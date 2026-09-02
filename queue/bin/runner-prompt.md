@@ -61,6 +61,13 @@ Do not guess on anything the user would want to weigh in on (visual direction, s
    where each option in the JSON array has this shape:
    `{"id":"a","label":"Short name","summary":"One or two plain sentences: what the user would see and do.","pros":["..."],"cons":["..."],"mitigation":"How the main con gets softened."}`
    Give 2 to 4 real options and always recommend one.
+   **Mark the option that means do not build this with `"declines": true`.**
+   Picking it retires the task for good instead of handing it back to the loop,
+   and the card says so before the user chooses. Without the marker an answer of
+   no comes straight back to a runner looking approved, which is exactly how a
+   declined feature got built on 2026-09-02. Only mark an option that ends the
+   whole task: "no button, copy as text instead" is still a yes to the task and
+   must not carry it, while "skip this for now" is a no and must.
 2. **Write the brief.** Alongside the decision, create
    `queue/decisions/<decisionId>.md`: a durable plain-language explainer that
    assumes the reader has NO context. Say what the surface or feature actually

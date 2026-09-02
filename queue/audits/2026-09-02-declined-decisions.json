@@ -1,0 +1,26 @@
+{
+  "feature": "An answer of no stays no",
+  "epic": "loop-robustness",
+  "summary": "A decision card can now carry the option that means do not build this. Choosing it retires the task for good instead of quietly sending it back to the build loop, and the card tells you that before you click.",
+  "setup": "The design dashboard at http://127.0.0.1:8791, Summary tab. Nothing to enable. Only cards written from now on carry the marker; the eleven older cards are all answered already.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791 and stay on the Summary tab." },
+    { "do": "Wait for a card under Needs your decision that has an option ending in a Stop line." },
+    { "do": "Read the Stop line: it says the task is retired and no runner picks it up again." },
+    { "do": "Click Select and stop on that option.", "shot": "2026-09-02-declined-decisions-card.png" },
+    { "do": "Go to the Tasks tab and find the task that card was blocking." },
+    { "do": "Confirm it reads dropped, and open its history to see which answer retired it." },
+    { "do": "Answer any other card with an ordinary Select and confirm that task goes back to pending as it always did." }
+  ],
+  "evaluate": [
+    "Is the Stop line enough warning, or should the whole option look different before you click?",
+    "Does Select and stop read as a normal choice, or does it feel like a warning you have to think twice about?",
+    "When you say not now rather than never, is dropped the right place for the task to land, or do you want it somewhere you can find again?",
+    "Is the line in the task history plain enough that you can tell in a month why the work stopped?"
+  ],
+  "rough": [
+    "The marker is written by whoever files the card. If an agent forgets it on a do-not-build option, that answer still requeues the task. Text cannot be trusted to say which is which: Copy as text only, no button is still a yes to its task, while Skip this for now is a no.",
+    "Retired means dropped. There is no separate not-yet state, so bringing something back is a manager pass reopening it, not a button.",
+    "Found while doing this and filed separately: a task answered while its runner is still working can be overwritten back to blocked seconds later and then waits forever on a settled question. One task is in that state right now."
+  ]
+}

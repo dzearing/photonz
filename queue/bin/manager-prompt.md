@@ -49,7 +49,8 @@ Rules that make a task executable:
 - **Goal is plain language, notes are technical.** Goal: what changes and for whom, no file names. Notes: files, flags, spec sections, the audit `rough` line it comes from.
 - **Dedupe.** Search open and recently dropped tasks before filing. Fold into an existing task rather than filing a near-twin.
 - **Priority reflects the focus.** Focus work is p1 or p2. `now` sub-epic work is p2. `next` epic work is p3 and says in its goal what focus feature it unblocks. Nothing for a `later` epic.
-- **Never block on the user.** When a task needs a product judgment, file the task, open a decision against it (`queue.mjs decision` plus the brief, exactly as `runner-prompt.md` describes), mark it blocked, and file a different task you can proceed on. The user resolves cards on the dashboard whenever they look.
+- **Never block on the user.** When a task needs a product judgment, file the task, open a decision against it (`queue.mjs decision` plus the brief, exactly as `runner-prompt.md` describes), mark it blocked, and file a different task you can proceed on. The user resolves cards on the dashboard whenever they look. When one of the options is "do not build this", mark it `"declines": true` so answering it retires the task instead of returning it to the queue.
+- **A dropped task the user turned down stays dropped.** Before reopening anything, check `queue/decisions/` for an answered card against it. Reopen only if something real has changed, and say what in the task notes.
 
 Target a queue with **six to twelve ready tasks** when you finish, ordered so the top of the queue is the most valuable app work. Fewer than six means you stopped looking; more than fifteen means you filed noise. Use `queue.mjs seq` so the claim order is deliberate.
 

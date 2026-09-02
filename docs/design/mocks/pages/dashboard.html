@@ -101,6 +101,8 @@
     background:color-mix(in srgb,var(--good) 8%,transparent)}
   #dashboard .db-opt .db-opt-t{font-size:12px;font-weight:640;letter-spacing:-.01em}
   #dashboard .db-opt.db-rec .db-opt-t .db-rec-k{color:var(--good);font-weight:600}
+  #dashboard .db-opt .db-pc .stop::before{content:"Stop";color:var(--warn)}
+  #dashboard .db-opt .db-pc .stop{color:var(--txt)}
   #dashboard .db-opt .db-opt-s{font-size:11px;color:var(--dim);line-height:1.5;margin:0}
   #dashboard .db-opt .db-pc{display:flex;flex-direction:column;gap:3px;margin:0}
   #dashboard .db-opt .db-pc span{position:relative;display:block;padding-left:var(--s6);font-size:10.5px;line-height:1.45;color:var(--dim)}
@@ -601,8 +603,12 @@
     var opts = (d.options || []).slice().sort(function (a, b) { return (b.id === d.recommended) - (a.id === d.recommended); });
     opts.forEach(function (o) {
       var rec = o.id === d.recommended;
+      // The answer that means do not build this retires the task instead of
+      // sending it back to the loop. Say so on the card, so the choice is
+      // honest before it is made and not only in the history afterwards.
+      var stop = !!o.declines;
       var noteKey = d.id + '/' + o.id;
-      h += '<div class="db-opt' + (rec ? ' db-rec' : '') + '">';
+      h += '<div class="db-opt' + (rec ? ' db-rec' : '') + (stop ? ' db-stop' : '') + '">';
       h += '<div class="db-opt-t">' + esc(o.label) + (rec ? ' <span class="db-rec-k">(Recommended)</span>' : '') + '</div>';
       var summary = o.summary || o.detail;
       if (summary) h += '<p class="db-opt-s">' + esc(summary) + '</p>';
@@ -610,10 +616,11 @@
       (o.pros || []).forEach(function (p) { pc += '<span class="pro">' + esc(p) + '</span>'; });
       (o.cons || []).forEach(function (c) { pc += '<span class="con">' + esc(c) + '</span>'; });
       if (o.mitigation) pc += '<span class="fix">' + esc(o.mitigation) + '</span>';
+      if (stop) pc += '<span class="stop">Retires this task. It will not be built, and no runner picks it up again.</span>';
       if (pc) h += '<div class="db-pc">' + pc + '</div>';
       h += '<div class="db-opt-act">';
       h += '<input class="input sm" name="note-' + esc(noteKey) + '" placeholder="Optional note" data-notefor="' + esc(noteKey) + '">';
-      h += '<button class="btn sm ' + (rec ? 'primary' : 'secondary') + '" data-act="decide" data-id="' + esc(d.id) + '" data-choice="' + esc(o.id) + '">Select</button>';
+      h += '<button class="btn sm ' + (rec ? 'primary' : 'secondary') + '" data-act="decide" data-id="' + esc(d.id) + '" data-choice="' + esc(o.id) + '">' + (stop ? 'Select and stop' : 'Select') + '</button>';
       h += '</div></div>';
     });
     h += '</div>';

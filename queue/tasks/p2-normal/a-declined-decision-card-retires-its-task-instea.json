@@ -5,11 +5,11 @@
   "epic": "loop-robustness",
   "priority": "p2-normal",
   "seq": 590,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T19:46:19.021Z",
-  "updated": "2026-09-02T19:46:19.022Z",
+  "updated": "2026-09-02T19:56:29.450Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Root cause: queue/bin/queue-lib.mjs resolveDecision() clears blockedBy and flips status blocked -> pending for ANY choice, and nothing downstream reads answer.choice. Hit live on 2026-09-02: task point-at-a-color-and-its-value-joins-the-spec was answered later (do not build) at 15:10 and was claimed by the runner at 19:45. Suggested shape: let an option carry a decline marker (e.g. \"declines\": true, or infer from recommended-vs-chosen is not enough - be explicit), and have resolveDecision set the task to dropped with the option label in the log when the chosen option declines. Decision-opening callers in runner-prompt.md/manager-prompt.md then need to mark the do-not-build option.",
@@ -23,6 +23,47 @@
     {
       "t": "2026-09-02T19:46:19.022Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T19:46:50.181Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T19:49:08.160Z",
+      "note": "Pre-build review. Walked the eleven decision cards written so far to check the premise. It holds, and it is worse than one incident: five of the eleven already carry a do-not-build option (\"Not now, ask again after the measure tools have been tried\", \"Skip alignment checks for now\", \"Keep verification offscreen\"), and every one of them put its task straight back in the queue looking approved. The colour-sampling task on 2026-09-02 is just the one that got far enough to be noticed."
+    },
+    {
+      "t": "2026-09-02T19:49:08.161Z",
+      "note": "Reviewed the obvious cheaper fix and rejected it: inferring a decline from the option text or from \"the user did not pick the recommended one\". The eleven real cards prove inference would be wrong. \"Copy as text only, no button\" is a no to a button but still a yes to the task; \"Skip alignment checks for now\" is a no to the whole task. Only the person writing the card knows which. So the marker has to be explicit per option."
+    },
+    {
+      "t": "2026-09-02T19:49:08.161Z",
+      "note": "Cut from scope: no new task state. A declined task becomes dropped, which the dashboard already renders and a manager pass can already reopen. \"Not now\" and \"never\" do not need to be told apart, because reopening is the same act either way."
+    },
+    {
+      "t": "2026-09-02T19:49:08.161Z",
+      "note": "One thing the mock of this idea missed: on the dashboard the user picks an option with no warning that one of them ends the work. Adding a short marker on the declining option so the choice is honest before it is made, not only after."
+    },
+    {
+      "t": "2026-09-02T19:56:29.449Z",
+      "note": "Built: an option can carry \"declines\": true; resolveDecision retires the task as dropped with the answer in its history instead of requeueing it. Every other answer requeues exactly as before. A late answer no longer rewrites a task that already shipped or was already dropped, and a decline outranks any other question still open on the task."
+    },
+    {
+      "t": "2026-09-02T19:56:29.450Z",
+      "note": "Post-build review on the real dashboard. First pass hung \"(Stops this work)\" off the option title beside \"(Recommended)\": two tags in a row wrapped the heading onto a second line and read as noise, and the dashed border fought the recommended fill. Moved it into the Pro/Con/Fix chip column as a fourth chip (\"Stop · Retires this task. It will not be built, and no runner picks it up again\") and made the button read Select and stop. Second render is clean."
+    },
+    {
+      "t": "2026-09-02T19:56:29.450Z",
+      "note": "Verified end to end, not just in unit form: seeded the real colour-sampling card into a throwaway queue, served it on :8799, clicked Select and stop in a browser, and the task file came back status dropped with the plain-language line naming the answer. New queue/bin/decision-drill.mjs: 13 checks pass on the fix and 7 fail against the old code, including the live incident (the declined task picks up a \"claimed by go loop\" line). churn-drill, failure-drill.sh and Scripts/test.sh (1451 tests) all green."
+    },
+    {
+      "t": "2026-09-02T19:56:29.450Z",
+      "note": "Left undone and filed as a-task-the-user-already-answered-is-never-left-s: answering a card while its runner is still working can be overwritten back to blocked seconds later. the-tool-bar-groups-tools-the-way-a-pro-editor-d is stranded that way right now (answered 15:24:11, re-blocked 15:24:36, blockedBy empty, no pending decision, nothing will ever claim it). Same family of harm, different cause, so it did not belong in this change."
+    },
+    {
+      "t": "2026-09-02T19:56:29.450Z",
+      "note": "Note on process: while cleaning up the sandbox server I ran an over-broad pkill and took down the real dashboard on :8791 with it. Restarted it the way the go skill does; it is serving the real queue again (200, 8 pending / 1 blocked). Nothing was lost, the queue is files."
     }
-  ]
+  ],
+  "started": "2026-09-02T19:46:50.180Z"
 }

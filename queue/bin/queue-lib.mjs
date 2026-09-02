@@ -511,6 +511,12 @@ export function readDecisionBrief(id) {
   try { return readFileSync(join(DECISIONS, `${id}.md`), 'utf8'); } catch { return null; }
 }
 
+// An option may carry `declines: true`. That marks it as the "do not build
+// this" answer: picking it retires the task instead of returning it to the
+// queue. It has to be explicit, because the text of an option cannot be trusted
+// to say which it is - "Copy as text only, no button" is a no to one control but
+// still a yes to the task, while "Skip alignment checks for now" ends the task.
+// Only whoever wrote the card knows the difference.
 export function addDecision({ taskId, question, context = '', options = [], recommended = '' }) {
   ensureDirs();
   const qslug = slug(question).slice(0, 32).replace(/-+$/, '');
@@ -518,13 +524,18 @@ export function addDecision({ taskId, question, context = '', options = [], reco
   const existing = new Set(readDecisions().map((d) => d.id));
   let n = 2;
   while (existing.has(id)) id = `${taskId}-${qslug}-${n++}`;
-  const d = { id, taskId, question, context, options, recommended, status: 'pending', created: now() };
+  const opts = (options || []).map((o) => (o && o.declines ? { ...o, declines: true } : o));
+  const d = { id, taskId, question, context, options: opts, recommended, status: 'pending', created: now() };
   writeJSON(join(DECISIONS, `${id}.json`), d);
   appendEvent('decision_opened', { id, taskId, question });
   return d;
 }
 
-// Resolving a decision unblocks its task and puts it back in the queue.
+// Resolving a decision unblocks its task and puts it back in the queue - unless
+// the answer was the one that means do not build this, in which case the task is
+// retired instead. Until 2026-09-02 every answer re-queued its task, so a
+// feature the user had turned down came back looking approved and a runner
+// picked it up hours later. An answer of no has to stay a no.
 export function resolveDecision(id, choice, note = '') {
   const file = join(DECISIONS, `${id}.json`);
   const d = readJSON(file);
@@ -535,12 +546,26 @@ export function resolveDecision(id, choice, note = '') {
   appendEvent('decision_resolved', { id, taskId: d.taskId, choice });
   const t = d.taskId ? findTask(d.taskId) : null;
   if (t) {
-    t.blockedBy = (t.blockedBy || []).filter((b) => b !== id);
-    if (!t.blockedBy.length && t.status === 'blocked') t.status = 'pending';
     const chosen = (d.options || []).find((o) => o.id === choice);
-    appendLog(t, `decision "${d.question}" resolved: ${chosen ? chosen.label : choice}${note ? ` (${note})` : ''}`);
-    saveTask(t);
-    appendEvent('task_unblocked', { id: t.id, decision: id });
+    const label = chosen ? chosen.label : choice;
+    t.blockedBy = (t.blockedBy || []).filter((b) => b !== id);
+    appendLog(t, `decision "${d.question}" resolved: ${label}${note ? ` (${note})` : ''}`);
+    // A task already finished or already retired is left where it is: a late
+    // answer must not reopen it or overwrite how it ended.
+    const settled = t.status === 'done' || t.status === 'dropped';
+    if (chosen && chosen.declines && !settled) {
+      const prev = t.status;
+      t.status = 'dropped';
+      t.parked = false;
+      t.parkReason = '';
+      appendLog(t, `retired by that answer: "${label}" means this should not be built, so it will not be picked up again.`);
+      saveTask(t);
+      appendEvent('task_dropped', { id: t.id, from: prev, decision: id, note: `declined: ${label}` });
+    } else {
+      if (!t.blockedBy.length && t.status === 'blocked') t.status = 'pending';
+      saveTask(t);
+      appendEvent('task_unblocked', { id: t.id, decision: id });
+    }
   }
   return d;
 }

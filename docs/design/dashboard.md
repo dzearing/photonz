@@ -29,6 +29,14 @@ every judgment call that came up waiting as a one-click decision.
   task, and move on. Resolving on the dashboard requeues the task with the
   answer in its log. The Summary tab is the default route so blocked-on-you is
   the first thing visible.
+- **An answer of no stays no.** The option that means do not build this carries
+  `"declines": true`. Its card reads *Stops this work* and its button reads
+  *Select and stop*, and choosing it retires the task as `dropped` with the
+  answer in the task history, instead of handing it back to the loop. Before
+  this, every answer requeued its task, so on 2026-09-02 a feature the user had
+  turned down at 15:10 was claimed and started by a runner at 19:45. A decline is
+  only for an option that ends the whole task: "no button, copy as text instead"
+  is still a yes to the task and does not carry the marker.
 - **Next release only.** Runners work in the Next release unless a task
   explicitly says current (see `docs/design/experiments.md`); the porting rule
   from CLAUDE.md still applies to shared-file changes.

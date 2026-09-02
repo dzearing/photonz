@@ -1,0 +1,27 @@
+{
+  "id": "a-task-the-user-already-answered-is-never-left-s",
+  "title": "A task the user already answered is never left stranded",
+  "goal": "If you answer a decision card while the loop is still working on that same task, your answer can be overwritten a few seconds later and the task ends up waiting forever on a question that is already settled. It should notice your answer and carry on instead of stalling.",
+  "epic": "loop-robustness",
+  "priority": "p2-normal",
+  "seq": 600,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T19:55:42.727Z",
+  "updated": "2026-09-02T19:55:42.727Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-02 while fixing a-declined-decision-card-retires-its-task-instea. Task the-tool-bar-groups-tools-the-way-a-pro-editor-d: user resolved its decision at 15:24:11 (choice a, Picture first), resolveDecision set status pending, and 25s later the still-running runner called setStatus blocked. It now sits status blocked with blockedBy [] and no pending decision, so readyTasks will never return it and nothing unblocks it. Two candidate fixes: (1) setStatus blocked refuses when the task has no pending decision open against it, or auto-clears; (2) guardStuck sweeps blocked tasks whose decisions are all resolved back to pending. Prefer (2) plus a warning in (1). Also repair the live task as part of the work.",
+  "acceptance": [
+    "A task whose only question has already been answered never sits waiting on the dashboard.",
+    "Answering a card while its task is still being worked on keeps the answer, and the task history shows it.",
+    "A test covers the case where the answer arrives before the task marks itself as waiting."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T19:55:42.727Z",
+      "note": "created (manual)"
+    }
+  ]
+}
