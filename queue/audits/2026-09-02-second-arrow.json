@@ -1,0 +1,30 @@
+{
+  "feature": "A second arrow can follow the first",
+  "epic": "epic-uehjr1",
+  "summary": "After you draw an arrow, the Arrow tool stays in your hand while its caption field is open, so dragging again leaves the first arrow plain and draws the next one; no stray letter ever lands in a label. The field says how to skip it, and the inspector's Caption field now commits when you click away, like every Mac text field.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Arrow captions flag is on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png.",
+  "try": [
+    { "do": "Press A and drag an arrow from the empty space above Launch at login down onto the Save Changes button. The dark red field reads Caption, Esc to skip, and the tool bar still shows Arrow selected.", "shot": "2026-09-02-second-arrow-1-placeholder.png" },
+    { "do": "Without pressing anything, drag a second arrow somewhere else. The first arrow stays plain and the field moves to the new arrow." },
+    { "do": "Type Hi and press Return. The pill lands and the tool bar switches back to Select with the arrow selected.", "shot": "2026-09-02-second-arrow-2-typing.png" },
+    { "do": "Press A, draw another arrow, and click once on empty canvas. The field closes, no arrow is drawn, and Select comes back." },
+    { "do": "Press A, draw an arrow, type a word, then drag yet another arrow. The word lands on the previous arrow and the new field opens." },
+    { "do": "Select a captioned arrow, click into the inspector's Caption field, change the text, and click on the canvas. The pill updates. Press Cmd Z once: the old text is back." },
+    { "do": "Click into the inspector's Caption field again, type something, press Esc. The field shows the arrow's real caption and nothing changed." },
+    { "do": "Type in the inspector's Caption field and, without pressing Return, double-click the arrow. Your text has landed and the on-canvas field opens with it selected.", "shot": "2026-09-02-second-arrow-3-reedit.png" }
+  ],
+  "evaluate": [
+    "While the caption field is open the tool bar keeps Arrow lit and the cursor stays a crosshair. Does that read as an invitation to keep drawing, or does it look like the tool forgot to switch back?",
+    "Return, Esc and a plain click all hand back to Select, but a drag draws the next arrow. Is that split obvious after one try?",
+    "Caption, Esc to skip is the whole hint. Does it say enough, or would you also want to be told that dragging draws another arrow?",
+    "Clicking away from the inspector's Caption field now commits what you typed. Did anything commit that you meant to throw away?",
+    "The field is as wide as its hint until you type, then shrinks to hug the text. Does that first shrink feel like a jump?"
+  ],
+  "rough": [
+    "Letters still go to the caption while the field is open, so pressing A there types an a. That is by design (a caption can start with a); the way to get the next arrow is to drag, which the tool bar now shows. If you would rather A worked too, say so and the trade is a caption that cannot start with a tool letter.",
+    "Clicking the Arrow tool button itself while the field is open closes the field and hands back to Select, since the tool did not change; you would then press A again. Rare, left as is.",
+    "The inspector Caption field commits when the arrow is deselected by a canvas click even though the field disappears in that instant. Verified with scripted events; worth one real click.",
+    "Screen capture is denied to the loop. The pictures are the app's own view layers rendered offscreen from the running probe app, so the inspector panel shows blank in the third shot even though its field worked in the script.",
+    "Two ElementBounds timing tests (30 ms and 50 ms budgets) failed in one full parallel test run on a loaded machine and passed in isolation; unrelated to this change, filed as a follow-up if it recurs."
+  ]
+}

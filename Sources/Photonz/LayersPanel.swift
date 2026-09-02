@@ -1103,6 +1103,11 @@ struct AnnotationInspector: View {
     @State private var headDraft: CGFloat?
     @State private var radiusDraft: CGFloat?
     @State private var captionDraft: String = ""
+    @FocusState private var captionFocused: Bool
+    /// True from the moment the Caption field takes focus until its draft has
+    /// been committed or dropped, so a field that disappears mid-edit (the
+    /// arrow was deselected by a canvas click) still lands what was typed.
+    @State private var captionEditing = false
     @State private var captionSizeDraft: CGFloat?
 
     private var annotation: AnnotationContent? {
@@ -1159,8 +1164,34 @@ struct AnnotationInspector: View {
                         TextField("Add a caption", text: $captionDraft)
                             .textFieldStyle(.roundedBorder)
                             .controlSize(.small)
+                            .focused($captionFocused)
                             .onSubmit {
                                 editorState.setAnnotationCaption(layerID: layer.id, captionDraft)
+                            }
+                            // Esc drops the draft: the field shows the arrow's
+                            // caption again and gives the keyboard back.
+                            .onExitCommand {
+                                captionDraft = a.caption ?? ""
+                                captionEditing = false
+                                captionFocused = false
+                            }
+                            // Like every Mac text field, clicking away commits
+                            // what you typed (one undo step; none if unchanged).
+                            // Not when the canvas has just opened its own editor
+                            // on this arrow: that editor owns the draft now.
+                            .onChange(of: captionFocused) { _, focused in
+                                if focused {
+                                    captionEditing = true
+                                } else if captionEditing {
+                                    captionEditing = false
+                                    commitInspectorCaption(layer.id)
+                                }
+                            }
+                            .onDisappear {
+                                if captionEditing {
+                                    captionEditing = false
+                                    commitInspectorCaption(layer.id)
+                                }
                             }
                     }
                     // Track the model (initially, after undo, on layer switch);
@@ -1171,8 +1202,14 @@ struct AnnotationInspector: View {
                     // The canvas opening its own editor on this arrow closes
                     // the inspector's draft (one draft at a time): the field
                     // falls back to the caption the canvas editor starts from.
+                    // In practice the click that opens the canvas editor takes
+                    // focus first, so a pending draft has already landed by
+                    // then (verified on the probe app); this is the fallback.
                     .onChange(of: editorState.editingCaptionLayerID) { _, editing in
-                        if editing == layer.id { captionDraft = annotation?.caption ?? "" }
+                        if editing == layer.id {
+                            captionEditing = false
+                            captionDraft = annotation?.caption ?? ""
+                        }
                     }
                     if a.hasCaption {
                         sliderRow("Label size", value: captionSizeDraft ?? a.captionFontSize,
@@ -1231,6 +1268,14 @@ struct AnnotationInspector: View {
         case .ellipse: "Ellipse"
         case .highlight: "Highlight"
         }
+    }
+
+    /// The inspector Caption field landing its draft (Return or focus loss).
+    /// Skipped while the canvas editor is open on the same arrow: the two
+    /// fields share one draft and the canvas holds it.
+    private func commitInspectorCaption(_ layerID: UUID) {
+        guard editorState.editingCaptionLayerID != layerID else { return }
+        editorState.setAnnotationCaption(layerID: layerID, captionDraft)
     }
 
     @ViewBuilder

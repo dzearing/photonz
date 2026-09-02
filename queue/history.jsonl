@@ -688,3 +688,6 @@
 {"t":"2026-09-02T09:42:35.660Z","ev":"task_blocked","id":"the-loop-can-see-the-screen-so-audits-carry-real","from":"pending","note":"Waiting on the decision: may the loop take screenshots of the probe app"}
 {"t":"2026-09-02T09:42:54.403Z","ev":"task_resequenced","id":"hide-all-measurements-joins-the-measure-menu-so","from":560,"to":535}
 {"t":"2026-09-02T09:44:02.148Z","ev":"manager","filed":9,"readyBefore":2,"readyAfter":9,"appReady":8,"decisions":2,"report":"queue/manager/2026-09-02-0240.md"}
+{"t":"2026-09-02T09:44:34.332Z","ev":"manager_pass","exit":0,"ready":9}
+{"t":"2026-09-02T09:44:34.359Z","ev":"task_started","id":"a-second-arrow-can-follow-the-first-without-a-st","title":"A second arrow can follow the first without a stray letter landing in its caption","priority":"p1-high"}
+{"t":"2026-09-02T10:08:11.105Z","ev":"task_created","id":"clicking-the-arrow-tool-button-while-a-caption-f","priority":"p3-low","title":"Clicking the Arrow tool button while a caption field is open keeps the Arrow tool in hand"}

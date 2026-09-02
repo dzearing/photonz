@@ -825,9 +825,14 @@ final class EditorState {
         // added to the previous arrow carries to the next).
         layer.style = annotationStyles.layerStyle(forShape: shape)
         perform { $0.addLayer(layer) }
-        finishCreating(layer.id)
-        guard shape == .arrow, Experiments.shared.arrowCaptionsEnabled else { return nil }
-        return layer
+        // An arrow that is about to offer its caption is not finished yet: the
+        // Arrow tool stays in hand while the field is open (a drag draws the
+        // next arrow), and the hand-back to Select happens when the field
+        // closes (`commitCaptionEdit` / `cancelCaptionEdit`).
+        let offersCaption = shape == .arrow && Experiments.shared.arrowCaptionsEnabled
+        finishCreating(layer.id,
+                       tool: ArrowCaptionEntry.toolAfterLanding(activeTool, offersCaption: offersCaption))
+        return offersCaption ? layer : nil
     }
 
     /// A caption edit session opened on `layerID`'s arrow. While it's open the
@@ -843,17 +848,19 @@ final class EditorState {
 
     /// Caption entry finished. Whitespace-only text clears the caption (or
     /// leaves a fresh arrow plain); anything else lands as one undo step.
-    /// Newlines collapse to spaces — the pill is a single line.
-    func commitCaptionEdit(layerID: UUID, string: String) {
+    /// Newlines collapse to spaces — the pill is a single line. Closing the
+    /// field finishes the arrow, so the Arrow tool that stayed live hands back
+    /// to Select; `keepTool` is the canvas drag that starts the NEXT arrow with
+    /// this same press and wants the tool to stay put.
+    func commitCaptionEdit(layerID: UUID, string: String, keepTool: Bool = false) {
         editingCaptionLayerID = nil
-        let text = string.replacingOccurrences(of: "\n", with: " ")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !keepTool { setTool(ArrowCaptionEntry.toolAfterClosing(activeTool)) }
         guard let layer = document?.layer(id: layerID),
               let annotation = layer.annotation else {
             rerender()
             return
         }
-        let newCaption: String? = text.isEmpty ? nil : text
+        let newCaption = ArrowCaptionEntry.caption(from: string)
         guard annotation.caption != newCaption else {
             rerender() // un-suppress the pill
             return
@@ -896,9 +903,11 @@ final class EditorState {
         saveAnnotationStyles()
     }
 
-    /// Caption entry abandoned (Esc): the arrow keeps whatever caption it had.
+    /// Caption entry abandoned (Esc): the arrow keeps whatever caption it had,
+    /// and is finished, so the Arrow tool that stayed live hands back to Select.
     func cancelCaptionEdit() {
         editingCaptionLayerID = nil
+        setTool(ArrowCaptionEntry.toolAfterClosing(activeTool))
         rerender()
     }
 
@@ -914,8 +923,8 @@ final class EditorState {
     /// 17.12's sticky Photoshop-style tools — user request 2026-08-21: "when I
     /// draw a line or a measure or any object, I want the tool to switch to V
     /// and the object selected, so I can left/right arrow".)
-    private func finishCreating(_ layerID: UUID) {
-        setTool(.select)
+    private func finishCreating(_ layerID: UUID, tool: Tool = .select) {
+        setTool(tool)
         selectedLayerID = layerID
     }
 

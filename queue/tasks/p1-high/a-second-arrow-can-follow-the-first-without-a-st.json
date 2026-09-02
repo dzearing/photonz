@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:40:28.308Z",
-  "updated": "2026-09-02T09:40:28.308Z",
+  "updated": "2026-09-02T09:44:34.359Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From audit 2026-09-02-arrow-captions rough 1 (A right after an arrow lands types into the label) and 2026-09-02-arrow-caption-one-draft rough 3 (inspector Caption field commits on Return only). Code: the inline caption editor in Sources/Photonz/CanvasView.swift (opened by the fresh-arrow flow), the hand-back to Select in EditorState after an annotation lands, the Caption field in Sources/Photonz/LayersPanel.swift. Recommended shape, decide after the adversarial walk: while the fresh-arrow caption field is open and empty, the Arrow tool stays live so a canvas drag commits the empty caption and starts the next arrow; letters still go to the caption (a caption can start with a); the field shows a placeholder like Caption, Esc to skip. Keep Current byte-identical (flag off).",
@@ -24,6 +24,27 @@
     {
       "t": "2026-09-02T09:40:28.308Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T09:44:34.359Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T09:52:49.000Z",
+      "note": "Adversarial walk before building. Reproduction path in code: the fresh arrow hands the tool back to Select (finishCreating) on the same mouse-up that opens the NSTextView caption editor, which is first responder, so an unmodified A never reaches the SwiftUI tool shortcut and lands as text. Ideas rejected: (1) swallow A when the field is empty and switch tools: a caption can start with a (\"a button\"), so letters must always type. (2) Keep Arrow sticky after the caption commits: reverses the 2026-08-21 request that drawing returns to Select so the object can be nudged. (3) Hint-only (\"Esc to skip\", then A, then drag): works but leaves three steps between plain arrows. Chosen shape: the arrow is not finished until its caption is decided. While the fresh field is open the Arrow tool stays in hand (tool bar shows it, crosshair cursor), so a canvas drag leaves this arrow plain and draws the next one; Return, Esc, a plain click, or clicking elsewhere finish the arrow and hand back to Select as every tool does. Nudging is unaffected either way: while the field is open the arrow keys belong to the text field, and the hand-back happens the moment it closes. The field itself says what to do: placeholder \"Caption, Esc to skip\". This is the manager's recommended shape; no decision opened because it keeps the user's stated hand-back rule at the moment the object is actually finished, changes nothing when the flag is off, and is one line to revert; the audit asks the question directly so the user can overrule."
+    },
+    {
+      "t": "2026-09-02T09:52:49.000Z",
+      "note": "Inspector Caption field: commit on focus loss like every Mac text field, one undo step, no step when unchanged. Skipped when the canvas has just opened its own editor on the same arrow (one-draft rule from 94f8be1), otherwise the inspector's stale draft would land under the open canvas editor. Esc restores the field to the arrow's caption and drops focus."
+    },
+    {
+      "t": "2026-09-02T10:07:47.000Z",
+      "note": "Reproduced on the probe app before changing behaviour: the caption NSTextView is first responder after the fresh arrow lands, so the unmodified A shortcut never fires and the letter lands as text (harness S1 first run). Verified the fix on the probe app with a temporary in-app harness (deleted before commit) that drives the real CanvasNSView and the inspector NSTextField with synthesized events, 8 scenarios, all passed: (1) A picks Arrow, drag lands arrow 1, Arrow stays in hand, field open and empty, a types a and does not switch tools, Esc closes and hands back to Select, arrow plain and selected. (2) field open, drag again: next arrow lands, previous stays plain, field moves; Hi + Return commits and hands back. (3) typed draft + drag: draft lands, next arrow starts. (4) plain click: field closes, no arrow, Select back. (5) inspector field, type Blur, click empty canvas (deselects the arrow, the field disappears): Blur committed, exactly one undo step, redo restores. (6) inspector Esc: field restored, nothing committed, focus dropped. (7) pending inspector draft + double-click the arrow: focus loss commits the draft first, the canvas editor opens with the committed text (the earlier one-draft behaviour of dropping the inspector draft is superseded by Mac blur-commit; nothing typed is lost). (8) picking another tool with the field open commits and keeps that tool."
+    },
+    {
+      "t": "2026-09-02T10:07:47.000Z",
+      "note": "Shots under queue/audits/2026-09-02-second-arrow-*.png are the probe's view layers rendered offscreen (no Screen Recording for the loop). Placeholder renders white at 55% on the pill tone, field sized to the hint until you type."
     }
-  ]
+  ],
+  "started": "2026-09-02T09:44:34.358Z"
 }

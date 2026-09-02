@@ -120,7 +120,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: arrowCaptionsFlag,
                     title: "Arrow captions",
-                    description: "Right after you draw an arrow, type a label and it lands in a pill at the arrow's tail, styled like the measure readout. Press Esc to skip. Double-click an arrow to add or edit its caption.",
+                    description: "Right after you draw an arrow, type a label and it lands in a pill at the arrow's tail, styled like the measure readout. Press Esc to skip, or drag again to draw the next arrow. Double-click an arrow to add or edit its caption.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

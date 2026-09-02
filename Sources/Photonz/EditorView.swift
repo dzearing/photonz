@@ -248,7 +248,7 @@ struct EditorView: View {
                        onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
                        onTextCancel: { editorState.cancelTextEdit() },
                        onCaptionEditBegin: { editorState.beginCaptionEdit(layerID: $0) },
-                       onCaptionCommit: { editorState.commitCaptionEdit(layerID: $0, string: $1) },
+                       onCaptionCommit: { editorState.commitCaptionEdit(layerID: $0, string: $1, keepTool: $2) },
                        onCaptionCancel: { editorState.cancelCaptionEdit() },
                        onDeleteLayer: { editorState.deleteLayer(id: $0) },
                        onDeleteLayers: { editorState.deleteLayers(ids: $0) },

@@ -1,0 +1,27 @@
+{
+  "id": "clicking-the-arrow-tool-button-while-a-caption-f",
+  "title": "Clicking the Arrow tool button while a caption field is open keeps the Arrow tool in hand",
+  "goal": "Right after you draw an arrow, its caption field is open and the Arrow tool is still active. If you click the Arrow button in the tool bar at that moment, the field closes and the tool switches back to Select, because the tool did not actually change. Clicking the tool you already hold should leave you holding it.",
+  "epic": "epic-uehjr1",
+  "priority": "p3-low",
+  "seq": 590,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T10:08:11.104Z",
+  "updated": "2026-09-02T10:08:11.105Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from audit 2026-09-02-second-arrow rough 2. The hand-back lives in EditorState.commitCaptionEdit via ArrowCaptionEntry.toolAfterClosing(activeTool); the tool bar button calls setTool(.arrow) which early-returns when the tool is unchanged, so the deferred focus-loss commit sees .arrow and hands back. Fix idea: the toolbar click on the active Arrow button while editingCaptionLayerID != nil commits with keepTool, or setTool records the intent so toolAfterClosing is skipped.",
+  "acceptance": [
+    "With the Arrow captions flag on in Next: draw an arrow, then click the Arrow tool button; the caption field closes with the arrow plain and the Arrow tool stays active.",
+    "Return, Esc and a plain canvas click still hand back to Select as before.",
+    "Scripts/test.sh green."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T10:08:11.105Z",
+      "note": "created (manual)"
+    }
+  ]
+}

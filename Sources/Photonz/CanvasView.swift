@@ -118,7 +118,8 @@ struct CanvasView: NSViewRepresentable {
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
     let onTextCancel: () -> Void
     let onCaptionEditBegin: (UUID) -> Void
-    let onCaptionCommit: (UUID, String) -> Void
+    /// (layer, draft, keepTool): keepTool is the press that starts the next arrow.
+    let onCaptionCommit: (UUID, String, Bool) -> Void
     let onCaptionCancel: () -> Void
     let onDeleteLayer: (UUID) -> Void
     let onDeleteLayers: ([UUID]) -> Void
@@ -236,7 +237,7 @@ final class CanvasNSView: NSView {
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
     var onTextCancel: (() -> Void) = {}
     var onCaptionEditBegin: ((UUID) -> Void) = { _ in }
-    var onCaptionCommit: ((UUID, String) -> Void) = { _, _ in }
+    var onCaptionCommit: ((UUID, String, Bool) -> Void) = { _, _, _ in }
     var onCaptionCancel: (() -> Void) = {}
     var onDeleteLayer: ((UUID) -> Void) = { _ in }
     var onDeleteLayers: (([UUID]) -> Void) = { _ in }
@@ -408,6 +409,10 @@ final class CanvasNSView: NSView {
     private var tool: Tool = .select
     /// In-progress drag-to-create (document coordinates).
     private var annotationDrag: AnnotationDrag?
+    /// Set by a press that committed the fresh arrow's caption field with the
+    /// Arrow tool still in hand; mouse-up decides whether it was a click (hand
+    /// back to Select) or a drag (the next arrow).
+    private var pressClosedCaptionField = false
     /// Styled content for the active tool, echoed from EditorState; the in-flight
     /// preview strokes with this so it matches the committed rasterization.
     private var annotationContent: AnnotationContent?
@@ -1403,9 +1408,18 @@ final class CanvasNSView: NSView {
         guard let viewport else { return }
         // A click outside the inline text editor commits it; the click is
         // swallowed so committing never doubles as starting something else.
-        if textSession != nil {
-            commitTextSession()
-            return
+        // The one exception is the fresh arrow's caption field: the Arrow tool
+        // stayed in hand while it is open, so this press commits the draft AND
+        // starts the next arrow (a plain click hands back to Select on mouse-up).
+        if let session = textSession {
+            if session.captionStyle != nil,
+               ArrowCaptionEntry.pressOutsideField(tool: tool) == .commitAndDraw {
+                commitTextSession(keepTool: true)
+                pressClosedCaptionField = true
+            } else {
+                commitTextSession()
+                return
+            }
         }
         window?.makeFirstResponder(self)
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
@@ -1881,8 +1895,13 @@ final class CanvasNSView: NSView {
             refreshOverlays()
         } else if let drag = annotationDrag {
             annotationDrag = nil
+            let closedField = pressClosedCaptionField
+            pressClosedCaptionField = false
             if drag.isClick(atZoom: viewport.zoom) {
                 clearAnnotationPreview()
+                // The press only dismissed the caption field: the arrow is
+                // finished, so Select comes back as it does for Return or Esc.
+                if closedField { onToolChange(ArrowCaptionEntry.toolAfterClosing(tool)) }
             } else if tool == .zoomCallout {
                 clearAnnotationPreview()
                 let end = drag.end(constrained: event.modifierFlags.contains(.shift), shape: .rectangle)
@@ -2318,14 +2337,13 @@ final class CanvasNSView: NSView {
             hideMeasureHoverReadout()
             clearAnnotationPreview()
             // …but a typed text draft is worth keeping: commit it. Deferred a
-            // tick because this runs inside a SwiftUI update. A caption
-            // session is exempt from the hand-back to Select: drawing the
-            // arrow is what switches the tool, and that same mouse-up opened
-            // the editor, so committing here would close it before the first
-            // keystroke. Any other tool switch commits it like a text block.
-            if let session = textSession, !(session.captionStyle != nil && tool == .select) {
+            // tick because this runs inside a SwiftUI update. (A fresh arrow's
+            // caption field no longer sees a tool switch on landing: the Arrow
+            // tool stays in hand until the field closes.)
+            if textSession != nil {
                 DispatchQueue.main.async { [weak self] in self?.commitTextSession() }
             }
+            pressClosedCaptionField = false
             window?.invalidateCursorRects(for: self)
         }
         // Undo while editing can delete the layer behind the editor.
@@ -3195,6 +3213,9 @@ final class CanvasNSView: NSView {
 
         let editor = makeInlineEditor()
         editor.commitsOnPlainReturn = true
+        // A fresh (or never captioned) arrow says how to skip. A re-edit of an
+        // existing label starts with that label selected instead.
+        if a.caption == nil { editor.placeholder = ArrowCaptionEntry.placeholder }
         let tone = a.captionChipColor
         editor.drawsBackground = true
         editor.backgroundColor = NSColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
@@ -3217,6 +3238,7 @@ final class CanvasNSView: NSView {
     private func makeInlineEditor() -> InlineTextView {
         let editor = InlineTextView()
         editor.onCommit = { [weak self] in self?.commitTextSession() }
+        editor.onCancel = { [weak self] in self?.cancelTextSession() }
         editor.isRichText = false
         editor.allowsUndo = true
         editor.drawsBackground = false
@@ -3300,6 +3322,13 @@ final class CanvasNSView: NSView {
             contentWidth = min(capView, max(minView, ceil(used.width) + 3))
             height = max(height, used.height + 2)
         }
+        if editor.string.isEmpty, let placeholder = (editor as? InlineTextView)?.placeholder,
+           let font = editor.font {
+            // An empty caption field is as wide as its hint, so the hint reads
+            // in one line and the field shrinks to the text once you type.
+            let hint = (placeholder as NSString).size(withAttributes: [.font: font]).width
+            contentWidth = min(capView, max(contentWidth, ceil(hint) + 8))
+        }
         if session.captionStyle != nil {
             // A caption session centers the editor where the pill for the
             // current draft will render: it grows away from the tail as you
@@ -3338,12 +3367,14 @@ final class CanvasNSView: NSView {
         }
     }
 
-    private func commitTextSession() {
+    /// `keepTool` is the canvas press that closes the fresh arrow's field and
+    /// starts the next arrow in the same gesture: the Arrow tool stays in hand.
+    private func commitTextSession(keepTool: Bool = false) {
         guard let session = textSession, let editor = textEditor else { return }
         let string = editor.string
         if session.captionStyle != nil, let layerID = session.layerID {
             teardownTextSession()
-            onCaptionCommit(layerID, string)
+            onCaptionCommit(layerID, string, keepTool)
             return
         }
         // Same wrap cap the live editor used, so layout doesn't shift on commit.
@@ -3415,16 +3446,53 @@ extension CanvasNSView: NSTextViewDelegate {
 /// leaving plain Return to insert a line break.
 private final class InlineTextView: NSTextView {
     var onCommit: () -> Void = {}
+    var onCancel: () -> Void = {}
     /// Caption entry is single-line: plain Return commits instead of inserting
     /// a newline. Text blocks keep Return-as-newline and commit on ⌘Return.
     var commitsOnPlainReturn = false
+    /// Drawn in the text color at reduced opacity while the field is empty
+    /// (NSTextView has no placeholder of its own).
+    var placeholder: String? {
+        didSet { needsDisplay = true }
+    }
 
     override func keyDown(with event: NSEvent) {
-        if (event.keyCode == 36 || event.keyCode == 76),
-           commitsOnPlainReturn || event.modifierFlags.contains(.command) {
+        if commitsOnPlainReturn {
+            // The caption field's keys are decided in PhotonzCore so the rule
+            // (letters always type, even tool shortcuts) is tested there.
+            let key: ArrowCaptionEntry.Key
+            if event.keyCode == 36 || event.keyCode == 76 {
+                key = .return
+            } else if event.keyCode == 53 {
+                key = .escape
+            } else {
+                key = .text(event.charactersIgnoringModifiers ?? "")
+            }
+            switch ArrowCaptionEntry.action(for: key) {
+            case .commit: onCommit(); return
+            case .cancel: onCancel(); return
+            case .type: break
+            }
+        } else if (event.keyCode == 36 || event.keyCode == 76),
+                  event.modifierFlags.contains(.command) {
             onCommit()
             return
         }
         super.keyDown(with: event)
+    }
+
+    override func didChangeText() {
+        super.didChangeText()
+        if placeholder != nil { needsDisplay = true }
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        guard let placeholder, string.isEmpty, let font else { return }
+        let color = (textColor ?? .white).withAlphaComponent(0.55)
+        let origin = textContainerOrigin
+        (placeholder as NSString).draw(
+            at: NSPoint(x: origin.x + (textContainer?.lineFragmentPadding ?? 0), y: origin.y),
+            withAttributes: [.font: font, .foregroundColor: color])
     }
 }
