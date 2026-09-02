@@ -55,7 +55,7 @@ struct PlaytestScriptTests {
         #expect(at.point == CGPoint(x: 100, y: 200) && at.space == .document)
         guard case .click(let click, let count, let clickMods) = script.steps[5] else { Issue.record("click"); return }
         #expect(click.space == .view && count == 2 && clickMods.isEmpty)
-        guard case .drag(let from, let to, let steps) = script.steps[6] else { Issue.record("drag"); return }
+        guard case .drag(let from, let to, let steps, _, _) = script.steps[6] else { Issue.record("drag"); return }
         #expect(from.point == CGPoint(x: 10, y: 10) && to.point == CGPoint(x: 200, y: 120) && steps == 4)
         guard case .type(let text) = script.steps[7] else { Issue.record("type"); return }
         #expect(text == "Primary button")
@@ -89,7 +89,7 @@ struct PlaytestScriptTests {
         """)
         guard case .click(let at, let count, let mods) = script.steps[0] else { Issue.record("click"); return }
         #expect(at.space == .document && count == 1 && mods.isEmpty)
-        guard case .drag(_, _, let steps) = script.steps[1] else { Issue.record("drag"); return }
+        guard case .drag(_, _, let steps, _, _) = script.steps[1] else { Issue.record("drag"); return }
         #expect(steps == PlaytestStep.defaultDragSteps)
         #expect(script.out == nil)
     }
@@ -232,5 +232,33 @@ struct PlaytestScriptTests {
         }
         let expected: [PlaytestAction] = [.hideInspector, .showInspector, .zoomIn, .zoomOut, .zoomToFit]
         #expect(actions == expected)
+    }
+
+    @Test func aDragCanNameAShotTakenWhileTheButtonIsStillDown() throws {
+        // The yellow snap guide only exists mid-drag; an audit that has to show
+        // it needs the picture taken before the mouse comes up.
+        let script = try decode("""
+        { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "hold": "snapped" } ] }
+        """)
+        guard case .drag(_, _, _, _, let hold) = script.steps[0] else { Issue.record("drag"); return }
+        #expect(hold == "snapped")
+    }
+
+    @Test func aDragCanHoldAModifierForTheWholeGesture() throws {
+        // Command is the escape hatch from every magnet in this app, so a walk
+        // that cannot hold it cannot check that the escape hatch still works.
+        let script = try decode("""
+        { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "modifiers": ["command"] } ] }
+        """)
+        guard case .drag(_, _, _, let modifiers, _) = script.steps[0] else { Issue.record("drag"); return }
+        #expect(modifiers == [.command])
+    }
+
+    @Test func aDragWithoutAHoldShotTakesNoneAtAll() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9] } ] }
+        """)
+        guard case .drag(_, _, _, _, let hold) = script.steps[0] else { Issue.record("drag"); return }
+        #expect(hold == nil)
     }
 }

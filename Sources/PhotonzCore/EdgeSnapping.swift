@@ -33,6 +33,33 @@ public enum EdgeSnapping {
         }
     }
 
+    /// Extra snap lines the caller supplies alongside the detected edges:
+    /// document x positions that a vertical line may land on, and y positions
+    /// for a horizontal one. `MeasureSnapping` fills these from the other
+    /// measurements on the canvas, so callouts line up with each other.
+    public struct GuideLines: Equatable, Sendable {
+        /// x positions — candidates for the x axis.
+        public var vertical: [CGFloat]
+        /// y positions — candidates for the y axis.
+        public var horizontal: [CGFloat]
+
+        public init(vertical: [CGFloat] = [], horizontal: [CGFloat] = []) {
+            self.vertical = vertical
+            self.horizontal = horizontal
+        }
+
+        public static let none = GuideLines()
+        public var isEmpty: Bool { vertical.isEmpty && horizontal.isEmpty }
+    }
+
+    /// A supplied guide outranks a detected edge, because somebody put it
+    /// there on purpose: at equal distance the guide takes the snap. It is
+    /// deliberately not overwhelming — a maximally strong edge sitting under
+    /// the pointer still beats a guide roughly two pixels away, so lining up
+    /// with a neighbouring callout never costs you the pixel edge you are
+    /// actually standing on.
+    public static let guideStrength: Double = 1.5
+
     /// Half-width of the fallback query window when the caller has no line span.
     public static let defaultSpanRadius: CGFloat = 32
 
@@ -46,6 +73,23 @@ public enum EdgeSnapping {
     /// midpoints of antialiasing-ghost pairs stay too weak to steal a snap.
     public static let centerScoreFactor: Double = 0.5
 
+    /// The magnet's reach in IMAGE pixels at a given zoom.
+    public static func tolerance(zoom: CGFloat, screenTolerance: CGFloat = 8) -> CGFloat {
+        max(zoom > 0 ? screenTolerance / zoom : screenTolerance, minimumImageTolerance)
+    }
+
+    /// Snaps ONE axis to supplied guide lines alone — no detected edges, no
+    /// centers. What a readout chip's cross-axis drag uses: the chip is not a
+    /// measured point, so the picture's own edges have no say over where it
+    /// parks, but the other chips do.
+    public static func snapValue(_ value: CGFloat, toGuides guides: [CGFloat], zoom: CGFloat,
+                                 screenTolerance: CGFloat = 8,
+                                 snapToPixelGrid: Bool = true) -> (value: CGFloat, guide: CGFloat?) {
+        snapAxis(value, candidates: [], guides: guides,
+                 tolerance: tolerance(zoom: zoom, screenTolerance: screenTolerance),
+                 includeCenters: false, pixelGrid: snapToPixelGrid)
+    }
+
     /// Snaps `point` against locally detected edges.
     /// - xSpan: x-range of the horizontal line the point moves (drives y-snap).
     /// - ySpan: y-range of the vertical line the point moves (drives x-snap).
@@ -54,25 +98,29 @@ public enum EdgeSnapping {
     ///   accepted edges — element centers and gap centers fall out of the same
     ///   rule (`next-measure-center-snap`, "Edges and centers").
     /// - snapToPixelGrid: when no edge captures an axis, round it to whole pixels.
+    /// - guides: extra lines the caller wants this point to land on, whatever
+    ///   the picture underneath says (the other measurements on the canvas).
     public static func snap(_ point: CGPoint, edges: EdgeMap, zoom: CGFloat,
                             xSpan: ClosedRange<CGFloat>? = nil,
                             ySpan: ClosedRange<CGFloat>? = nil,
                             screenTolerance: CGFloat = 8,
                             includeCenters: Bool = false,
-                            snapToPixelGrid: Bool = true) -> Snap {
-        let tolerance = max(zoom > 0 ? screenTolerance / zoom : screenTolerance,
-                            minimumImageTolerance)
+                            snapToPixelGrid: Bool = true,
+                            guides: GuideLines = .none) -> Snap {
+        let tolerance = tolerance(zoom: zoom, screenTolerance: screenTolerance)
 
         let xWindow = ySpan ?? (point.y - defaultSpanRadius)...(point.y + defaultSpanRadius)
         let vertical = edges.verticalEdges(
             inYRange: Double(xWindow.lowerBound)...Double(xWindow.upperBound))
-        let x = snapAxis(point.x, candidates: vertical, tolerance: tolerance,
+        let x = snapAxis(point.x, candidates: vertical, guides: guides.vertical,
+                         tolerance: tolerance,
                          includeCenters: includeCenters, pixelGrid: snapToPixelGrid)
 
         let yWindow = xSpan ?? (point.x - defaultSpanRadius)...(point.x + defaultSpanRadius)
         let horizontal = edges.horizontalEdges(
             inXRange: Double(yWindow.lowerBound)...Double(yWindow.upperBound))
-        let y = snapAxis(point.y, candidates: horizontal, tolerance: tolerance,
+        let y = snapAxis(point.y, candidates: horizontal, guides: guides.horizontal,
+                         tolerance: tolerance,
                          includeCenters: includeCenters, pixelGrid: snapToPixelGrid)
 
         return Snap(point: CGPoint(x: x.value, y: y.value), guideX: x.guide, guideY: y.guide)
@@ -88,9 +136,20 @@ public enum EdgeSnapping {
     /// and text-run clusters only expose the boundary lines on the pointer's
     /// side. Returns the captured position as the guide (nil for grid/free).
     private static func snapAxis(_ value: CGFloat, candidates: [EdgeCandidate],
+                                 guides: [CGFloat] = [],
                                  tolerance: CGFloat, includeCenters: Bool,
                                  pixelGrid: Bool) -> (value: CGFloat, guide: CGFloat?) {
         var best: (position: CGFloat, score: Double)?
+        // Supplied guides go first so an equal-scoring edge cannot displace
+        // them, and so guides tie-break toward the lower position.
+        for line in guides {
+            let distance = abs(line - value)
+            guard distance <= tolerance else { continue }
+            let score = guideStrength / (1.0 + Double(distance) / 4.0)
+            if score > (best?.score ?? 0) {
+                best = (line, score)
+            }
+        }
         for candidate in approachSideFiltered(candidates, pointer: Double(value)) {
             // Approaching from below/right uses the element's after-side landing;
             // from above/left the before-side. (A redliner measures the gap up to

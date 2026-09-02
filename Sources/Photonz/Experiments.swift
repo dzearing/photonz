@@ -154,6 +154,12 @@ extension Experiments {
     /// only in the Next release's catalog, so Current always reads false.
     var measureCenterSnapEnabled: Bool { isEnabled(FeatureCatalog.measureCenterSnapFlag) }
 
+    /// `next-measure-guide-snap`: whether measurements magnetize to each other
+    /// — a dragged readout chip lines up with the other chips, a dragged foot
+    /// with the other calipers' feet and lines. Exists only in the Next
+    /// release's catalog, so Current always reads false.
+    var measureGuideSnapEnabled: Bool { isEnabled(FeatureCatalog.measureGuideSnapFlag) }
+
     /// `next-measure-roles`: whether measurements carry Size/Spacing roles —
     /// the inspector's Role control, per-role remembered colors, the canvas
     /// legend, and the tool options' Show filter. Exists only in the Next

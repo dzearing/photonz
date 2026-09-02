@@ -234,19 +234,30 @@ private final class Run {
             await sleep(0.05)
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p))", state: describe())
 
-        case .drag(let from, let to, let steps):
+        case .drag(let from, let to, let steps, let modifiers, let hold):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
-            if let event = mouseEvent(.leftMouseDown, at: a, on: canvas) { canvas.mouseDown(with: event) }
+            let flags = eventFlags(modifiers)
+            if let event = mouseEvent(.leftMouseDown, at: a, on: canvas, flags: flags) { canvas.mouseDown(with: event) }
             for i in 1...steps {
                 let t = CGFloat(i) / CGFloat(steps)
                 let p = CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
-                if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas) { canvas.mouseDragged(with: event) }
+                if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: flags) { canvas.mouseDragged(with: event) }
                 await sleep(0.02)
             }
-            if let event = mouseEvent(.leftMouseUp, at: b, on: canvas) { canvas.mouseUp(with: event) }
+            // Anything that lives only while the button is down — the yellow
+            // snap guide, a live preview — has to be photographed here.
+            var held = ""
+            if let hold, let window = try? requireWindow(), let content = window.contentView {
+                try snapshot(content, name: hold)
+                await screenCapture(window, name: hold)
+                held = ", held \(hold).png"
+            }
+            if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: flags) { canvas.mouseUp(with: event) }
             await sleep(0.05)
-            note(number, step.name, "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)", state: describe())
+            note(number, step.name,
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)",
+                 state: describe())
 
         case .type(let text):
             let window = try requireWindow()
@@ -588,8 +599,13 @@ private final class Run {
         let measures = layers.compactMap { layer -> String? in
             guard let measure = layer.measure, let document else { return nil }
             let flags = "\(measure.role.rawValue)\(measure.alignment != nil ? ", alignment" : "")"
+            // Feet and readout chip in DOCUMENT space, the same units a walk's
+            // clicks are written in, so a walk can prove where things landed.
+            let feet = MeasureSnapping.documentMeasure(layer)
+            let chip = MeasureSnapping.chipCentre(of: layer)
             return "\(MeasureSpecList.displayName(for: layer)) = \(measure.label(pixelScale: document.pixelScale)) [\(flags)] " +
-                "feet \(short(measure.start)) to \(short(measure.end)) frame \(layer.frame.integral)"
+                "feet \(short(feet?.start ?? measure.start)) to \(short(feet?.end ?? measure.end)) " +
+                "chip \(chip.map(short) ?? "hidden") frame \(layer.frame.integral)"
         }
         let arrows = layers.compactMap { layer -> String? in
             guard let annotation = layer.annotation else { return nil }

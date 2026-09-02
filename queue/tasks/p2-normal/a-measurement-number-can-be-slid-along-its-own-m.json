@@ -1,0 +1,29 @@
+{
+  "id": "a-measurement-number-can-be-slid-along-its-own-m",
+  "title": "A measurement number can be slid along its own measuring line",
+  "goal": "Today a measurement number can only be pushed away from or toward the thing it measures, never slid left and right along it. That means a stack of width measurements can never have its numbers pulled into one tidy column, because each number is pinned to the middle of its own span. Dragging a number should move it in both directions, and it should snap into line with the other numbers on either axis.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 580,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T16:41:12.181Z",
+  "updated": "2026-09-02T16:41:12.182Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "MeasureContent.labelNudge already exists as the along-axis shift (the planner uses it to keep two nearby readouts from stacking), so the model supports this; the head drag in CanvasView.swift (snapMeasureHead / MeasureHandleDrag.params) only writes headOffset. Extend the head drag to write labelNudge from the along-axis component of the pointer, and feed the along-axis chip lines from MeasureSnapping.chipLines (they are already collected on both axes). Found while building the cross-axis chip snap on 2026-09-02; see queue/audits/2026-09-02-measure-guide-snap.json.",
+  "acceptance": [
+    "Dragging a readout chip moves it along the measuring line as well as across it",
+    "A chip dragged along its line snaps into a column with the other chips, with the yellow guide, at the same tolerance",
+    "Holding command drags the chip free in both directions",
+    "The measured value never changes when only the chip moves",
+    "Unit tests in PhotonzCore cover the along-axis offset and its snap"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T16:41:12.182Z",
+      "note": "created (manual)"
+    }
+  ]
+}

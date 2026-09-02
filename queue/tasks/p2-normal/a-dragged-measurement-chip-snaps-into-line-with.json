@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:57:23.206Z",
-  "updated": "2026-09-02T16:15:09.418Z",
+  "updated": "2026-09-02T16:25:46.835Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-02: when I resize a sizer I would love it to snap to other elements; I am trying to align a bunch of measuring chips, if I grab the sizer for the chip on one I want it to snap to the positioning of other chips above it, and have the yellow guide show up. Code: CanvasView.swift measureHandleDrag; the .head handle (the chip bar position, MeasureContent.headOffset) is explicitly left free with snapGuide = nil while feet go through EdgeSnapping.snap with edgeMap candidates and the snapGuideLayer (systemYellow). Build the candidate set from the other measure layers in the document: each caliper geometry (MeasureContent.caliperGeometry, labelAnchor, feet) projected to document coordinates by the layer frame. Add those candidates alongside the edge map for feet, and as the only candidates for the head. EdgeSnapping is per-axis with a zoom-scaled tolerance; extend it to accept extra candidate lines rather than writing a second snapper. Keep it in PhotonzCore and tested (EdgeSnappingTests). Related earlier decision: the user rejected alignment guides drawn against image content in phase 16, so keep this strictly about measurement-to-measurement snapping, not content guides.",
@@ -37,8 +37,20 @@
     {
       "t": "2026-09-02T16:15:09.418Z",
       "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-09-02T16:22:53.007Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T16:25:46.835Z",
+      "note": "Adversarial review before building. (1) The chip handle only moves on ONE axis: a horizontal caliper's chip moves in y, a vertical one's in x. So the snap must be single-axis and must only draw the guide for that axis, or we would flash a yellow line through an axis the chip cannot move on. (2) The chip is grabbed anywhere on the pill (grabCross), so the snap has to line up the CHIP, not the pointer, or a chip grabbed by its left edge would settle a few px off. (3) The chip does not always sit on the head line: when the readout has moved out of the way of its subject it is displaced. Lining up what the user sees means snapping chip CENTRES, not head anchors. (4) Snapping to every part of every other measurement would be grabby. Chips line up with chips; feet line up with feet and head lines. (5) A deliberate line another measurement already put down should beat a detected pixel edge, but not one directly under the pointer, so guides get roughly double strength and the same distance falloff."
+    },
+    {
+      "t": "2026-09-02T16:25:46.835Z",
+      "note": "Shortest version that delivers the value: one candidate-line collector in PhotonzCore plus a guides parameter on the existing per-axis snapper. No second snapper, no new overlay: the existing yellow full-span guide already draws through whatever it lined up with."
     }
   ],
-  "started": "2026-09-02T16:14:53.130Z",
+  "started": "2026-09-02T16:22:53.007Z",
   "failures": 1
 }

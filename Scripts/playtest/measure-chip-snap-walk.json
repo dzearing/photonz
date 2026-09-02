@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/measure-chip-snap",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+
+    { "do": "click", "at": [200, 700] },
+    { "do": "move", "at": [400, 700] },
+    { "do": "click", "at": [400, 700] },
+    { "do": "move", "at": [400, 640] },
+    { "do": "click", "at": [400, 640] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-first", "note": "caliper A: feet at y 700, chip parked at y 640" },
+    { "do": "snapshot", "name": "1-first-measurement" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "click", "at": [700, 560] },
+    { "do": "move", "at": [920, 560] },
+    { "do": "click", "at": [920, 560] },
+    { "do": "move", "at": [920, 480] },
+    { "do": "click", "at": [920, 480] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-second", "note": "caliper B: feet at y 560, chip parked at y 480, well out of line with A" },
+    { "do": "snapshot", "name": "2-second-measurement" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "click", "at": [810, 480] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "3-selected", "note": "caliper B selected, its chip is the grab" },
+    { "do": "snapshot", "name": "3-chip-selected" },
+
+    { "do": "drag", "from": [810, 480], "to": [810, 636], "steps": 24, "hold": "4-snapped-guide" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "4-snapped", "note": "chip dragged to 4px short of A's chip line; it should have snapped onto y 640 and the yellow guide should run through both chips" },
+    { "do": "snapshot", "name": "4-after-release" },
+    { "do": "render", "name": "4-render-snapped" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "drag", "from": [810, 480], "to": [810, 636], "steps": 24, "modifiers": ["command"], "hold": "5-command-free" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-command", "note": "the same drag with command held should stay free at y 636, no guide" },
+    { "do": "snapshot", "name": "5-after-command-release" },
+    { "do": "render", "name": "5-render-free" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [806, 480] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "drag", "from": [700, 560], "to": [700, 636], "steps": 24, "hold": "6-foot-guide" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "6-foot", "note": "B's left foot dragged to 4px short of A's chip line at y 640; both calipers should now share that line" },
+    { "do": "snapshot", "name": "6-after-foot-release" },
+    { "do": "render", "name": "6-render-shared-line" }
+  ]
+}

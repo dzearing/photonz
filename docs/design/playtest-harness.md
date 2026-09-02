@@ -88,7 +88,7 @@ read coordinates straight off the fixture.
 | `move` | `at` | Moves the pointer over the canvas (hover previews, snap dots). |
 | `hover` | `label` or `at` | Rests the pointer on a control until its tooltip shows: `label` is the text the tooltip starts with ("Arrow", "Measure"); `at` is a point, and one over no control leaves the tooltip behind. The log line says what showed and where, and a `snapshot` taken now includes it. |
 | `click` | `at`, optional `count`, `modifiers` | Mouse down and up on the canvas. |
-| `drag` | `from`, `to`, optional `steps` | Mouse down, a run of drags, mouse up. |
+| `drag` | `from`, `to`, optional `steps`, `modifiers`, `hold` | Mouse down, a run of drags, mouse up. `modifiers` are held for the whole gesture (Command drags free of every magnet). `hold` names a snapshot taken with the button still down, just before the release: the only way to photograph something that exists only mid-drag, like the yellow snap guide. |
 | `type` | `text` | Inserts text into whatever field has the keyboard. Fails when nothing does. |
 | `tool` | `tool` | Picks a tool directly (`select`, `arrow`, `measure`, and so on), for when its key was not honoured. |
 | `measureMode` | `mode` | Presses I until the Measure tool is in `distance`, `size`, `gap` or `alignment`, and logs how many presses it took. |

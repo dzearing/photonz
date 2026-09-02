@@ -185,7 +185,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// control rests in the open and hides whatever was showing.
     case hover(PlaytestHoverTarget)
     case click(PlaytestPoint, count: Int, modifiers: [PlaytestModifier])
-    case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int)
+    /// `hold` names a snapshot taken with the button still DOWN, just before
+    /// the release: the only way to photograph anything that exists only while
+    /// a drag is in hand, like the yellow snap guide.
+    case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int,
+              modifiers: [PlaytestModifier], hold: String?)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Pick a tool directly, for when its key was not honoured.
@@ -270,7 +274,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .click(try f.point("at"), count: max(1, count), modifiers: try f.modifiers())
         case "drag":
             let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps
-            self = .drag(from: try f.point("from"), to: try f.point("to"), steps: max(1, steps))
+            self = .drag(from: try f.point("from"), to: try f.point("to"), steps: max(1, steps),
+                         modifiers: try f.modifiers(), hold: try f.optionalString("hold"))
         case "type":
             self = .type(try f.string("text"))
         case "tool":
@@ -317,6 +322,12 @@ public enum PlaytestStep: Sendable, Equatable {
 
         func string(_ field: String) throws -> String {
             guard let value = fields[field] as? String, !value.isEmpty else { throw invalid(field, "must be a non-empty string") }
+            return value
+        }
+
+        func optionalString(_ field: String) throws -> String? {
+            guard let raw = fields[field] else { return nil }
+            guard let value = raw as? String, !value.isEmpty else { throw invalid(field, "must be a non-empty string") }
             return value
         }
 

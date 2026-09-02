@@ -37,6 +37,8 @@ public enum FeatureCatalog {
 
     public static let measureCenterSnapFlag = "next-measure-center-snap"
 
+    public static let measureGuideSnapFlag = "next-measure-guide-snap"
+
     public static let measureRolesFlag = "next-measure-roles"
 
     public static let measurePanelFlag = "next-measure-panel"
@@ -165,6 +167,15 @@ public enum FeatureCatalog {
                     name: measureCenterSnapFlag,
                     title: "Snap to centers",
                     description: "Adds a Snap option to the Measure Tool section of the inspector. With Edges and centers, measure points also magnetize to element and gap centers, the midpoint between neighboring edges. Hold Command to drag free.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: measureGuideSnapFlag,
+                    title: "Snap to other measurements",
+                    description: "Measurements line up with each other. Drag a readout chip and it snaps into line with the other chips on the picture; drag a foot and it snaps to the feet and lines of the other measurements, so two calipers can share a start line. The yellow guide shows what it lined up with. Hold Command to drag free.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

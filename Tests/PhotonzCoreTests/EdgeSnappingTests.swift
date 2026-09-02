@@ -392,4 +392,103 @@ struct EdgeSnappingLandingTests {
                                      xSpan: 0...399, snapToPixelGrid: false)
         #expect(snap.point.y == 103)
     }
+
+    // MARK: Guide lines from other measurements
+
+    @Test func guideLineCapturesAnAxisWithNoDetectedEdge() {
+        // Nothing in the picture here; the only candidate is a line another
+        // measurement already put down at y = 300.
+        let f = Field(w: 800, h: 600)
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 304), edges: f.map, zoom: 1,
+                                     xSpan: 0...399, snapToPixelGrid: false,
+                                     guides: EdgeSnapping.GuideLines(horizontal: [300]))
+        #expect(snap.point.y == 300)
+        #expect(snap.guideY == 300)
+    }
+
+    @Test func guideLineOutOfToleranceLeavesTheAxisAlone() {
+        let f = Field(w: 800, h: 600)
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 320), edges: f.map, zoom: 1,
+                                     xSpan: 0...399, snapToPixelGrid: false,
+                                     guides: EdgeSnapping.GuideLines(horizontal: [300]))
+        #expect(snap.point.y == 320)
+        #expect(snap.guideY == nil)
+    }
+
+    @Test func guideLineBeatsADetectedEdgeAtTheSameDistance() {
+        // A line the user has already established outranks a pixel edge the
+        // same distance away: they put it there on purpose.
+        var f = Field(w: 800, h: 600)
+        f.addHorizontalEdge(row: 296, x0: 0, x1: 399)
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 300), edges: f.map, zoom: 1,
+                                     xSpan: 0...399, snapToPixelGrid: false,
+                                     guides: EdgeSnapping.GuideLines(horizontal: [304]))
+        #expect(snap.point.y == 304)
+        #expect(snap.guideY == 304)
+    }
+
+    @Test func detectedEdgeUnderThePointerBeatsADistantGuide() {
+        var f = Field(w: 800, h: 600)
+        f.addHorizontalEdge(row: 300, x0: 0, x1: 399)
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 300), edges: f.map, zoom: 1,
+                                     xSpan: 0...399, snapToPixelGrid: false,
+                                     guides: EdgeSnapping.GuideLines(horizontal: [307]))
+        #expect(snap.point.y == 300)
+    }
+
+    @Test func guideToleranceScalesWithZoomLikeEveryOtherSnap() {
+        let f = Field(w: 800, h: 600)
+        // Six screen points at 4x is 1.5 image px: a guide 6 image px away is
+        // out of reach there, and well in reach at 1x.
+        let far = EdgeSnapping.snap(CGPoint(x: 200, y: 306), edges: f.map, zoom: 4,
+                                    snapToPixelGrid: false,
+                                    guides: EdgeSnapping.GuideLines(horizontal: [300]))
+        #expect(far.guideY == nil)
+        let near = EdgeSnapping.snap(CGPoint(x: 200, y: 306), edges: f.map, zoom: 1,
+                                     snapToPixelGrid: false,
+                                     guides: EdgeSnapping.GuideLines(horizontal: [300]))
+        #expect(near.guideY == 300)
+    }
+
+    @Test func guidesSnapEachAxisIndependently() {
+        let f = Field(w: 800, h: 600)
+        let snap = EdgeSnapping.snap(CGPoint(x: 103, y: 304), edges: f.map, zoom: 1,
+                                     snapToPixelGrid: false,
+                                     guides: EdgeSnapping.GuideLines(vertical: [100],
+                                                                     horizontal: [300]))
+        #expect(snap.point == CGPoint(x: 100, y: 300))
+        #expect(snap.guideX == 100)
+        #expect(snap.guideY == 300)
+    }
+
+    // MARK: One-axis snapping (the readout chip's cross-axis drag)
+
+    @Test func snapValueLinesUpWithTheNearestGuideAndReportsIt() {
+        let result = EdgeSnapping.snapValue(304, toGuides: [120, 300, 480], zoom: 1)
+        #expect(result.value == 300)
+        #expect(result.guide == 300)
+    }
+
+    @Test func snapValueFallsBackToThePixelGridWhenNothingIsInReach() {
+        let result = EdgeSnapping.snapValue(304.4, toGuides: [120, 480], zoom: 1)
+        #expect(result.value == 304)
+        #expect(result.guide == nil)
+    }
+
+    @Test func snapValueLeavesTheValueFreeWhenTheGridIsOff() {
+        let result = EdgeSnapping.snapValue(304.4, toGuides: [], zoom: 1,
+                                            snapToPixelGrid: false)
+        #expect(result.value == 304.4)
+        #expect(result.guide == nil)
+    }
+
+    @Test func snapValuePrefersTheNearerOfTwoGuidesInReach() {
+        let result = EdgeSnapping.snapValue(302, toGuides: [300, 306], zoom: 1)
+        #expect(result.value == 300)
+    }
+
+    @Test func snapValueToleranceScalesWithZoom() {
+        #expect(EdgeSnapping.snapValue(306, toGuides: [300], zoom: 4).guide == nil)
+        #expect(EdgeSnapping.snapValue(306, toGuides: [300], zoom: 1).guide == 300)
+    }
 }

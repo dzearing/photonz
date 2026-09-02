@@ -8,7 +8,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T10:59:36.527Z",
-  "updated": "2026-09-02T16:22:16.387Z",
+  "updated": "2026-09-02T16:22:47.281Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on the end-to-end walk (queue/audits/2026-09-02-redline-walk.json): four measurements cost seven presses of I. EditorState.addMeasure / addElementSize / addGapMeasure / addAlignmentCheck all call finishCreating(layer.id) which is setTool(.select). The arrow tool has precedent for staying in hand while a caption field is open (ArrowCaptionEntry.toolAfterLanding). If Measure stays, Esc and V put it down; the mode hint should not re-raise on every landing. RESOLVED 2026-09-02: chosen option was \"Hand back to Select (today)\", so no behaviour change. Guard walk: Scripts/playtest/measure-handback.json (Size, Gap, Distance, pickup key, Esc). finishCreating carries the decision in its doc comment.",
@@ -74,6 +74,6 @@
   ],
   "status": "done",
   "started": "2026-09-02T16:15:02.534Z",
-  "failures": 1,
+  "failures": 0,
   "completed": "2026-09-02T16:22:16.387Z"
 }
