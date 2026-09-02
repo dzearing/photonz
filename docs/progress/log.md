@@ -4922,3 +4922,11 @@ the card's left end, over the icons.
 - Playtest harness: `drag` gained `modifiers` (⌘ is the escape hatch from every magnet, so a walk has to be able to hold it) and `hold`, a snapshot taken with the button still down — the only way to photograph the guide. `describe` now reports each measurement's feet and chip centre in DOCUMENT space. Walk: `Scripts/playtest/measure-chip-snap-walk.json`.
 - Verified on the probe: chip dragged to y 636 landed at 640 (the other chip's line) with the guide; the same drag with ⌘ stayed at 636 with no guide; a foot dragged to 636 landed on 640; the measured value never moved.
 - Audit: `queue/audits/2026-09-02-measure-guide-snap.json`. Open: a chip still cannot slide ALONG its own measuring line, so a stack of width measurements cannot be pulled into one column (follow-up task filed).
+
+## 2026-09-02 (go loop): the measure inspector stops exporting the document
+
+- Next: selecting a measurement no longer shows an Export section with Copy Image and Export PNG. Both act on the whole document, so under a single selected measurement they read as if they exported it (the user's own complaint). `LayersPanel.swift` `exportSection` → `copySection`, still behind `next-measure-panel`.
+- In their place: one **Copy Measurement** button (`copyMeasurement(id:)`, the same call the row context menu and the Measure menu make) with the exact line it will copy underneath in tertiary monospace, live from the document via `MeasureSpecList.specLine`, so a rename, recolor or unit change updates it in place.
+- Nothing lost: File ▸ Copy Image (⇧⌘C) is unchanged, and File ▸ Export… (⇧⌘E) opens on PNG at 1×, so Return is the removed button. There was no toolbar home for either, contrary to the task's note.
+- Verified: `swift build` clean, `Scripts/test.sh` green (1401 tests), and a playtest walk on the probe placed a size measurement, selected it, and photographed the inspector — Export gone, `- Width: 124 px (size)` under the button.
+- Audit: `queue/audits/2026-09-02-measure-inspector-copy.json`. `docs/design/next-measure.md` §7 records the mock's Export section as shipped then removed, and why.

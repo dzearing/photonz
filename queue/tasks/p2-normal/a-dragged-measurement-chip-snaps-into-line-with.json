@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:57:23.206Z",
-  "updated": "2026-09-02T16:42:27.988Z",
+  "updated": "2026-09-02T16:42:48.530Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-02: when I resize a sizer I would love it to snap to other elements; I am trying to align a bunch of measuring chips, if I grab the sizer for the chip on one I want it to snap to the positioning of other chips above it, and have the yellow guide show up. Code: CanvasView.swift measureHandleDrag; the .head handle (the chip bar position, MeasureContent.headOffset) is explicitly left free with snapGuide = nil while feet go through EdgeSnapping.snap with edgeMap candidates and the snapGuideLayer (systemYellow). Build the candidate set from the other measure layers in the document: each caliper geometry (MeasureContent.caliperGeometry, labelAnchor, feet) projected to document coordinates by the layer frame. Add those candidates alongside the edge map for feet, and as the only candidates for the head. EdgeSnapping is per-axis with a zoom-scaled tolerance; extend it to accept extra candidate lines rather than writing a second snapper. Keep it in PhotonzCore and tested (EdgeSnappingTests). Related earlier decision: the user rejected alignment guides drawn against image content in phase 16, so keep this strictly about measurement-to-measurement snapping, not content guides.",
@@ -68,6 +68,6 @@
     }
   ],
   "started": "2026-09-02T16:22:53.007Z",
-  "failures": 1,
+  "failures": 0,
   "completed": "2026-09-02T16:42:27.988Z"
 }

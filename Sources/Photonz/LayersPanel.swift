@@ -1579,7 +1579,7 @@ struct MeasureInspector: View {
                 }
                 if Experiments.shared.measurePanelEnabled {
                     geometryGrid(c)
-                    exportSection
+                    copySection
                 }
             }
             .padding(.horizontal, 14)
@@ -1675,20 +1675,35 @@ struct MeasureInspector: View {
         }
     }
 
-    /// The mock's Export section (§7): the two existing app-wide actions as
-    /// convenience buttons. The caliper is baked into every export by
-    /// construction, so these need nothing measure-specific.
-    @ViewBuilder private var exportSection: some View {
+    /// The one hand-off action that belongs beside ONE selected measurement
+    /// (§7): its own spec line, as text. This section used to carry Copy
+    /// Image and Export PNG, straight from the mock, but both act on the whole
+    /// document, so sitting under a selected measurement they read as if they
+    /// exported that measurement. Whole-document export lives in File, where
+    /// every other whole-document action already lives.
+    @ViewBuilder private var copySection: some View {
         Divider().opacity(0.4)
-        field("Export") {
-            HStack(spacing: 8) {
-                Button("Copy Image") { editorState.copyCompositeToClipboard() }
-                    .help("Copies the flattened image, measurements included, with the spec list as text for plain text fields")
-                Button("Export PNG") { editorState.exportComposite(format: .png, scale: 1) }
-                    .help("Saves the flattened image as a PNG, measurements included")
+        VStack(alignment: .leading, spacing: 4) {
+            Button("Copy Measurement") { editorState.copyMeasurement(id: layer.id) }
+                .controlSize(.small)
+                .help("Copies this one measurement's spec line as text, ready to paste into a thread")
+            // The exact line that lands on the clipboard, so the button needs
+            // no explaining. Selectable, like the readouts above it.
+            if let line = specLine {
+                Text(line)
+                    .font(.caption2).monospaced().foregroundStyle(.tertiary)
+                    .lineLimit(1).truncationMode(.tail)
+                    .textSelection(.enabled)
             }
-            .controlSize(.small)
         }
+    }
+
+    /// The spec line Copy Measurement puts on the clipboard, live from the
+    /// document so a recolor, rename or unit change updates it in place.
+    private var specLine: String? {
+        guard let document = editorState.document,
+              let current = document.layer(id: layer.id) else { return nil }
+        return MeasureSpecList.specLine(for: current, in: document)
     }
 
     /// A compact labeled control matching the Effects panel: a small secondary

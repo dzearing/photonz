@@ -1,0 +1,27 @@
+{
+  "feature": "The measure inspector carries only measurement actions",
+  "epic": "measure-redline",
+  "summary": "Selecting a measurement no longer offers Copy Image and Export PNG, which exported the whole document. In their place is Copy Measurement, with the exact spec line it will copy shown underneath.",
+  "setup": "Photonz Dev, Experiments window, release Next, Measurements panel flag on (default). Open any screenshot.",
+  "try": [
+    { "do": "Press I for the Measure tool and click a control to place a size measurement." },
+    { "do": "Press V and click the measurement so the Measure inspector shows.", "shot": "2026-09-02-measure-inspector-copy-1.png" },
+    { "do": "Scroll the inspector to the bottom and read the line under the button." },
+    { "do": "Click Copy Measurement, then paste into any chat or notes field." },
+    { "do": "Rename the measurement in the Name field and watch the line under the button follow." },
+    { "do": "Press Shift Command C to copy the whole image, and Shift Command E then Return to export a PNG." }
+  ],
+  "evaluate": [
+    "With Export gone, does the inspector read as being only about the selected measurement?",
+    "Does the grey line under the button tell you what will land on the clipboard, or does it read as decoration?",
+    "Is one Copy Measurement button here worth having, given the row's right-click and the Measure menu already offer it?",
+    "Did you miss the two export buttons, or was the File menu where you would have looked anyway?"
+  ],
+  "rough": [
+    "The preview line keeps the leading dash, because that is literally what gets copied (- Width: 124 px (size)). It is honest but it can read as a bullet decoration.",
+    "A long measurement name truncates the preview line with an ellipsis rather than wrapping, to keep the section one row tall.",
+    "Export PNG used to save a 1x PNG in one click. It is now Shift Command E then Return, since the dialog opens on PNG at 1x. One extra keystroke, no lost capability.",
+    "The task said the toolbar also owns these actions. It does not: File is the only other home, and that is where they stayed.",
+    "This is a departure from the redline mock, which staged an Export section in the Properties panel. The mock put a document action under a selection."
+  ]
+}

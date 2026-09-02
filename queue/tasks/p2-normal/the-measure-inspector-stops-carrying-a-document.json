@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 550,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:48:48.090Z",
-  "updated": "2026-09-02T14:48:48.090Z",
+  "updated": "2026-09-02T16:47:01.679208Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user reacted to this on 2026-09-02 in Photonz Dev, release Next: why have a random export section in the workspace. Source: LayersPanel.swift exportSection, shown from the measure inspector when Experiments.shared.measurePanelEnabled. It was added per the redline mock (docs/design/next-measure.md section 7, Export: the redline sheet) which staged Copy image / Export PNG in the Properties panel; the app-wide actions already exist (copyCompositeToClipboard, exportComposite). Copy Measurement (copyMeasurement(id:)) now exists from the spec-export task and is the natural replacement. Update next-measure.md section 7 shipped shape when the section moves.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-02T14:48:48.090Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-02T16:42:54.417Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T16:47:01.679208Z",
+      "note": "Pre-build review: confirmed the mismatch in code. LayersPanel exportSection called copyCompositeToClipboard and exportComposite(.png, 1), both whole-document, rendered under a single selected measurement. Also checked what else owns them: not the toolbar (the task assumed one), only File > Copy Image (shift-cmd-C) and File > Export... (shift-cmd-E). The export dialog opens on PNG at 1x, so shift-cmd-E then Return is exactly the removed button; nothing is lost by removing it."
+    },
+    {
+      "t": "2026-09-02T16:47:01.679208Z",
+      "note": "Shortest version that keeps the value: drop the section, keep ONE measurement-specific action. Copy Measurement (copyMeasurement(id:)) already exists from the spec-export task and is what a redliner wants beside a selected measurement. Added the exact spec line it will copy under the button (MeasureSpecList.specLine, read live from the document), so the button needs no explaining and a rename or unit change updates it in place."
+    },
+    {
+      "t": "2026-09-02T16:47:01.679208Z",
+      "note": "Shipped: LayersPanel.swift exportSection -> copySection, still behind next-measure-panel. swift build clean, Scripts/test.sh green (1401 tests)."
+    },
+    {
+      "t": "2026-09-02T16:47:01.679208Z",
+      "note": "Verified in the real app via the playtest harness (probe bundle): placed a size measurement, selected it, snapshotted the window. Export section gone; Copy Measurement plus '- Width: 124 px (size)' present. Screenshot saved as queue/audits/2026-09-02-measure-inspector-copy-1.png. Probe quit."
+    },
+    {
+      "t": "2026-09-02T16:47:01.679208Z",
+      "note": "docs/design/next-measure.md section 7 updated: the mock's Export section is recorded as shipped then removed, with why, and the shipped shape now names copySection."
+    },
+    {
+      "t": "2026-09-02T16:47:01.679208Z",
+      "note": "Audit: queue/audits/2026-09-02-measure-inspector-copy.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T16:42:54.416Z"
 }

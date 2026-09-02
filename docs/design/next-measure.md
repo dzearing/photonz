@@ -344,9 +344,11 @@ Export PNG / Describe specs) and the Measurements panel menu "Copy as spec
 list"; `capture-wt.html` step 11 (Copy image, ⌘C).
 
 - **Copy image / Export PNG** already exist app-wide, and since 16.15 the
-  caliper (chip included) is baked into every export by construction. The
-  delta is surfacing the two existing actions as convenience buttons in an
-  Export section of the measure inspector, per the mock.
+  caliper (chip included) is baked into every export by construction. The mock
+  staged them as convenience buttons in an Export section of the measure
+  inspector; that shipped, and was removed again on 2026-09-02 (see the last
+  note in this section) because both act on the whole document and read, under
+  a selected measurement, as if they exported it.
 - **Copy as spec list** is new — `MeasureSpecList.render(document:) -> String`
   in `PhotonzCore` (TDD, format pinned by tests): a header line
   `<document name> · <W> × <H> px`, then one line per **visible** measurement
@@ -364,8 +366,7 @@ measurement in panel order — the value from `MeasureContent.label` (so an
 alignment guide reads its verdict, role word `alignment`). The panel menu's
 Copy as Spec List puts it on the clipboard via
 `EditorState.copyMeasureSpecList()` (header name = document file name, no
-release tag). The inspector's Export section offers Copy Image
-(`copyCompositeToClipboard`) and Export PNG (`exportComposite(.png, 1)`).
+release tag).
 
 Added 2026-09-02: the whole hand-off runs from the keyboard. The menu-bar
 Measure menu gains **Copy as Spec List** (⌃⌘C, the copy family's free chord:
@@ -382,7 +383,7 @@ pastes the line while Photonz's own paste still lands the layer. The mock's
 "Copy measurement" lived in a Properties panel menu Photonz does not have.
 
 Added 2026-09-02 (one copy hands off both): with `next-measure-panel` on,
-**Copy Image** (⇧⌘C, and the inspector's Export button) also puts the spec
+**Copy Image** (⇧⌘C, File menu) also puts the spec
 list on the clipboard as plain text whenever the document has at least one
 visible measurement. `CompositeCopy` in `PhotonzCore` pins the flavors and
 their order (PNG, TIFF, then text; `CompositeCopyTests`), and
@@ -395,6 +396,20 @@ says nothing the picture does not and would leave a stray line in a plain
 field. The "Copied" notice gains an `image(measurements:)` subject: "Image",
 or "Image and spec list with N measurements". A document without
 measurements copies exactly what it did before, and Current is untouched.
+
+Changed 2026-09-02 (the inspector carries only what is about the selection):
+the measure inspector's Export section is gone. Copy Image and Export PNG are
+whole-document actions with a whole-document home already — File ▸ Copy Image
+(⇧⌘C) and File ▸ Export… (⇧⌘E, which opens on PNG at 1× so Return is the old
+button) — and beside one selected measurement they read as if they exported
+that measurement. In their place the inspector shows one measurement-specific
+action, **Copy Measurement** (`copyMeasurement(id:)`, the same call the
+measurement row's context menu and the Measure menu make), with the exact
+line it will copy rendered under it in tertiary monospace, live from the
+document (`MeasureSpecList.specLine`) so a rename, recolor or unit change
+updates it in place. `LayersPanel.swift` → `copySection`, still behind
+`next-measure-panel`.
+
 
 ## 8. Snapping option: centers — `next-measure-center-snap` (shipped)
 
