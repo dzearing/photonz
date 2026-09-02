@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T09:41:37.764Z",
-  "updated": "2026-09-02T15:09:49.714Z",
+  "updated": "2026-09-02T20:15:20.706700Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked on the decision opened by the 2026-09-02 manager pass, since the user has to grant the permission by hand. dist/Photonz Probe.app (com.dzearing.photonz.probe) is signed with the stable Photonz Dev identity by Scripts/build-app.sh, so one grant survives rebuilds. Do not touch the dev app or its grants. The same denial blocks Apple Events to System Events (audit 2026-09-02-capture-menu-names rough 2), which the Accessibility or Automation grant to the loop terminal would lift.",
@@ -39,6 +39,39 @@
     {
       "t": "2026-09-02T15:09:49.714Z",
       "note": "decision \"May the unmanned loop take screenshots of its own copy of the app?\" resolved: Grant the probe app Screen Recording and the loop terminal Accessibility"
+    },
+    {
+      "t": "2026-09-02T20:06:55.331Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T20:15:20.706700Z",
+      "note": "Adversarial review before building: the shortest version wins. The harness already wrote <name>-sc.png from ScreenCaptureKit, gated on a preflight, so nothing needed inventing. What was missing was the grant itself, any way for a runner to know whether it had it, and a rule saying to use it. Built those three, nothing else. Rejected: prompting for Accessibility from the loop terminal (a system dialog once per probe launch, landing on top of the user's work) and launching System Events just to resolve the Automation state (a side effect for a nicety). Both report honestly instead."
+    },
+    {
+      "t": "2026-09-02T20:15:20.706700Z",
+      "note": "Shell cannot ask TCC about another app's grant and TCC.db is unreadable without Full Disk Access, so the probe answers for itself: ProbeGrants.recordOnLaunch writes dist/probe-grants.json (gitignored) beside the bundle, probe-app.sh reads it back. Scripts/permcheck.swift covers the terminal side (Accessibility, Automation, Screen Recording) with no prompts, 0.3s."
+    },
+    {
+      "t": "2026-09-02T20:15:20.706700Z",
+      "note": "Verified live: Screen Recording for com.dzearing.photonz.probe is GRANTED (the user's half of the resolved decision). Scripts/probe-app.sh prints \"Grants: probe Screen Recording granted \\u00b7 Ghoztty Accessibility denied\" on every launch, twice confirmed, exit 0. Scripts/playtest.sh redline-walk wrote 13 real -sc.png window captures."
+    },
+    {
+      "t": "2026-09-02T20:15:20.706700Z",
+      "note": "Review of the built thing, on the real app: the offscreen render is worse than the docs said. Comparing 8-spec-copied.png to 8-spec-copied-sc.png, the render loses the ENTIRE inspector panel (Layers through Effects, a blank white slab) and the toast's pill, not just a few colors. Every audit before today that judged panel layout was judging a blank rectangle. Recorded in the audit's rough so the user can discount those conclusions."
+    },
+    {
+      "t": "2026-09-02T20:15:20.706700Z",
+      "note": "Acceptance 3, honestly: a real screenshot now reaches an audit (queue/audits/2026-09-02-loop-screenshots.json carries two, a capture and the render beside it), and runner-prompt.md now requires one whenever the grant is present. Whether the NEXT feature task actually does it is not verifiable from this run. No prompt can appear more than once per launch: the preflight never prompts and macOS only dialogs while a grant is undetermined."
+    },
+    {
+      "t": "2026-09-02T20:15:20.706700Z",
+      "note": "Acceptance 4: filed the-loop-can-read-menus-and-drive-other-apps for the still-denied Accessibility half."
+    },
+    {
+      "t": "2026-09-02T20:15:20.706700Z",
+      "note": "Note on staging: epic unmanned-loop is staged next, not now. Kept because the payoff lands on the focus epic (measure-redline audits now carry a real picture) and the user answered the decision \"grant\"."
     }
-  ]
+  ],
+  "started": "2026-09-02T20:06:55.331Z"
 }

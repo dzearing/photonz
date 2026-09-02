@@ -1,0 +1,27 @@
+{
+  "id": "the-loop-can-read-menus-and-drive-other-apps",
+  "title": "The loop can read menus and drive other apps",
+  "goal": "The loop can now photograph its own copy of the app, but it still cannot read a menu title or send a keystroke to another app, so audits keep leaving those checks for you by hand. This needs one tick in System Settings that only a person can make.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 560,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T20:15:00.139Z",
+  "updated": "2026-09-02T20:15:00.139Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Half of decision the-loop-can-see-the-screen-so-audits-carry-real-may-the-unmanned-loop-take-scree (answered \"grant\" on 2026-09-02) is still outstanding: Screen Recording for com.dzearing.photonz.probe is granted, Accessibility for Ghoztty is not. Grant path: System Settings > Privacy & Security > Accessibility, tick Ghoztty (the app that owns the loop terminal; Scripts/permcheck.swift reports the state, Scripts/probe-app.sh prints it). Apple Events to System Events may need a separate Automation grant, which permcheck reports as unknown while System Events is not running. Blocks audit 2026-09-02-capture-menu-names rough 2.",
+  "acceptance": [
+    "Scripts/probe-app.sh prints Accessibility granted for the terminal that runs the loop.",
+    "A runner can read the app menu titles from the running probe and put them in an audit.",
+    "The audit that follows this one names a real menu item it read, not one it guessed from the source."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T20:15:00.139Z",
+      "note": "created (manual)"
+    }
+  ]
+}

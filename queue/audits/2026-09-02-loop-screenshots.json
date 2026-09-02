@@ -1,0 +1,27 @@
+{
+  "feature": "The loop can see the screen",
+  "epic": "unmanned-loop",
+  "summary": "The unmanned loop's own copy of Photonz can now photograph its window, so an audit can show you the app as you would see it instead of a flat drawing of it. Every launch prints one line saying whether it is allowed to, so nothing can claim to have looked when it could not.",
+  "setup": "Nothing to install. You already granted Screen Recording to Photonz Probe, which is what made this work. The probe is the loop's own app, never the one you play in.",
+  "try": [
+    { "do": "Open queue/audits/2026-09-02-loop-screenshots-1-real-capture.png. This is the loop's photograph of its window.", "shot": "2026-09-02-loop-screenshots-1-real-capture.png" },
+    { "do": "Open queue/audits/2026-09-02-loop-screenshots-2-offscreen-render.png beside it. This is what every audit until now was showing you.", "shot": "2026-09-02-loop-screenshots-2-offscreen-render.png" },
+    { "do": "Look at the right edge of both. The whole inspector, Layers through Effects, is a blank white slab in the drawing and fully painted in the photograph." },
+    { "do": "Look at the Copied toast at the bottom. In the drawing it is bare text with no pill behind it." },
+    { "do": "Run Scripts/probe-app.sh in a terminal and read the last lines it prints." },
+    { "do": "Confirm it says: Grants: probe Screen Recording granted, and that it names Ghoztty for the Accessibility grant it still wants." },
+    { "do": "Run Scripts/probe-app.sh --quit when you are done." }
+  ],
+  "evaluate": [
+    "Does the one-line grant report tell you what you need at a glance, or would you rather it only spoke up when something was missing?",
+    "The line names Ghoztty by name for the Accessibility grant. Is that the right thing to name, or would you rather it said nothing about your terminal at all?",
+    "Now that the drawings are known to be wrong about a whole panel, should audits stop shipping them entirely when a photograph is available?",
+    "Do you want to grant Ghoztty Accessibility as well, so the loop can read menu titles and drive other apps, or leave that half declined?"
+  ],
+  "rough": [
+    "The offscreen drawing is worse than we knew. It misses the entire inspector panel and the toast background, not just a few colors. Any audit written before today that judged panel layout was judging a blank rectangle, so treat those conclusions as unverified.",
+    "Only half the grant you approved is in place. Screen Recording for the probe is on; Accessibility for Ghoztty is still denied, so the loop still cannot read menu titles or send keystrokes to other apps. Filed as its own task rather than nagging you here.",
+    "The Automation grant, which is what actually carries menu reading, can only be answered while System Events happens to be running, so the line usually leaves it out rather than guessing. It never launches System Events just to find out.",
+    "Nothing here prompts you. The probe raises the system dialog at most once per launch and only while a grant has never been answered, and the terminal side never prompts at all, because that dialog would land on top of whatever you were doing."
+  ]
+}

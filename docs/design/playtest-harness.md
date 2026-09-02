@@ -125,7 +125,10 @@ read coordinates straight off the fixture.
   weight or a disabled look from `<name>.png`; use `<name>-sc.png`, which is
   the real picture. It is only written when the probe holds Screen Recording
   (the harness preflights and never prompts), and the log's `capture` line
-  says whether it was.
+  says whether it was. You do not have to guess before a walk:
+  `Scripts/probe-app.sh` prints a `Grants:` line on every launch saying whether
+  the probe may record the screen, from the file the probe writes about itself
+  at launch (`Sources/Photonz/Playtest/ProbeGrants.swift`).
 - Keep the probe quit when you finish. `Scripts/playtest.sh` does that unless
   you pass `--keep`.
 - Never point this at `dist/Photonz Dev.app`. It would not act on a script
