@@ -236,7 +236,11 @@ default. The Show filter lives in `EditorState.measureShowFilter` and is
 applied in `submit()` plus both drag-preview underlays; alignment guides are
 neither role, so they always show. The legend swatches each kind with the
 top-most measurement's actual ink and lists Alignment (dashed) when a check
-exists. All UI behind `next-measure-roles` (Next, default ON).
+exists. All UI behind `next-measure-roles` (Next, default ON). Placement
+(2026-09-02): `PanelPlacement` walks the four corners, then the middle of the
+left edge, then the right, taking the first slot clear of every measurement and
+of the bottom chrome (hint slot, tool bar); chrome is never overlapped, a
+measurement only as a last resort.
 
 ## 6. The Measurements panel — `next-measure-panel`
 

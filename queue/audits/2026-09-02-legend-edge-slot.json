@@ -1,0 +1,25 @@
+{
+  "feature": "The legend steps aside when every corner is taken",
+  "epic": "measure-redline",
+  "summary": "The measure legend now has two more places to park: the middle of the left edge and the middle of the right edge. On a narrow window with measurements in both top corners it steps down the left edge instead of sitting on a measurement or behind the tool bar.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Open a screenshot, show the inspector, and make the window about 700 pt wide so the canvas is about 435 pt.",
+  "try": [
+    { "do": "Press M for the Measure tool. No legend yet, the document has no measurements." },
+    { "do": "Click an element near the top-left of the picture in Size mode. The legend appears top-right, away from the new calipers." },
+    { "do": "Click an element near the top-right in Gap mode. The legend slides to the middle of the left edge.", "shot": "2026-09-02-legend-edge-slot-narrow.png" },
+    { "do": "Press [ or ] to change the mode. The hint pill comes and goes at the bottom and the legend does not move." },
+    { "do": "Widen the window past about 900 pt. The legend returns to a corner.", "shot": "2026-09-02-legend-edge-slot-wide.png" },
+    { "do": "Drag a caliper into the legend's spot. It steps to the next free slot, right edge if the left is taken." }
+  ],
+  "evaluate": [
+    "Does the legend halfway down the left edge still read as the key to the measurements, or does it look lost?",
+    "When it slides from a corner to the edge, does the quarter-second move feel like it is getting out of the way, or like it is fidgeting?",
+    "Would you rather it shrank to one row of swatches and stayed in a corner?"
+  ],
+  "rough": [
+    "The edge slots are centred on the canvas, not tucked just below the measurement they dodged. A position that followed the gaps would creep after every dragged caliper, so a fixed slot won.",
+    "If both edges are also under measurements, the legend still falls back to top-left over a measurement rather than disappearing behind chrome.",
+    "The inspector toggle overlaps the legend's empty top-right padding when the legend takes the top-right corner. Pre-existing, not changed here.",
+    "The screenshots are offscreen layer renders from the probe app: the glass panel behind the legend rows and the inspector do not draw in them."
+  ]
+}

@@ -290,7 +290,7 @@ struct EditorView: View {
                         cropActionBar
                     }
                 }
-                .overlay(alignment: Self.alignment(for: editorState.measureLegendCorner)) {
+                .overlay(alignment: Self.alignment(for: editorState.measureLegendAnchor)) {
                     let entries = editorState.measureLegendEntries
                     if !entries.isEmpty { measureLegend(entries) }
                 }
@@ -299,7 +299,7 @@ struct EditorView: View {
                 .animation(.easeInOut(duration: 0.2), value: editorState.copyConfirmation)
                 .animation(.easeInOut(duration: 0.2), value: editorState.activeTool)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureLegendEntries)
-                .animation(.easeInOut(duration: 0.25), value: editorState.measureLegendCorner)
+                .animation(.easeInOut(duration: 0.25), value: editorState.measureLegendAnchor)
         } else {
             emptyState
         }
@@ -328,13 +328,15 @@ struct EditorView: View {
         .transition(.opacity)
     }
 
-    /// The corner the legend picked, as a SwiftUI overlay alignment.
-    private static func alignment(for corner: CanvasCorner) -> Alignment {
-        switch corner {
+    /// The slot the legend picked, as a SwiftUI overlay alignment.
+    private static func alignment(for anchor: PanelAnchor) -> Alignment {
+        switch anchor {
         case .topLeading: .topLeading
         case .topTrailing: .topTrailing
         case .bottomLeading: .bottomLeading
         case .bottomTrailing: .bottomTrailing
+        case .leading: .leading
+        case .trailing: .trailing
         }
     }
 

@@ -4710,3 +4710,13 @@ the card's left end, over the icons.
   messages the same width. Probe app built, launched, idle at 0% CPU, quit.
   The loop cannot record the screen, so the toast was not triggered live.
   Audit `queue/audits/2026-09-02-capture-toast-edit.json`.
+
+## 2026-09-02 (go loop): the legend steps aside when every corner is taken
+
+- `CornerPlacement` is now `PanelPlacement`; `PanelAnchor` adds `.leading` and
+  `.trailing` (middle of the left and right edges) after the four corners, so
+  on a narrow canvas with calipers in both top corners the legend parks
+  mid-left instead of on a measurement. Verified on the probe app at a 435 pt
+  canvas and pinned by `PanelPlacementTests`.
+- Next: user reaction to `queue/audits/2026-09-02-legend-edge-slot.json`
+  (compact one-row legend is the alternative if the edge slot reads as lost).

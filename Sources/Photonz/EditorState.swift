@@ -1342,10 +1342,12 @@ final class EditorState {
         return document
     }
 
-    /// Which corner the legend takes. It is a key TO the measurements, so
+    /// Which slot the legend takes. It is a key TO the measurements, so
     /// parking it on top of one makes the same mistake a callout covering its
-    /// subject makes (UX-PATTERNS D14): it walks to the first free corner.
-    var measureLegendCorner: CanvasCorner {
+    /// subject makes (UX-PATTERNS D14): it walks to the first free corner,
+    /// and when every corner is taken it steps down the left edge (then the
+    /// right) rather than sit on a measurement.
+    var measureLegendAnchor: PanelAnchor {
         guard let viewport, let document else { return .topLeading }
         let rows = measureLegendEntries.count
         guard rows > 0 else { return .topLeading }
@@ -1363,7 +1365,7 @@ final class EditorState {
         let chrome = EditorChromeLayout.bottomChrome(canvasSize: viewport.viewSize,
                                                      toolBarWidth: toolBarWidth,
                                                      noticeSize: MeasureModeHint.reservedSize)
-        return CornerPlacement.firstClear(size: Self.measureLegendSize(rows: rows),
+        return PanelPlacement.firstClear(size: Self.measureLegendSize(rows: rows),
                                           in: viewport.viewSize,
                                           inset: Self.measureLegendInset,
                                           avoiding: occupied,

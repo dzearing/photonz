@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 520,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T11:14:53.201Z",
-  "updated": "2026-09-02T11:14:53.202Z",
+  "updated": "2026-09-02T12:01:09.287Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From the 2026-09-02 measure-hint task. CornerPlacement.firstClear now has occupied (soft) and blocked (hard) tiers; the fallback when no corner clears both is the first corner clear of chrome. Options: a compact one-row legend variant, or an edge slot between corners. Check with the user before building anything speculative.",
+  "notes": "From the 2026-09-02 measure-hint task. Shipped: CornerPlacement became PanelPlacement (Sources/PhotonzCore/PanelPlacement.swift) with PanelAnchor gaining .leading and .trailing (middle of the left and right edges) after the four corners; frame(for:) centres those along the edge. EditorState.measureLegendAnchor and EditorView.alignment(for:) map them to SwiftUI .leading/.trailing overlay alignment. Verified in the probe app with a temporary harness (removed): 435 pt canvas, three rows, calipers in both top corners: anchor .leading, frame (10, 254.5, 140, 79), crosses nothing; 735 pt canvas returns to topLeading. Renders queue/audits/2026-09-02-legend-edge-slot-{narrow,wide}.png. Not done: a compact one-row legend variant (the user can ask for it from the audit); the inspector toggle overlapping the legend at top-right is pre-existing.",
   "acceptance": [
     "On a canvas about 435 points wide with Size, Spacing and Alignment measurements filling both top corners, the legend covers no measurement and sits behind no chrome.",
     "The legend never jumps while the mode hint appears and fades.",
@@ -22,6 +22,24 @@
     {
       "t": "2026-09-02T11:14:53.202Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T11:48:11.536Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T11:50:59.260Z",
+      "note": "Adversarial review before building: reproduced from the 2026-09-02 narrow render (legend on the Size caliper at top-left). Two candidates: (a) a compact one-row legend, (b) more parking spots. (a) does not help by itself: a one-row legend still has nowhere to go, since both bottom corners are under the hint slot and the bar at 435 pt, and it is a second visual to learn. (b) keeps the one legend and adds the middle of the left and right edges as slots after the four corners, so nothing new appears on screen; the legend simply steps down the edge. A continuously sliding position was rejected because it would follow a dragged measurement and jitter. Going with (b). Noted but out of scope: the inspector toggle overlaps the legend’s empty top-right padding when the legend takes the top-right corner."
+    },
+    {
+      "t": "2026-09-02T12:00:55.434Z",
+      "note": "Built: PanelAnchor.leading/.trailing edge slots after the corners; 13 PanelPlacementTests green including the 435 pt case and a 435 to 800 pt sweep that also checks no measurement is covered. Probe app harness (temporary, removed) confirmed anchor .leading at a 435 pt canvas with three rows and both top corners under calipers, nothing crossed; 735 pt returns to topLeading. Audit queue/audits/2026-09-02-legend-edge-slot.json with two renders."
+    },
+    {
+      "t": "2026-09-02T12:01:09.286Z",
+      "note": "PanelPlacement (was CornerPlacement) walks the four corners then the middle of the left and right edges; on a 435 pt canvas with calipers in both top corners the legend parks mid-left, crossing no measurement and no chrome. Pinned by PanelPlacementTests (13, incl. a 435 to 800 pt sweep), verified on the probe app with a temporary harness; renders and audit in queue/audits/2026-09-02-legend-edge-slot*. Scripts/test.sh green (1284)."
     }
-  ]
+  ],
+  "started": "2026-09-02T11:48:11.535Z",
+  "completed": "2026-09-02T12:01:09.286Z"
 }
