@@ -4762,3 +4762,9 @@ the card's left end, over the icons.
 - Considered and rejected: showing both units on the loupe (the editor never says pt, so it would keep the mismatch alive), changing the editor to pt (its CSS-style px convention runs through measurements and the spec export), and the spec header's `@2x` idiom for the device line (that annotates a logical number, so it would mislabel device coordinates). The widest possible line at 11 pt medium is about 116 pt against the 123 pt the panel gives it.
 - `CaptureLoupe.readout` now builds its suffixes from `MeasureUnit`, so the two surfaces cannot drift apart again. Five readout tests, suite green (1288). Current untouched: the loupe is Next only.
 - Audit: `queue/audits/2026-09-02-loupe-units.json`. Open: whether the selection line should also carry the actual size.
+
+## 2026-09-02 (go loop) spend-limit refusal on a digest run
+
+- The loop now recognises a spend-limit refusal the same way it recognises an expired login: one table of environment signatures in `queue/bin/queue-lib.mjs` (`ENVIRONMENT_SIGNATURES`), each with its own status note and fix, and `reason` on `runner_failed` and `status.lastError`.
+- A digest run that prints the refusal and exits 0 is recorded as an environment failure, the loop reports unhealthy at once, the digest is deferred instead of stubbed, and the dashboard hero says "Spend limit hit" with the reset time from the message.
+- Task runs keep the per-task rule (the limit can land mid-work), only the window and hero wording changed. `queue/bin/failure-drill.sh` gained scenario 3 for it; all three scenarios pass.

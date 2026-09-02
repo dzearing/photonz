@@ -23,7 +23,7 @@
 //                                            (a sign-in failure first, else the last stderr/stdout line)
 //   node queue/bin/queue.mjs runner-exit <taskId|-> <exitCode> [error]
 //                                            record how a runner ended; prints shell vars
-//                                            (OUTCOME/BACKOFF/FAILURES/HEALTH/ENVFAIL/SIGNIN) for the go loop to eval
+//                                            (OUTCOME/BACKOFF/FAILURES/HEALTH/ENVFAIL/SIGNIN/REASON) for the go loop to eval
 //   node queue/bin/queue.mjs event <ev> [dataJSON]
 //   node queue/bin/queue.mjs state           print aggregate dashboard state JSON
 import { readFileSync } from 'node:fs';
@@ -105,7 +105,9 @@ try {
       break;
     }
     // The go loop evals this, so print shell assignments, not JSON. OUTCOME is
-    // ok|failed|parked|signin, BACKOFF is seconds to wait before claiming again.
+    // ok|failed|parked|signin|spend, BACKOFF is seconds to wait before claiming
+    // again, REASON is the refusal the runner's words named (signin|spend) or
+    // empty.
     case 'runner-exit': {
       const r = q.recordRunnerExit({
         taskId: args[0] && args[0] !== '-' ? args[0] : null,
@@ -113,8 +115,8 @@ try {
         error: args.slice(2).join(' '),
         kind: args[0] && args[0] !== '-' ? 'task' : 'digest',
       });
-      const health = (r.signIn || r.consecutiveFailures >= q.UNHEALTHY_AT) ? 'unhealthy' : 'ok';
-      out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${health} ENVFAIL=${r.environment ? 1 : 0} SIGNIN=${r.signIn ? 1 : 0}`);
+      const health = (r.reason || r.consecutiveFailures >= q.UNHEALTHY_AT) ? 'unhealthy' : 'ok';
+      out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${health} ENVFAIL=${r.environment ? 1 : 0} SIGNIN=${r.signIn ? 1 : 0} REASON=${r.reason || ''}`);
       break;
     }
     case 'event':

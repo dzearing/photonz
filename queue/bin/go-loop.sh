@@ -51,9 +51,11 @@ run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop
 # set first so a queue CLI that itself fails still leaves the loop with a sane
 # (and cautious) OUTCOME/BACKOFF rather than an unset variable. SIGNIN=1 means
 # the runner could not authenticate: the queue charged nothing to the task, and
-# the loop's job is to say so and wait for a person to log in.
+# the loop's job is to say so and wait for a person to log in. REASON names the
+# refusal the runner's own words carried (signin, spend) or is empty; a digest
+# run that ended in one is deferred, never stubbed.
 record_exit() { # $1 = task id or "-", $2 = exit code
-  OUTCOME=failed; BACKOFF=60; FAILURES=1; HEALTH=unhealthy; ENVFAIL=0; SIGNIN=0
+  OUTCOME=failed; BACKOFF=60; FAILURES=1; HEALTH=unhealthy; ENVFAIL=0; SIGNIN=0; REASON=""
   eval "$(Q runner-exit "$1" "$2" "$RUNNER_ERR")"
 }
 
@@ -129,6 +131,12 @@ backoff_wait() {
     echo "[go-loop] $(date +%T) sign-in needed: the agent could not authenticate ($fails attempt(s)). Run \`claude\` in a terminal and log in; retrying in ${secs}s. Last error: $err" | tee -a "$LOG"
     banner "**Go loop needs sign-in** the agent could not authenticate. Run \`claude\` in a terminal and log in; the loop retries in ${secs}s and resumes on its own."
     title "photonz: go-loop (sign-in needed)"
+  elif [[ "${REASON:-}" == spend ]]; then
+    # The agent refused for spend: nothing runs until the limit resets (the
+    # message says when) or someone raises it, so say that, not "unhealthy".
+    echo "[go-loop] $(date +%T) spend limit hit: the agent refused to run ($fails attempt(s)). Wait for the reset it names or raise the limit; retrying in ${secs}s. Last error: $err" | tee -a "$LOG"
+    banner "**Go loop hit the spend limit** the agent refused to run. Wait for the reset it names or raise the limit; the loop retries in ${secs}s and resumes on its own. $err"
+    title "photonz: go-loop (spend limit)"
   else
     echo "[go-loop] $(date +%T) unhealthy: $fails consecutive runner failures; waiting ${secs}s. Last error: $err" | tee -a "$LOG"
     banner "**Go loop unhealthy** $fails runner failures in a row, retrying in ${secs}s. Last error: $err"
@@ -169,12 +177,13 @@ while :; do
     run_runner "$(cat queue/bin/digest-prompt.md)"
     DIGEST_EXIT=$?
     record_exit - "$DIGEST_EXIT"
-    if [[ "$SIGNIN" == 1 ]]; then
-      # The runner never started, so leave no stub behind: with the file still
-      # missing, the digest is the first thing retried on every pass, and the
-      # day gets a real one as soon as a person has signed in.
-      echo "[go-loop] $(date +%T) digest for $TODAY deferred: the agent could not sign in" | tee -a "$LOG"
-      Q event digest_deferred '{"reason":"sign-in"}'
+    if [[ -n "$REASON" ]]; then
+      # The runner refused to start (no sign-in, or the spend limit), so leave
+      # no stub behind: with the file still missing, the digest is the first
+      # thing retried on every pass, and the day gets a real one as soon as
+      # the refusal clears.
+      echo "[go-loop] $(date +%T) digest for $TODAY deferred: $REASON ($RUNNER_ERR)" | tee -a "$LOG"
+      Q event digest_deferred "{\"reason\":\"$REASON\"}"
     # If the digest still does not exist, write a stub so we do not spin on it.
     elif [[ ! -f "$QDIR/digests/$TODAY.md" ]]; then
       printf '# Daily digest %s\n\n## Summary\nDigest generation failed; see %s.\n\n## Reflections\n(none)\n\n## Triage review\n(skipped)\n' "$TODAY" "$LOG" > "$QDIR/digests/$TODAY.md"

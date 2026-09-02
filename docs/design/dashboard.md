@@ -61,5 +61,9 @@ gets parked and anything parked in that streak is handed back. An expired login
 is its own case: the CLI reports it as a success with exit 0, so the loop reads
 the runner's words instead, charges nothing to the task, leaves the daily
 digest unwritten so it is retried, and the hero pill says **Sign-in needed**
-with the fix (run `claude` in a terminal and log in). Details and the drill that
-verifies it: `queue/README.md`.
+with the fix (run `claude` in a terminal and log in). A spend-limit refusal is
+read the same way: the CLI reports it as a success too, so a digest run that
+says it is deferred rather than stubbed, the loop reports `unhealthy` at once,
+and the hero pill says **Spend limit hit** with when it resets. On a task run
+the limit can land mid-work, so there the usual per-task rule stays in charge.
+Details and the drill that verifies it: `queue/README.md`.

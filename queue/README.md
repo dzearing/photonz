@@ -72,10 +72,25 @@ happens now, after every runner exit:
   the file stays missing (a `digest_deferred` event records why), so the digest
   is the first thing retried on every pass and the day gets a real one once
   someone has signed in. Retries follow the usual backoff, capped at 30 minutes.
+- **A spend-limit refusal is read the same way.** The CLI reports that as a
+  success too (`You've hit your monthly spend limit`, a success result, exit
+  0). On 2026-08-26 the digest run printed it, the exit-code rule said ok, the
+  day was stubbed as a failed digest and the loop read healthy. The refusals
+  the loop recognises live in one table in `queue-lib.mjs`
+  (`ENVIRONMENT_SIGNATURES`: sign-in, spend limit), each with its own
+  status note and fix; `runner_failed` and `status.lastError` carry the match
+  as `reason`. A digest run that hits one is deferred (`digest_deferred` with
+  that reason), never stubbed; `status.json` reports `unhealthy` at once and
+  the Summary hero pill reads **Spend limit hit** with the reset time from the
+  message. On a task run the limit can land mid-work (2026-08-23 it did, after
+  a dozen tool calls), so there the per-task rule stays in charge: the failure
+  is counted, three in a row park the task, and a streak across tasks blames
+  the environment as before.
 
 `queue/bin/failure-drill.sh` proves all of the above against the real loop:
 one scenario for a runner that always dies, one for a login that expires and
-is later restored.
+is later restored, one for a spend limit that refuses the digest run and later
+clears.
 
 Whatever still slips through cannot balloon the files the dashboard reads. A
 task's `log` is capped at 120 entries (the oldest 20 and the newest 99 are kept,

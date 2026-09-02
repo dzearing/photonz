@@ -297,27 +297,58 @@ export const BACKOFF_STEPS = ENV_BACKOFF.length ? ENV_BACKOFF : DEFAULT_BACKOFF;
 
 const cleanError = (s) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 400);
 
-// The agent CLI's own words when it cannot sign in. From 2026-08-26 to
-// 2026-09-01 every runner printed this, reported a "success" result and exited
-// 0, so the exit-code rule below said ok, nine digests were stubbed as failed,
-// and nothing on the dashboard said why. A run that says this did no work,
-// whichever task it was for, and the only cure is a person signing in.
+// The agent CLI's own words for the refusals it reports as a success: the
+// message on stderr (and in the stream), a "success" result, exit 0. Each is
+// an environment failure, not the work's: the run did nothing, whichever task
+// it was for, and only something outside the loop cures it.
+//
+//   signin  2026-08-26 to 2026-09-01 every runner printed this; the exit-code
+//           rule said ok, nine digests were stubbed as failed, and nothing on
+//           the dashboard said why. Cure: a person signs in.
+//   spend   2026-08-26 05:38 the digest run printed this, exited 0, and the
+//           day was written up as a failed digest while the loop read
+//           healthy. Cure: the limit resets (the message says when) or someone
+//           raises it.
+//
+// `note` is the status.json wording while it lasts; `fix` is what the
+// dashboard and the loop window tell the person to do.
 export const SIGN_IN_PATTERN = /failed to authenticate|oauth session expired|not logged in|please run \/login|invalid api key|authentication[_ ]error/i;
+export const SPEND_LIMIT_PATTERN = /spend limit|credit balance is too low|usage limit (?:reached|exceeded|hit)/i;
+export const ENVIRONMENT_SIGNATURES = [
+  {
+    id: 'signin',
+    pattern: SIGN_IN_PATTERN,
+    label: 'Sign-in needed',
+    note: 'sign-in needed: the agent could not authenticate',
+    fix: 'Run `claude` in a terminal and log in. The loop retries on its own.',
+  },
+  {
+    id: 'spend',
+    pattern: SPEND_LIMIT_PATTERN,
+    label: 'Spend limit hit',
+    note: 'spend limit hit: the agent refused to run',
+    fix: 'Wait for the reset the message names, or raise the limit. The loop retries on its own.',
+  },
+];
+export const environmentSignature = (text) => ENVIRONMENT_SIGNATURES.find((sig) => sig.pattern.test(String(text || ''))) || null;
 export const isSignInFailure = (text) => SIGN_IN_PATTERN.test(String(text || ''));
+export const isSpendLimitFailure = (text) => SPEND_LIMIT_PATTERN.test(String(text || ''));
+export const isEnvironmentFailure = (text) => !!environmentSignature(text);
 export const SIGN_IN_HINT = 'Sign-in needed: run `claude` in a terminal and log in. The loop retries on its own.';
 
 // The one line of a runner's output worth keeping as its error. The CLI's own
-// complaints (stderr) beat the runner's last words (stdout), and a sign-in
-// failure beats whatever the CLI printed after it, since that line explains
-// everything. Stdout is only searched for a sign-in line when stderr is empty:
-// a runner working on this very feature echoes the phrase in its tool calls.
+// complaints (stderr) beat the runner's last words (stdout), and a refusal
+// (sign-in, spend limit) beats whatever the CLI printed after it, since that
+// line explains everything. Stdout is only searched for a refusal when stderr
+// is empty: a runner working on this very feature echoes the phrases in its
+// tool calls.
 const stripAnsi = (s) => String(s || '').replace(/\x1b\[[0-9;]*m/g, '');
 export function pickRunnerError(stderrText = '', stdoutText = '') {
   const lines = (s) => stripAnsi(s).split('\n').map((l) => l.trim()).filter(Boolean);
   const err = lines(stderrText);
   const out = lines(stdoutText);
-  if (err.length) return err.find(isSignInFailure) || err[err.length - 1];
-  return out.find(isSignInFailure) || out[out.length - 1] || '';
+  if (err.length) return err.find(isEnvironmentFailure) || err[err.length - 1];
+  return out.find(isEnvironmentFailure) || out[out.length - 1] || '';
 }
 
 // Park a task: it has failed on its own often enough that retrying it is just
@@ -348,19 +379,24 @@ function unparkTask(id, reason) {
 // a success or a failure, updates the task and the loop health, and returns how
 // long the loop should wait before claiming again.
 //
-//   outcome  ok | failed | parked | signin
+//   outcome  ok | failed | parked | signin | spend
 //   backoff  seconds to sleep before the next claim
+//   reason   signin | spend | null: which refusal the runner's words named
 export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = 'task' } = {}) {
   const s = readStatus();
   const task = taskId ? findTask(taskId) : null;
   // What counts as failure: for a task run, the runner leaving its task
   // in_progress (it never finalized, whatever it exited with); for a digest run
-  // there is no task to inspect, so the exit code is all we have, plus the one
-  // failure the CLI reports as a success: it could not sign in. A runner that
-  // finalized its task and then exited non-zero still did the work.
+  // there is no task to inspect, so the exit code is all we have, plus the
+  // refusals the CLI reports as a success: it could not sign in, or the spend
+  // limit is hit. A runner that finalized its task and then exited non-zero
+  // still did the work.
   const unfinalized = !!task && task.status === 'in_progress';
-  const signIn = isSignInFailure(error);
-  const failed = task ? unfinalized : (exit !== 0 || signIn);
+  const signature = environmentSignature(error);
+  const reason = signature ? signature.id : null;
+  const signIn = reason === 'signin';
+  const spend = reason === 'spend';
+  const failed = task ? unfinalized : (exit !== 0 || !!signature);
   if (!failed) {
     if (task && task.failures) { task.failures = 0; saveTask(task); }
     writeStatus({ health: 'ok', consecutiveFailures: 0, lastError: null, failureStreak: null });
@@ -379,8 +415,11 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
   // queue one task at a time would be the worst possible response, so back off
   // instead and hand back anything parked earlier in this same streak. A
   // sign-in failure is the environment's fault on its own: it needs no second
-  // task to prove it.
-  const environment = signIn || streak.taskIds.length > 1;
+  // task to prove it. A spend-limit line is too, but only on a digest run: on
+  // a task run the limit can land mid-work (seen 2026-08-23, after a dozen
+  // tool calls), so the per-task rule stays in charge there and the streak
+  // across tasks is what blames the environment.
+  const environment = signIn || (spend && !task) || streak.taskIds.length > 1;
   const unparked = [];
   if (environment && streak.parked.length) {
     for (const id of streak.parked) {
@@ -389,7 +428,7 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
     streak.parked = [];
   }
 
-  let outcome = signIn ? 'signin' : 'failed';
+  let outcome = signIn ? 'signin' : (spend && !task) ? 'spend' : 'failed';
   if (task && unfinalized && signIn) {
     // The runner never got to start, so the task is handed straight back:
     // no failure counted, no lastError, nothing that could ever park it.
@@ -411,19 +450,20 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
   }
 
   const backoff = BACKOFF_STEPS[Math.min(consecutive - 1, BACKOFF_STEPS.length - 1)];
-  // A sign-in failure is unambiguous, so the loop reports unhealthy on the
-  // first one instead of waiting for a second to be sure.
+  // A refusal the CLI named (sign-in, spend limit) is unambiguous, so the loop
+  // reports unhealthy on the first one instead of waiting for a second to be
+  // sure, and the note says which it was.
   writeStatus({
-    health: (signIn || consecutive >= UNHEALTHY_AT) ? 'unhealthy' : 'ok',
+    health: (signature || consecutive >= UNHEALTHY_AT) ? 'unhealthy' : 'ok',
     consecutiveFailures: consecutive,
-    lastError: { at: now(), taskId: taskId || null, kind, exit, message, environment, signIn },
+    lastError: { at: now(), taskId: taskId || null, kind, exit, message, environment, signIn, reason },
     failureStreak: streak,
-    note: signIn
-      ? `sign-in needed: the agent could not authenticate; retrying in ${backoff}s`
+    note: signature
+      ? `${signature.note}; retrying in ${backoff}s`
       : `runner failed (exit ${exit}); retrying in ${backoff}s`,
   });
-  appendEvent('runner_failed', { id: taskId || null, kind, exit, consecutive, outcome, environment, signIn, error: message });
-  return { outcome, backoff, consecutiveFailures: consecutive, parked: outcome === 'parked', unparked, environment, signIn };
+  appendEvent('runner_failed', { id: taskId || null, kind, exit, consecutive, outcome, environment, signIn, reason, error: message });
+  return { outcome, backoff, consecutiveFailures: consecutive, parked: outcome === 'parked', unparked, environment, signIn, reason };
 }
 
 // A runner that exits without finalizing leaves the task in_progress forever.

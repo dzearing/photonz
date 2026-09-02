@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T07:49:54.831Z",
-  "updated": "2026-09-02T12:06:02.634Z",
+  "updated": "2026-09-02T12:46:18.906Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-08-26 05:38 in queue/loop.log: \"You have hit your monthly spend limit\" printed, result success, exit 0, then the digest stub was written. Same shape as the sign-in failure fixed by the-loop-tells-an-expired-login-apart-from-a-fai; the natural extension is a small table of environment signatures (sign-in, spend limit) in queue-lib.mjs feeding recordRunnerExit, with each signature carrying its own dashboard wording. Careful: scenario 1 of the drill uses the spend-limit text with exit 1 and expects a solo task to be PARKED after three tries, so a text match must not override the per-task rule for task runs, only stop the digest run from being counted as ok.",
@@ -35,6 +35,44 @@
     {
       "t": "2026-09-02T12:06:02.634Z",
       "note": "seq 540 -> 30"
+    },
+    {
+      "t": "2026-09-02T12:38:05.128Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T12:45:41.721Z",
+      "note": "epic unmanned-loop is staged next, not now; kept because triage 2026-09-02 rewrote the goal to say how it serves the redlining focus (the digest is the one daily report on the focus feature) and the fix is small"
+    },
+    {
+      "t": "2026-09-02T12:45:41.722Z",
+      "note": "reproduced from queue/loop.log line 45556: the 2026-08-26 05:38 digest run printed the spend-limit line, the stream said runner finished (success), and history.jsonl got digest_failed for that day while status read healthy"
+    },
+    {
+      "t": "2026-09-02T12:45:41.722Z",
+      "note": "pre-build review: (1) a text match must not decide task runs, because the log also shows the limit landing mid-task after a dozen tool calls on 2026-08-23, so for task runs the per-task rule stays and only the dashboard wording changes; (2) the sign-in special case generalises into one table (ENVIRONMENT_SIGNATURES in queue-lib.mjs) so the next refusal is one row, not another branch; (3) the loop should defer the digest on any named refusal, not only sign-in; (4) the decorative part would be a separate hero colour per refusal, cut: same red pill, different label"
+    },
+    {
+      "t": "2026-09-02T12:45:41.722Z",
+      "note": "built: environmentSignature()/isEnvironmentFailure() with signin + spend rows; recordRunnerExit returns reason and records it on lastError and runner_failed; digest runs with a refusal fail with outcome spend and environment true; health goes unhealthy on the first named refusal; queue.mjs runner-exit prints REASON; go-loop.sh defers the digest whenever REASON is set (digest_deferred carries the reason) and the window/title say spend limit; dashboard.html loopState + hero strip gained a spend branch; docs/design/dashboard.md and queue/README.md updated"
+    },
+    {
+      "t": "2026-09-02T12:45:41.722Z",
+      "note": "verified: queue/bin/failure-drill.sh scenario 3 (spend limit refuses the digest run with exit 0, then clears) passes 13 checks; scenarios 1 and 2 unchanged and green (the scenario 1 wait regex now also accepts \"retrying in Ns\", since a task run that prints the spend line now names the cause in the window); dashboard hero checked on a sandbox queue at :8799, screenshot reviewed"
+    },
+    {
+      "t": "2026-09-02T12:45:41.722Z",
+      "note": "post-build review: a task run that prints the spend line still counts against the task and can park it after three solo tries (kept on purpose, scenario 1 asserts it, and a streak across tasks hands it back), but with a single-task queue that means the limit can park the only task; left as is and noted in README"
+    },
+    {
+      "t": "2026-09-02T12:45:41.722Z",
+      "note": "no audit written: loop tooling, not a playtestable app feature; the drill is the proof"
+    },
+    {
+      "t": "2026-09-02T12:46:18.905Z",
+      "note": "A digest runner that prints the spend-limit line and exits 0 is now an environment failure: recorded with reason spend, loop unhealthy at once, digest deferred (not stubbed) and retried next pass, dashboard hero reads Spend limit hit with the reset time. Task runs keep the per-task rule. Signatures live in one table in queue-lib.mjs. Verified by queue/bin/failure-drill.sh scenario 3 (13 checks) with scenarios 1 and 2 still green, plus a sandbox dashboard render."
     }
-  ]
+  ],
+  "started": "2026-09-02T12:38:05.127Z",
+  "completed": "2026-09-02T12:46:18.906Z"
 }

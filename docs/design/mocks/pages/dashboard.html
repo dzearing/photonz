@@ -670,6 +670,7 @@
     // login is the one failure a person has to fix by hand, so it gets its
     // own name and the instruction right in the pill.
     if (L.health === 'unhealthy' && L.lastError && L.lastError.signIn) return { cls: 'bad', ic: 'ic-warning', label: 'Sign-in needed', note: 'The agent cannot sign in, so nothing runs until someone logs in. Nothing was charged to a task.' };
+    if (L.health === 'unhealthy' && L.lastError && L.lastError.reason === 'spend') return { cls: 'bad', ic: 'ic-warning', label: 'Spend limit hit', note: 'The agent refuses to run until its spend limit resets or someone raises it.' };
     if (L.health === 'unhealthy') return { cls: 'bad', ic: 'ic-warning', label: 'Loop unhealthy', note: L.consecutiveFailures + ' runner ' + (L.consecutiveFailures === 1 ? 'failure' : 'failures') + ' in a row. Nothing is getting done until this clears.' };
     if (L.state === 'running') return { cls: 'run', ic: '', label: 'Running', note: '' };
     return { cls: 'idle', ic: 'ic-pause', label: 'Idle', note: 'Waiting for ready tasks. Queue one below or resolve a blocker.' };
@@ -694,6 +695,15 @@
       h += '<p>The agent’s login expired. No task was charged a failure and none was parked' +
         (LS.kind === 'digest' ? '; today’s digest is waiting and will be written once sign-in works' : '') +
         '. To fix it: open a terminal, run claude, and log in. The loop retries every few minutes and picks up where it left off.</p>';
+      h += '</div></div>';
+    } else if (L.health === 'unhealthy' && L.lastError && L.lastError.reason === 'spend') {
+      var LP = L.lastError;
+      h += '<div class="db-herr"><i class="ic ic-warning"></i><div>';
+      h += '<b>Spend limit hit · ' + L.consecutiveFailures + (L.consecutiveFailures === 1 ? ' try' : ' tries') + ' so far · ' + rel(LP.at) + '</b>';
+      h += '<code>' + esc(LP.message || 'no error text captured') + '</code>';
+      h += '<p>The agent refused to run because its spend limit is used up.' +
+        (LP.kind === 'digest' ? ' Today’s digest is waiting and will be written once runs work again.' : (LP.taskId ? ' The run was on ' + esc(LP.taskId) + '.' : '')) +
+        ' To fix it: wait for the reset the message names, or raise the limit. The loop retries every few minutes and picks up where it left off.</p>';
       h += '</div></div>';
     } else if (L.health === 'unhealthy' && L.lastError) {
       var LE = L.lastError;
