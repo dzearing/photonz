@@ -5,11 +5,11 @@
   "epic": "alignment-checks",
   "priority": "p3-low",
   "seq": 540,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T13:57:11.048Z",
-  "updated": "2026-09-02T21:47:23.485Z",
+  "updated": "2026-09-02T22:07:14.586Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by audit 2026-09-02-guide-item-counts. The off toggle track is about #E9E9EB on white (contrast ~0.09); the knob edge/shadow 2 device px inside it wins the strength filter in AlignmentScan.runs (defaultElementStrength 0.2 of the boldest candidate in the sample window). Candidate direction: when the guide was drawn within a pixel or two of a faint edge that runs the whole element, prefer it over a bolder one further in, the same extent-over-boldness argument borderFlanks already makes. Playtest walk: Scripts/playtest/alignment-counts.json step 3.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-02T22:06:15.351726Z",
       "note": "Review of the built thing: the drag sweep 1254...1262 all read aligned, and the press anchor snaps to 1259 or jumps to 1268 from anywhere in that band, so every guide a hand can draw down this row is covered. A guide forced onto the knob's edge at 1264 still reports off 2 px; left as is, and recorded in the audit's rough. Guarded against the fix simply rounding everything onto the majority by doctoring the fixture (third toggle moved 6 device px) and pinning that it still reports off 3 px."
+    },
+    {
+      "t": "2026-09-02T22:07:14.585Z",
+      "note": "AlignmentScan.elementTracks adds hysteresis so a pale boundary is not chopped into flank-sized fragments; the four-toggle row now reads 'Left edges, 4 items: aligned' on the real capture and in the running probe app. 1483 tests green, 5 new ones failing before the fix. Audit: queue/audits/2026-09-02-guide-toggle-track.json"
     }
   ],
-  "started": "2026-09-02T21:47:23.485Z"
+  "started": "2026-09-02T21:47:23.485Z",
+  "completed": "2026-09-02T22:07:14.586Z"
 }
