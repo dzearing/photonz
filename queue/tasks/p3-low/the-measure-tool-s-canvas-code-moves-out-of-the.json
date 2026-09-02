@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:27:30.279Z",
-  "updated": "2026-09-02T14:27:41.099Z",
+  "updated": "2026-09-02T20:26:16.047Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Evidence: manager pass 2026-09-02 02:40 (Architecture) recorded CanvasView.swift at 3430 lines; it is 3556 today, EditorState.swift 3550. The measure slice is roughly CanvasView.swift lines 1160 to 1340 (updateSizePreview, updateGapPreview, subjects(of:), the raster cache key at 1329) plus the alignment drag handling. Keep it an extension or a helper owned by CanvasNSView so nothing crosses a module boundary; the point is a smaller file, not a new architecture. Unblocks: the text-as-element task (p1) and every-pill-on-the-canvas-finds-its-spot-through (p3). Walk scripts: Scripts/playtest/*.json.",
+  "notes": "Evidence: manager pass 2026-09-02 02:40 (Architecture) recorded CanvasView.swift at 3430 lines; it is 3556 today, EditorState.swift 3550. The measure slice is roughly CanvasView.swift lines 1160 to 1340 (updateSizePreview, updateGapPreview, subjects(of:), the raster cache key at 1329) plus the alignment drag handling. Keep it an extension or a helper owned by CanvasNSView so nothing crosses a module boundary; the point is a smaller file, not a new architecture. Unblocks: the text-as-element task (p1) and every-pill-on-the-canvas-finds-its-spot-through (p3). Walk scripts: Scripts/playtest/*.json. DONE 2026-09-02: split landed as Sources/Photonz/CanvasMeasure.swift (extension on CanvasNSView, not a new type). To keep it compiling, 41 CanvasNSView members lost `private` (viewport, document, tool, edgeMap, lumaField, snapGuide, snapDotLayer, the hover/alignment/annotation-preview CALayers, the measure* state, HoverCaliperSprite, MeasurePlacement, axisGated, trackDragMotion, resetDragMotion, refreshOverlays, clearAnnotationPreview). Both files carry a comment saying those are still the canvas view's alone. Verification recipe worth reusing: byte-compare the offscreen renders AND diff log.json with layer UUIDs and `t` normalized out; renders alone are noisy in the bottom toast band.",
   "acceptance": [
     "The Size, Gap and Alignment preview code, the neighbour and subject lookups, and the readout planning calls that live in the canvas view today are in a new file under Sources/Photonz with a one-paragraph header saying what it owns.",
     "CanvasView.swift shrinks by at least the moved lines, and no line of Measure behavior changes: the four audit renders from 2026-09-02 (caliper subjects, gap under label, guide edge chip, legend under toggle) come out pixel-identical when Scripts/playtest.sh replays their walks.",
@@ -26,6 +26,28 @@
     {
       "t": "2026-09-02T14:27:41.099Z",
       "note": "seq 550 -> 90"
+    },
+    {
+      "t": "2026-09-02T20:16:08.856Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T20:26:16.000Z",
+      "note": "Review before building: this is code motion for a focus epic, so the risk is not the idea but the blast radius. Two things I decided against. (1) Moving the shared drag-motion accumulator (axisGated/trackDragMotion/resetDragMotion) out with the measure code: the region marquee drag uses the same three, so they stayed put. (2) Wrapping the measure state in a helper type: the task asks for a smaller file, not a new boundary, and a helper would have to be handed the viewport, document, edge map, luma field and six CALayers on every call. Cost I accepted instead: 41 members of CanvasNSView had to drop `private` so a second file can reach them. That is the honest price of splitting a class across files in Swift; both files now carry a comment saying so."
+    },
+    {
+      "t": "2026-09-02T20:26:16.000Z",
+      "note": "Shipped: Sources/Photonz/CanvasMeasure.swift, 641 lines, one extension on CanvasNSView. CanvasView.swift 3796 -> 3181 lines (660 removed). Moved: snapMeasureHead, MeasureHandle/MeasureHandleDrag, measureHandles, measureGuideLines, measureChipGuideLines, documentMeasure, measureReadoutRect, drawnMeasureHandles, handleMeasureHover, the whole Caliper 3-click placement MARK, the Alignment-guide drag MARK, and the whole Size/Gap mode preview MARK (hideMeasureHoverReadout, refreshMeasureHoverReadout, neighbors, drawElementPreview, drawGapPreview, subjects, layoutHoverCaliper, placedReadoutRects, refreshMeasureCreation). captionPillRect stayed behind with the caption code; the NSView overrides (updateTrackingAreas, mouseMoved, mouseExited) stayed too."
+    },
+    {
+      "t": "2026-09-02T20:26:16.000Z",
+      "note": "Verified no behavior change. Captured a baseline of four measure walks (gap-then-size, alignment-counts, legend-under-toggle, redline-walk = 26 offscreen renders) BEFORE the edit and replayed them after. 21 of 26 renders are byte-identical; the 5 that differ do so only inside the y 1488-1628 toast band, and a second replay of the SAME binary differs in that band too (7 files), so it is a toast caught mid-fade, not a change. The structured playtest logs are the real oracle and they are identical across all four walks once per-run layer UUIDs and timings are normalized, except two entries in legend-under-toggle where an edgeMap-ready flag flipped on a timing race with byte-identical renders. Scripts/test.sh green (1451 tests, 167 suites). swift build clean, zero warnings."
+    },
+    {
+      "t": "2026-09-02T20:26:16.047Z",
+      "note": "Measure canvas code now lives in Sources/Photonz/CanvasMeasure.swift (641 lines); CanvasView.swift 3796 -> 3181. Verified by replaying four measure walks against a pre-refactor baseline: playtest logs identical modulo per-run layer ids, 21/26 renders byte-identical and the rest differ only in a toast band that also differs between two runs of the same binary. Scripts/test.sh green, 1451 tests."
     }
-  ]
+  ],
+  "started": "2026-09-02T20:16:08.856Z",
+  "completed": "2026-09-02T20:26:16.047Z"
 }

@@ -216,6 +216,11 @@ struct CanvasView: NSViewRepresentable {
     }
 }
 
+// The Measure tool's share of this view lives in CanvasMeasure.swift: the
+// Size and Gap hover previews, the three-click caliper placement, the
+// alignment-guide drag and a placed caliper's handle geometry. The members
+// below that carry no `private` are the ones that file reaches for; they are
+// still this view's alone, and nothing else in the app should touch them.
 final class CanvasNSView: NSView {
     var onViewSizeChange: ((CGSize) -> Void) = { _ in }
     var onViewportChange: ((Viewport) -> Void) = { _ in }
@@ -303,28 +308,28 @@ final class CanvasNSView: NSView {
     /// Hover snap dot: while the measure tool is active and idle, a dot follows
     /// the cursor and magnetizes to the nearest detected edge (⌘ bypasses),
     /// marking where a drag will begin.
-    private let snapDotLayer = CAShapeLayer()
+    let snapDotLayer = CAShapeLayer()
     /// Hover-to-measure readout (`next-measure-hover`, Next release): while the
     /// Measure tool idles over the image, the element rect under the pointer
     /// gets a tinted outline plus two transient size calipers (width along the
     /// bottom edge, height along the right), rasterized exactly like committed
     /// calipers. Canvas chrome only — nothing here touches the document, makes
     /// history entries, or triggers a composite re-render.
-    private let hoverBoundsLayer = CAShapeLayer()
-    private let hoverWidthCaliperLayer = CALayer()
-    private let hoverHeightCaliperLayer = CALayer()
+    let hoverBoundsLayer = CAShapeLayer()
+    let hoverWidthCaliperLayer = CALayer()
+    let hoverHeightCaliperLayer = CALayer()
     /// A rasterized transient caliper, cached so resting on one element (or
     /// gliding within it) never re-renders text per mouse move.
-    private struct HoverCaliperSprite {
+    struct HoverCaliperSprite {
         let key: String
         let image: CGImage
         /// Document-space frame of the rasterized caliper layer.
         let frame: CGRect
     }
-    private var hoverWidthSprite: HoverCaliperSprite?
-    private var hoverHeightSprite: HoverCaliperSprite?
+    var hoverWidthSprite: HoverCaliperSprite?
+    var hoverHeightSprite: HoverCaliperSprite?
     /// Latest pointer location in view space, for the hover snap dot.
-    private var hoverPoint: CGPoint?
+    var hoverPoint: CGPoint?
     /// Dashed wells + a plus glyph over every EMPTY collage slot — editor
     /// chrome only; empty slots render transparent in the composite.
     private let collageWellsLayer = CAShapeLayer()
@@ -338,10 +343,10 @@ final class CanvasNSView: NSView {
     private let cropBorderLayer = CAShapeLayer()
     private let cropHandlesLayer = CAShapeLayer()
     /// Live preview of an in-progress drag-to-create annotation.
-    private let annotationPreviewLayer = CAShapeLayer()
+    let annotationPreviewLayer = CAShapeLayer()
     /// Arrowheads are filled but never stroked (matching the rasterizer), so
     /// they need their own shape layer under the stroked shaft.
-    private let annotationPreviewHeadLayer = CAShapeLayer()
+    let annotationPreviewHeadLayer = CAShapeLayer()
     /// A just-created zoom callout flying from its source box to its placed
     /// frame: the magnified sprite, plus the source outline and leader lines
     /// fading in underneath it.
@@ -357,10 +362,10 @@ final class CanvasNSView: NSView {
     /// The viewport currently on screen. Gesture handlers mutate from this and
     /// apply locally before notifying, so panning/zooming never waits a runloop
     /// tick for SwiftUI to echo the state back.
-    private var viewport: Viewport?
+    var viewport: Viewport?
     private var image: CGImage?
     /// Committed document (hit-testing source). Previews never land here.
-    private var document: PhotonzDocument?
+    var document: PhotonzDocument?
     /// Committed selection region in document coordinates.
     private var selection: SelectionRegion?
     /// Whether the committed region has pixel semantics (region tools) —
@@ -422,7 +427,7 @@ final class CanvasNSView: NSView {
     }
     /// The active tool, echoed from EditorState. Annotation tools reroute the
     /// pointer from hit-test/marquee into drag-to-create.
-    private var tool: Tool = .select
+    var tool: Tool = .select
     private var captionCloseRequest = 0
     /// In-progress drag-to-create (document coordinates).
     private var annotationDrag: AnnotationDrag?
@@ -436,49 +441,49 @@ final class CanvasNSView: NSView {
     /// The draft layer style for the active shape tool (border/corner radius);
     /// the create preview draws its border so outline-only rectangles show.
     private var annotationStyle: LayerStyle?
-    private var measureContent: MeasureContent?
+    var measureContent: MeasureContent?
     /// Live label-size preview for the selected caliper during a slider drag.
     /// In-progress 3-click caliper placement: click foot A → move → click foot B →
     /// move → click sets the head (depth + direction). Nil = idle (hover only).
-    private enum MeasurePlacement {
+    enum MeasurePlacement {
         case firstPlaced(foot1: CGPoint)                                   // seeking foot B
         case secondPlaced(foot1: CGPoint, foot2: CGPoint, mode: MeasureMode) // seeking head
     }
-    private var measurePlacement: MeasurePlacement?
+    var measurePlacement: MeasurePlacement?
     /// What the Measure tool does when you click (Next). Distance is the only
     /// mode that draws nothing under an idle pointer.
-    private var measureToolMode: MeasureToolMode = .distance
+    var measureToolMode: MeasureToolMode = .distance
     /// Which rung of the element ladder Size mode shows (`[` / `]`).
-    private var measureCandidateLevel = 0
+    var measureCandidateLevel = 0
     /// The rect Size mode is previewing right now — exactly what a click
     /// commits, so what you see and what you get can never disagree.
-    private var measureElementPreview: CGRect?
+    var measureElementPreview: CGRect?
     /// The elements touching that rect, read off the capture. Detection costs
     /// real milliseconds and the pick only changes when the pointer crosses
     /// into another element, so the answer is kept until it does.
-    private var measureElementNeighbors: [CGRect] = []
-    private var measureNeighborCache: (rect: CGRect, reach: CGFloat, neighbors: [CGRect])?
+    var measureElementNeighbors: [CGRect] = []
+    var measureNeighborCache: (rect: CGRect, reach: CGFloat, neighbors: [CGRect])?
     /// The two elements bounding the gap under the pointer, kept until the gap
     /// itself changes so a mouse move inside one gap costs no detection.
-    private var measureGapSubjectCache: (gap: GapMeasurement, subjects: [CGRect])?
+    var measureGapSubjectCache: (gap: GapMeasurement, subjects: [CGRect])?
     /// The gap Gap mode is previewing right now, same contract.
-    private var measureGapPreview: GapMeasurement?
+    var measureGapPreview: GapMeasurement?
     /// Alignment mode (Next `next-measure-align`): whether Measure drags draw a
     /// checking guide, and the in-flight guide drag (document coordinates).
-    private var measureChecksAlignment: Bool { measureToolMode == .alignment }
+    var measureChecksAlignment: Bool { measureToolMode == .alignment }
     /// Snap option (Next `next-measure-center-snap`): measure snapping also
     /// offers element/gap centers, echoed from EditorState via the wrapper.
-    private var measureSnapsToCenters = false
-    private var alignmentDrag: (anchor: CGPoint, current: CGPoint)?
+    var measureSnapsToCenters = false
+    var alignmentDrag: (anchor: CGPoint, current: CGPoint)?
     /// Dashed live preview of the guide being dragged.
-    private let alignmentPreviewLayer = CAShapeLayer()
+    let alignmentPreviewLayer = CAShapeLayer()
     /// The mouse-down location (view space) of the current measure press, to tell
     /// a click from a press-drag on release.
-    private var measurePressDownView: CGPoint?
+    var measurePressDownView: CGPoint?
     /// True between the mouse-down that first placed foot A and its mouse-up, so a
     /// no-drag release stays in click/click mode while a dragged release completes
     /// the measuring line (down/drag/release).
-    private var measureFirstFootPress = false
+    var measureFirstFootPress = false
     /// In-flight drag of one of a placed caliper's three handles (a foot or head).
     private var measureHandleDrag: MeasureHandleDrag?
     /// Dragging a selected arrow's caption pill to the spot you want (Next
@@ -496,11 +501,11 @@ final class CanvasNSView: NSView {
     private var captionDrag: CaptionDrag?
     /// Detected UI edges, mirrored from EditorState; measure corners magnetize to
     /// these (and the pixel grid) while dragging.
-    private var edgeMap = EdgeMap.empty
-    private var lumaField = LumaField.empty
+    var edgeMap = EdgeMap.empty
+    var lumaField = LumaField.empty
     /// Document-space x/y of the edge(s) a measure corner is currently snapped to,
     /// drawn as a highlight while the corner is held. Cleared on mouse-up.
-    private var snapGuide: (x: CGFloat?, y: CGFloat?)?
+    var snapGuide: (x: CGFloat?, y: CGFloat?)?
     /// Decayed accumulator of recent drag motion (doc px). When the user is
     /// clearly resizing along ONE axis, the perpendicular axis stops grabbing
     /// edges — dragging a leg up/down shouldn't flash vertical snap guides.
@@ -519,44 +524,9 @@ final class CanvasNSView: NSView {
     /// `.center` when ⇧ made the drag symmetric (content stays centered).
     private var canvasResizeDrag: (handle: ResizeHandle, rect: CGRect, centered: Bool)?
 
-    /// Moves a dragged readout and lines it up with the other readouts on the
-    /// picture, writing the landing back into `drag` and returning the guide to
-    /// draw.
-    ///
-    /// The pill moves two ways and they mean different things: ACROSS its line
-    /// it carries the caliper's head with it (the fork gets deeper), ALONG the
-    /// line only the number moves and the measurement is untouched. Both line up
-    /// with the readouts already placed, which is the point — a stack of widths
-    /// can be pulled into one tidy column of numbers.
-    ///
-    /// The pointer keeps its grip on the pill, so it is the CHIP that is lined
-    /// up, not the pointer. The across-axis landing is then checked: a readout
-    /// pushed clear of its subject keeps its own distance from the measuring
-    /// line and does not ride the head, and a snap it would not honour is
-    /// dropped rather than faked.
-    private func snapMeasureHead(_ drag: inout MeasureHandleDrag, pointer p: CGPoint,
-                                 zoom: CGFloat, snapping: Bool) -> (x: CGFloat?, y: CGFloat?)? {
-        guard let layer = document?.layer(id: drag.layerID),
-              let m = documentMeasure(layer) else {
-            drag.current = p
-            return nil
-        }
-        let slides = Experiments.shared.measureReadoutSlideEnabled
-        let landing = MeasureReadoutDrag.resolve(m, pointer: p, grabCross: drag.grabCross,
-                                                 grabAlong: drag.grabAlong, guides: drag.guides,
-                                                 zoom: zoom, snapping: snapping,
-                                                 slidesAlong: slides)
-        drag.current = p
-        drag.head = landing.headOffset
-        // Only a drag that actually slid the number claims it was placed by
-        // hand: pinning a number nobody moved would stop it dodging forever.
-        drag.readout = slides ? landing.readout : nil
-        return (landing.guideX, landing.guideY)
-    }
-
     /// Suppresses edge captures on the axis perpendicular to decisive motion.
     /// The suppressed axis falls back to the pixel grid.
-    private func axisGated(_ snap: EdgeSnapping.Snap, raw p: CGPoint) -> EdgeSnapping.Snap {
+    func axisGated(_ snap: EdgeSnapping.Snap, raw p: CGPoint) -> EdgeSnapping.Snap {
         var snap = snap
         let ax = abs(dragMotion.dx), ay = abs(dragMotion.dy)
         if ay > 2 * ax, ay > 2, snap.guideX != nil {
@@ -570,7 +540,7 @@ final class CanvasNSView: NSView {
     }
 
     /// Feeds the motion accumulator; call once per mouseDragged before snapping.
-    private func trackDragMotion(_ p: CGPoint) {
+    func trackDragMotion(_ p: CGPoint) {
         if let last = lastDragPoint {
             dragMotion.dx = dragMotion.dx * 0.7 + (p.x - last.x)
             dragMotion.dy = dragMotion.dy * 0.7 + (p.y - last.y)
@@ -578,119 +548,9 @@ final class CanvasNSView: NSView {
         lastDragPoint = p
     }
 
-    private func resetDragMotion(_ p: CGPoint) {
+    func resetDragMotion(_ p: CGPoint) {
         dragMotion = .zero
         lastDragPoint = p
-    }
-
-    /// Which of a caliper's three handles is being dragged: either foot of the
-    /// measuring line, or the head (the chip bar's perpendicular offset).
-    private enum MeasureHandle { case footA, footB, head }
-
-    /// Dragging one of a placed caliper's three handles. Feet drags keep the
-    /// measuring line level (the opposite foot follows onto the dragged foot's
-    /// cross-axis); the head drag changes only the signed perpendicular offset.
-    private struct MeasureHandleDrag {
-        let layerID: UUID
-        let handle: MeasureHandle
-        let mode: MeasureMode
-        let originalStart: CGPoint   // feet, document space
-        let originalEnd: CGPoint
-        let originalHeadOffset: CGFloat
-        /// Where on the cross axis the pointer took hold, relative to the head:
-        /// a head grabbed by its readout (anywhere on the pill) or a little off
-        /// its dot keeps that grip, instead of jumping under the pointer.
-        var grabCross: CGFloat = 0
-        /// The same grip ALONG the line, relative to the readout pill's centre,
-        /// so a pill taken hold of by its edge does not jump under the pointer.
-        var grabAlong: CGFloat = 0
-        /// The lines the OTHER measurements offer this drag, collected once at
-        /// grab time: nothing else on the canvas moves while a handle is held,
-        /// and rebuilding them per mouse-moved event would be wasted work.
-        var guides: EdgeSnapping.GuideLines = .none
-        /// The head-drag landing, resolved against the readout's real geometry:
-        /// the signed head offset, and where the number sits along the line when
-        /// this drag moved it (nil when it did not).
-        var head: CGFloat?
-        var readout: MeasureReadoutPlacement?
-        var originalReadout: MeasureReadoutPlacement
-        var current: CGPoint
-        /// The caliper's (start, end, headOffset) with this drag applied, plus
-        /// where the drag put the number when it moved it at all.
-        func params() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat,
-                          readout: MeasureReadoutPlacement?) {
-            var s = originalStart, e = originalEnd, off = originalHeadOffset
-            switch handle {
-            case .head:
-                off = head ?? ((mode == .horizontal ? current.y - s.y : current.x - s.x) - grabCross)
-                return (s, e, off, readout)
-            case .footA:
-                s = current
-                if mode == .horizontal { e.y = current.y } else { e.x = current.x }
-            case .footB:
-                e = current
-                if mode == .horizontal { s.y = current.y } else { s.x = current.x }
-            }
-            // Dragging a fork keeps the HEAD (chip) fixed in absolute space —
-            // the leg depth grows/shrinks to absorb the feet line's move, so the
-            // label doesn't wander when you adjust the measured span.
-            let headAbs = mode == .horizontal ? originalStart.y + originalHeadOffset
-                                              : originalStart.x + originalHeadOffset
-            let feet = mode == .horizontal ? s.y : s.x
-            off = headAbs - feet
-            return (s, e, off, nil)
-        }
-        /// Where the caliper was before this drag, readout included — an Esc
-        /// puts the number back exactly as it was, hand-placed or not.
-        func originalParams() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat,
-                                  readout: MeasureReadoutPlacement?) {
-            (originalStart, originalEnd, originalHeadOffset, originalReadout)
-        }
-    }
-
-    /// The three draggable handles of a placed caliper in document space: the two
-    /// feet (the measuring line) and the head (the chip bar's offset point).
-    private func measureHandles(_ layer: Layer) -> [(handle: MeasureHandle, point: CGPoint)] {
-        guard let m = layer.measure, m.alignment == nil,
-              let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return [] }
-        let g = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e, headOffset: m.headOffset)
-        return [(.footA, g.footA), (.footB, g.footB), (.head, g.labelAnchor)]
-    }
-
-    /// The lines the measurements already on the canvas offer a dragged FOOT:
-    /// their feet lines, head lines and ends, so two calipers can share a start
-    /// line. Empty while the Next flag is off. Pass nil to exclude nothing (a
-    /// caliper being placed is not a layer yet).
-    private func measureGuideLines(excluding id: UUID?) -> EdgeSnapping.GuideLines {
-        guard Experiments.shared.measureGuideSnapEnabled, let document else { return .none }
-        return MeasureSnapping.lines(in: document, excluding: id)
-    }
-
-    /// The lines a dragged READOUT CHIP lines up with: where the other chips
-    /// centre. A chip is not a measured point, so the picture's own edges have
-    /// no say over where it parks — the other chips do.
-    private func measureChipGuideLines(excluding id: UUID) -> EdgeSnapping.GuideLines {
-        guard Experiments.shared.measureGuideSnapEnabled, let document else { return .none }
-        return MeasureSnapping.chipLines(in: document, excluding: id)
-    }
-
-    /// A caliper's content re-based to document space (its feet are stored
-    /// layer-local), so its readout geometry compares against the pointer.
-    private func documentMeasure(_ layer: Layer) -> MeasureContent? {
-        guard var m = layer.measure, m.alignment == nil,
-              let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return nil }
-        m.start = s
-        m.end = e
-        return m
-    }
-
-    /// The readout pill's footprint in document space. Dragging the number
-    /// drags the head: it is the obvious thing to take hold of, and while the
-    /// pill sits on the head midpoint it is the ONLY grab there (see
-    /// `drawnMeasureHandles`).
-    private func measureReadoutRect(_ layer: Layer) -> CGRect? {
-        guard let m = documentMeasure(layer), m.showLabel else { return nil }
-        return m.labelRect(chipSize: m.estimatedLabelSize)
     }
 
     /// A captioned arrow's pill footprint in document space (the same estimate
@@ -704,13 +564,6 @@ final class CanvasNSView: NSView {
                       width: size.width, height: size.height)
     }
 
-    /// The handles that get a dot. The head dot is left out while the readout
-    /// covers it: a white dot on the digits made "121 px" read as "12 px",
-    /// and the pill is the grab there anyway.
-    private func drawnMeasureHandles(_ layer: Layer) -> [CGPoint] {
-        let covered = documentMeasure(layer).map { $0.labelCoversHeadHandle(chipSize: $0.estimatedLabelSize) } ?? false
-        return measureHandles(layer).compactMap { covered && $0.handle == .head ? nil : $0.point }
-    }
     /// The composite that was on screen when an annotation was committed. The
     /// preview shape stays up until a *different* image arrives, so the new
     /// annotation doesn't flash out while the re-render is in flight.
@@ -1126,474 +979,6 @@ final class CanvasNSView: NSView {
             window?.invalidateCursorRects(for: self)
             (toolCursor ?? .arrow).set()
         }
-    }
-
-    /// Tracks the pointer for the measure tool's hover dot + placement preview.
-    private func handleMeasureHover(_ event: NSEvent) {
-        hoverPoint = convert(event.locationInWindow, from: nil)
-        // Feed the axis-gating accumulator while seeking foot B so a decisive
-        // drag direction suppresses perpendicular snap jitter.
-        if case .firstPlaced = measurePlacement, let viewport, let hoverPoint {
-            trackDragMotion(viewport.documentPoint(fromView: hoverPoint))
-        }
-        refreshMeasureCreation(modifierFlags: event.modifierFlags)
-    }
-
-    // MARK: Caliper 3-click placement
-
-    /// Snaps the FIRST foot to a nearby edge (small window; ⌘ = free).
-    private func snapMeasureAnchor(_ doc: CGPoint, modifiers: NSEvent.ModifierFlags) -> CGPoint {
-        guard let viewport, !modifiers.contains(.command) else { return doc }
-        return EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom,
-                                 includeCenters: measureSnapsToCenters,
-                                 guides: measureGuideLines(excluding: nil)).point
-    }
-
-    /// Snaps the SECOND foot along the measuring line from foot1 (edge magnetize +
-    /// axis gating; ⌘ = free), then levels it to the dominant axis. Returns the
-    /// leveled foot and the chosen axis.
-    private func snapMeasureSecondFoot(from foot1: CGPoint, to doc: CGPoint,
-                                       modifiers: NSEvent.ModifierFlags) -> (foot2: CGPoint, mode: MeasureMode) {
-        var p = doc
-        if let viewport, !modifiers.contains(.command) {
-            p = axisGated(EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom,
-                                            xSpan: min(foot1.x, doc.x)...max(foot1.x, doc.x),
-                                            ySpan: min(foot1.y, doc.y)...max(foot1.y, doc.y),
-                                            includeCenters: measureSnapsToCenters,
-                                            guides: measureGuideLines(excluding: nil)),
-                          raw: doc).point
-        }
-        let mode = MeasureContent.dominantAxis(from: foot1, to: p)
-        let foot2 = mode == .horizontal ? CGPoint(x: p.x, y: foot1.y) : CGPoint(x: foot1.x, y: p.y)
-        return (foot2, mode)
-    }
-
-    /// Signed perpendicular distance from the measuring line to `doc` — the head
-    /// (depth + direction). Kept a hair off zero so a click on the line still
-    /// yields a visible caliper.
-    private func measureHeadOffset(mode: MeasureMode, foot1: CGPoint, point doc: CGPoint) -> CGFloat {
-        let raw = mode == .horizontal ? doc.y - foot1.y : doc.x - foot1.x
-        if abs(raw) < 4 { return raw >= 0 ? 4 : -4 }
-        return raw
-    }
-
-    /// Advances placement on mouse-up. `dragged` = the press moved far enough to
-    /// count as a drag. The measuring line is set by click/click OR by a single
-    /// press-drag-release; the head is a final click (or drag). The last step
-    /// commits the caliper (which auto-reverts to the Select tool).
-    private func advanceMeasurePlacement(at raw: CGPoint, dragged: Bool,
-                                         modifiers: NSEvent.ModifierFlags) {
-        switch measurePlacement {
-        case nil:
-            // mouse-down normally creates .firstPlaced; guard defensively.
-            resetDragMotion(raw)
-            measurePlacement = .firstPlaced(foot1: snapMeasureAnchor(raw, modifiers: modifiers))
-        case .firstPlaced(let foot1):
-            if measureFirstFootPress && !dragged {
-                // A plain click placed foot A — stay and wait for a foot-B click.
-                measureFirstFootPress = false
-            } else {
-                // Either a press-drag-release drew the line, or a later click/drag
-                // set foot B. Complete the measuring line → head-placement mode.
-                measureFirstFootPress = false
-                let (foot2, mode) = snapMeasureSecondFoot(from: foot1, to: raw, modifiers: modifiers)
-                guard hypot(foot2.x - foot1.x, foot2.y - foot1.y) >= 1 else { break }
-                measurePlacement = .secondPlaced(foot1: foot1, foot2: foot2, mode: mode)
-            }
-        case .secondPlaced(let foot1, let foot2, let mode):
-            let off = measureHeadOffset(mode: mode, foot1: foot1, point: raw)
-            measurePlacement = nil
-            measureFirstFootPress = false
-            snapGuide = nil
-            snapDotLayer.isHidden = true
-            clearAnnotationPreview()
-            onMeasureCommit(foot1, foot2, mode, off) // adds, selects, reverts to Select
-        }
-        refreshOverlays()
-    }
-
-    /// Cancels an in-progress placement (⎋, tool switch, or a Measure mode
-    /// switch) — both the caliper draft and any alignment-guide drag.
-    private func cancelMeasurePlacement() {
-        measurePlacement = nil
-        measureFirstFootPress = false
-        measurePressDownView = nil
-        alignmentDrag = nil
-        alignmentPreviewLayer.isHidden = true
-        snapGuide = nil
-        snapDotLayer.isHidden = true
-        hideMeasureHoverReadout()
-        clearAnnotationPreview()
-    }
-
-    // MARK: Alignment-guide drag (Next, `next-measure-align`)
-
-    /// Draws the dashed guide being dragged, leveled onto the drag's dominant
-    /// axis through the (snapped) anchor.
-    private func refreshAlignmentPreview() {
-        guard let viewport, let drag = alignmentDrag else {
-            alignmentPreviewLayer.isHidden = true
-            return
-        }
-        hideMeasureHoverReadout()
-        let axis = MeasureContent.dominantAxis(from: drag.anchor, to: drag.current)
-        let end = axis == .vertical
-            ? CGPoint(x: drag.anchor.x, y: drag.current.y)
-            : CGPoint(x: drag.current.x, y: drag.anchor.y)
-        let path = CGMutablePath()
-        path.move(to: viewport.viewPoint(fromDocument: drag.anchor))
-        path.addLine(to: viewport.viewPoint(fromDocument: end))
-        let style = measureContent ?? MeasureContent()
-        let rgba = RGBA(hex: style.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        alignmentPreviewLayer.path = path
-        alignmentPreviewLayer.strokeColor = CGColor(srgbRed: rgba.r, green: rgba.g,
-                                                    blue: rgba.b, alpha: rgba.a)
-        alignmentPreviewLayer.lineWidth = max(1, style.strokeWidth * viewport.zoom)
-        alignmentPreviewLayer.isHidden = false
-        snapDotLayer.isHidden = true
-        CATransaction.commit()
-    }
-
-    /// Mouse-up on an alignment drag: level onto the dominant axis and hand the
-    /// guide (axis, cross-axis position, along-axis span) to the app, which
-    /// scans the edges it crosses and commits the check. A press that never
-    /// really dragged is a quiet no-op — a guide needs a span.
-    private func finishAlignmentDrag(from anchor: CGPoint, to raw: CGPoint) {
-        guard let viewport else { return }
-        let axis = MeasureContent.dominantAxis(from: anchor, to: raw)
-        let alongLength = axis == .vertical ? abs(raw.y - anchor.y) : abs(raw.x - anchor.x)
-        guard alongLength * viewport.zoom > 8 else {
-            refreshMeasureCreation(modifierFlags: [])
-            return
-        }
-        let position = axis == .vertical ? anchor.x : anchor.y
-        let span = axis == .vertical
-            ? min(anchor.y, raw.y)...max(anchor.y, raw.y)
-            : min(anchor.x, raw.x)...max(anchor.x, raw.x)
-        onAlignmentCommit(axis, position, span) // adds, selects, reverts to Select
-    }
-
-    // MARK: Size / Gap mode preview (Next)
-
-    /// Hides every mode-preview layer (a miss, a placement, a tool switch).
-    private func hideMeasureHoverReadout() {
-        hoverBoundsLayer.isHidden = true
-        hoverWidthCaliperLayer.isHidden = true
-        hoverHeightCaliperLayer.isHidden = true
-        measureElementPreview = nil
-        measureElementNeighbors = []
-        measureGapPreview = nil
-    }
-
-    /// Draws (or hides) what a click would commit in the current mode.
-    ///
-    /// Only Size and Gap draw here at all: Distance leaves the canvas untouched
-    /// until you click, which is the whole reason it is the default. A miss is
-    /// quiet (no chrome), and until the edge map has finished computing,
-    /// detection sees `EdgeMap.empty` and this stays a no-op — the same gate
-    /// snapping uses. Whatever is drawn is stashed, so mouse-up commits exactly
-    /// the thing you were looking at.
-    private func refreshMeasureHoverReadout(modifierFlags: NSEvent.ModifierFlags) {
-        measureElementPreview = nil
-        measureElementNeighbors = []
-        measureGapPreview = nil
-        guard tool == .measure, measurePlacement == nil,
-              measureToolMode.previewsUnderPointer,
-              let viewport, let document, let hoverPoint else {
-            hideMeasureHoverReadout()
-            return
-        }
-        let probe = viewport.documentPoint(fromView: hoverPoint)
-        guard CGRect(origin: .zero, size: document.canvasSize).contains(probe) else {
-            hideMeasureHoverReadout()
-            return
-        }
-        let style = measureContent ?? MeasureContent()
-        switch measureToolMode {
-        case .size:
-            let ladder = ElementBounds.candidates(
-                at: probe, in: edgeMap, luma: lumaField,
-                // Ten logical points is the smallest thing worth calling an
-                // element, whatever the capture's scale; a line of text ends
-                // at the same visible gap the alignment scan splits items on.
-                minElement: max(10, 10 * document.pixelScale),
-                textGap: AlignmentScan.visibleGap * max(1, document.pixelScale))
-            guard let rect = ladder.isEmpty
-                    ? nil : ladder[min(max(measureCandidateLevel, 0), ladder.count - 1)] else {
-                hideMeasureHoverReadout()
-                return
-            }
-            measureElementPreview = rect
-            drawElementPreview(rect, style: style, viewport: viewport,
-                               pixelScale: document.pixelScale, canvas: document.canvasSize)
-        case .gap:
-            guard let gap = ElementBounds.gap(at: probe, in: edgeMap) else {
-                hideMeasureHoverReadout()
-                return
-            }
-            measureGapPreview = gap
-            drawGapPreview(gap, style: style, viewport: viewport,
-                           pixelScale: document.pixelScale, canvas: document.canvasSize)
-        case .distance, .alignment:
-            hideMeasureHoverReadout()
-        }
-    }
-
-    /// The elements around the picked one, so the two readouts can steer around
-    /// them: what is touching it, and what sits as far out as the number itself
-    /// will travel, since a button half a chip away is just as much in the way.
-    /// Detection costs milliseconds per probe and the pick holds still while
-    /// the pointer wanders inside one element, so the last answer is reused
-    /// until the pick actually changes.
-    private func neighbors(of rect: CGRect, reach: CGFloat) -> [CGRect] {
-        if let cached = measureNeighborCache, cached.rect == rect, cached.reach == reach {
-            return cached.neighbors
-        }
-        let scale = max(1, document?.pixelScale ?? 1)
-        let found = ElementBounds.neighbors(of: rect, in: edgeMap, luma: lumaField,
-                                            minElement: max(10, 10 * scale),
-                                            textGap: AlignmentScan.visibleGap * scale,
-                                            reaches: [ElementBounds.neighborProbeReach,
-                                                      Double(reach)])
-        measureNeighborCache = (rect, reach, found)
-        return found
-    }
-
-    /// Size mode's preview: the picked element outlined in the measure ink, with
-    /// the width and height calipers a click would leave behind.
-    private func drawElementPreview(_ rect: CGRect, style: MeasureContent,
-                                    viewport: Viewport, pixelScale: CGFloat, canvas: CGSize) {
-        let rgba = RGBA(hex: style.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        defer { CATransaction.commit() }
-
-        // Element outline: the measure ink at reduced opacity + a whisper of
-        // fill, so there is never any doubt about WHAT is being measured — the
-        // complaint that sank the old always-on version.
-        let corners = [CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.minY),
-                       CGPoint(x: rect.maxX, y: rect.maxY), CGPoint(x: rect.minX, y: rect.maxY)]
-            .map { viewport.viewPoint(fromDocument: $0) }
-        let outline = CGMutablePath()
-        outline.addLines(between: corners)
-        outline.closeSubpath()
-        hoverBoundsLayer.path = outline
-        hoverBoundsLayer.strokeColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: 0.7)
-        hoverBoundsLayer.fillColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: 0.05)
-        hoverBoundsLayer.isHidden = false
-
-        // Width caliper along the bottom edge, height caliper along the right,
-        // both heads reaching outward far enough to clear the element — the same
-        // placement the click commits, so the preview never lies.
-        let widthFeet = (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.maxY))
-        let heightFeet = (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY))
-        var widthStyle = style
-        widthStyle.mode = .horizontal
-        var heightStyle = style
-        heightStyle.mode = .vertical
-        let widthHead = MeasureBuilder.clearingHeadOffset(content: widthStyle, from: widthFeet.0,
-                                                          to: widthFeet.1, canvas: canvas)
-        let heightHead = MeasureBuilder.clearingHeadOffset(content: heightStyle, from: heightFeet.0,
-                                                           to: heightFeet.1, canvas: canvas)
-        // Both readouts are told the element itself is off limits, and steer
-        // around whatever sits within reach of where a number would land; the
-        // height number also dodges the width number, exactly the order the
-        // commit uses, so nothing shifts between the preview and the click.
-        let widthChip = widthStyle.estimatedLabelSize
-        let heightChip = heightStyle.estimatedLabelSize
-        let reach = max(abs(widthHead) + widthChip.height / 2,
-                        abs(heightHead) + heightChip.width / 2)
-        let neighbors = neighbors(of: rect, reach: reach)
-        measureElementNeighbors = neighbors
-        let widthReadout = layoutHoverCaliper(
-            hoverWidthCaliperLayer, sprite: &hoverWidthSprite,
-            style: style, mode: .horizontal,
-            from: widthFeet.0, to: widthFeet.1, headOffset: widthHead,
-            viewport: viewport, pixelScale: pixelScale,
-            avoiding: neighbors, describing: [rect])
-        layoutHoverCaliper(
-            hoverHeightCaliperLayer, sprite: &hoverHeightSprite,
-            style: style, mode: .vertical,
-            from: heightFeet.0, to: heightFeet.1, headOffset: heightHead,
-            viewport: viewport, pixelScale: pixelScale,
-            avoiding: neighbors + [widthReadout].compactMap { $0 }, describing: [rect])
-    }
-
-    /// Gap mode's preview: one caliper across the whitespace, no outline — there
-    /// is no element to outline, and the caliper's own feet already show which
-    /// two edges are being measured to.
-    private func drawGapPreview(_ gap: GapMeasurement, style: MeasureContent,
-                                viewport: Viewport, pixelScale: CGFloat, canvas: CGSize) {
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        defer { CATransaction.commit() }
-        hoverBoundsLayer.isHidden = true
-        hoverHeightCaliperLayer.isHidden = true
-        var ink = style
-        ink.mode = gap.axis
-        // The readout is told which two elements bound the gap, exactly as the
-        // click will tell it, so the preview never lies about where it lands.
-        layoutHoverCaliper(hoverWidthCaliperLayer, sprite: &hoverWidthSprite,
-                           style: style, mode: gap.axis,
-                           from: gap.start, to: gap.end,
-                           headOffset: MeasureBuilder.clearingHeadOffset(
-                               content: ink, from: gap.start, to: gap.end, canvas: canvas),
-                           viewport: viewport, pixelScale: pixelScale,
-                           describing: subjects(of: gap, pixelScale: pixelScale))
-    }
-
-    /// The elements on either side of `gap`, read once per gap rather than per
-    /// mouse move: the pointer wanders inside one gap for many events and the
-    /// answer cannot change until the gap does.
-    private func subjects(of gap: GapMeasurement, pixelScale: CGFloat) -> [CGRect] {
-        if let cached = measureGapSubjectCache, cached.gap == gap { return cached.subjects }
-        let found = ElementBounds.subjects(from: gap.start, to: gap.end, mode: gap.axis,
-                                           in: edgeMap, luma: lumaField,
-                                           minElement: max(10, 10 * pixelScale),
-                                           textGap: AlignmentScan.visibleGap * max(1, pixelScale))
-        measureGapSubjectCache = (gap, found)
-        return found
-    }
-
-    /// Positions one transient caliper layer, rasterizing through the same
-    /// `MeasureBuilder`/`MeasureRasterizer` pipeline a committed caliper uses so
-    /// the readout (chip, unit, decimals, ink) matches a real measure exactly.
-    /// The raster is cached until the measured span or style actually changes.
-    @discardableResult
-    private func layoutHoverCaliper(_ caliperLayer: CALayer, sprite: inout HoverCaliperSprite?,
-                                    style: MeasureContent, mode: MeasureMode,
-                                    from start: CGPoint, to end: CGPoint, headOffset: CGFloat,
-                                    viewport: Viewport, pixelScale: CGFloat,
-                                    avoiding extra: [CGRect] = [],
-                                    describing subjects: [CGRect] = []) -> CGRect? {
-        var content = style
-        content.mode = mode
-        content.headOffset = headOffset
-        content.showLabel = true
-        // The preview picks the readout's spot exactly the way the commit will,
-        // so nothing jumps when you click (UX-PATTERNS D14).
-        var probe = content
-        probe.start = start
-        probe.end = end
-        let plan = MeasureLabelPlanner.plan(for: probe, canvas: viewport.documentSize,
-                                            avoiding: placedReadoutRects() + extra,
-                                            describing: subjects)
-        content.apply(plan)
-        probe.apply(plan)
-        let readout = probe.labelRect(chipSize: probe.estimatedLabelSize)
-        let built = MeasureBuilder.layer(content: content, from: start, to: end)
-        let key = "\(mode.rawValue)|\(start)|\(end)|\(style.unit.rawValue)|\(style.decimals)|"
-            + "\(style.strokeColorHex)|\(style.chipColorHex)|\(style.textColorHex)|"
-            + "\(style.labelScale)|\(style.strokeWidth)|\(pixelScale)|"
-            + "\(plan.placement.rawValue)|\(plan.nudge)|\(plan.crossReach)"
-        if sprite?.key != key {
-            guard let measure = built.measure,
-                  let image = MeasureRasterizer.rasterize(measure, size: built.frame.size,
-                                                          pixelScale: pixelScale) else {
-                sprite = nil
-                caliperLayer.isHidden = true
-                return nil
-            }
-            sprite = HoverCaliperSprite(key: key, image: image, frame: built.frame)
-        }
-        guard let sprite else { return nil }
-        caliperLayer.contents = sprite.image
-        let origin = viewport.viewPoint(fromDocument: sprite.frame.origin)
-        caliperLayer.frame = CGRect(x: origin.x, y: origin.y,
-                                    width: sprite.frame.width * viewport.zoom,
-                                    height: sprite.frame.height * viewport.zoom)
-        caliperLayer.isHidden = false
-        return readout
-    }
-
-    /// Every readout already on the canvas, in document space — what a hovered
-    /// preview steers around, same as a committed measurement does.
-    private func placedReadoutRects() -> [CGRect] {
-        (document?.layers ?? []).compactMap { MeasureBuilder.readoutRect(of: $0) }
-    }
-
-    /// Draws the measure tool's creation chrome — the snapping dot(s) and the
-    /// in-progress preview line/squared-U — for the 3-click placement flow. ⌘
-    /// bypasses edge snapping throughout.
-    private func refreshMeasureCreation(modifierFlags: NSEvent.ModifierFlags) {
-        refreshMeasureHoverReadout(modifierFlags: modifierFlags)
-        guard tool == .measure, let viewport else {
-            snapDotLayer.isHidden = true
-            return
-        }
-        let cursor = hoverPoint.map { viewport.documentPoint(fromView: $0) }
-        let dots = CGMutablePath()
-        let r: CGFloat = 4
-        func addDot(_ doc: CGPoint) {
-            let v = viewport.viewPoint(fromDocument: doc)
-            dots.addEllipse(in: CGRect(x: v.x - r, y: v.y - r, width: 2 * r, height: 2 * r))
-        }
-        var previewPoints: [CGPoint] = []
-
-        // Alignment mode: only the snap dot (it shows which edge a press would
-        // anchor the guide on); the caliper placement chrome never applies.
-        if measureChecksAlignment {
-            if alignmentDrag == nil, let cursor {
-                addDot(snapMeasureAnchor(cursor, modifiers: modifierFlags))
-            }
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            snapDotLayer.path = dots
-            snapDotLayer.isHidden = dots.isEmpty
-            annotationPreviewLayer.isHidden = true
-            annotationPreviewHeadLayer.path = nil
-            CATransaction.commit()
-            return
-        }
-
-        switch measurePlacement {
-        case nil:
-            if let cursor { addDot(snapMeasureAnchor(cursor, modifiers: modifierFlags)) }
-        case .firstPlaced(let foot1):
-            addDot(foot1)
-            if let cursor {
-                let (foot2, _) = snapMeasureSecondFoot(from: foot1, to: cursor, modifiers: modifierFlags)
-                addDot(foot2)
-                previewPoints = [foot1, foot2]
-            }
-        case .secondPlaced(let foot1, let foot2, let mode):
-            addDot(foot1)
-            addDot(foot2)
-            if let cursor {
-                let off = measureHeadOffset(mode: mode, foot1: foot1, point: cursor)
-                let g = MeasureContent.caliperGeometry(mode: mode, start: foot1, end: foot2, headOffset: off)
-                addDot(g.labelAnchor)
-                previewPoints = g.path
-            }
-        }
-
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        snapDotLayer.path = dots
-        snapDotLayer.isHidden = dots.isEmpty
-        if previewPoints.count >= 2 {
-            let style = measureContent ?? MeasureContent()
-            let path = CGMutablePath()
-            let pts = previewPoints.map { viewport.viewPoint(fromDocument: $0) }
-            path.move(to: pts[0])
-            for p in pts.dropFirst() { path.addLine(to: p) }
-            let rgba = RGBA(hex: style.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
-            annotationPreviewLayer.path = path
-            annotationPreviewLayer.strokeColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
-            annotationPreviewLayer.fillColor = nil
-            annotationPreviewLayer.lineWidth = max(1, style.strokeWidth * viewport.zoom)
-            annotationPreviewLayer.lineJoin = .round
-            annotationPreviewLayer.lineCap = .round
-            annotationPreviewLayer.compositingFilter = nil
-            annotationPreviewHeadLayer.path = nil
-            annotationPreviewLayer.isHidden = false
-        } else {
-            annotationPreviewLayer.isHidden = true
-            annotationPreviewHeadLayer.path = nil
-        }
-        CATransaction.commit()
     }
 
     // MARK: Pointer: layer move or marquee
@@ -2713,7 +2098,7 @@ final class CanvasNSView: NSView {
         refreshOverlaysInsideTransaction()
     }
 
-    private func refreshOverlays(constrainSquare: Bool = false) {
+    func refreshOverlays(constrainSquare: Bool = false) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         refreshOverlaysInsideTransaction(constrainSquare: constrainSquare)
@@ -3193,7 +2578,7 @@ final class CanvasNSView: NSView {
         super.flagsChanged(with: event)
     }
 
-    private func clearAnnotationPreview() {
+    func clearAnnotationPreview() {
         annotationCommitImage = nil
         endpointHoldLayerID = nil
         annotationPreviewLayer.isHidden = true

@@ -50,6 +50,10 @@ scoped to the `next` release only, default ON in next** (`experiments.md`):
   skew is possible).
 - Tool shortcut stays **i** (Photoshop parity: PS groups its Ruler under I; the
   mock's M is PS's marquee and is not adopted).
+- The measure tool's canvas code lives in `Sources/Photonz/CanvasMeasure.swift`
+  (Size/Gap hover previews, element and gap lookups, readout planning, the
+  three-click caliper placement, the alignment-guide drag); `CanvasView.swift`
+  keeps the shell, the pointer routing and every other tool.
 
 ## 3. Measure modes: Distance, Size, Gap — `next-measure-modes`
 
