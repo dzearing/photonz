@@ -1,0 +1,46 @@
+{
+  "feature": "Region capture dims at once, with no magnifier",
+  "epic": "measure-redline",
+  "summary": "Starting a region capture darkens every display the moment you press the shortcut, measured at 10 to 18 ms from the shortcut to every display covered, instead of after the screenshot comes back (43 ms for the first display, 12 ms for each one after). The magnifier that used to ride beside the pointer is gone: a drag shows the box, the bright picture inside it and its size, nothing else.",
+  "setup": "Photonz Dev, either release. Nothing to switch on, and the Loupe during a region capture switch is gone from the Experiments window for good.",
+  "try": [
+    {
+      "do": "Press Shift Command 4 and watch the moment you press it. The whole screen should darken at once, on every display."
+    },
+    {
+      "do": "Hold the pointer still. Nothing should ride beside it: no magnified square, no pixel readout."
+    },
+    {
+      "do": "Keep watching for a second without moving. The picture under the dim should not flicker, shift or change brightness when the freeze lands."
+    },
+    {
+      "do": "Drag a box around something. The box should be bright against the dim, with its size in a pill and no second readout anywhere."
+    },
+    {
+      "do": "Drag onto a second display, if you have one, and off the bottom of a display. The dim should be right on both."
+    },
+    {
+      "do": "Press Esc. The dim should go immediately."
+    },
+    {
+      "do": "Open a menu in any app, press Shift Command 4 without closing it, and see whether the menu is still there in the frozen picture."
+    },
+    {
+      "do": "Choose Record Screen / Video, pick Region, and check the same dim and the same box on the recording overlay."
+    }
+  ],
+  "evaluate": [
+    "Does the dim now land soon enough to feel like the shortcut did it, rather than something starting up?",
+    "Is 25% black the right amount of dark, now that it actually covers the whole display for the first time?",
+    "With the magnifier gone, can you still start a crop on the pixel you mean, or do you want something quieter in its place?",
+    "Does the size pill sit where you want it while you drag, now that it is the only readout?",
+    "Does anything shift or flash in the second after the dim, when the frozen picture slides in underneath?"
+  ],
+  "rough": [
+    "The dim was never covering the whole display before this. It was painted per redrawn rectangle, so a fresh overlay dimmed the outline of the window under the pointer and little else, and the rest of the screen only darkened where a drag had swept. That is fixed here, and it is probably a good part of what felt wrong.",
+    "No screenshot. The loop's probe does hold Screen Recording, and it photographed the drag earlier in the session (box, size pill, no magnifier anywhere), but the machine locked before the dim was fixed and nothing can see past a lock screen: every capture after that came back as the desktop picture, so the shot would have shown a locked machine rather than the feature. The finished dim is checked by its geometry instead (CaptureDim, six tests in PhotonzCore) and by the overlay's layer tree. A follow-up task takes the picture once somebody is logged in.",
+    "The freeze now happens a frame or two after the overlay appears rather than before it. Nothing activates, so a menu left open should survive into the picture, but that is the one behaviour this change could have cost and it is in the steps above for that reason.",
+    "The overlay hides itself from its own screenshot while the freeze is in flight and goes back to being visible afterwards. If you record your screen with another tool, the very first instant of a capture will not show the dim.",
+    "Nothing replaced the magnifier. If placing a crop to the exact pixel matters to you, say so and it comes back as something else: nudge keys, or a readout in the pill, not a floating loupe."
+  ]
+}

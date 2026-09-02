@@ -329,16 +329,16 @@ private final class DimView: NSView {
         return shape
     }
 
-    /// The whole display, minus `hole`. Nil dims everything, which is what a
-    /// capture looks like before the first drag.
-    func open(on hole: CGRect?) {
+    /// The whole display, minus `selection` (in the overlay's top-left points;
+    /// `CaptureDim` turns it the right way up for this layer, and is where that
+    /// turn is tested). Nil dims everything, which is what a capture looks like
+    /// before the pointer has picked anything out.
+    func open(on selection: CGRect?) {
         guard let shape = layer as? CAShapeLayer else { return }
         let path = CGMutablePath()
         path.addRect(bounds)
-        if let hole {
-            // This view is not flipped; the selection is in top-left points.
-            path.addRect(CGRect(x: hole.minX, y: bounds.height - hole.maxY,
-                                width: hole.width, height: hole.height))
+        if let selection, let hole = CaptureDim.hole(for: selection, in: bounds) {
+            path.addRect(hole)
         }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
