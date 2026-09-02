@@ -7,7 +7,7 @@
   "seq": 540,
   "status": "pending",
   "release": "next",
-  "area": "app",
+  "area": "queue",
   "created": "2026-09-02T07:49:54.831Z",
   "updated": "2026-09-02T07:49:54.831Z",
   "deps": [],
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-02T07:49:54.831Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T09:44:17.806Z",
+      "note": "area app -> queue (manager pass 2026-09-02: loop work, not app work)"
     }
   ]
 }
