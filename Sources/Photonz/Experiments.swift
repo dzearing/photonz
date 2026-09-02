@@ -185,6 +185,12 @@ extension Experiments {
     /// false and keeps one button per tool.
     var toolGroupsEnabled: Bool { isEnabled(FeatureCatalog.toolGroupsFlag) }
 
+    /// `next-tool-bar-feedback`: whether the floating tool bar's buttons (and
+    /// the inspector toggle) show the shared hover fill and pressed shrink of
+    /// `IconActionButtonStyle`. Exists only in the Next release's catalog, so
+    /// Current always reads false and its buttons sit still until clicked.
+    var toolBarFeedbackEnabled: Bool { isEnabled(FeatureCatalog.toolBarFeedbackFlag) }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its

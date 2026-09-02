@@ -108,19 +108,13 @@ struct ToolModeButton<Mode: Hashable>: View {
         .overlay { cycleKey }
     }
 
-    /// The glyph, wearing the accent circle when this tool is the one in hand,
-    /// and a corner marker when it has modes to offer.
+    /// The glyph, with a corner marker when it has modes to offer. The accent
+    /// circle for the tool in hand, and the hover and pressed fills, come from
+    /// the shared button style (`.tool(isActive:in:)`), the same one every
+    /// plain tool button wears.
     private var glyph: some View {
         Image(systemName: current?.symbol ?? "questionmark")
             .font(.system(size: 15, weight: .medium))
-            .foregroundStyle(isActive ? Color.white : Color.primary)
-            .frame(width: 28, height: 28)
-            .background {
-                if isActive {
-                    Circle().fill(Color.accentColor)
-                        .matchedGeometryEffect(id: "activeTool", in: namespace)
-                }
-            }
             .overlay(alignment: .bottomTrailing) { moreMarker }
     }
 
@@ -139,6 +133,7 @@ struct ToolModeButton<Mode: Hashable>: View {
 
     private var plainButton: some View {
         Button(action: activate) { glyph }
+            .buttonStyle(.tool(isActive: isActive, in: namespace))
     }
 
     /// Click picks the tool up; press-and-hold or the chevron opens the modes.
@@ -171,13 +166,14 @@ struct ToolModeButton<Mode: Hashable>: View {
         // to look at and two slots wide for one tool.
         .menuIndicator(.hidden)
         .menuStyle(.button)
-        // Plain, not borderless: a `Menu` with a primary action under the
-        // borderless style draws its label at about two thirds strength, so
-        // this button sat in the bar looking disabled beside the plain tool
-        // buttons (measured 155 vs 244 on a real capture). The plain style
-        // leaves the glyph's own foreground alone and keeps the click and
-        // the press-and-hold.
-        .buttonStyle(.plain)
+        // The shared tool style, not borderless: a `Menu` with a primary
+        // action under the borderless style draws its label at about two
+        // thirds strength, so this button sat in the bar looking disabled
+        // beside the plain tool buttons (measured 155 vs 244 on a real
+        // capture). The shared style sets the glyph's own foreground, adds
+        // the hover and pressed fills, and keeps the click and the
+        // press-and-hold.
+        .buttonStyle(.tool(isActive: isActive, in: namespace))
         .fixedSize()
     }
 

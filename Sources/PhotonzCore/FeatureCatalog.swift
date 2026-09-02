@@ -47,6 +47,8 @@ public enum FeatureCatalog {
 
     public static let toolGroupsFlag = "next-tool-groups"
 
+    public static let toolBarFeedbackFlag = "next-tool-bar-feedback"
+
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
@@ -204,6 +206,15 @@ public enum FeatureCatalog {
                     name: toolGroupsFlag,
                     title: "Tool bar families",
                     description: "The floating tool bar groups its tools into families in a fixed order: pick, cut and measure the picture; draw on it; paint it. Line, Rectangle and Ellipse share one Shapes button that remembers the last one you used (Shift plus their letter cycles), and Resize Image moves into the Crop button's list and the Image menu. Off means one button per tool in the old order.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: toolBarFeedbackFlag,
+                    title: "Tool bar buttons respond to the pointer",
+                    description: "Pointing at a tool in the floating tool bar shows the soft fill every other icon button in the app shows, and pressing one shows the stronger fill with a slight shrink. The tool in hand keeps its accent circle and still lights up under the pointer. Off means the buttons sit still until clicked.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

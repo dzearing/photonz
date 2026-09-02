@@ -1,0 +1,26 @@
+{
+  "feature": "Tool bar buttons respond to the pointer",
+  "epic": "measure-redline",
+  "summary": "Every button in the floating tool bar now shows the same soft fill on hover and the stronger fill with a slight shrink on press that the history overlay, toasts and video controls already use. The tool in hand keeps its accent circle and brightens under the pointer.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag 'Tool bar buttons respond to the pointer' is on by default. The style used is IconActionButtonStyle, reached as .tool(isActive:in:), the one the history overlay and toasts use.",
+  "try": [
+    { "do": "Open any screenshot and move the pointer slowly along the tool bar without clicking.", "shot": "2026-09-02-tool-bar-feedback-1.png" },
+    { "do": "Rest on the Arrow tool, then press and hold the mouse button before releasing." },
+    { "do": "Press I to pick up Measure, then hover the Measure button while it wears the accent circle.", "shot": "2026-09-02-tool-bar-feedback-2.png" },
+    { "do": "Hover the selection button (dashed rectangle) and the Crop button, then press and hold one until its list opens.", "shot": "2026-09-02-tool-bar-feedback-3.png" },
+    { "do": "Hover the sidebar toggle in the top-right corner of the canvas." },
+    { "do": "Shrink the window until the ... overflow button appears, then hover it." }
+  ],
+  "evaluate": [
+    "Does the hover fill appear as quickly and fade as softly as it does on the history overlay's buttons?",
+    "Does the tool in hand still read as selected while the pointer rests on it, or does the white wash over the accent circle look muddy?",
+    "Does the press shrink feel right on a menu-backed button that stays pressed while its list is open?",
+    "Is the sidebar toggle's whole capsule lighting up the right amount of feedback for that control?"
+  ],
+  "rough": [
+    "The zoom percentage and the color capsule are not icon buttons (a text menu and a swatch pair), so they keep their own borderless look. They are the only tool bar controls without the shared style.",
+    "The crop aspect chips and the wand tolerance chip, which only exist with the tool options flag off, still use the plain borderless style.",
+    "Hover was not seen on screen by the unmanned loop: the playtest harness cannot move the real pointer. The fill, shrink and timing are the same code path the history overlay ships, and the accent circle now drawn by that style was verified on a real capture.",
+    "Pressing a tool with the flag off (Current) keeps the press highlight a plain button has always had, without the hover fill or the shrink."
+  ]
+}

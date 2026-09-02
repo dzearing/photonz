@@ -132,13 +132,14 @@ struct ToolGroupButton: View {
         }
         .menuIndicator(.hidden)
         .menuStyle(.button)
-        // Plain, not borderless: a `Menu` with a primary action under the
-        // borderless style draws its label at about two thirds strength, so
-        // this button sat in the bar looking disabled beside the plain tool
-        // buttons (measured 155 vs 244 on a real capture). The plain style
-        // leaves the glyph's own foreground alone and keeps the click and
-        // the press-and-hold.
-        .buttonStyle(.plain)
+        // The shared tool style, not borderless: a `Menu` with a primary
+        // action under the borderless style draws its label at about two
+        // thirds strength, so this button sat in the bar looking disabled
+        // beside the plain tool buttons (measured 155 vs 244 on a real
+        // capture). The shared style sets the glyph's own foreground, adds
+        // the hover and pressed fills and the accent circle, and keeps the
+        // click and the press-and-hold.
+        .buttonStyle(.tool(isActive: isActive, in: namespace))
         .fixedSize()
         .help(tooltip)
         .accessibilityLabel("\(group.title): \(remembered.barTitle)")
@@ -148,17 +149,11 @@ struct ToolGroupButton: View {
         }
     }
 
+    /// The glyph with the family's corner marker. The accent circle and the
+    /// pointer response come from the shared button style.
     private var glyph: some View {
         Image(systemName: remembered.barSymbol)
             .font(.system(size: 15, weight: .medium))
-            .foregroundStyle(isActive ? Color.white : Color.primary)
-            .frame(width: 28, height: 28)
-            .background {
-                if isActive {
-                    Circle().fill(Color.accentColor)
-                        .matchedGeometryEffect(id: "activeTool", in: namespace)
-                }
-            }
             .overlay(alignment: .bottomTrailing) { ToolBarMoreMarker(isActive: isActive) }
     }
 }

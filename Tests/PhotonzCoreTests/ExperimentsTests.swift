@@ -380,6 +380,17 @@ struct FeatureCatalogTests {
         #expect(FeatureCatalog.toolGroupsFlag == "next-tool-groups")
     }
 
+    @Test func theToolBarFeedbackFlagIsNextOnlyAndOnByDefault() {
+        // Tool bar buttons show the shared hover fill and pressed shrink that
+        // every other icon button in the app has. Next only; Current keeps
+        // its still buttons.
+        #expect(FeatureCatalog.toolBarFeedbackFlag == "next-tool-bar-feedback")
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.toolBarFeedbackFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.toolBarFeedbackFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.toolBarFeedbackFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.toolBarFeedbackFlag))
+    }
+
     @Test func theToastEditFlagIsNextOnlyAndOnByDefault() {
         // The capture toast used to hide its way into the editor behind a
         // hover. In Next the toast shows an Edit control and names the key;

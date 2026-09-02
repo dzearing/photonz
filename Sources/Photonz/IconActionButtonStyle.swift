@@ -6,46 +6,106 @@ import SwiftUI
 /// pressed. Destructive buttons (`Button(role: .destructive)`) tint red
 /// automatically. Use via `.buttonStyle(IconActionButtonStyle())` on a button
 /// or a row of buttons.
+///
+/// The floating tool bar speaks the same language through `.tool(isActive:in:)`
+/// below: a full-weight glyph at rest, the same hover and pressed fills, and,
+/// for the tool in hand, the accent circle that slides between buttons. One
+/// style for both, so an icon button behaves the same wherever it sits.
 struct IconActionButtonStyle: ButtonStyle {
     /// Diameter of the circular button.
     var diameter: CGFloat = 28
+    /// The label's color while nothing is happening. Small action buttons
+    /// rest at secondary and come up to primary under the pointer; a tool bar
+    /// glyph rests at primary, because a tool is never a quiet extra.
+    var restingTint: Color = .secondary
+    /// Whether the label carries a font of its own that the style should
+    /// leave alone (the tool bar's 15pt medium glyphs), or takes the style's
+    /// 13pt semibold.
+    var keepsLabelFont: Bool = false
+    /// True for the tool in hand: the accent circle behind a white glyph.
+    var isActive: Bool = false
+    /// The namespace the accent circle slides in (`matchedGeometryEffect`),
+    /// so picking another tool moves one circle instead of blinking two.
+    var activeNamespace: Namespace.ID? = nil
+    /// Whether clicks land anywhere in the square frame (a row of tools has
+    /// no dead corners between neighbours) or only inside the circle.
+    var squareHitTarget: Bool = false
+    /// Whether the pointer gets a response. Off keeps only the press
+    /// highlight a plain button has always had (no hover fill, no shrink),
+    /// which is what Current ships for its tool bar.
+    var pointerFeedback: Bool = true
 
     func makeBody(configuration: Configuration) -> some View {
-        IconButtonBody(configuration: configuration, diameter: diameter)
+        IconButtonBody(configuration: configuration, style: self)
     }
 
     private struct IconButtonBody: View {
         let configuration: Configuration
-        let diameter: CGFloat
+        let style: IconActionButtonStyle
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
 
         var body: some View {
             let destructive = configuration.role == .destructive
             let pressed = configuration.isPressed
-            let active = pressed || hovering
-            let tint: Color = destructive ? .red : .primary
+            let hovered = style.pointerFeedback && hovering
+            let lit = pressed || hovered
+            // Over the accent circle the wash is white, so the tool in hand
+            // brightens under the pointer instead of going muddy.
+            let tint: Color = style.isActive ? .white : (destructive ? .red : .primary)
+            let foreground: Color = style.isActive ? .white : (lit ? tint : style.restingTint)
 
             configuration.label
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(active ? tint : Color.secondary)
-                .frame(width: diameter, height: diameter)
+                .font(style.keepsLabelFont ? nil : .system(size: 13, weight: .semibold))
+                .foregroundStyle(foreground)
+                .frame(width: style.diameter, height: style.diameter)
                 .background {
-                    Circle().fill(tint.opacity(fillOpacity(pressed: pressed)))
+                    if style.isActive {
+                        accentCircle
+                    }
+                    Circle().fill(tint.opacity(fillOpacity(pressed: pressed, hovered: hovered)))
                 }
-                .scaleEffect(pressed ? 0.90 : 1)
-                .contentShape(Circle())
+                .scaleEffect(pressed && style.pointerFeedback ? 0.90 : 1)
+                .contentShape(style.squareHitTarget ? AnyShape(Rectangle()) : AnyShape(Circle()))
                 .opacity(isEnabled ? 1 : 0.4)
                 .onHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)
                 .animation(.easeOut(duration: 0.10), value: pressed)
         }
 
-        private func fillOpacity(pressed: Bool) -> Double {
+        @ViewBuilder private var accentCircle: some View {
+            if let namespace = style.activeNamespace {
+                Circle().fill(Color.accentColor)
+                    .matchedGeometryEffect(id: "activeTool", in: namespace)
+            } else {
+                Circle().fill(Color.accentColor)
+            }
+        }
+
+        private func fillOpacity(pressed: Bool, hovered: Bool) -> Double {
             if pressed { return 0.22 }
-            if hovering { return 0.12 }
+            if hovered { return 0.12 }
             return 0
         }
+    }
+}
+
+extension ButtonStyle where Self == IconActionButtonStyle {
+    /// A button in the floating tool bar, or any icon button that should read
+    /// as one: full-weight glyph at rest, the shared hover and pressed fills,
+    /// and the accent circle while it is the tool in hand. The pointer
+    /// response follows the Next release's `next-tool-bar-feedback` flag;
+    /// with it off the button draws its resting look and nothing more.
+    @MainActor
+    static func tool(isActive: Bool = false, in namespace: Namespace.ID? = nil,
+                     diameter: CGFloat = 28) -> IconActionButtonStyle {
+        IconActionButtonStyle(diameter: diameter,
+                              restingTint: .primary,
+                              keepsLabelFont: true,
+                              isActive: isActive,
+                              activeNamespace: namespace,
+                              squareHitTarget: true,
+                              pointerFeedback: Experiments.shared.toolBarFeedbackEnabled)
     }
 }
 

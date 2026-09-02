@@ -1,0 +1,41 @@
+{
+  "id": "tool-bar-buttons-hover-and-press-like-every-othe",
+  "title": "Tool bar buttons hover and press like every other icon button in the app",
+  "goal": "Pointing at a tool in the editor tool bar changes nothing, so the bar feels dead. Tools should show the same soft fill on hover and the stronger fill with a slight shrink on press that the history overlay, toasts and video controls already use, so buttons across the app behave as one family.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 120,
+  "status": "in_progress",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:52:46.409Z",
+  "updated": "2026-09-02T15:46:50.105Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-02: none of the buttons in the toolbar have hover states, I hate this, do we not have a design language for buttons. We do: Sources/Photonz/IconActionButtonStyle.swift (IconActionButtonStyle and PillActionButtonStyle: quiet at rest, soft fill on hover, stronger fill plus shrink on press, 0.4 opacity disabled) is used by the history overlay, quick access, ToastController, PlaybackScrubber and VideoEditorView. The editor tool bar never adopted it: EditorView.swift toolsBar uses .buttonStyle(.borderless) with a hand-rolled active circle in toolButton, and ToolModeButton.swift draws its own glyph. Extend or parametrize IconActionButtonStyle so it can carry the active accent circle plus the matchedGeometryEffect, and apply it to toolButton, selectionGroupButton, ToolModeButton, resizeButton and the fill bucket. Same treatment for the inspector toggle and zoom control if they are icon buttons.",
+  "acceptance": [
+    "Hovering any tool bar button shows the shared hover fill within the shared animation timing; pressing shows the shared pressed state",
+    "The active tool keeps its accent circle and still shows a hover response",
+    "The selection group, crop and measure buttons that open a menu respond to hover the same way as plain tools",
+    "Audit written under queue/audits/ naming the button style used and listing any icon button in the editor that still does not use it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:52:46.410Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-02T15:46:50.105Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T15:50:38.131Z",
+      "note": "Pre-build review. The bar is shared code (EditorView, ToolModeButton, ToolGroupButton), so the hover/press feedback goes behind a Next-only flag (next-tool-bar-feedback, on by default) like every other Next tool bar change; with it off the buttons draw exactly as today. Plan: parametrize IconActionButtonStyle (resting tint, accent circle + matchedGeometryEffect, square hit target, feedback on/off) and expose .tool(isActive:in:), then apply it to every icon button in the bar and the inspector toggle. Kept the 28pt square hit target rather than the circle the history overlay uses, so no dead corners between tools. Hover on the active tool lightens the accent circle with a white wash; press shrinks it like every other icon button. Menu-backed buttons (selection, crop, measure, shapes, overflow) get the same style on the Menu label; a menu stays pressed while its list is open, which is the same thing the system does. The zoom percentage is a text menu, not an icon button, so it is left alone and listed in the audit. The playtest harness cannot hover (it sends synthetic moves to the canvas view and keeps the window at alpha 0), so hover is verified by the shared style code already in use elsewhere, and the style being honored by Menu labels is verified by snapshot: the accent circle now comes from the style."
+    },
+    {
+      "t": "2026-09-02T15:55:06.077Z",
+      "note": "Built. IconActionButtonStyle parametrized (restingTint, keepsLabelFont, isActive+activeNamespace drawing the accent circle with matchedGeometryEffect, squareHitTarget, pointerFeedback) and exposed as .tool(isActive:in:diameter:). Applied in EditorView (toolButton, selectionGroupButton, resizeButton, overflowMenu, placeholderButton, inspectorToggle), ToolModeButton (plain and menu forms) and ToolGroupButton; the glyphs no longer draw their own circle. Flag next-tool-bar-feedback added to FeatureCatalog (Next only, on by default) with a test. Playtest walk Scripts/playtest/tool-bar-feedback.json: real capture shows the accent circle on Select, Measure, Crop and the selection family, so Menu labels honour the style. Post-build review: hover cannot be driven by the harness (synthetic moves go to the canvas view, window is alpha 0), so the hover/press path rests on the same code the history overlay ships; the zoom percentage and color capsule are not icon buttons and keep their look; flag-off (Current) keeps the press highlight but gains no hover or shrink."
+    }
+  ],
+  "started": "2026-09-02T15:46:50.104Z"
+}

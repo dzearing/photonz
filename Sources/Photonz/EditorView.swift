@@ -627,9 +627,9 @@ struct EditorView: View {
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 15, weight: .semibold))
-                .frame(width: 28, height: 28)
         }
-        .menuStyle(.borderlessButton)
+        .menuStyle(.button)
+        .buttonStyle(.tool())
         .menuIndicator(.hidden)
         .fixedSize()
         .help("More tools")
@@ -670,8 +670,8 @@ struct EditorView: View {
         } label: {
             Image(systemName: "arrow.down.right.and.arrow.up.left.rectangle")
                 .font(.system(size: 15, weight: .medium))
-                .frame(width: 28, height: 28)
         }
+        .buttonStyle(.tool())
         .disabled(editorState.document == nil)
         .help("Resize Image (⌥⌘I)")
     }
@@ -691,10 +691,10 @@ struct EditorView: View {
         } label: {
             Image(systemName: isShown ? "sidebar.trailing" : "sidebar.leading")
                 .font(.system(size: 14, weight: .medium))
-                .frame(width: EditorChromeLayout.inspectorToggleSize,
-                       height: EditorChromeLayout.inspectorToggleSize)
         }
-        .buttonStyle(.borderless)
+        // Same language as the tool bar: the hover fill is the capsule itself
+        // lighting up, since the button is exactly the glass it sits on.
+        .buttonStyle(.tool(diameter: EditorChromeLayout.inspectorToggleSize))
         .glassEffect(.regular, in: .capsule)
         .help(isShown ? "Hide Inspector (⌥⌘L)" : "Show Inspector (⌥⌘L)")
     }
@@ -1779,15 +1779,10 @@ struct EditorView: View {
             editorState.setTool(tool)
         } label: {
             icon()
-                .foregroundStyle(isActive ? Color.white : Color.primary)
-                .frame(width: 28, height: 28)
-                .background {
-                    if isActive {
-                        Circle().fill(Color.accentColor)
-                            .matchedGeometryEffect(id: "activeTool", in: toolbarNamespace)
-                    }
-                }
         }
+        // The shared icon-button language: hover fill, pressed shrink, and the
+        // accent circle while this is the tool in hand.
+        .buttonStyle(.tool(isActive: isActive, in: toolbarNamespace))
         // Tools are sticky (17.12), so no double-click-to-lock is needed.
         .help("\(help)\(keyHint)")
         .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: modifiers) })
@@ -1827,20 +1822,12 @@ struct EditorView: View {
         } label: {
             Image(systemName: selectionToolSymbol(remembered))
                 .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(isActive ? Color.white : Color.primary)
-                .frame(width: 28, height: 28)
-                .background {
-                    if isActive {
-                        Circle().fill(Color.accentColor)
-                            .matchedGeometryEffect(id: "activeTool", in: toolbarNamespace)
-                    }
-                }
         } primaryAction: {
             activateSelectionTool(remembered)
         }
         .menuIndicator(.visible)
         .menuStyle(.button)
-        .buttonStyle(.borderless)
+        .buttonStyle(.tool(isActive: isActive, in: toolbarNamespace))
         .fixedSize()
         .help("Selection: Rectangle / Ellipse / Magic Wand (M, ⇧M cycles, W wand). ⇧ add, ⌥ subtract, ⇧⌥ intersect.")
         // The shortcuts live on invisible stand-ins (Menu can't carry them):
@@ -1881,8 +1868,8 @@ struct EditorView: View {
         Button {} label: {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .medium))
-                .frame(width: 28, height: 28)
         }
+        .buttonStyle(.tool())
         .disabled(true)
         .help(help)
     }
