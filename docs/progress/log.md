@@ -4740,3 +4740,18 @@ the card's left end, over the icons.
 - Fix: `ArrowCaptionEntry.repickClosesField(picked:current:fieldOpen:)` (PhotonzCore, test-first): re-picking the tool already in hand while a caption field is open closes the field and keeps the tool. `EditorState.setTool` bumps `captionCloseRequest` in that case; `CanvasView` passes it to the NSView, which answers with `commitTextSession(keepTool: true)` (deferred a tick, same as the tool-switch commit). A different tool button still closes the field through the existing tool-change path.
 - Harness facts worth keeping: the tool bar buttons are AppKit-backed (`SwiftUIAppKitButton`, an NSButton) whose `mouseDown` runs a tracking loop, so a synthesized click must `NSApp.postEvent` the mouse-up BEFORE calling `mouseDown` directly; SwiftUI buttons are invisible to the in-process AX tree, the AppKit pop-ups beside them are not, so button positions were derived from the Selection pop-up's frame and calibrated by clicking. `NSWindow.sendEvent` swallows clicks while the app is inactive; dispatch to the hit-tested view instead.
 - Verified: six scenarios on the probe app (Arrow button with empty field, Return, Esc, plain canvas click, Rectangle button, typed draft + Arrow button + next drag). 1285 tests green. Audit: `queue/audits/2026-09-02-arrow-button-repick.json`.
+
+## 2026-09-02 (go loop): a caliper readout pill draws whole at the edge of its layer
+
+- Task `a-caliper-readout-pill-draws-whole-at-the-edge-o`. Reproduced first
+  with `CaliperChipTests` (PhotonzRender): at the default label size the real
+  pill is 42 px tall and the reservation was 40, so a readout riding the head
+  line past the feet lost its bottom border in the export; at stroke 3 the
+  border's outer half also spilled sideways at small label sizes.
+- Fix in shared `PhotonzCore/Measure.swift`, so Current and Next both have it:
+  the caliper line box is now 1.2 em + 5 (the alignment chip's rule, which
+  holds at 8, 18 and 90 px), and `MeasureBuilder.layer` pads the chip
+  reservation by `chipRenderPadding` (half the stroke plus a pixel) the way
+  `renderPadding` already covers the legs. `clearingHeadOffset` moves from 31
+  to 32.5 px at the default size as a consequence; no pinned test changed.
+  1287 tests green.

@@ -453,8 +453,22 @@ extension MeasureContent {
         let digits = max(1, String(Int(rawDistance.rounded())).count)
         let chars = CGFloat(digits + 4) // space + up-to-2-char unit + slack
         let w = chars * labelPointSize * 0.62 + 2 * labelPadding
-        let h = labelPointSize * 1.3 + 2 * labelPadding
+        // The line box is 1.2 em plus 5, the same rule the alignment chip
+        // uses. SF Pro's line height is not a fixed multiple of the size (it
+        // runs about 1.67 em at 9 pt, 1.44 em at 18 pt, 1.22 em at 90 pt),
+        // and the old 1.3 em came up two pixels short at the default size,
+        // which shaved the pill's bottom border off an export whenever the
+        // readout was the outermost thing in its layer (`CaliperChipTests`).
+        let h = labelPointSize * 1.2 + 5 + 2 * labelPadding
         return CGSize(width: w.rounded(.up), height: h.rounded(.up))
+    }
+
+    /// How far the pill's ink reaches past its reserved rect: the border is
+    /// stroked centered on the pill's edge, so half of it lies outside, plus a
+    /// pixel for antialiasing. The builder pads the chip reservation by this,
+    /// as `renderPadding` does for the legs.
+    public var chipRenderPadding: CGFloat {
+        (strokeWidth / 2 + 1).rounded(.up)
     }
 
     /// How far drawing can extend past the caliper's point bounding box: half the
@@ -550,7 +564,9 @@ public enum MeasureBuilder {
         // readout has moved out of the way of its subject (D14), is not on the
         // head line at all.
         if content.showLabel {
-            box = box.union(content.labelRect(chipSize: content.estimatedLabelSize))
+            let chipPad = content.chipRenderPadding
+            box = box.union(content.labelRect(chipSize: content.estimatedLabelSize)
+                .insetBy(dx: -chipPad, dy: -chipPad))
         }
         // An alignment check also draws each item's tick (and an outlier's
         // actual edge, which can sit well off the guide) — reserve that too.
