@@ -5,11 +5,11 @@
   "epic": "loop-robustness",
   "priority": "p2-normal",
   "seq": 600,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T19:55:42.727Z",
-  "updated": "2026-09-02T20:40:00.000Z",
+  "updated": "2026-09-02T20:06:27.225Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-02 while fixing a-declined-decision-card-retires-its-task-instea. Task the-tool-bar-groups-tools-the-way-a-pro-editor-d: user resolved its decision at 15:24:11 (choice a, Picture first), resolveDecision set status pending, and 25s later the still-running runner called setStatus blocked. It now sits status blocked with blockedBy [] and no pending decision, so readyTasks will never return it and nothing unblocks it. Two candidate fixes: (1) setStatus blocked refuses when the task has no pending decision open against it, or auto-clears; (2) guardStuck sweeps blocked tasks whose decisions are all resolved back to pending. Prefer (2) plus a warning in (1). Also repair the live task as part of the work.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-02T20:40:00.000Z",
       "note": "Audit: queue/audits/2026-09-02-answered-while-working.json. Docs: queue/README.md gained 'An answer that arrives first is never lost' plus a lifecycle line, docs/design/dashboard.md gained the matching design decision, runner-prompt.md now tells runners to re-read their decision file before exiting and never to force a blocked status by hand."
+    },
+    {
+      "t": "2026-09-02T20:06:27.225Z",
+      "note": "Blocking now only holds while a question is open: an answer that lands first is applied instead (pending with the answer quoted, or dropped if it declined), a late block on settled work is ignored, and queue.mjs guard sweeps anything already stranded. queue/bin/queue-lib.mjs; 13 new checks in decision-drill.mjs (26 pass, 7 of the new ones fail on the old code); churn-drill, failure-drill.sh and Scripts/test.sh (1451) green; verified end to end through the dev server API on a throwaway queue. The live stranded tool bar task is repaired to done. Audit: queue/audits/2026-09-02-answered-while-working.json"
     }
   ],
-  "started": "2026-09-02T19:57:14.601Z"
+  "started": "2026-09-02T19:57:14.601Z",
+  "completed": "2026-09-02T20:06:27.225Z"
 }
