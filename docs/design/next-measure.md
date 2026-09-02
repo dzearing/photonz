@@ -441,9 +441,15 @@ px `tolerance` parameter, default 1):
     you see at a glance and can never be confused with a tick meaning "agrees".
     It replaced a 1px edge line plus a midpoint connector that read as nothing
     at 1:1 (2026-08-23).
-  - The verdict chip ("aligned" / "off 4 px", unit-aware) lands wherever
-    `MeasureLabelPlacement` puts it — past the end of the guide by preference,
-    never on a row being judged (D14).
+  - The verdict chip names the edge as well as the verdict ("Left edges
+    aligned" / "Left edges, off 4 px", unit-aware; "Vertical edges" when the
+    side is unknown, "No edges" with nothing to compare): an exported picture
+    carries no row name, so the chip is all a reader gets (2026-09-02). It
+    lands wherever `MeasureLabelPlacement` puts it — past the end of the guide
+    by preference, never on a row being judged (D14). Being words, it is often
+    wider than the margin a left-edge guide runs in, so a centred chip that
+    would hang off the picture slides across the line by exactly the overhang
+    (`labelCrossReach` on the on-line and past-the-end placements).
   All of it is baked into the layer raster, so exports carry it (16.15 rule).
 - **Which edge (2026-09-02).** The edge map stores no polarity, so "left
   edge" cannot be read off an item. `AlignmentScan.elementSide` looks for the
@@ -505,9 +511,9 @@ px `tolerance` parameter, default 1):
   midpoint between two rows when nearer than either edge; edges win ties;
   option persists with the tool's styles.
 - `next-measure-align`: with the Measure tool in Alignment mode, dragging
-  along a shared edge commits a dashed guide reading "aligned"; a 4px-off
-  element gets its real edge drawn with a connector and the chip reads
-  "off 4 px"; the guide settles on the majority edge even when drawn a few px
+  along a shared edge commits a dashed guide reading "Left edges aligned"; a
+  4px-off element gets its real edge drawn with a connector and the chip reads
+  "Left edges, off 4 px"; the guide settles on the majority edge even when drawn a few px
   away; scan/verdict/builder/label unit tests and a rasterizer pixel test
   cover it; exports bake the guide.
 - All of it: flags appear only in the Next release's Experiments list; Current

@@ -102,8 +102,10 @@ extension MeasureContent {
             break
         case .afterEnd:
             along += rawDistance / 2 + halfAlong + gap
+            cross = labelCrossReach
         case .beforeStart:
             along -= rawDistance / 2 + halfAlong + gap
+            cross = labelCrossReach
         case .clearPositive:
             cross = max(0, max(subjectCrossReach, labelCrossReach) + gap + halfCross - headOffset)
         case .clearNegative:
@@ -125,6 +127,21 @@ extension MeasureContent {
         let p = labelPosition(chipSize: chipSize)
         return CGRect(x: p.x - chipSize.width / 2, y: p.y - chipSize.height / 2,
                       width: chipSize.width, height: chipSize.height)
+    }
+
+    /// The signed slide across the line that brings `rect` back onto
+    /// `bounds` on the cross axis, or nil when it already is, or when no slide
+    /// can (a chip wider than the picture). The slide is the least that
+    /// works, so the chip's edge sits on the picture's edge.
+    func edgeSlide(for rect: CGRect, within bounds: CGRect) -> CGFloat? {
+        let lo = mode == .horizontal ? rect.minY : rect.minX
+        let hi = mode == .horizontal ? rect.maxY : rect.maxX
+        let boundLo = mode == .horizontal ? bounds.minY : bounds.minX
+        let boundHi = mode == .horizontal ? bounds.maxY : bounds.maxX
+        guard hi - lo <= boundHi - boundLo else { return nil }
+        if lo < boundLo { return boundLo - lo }
+        if hi > boundHi { return boundHi - hi }
+        return nil
     }
 
     /// True while the readout still rides its own line, which is the only time
@@ -185,6 +202,12 @@ public enum MeasureLabelPlanner {
     /// allows. Each subject's edge is its own candidate because clearing the
     /// near one is often enough: the far one may not reach the chip at all
     /// once a nudge slides it along.
+    ///
+    /// The other placements keep the chip centred on the line, with one
+    /// exception: when centring a past-the-end chip hangs it off the picture
+    /// (a wide chip on a guide near the edge), it may slide across the line
+    /// by exactly the overhang. That slide is found per candidate in `plan`,
+    /// since it depends on where the chip landed.
     private static func crossReaches(for placement: MeasureLabelPlacement,
                                      content: MeasureContent, subjects: [CGRect],
                                      chip: CGSize) -> [CGFloat] {
@@ -233,6 +256,17 @@ public enum MeasureLabelPlanner {
                     probe.labelPlacement = placement
                     probe.labelNudge = step * CGFloat(multiple)
                     probe.labelCrossReach = reach
+                    // A centred chip that hangs off the picture may slide
+                    // across the line by the overhang; the slide is the
+                    // candidate's cross reach, so it draws from the plan alone.
+                    // On-line chips stay centred: the line splits around them,
+                    // and a slid pill would show the dashes through its fill.
+                    let pastEnd = placement == .afterEnd || placement == .beforeStart
+                    if pastEnd, let bounds,
+                       let slide = probe.edgeSlide(for: probe.labelRect(chipSize: chip),
+                                                   within: bounds) {
+                        probe.labelCrossReach = slide
+                    }
                     let rect = probe.labelRect(chipSize: chip)
                     var score = CGFloat(rank) * rankPenalty
                     score += CGFloat(abs(multiple)) * nudgePenalty
@@ -243,7 +277,7 @@ public enum MeasureLabelPlanner {
                     score += hypot(offset.x, offset.y) * travelPenalty
                     if score < bestScore {
                         bestScore = score
-                        best = (placement, probe.labelNudge, reach)
+                        best = (placement, probe.labelNudge, probe.labelCrossReach)
                     }
                 }
             }

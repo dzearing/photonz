@@ -1,0 +1,28 @@
+{
+  "id": "a-caliper-readout-pill-draws-whole-at-the-edge-o",
+  "title": "A caliper readout pill draws whole at the edge of its layer",
+  "goal": "The room Photonz reserves for a measurement readout is two pixels shorter than the pill it actually draws at the default label size, so the pill's outermost border pixel can be shaved off in an exported picture when the readout sits past the end of its caliper. The reserved height should match the real pill so exports are never clipped.",
+  "epic": "spec-export",
+  "priority": "p3-low",
+  "seq": 600,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T10:38:44.234Z",
+  "updated": "2026-09-02T10:38:44.235Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "MeasureContent.estimatedLabelSize (Sources/PhotonzCore/Measure.swift) uses labelPointSize * 1.3 for the line box; TextRasterizer.naturalSize measures SF Pro at 1.444 em at 18 pt, 1.667 em at 9 pt, 1.22 em at 90 pt. The alignment branch already uses labelPointSize * 1.2 + 5, which holds at every size (AlignmentChipTests.theReservationHoldsTheRealTextForEveryWording). The caliper branch was left alone on 2026-09-02 because it ships in Current and a taller reservation nudges clearingHeadOffset for horizontal calipers; decide whether that is acceptable. MeasureBuilder.layer unions the chip rect without renderPadding, so the frame ends exactly at the reserved edge.",
+  "acceptance": [
+    "A rendered caliper with its readout past the end shows the pill's full border on every side in the exported pixels, at label sizes 8, 18 and 90 px.",
+    "The PhotonzRender suite has a test comparing the reserved chip size with the real pill footprint for calipers, the way AlignmentChipTests does for guides.",
+    "Existing caliper placement and clearing-head tests still pass, or their pinned numbers are updated with a note saying why.",
+    "Because this changes shared code, the current release gets the same fix and the change is noted in the progress log."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T10:38:44.235Z",
+      "note": "created (manual)"
+    }
+  ]
+}

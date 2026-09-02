@@ -5,11 +5,11 @@
   "epic": "alignment-checks",
   "priority": "p2-normal",
   "seq": 450,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:40:56.290Z",
-  "updated": "2026-09-02T09:40:56.291Z",
+  "updated": "2026-09-02T10:39:17.005Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From audit 2026-09-02-alignment-guide-row rough 4 (the settled edge is a readout in the inspector only). Code: MeasureContent.label for alignment verdicts at Sources/PhotonzCore/Measure.swift:325 (aligned / off N px), the edge word already derived for the row in MeasureSpecList.derivedName and AlignmentCheck side inference (ink within 20 px). MeasureLabelPlacement.plan uses estimatedLabelSize, so the wider chip changes candidates; MeasureRasterizer bakes it. Keep the spec line format pinned by MeasureSpecListTests unchanged.",
@@ -23,6 +23,28 @@
     {
       "t": "2026-09-02T09:40:56.291Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T10:27:09.149Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T10:31:09.726Z",
+      "note": "Pre-build review. (1) The canvas chip is the only thing an exported picture carries, and today it reads aligned / off 4 px with no subject: a reader cannot tell left edges from tops from centers. The row name in the panel already has the words (Left edges / Vertical edges), so the chip reuses them: Left edges aligned, Left edges, off 4 px. (2) Shortest version: change the baked chip text only. The spec line, the panel row (name already says the edge) and the inspector stay as they are. (3) Breaking it: the chip gets about 2.5x wider. A guide down the left edges of a card sits near the picture edge, and the chip is centred on the guide, so a 240 px chip centred at x 96 hangs off the picture. The planner already penalises off-canvas but has no move that fixes it for the past-the-end spots (its only cross-axis move is the sideways placement, which lands on the rows). So the planner needs to let a past-the-end or on-line chip slide across the line just far enough to stay on the picture. (4) No verdict (fewer than two edges) has no edge to name: the chip reads No edges, capitalised to match the new sentences. (5) Not a decision for the user: wording follows the row names the previous audit already settled, so no card."
+    },
+    {
+      "t": "2026-09-02T10:39:16.977Z",
+      "note": "Built and verified. MeasureContent.chipText names the edge (Left edges aligned / Left edges, off 4 px / Vertical edges when the side is unknown / No edges); MeasureContent.alignmentEdgesPhrase is shared with MeasureSpecList.derivedName so row and chip never disagree; label() and the spec line are unchanged. estimatedLabelSize for a guide is sized from measured SF Pro widths (0.44 em + 1.2 px per glyph, line box 1.2 em + 5), pinned against the real pill by AlignmentChipTests at every label size. MeasureLabelPlanner lets a past-the-end chip slide across the guide by exactly its overhang to stay on the picture (stored in labelCrossReach; on-line chips stay centred so the dashes never show through the fill). MeasureRasterizer bakes chipText. Scripts/test.sh: 1248 tests green (13 new). Before/after renders through DocumentRenderer on the audit capture in queue/audits/2026-09-02-guide-edge-chip-*.png; audit at queue/audits/2026-09-02-guide-edge-chip.json. Could not click through the app (no screen capture for the loop), so acceptance item 1 is verified on the fixture through the same render pipeline rather than by hand."
+    },
+    {
+      "t": "2026-09-02T10:39:16.977Z",
+      "note": "Post-build review: the chip is about twice as wide, so on pictures under ~300 px a left-edge guide may have no spot both on the picture and off its rows (planner then covers a row rather than fall off). Filed follow-ups: caliper pill reserved height 2 px short of the real pill (shared code, left alone), and the button-tops guide reading off 1 px with 4 items on the 2x capture (scan tolerance)."
+    },
+    {
+      "t": "2026-09-02T10:39:17.004Z",
+      "note": "Guide chip now reads Left edges aligned / Left edges, off 4 px (or Vertical edges when the side is unknown); reservation sized to the real text; a wide chip near the picture edge slides onto the picture. Sources/PhotonzCore/Measure.swift, MeasureLabelPlacement.swift, MeasureSpecList.swift, PhotonzRender/MeasureRasterizer.swift. 1248 tests green; renders in queue/audits/2026-09-02-guide-edge-chip-*.png; audit written."
     }
-  ]
+  ],
+  "started": "2026-09-02T10:27:09.149Z",
+  "completed": "2026-09-02T10:39:17.005Z"
 }

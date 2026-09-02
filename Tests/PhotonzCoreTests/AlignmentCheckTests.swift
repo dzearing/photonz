@@ -327,15 +327,18 @@ struct AlignmentVerdictTests {
 @Suite("Alignment content")
 struct AlignmentContentTests {
 
-    private func alignedContent(edges: [CGFloat], tolerance: CGFloat = 1) -> MeasureContent {
+    private func alignedContent(edges: [CGFloat], tolerance: CGFloat = 1,
+                                mode: MeasureMode = .vertical,
+                                side: EdgeSide? = nil) -> MeasureContent {
         var content = MeasureContent(start: CGPoint(x: 100, y: 30),
                                      end: CGPoint(x: 100, y: 210),
-                                     headOffset: 0, mode: .vertical)
+                                     headOffset: 0, mode: mode)
         content.alignment = AlignmentCheck(
             items: edges.enumerated().map {
                 AlignmentItem(edge: $0.element,
                               spanStart: CGFloat(40 + $0.offset * 70),
-                              spanEnd: CGFloat(80 + $0.offset * 70))
+                              spanEnd: CGFloat(80 + $0.offset * 70),
+                              elementSide: side)
             },
             tolerance: tolerance)
         return content
@@ -399,6 +402,57 @@ struct AlignmentContentTests {
     @Test func aGuideWithNothingToCheckSaysSo() {
         let content = alignedContent(edges: [])
         #expect(content.label(pixelScale: 1) == "no edges")
+    }
+
+    // MARK: - The chip on the canvas names its edge
+
+    /// The exported picture carries nothing but the chip, so the chip has to
+    /// say what the guide judged: the same edge words the panel row uses.
+    @Test func theChipNamesTheEdgeItChecked() {
+        #expect(alignedContent(edges: [100, 100, 100], side: .after).chipText(pixelScale: 1)
+                == "Left edges aligned")
+        #expect(alignedContent(edges: [100, 104, 100], side: .after).chipText(pixelScale: 1)
+                == "Left edges, off 4 px")
+        #expect(alignedContent(edges: [100, 100], side: .before).chipText(pixelScale: 1)
+                == "Right edges aligned")
+        #expect(alignedContent(edges: [100, 100], mode: .horizontal, side: .after).chipText(pixelScale: 1)
+                == "Top edges aligned")
+        #expect(alignedContent(edges: [100, 103, 100], mode: .horizontal, side: .before).chipText(pixelScale: 1)
+                == "Bottom edges, off 3 px")
+    }
+
+    /// When the scan could not tell which side the elements sit on, the chip
+    /// names the guide's axis, exactly as the row does, rather than guess.
+    @Test func theChipFallsBackToTheAxisWhenTheSideIsUnknown() {
+        #expect(alignedContent(edges: [100, 104, 100]).chipText(pixelScale: 1)
+                == "Vertical edges, off 4 px")
+        #expect(alignedContent(edges: [100, 100], mode: .horizontal).chipText(pixelScale: 1)
+                == "Horizontal edges aligned")
+    }
+
+    @Test func theChipDeltaRespectsLogicalUnits() {
+        var content = alignedContent(edges: [100, 104, 100], side: .after)
+        content.unit = .points
+        #expect(content.chipText(pixelScale: 2) == "Left edges, off 2 px")
+    }
+
+    /// Fewer than two edges is nothing to compare, so there is no edge to name.
+    @Test func theChipWithNothingToCheckSaysSo() {
+        #expect(alignedContent(edges: []).chipText(pixelScale: 1) == "No edges")
+        #expect(alignedContent(edges: [100], side: .after).chipText(pixelScale: 1) == "No edges")
+    }
+
+    /// The spec line is pinned by `MeasureSpecListTests` and already carries
+    /// the edge in the row name, so the short verdict stays as it was.
+    @Test func theSpecVerdictIsUnchangedByTheChipWording() {
+        let content = alignedContent(edges: [100, 104, 100], side: .after)
+        #expect(content.label(pixelScale: 1) == "off 4 px")
+    }
+
+    @Test func aCaliperChipIsItsReadout() {
+        let caliper = MeasureContent(start: CGPoint(x: 0, y: 10), end: CGPoint(x: 120, y: 10),
+                                     headOffset: 20, mode: .horizontal)
+        #expect(caliper.chipText(pixelScale: 1) == caliper.label(pixelScale: 1))
     }
 }
 

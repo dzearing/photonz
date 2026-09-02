@@ -29,13 +29,7 @@ public enum MeasureSpecList {
     /// role word. The value (the verdict, for a guide) is shown beside the
     /// name, not inside it.
     public static func derivedName(for content: MeasureContent) -> String {
-        if let check = content.alignment {
-            let edges: String
-            if let edge = content.alignedEdge {
-                edges = "\(edge.word) edges"
-            } else {
-                edges = content.mode == .vertical ? "Vertical edges" : "Horizontal edges"
-            }
+        if let check = content.alignment, let edges = content.alignmentEdgesPhrase {
             return "\(edges), \(countPhrase(check.items.count))"
         }
         switch content.role {

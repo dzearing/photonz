@@ -99,6 +99,13 @@ struct AlignmentFixtureTests {
         #expect(content.label(pixelScale: Self.pixelScale) == "off 4 px")
     }
 
+    /// What the exported picture says, with nothing else to read: the edge the
+    /// guide judged and the verdict, in one line.
+    @Test func theChipNamesTheEdgeOnTheCapture() {
+        let (content, _, _) = committed(scan())
+        #expect(content.chipText(pixelScale: Self.pixelScale) == "Left edges, off 4 px")
+    }
+
     /// And it accuses the right row: the middle label, not the ghost under it.
     @Test func theOutlierIsTheMiddleLabel() {
         let items = scan()

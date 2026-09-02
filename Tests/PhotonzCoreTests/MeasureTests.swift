@@ -192,6 +192,37 @@ struct MeasureMigrationTests {
         #expect(m.estimatedLabelSize.height > base.height) // bigger label → bigger chip
     }
 
+    /// A guide's chip names its edge, so the frame the builder reserves and the
+    /// spots the planner tries have to be sized for the words, not for the
+    /// bare verdict: "Horizontal edges, off 120 px" needs more room than
+    /// "Left edges, off 120 px", and both need more than a caliper's number.
+    @Test func alignmentReservationIsSizedForTheEdgeWords() {
+        func guide(_ mode: MeasureMode, side: EdgeSide?) -> MeasureContent {
+            var m = MeasureContent(start: .zero,
+                                   end: mode == .vertical ? CGPoint(x: 0, y: 200) : CGPoint(x: 200, y: 0),
+                                   headOffset: 0, mode: mode)
+            m.alignment = AlignmentCheck(items: [
+                AlignmentItem(edge: 0, spanStart: 0, spanEnd: 40, elementSide: side),
+                AlignmentItem(edge: 0, spanStart: 60, spanEnd: 100, elementSide: side),
+            ], tolerance: 1)
+            return m
+        }
+        let left = guide(.vertical, side: .after).estimatedLabelSize
+        let vertical = guide(.vertical, side: nil).estimatedLabelSize
+        let horizontal = guide(.horizontal, side: nil).estimatedLabelSize
+        let caliper = MeasureContent(start: .zero, end: CGPoint(x: 120, y: 0),
+                                     headOffset: 20, mode: .horizontal).estimatedLabelSize
+        #expect(left.width > caliper.width)
+        #expect(vertical.width > left.width)
+        #expect(horizontal.width > vertical.width)
+        #expect(left.height >= caliper.height)
+        // Wide enough for the longest wording at the estimate's own per-glyph
+        // rate, so the rasterizer's real text always fits inside (the render
+        // suite checks that rate against the real glyphs).
+        let perGlyph = MeasureContent.labelFontSize * 0.44 + 1.2
+        #expect(horizontal.width >= CGFloat("Horizontal edges, off 120 px".count) * perGlyph)
+    }
+
     @Test func labelScaleSurvivesEncodeAndRestyle() throws {
         var m = MeasureContent(mode: .horizontal, labelScale: 1.5)
         m.start = .zero; m.end = CGPoint(x: 100, y: 0)

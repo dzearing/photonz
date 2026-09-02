@@ -1,0 +1,28 @@
+{
+  "id": "a-guide-across-two-buttons-that-line-up-reads-al",
+  "title": "A guide across two buttons that line up reads aligned, not off 1 px",
+  "goal": "On a 2x capture, a guide drawn along the tops of the Reset and Save Changes buttons says Top edges, off 1 px with 4 items, although the buttons line up to the eye. The check should treat a one device pixel difference on a Retina capture as aligned, and count each button once.",
+  "epic": "alignment-checks",
+  "priority": "p2-normal",
+  "seq": 490,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T10:38:44.263Z",
+  "updated": "2026-09-02T10:38:44.263Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen while rendering queue/audits/2026-09-02-guide-edge-chip-buttons.png. AlignmentScan.items splits each button top into two runs (the 16 px block-summed edge map plus the rounded corners), and the tolerance is 1 device px regardless of pixelScale (Experiments.shared.measureAlignTolerance, applied in EditorState.addAlignmentCheck). Consider expressing tolerance in logical px, or rounding item edges to the block grid before comparing. Check the scan output with temp/edge-chip/Render.swift as a starting point.",
+  "acceptance": [
+    "On Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, a horizontal guide at device y 758 spanning x 60 to 500 reads Top edges aligned.",
+    "The same guide counts 2 items, one per button, in the Measurements row.",
+    "A real misalignment of 2 logical px on the same capture is still reported as off 2 px.",
+    "AlignmentFixtureTests covers the button case."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T10:38:44.263Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "feature": "An alignment guide's chip on the canvas names the edge it checked",
+  "epic": "alignment-checks",
+  "summary": "The chip baked onto the picture now reads Left edges, off 4 px or Top edges aligned instead of a bare off 4 px, so an exported screenshot says what the guide judged without the inspector. A chip too wide for the margin it sits in slides across the guide just far enough to stay on the picture.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-measure-align is on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png.",
+  "try": [
+    { "do": "Press I for Measure and set the mode to Alignment." },
+    { "do": "Drag a guide straight down just left of the three labels in the second card, then release.", "shot": "2026-09-02-guide-edge-chip-before.png" },
+    { "do": "Read the chip under the guide. It should say Left edges, off 4 px, sitting in the margin with its left end at the picture's edge rather than hanging off it.", "shot": "2026-09-02-guide-edge-chip-after.png" },
+    { "do": "Draw a horizontal guide along the top of the Reset and Save Changes buttons. The chip to its right should start with Top edges.", "shot": "2026-09-02-guide-edge-chip-buttons.png" },
+    { "do": "Draw a vertical guide down the left side of a card, where the padding is wider than 20 px. The chip should start with Vertical edges, the same words as its row in the Measurements list." },
+    { "do": "Export or copy the image. The chip in the exported picture carries the same words." },
+    { "do": "Open the Measurements list and Copy as Spec List. The guide's line should still read Left edges, 3 items: off 4 px (alignment), unchanged." }
+  ],
+  "evaluate": [
+    "Does Left edges, off 4 px tell you what the guide judged without looking at the panel, or do you still want the word alignment on the chip?",
+    "Is the comma the right join for the off case (Left edges, off 4 px) while the aligned case runs on (Left edges aligned), or should both read the same way?",
+    "When the chip slides sideways to stay on the picture, does it still read as belonging to the guide above it, or does it look detached?",
+    "Is the chip now too long for a small capture, such as a single dialog at 1x, and would you rather it shortened to Left, off 4 px there?"
+  ],
+  "rough": [
+    "The chip is roughly twice as wide as before, so on a picture narrower than about 300 px a left-edge guide has no spot that is both on the picture and off its rows; the planner then covers a row rather than fall off the edge.",
+    "The chip slides only for the past-the-end spots. A chip sitting on the guide line stays centred, because a slid pill would show the dashes through its translucent fill; near a picture edge that spot is skipped in favour of a sideways one.",
+    "The horizontal guide across the two buttons reports Top edges, off 1 px with 4 items: the scan splits each button's top into two runs and the two buttons differ by a device pixel at 2x. Filed as a follow-up on the scan's tolerance, not the wording.",
+    "The caliper chip's reserved height (shared with the current release) is 2 px shorter than the real pill at the default label size, so the pill's outermost border pixel can clip at the layer's edge in an export. The alignment chip's reservation was sized to the real pill; the caliper's was left alone and filed as a follow-up.",
+    "I could not drive the running app on this machine, so the pictures here are renders of the same document pipeline the app exports through, not screenshots of the app."
+  ]
+}

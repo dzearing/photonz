@@ -208,6 +208,73 @@ struct MeasureLabelPlacementTests {
         for subject in m.subjectRects { #expect(!rect.intersects(subject)) }
     }
 
+    /// A guide down the left edges of a column of labels runs close to the
+    /// picture's left edge, and its chip, now carrying "Left edges, off 4 px",
+    /// is wider than twice that margin. Centred on the guide it would hang off
+    /// the picture, so the past-the-end spot slides across the line just far
+    /// enough to stay on it, and still keeps off the rows it judged.
+    @Test func aGuideNearThePictureEdgeSlidesItsChipOntoThePicture() {
+        var m = MeasureContent(start: CGPoint(x: 40, y: 100), end: CGPoint(x: 40, y: 300),
+                               headOffset: 0, mode: .vertical)
+        m.alignment = AlignmentCheck(items: [
+            AlignmentItem(edge: 40, spanStart: 100, spanEnd: 160, elementSide: .after),
+            AlignmentItem(edge: 44, spanStart: 170, spanEnd: 230, elementSide: .after),
+            AlignmentItem(edge: 40, spanStart: 240, spanEnd: 300, elementSide: .after),
+        ], tolerance: 1)
+        let canvas = CGSize(width: 600, height: 600)
+        let chip = m.estimatedLabelSize
+        #expect(chip.width / 2 > 40, "the test needs a chip wider than the margin")
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas)
+        var placed = m
+        placed.apply(plan)
+        let rect = placed.labelRect(chipSize: chip)
+        #expect(plan.placement == .afterEnd)
+        #expect(CGRect(origin: .zero, size: canvas).contains(rect), "\(rect)")
+        for subject in m.subjectRects { #expect(!rect.intersects(subject)) }
+        // It slid only as far as it had to: the chip's edge sits on the
+        // picture's edge, not somewhere out in the middle.
+        #expect(rect.minX == 0)
+        // The slide is the plan's cross reach, so a saved document redraws it.
+        #expect(plan.crossReach > 0)
+    }
+
+    /// The mirror: a guide down the right edges of things against the
+    /// picture's right edge slides the other way.
+    @Test func aGuideNearTheFarEdgeSlidesTheOtherWay() {
+        var m = MeasureContent(start: CGPoint(x: 570, y: 100), end: CGPoint(x: 570, y: 300),
+                               headOffset: 0, mode: .vertical)
+        m.alignment = AlignmentCheck(items: [
+            AlignmentItem(edge: 570, spanStart: 100, spanEnd: 160, elementSide: .before),
+            AlignmentItem(edge: 570, spanStart: 240, spanEnd: 300, elementSide: .before),
+        ], tolerance: 1)
+        let canvas = CGSize(width: 600, height: 600)
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas)
+        var placed = m
+        placed.apply(plan)
+        let rect = placed.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(CGRect(origin: .zero, size: canvas).contains(rect), "\(rect)")
+        #expect(rect.maxX == 600)
+        #expect(plan.crossReach < 0)
+    }
+
+    /// A guide with room on both sides never slides: the chip stays centred
+    /// on the line it belongs to, exactly as before the slide existed.
+    @Test func aGuideWithRoomKeepsItsChipCentredOnTheLine() {
+        var m = alignment()
+        // The same guide, moved to the middle of the picture.
+        m.start.x = 400
+        m.end.x = 400
+        let moved = (m.alignment?.items ?? []).map {
+            AlignmentItem(edge: $0.edge + 300, spanStart: $0.spanStart, spanEnd: $0.spanEnd)
+        }
+        m.alignment?.items = moved
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: CGSize(width: 800, height: 800))
+        var placed = m
+        placed.apply(plan)
+        #expect(plan.crossReach == 0)
+        #expect(placed.labelRect(chipSize: m.estimatedLabelSize).midX == 400)
+    }
+
     /// A caliper whose head already stands clear keeps the classic look: the
     /// fix must not shove labels that were never in the way.
     @Test func plannerLeavesAClearCaliperOnItsHeadLine() {

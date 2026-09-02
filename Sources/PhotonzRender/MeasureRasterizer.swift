@@ -66,7 +66,7 @@ public enum MeasureRasterizer {
         }
 
         // Where the readout lands, and what the line has to do about it.
-        let labelText = measure.label(pixelScale: pixelScale)
+        let labelText = measure.chipText(pixelScale: pixelScale)
         let plan = labelPlan(measure, geometry: g, text: labelText,
                              attachments: [(g.footA, g.headA), (g.headA, g.headB),
                                            (g.headB, g.footB)])
@@ -96,13 +96,15 @@ public enum MeasureRasterizer {
     /// An alignment check (§9, decision D1): a dashed guide along the feet
     /// line, a short solid tick where each element that AGREES crosses it, a
     /// heavier bracket enclosing the gap between the guide and the one element
-    /// that does not, and the verdict chip ("aligned" / "off 4 px") wherever the
-    /// content's `labelPlacement` puts it — never on the rows being judged.
+    /// that does not, and the verdict chip ("Left edges aligned" / "Left
+    /// edges, off 4 px": the picture carries no row name, so the chip names
+    /// the edge itself) wherever the content's `labelPlacement` puts it —
+    /// never on the rows being judged.
     private static func drawAlignmentCheck(_ measure: MeasureContent, geometry g: CaliperGeometry,
                                            pixelScale: CGFloat, color: CGColor,
                                            chipColor: CGColor, in context: CGContext) {
         guard let check = measure.alignment else { return }
-        let labelText = measure.label(pixelScale: pixelScale)
+        let labelText = measure.chipText(pixelScale: pixelScale)
         let plan = labelPlan(measure, geometry: g, text: labelText,
                              attachments: [(g.footA, g.footB)])
 

@@ -119,9 +119,13 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// How far off the measuring line a sideways placement pushes when the
     /// planner had to clear what the caller said the caliper describes: the
     /// element under a Size readout, the two elements a hand-drawn caliper's
-    /// feet landed on. Stored so drawing needs nothing from the picture; zero
-    /// for every other placement and for every document saved before it
-    /// existed. Bounded by the planner (`MeasureLabelPlanner.maxCrossReach`).
+    /// feet landed on. For the on-line and past-the-end placements it is
+    /// instead a signed slide across the line, used only to keep a chip that
+    /// is wider than its margin on the picture (an alignment guide down the
+    /// left edges of a column runs close to the picture's left edge). Stored
+    /// so drawing needs nothing from the picture; zero for every other case
+    /// and for every document saved before it existed. Bounded by the planner
+    /// (`MeasureLabelPlanner.maxCrossReach`, or the picture's edge).
     public var labelCrossReach: CGFloat
 
     public init(start: CGPoint = .zero, end: CGPoint = .zero,
@@ -322,7 +326,10 @@ extension MeasureContent {
     }
 
     /// The formatted readout: a caliper's distance ("120 px"), or an alignment
-    /// check's verdict ("aligned" / "off 4 px" / "no edges").
+    /// check's verdict ("aligned" / "off 4 px" / "no edges"). This is the
+    /// VALUE, shown beside a name that already says what was measured (the
+    /// Measurements row, the spec line). The chip on the canvas has no name
+    /// beside it, so it says more: `chipText`.
     public func label(pixelScale: CGFloat) -> String {
         if let alignment {
             guard let verdict = alignment.verdict else { return "no edges" }
@@ -332,6 +339,28 @@ extension MeasureContent {
         }
         let value = displayDistance(pixelScale: pixelScale)
         return String(format: "%.\(max(0, decimals))f %@", value, unit.suffix)
+    }
+
+    /// For an alignment guide, the edges it judged as words: "Left edges", or
+    /// "Vertical edges" when the scan could not tell which side its elements
+    /// sit on (so it names the axis rather than guess). Nil for a caliper.
+    /// Shared by the row name and the canvas chip so they never disagree.
+    public var alignmentEdgesPhrase: String? {
+        guard alignment != nil else { return nil }
+        if let edge = alignedEdge { return "\(edge.word) edges" }
+        return mode == .vertical ? "Vertical edges" : "Horizontal edges"
+    }
+
+    /// What the chip on the canvas says. A caliper's chip is its readout. An
+    /// alignment guide's chip is the only thing an exported picture carries,
+    /// so it names the edge it checked as well as the verdict: "Left edges
+    /// aligned", "Left edges, off 4 px", or "No edges" when there were fewer
+    /// than two edges to compare and so no edge to name.
+    public func chipText(pixelScale: CGFloat) -> String {
+        guard let alignment, let edges = alignmentEdgesPhrase else { return label(pixelScale: pixelScale) }
+        guard let verdict = alignment.verdict else { return "No edges" }
+        guard !verdict.isAligned else { return "\(edges) aligned" }
+        return "\(edges), \(label(pixelScale: pixelScale))"
     }
 
     /// Drawable geometry for this measure's own points (feet + head + anchor).
@@ -405,16 +434,24 @@ extension MeasureContent {
     /// digit count across units), so it stays stable when the unit/scale changes.
     /// The rasterizer measures the real text and centers within this reservation.
     public var estimatedLabelSize: CGSize {
-        // Alignment verdicts are words, not distances: "off 120 px" is the
-        // longest realistic form, and a fixed reservation keeps the frame
-        // stable when the verdict text changes.
-        let chars: CGFloat
-        if alignment != nil {
-            chars = 10
-        } else {
-            let digits = max(1, String(Int(rawDistance.rounded())).count)
-            chars = CGFloat(digits + 4) // space + up-to-2-char unit + slack
+        // An alignment chip is words, not a distance: the edge phrase plus
+        // ", off 120 px", the longest realistic verdict. The phrase is fixed
+        // once the guide lands (it comes from the items), so the reservation
+        // stays stable when only the unit or decimals change.
+        if let edges = alignmentEdgesPhrase {
+            let chars = CGFloat(edges.count + ", off 120 px".count)
+            // Words, not digits, and measured (`AlignmentChipTests`): SF Pro's
+            // letters in these phrases average under 0.44 em, plus about a
+            // pixel of advance that does not scale down with the font; the
+            // line box is 1.2 em plus 5. Sized to hold the real pill at every
+            // label size, and no wider, so a guide near the edge of a narrow
+            // picture is not pushed sideways for room it does not need.
+            let w = chars * (labelPointSize * 0.44 + 1.2) + 2 * labelPadding
+            let h = labelPointSize * 1.2 + 5 + 2 * labelPadding
+            return CGSize(width: w.rounded(.up), height: h.rounded(.up))
         }
+        let digits = max(1, String(Int(rawDistance.rounded())).count)
+        let chars = CGFloat(digits + 4) // space + up-to-2-char unit + slack
         let w = chars * labelPointSize * 0.62 + 2 * labelPadding
         let h = labelPointSize * 1.3 + 2 * labelPadding
         return CGSize(width: w.rounded(.up), height: h.rounded(.up))

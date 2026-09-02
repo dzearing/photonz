@@ -4599,3 +4599,27 @@ the card's left end, over the icons.
 - Next, `next-measure-panel`: Copy Image (⇧⌘C, inspector Export button) now writes the spec list as plain text beside the PNG and TIFF when the document has a visible measurement. `CompositeCopy` (PhotonzCore, tested) pins the flavors and order; `EditorState.copyCompositeToClipboard` walks it. The "Copied" pill gains an `image(measurements:)` subject.
 - Probed consumers: rich NSTextView and a WebKit editable take the picture; plain text views and NSTextField take the list. Chat clients (Messages, Slack, Discord) are left to the playtest audit `queue/audits/2026-09-02-copy-image-spec-list.json`, since the agent cannot drive other apps.
 - Next: user reaction to the audit; if a chat client prefers the text, withdraw and open a decision.
+
+## 2026-09-02 — The alignment guide's chip names its edge
+
+- Task `an-alignment-guide-on-the-canvas-says-which-edge` (Next, `next-measure-align`).
+  The baked chip read `aligned` / `off 4 px` with no subject, so an exported
+  picture could not say whether left edges, tops or centers were checked.
+  `MeasureContent.chipText` now reads "Left edges aligned" / "Left edges, off
+  4 px" ("Vertical edges" when the side is unknown, "No edges" with nothing to
+  compare); `alignmentEdgesPhrase` is shared with the row name. `label()` and
+  the spec line are unchanged.
+- The reservation for a guide's chip is sized from measured SF Pro widths
+  (0.44 em + 1.2 px per glyph, line box 1.2 em + 5) and pinned against the real
+  pill by `AlignmentChipTests` at every label size. The caliper's reservation
+  (shared with Current) was left alone: it is 2 px short of the real pill at
+  the default size, filed as a follow-up.
+- A past-the-end chip wider than the margin it sits in slides across the guide
+  by exactly its overhang (`MeasureLabelPlanner`, stored in `labelCrossReach`).
+  On-line chips stay centred so the dashes never show through the fill.
+- Verified: 1248 tests green (13 new). Before/after renders of the audit capture
+  through `DocumentRenderer` (`temp/edge-chip/Render.swift`) in
+  `queue/audits/2026-09-02-guide-edge-chip-*.png`; audit
+  `2026-09-02-guide-edge-chip.json`.
+- Filed: the button-tops guide on the 2x capture reads off 1 px with 4 items
+  (scan tolerance in device px, runs split per button).
