@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:48:50.092Z",
-  "updated": "2026-09-02T17:02:00.530Z",
+  "updated": "2026-09-02T17:02:20.828Z",
   "deps": [],
   "blockedBy": [],
   "notes": "See queue/audits/2026-09-02-text-line-3-label-hover-zoom.png. The planner (MeasureLabelPlanner.plan describing:/avoiding:) is handed the label as subject and the neighbours from ElementBounds.neighbors(of:) at two reaches; the far probe lands on the next row (or its label), so the space under the caliper counts as on a neighbour and the above-right slot with a leader wins. Options: let the strip between the subject and the next neighbour count as clear when the chip fits in it, or weigh a neighbour that is a row less than one that is a control.",
@@ -42,7 +42,12 @@
     {
       "t": "2026-09-02T17:02:00.530Z",
       "note": "Verified: the two new pinning tests fail on the old planner and pass on the new one; full Scripts/test.sh green at 1405 tests; playtested on Photonz Probe against the settings fixture, screenshots in queue/audits/2026-09-02-row-label-readout-*.png. Heading, Reset/Save Changes and whole-row readouts all land where they landed before."
+    },
+    {
+      "t": "2026-09-02T17:02:20.827Z",
+      "note": "The row label's width number now sits under the words on its own caliper line, no leader. MeasureLabelPlanner charges a neighbour by how deep the readout reaches into it, and charges a sideways placement whose leader would cross the subject. Two pinning tests (core + fixture), full suite green at 1405, playtested on the probe, audit at queue/audits/2026-09-02-row-label-readout.json."
     }
   ],
-  "started": "2026-09-02T16:47:49.421Z"
+  "started": "2026-09-02T16:47:49.421Z",
+  "completed": "2026-09-02T17:02:20.828Z"
 }
