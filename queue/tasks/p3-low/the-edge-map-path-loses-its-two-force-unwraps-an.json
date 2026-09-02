@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:57.338Z",
-  "updated": "2026-09-02T07:37:15.000Z",
+  "updated": "2026-09-02T07:37:26.728Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/PhotonzCore/EdgeMap.swift:79 (luma!.count), Sources/PhotonzRender/EdgeMapAnalyzer.swift:103 (CGColorSpace(name:)!), Sources/PhotonzCore/SelectionRegion.swift:12 (@unchecked Sendable). CLAUDE.md: no force unwraps in core or render; core must be value-typed and Sendable. Shared code, both releases.",
@@ -42,7 +42,12 @@
     {
       "t": "2026-09-02T07:37:15.000Z",
       "note": "grep -rnE '[A-Za-z0-9_\\)\\]]![^=]' Sources/PhotonzCore Sources/PhotonzRender | grep -vE '!=|\"[^\"]*!'  => 0 hits. Scripts/test.sh: 1181 tests in 148 suites passed; ElementDetectionFixtureTests and AlignmentFixtureTests untouched and green."
+    },
+    {
+      "t": "2026-09-02T07:37:26.728Z",
+      "note": "Both force unwraps removed (EdgeMap luma validation, EdgeMapAnalyzer sRGB colour space); grep over PhotonzCore and PhotonzRender shows zero. SelectionRegion keeps @unchecked Sendable because CGPath is not Sendable in the macOS 26 SDK, now with a comment saying exactly why, and its init no longer retains a caller's path when the copy fails. New tests pin luma-size validation and copy independence. Scripts/test.sh: 1181 tests green. Commit e36055b pushed to main."
     }
   ],
-  "started": "2026-09-02T07:33:50.942Z"
+  "started": "2026-09-02T07:33:50.942Z",
+  "completed": "2026-09-02T07:37:26.728Z"
 }
