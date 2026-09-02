@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 570,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T15:00:58.735Z",
-  "updated": "2026-09-02T17:02:45.618Z",
+  "updated": "2026-09-02T17:16:26.826Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Both grabs live in CanvasView.mouseDown: captionPillRect(_:) for arrows (captionDrag) and measureReadoutRect(_:) for calipers (measureHandleDrag .head). Cursor rects or a mouseMoved check against those rects with NSCursor.openHand / closedHand is the smallest version. Filed from the caption-drag audit rough item 1 and the caliper-head audit rough item 1.",
@@ -27,7 +27,12 @@
     {
       "t": "2026-09-02T17:02:45.618Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T17:16:26.826Z",
+      "note": "Next: an open-hand cursor when the pointer rests on a draggable pill (arrow caption, caliper number), closed hand while dragging, behind next-grab-cue (on by default in Next). Decision logic is PhotonzCore/ReadoutGrab (14 tests) mirroring mouseDown precedence, so handles and feet keep the plain arrow. Verified on the probe with Scripts/playtest/grab-cue.json (harness now logs the cursor, including while a drag is held); Scripts/test.sh green at 1420. Audit queue/audits/2026-09-02-grab-cue.json; the caption-drag and caliper-head audits' rough item 1 now points at it. Commit 0aed389."
     }
   ],
-  "started": "2026-09-02T17:02:45.617Z"
+  "started": "2026-09-02T17:02:45.617Z",
+  "completed": "2026-09-02T17:16:26.826Z"
 }
