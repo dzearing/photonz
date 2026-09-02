@@ -1,0 +1,30 @@
+{
+  "feature": "Every tool explains itself with a tooltip",
+  "epic": "measure-redline",
+  "summary": "Resting the pointer on any button in the floating tool bar now shows a small dark label with the tool's name and the key that picks it (Arrow A, Measure I, Resize Image ⌥⌘I), in the design language's tooltip style with a beak aimed at the button. Before, hovering a tool showed nothing.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag 'Tools explain themselves with a tooltip' is on by default. The label is the app's own tooltip (HintTooltip.swift), not the system help tag.",
+  "try": [
+    { "do": "Open any screenshot, put the pointer on the Arrow tool and hold it still for about a second.", "shot": "2026-09-02-tool-tips-1-arrow.png" },
+    { "do": "Without lifting, slide along the bar to the next tools. The label should follow at once, no fade between neighbours." },
+    { "do": "Rest on the Measure button. It reads 'Measure: Size' (or whichever mode its glyph shows) with I.", "shot": "2026-09-02-tool-tips-2-measure.png" },
+    { "do": "Sweep the pointer quickly across the whole bar without stopping. Nothing should pop." },
+    { "do": "Rest on a tool, then slip into the gap between two buttons and back. The label should survive the gap." },
+    { "do": "With a label showing, click the tool, or press any key. The label should vanish at once." },
+    { "do": "Rest on the sidebar toggle in the top-right corner of the canvas.", "shot": "2026-09-02-tool-tips-3-inspector.png" }
+  ],
+  "evaluate": [
+    "Is about one second of holding still the right wait before the first label, or does it feel like the app is ignoring you?",
+    "Does the label sit where your eye already is, above the button with the beak on it, or does it get in the way of the bar?",
+    "Is the quieter key beside the name enough to teach the shortcut, or should the key be louder?",
+    "For Measure and Crop, does naming the live mode ('Measure: Size') help, or would the bare tool name be clearer?",
+    "Do you miss the family listing the group buttons used to put in their tooltip (Line L, Rectangle R, Ellipse O), now that the press-and-hold list is the only place it appears?"
+  ],
+  "rough": [
+    "The loop could not move the real pointer (no Accessibility grant for its shell), and the hidden probe window did not turn a synthesized mouse move into hover events, so the walk delivered the hover to the button directly. Placement, text, timing and drawing were verified; the real pointer reaching the button is the one link you are testing.",
+    "The wait uses the mock's rest-gated one second (tooltip.js), not the 400ms UX-PATTERNS mentions. The two documents disagree; the mock's number came with the reasoning, so it won.",
+    "The sidebar toggle's label lands over the window's title bar, because a hint goes above its control and only flips below when the screen runs out. If that reads as wrong, the rule could prefer below for controls along the window's top edge.",
+    "Group buttons (Shapes, Selection) now name only the member the button stands for, with its key. The family and its letters live in the press-and-hold list, which already prints them.",
+    "The labels show on hover only. The mock also shows them on keyboard focus; the tool bar's buttons are not tab stops, so that path does not exist here yet.",
+    "The history overlay still uses the older capsule tooltip (TooltipController). It is Current-release code, so it was left alone; folding it into this component is a follow-up for when Next forks that surface."
+  ]
+}

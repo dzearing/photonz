@@ -141,7 +141,9 @@ struct ToolGroupButton: View {
         // click and the press-and-hold.
         .buttonStyle(.tool(isActive: isActive, in: namespace))
         .fixedSize()
-        .help(tooltip)
+        // The hint names the member the button stands for; the family and
+        // its letters are one press-and-hold away, in the list.
+        .toolTip(remembered.barTitle, key: remembered.shortcutHint ?? keyLabel, fallback: tooltip)
         .accessibilityLabel("\(group.title): \(remembered.barTitle)")
         .background {
             ToolGroupShortcuts(group: group, activate: activate,

@@ -391,6 +391,17 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.toolBarFeedbackFlag))
     }
 
+    @Test func theToolTipsFlagIsNextOnlyAndOnByDefault() {
+        // Every tool bar button explains itself with the design-language
+        // tooltip (name plus key) instead of the system help tag. Next only;
+        // Current keeps the system tag.
+        #expect(FeatureCatalog.toolTipsFlag == "next-tool-tips")
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.toolTipsFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.toolTipsFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.toolTipsFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.toolTipsFlag))
+    }
+
     @Test func theToastEditFlagIsNextOnlyAndOnByDefault() {
         // The capture toast used to hide its way into the editor behind a
         // hover. In Next the toast shows an Edit control and names the key;

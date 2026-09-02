@@ -84,6 +84,12 @@ struct ToolModeButton<Mode: Hashable>: View {
         keyLabel.map { " (\($0))" } ?? ""
     }
 
+    /// The one-line hint: the tool, and the mode its glyph is showing.
+    private var hint: String {
+        guard let current, modes.count > 1 else { return toolTitle }
+        return "\(toolTitle): \(current.title)"
+    }
+
     private var tooltip: String {
         guard let current else { return "\(toolTitle)\(keySuffix)" }
         guard modes.count > 1 else { return "\(current.help)\(keySuffix)" }
@@ -100,7 +106,7 @@ struct ToolModeButton<Mode: Hashable>: View {
                 plainButton
             }
         }
-        .help(tooltip)
+        .toolTip(hint, key: keyLabel, fallback: tooltip)
         // The label is a bare glyph, so without this the button reaches
         // VoiceOver as an unnamed pop-up. Name the tool AND the live mode,
         // since the mode is the thing the glyph is saying.

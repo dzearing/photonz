@@ -86,6 +86,7 @@ read coordinates straight off the fixture.
 | `wait` | `seconds` | Sleeps. Prefer `waitFor`. |
 | `key` | `key`, optional `modifiers` | Presses and releases a key. `key` is one character or `return`, `escape`, `tab`, `space`, `delete`, `left`, `right`, `up`, `down`. Modifiers: `command`, `shift`, `option`, `control`. Plain keys go to the window like typing; chords are offered to the window, then the menu bar, and the log says who took them. |
 | `move` | `at` | Moves the pointer over the canvas (hover previews, snap dots). |
+| `hover` | `label` or `at` | Rests the pointer on a control until its tooltip shows: `label` is the text the tooltip starts with ("Arrow", "Measure"); `at` is a point, and one over no control leaves the tooltip behind. The log line says what showed and where, and a `snapshot` taken now includes it. |
 | `click` | `at`, optional `count`, `modifiers` | Mouse down and up on the canvas. |
 | `drag` | `from`, `to`, optional `steps` | Mouse down, a run of drags, mouse up. |
 | `type` | `text` | Inserts text into whatever field has the keyboard. Fails when nothing does. |

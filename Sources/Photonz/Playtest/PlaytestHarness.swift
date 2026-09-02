@@ -66,6 +66,8 @@ private final class Run {
     private var editor: EditorState?
     private var window: NSWindow?
     private var canvas: CanvasNSView?
+    /// The control the last `hover` rested on, so the next one can leave it.
+    private var hovered: HintAnchorView?
 
     init(scriptURL: URL, coordinator: AppCoordinator) {
         self.scriptURL = scriptURL
@@ -169,6 +171,59 @@ private final class Run {
             if let event = mouseEvent(.mouseMoved, at: p, on: canvas) { canvas.mouseMoved(with: event) }
             await sleep(0.05)
             note(number, step.name, "to \(short(at.point)) \(at.space.rawValue) = view \(short(p))")
+
+        case .hover(let target):
+            let window = try requireWindow()
+            let canvas = try requireCanvas()
+            guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
+            let anchors = Self.findAll(HintAnchorView.self, in: content)
+            let anchor: HintAnchorView?
+            let location: CGPoint
+            let place: String
+            switch target {
+            case .label(let text):
+                // The exact label first, then one that starts with the text,
+                // then one that mentions it: "Rectangle" is the shape, not
+                // Rectangle Select; "Inspector" is the toggle in either state.
+                guard let found = anchors.first(where: { $0.label == text })
+                        ?? anchors.first(where: { $0.label.hasPrefix(text) })
+                        ?? anchors.first(where: { $0.label.range(of: text, options: .caseInsensitive) != nil }) else {
+                    let names = anchors.map(\.label).sorted().joined(separator: ", ")
+                    throw Failure(description: "no control with a tooltip starting \"\(text)\"; on screen: \(names)")
+                }
+                anchor = found
+                location = found.convert(CGPoint(x: found.bounds.midX, y: found.bounds.midY), to: nil)
+                place = "\"\(text)\""
+            case .point(let at):
+                location = canvas.convert(try viewPoint(at), to: nil)
+                anchor = anchors.first { $0.convert($0.bounds, to: nil).contains(location) }
+                place = "\(short(at.point)) \(at.space.rawValue)"
+            }
+            let controller = HintTooltipController.shared
+            guard let event = NSEvent.mouseEvent(
+                with: .mouseMoved, location: location, modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+                context: nil, eventNumber: 0, clickCount: 0, pressure: 0) else {
+                throw Failure(description: "could not make a mouse event")
+            }
+            // Through the window, the way a real pointer's move arrives, so
+            // AppKit's own tracking areas do the entering and leaving.
+            window.sendEvent(event)
+            await sleep(0.1)
+            var path = "window"
+            // If the window did not turn the move into enter and leave
+            // events, deliver them by hand, and say so in the log.
+            if let hovered, hovered !== anchor, controller.isWatching(hovered) {
+                hovered.mouseExited(with: event)
+                path = "direct"
+            }
+            if let anchor, !controller.isWatching(anchor) {
+                anchor.mouseEntered(with: event)
+                path = "direct"
+            }
+            hovered = anchor
+            await sleep(HintTooltipController.restDelay + 0.4)
+            note(number, step.name, "\(place) via \(path) events: \(controller.visibleDescription ?? "no tooltip")", state: describe())
 
         case .click(let at, let count, let modifiers):
             let canvas = try requireCanvas()
@@ -328,6 +383,13 @@ private final class Run {
         note(number, "open", "\(url.lastPathComponent): document \(Int(documentSize.width))x\(Int(documentSize.height)) at pixelScale \(opened.document?.pixelScale ?? 0) (points are in these units); window \(Int(window.frame.width))x\(Int(window.frame.height)) pt; canvas \(Int(canvas?.bounds.width ?? 0))x\(Int(canvas?.bounds.height ?? 0)) pt; zoom \(String(format: "%.3f", opened.viewport?.zoom ?? 0))", state: describe())
     }
 
+    private static func findAll<T: NSView>(_ type: T.Type, in view: NSView) -> [T] {
+        var found: [T] = []
+        if let match = view as? T { found.append(match) }
+        for subview in view.subviews { found += findAll(type, in: subview) }
+        return found
+    }
+
     private static func findCanvas(_ view: NSView) -> CanvasNSView? {
         if let canvas = view as? CanvasNSView { return canvas }
         for subview in view.subviews {
@@ -446,10 +508,33 @@ private final class Run {
             throw Failure(description: "could not make a bitmap for \(name)")
         }
         view.cacheDisplay(in: view.bounds, to: rep)
+        drawTooltip(over: view, into: rep)
         guard let png = rep.representation(using: .png, properties: [:]) else {
             throw Failure(description: "could not encode \(name).png")
         }
         try png.write(to: out.appendingPathComponent("\(name).png"))
+    }
+
+    /// A tooltip is its own little window floating over the editor's, so an
+    /// offscreen draw of the editor alone would never show one. Paint it in
+    /// where it sits, so the picture is what a person would see.
+    private func drawTooltip(over view: NSView, into rep: NSBitmapImageRep) {
+        guard let window = view.window,
+              let panel = HintTooltipController.shared.panel(over: window),
+              let tipView = panel.contentView,
+              let tipRep = tipView.bitmapImageRepForCachingDisplay(in: tipView.bounds) else { return }
+        tipView.cacheDisplay(in: tipView.bounds, to: tipRep)
+        let image = NSImage(size: tipView.bounds.size)
+        image.addRepresentation(tipRep)
+        var rect = view.convert(window.convertFromScreen(panel.frame), from: nil)
+        // The bitmap is bottom-up; a flipped view's rect is not.
+        if view.isFlipped { rect.origin.y = view.bounds.height - rect.maxY }
+        guard let context = NSGraphicsContext(bitmapImageRep: rep) else { return }
+        NSGraphicsContext.saveGraphicsState()
+        // The context already maps the view's points onto the 2x bitmap.
+        NSGraphicsContext.current = context
+        image.draw(in: rect)
+        NSGraphicsContext.restoreGraphicsState()
     }
 
     /// The window as the screen actually shows it, beside the offscreen
@@ -534,6 +619,7 @@ private final class Run {
             "legendAnchor": editor.measureLegendAnchor.rawValue,
             "legendTopInset": editor.measureLegendTopInset,
             "inspector": editor.isLayersPanelVisible,
+            "tooltip": HintTooltipController.shared.visibleDescription ?? "none",
             "edgeMap": !editor.snappingEdgeMap.isEmpty,
             "firstResponder": window?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil",
         ]

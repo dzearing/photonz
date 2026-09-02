@@ -184,6 +184,27 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test func hoverNamesEitherAPointOrTheControlItLabels() throws {
+        // A walk rests the pointer on a control to see its tooltip. The tool
+        // bar is chrome, so it is more natural to name the control than to
+        // measure where it landed; a point still works for anything else.
+        let script = try decode("""
+        {
+          "steps": [
+            { "do": "hover", "label": "Arrow" },
+            { "do": "hover", "at": [300, 800], "space": "view" }
+          ]
+        }
+        """)
+        guard case .hover(.label(let label)) = script.steps[0] else { Issue.record("label"); return }
+        #expect(label == "Arrow")
+        guard case .hover(.point(let at)) = script.steps[1] else { Issue.record("point"); return }
+        #expect(at.point == CGPoint(x: 300, y: 800) && at.space == .view)
+        #expect(throws: PlaytestScriptError.self) {
+            try decode(#"{ "steps": [ { "do": "hover" } ] }"#)
+        }
+    }
+
     @Test func everyStepNameIsListedOnce() {
         // The error text and the doc both come from this list, so a new step
         // that forgets to register itself is caught here.

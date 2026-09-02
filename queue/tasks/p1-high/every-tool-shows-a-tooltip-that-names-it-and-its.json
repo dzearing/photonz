@@ -1,0 +1,53 @@
+{
+  "id": "every-tool-shows-a-tooltip-that-names-it-and-its",
+  "title": "Every tool shows a tooltip that names it and its key",
+  "goal": "Hovering a tool in the editor tool bar shows no tooltip, so there is no way to learn that A is Arrow or I is Measure without reading the menus. Every tool should show the design language tooltip with its name and the key that picks it.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 130,
+  "status": "in_progress",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:52:46.438Z",
+  "updated": "2026-09-02T15:56:54.550Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-02: none of the tools have a tooltip like we have in the design language; I want the tools to tell me what keyboard button to press. The code already attaches .help(help + keyHint) in EditorView.swift toolButton, with the key from Tool.shortcutHint, and ToolModeButton applies .help(tooltip). So either .help does not surface on borderless buttons inside the glass capsule, or the Menu-hosted tools swallow it, or the delay is long enough that the user never sees one. Reproduce first on the probe (dist/Photonz Probe.app), then fix. UX-PATTERNS.md around line 855 and 894 describes the tooltip contract (about 400ms in, cannot steal hover). If the app has no shared tooltip component yet, build one small enough for the tool bar and note it as the pattern for other surfaces.\n\nOutcome: the design-language tooltip now lives in Sources/Photonz/HintTooltip.swift (controller, anchor view, SwiftUI view, .toolTip modifier) behind next-tool-tips. Follow-up not filed as a task (design-system is staged next, not now): the history overlay's TooltipController is a second tooltip component and should fold into HintTooltip when Next forks that surface. Real-pointer hover was not observable from the loop; the audit asks the user to confirm it.",
+  "acceptance": [
+    "Hovering each tool bar button for the standard delay shows a tooltip reading the tool name and its key, for example Arrow (A) and Measure (I)",
+    "Tools without a single key, like Resize, show their menu chord instead",
+    "The tooltip uses the app tooltip treatment described in docs/design/mocks/shared/UX-PATTERNS.md (delay, no flicker, never steals hover) rather than a bare system tooltip if the two differ",
+    "Verified on the probe app by hovering with the playtest harness or by hand, with a screenshot in the audit under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:52:46.438Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-02T15:56:54.550Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T16:14:06.000Z",
+      "note": "Reproduction attempt: the loop's shell has no Accessibility grant, so a synthesized pointer move (CGEvent) was silently ignored and the accessibility tree was unreadable; the real-pointer path could not be observed from the loop. Recorded as such rather than claimed."
+    },
+    {
+      "t": "2026-09-02T16:14:06.000Z",
+      "note": "Adversarial review of the idea: a paragraph is not a tooltip (D12), so the group and mode buttons drop their multi-line help for one line (name plus key; 'Measure: Size'), leaving the family listing to the press-and-hold menu. Two design docs disagree on the delay (UX-PATTERNS ~400ms, tooltip.js 1s rest-gated); took tooltip.js since it carries the reasoning, and put the question in the audit. Kept the system .help as the Current-release fallback so Current is untouched."
+    },
+    {
+      "t": "2026-09-02T16:14:06.000Z",
+      "note": "Built HintTooltip.swift: HintTooltipController (one NSPanel child of the editor window, rest-gated show, 60ms warm swap, 450ms leave grace, dismiss on press/key/scroll/window close, above-with-flip placement, never resizes, ignores the mouse), HintAnchorView (tracking-area NSView behind each control, hitTest nil), HintTooltipView (dark-slate plate, quieter monospaced key, blunted beak from the mock's path), and .toolTip(_:key:fallback:) which falls back to .help when next-tool-tips is off. Applied to every tool bar button, the inspector toggle, overflow, Resize, Swap Fill Colors and the style button."
+    },
+    {
+      "t": "2026-09-02T16:14:06.000Z",
+      "note": "Harness: new 'hover' step (by tooltip label or point) that rests past the delay and logs what showed; snapshots now composite the tooltip panel into the offscreen render; describe() reports 'tooltip'. The hidden probe window did not turn window.sendEvent(mouseMoved) into tracking events, so the step falls back to delivering mouseEntered directly and says 'via direct events' in the log."
+    },
+    {
+      "t": "2026-09-02T16:14:06.000Z",
+      "note": "Verified on the probe with Scripts/playtest/tool-tips.json: Arrow (A), Measure: Size (I), Crop: Free (C), Rectangle (R), Show Inspector (⌥⌘L) each appeared above their button; resting in the open showed nothing. Screenshots in queue/audits/2026-09-02-tool-tips-*.png; audit 2026-09-02-tool-tips.json."
+    }
+  ],
+  "started": "2026-09-02T15:56:54.550Z"
+}

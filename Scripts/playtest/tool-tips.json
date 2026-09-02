@@ -1,0 +1,28 @@
+{
+  "out": "/tmp/photonz-playtest/tool-tips",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "hover", "label": "Arrow" },
+    { "do": "describe", "stage": "1-arrow", "note": "resting on Arrow: the label and its key sit above the button" },
+    { "do": "snapshot", "name": "1-arrow" },
+
+    { "do": "hover", "label": "Measure" },
+    { "do": "describe", "stage": "2-measure", "note": "moving to Measure swaps the label in place; the mode rides along" },
+    { "do": "snapshot", "name": "2-measure" },
+
+    { "do": "hover", "label": "Crop" },
+    { "do": "snapshot", "name": "3-crop" },
+
+    { "do": "hover", "label": "Rectangle" },
+    { "do": "snapshot", "name": "4-shapes-family" },
+
+    { "do": "hover", "label": "Inspector" },
+    { "do": "snapshot", "name": "5-inspector-toggle" },
+
+    { "do": "hover", "at": [640, 400], "space": "view" },
+    { "do": "describe", "stage": "6-left", "note": "resting in the open: nothing showing" },
+    { "do": "snapshot", "name": "6-left" }
+  ]
+}

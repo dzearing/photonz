@@ -163,6 +163,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case undo, redo
 }
 
+/// What a `hover` step rests the pointer on.
+public enum PlaytestHoverTarget: Sendable, Equatable {
+    /// The control whose tooltip begins with this text ("Arrow", "Measure").
+    case label(String)
+    /// A point; over no control it rests in the open.
+    case point(PlaytestPoint)
+}
+
 public enum PlaytestStep: Sendable, Equatable {
     /// Open a file in an editor window and wait until it is ready to drive.
     /// The window is kept invisible; `size` sets its frame first.
@@ -172,6 +180,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// menu shortcuts are found).
     case key(PlaytestKey, [PlaytestModifier])
     case move(PlaytestPoint)
+    /// Rest the pointer on a control (named by the label its tooltip shows,
+    /// or by a point) long enough for its tooltip to appear. A point over no
+    /// control rests in the open and hides whatever was showing.
+    case hover(PlaytestHoverTarget)
     case click(PlaytestPoint, count: Int, modifiers: [PlaytestModifier])
     case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int)
     /// Insert text into whatever field has the keyboard.
@@ -198,8 +210,8 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "clearClipboard", "click", "describe", "drag", "key", "measureMode", "move",
-        "open", "readClipboard", "render", "snapshot", "tool", "type", "wait", "waitFor",
+        "action", "clearClipboard", "click", "describe", "drag", "hover", "key", "measureMode",
+        "move", "open", "readClipboard", "render", "snapshot", "tool", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
@@ -209,6 +221,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .wait: "wait"
         case .key: "key"
         case .move: "move"
+        case .hover: "hover"
         case .click: "click"
         case .drag: "drag"
         case .type: "type"
@@ -244,6 +257,14 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .key(key, try f.modifiers())
         case "move":
             self = .move(try f.point("at"))
+        case "hover":
+            if fields["label"] != nil {
+                self = .hover(.label(try f.string("label")))
+            } else if fields["at"] != nil {
+                self = .hover(.point(try f.point("at")))
+            } else {
+                throw f.invalid("label", "hover needs a \"label\" (the text the control's tooltip shows) or an \"at\" point")
+            }
         case "click":
             let count = try f.optionalNumber("count").map { Int($0) } ?? 1
             self = .click(try f.point("at"), count: max(1, count), modifiers: try f.modifiers())

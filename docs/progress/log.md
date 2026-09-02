@@ -4907,3 +4907,9 @@ the card's left end, over the icons.
 - Next: every icon button in the floating tool bar (plain tools, the selection / Shapes families, Crop and Measure with their mode lists, Resize, the overflow chevron) and the inspector toggle now wear `IconActionButtonStyle`, reached as `.buttonStyle(.tool(isActive:in:))`. The style grew `restingTint`, `keepsLabelFont`, `isActive` + `activeNamespace` (it draws the accent circle and its `matchedGeometryEffect`), `squareHitTarget` and `pointerFeedback`. Behind `next-tool-bar-feedback` (on by default in Next); with it off the buttons keep their still look and the plain press highlight.
 - Verified: `Scripts/test.sh` green (1375 tests, one new for the flag); walk `Scripts/playtest/tool-bar-feedback.json` on a real capture shows the accent circle under Select, Measure, Crop and the selection family, so the menu-backed buttons honour the style. Hover itself cannot be driven by the harness.
 - Audit: `queue/audits/2026-09-02-tool-bar-feedback.json`. Not styled: the zoom percentage (text menu), the color capsule, and the flag-off crop and wand chips.
+
+## 2026-09-02 (go loop): tool bar tooltips
+
+- Every tool bar button now explains itself with the design-language tooltip (name plus key, dark plate, beak) via `Sources/Photonz/HintTooltip.swift`, behind Next's `next-tool-tips` flag; Current keeps the system `.help` tag.
+- Playtest harness gained a `hover` step and composites the tooltip into snapshots. Synthesized mouse moves through the hidden probe window do not drive tracking areas, so the step delivers the hover directly and says so.
+- Open: the real-pointer path could not be observed from the loop (no Accessibility grant); the audit `queue/audits/2026-09-02-tool-tips.json` asks the user to confirm. The history overlay's older `TooltipController` remains a second tooltip component until Next forks that surface.

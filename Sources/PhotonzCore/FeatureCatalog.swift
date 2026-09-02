@@ -49,6 +49,8 @@ public enum FeatureCatalog {
 
     public static let toolBarFeedbackFlag = "next-tool-bar-feedback"
 
+    public static let toolTipsFlag = "next-tool-tips"
+
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
@@ -215,6 +217,15 @@ public enum FeatureCatalog {
                     name: toolBarFeedbackFlag,
                     title: "Tool bar buttons respond to the pointer",
                     description: "Pointing at a tool in the floating tool bar shows the soft fill every other icon button in the app shows, and pressing one shows the stronger fill with a slight shrink. The tool in hand keeps its accent circle and still lights up under the pointer. Off means the buttons sit still until clicked.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: toolTipsFlag,
+                    title: "Tools explain themselves with a tooltip",
+                    description: "Resting the pointer on a tool in the floating tool bar shows a small label with the tool's name and the key that picks it, in the app's own tooltip style: it appears once the pointer has been still for a moment, follows the pointer from tool to tool without flicker, and never gets in the way of a click. Off means the buttons show the plain system help tag, which may not appear at all.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

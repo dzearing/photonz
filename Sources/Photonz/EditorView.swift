@@ -632,7 +632,7 @@ struct EditorView: View {
         .buttonStyle(.tool())
         .menuIndicator(.hidden)
         .fixedSize()
-        .help("More tools")
+        .toolTip("More tools")
     }
 
     /// Contextual options for the active tool (wand tolerance, crop aspects). In
@@ -673,7 +673,7 @@ struct EditorView: View {
         }
         .buttonStyle(.tool())
         .disabled(editorState.document == nil)
-        .help("Resize Image (⌥⌘I)")
+        .toolTip("Resize Image", key: "⌥⌘I")
     }
 
     /// The in-window sidebar toggle (top-trailing): collapse or reveal the
@@ -696,7 +696,7 @@ struct EditorView: View {
         // lighting up, since the button is exactly the glass it sits on.
         .buttonStyle(.tool(diameter: EditorChromeLayout.inspectorToggleSize))
         .glassEffect(.regular, in: .capsule)
-        .help(isShown ? "Hide Inspector (⌥⌘L)" : "Show Inspector (⌥⌘L)")
+        .toolTip(isShown ? "Hide Inspector" : "Show Inspector", key: "⌥⌘L")
     }
 
     /// Auto-collapse the inspector below the width threshold, and restore the
@@ -1067,7 +1067,7 @@ struct EditorView: View {
                     .frame(width: 16, height: 16)
             }
             .keyboardShortcut("x", modifiers: [])
-            .help("Swap Fill Colors (X)")
+            .toolTip("Swap Fill Colors", key: "X")
         }
     }
 
@@ -1529,7 +1529,7 @@ struct EditorView: View {
                 .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
                 .frame(width: 28, height: 28)
         }
-        .help(editorState.activeTool == .text ? "Text Style (S)" : "Annotation Style (S)")
+        .toolTip(editorState.activeTool == .text ? "Text Style" : "Annotation Style", key: "S")
         .keyboardShortcut("s", modifiers: [])
         .popover(isPresented: $isStylePopoverPresented, arrowEdge: .top) {
             stylePopover
@@ -1773,7 +1773,8 @@ struct EditorView: View {
                             @ViewBuilder icon: () -> some View) -> some View {
         let isActive = editorState.activeTool == tool
         let shiftHint = modifiers.contains(.shift) ? "⇧" : ""
-        let keyHint = tool.shortcutHint.map { " (\(shiftHint)\($0))" } ?? ""
+        let keyLabel = tool.shortcutHint.map { "\(shiftHint)\($0)" }
+        let keyHint = keyLabel.map { " (\($0))" } ?? ""
         let key = tool.keyEquivalent
         return Button {
             editorState.setTool(tool)
@@ -1784,7 +1785,8 @@ struct EditorView: View {
         // accent circle while this is the tool in hand.
         .buttonStyle(.tool(isActive: isActive, in: toolbarNamespace))
         // Tools are sticky (17.12), so no double-click-to-lock is needed.
-        .help("\(help)\(keyHint)")
+        .toolTip(help, key: keyLabel, fallback: "\(help)\(keyHint)")
+        .accessibilityLabel(help)
         .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: modifiers) })
     }
 
@@ -1829,7 +1831,8 @@ struct EditorView: View {
         .menuStyle(.button)
         .buttonStyle(.tool(isActive: isActive, in: toolbarNamespace))
         .fixedSize()
-        .help("Selection: Rectangle / Ellipse / Magic Wand (M, ⇧M cycles, W wand). ⇧ add, ⌥ subtract, ⇧⌥ intersect.")
+        .toolTip(remembered.barTitle, key: remembered == .wand ? "W" : "M",
+                 fallback: "Selection: Rectangle / Ellipse / Magic Wand (M, ⇧M cycles, W wand). ⇧ add, ⌥ subtract, ⇧⌥ intersect.")
         // The shortcuts live on invisible stand-ins (Menu can't carry them):
         // M = the remembered selector, ⇧M = cycle, W = jump to the wand.
         .background {
@@ -1871,7 +1874,7 @@ struct EditorView: View {
         }
         .buttonStyle(.tool())
         .disabled(true)
-        .help(help)
+        .toolTip(help)
     }
 }
 

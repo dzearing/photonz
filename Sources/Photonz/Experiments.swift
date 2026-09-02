@@ -191,6 +191,13 @@ extension Experiments {
     /// Current always reads false and its buttons sit still until clicked.
     var toolBarFeedbackEnabled: Bool { isEnabled(FeatureCatalog.toolBarFeedbackFlag) }
 
+    /// `next-tool-tips`: whether the floating tool bar's buttons explain
+    /// themselves with the design-language tooltip (`HintTooltip.swift`: name
+    /// plus key, rest-gated, placed above the control) instead of the system
+    /// help tag. Exists only in the Next release's catalog, so Current always
+    /// reads false and keeps `.help`.
+    var toolTipsEnabled: Bool { isEnabled(FeatureCatalog.toolTipsFlag) }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its
