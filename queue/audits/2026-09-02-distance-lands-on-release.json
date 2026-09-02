@@ -1,0 +1,29 @@
+{
+  "feature": "Distance in one drag",
+  "epic": "measure-redline",
+  "summary": "A Distance measurement can now be one press-and-drag: let go and the caliper lands with its number already placed clear of what it measured, instead of waiting for a third click. It is built and switched OFF, waiting on the decision card, so nothing has changed for anyone yet.",
+  "setup": "Photonz Dev, Experiments window, release Next. Find Measure modes and turn on its Distance lands when you let go switch, then open a screenshot.",
+  "try": [
+    { "do": "Press I. The pill above the tool bar should read Drag between two points, or click each one." },
+    { "do": "Press on one edge of a button, drag to the other edge, and let go. The measurement lands, finished.", "shot": "2026-09-02-distance-lands-on-release.png" },
+    { "do": "Look at where the number sits. It should be clear of the thing you just measured." },
+    { "do": "Drag the number away from the measuring line. The arm gets deeper and the number goes with it." },
+    { "do": "Press I again and this time click one point, then the other, without dragging. The second click finishes it." },
+    { "do": "Press Command Z. The whole measurement goes in one step." },
+    { "do": "Turn the switch back off and take the same measurement. It should want three clicks again, and the pill should say so." }
+  ],
+  "evaluate": [
+    "Does letting go feel like the measurement is finished, or does it land before you meant it to?",
+    "Is the spot the number picks good enough that you stop thinking about it?",
+    "When the spot is wrong, is dragging the number an obvious enough fix, or did you look for something else first?",
+    "Does the click, click version still feel right now that the second click ends it rather than starting a wait?",
+    "Is the Distance pill's line, Drag between two points, or click each one, the right thing to say?"
+  ],
+  "rough": [
+    "The number always goes to the growing side, below a horizontal measurement and right of a vertical one, unless the edge of the picture pushes it back. It does not yet look for which side has more empty space. That is the same rule Gap follows, so the two agree, but a measurement taken along the bottom of a dense card can still land its number on content.",
+    "There is no way to overrule the spot while you are still measuring. The only override is dragging the number after it lands. Whether a held key should bring the old third click back is one of the options on the decision card.",
+    "Whether this ships at all is the user's call. The switch defaults to off and the card is open; a runner should not flip it before the card is answered.",
+    "Checked, not assumed: the same two points measured by drag and by two clicks give the same numbers (123 px and 602 px on the settings-pane fixture), so the faster gesture is not a less accurate one.",
+    "The picture is a real screen capture of the probe app, not an offscreen render."
+  ]
+}

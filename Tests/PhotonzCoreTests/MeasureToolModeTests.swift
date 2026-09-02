@@ -108,6 +108,43 @@ struct MeasureToolModeTests {
         }
     }
 
+    @Test func distanceSaysItLandsOnTheReleaseWhenTheDragPlacesTheNumber() throws {
+        // With the drag gesture on, the third click is gone: the caliper lands
+        // when you let go and the number places itself. The pill has to teach
+        // the drag, and must NOT still promise a click that places the number,
+        // which is exactly what made the caliper seem stuck before.
+        let line = MeasureToolMode.distance.hint(landsOnRelease: true)
+        #expect(line.lowercased().contains("drag"))
+        #expect(!line.contains("then click"))
+        #expect(line.count <= MeasureToolMode.hintLengthLimit)
+        #expect(!line.contains("—"))
+
+        let long = MeasureToolMode.distance.help(landsOnRelease: true)
+        #expect(long.hasPrefix(MeasureToolMode.distance.title))
+        #expect(long.lowercased().contains("drag"))
+        #expect(!long.contains("—"))
+
+        // The way to overrule the automatic spot is to drag the number, and
+        // that is taught where it stays rather than in a pill that fades.
+        let tip = try #require(MeasureToolMode.distance.keyTip(landsOnRelease: true))
+        #expect(tip.lowercased().contains("drag"))
+        #expect(tip.count <= MeasureToolMode.hintLengthLimit)
+        #expect(!tip.contains("—"))
+
+        // The other modes are one click either way, so their words never move.
+        for mode in MeasureToolMode.allCases where mode != .distance {
+            #expect(mode.hint(landsOnRelease: true) == mode.hint)
+            #expect(mode.help(landsOnRelease: true) == mode.help)
+            #expect(mode.keyTip(landsOnRelease: true) == mode.keyTip)
+        }
+        // And with the gesture off nothing has moved at all.
+        for mode in MeasureToolMode.allCases {
+            #expect(mode.hint(landsOnRelease: false) == mode.hint)
+            #expect(mode.help(landsOnRelease: false) == mode.help)
+            #expect(mode.keyTip(landsOnRelease: false) == mode.keyTip)
+        }
+    }
+
     @Test func aGapPreviewCanBorrowTheSpacingInkWithoutChangingTheRememberedRole() {
         // Gap mode commits a Spacing callout, so its preview has to be drawn in
         // Spacing ink — but picking up the Gap mode must not rewrite what the

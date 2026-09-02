@@ -5040,3 +5040,44 @@ things on the canvas that drag without saying so. Filed as
 `every-handle-on-the-canvas-says-what-it-does-to` rather than guessed at: a
 resize handle probably wants a resize arrow, and AppKit has no public diagonal
 one, so that pass likely draws its own.
+
+## 2026-09-02 — Distance in one drag, built and parked on a decision
+
+Task `a-distance-measurement-can-be-one-drag-instead-o` (epic `measure-redline`).
+
+Reading the code before building changed the shape of the task. A
+press-drag-release ALREADY drew the measuring line, so today's Distance is
+drag-then-click, not click-click-click; the only ceremony left is the third
+click that sets the head. That click does two jobs, the number's side and the
+arm's depth, and `MeasureLabelPlanner` plus `MeasureBuilder.clearingHeadOffset`
+already decide both for Gap and Size. It is also a worse override than the one
+that exists: dragging a landed number moves it AND carries the arm with it,
+live. So no new override gesture was built.
+
+Shipped switched OFF, behind a new `distance-on-release` parameter on
+`next-measure-modes`:
+
+- `CanvasMeasure.advanceMeasurePlacement` skips the `.secondPlaced` stage when
+  the switch is on and calls the new shared `finishMeasurePlacement`.
+- `EditorState.addMeasure` takes `headOffset: CGFloat?`; nil means "pick it
+  yourself" and falls through to `clearingHeadOffset`, the same standoff Gap
+  uses, before the existing `planReadout`.
+- `MeasureToolMode.hint/help/keyTip` and `MeasureModeHint.detail` gained
+  `landsOnRelease:` forms rather than forking. Distance earns its first
+  `keyTip`: "Drag the number to put it somewhere else".
+
+Verified on the probe with Screen Recording granted. Two walks on the same
+capture (`Scripts/playtest/distance-three-clicks.json`,
+`distance-lands-on-release.json`) land the Save Changes button width and the
+first settings row width. Both gestures give identical numbers, 123 px and
+602 px, and both readouts land clear. An earlier run read 120 px against 123 px
+and looked like the drag skipping a snap; it did not reproduce on a re-run of
+the same build, so it was edge-map timing rather than the gesture. Tests 1475
+green. Audit: `queue/audits/2026-09-02-distance-lands-on-release.json`.
+
+**Next:** the decision card
+`a-distance-measurement-can-be-one-drag-instead-o-should-a-distance-measurement-fi`
+is open with a real capture per option. An approving answer is a one-line
+default flip plus, if the Option variant wins, the held key. Also noted for
+whoever takes it: the auto placement always reaches to the growing side unless
+the picture's edge pushes back, and does not yet prefer the emptier side.

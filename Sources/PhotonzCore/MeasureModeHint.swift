@@ -52,5 +52,11 @@ public struct MeasureModeHint: Hashable, Sendable {
     public var title: String { mode.title }
 
     /// What a click does in that mode, phrased as the next thing to do.
-    public var detail: String { mode.hint }
+    public var detail: String { detail(landsOnRelease: false) }
+
+    /// The same line under the Distance drag gesture, where the caliper lands
+    /// on the release and there is no third click to promise.
+    public func detail(landsOnRelease: Bool) -> String {
+        mode.hint(landsOnRelease: landsOnRelease)
+    }
 }

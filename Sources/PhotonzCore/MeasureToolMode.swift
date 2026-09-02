@@ -11,7 +11,9 @@ import Foundation
 /// only appears when its flag is on.
 public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
     /// The two-point caliper: click a point, click another, click to place the
-    /// head. The default, and the only mode that draws no live chrome.
+    /// head — or, with the drag gesture switched on, one press-drag-release
+    /// that lands the caliper with its number already placed. The default, and
+    /// the only mode that draws no live chrome.
     case distance
     /// The element under the pointer, committed by a click: one width caliper
     /// and one height caliper, in a single undo step.
@@ -46,9 +48,18 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
 
     /// The tooltip on the tool button, and the line the flyout's row carries:
     /// what a click does in this mode.
-    public var help: String {
+    public var help: String { help(landsOnRelease: false) }
+
+    /// The same line, told for the Distance gesture that is switched on.
+    /// `landsOnRelease` is the drag gesture: the caliper lands the moment you
+    /// let go and the number places itself, so there is no third click to
+    /// describe. Every other mode is one click either way and reads the same.
+    public func help(landsOnRelease: Bool) -> String {
         switch self {
-        case .distance: "Distance: click two points, then click to place the readout"
+        case .distance:
+            landsOnRelease
+                ? "Distance: drag from one point to the other, or click each one. The number places itself, and you can drag it somewhere else"
+                : "Distance: click two points, then click to place the readout"
         case .size: "Size: click the element under the pointer for its width and height. [ and ] pick a smaller or larger one"
         case .gap: "Gap: click in the space between two elements for the gap"
         case .alignment: "Alignment: drag a guide along an edge to check everything it crosses"
@@ -63,9 +74,17 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
     /// of a narrow window. Distance's never said that a THIRD click places
     /// the number, so a first-timer clicked twice and waited. The long form
     /// of each tip lives in `help`, the tooltip, and Size's keys in `keyTip`.
-    public var hint: String {
+    public var hint: String { hint(landsOnRelease: false) }
+
+    /// The same line under the Distance drag gesture (`landsOnRelease`): the
+    /// caliper lands when you let go, so the pill teaches the drag and names
+    /// the click pair as the other way in, and never promises a third click.
+    public func hint(landsOnRelease: Bool) -> String {
         switch self {
-        case .distance: "Click twice, then click to place the number"
+        case .distance:
+            landsOnRelease
+                ? "Drag between two points, or click each one"
+                : "Click twice, then click to place the number"
         case .size: "Click an element for its width and height"
         case .gap: "Click the space between two elements"
         case .alignment: "Drag along an edge to see what lines up"
@@ -80,10 +99,17 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
     /// The keys worth a line of their own, taught where they stay: beside the
     /// Mode control in the inspector, not in a pill that fades in two seconds.
     /// Only Size has any; a tip under Distance would be noise.
-    public var keyTip: String? {
+    public var keyTip: String? { keyTip(landsOnRelease: false) }
+
+    /// The same line, plus the one Distance earns once its number places
+    /// itself: how to overrule the spot. The pill fades in two seconds and the
+    /// override is the thing a person goes looking for later, so it is taught
+    /// beside the Mode control where it stays.
+    public func keyTip(landsOnRelease: Bool) -> String? {
         switch self {
         case .size: "[ and ] pick a smaller or larger element"
-        case .distance, .gap, .alignment: nil
+        case .distance: landsOnRelease ? "Drag the number to put it somewhere else" : nil
+        case .gap, .alignment: nil
         }
     }
 

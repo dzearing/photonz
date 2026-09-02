@@ -102,7 +102,7 @@ struct CanvasView: NSViewRepresentable {
     let onAnnotationCommit: (CGPoint, CGPoint) -> Layer?
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
     let onZoomCalloutCommit: (CGPoint, CGPoint) -> Void
-    let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat) -> Void
+    let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     /// A selected arrow's caption pill dragged to a spot: live, drop, Esc.
@@ -241,7 +241,7 @@ final class CanvasNSView: NSView {
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Layer?) = { _, _ in nil }
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
-    var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat) -> Void) = { _, _, _, _ in }
+    var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }
     var onGapCommit: ((GapMeasurement) -> Void) = { _ in }

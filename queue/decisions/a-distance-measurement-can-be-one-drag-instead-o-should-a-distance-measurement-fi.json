@@ -1,0 +1,56 @@
+{
+  "id": "a-distance-measurement-can-be-one-drag-instead-o-should-a-distance-measurement-fi",
+  "taskId": "a-distance-measurement-can-be-one-drag-instead-o",
+  "question": "Should a Distance measurement finish when you let go of the drag, with its number placed for you?",
+  "context": "Distance is the measurement people reach for most, and it is the only one that still costs three clicks: one on each point, then a third to park the number. Size and Gap each land in one click and place their own number, and the placer that does it now keeps a number clear of the things it is measuring. Both options below are built and photographed on the same capture.",
+  "options": [
+    {
+      "id": "release",
+      "label": "Let go and it lands",
+      "summary": "Press at one point, drag to the other, let go. The measurement is finished and its number is already placed clear of what you measured, the same way a Gap measurement places its own. Clicking each point still works and the second click finishes it. To move the number, drag it.",
+      "pros": [
+        "One gesture instead of three clicks, which is what Size and Gap already feel like",
+        "Nothing to learn: the drag reads as drawing the measurement you want",
+        "The number lands somewhere sensible without you aiming for empty space",
+        "Moving the number afterwards is a direct drag on it, with the measurement following live"
+      ],
+      "cons": [
+        "You no longer get to choose the number's side while you are measuring, only afterwards",
+        "A drag that overshoots lands a measurement you then have to undo, where before you could still adjust before the last click"
+      ],
+      "mitigation": "The measurement stays selected the moment it lands, so its feet and its number are all under the pointer for an immediate adjustment, and Command Z takes it away."
+    },
+    {
+      "id": "release-modifier",
+      "label": "Let go and it lands, unless you hold Option",
+      "summary": "The same one drag, but if you hold Option as you finish, the number stays on the pointer and waits for a click, exactly like today's third click.",
+      "pros": [
+        "Fast by default, with the old placement still there for anyone who wants it",
+        "Nothing anyone can do today becomes impossible"
+      ],
+      "cons": [
+        "A key you have to know about, held at exactly the right moment, which most people will never find",
+        "Two ways to finish the same measurement, and the tool has to explain both"
+      ],
+      "mitigation": "The Measure options in the inspector would carry a line naming the key, the way the [ and ] tip is taught for Size."
+    },
+    {
+      "id": "keep",
+      "label": "Keep the three clicks",
+      "summary": "Nothing changes. A Distance measurement is a click on each point and a third click to park the number where you want it.",
+      "pros": [
+        "You place the number yourself, every time, while you are still measuring",
+        "Nothing to relearn"
+      ],
+      "cons": [
+        "Three clicks for the measurement people take most often, next to one for Size and one for Gap",
+        "After the second click the line follows the pointer with nothing on screen saying a third click is coming"
+      ],
+      "mitigation": "The pill now says a third click places the number, so the wait at least reads as intended.",
+      "declines": true
+    }
+  ],
+  "recommended": "release",
+  "status": "pending",
+  "created": "2026-09-02T21:27:38.338Z"
+}

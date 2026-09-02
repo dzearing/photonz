@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/distance-lands-on-release",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+
+    { "do": "describe", "stage": "0-armed", "note": "Distance mode, lands when you let go" },
+
+    { "do": "drag", "from": [234, 786], "to": [480, 786], "steps": 20 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-button-width", "note": "Save Changes width: one drag, number placed by the app" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "drag", "from": [64, 191], "to": [1262, 191], "steps": 30 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-row-width", "note": "Launch at login row: one drag, number placed by the app" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "click", "at": [120, 920] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "lands-on-release" },
+    { "do": "render", "name": "lands-on-release-render" }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/distance-three-clicks",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+
+    { "do": "describe", "stage": "0-armed", "note": "Distance mode, three-click flow" },
+
+    { "do": "click", "at": [234, 786] },
+    { "do": "move", "at": [480, 786] },
+    { "do": "click", "at": [480, 786] },
+    { "do": "move", "at": [357, 840] },
+    { "do": "click", "at": [357, 840] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-button-width", "note": "Save Changes width: two clicks on the edges, a third about 54 px below to park the number" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "click", "at": [64, 191] },
+    { "do": "move", "at": [1262, 191] },
+    { "do": "click", "at": [1262, 191] },
+    { "do": "move", "at": [660, 140] },
+    { "do": "click", "at": [660, 140] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-row-width", "note": "Launch at login row: card edge to toggle, third click about 50 px above the line" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "click", "at": [120, 920] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "three-clicks" },
+    { "do": "render", "name": "three-clicks-render" }
+  ]
+}

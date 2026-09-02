@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T12:07:28.443Z",
-  "updated": "2026-09-02T12:07:28.472Z",
+  "updated": "2026-09-02T21:29:10.340093Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-09-02-redline-walk.json step 3 (click two edges, watch the line follow the pointer, click once more) and its earlier rough item that the line seemed stuck after two clicks; MeasureLabelPlanner already plans Size and Gap readouts. Related open card: whether the Measure tool stays in hand after a landing. Filed by the 2026-09-02 digest after judging the walk as a first-time user.",
@@ -27,6 +27,31 @@
     {
       "t": "2026-09-02T12:07:28.471Z",
       "note": "seq 540 -> 120"
+    },
+    {
+      "t": "2026-09-02T21:13:13.263Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T21:29:10.340093Z",
+      "note": "Adversarial review before building. Read the code first: a press-drag-release ALREADY drew the measuring line, so today's Distance is really drag-then-click or click-click-click. The only ceremony left is the third click that sets the head. The third click does two jobs, which side the number sits on and how deep the arm runs, and both are things the placer already decides for Gap and Size. It is also the only override, and a worse one than what already exists: dragging the landed number moves it AND carries the arm with it, live, which a blind third click cannot do. Cut: no new override gesture is needed for the shortest version."
+    },
+    {
+      "t": "2026-09-02T21:29:10.340093Z",
+      "note": "Built the gesture behind a switch inside next-measure-modes (parameter distance-on-release), default OFF so Next is unchanged until the card is answered. Landing now shares one finishMeasurePlacement path; addMeasure takes an optional headOffset and falls back to MeasureBuilder.clearingHeadOffset, the same standoff Gap uses, then runs the same planReadout. Copy follows the switch: hint, help and a new Distance keyTip teaching the number drag, all parameterized rather than forked."
+    },
+    {
+      "t": "2026-09-02T21:29:10.340093Z",
+      "note": "Verified on the real app, twice, with Screen Recording granted. Two playtest walks on the same capture (Scripts/playtest/distance-three-clicks.json and distance-lands-on-release.json), each landing the Save Changes button width and the first settings row width. Both gestures produce identical measurements (123 px, 602 px) and both numbers land clear. An earlier run showed 120 px against 123 px and looked like a snapping difference between the gestures; re-run on the same build it did not reproduce, so it was edge-map timing, not the gesture."
+    },
+    {
+      "t": "2026-09-02T21:29:10.340093Z",
+      "note": "Decision filed with a real screen capture per option plus a brief. Recommended the plain drag over the Option-held variant: the user already turned down a held-key variant on this same tool (next-measure-free-angle, answer keep-hv), and the number drag is a better override than a modifier. The keep-the-three-clicks option carries declines:true so a no retires the task."
+    },
+    {
+      "t": "2026-09-02T21:29:10.340093Z",
+      "note": "Left for the follow-up run once the card is answered: flip the parameter default (or add the Option hold), and if the user wants it, teach the placer to prefer the emptier side rather than always the growing side. Scripts/test.sh green at 1475 tests."
     }
-  ]
+  ],
+  "started": "2026-09-02T21:13:13.263Z"
 }

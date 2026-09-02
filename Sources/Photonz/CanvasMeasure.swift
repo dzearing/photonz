@@ -220,10 +220,22 @@ extension CanvasNSView {
         return raw
     }
 
+    /// Whether the caliper lands the moment the measuring line is done, with its
+    /// number placed for you (Next, `next-measure-modes` / distance-on-release),
+    /// instead of waiting for a third click to set the head.
+    var measureLandsOnRelease: Bool {
+        measureToolMode == .distance && Experiments.shared.measureDistanceLandsOnRelease
+    }
+
     /// Advances placement on mouse-up. `dragged` = the press moved far enough to
     /// count as a drag. The measuring line is set by click/click OR by a single
     /// press-drag-release; the head is a final click (or drag). The last step
     /// commits the caliper (which auto-reverts to the Select tool).
+    ///
+    /// With `measureLandsOnRelease` on there is no last step: finishing the line
+    /// commits, and the head and the number are placed the way Gap places its
+    /// own. Moving the number afterwards is a drag on the pill, which is the
+    /// same grab that has always moved it.
     func advanceMeasurePlacement(at raw: CGPoint, dragged: Bool,
                                  modifiers: NSEvent.ModifierFlags) {
         switch measurePlacement {
@@ -241,18 +253,30 @@ extension CanvasNSView {
                 measureFirstFootPress = false
                 let (foot2, mode) = snapMeasureSecondFoot(from: foot1, to: raw, modifiers: modifiers)
                 guard hypot(foot2.x - foot1.x, foot2.y - foot1.y) >= 1 else { break }
+                guard !measureLandsOnRelease else {
+                    finishMeasurePlacement(foot1: foot1, foot2: foot2, mode: mode, headOffset: nil)
+                    break
+                }
                 measurePlacement = .secondPlaced(foot1: foot1, foot2: foot2, mode: mode)
             }
         case .secondPlaced(let foot1, let foot2, let mode):
-            let off = measureHeadOffset(mode: mode, foot1: foot1, point: raw)
-            measurePlacement = nil
-            measureFirstFootPress = false
-            snapGuide = nil
-            snapDotLayer.isHidden = true
-            clearAnnotationPreview()
-            onMeasureCommit(foot1, foot2, mode, off) // adds, selects, reverts to Select
+            finishMeasurePlacement(foot1: foot1, foot2: foot2, mode: mode,
+                                   headOffset: measureHeadOffset(mode: mode, foot1: foot1,
+                                                                 point: raw))
         }
         refreshOverlays()
+    }
+
+    /// Lands the caliper and clears the in-flight chrome. `headOffset` nil means
+    /// the app picks the standoff itself, the way it does for a Gap.
+    private func finishMeasurePlacement(foot1: CGPoint, foot2: CGPoint,
+                                        mode: MeasureMode, headOffset: CGFloat?) {
+        measurePlacement = nil
+        measureFirstFootPress = false
+        snapGuide = nil
+        snapDotLayer.isHidden = true
+        clearAnnotationPreview()
+        onMeasureCommit(foot1, foot2, mode, headOffset) // adds, selects, reverts to Select
     }
 
     /// Cancels an in-progress placement (⎋, tool switch, or a Measure mode

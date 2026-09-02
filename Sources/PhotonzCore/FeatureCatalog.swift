@@ -31,6 +31,7 @@ public enum FeatureCatalog {
     public static let captureToastEditFlag = "next-capture-toast-edit"
 
     public static let measureModesFlag = "next-measure-modes"
+    public static let measureDistanceOnRelease = "distance-on-release"
 
     public static let measureAlignFlag = "next-measure-align"
     public static let measureAlignTolerance = "tolerance"
@@ -123,7 +124,11 @@ public enum FeatureCatalog {
                     title: "Measure modes",
                     description: "The Measure tool gets modes you pick in its own tool button: Distance is the two-point caliper and draws nothing until you click, Size measures the element under the pointer in one click (with [ and ] to grow or shrink the pick), and Gap turns a click in the space between two elements into one spacing measurement. Off means the Measure tool is the plain two-point caliper.",
                     isEnabled: false,
-                    parameters: []),
+                    parameters: [
+                        FeatureParameter(name: measureDistanceOnRelease,
+                                         label: "Distance lands when you let go",
+                                         value: .boolean(false)),
+                    ]),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
             Definition(

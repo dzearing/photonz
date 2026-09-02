@@ -1112,10 +1112,18 @@ final class EditorState {
     /// active style, then auto-revert to Select and select the new caliper so its
     /// handles are immediately grabbable — matches other apps (the old sticky
     /// measure tool felt inconsistent).
-    func addMeasure(from start: CGPoint, to end: CGPoint, mode: MeasureMode, headOffset: CGFloat) {
+    ///
+    /// `headOffset` nil means the caliper landed on the release of the drag and
+    /// there was never a third click to set the standoff: the head then reaches
+    /// exactly as far as a Gap's does, far enough that the readout sits clear of
+    /// the line it belongs to.
+    func addMeasure(from start: CGPoint, to end: CGPoint, mode: MeasureMode,
+                    headOffset: CGFloat?) {
         var content = measureStyle
         content.mode = mode
         content.headOffset = headOffset
+            ?? MeasureBuilder.clearingHeadOffset(content: content, from: start, to: end,
+                                                 canvas: document?.canvasSize)
         // A hand-drawn caliper knows what its feet landed on, so its number
         // stays off those elements and not just off its own thin line.
         planReadout(&content, from: start, to: end,
@@ -1393,7 +1401,13 @@ final class EditorState {
     var measureHintTitle: String? { measureModeHint?.title }
 
     /// That chip's line, for the current mode.
-    var measureHintText: String { measureModeHint?.detail ?? measureToolMode.hint }
+    var measureHintText: String {
+        let landsOnRelease = Experiments.shared.measureDistanceLandsOnRelease
+        guard let hint = measureModeHint else {
+            return measureToolMode.hint(landsOnRelease: landsOnRelease)
+        }
+        return hint.detail(landsOnRelease: landsOnRelease)
+    }
 
     // MARK: - Measure styling
 

@@ -324,6 +324,20 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measureModesFlag })
     }
 
+    @Test func theDistanceDragIsAParameterOfMeasureModesAndStartsOff() {
+        // Whether a Distance caliper lands when you let go of the drag, with
+        // its number placed for you, is a switch inside Measure modes rather
+        // than a flag of its own: it changes what ONE of the modes does. It
+        // starts off, so Next behaves exactly as it did until the gesture is
+        // chosen.
+        let modes = FeatureCatalog.flags(for: .next)
+            .first { $0.name == FeatureCatalog.measureModesFlag }
+        #expect(modes?.parameter(named: FeatureCatalog.measureDistanceOnRelease) != nil)
+        #expect(FeatureCatalog.defaultSettings(for: .next)
+            .boolean(FeatureCatalog.measureModesFlag,
+                     FeatureCatalog.measureDistanceOnRelease) == false)
+    }
+
     @Test func theWindowCaptureFlagIsNextOnlyAndOnByDefault() {
         // Most redlines start from one app window: during a region capture the
         // window under the pointer lights up and a click captures it. Next only.

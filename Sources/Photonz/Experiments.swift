@@ -138,6 +138,16 @@ extension Experiments {
     /// Current always reads false and keeps the plain two-point caliper.
     var measureModesEnabled: Bool { isEnabled(FeatureCatalog.measureModesFlag) }
 
+    /// `next-measure-modes` / distance-on-release: whether a Distance caliper
+    /// lands the moment you let go of the drag, with its number placed the way
+    /// Gap places its own, instead of waiting for a third click. Off means the
+    /// three-click flow. Reads false whenever Measure modes itself is off.
+    var measureDistanceLandsOnRelease: Bool {
+        measureModesEnabled
+            && boolean(FeatureCatalog.measureModesFlag,
+                       FeatureCatalog.measureDistanceOnRelease) == true
+    }
+
     /// `next-measure-align`: whether the Measure tool offers its Alignment
     /// mode (drag a guide along an edge to check everything it crosses).
     /// Exists only in the Next release's catalog, so Current always reads false.
