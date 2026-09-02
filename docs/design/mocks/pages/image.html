@@ -48,7 +48,10 @@
 
   /* layer rows: mask thumbnail + group counts */
   .lrow .mth{width:16px;height:12px;border-radius:3px;flex:none;border:1px solid var(--line-strong)}
-  .lrow .eye{cursor:pointer}
+  /* The one eye that works is a real button: an icon is mask-rendered, so a
+     ring drawn on the icon itself is clipped away with the rest of it. */
+  .lrow button.eye{appearance:none;background:none;border:0;padding:0;margin:0;display:inline-flex;align-items:center;font:inherit;cursor:pointer;border-radius:var(--r-sm)}
+  .lrow button.eye:focus-visible{outline:none;box-shadow:var(--ring)}
   .lgroup .cnt{color:var(--faint);font-weight:520;margin-left:5px}
 
   /* mask list rows: editing highlight + tag */
@@ -247,7 +250,7 @@
 
             <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Adjustments <span class="cnt">above the pixels</span></div>
             <!-- SELECTION, place 2 of 3: the matching row in Layers -->
-            <div class="lrow child sel adj"><i class="ic ic-saturation" style="color:#ff7e5f"></i><span class="clipmark"></span><span class="nm">Hue / Saturation</span><span class="mth" style="background:linear-gradient(135deg,#111 45%,#eee)"></span><i class="ic sm ic-eye eye adjtoggle" id="adjEye" title="Toggle layer"></i></div>
+            <div class="lrow child sel adj"><i class="ic ic-saturation" style="color:#ff7e5f"></i><span class="clipmark"></span><span class="nm">Hue / Saturation</span><span class="mth" style="background:linear-gradient(135deg,#111 45%,#eee)"></span><button class="eye adjtoggle" id="adjEye" title="Show or hide Hue / Saturation" aria-pressed="true"><i class="ic sm ic-eye"></i></button></div>
             <div class="lrow child adj"><i class="ic ic-swatch" style="color:#4c9fff"></i><span class="nm">Color balance</span><i class="ic sm ic-eye eye"></i></div>
             <div class="lrow child adj"><i class="ic ic-curves" style="color:#e0a53a"></i><span class="nm">Curves</span><span class="mth" style="background:linear-gradient(135deg,#fff 40%,#111)"></span><i class="ic sm ic-eye eye"></i></div>
             <div class="lrow child adj"><i class="ic ic-temperature" style="color:#7f9bff"></i><span class="nm">White balance</span><i class="ic sm ic-eye eye"></i></div>
@@ -435,7 +438,11 @@
       if (t.classList.contains('en')) {
         t.classList.toggle('off', !state.on);
         t.setAttribute('aria-pressed', state.on ? 'true' : 'false');
-      } else { t.classList.toggle('ic-eye', state.on); t.classList.toggle('ic-eye-off', !state.on); }
+      } else {
+        var ic = t.querySelector('.ic') || t;
+        ic.classList.toggle('ic-eye', state.on); ic.classList.toggle('ic-eye-off', !state.on);
+        t.setAttribute('aria-pressed', state.on ? 'true' : 'false');
+      }
     });
   }
 

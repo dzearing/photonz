@@ -361,7 +361,10 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   A `.menuitem` must therefore sit inside a `.menu`, a `.popover`, or a
   `[role="menu"]`, or it has no menu to belong to. A page that binds its own
   click on something that is not a `<button>` or an `<a>` owes it `role`,
-  `tabindex` and a keydown of its own. `node shared/audit-keyboard.mjs` runs
+  `tabindex` and a keydown of its own: call `PZ.key(el)` (or
+  `PZ.key(el, 'tab')` for another role) right where the click is bound, give
+  it a `:focus-visible` ring, and keep `aria-pressed`/`aria-expanded` in step
+  with the state the click changes. `node shared/audit-keyboard.mjs` runs
   every page in a real browser and fails on a cross-link that cannot take
   focus or navigate on Enter, a menu row with no key path, or a menu that
   does not open, move and close from the keyboard; it also lists the private

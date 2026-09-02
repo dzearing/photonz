@@ -1,0 +1,26 @@
+{
+  "feature": "Design study: the last mouse-only controls reach the keyboard",
+  "epic": "design-system",
+  "summary": "Every clickable thing in the design study now takes focus with Tab and presses with Enter or Space, including the eight page-private controls the shared pass left behind. A page that binds its own click now has one call to make it keyboard-reachable, and the audit fails the build if one is missed.",
+  "setup": "Dashboard at http://127.0.0.1:8791, open a mock page in the shell. No app build involved.",
+  "try": [
+    { "do": "Open the design-system modes page and press Tab until the Dark label above the token table lights up.", "shot": "2026-09-01-mock-keyboard-private-2-mode.png" },
+    { "do": "Press Space. The whole table and the sample switch to Dark, the same as clicking the label." },
+    { "do": "Open the motion language page and Tab to the Decelerate easing card.", "shot": "2026-09-01-mock-keyboard-private-3-easing.png" },
+    { "do": "Press Enter. The puck glides across the rail again." },
+    { "do": "Tab on to the Effects chip in the collapsing-section demo and press Enter to fold it, then Enter again to open it.", "shot": "2026-09-01-mock-keyboard-private-4-chip.png" },
+    { "do": "Open the image editing page and Tab to the eye on the Hue / Saturation layer.", "shot": "2026-09-01-mock-keyboard-private-1-eye.png" },
+    { "do": "Press Space. The adjustment switches off on the canvas and the eye closes; Space again brings it back." }
+  ],
+  "evaluate": [
+    "Is the focus ring on the small eye icon visible enough to find at a glance, or does it need a larger target?",
+    "Do the three mode labels above the table earn a tab stop, given the segmented control above them already switches the mode?",
+    "When Tab lands on an easing card, is it obvious that Enter will replay it, or does the card need a visible play affordance?",
+    "Does the tab order on the image page reach the layer eye in a sensible place, or does it feel buried?"
+  ],
+  "rough": [
+    "Only the Hue / Saturation eye works; every other eye in the layer list is decoration and is skipped by Tab. That is honest to the mock but a first-time user may try to Tab to the others.",
+    "The mode labels are a second path to something the segmented control already does. Kept for keyboard parity, but a redesign could drop them.",
+    "An icon is mask-rendered, so a focus ring drawn on the icon itself disappears. The eye became a real button around the icon; any other icon that gains a click should do the same rather than reuse the shortcut helper."
+  ]
+}

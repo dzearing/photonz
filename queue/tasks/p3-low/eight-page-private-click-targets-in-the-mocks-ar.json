@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 440,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T02:19:54.622Z",
-  "updated": "2026-09-02T02:19:54.622Z",
+  "updated": "2026-09-02T02:44:22.607Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by shared/audit-keyboard.mjs on 2026-09-01 after core.js took over [data-target], .sec-h and .menuitem. Remaining (informational line of the audit): ds-modes span.cn x2 + span.cn.active, lang-motion div.ease.es/.ed/.esp, image i.ic.sm + div.ch. These bind their own click in the page inline script, so the fix is per page: role, tabindex=0, keydown Enter/Space -> click (see AGENTS.md Keyboard reach). Small, mechanical.",
@@ -22,6 +22,32 @@
     {
       "t": "2026-09-02T02:19:54.622Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T02:36:50.965Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T02:43:52.773Z",
+      "note": "Epic design-system is staged next, not now; the loop has been executing its sibling keyboard tasks (see commit a9eded8), so proceeded. Reproduced first: audit-keyboard on ds-modes, lang-motion and image lists exactly 8 private pointer targets. Correction to the notes: the chip (div.ch) is on lang-motion, not image; image has only the one eye icon."
+    },
+    {
+      "t": "2026-09-02T02:43:52.774Z",
+      "note": "Adversarial review before building: the eight are three redundant mode names (the segmented control above already keyboard-selects the mode), three replay-on-click easing cards, one collapsing-section chip in a bespoke demo, and one working eye in a layer list where every other eye is decoration. None is decorative enough to cut: each shows a state a keyboard user could not otherwise reach or replay. Shortest version: one shared upgrade (PZ.key) instead of three hand-written keydown handlers, plus the state attributes only the page knows (aria-pressed on the mode names and the eye, aria-expanded on the chip)."
+    },
+    {
+      "t": "2026-09-02T02:43:52.774Z",
+      "note": "core.js publishes PZ.key(el[, role]): role button by default, tabindex 0, Enter/Space presses; real buttons and links are left alone. README and AGENTS.md (Keyboard reach) name it. ds-modes: PZ.key on the three .cn heads, aria-pressed synced in setMode, focus ring. lang-motion: PZ.key on the three .ease cards with aria-label 'Replay <name> easing', PZ.key on #csecH with aria-expanded, focus rings. image: #adjEye became a real <button class=eye> around the icon, because .ic is mask-rendered and a ring on the icon itself was clipped invisible (screenshot-verified); render() now flips the inner icon and aria-pressed."
+    },
+    {
+      "t": "2026-09-02T02:43:52.774Z",
+      "note": "Verified in a real browser (Playwright, headless Chrome): each of the eight has a role, is reached by Tab, and acts on both Enter and Space (mode switches, glide replays, section collapses, eye toggles). Focus rings screenshot-checked on all four kinds. audit-keyboard across all 90 pages: no private pointer targets left, 0 failures; check-a11y-names, check-elevation, check-reserved, check-states, check-selection, check-shortcuts all green."
+    },
+    {
+      "t": "2026-09-02T02:44:22.606Z",
+      "note": "Eight page-private mock controls now reach the keyboard: mode names on ds-modes, easing cards and the Effects chip on lang-motion, the adjustment eye on image (now a real button so its ring shows). core.js publishes PZ.key(el) for any page that binds its own click; AGENTS.md and the components README name it. Verified in headless Chrome: each takes Tab focus, has a role, acts on Enter and Space; audit-keyboard over 90 pages reports no private targets; all mock lints green. Audit: queue/audits/2026-09-01-mock-keyboard-private.json"
     }
-  ]
+  ],
+  "started": "2026-09-02T02:36:50.965Z",
+  "completed": "2026-09-02T02:44:22.607Z"
 }

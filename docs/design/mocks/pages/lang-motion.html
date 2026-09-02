@@ -57,6 +57,7 @@
   #lang-motion .eases{display:flex;gap:var(--gap-sm);flex-wrap:wrap}
   #lang-motion .ease{flex:1 1 120px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);padding:var(--pad-sm);cursor:pointer}
   #lang-motion .ease:hover{border-color:var(--accent-line)}
+  #lang-motion .ease:focus-visible{outline:none;box-shadow:var(--ring)}
   #lang-motion .ease .t{font-size:11px;font-weight:620;color:var(--ink);margin-bottom:2px}
   #lang-motion .ease .c{font-family:var(--mono);font-size:8.5px;color:var(--faint);margin-bottom:var(--gap-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #lang-motion .ease .mo-rail{height:14px;position:relative}
@@ -123,6 +124,7 @@
   /* collapsing section demo */
   #lang-motion .csec{width:100%;border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;background:var(--panel-2)}
   #lang-motion .csec .ch{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);font-size:11px;font-weight:600;color:var(--ink);cursor:pointer;user-select:none}
+  #lang-motion .csec .ch:focus-visible{outline:none;box-shadow:var(--ring)}
   #lang-motion .csec .ch .cv{color:var(--faint);font-size:9px;transition:transform var(--dur-2) var(--ease-standard)}
   #lang-motion .csec.closed .ch .cv{transform:rotate(-90deg)}
   #lang-motion .csec .cbody{display:grid;grid-template-rows:1fr;transition:grid-template-rows var(--dur-3) var(--ease-standard)}
@@ -358,6 +360,9 @@
 
     // Easing cards replay their glide on click.
     root.querySelectorAll('[data-ease]').forEach(function(c){
+      PZ.key(c);
+      var t = c.querySelector('.t');
+      if(t && !c.hasAttribute('aria-label')) c.setAttribute('aria-label', 'Replay ' + t.textContent.trim() + ' easing');
       c.addEventListener('click', function(){ replay(c, 'go'); });
     });
 
@@ -375,7 +380,12 @@
 
     // Collapsing section demo (bespoke so the height transition is visible).
     var csec = document.getElementById('csec'), csecH = document.getElementById('csecH');
-    if(csecH){ csecH.addEventListener('click', function(){ csec.classList.toggle('closed'); }); }
+    if(csecH){
+      PZ.key(csecH);
+      var syncSec = function(){ csecH.setAttribute('aria-expanded', csec.classList.contains('closed') ? 'false' : 'true'); };
+      csecH.addEventListener('click', function(){ csec.classList.toggle('closed'); syncSec(); });
+      syncSec();
+    }
 
     // Toast demo: drop in, hold, auto-fade.
     var toast = document.getElementById('dtoast'), tbtn = document.getElementById('toastBtn'), tTimer;

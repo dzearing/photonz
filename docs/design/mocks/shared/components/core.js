@@ -60,6 +60,19 @@
     });
   }
 
+  /* A page that binds its own click on something that is not a <button> or
+     an <a> calls PZ.key(el) so the keyboard reaches it too: a role (button
+     unless the page says otherwise), a tab stop, and Enter/Space pressing
+     it. A real button or link is left alone. The page still owns any state
+     the role implies (aria-pressed, aria-expanded), because only it knows. */
+  function keyable(el, role) {
+    if (!el || isNative(el)) return el;
+    if (!el.hasAttribute('role')) el.setAttribute('role', role || 'button');
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+    pressable(el, true);
+    return el;
+  }
+
   // Cross-page nav: any [data-target] asks the shell to load that page.
   function upgradeLinks(root) {
     all('[data-target]', root).forEach(function (el) {
@@ -314,7 +327,7 @@
   // focus back. A component that walks its own rows marks the menu
   // data-keys="own" and is left alone.
   window.PZ = {
-    all: all, winOf: winOf, isNarrow: isNarrow, NARROW: NARROW,
+    all: all, winOf: winOf, isNarrow: isNarrow, NARROW: NARROW, key: keyable,
     menu: { enter: enterMenu, close: closeMenu, upgrade: upgradeMenus }
   };
 })();

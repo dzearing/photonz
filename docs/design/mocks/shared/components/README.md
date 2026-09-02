@@ -36,7 +36,9 @@ to disk.
 - **Behaviour is an idempotent upgrade pass.** Each JS component is its own
   guarded IIFE, safe to run twice, and a no-op on a page that does not use it.
 - **`core.js` runs first** and publishes the only shared helpers on
-  `window.PZ`: `all`, `winOf`, `isNarrow`, `NARROW`, and `menu` (the keyboard
+  `window.PZ`: `all`, `winOf`, `isNarrow`, `NARROW`, `key` (give a
+  page-private click target a role, a tab stop and Enter/Space:
+  `PZ.key(el[, role])`), and `menu` (the keyboard
   contract for anything that opens a menu: `enter(m)` after a keyboard open,
   `close(m)` to dismiss and hand focus back; a component that walks its own
   rows marks the menu `data-keys="own"`). That is the entire shared surface. A
