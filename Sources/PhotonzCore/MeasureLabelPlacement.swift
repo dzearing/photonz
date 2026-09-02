@@ -188,6 +188,15 @@ public enum MeasureLabelPlanner {
     /// covering two subjects is no worse than covering one: when every spot is
     /// on something, the number stays where you always look for it instead of
     /// jumping to whichever spot happens to cover the least.
+    ///
+    /// The flat cost is the chosen answer, not a shortcut. Asked what a caliper
+    /// boxed in between two full-width rows should do with its number, the user
+    /// picked "stay on the line, straddling both rows" over shrinking it,
+    /// stepping past a foot, or sending it to the page margin: the number is
+    /// always at the gap, always the same size, and the overhang is a few
+    /// pixels. Weighting this by how many subjects a spot covers, or by how
+    /// deeply, un-picks that choice — `MeasureCalloutClearanceTests` fails when
+    /// it does.
     private static let subjectPenalty: CGFloat = 400
     /// Covering another readout, or a neighbouring element, is bad, but not as
     /// bad as covering the subject — and it is bad IN PROPORTION. A number that

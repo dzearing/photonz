@@ -395,6 +395,23 @@ struct MeasureCalloutClearanceTests {
         return false
     }
 
+    /// Every distinct gap Gap mode can read anywhere on the capture, on a grid
+    /// coarse enough to run in a test and fine enough to reach every band.
+    /// Shared, so the two sweeps below judge the same population.
+    private static let gapsOnTheCapture: [GapMeasurement] = {
+        var seen = Set<String>()
+        var gaps: [GapMeasurement] = []
+        for x in stride(from: CGFloat(20), through: 1420, by: 40) {
+            for y in stride(from: CGFloat(20), through: 940, by: 40) {
+                guard let gap = ElementBounds.gap(at: CGPoint(x: x, y: y), in: analysis.edges),
+                      gap.length >= 4 else { continue }
+                let key = "\(gap.axis)|\(gap.start)|\(gap.end)"
+                if seen.insert(key).inserted { gaps.append(gap) }
+            }
+        }
+        return gaps
+    }()
+
     /// The whitespace between the Reset and Save Changes buttons, read the way
     /// Gap mode reads it.
     private var buttonGap: GapMeasurement? {
@@ -496,21 +513,87 @@ struct MeasureCalloutClearanceTests {
         #expect(offenders.isEmpty, "a foot lost its row: \(offenders)")
     }
 
+    // MARK: - Boxed in: the answer the user picked
+
+    /// The rows on this capture run nearly the full width, so a caliper in the
+    /// 33 px space between the two cards has nowhere clear within its leash
+    /// once it is far enough from either margin. The user chose what happens
+    /// then: the number keeps the classic spot, centred on the caliper, right
+    /// at the gap, overhanging a row by a few pixels rather than travelling.
+    /// (Decision `a-caliper-boxed-in-by-two-full-width-rows-finds-when-a-gap-caliper-sits-between`.)
+    @Test(arguments: [CGFloat(700), 1000])
+    func aCaliperBoxedInByTwoFullWidthRowsKeepsItsNumberAtTheGap(x: CGFloat) {
+        guard let gap = cardGap(atX: x) else {
+            Issue.record("no vertical gap read between the cards at x \(x)")
+            return
+        }
+        var ink = MeasureContent(mode: gap.axis, unit: .points)
+        let head = MeasureBuilder.clearingHeadOffset(content: ink, from: gap.start, to: gap.end,
+                                                     canvas: Self.canvas)
+        let drawn = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head)
+        ink = drawn.content
+        // This really is the boxed-in case: nowhere in the planner's vocabulary
+        // is clear, so the test below is pinning the fallback, not a lucky spot.
+        #expect(!clearSpotExists(for: ink, subjects: drawn.subjects),
+                "x \(x) is not boxed in, so it cannot pin the fallback")
+
+        #expect(ink.labelPlacement == .onLine, "the number left the line: \(ink.labelPlacement)")
+        #expect(ink.labelNudge == 0, "the number slid along the line: \(ink.labelNudge)")
+        #expect(ink.labelCrossReach == 0, "the number was pushed sideways: \(ink.labelCrossReach)")
+
+        let chip = ink.labelRect(chipSize: ink.estimatedLabelSize)
+        // Centred on the gap it is describing, and beside the caliper rather
+        // than over it, so both feet stay readable.
+        #expect(abs(chip.midY - (gap.start.y + gap.end.y) / 2) < 0.5, "\(chip)")
+        #expect(chip.minX > gap.start.x, "the number covers its own caliper: \(chip)")
+
+        // And the price the user accepted is the small one they were shown: a
+        // few pixels onto a row, not half of it.
+        let rows = drawn.subjects.filter { $0.height > 60 }
+        #expect(rows.count == 2, "the two cards were not both seen: \(drawn.subjects)")
+        for row in rows {
+            let hit = chip.intersection(row)
+            #expect(hit.isNull || hit.height <= 8, "the number sits well inside a row: \(hit)")
+        }
+    }
+
+    /// The same answer everywhere it applies. Every gap on the capture that has
+    /// nowhere clear to put its number keeps the classic centred spot: none of
+    /// them wanders off to the margin, shrinks, or steps past a foot. This is
+    /// the guard on the choice — a change to how placements are scored that
+    /// quietly picks a different last resort fails here.
+    @Test func everyBoxedInCaliperOnTheCaptureKeepsTheClassicSpot() {
+        var boxedIn = 0
+        var offenders: [String] = []
+        for gap in Self.gapsOnTheCapture {
+            let ink = MeasureContent(mode: gap.axis, unit: .points)
+            let gapHead = MeasureBuilder.clearingHeadOffset(content: ink, from: gap.start,
+                                                            to: gap.end, canvas: Self.canvas)
+            for head in [gapHead, 16, -16] {
+                let drawn = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head)
+                guard !drawn.subjects.isEmpty,
+                      !clearSpotExists(for: drawn.content, subjects: drawn.subjects) else { continue }
+                boxedIn += 1
+                let c = drawn.content
+                guard c.labelPlacement != .onLine || c.labelNudge != 0 || c.labelCrossReach != 0
+                else { continue }
+                if offenders.count < 8 {
+                    offenders.append("\(gap.axis) \(gap.start)->\(gap.end) head=\(head) "
+                                     + "placement=\(c.labelPlacement) nudge=\(c.labelNudge) "
+                                     + "reach=\(c.labelCrossReach)")
+                }
+            }
+        }
+        #expect(boxedIn > 20, "the capture stopped producing boxed-in calipers: \(boxedIn)")
+        #expect(offenders.isEmpty, "a boxed-in number left the classic spot: \(offenders)")
+    }
+
     /// Every gap Gap mode can read anywhere on the capture, measured with the
     /// head Gap mode commits and with a hand-placed head on either side: no
     /// readout may sit on an element its feet landed on when any spot in the
     /// planner's vocabulary is clear.
     @Test func noCaliperAnywhereOnTheCaptureParksItsNumberOnWhatItsFeetLandedOn() {
-        var seen = Set<String>()
-        var gaps: [GapMeasurement] = []
-        for x in stride(from: CGFloat(20), through: 1420, by: 40) {
-            for y in stride(from: CGFloat(20), through: 940, by: 40) {
-                guard let gap = ElementBounds.gap(at: CGPoint(x: x, y: y), in: Self.analysis.edges),
-                      gap.length >= 4 else { continue }
-                let key = "\(gap.axis)|\(gap.start)|\(gap.end)"
-                if seen.insert(key).inserted { gaps.append(gap) }
-            }
-        }
+        let gaps = Self.gapsOnTheCapture
         #expect(!gaps.isEmpty)
         var protected = 0
         var offenders: [String] = []

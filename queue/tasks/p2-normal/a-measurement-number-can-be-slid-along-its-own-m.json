@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T16:41:12.181Z",
-  "updated": "2026-09-02T19:29:34.544Z",
+  "updated": "2026-09-02T19:29:54.989Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MeasureContent.labelNudge already exists as the along-axis shift (the planner uses it to keep two nearby readouts from stacking), so the model supports this; the head drag in CanvasView.swift (snapMeasureHead / MeasureHandleDrag.params) only writes headOffset. Extend the head drag to write labelNudge from the along-axis component of the pointer, and feed the along-axis chip lines from MeasureSnapping.chipLines (they are already collected on both axes). Found while building the cross-axis chip snap on 2026-09-02; see queue/audits/2026-09-02-measure-guide-snap.json.",
@@ -103,7 +103,7 @@
     }
   ],
   "started": "2026-09-02T19:16:57.689Z",
-  "failures": 3,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-02T18:46:56.755Z",
     "exit": 1,

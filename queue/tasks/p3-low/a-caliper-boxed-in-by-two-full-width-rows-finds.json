@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.562Z",
-  "updated": "2026-09-02T17:31:47.336Z",
+  "updated": "2026-09-02T19:39:58.317859Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 1. MeasureLabelPlanner.maxCrossReach caps sideways travel at three chip heights; the boxed-in fallback is the flat subjectPenalty tie-break to .onLine. Same limit shows up for Size mode on a full-width row (2026-08-23-size-readout-placement rough item 1). Render scripts: temp/boxed-in/Scan.swift (sweep) and temp/boxed-in/Render.swift (four options); compile with swiftc -I .build/debug/Modules against .build/debug/PhotonzCore.build/*.o and PhotonzRender.build/*.o. Option renders live in queue/audits/2026-09-02-boxed-in-*.png.",
@@ -64,14 +64,42 @@
     },
     {
       "t": "2026-09-02T17:31:47.336Z",
-      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your session limit resets 11:50am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-02T19:30:00.754Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T19:39:58.317859Z",
+      "note": "Adversarial review of the chosen answer before pinning it: straddle is what the code already does, so the risk is not building the wrong thing, it is that nobody knows it was chosen. Re-ran the sweep on the audit capture: 147 boxed-in placements across 338 gaps, every one centred on the line. The overhang the user accepted is real and small at the user's own label size (chip 93x47 on the 33 px card gap): 1.5 px onto the upper card, 5.5 px onto the lower one, both caliper feet uncovered."
+    },
+    {
+      "t": "2026-09-02T19:39:58.317859Z",
+      "note": "Checked the neighbouring behaviour so the pin does not over-claim: near either margin (x 200, x 1200) the number is NOT boxed in, it takes the long leash out to the page margin. That is the separately resolved travel decision (keep the long leash), not this one, so the pin only covers gaps with nothing clear in reach."
+    },
+    {
+      "t": "2026-09-02T19:39:58.317859Z",
+      "note": "Pinned it: MeasureCalloutClearanceTests gains aCaliperBoxedInByTwoFullWidthRowsKeepsItsNumberAtTheGap (x 700 and x 1000, asserts the case really is boxed in, the plan is exactly onLine/0/0, the chip is centred on the gap, off the caliper, and dips no more than 8 px into either card) and everyBoxedInCaliperOnTheCaptureKeepsTheClassicSpot (every boxed-in gap on the capture, all three heads). The gap list is now one shared static so both sweeps judge the same population."
+    },
+    {
+      "t": "2026-09-02T19:39:58.317859Z",
+      "note": "Mutation-checked the pin: making subjectPenalty count subjects instead of being flat sends the number two nudge steps down into the lower card, and all three tests fail (plus the existing core-level aBoxedInCaliperKeepsTheClassicSpot). Reverted; the flat penalty is unchanged."
+    },
+    {
+      "t": "2026-09-02T19:39:58.317859Z",
+      "note": "Recorded the choice at the source: MeasureLabelPlanner.subjectPenalty now documents that the flat cost is the user's answer, not a shortcut, and that weighting it by count or depth un-picks it."
+    },
+    {
+      "t": "2026-09-02T19:39:58.317859Z",
+      "note": "No user-visible change, so no audit was written: the chosen option is today's behaviour. Re-rendered the straddle for the record (temp/boxed-in/cards-a-straddle.png) and eyeballed it, the number reads as the gap's and both card edges stay legible. Scripts/test.sh green, 1449 tests."
     }
   ],
-  "started": "2026-09-02T17:31:45.043Z",
+  "started": "2026-09-02T19:30:00.753Z",
   "failures": 1,
   "lastError": {
     "at": "2026-09-02T17:31:47.336Z",
     "exit": 1,
-    "message": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+    "message": "You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your session limit resets 11:50am (America/Los_Angeles)"
   }
 }
