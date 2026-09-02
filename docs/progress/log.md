@@ -4970,3 +4970,35 @@ the card's left end, over the icons.
 - `decision-drill.mjs` grew 13 checks (26 total, all passing; 7 of the new ones fail against the pre-fix code): the incident in both directions, a question genuinely still open, the sweep repairing a stranded task, two answers quoting the one that came last, a parked task left alone, and blocking with no card. `churn-drill`, `failure-drill.sh` and `Scripts/test.sh` (1451 tests) green. Verified end to end against the real dev server on a throwaway queue at :8799: `POST /api/decide` (the dashboard's own call), then the runner's `blocked` write, and the task came out pending, answer quoted, claimable again. The sweep run against a copy of the real queue reported the live stranding.
 - Live repair: the tool bar task is `done`, not re-queued. Its answer picked option a, Picture first, which is the order already built, tested, playtested and audited under `next-tool-groups`, and no Recent slot was wanted. Re-queueing it would have made a runner rebuild what is shipped. No other task was stranded.
 - Audit: `queue/audits/2026-09-02-answered-while-working.json`. Docs: `queue/README.md`, `docs/design/dashboard.md`, and `runner-prompt.md` (runners re-read their decision file before exiting, and never force a `blocked` status by hand).
+
+## 2026-09-02 — one placer for every label
+
+Folded the three label placers into one. `CaptionPlanner` (arrow captions),
+`MeasureLabelPlanner` (measurement readouts) and `PanelPlacement` (the roles
+legend) each scored candidate spots on their own scale, so a placement fix
+landed in only one of them. They now describe their candidates and what they
+have to keep off, and `LabelPlacer` (PhotonzCore) does the ranking:
+forbidden chrome > off the picture > on the subject (flat) > into a neighbour
+(by depth) > leader across something > the surface's own preference order >
+nudge > travel.
+
+Behaviour-preserving by design and verified as such: 6107 placement decisions
+replayed on the settings-pane capture, 1990 measurement plans and 576 legend
+slots identical to the character. 38 of 3536 arrow captions moved, all of them
+zero-length arrows or arrows whose head is off the picture, where the shared
+Liang-Barsky segment test no longer counts a run of zero length as a crossing.
+Pinned in `AnnotationCaptionTests`.
+
+Both resolved placement decisions (boxed-in caliper straddles; keep the long
+sideways leash) are what the flat subject cost and `maxCrossReach` encode, and
+`docs/design/next-measure.md` § 4.1 now writes down the ladder, the fallback
+order for all four surfaces, and both decisions (index gains D5, D6).
+
+Cost: one plan went 39.3 → 46.6 µs, once per pointer move, composite path
+untouched. Tests 1464 green. Audit:
+`queue/audits/2026-09-02-one-label-placer.json`.
+
+**Next:** the audit asks two real questions the loop should not answer itself —
+whether the legend should dodge a measurement by depth the way a readout does,
+and whether the arrow caption should gain the pull back toward its arrow. Both
+are one-line changes now; both move pictures, so they want a user verdict.

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T12:05:41.105Z",
-  "updated": "2026-09-02T20:46:53.107889Z",
+  "updated": "2026-09-02T20:47:17.493Z",
   "deps": [
     "a-caliper-boxed-in-by-two-full-width-rows-finds",
     "how-far-a-readout-may-travel-to-find-whitespace"
@@ -86,7 +86,12 @@
     {
       "t": "2026-09-02T20:46:53.107889Z",
       "note": "Scripts/test.sh green at 1464 tests (1451 + 12 LabelPlacer + 1 caption). Audit: queue/audits/2026-09-02-one-label-placer.json with two real captures."
+    },
+    {
+      "t": "2026-09-02T20:47:17.493Z",
+      "note": "Arrow captions, measurement readouts and the roles legend now all rank their spots through one shared LabelPlacer (PhotonzCore): each surface only lists its candidates and what it must keep off, and the cost ladder (forbidden chrome > off the picture > on the subject > into a neighbour > leader crossing > preference order) lives in one place. Nothing on screen moves: 6107 placement decisions replayed on the settings-pane capture, 1990 measurement plans and 576 legend slots identical to the character, 38 of 3536 captions moved and every one is a zero-length arrow or a head off the picture (a run of zero length is no longer counted as crossing anything; pinned in AnnotationCaptionTests). Both resolved decisions are baked into the ladder and section 4.1 of docs/design/next-measure.md now carries the fallback order and the ladder. Scripts/test.sh green at 1464 tests; audit queue/audits/2026-09-02-one-label-placer.json with two real probe captures. Pushed as 918baae."
     }
   ],
-  "started": "2026-09-02T20:26:50.067Z"
+  "started": "2026-09-02T20:26:50.067Z",
+  "completed": "2026-09-02T20:47:17.493Z"
 }
