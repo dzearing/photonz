@@ -1046,6 +1046,11 @@ button{font-family:inherit;color:inherit;cursor:pointer}
     if(el.classList.contains('nav'))return;
     el.style.cursor='pointer';
     el.addEventListener('click',function(e){e.stopPropagation();show(el.dataset.target);});
+    // a card or a bold word that jumps somewhere is a link: give it a tab stop and Enter
+    if(el.matches('button,a[href]'))return;
+    if(!el.hasAttribute('role'))el.setAttribute('role','link');
+    if(!el.hasAttribute('tabindex'))el.setAttribute('tabindex','0');
+    el.addEventListener('keydown',function(e){if(e.target===el&&e.key==='Enter'){e.preventDefault();el.click();}});
   });
   // walkthrough stepper
   var wsteps=[].slice.call(document.querySelectorAll('.wstep'));

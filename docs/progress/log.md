@@ -4343,3 +4343,22 @@ key could be pressed into the running app. Those steps are the tail of
 
 Next: `three-mock-tool-bars-give-one-key-to-two-differe` covers the remaining
 same-bar collisions on the image, iconography and prototype pages.
+
+## 2026-09-01 — mocks: menu rows and cross-links reach the keyboard
+
+- `shared/components/core.js` now runs a keyboard sweep at load and on DOM
+  change: non-native `[data-target]` become `role=link` + tab stop + Enter;
+  `.section > .sec-h` headers become `role=button` + Enter/Space +
+  `aria-expanded`; every `.menuitem` is a real menu item with one tab stop per
+  menu, arrow keys, Enter/Space, Escape back to the trigger. Published as
+  `PZ.menu` (enter/close) for popover.js and dock.js; segmented.js opts out
+  with `data-keys="own"`.
+- Fixed on the way: dock.js group headers swallowed Enter on any button inside
+  them (collapsed the group instead of pressing the button); the shell's
+  late-added Home menu row had no click at all (sweep now binds late nodes).
+- New browser audit `shared/audit-keyboard.mjs` (Playwright + local Chrome):
+  90 pages, 391/391 cross-links focusable, 531/531 navigate on Enter,
+  1410/1410 menu rows reachable, 207/207 menus open/move/close by key, Tab
+  walk misses 0 on a 10-page sample. Documented in AGENTS.md.
+- Follow-up filed: 8 page-private click targets on ds-modes / lang-motion /
+  image remain mouse-only.

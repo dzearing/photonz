@@ -263,6 +263,9 @@
 
     var menu = document.createElement('div');
     menu.className = 'popover menu seg-menu';
+    menu.setAttribute('role', 'listbox');
+    // this menu walks its own rows (below); core.js must not add a second set of keys
+    menu.setAttribute('data-keys', 'own');
     document.body.appendChild(menu);
     seg.__menu = menu;
 

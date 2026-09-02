@@ -34,6 +34,14 @@ a:hover, .link:hover{
 a:active, .link:active{color:color-mix(in srgb, var(--accent) 70%, var(--ink))}
 a:focus-visible, .link:focus-visible{outline:none;box-shadow:var(--ring)}
 
+/* Anything that jumps to another page is a link, whatever tag it was drawn
+   with. core.js gives a [data-target] div, card or bold word a tab stop, and
+   this is the ring it shows there. A control that is also a .btn/.tool/.chip
+   keeps its own ring: button.css loads later and wins the tie. A bare inline
+   word gets the same small radius a real link has, so the ring hugs the word. */
+[data-target][tabindex]:focus-visible{outline:none;box-shadow:var(--ring)}
+b[data-target]{border-radius:3px}
+
 /* button-shaped elements borrowing the link look */
 button.link{border:0;background:none;padding:0;font:inherit;cursor:pointer}
 

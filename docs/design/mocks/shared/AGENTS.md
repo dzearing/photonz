@@ -341,6 +341,21 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   it and nothing to name it with. An element that is clickable but is not a
   `<button>` or an `<a>` needs `role` and `tabindex` too, or it is not merely
   unnamed, it is absent from the accessibility tree altogether.
+- **Keyboard reach:** everything a mouse can click, a keyboard can reach. For
+  the shared vocabulary that is handled for you at load by `core.js`: a
+  `[data-target]` drawn as a div, card or bold word becomes a link with a tab
+  stop and Enter; a `.section > .sec-h` header becomes a button with
+  Enter/Space and `aria-expanded`; every `.menuitem` becomes a real menu item
+  where the MENU is one tab stop, the arrow keys walk its rows, Enter/Space
+  picks, and Escape closes a popover menu and hands focus back to its trigger.
+  A `.menuitem` must therefore sit inside a `.menu`, a `.popover`, or a
+  `[role="menu"]`, or it has no menu to belong to. A page that binds its own
+  click on something that is not a `<button>` or an `<a>` owes it `role`,
+  `tabindex` and a keydown of its own. `node shared/audit-keyboard.mjs` runs
+  every page in a real browser and fails on a cross-link that cannot take
+  focus or navigate on Enter, a menu row with no key path, or a menu that
+  does not open, move and close from the keyboard; it also lists the private
+  click targets that fall outside the shared vocabulary.
 - **Elevation:** depth comes from a TOKEN, never a hand-written shadow.
   `--shadow-1` raised a hair (handle, knob, selected segment) · `--shadow-2` the
   hover lift · `--shadow` the window · `--lg-shadow` a float over live content

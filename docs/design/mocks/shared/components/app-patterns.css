@@ -17,6 +17,8 @@
 .menu{min-width:184px}
 .menuitem{display:flex;align-items:center;gap:var(--pad-sm);padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r2);font-size:12px;color:var(--ink);white-space:nowrap}
 .menuitem:hover{background:var(--accent-soft)}
+/* the keyboard's row reads like the mouse's: same fill, plus the ring */
+.menuitem:focus-visible{outline:none;box-shadow:var(--ring);background:var(--accent-soft)}
 .menuitem .ic{color:var(--faint);width:14px;flex:none}
 .menuitem .sc{margin-left:auto;color:var(--faint);font-family:var(--mono);font-size:10px}
 .menu-sep{height:1px;background:var(--line-soft);margin:var(--s1) 0}

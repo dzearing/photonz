@@ -262,6 +262,7 @@
 /* collapsible inspector groups — ds.js turns every .section with a .sec-h into one */
 .section.grp>.sec-h{cursor:pointer;user-select:none}
 .section.grp>.sec-h:hover{color:var(--accent)}
+.section.grp>.sec-h:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r-sm)}
 .section.grp>.sec-h .chev{display:inline-block;color:var(--faint);width:9px;height:9px;flex:none;transition:transform .15s ease;transform:rotate(0deg)}
 .section.grp.closed>.sec-h .chev{transform:rotate(-90deg)}
 .section.grp.closed>*:not(.sec-h){display:none!important}

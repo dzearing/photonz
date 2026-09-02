@@ -183,7 +183,7 @@
 .seg-menu.on{display:block}
 .seg-menu .menuitem{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
 .seg-menu .menuitem.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.seg-menu .menuitem:hover:not([disabled]){background:var(--accent);color:var(--accent-ink)}
+.seg-menu .menuitem:hover:not([disabled]),.seg-menu .menuitem:focus-visible:not([disabled]){background:var(--accent);color:var(--accent-ink)}
 .seg-menu .menuitem[disabled]{opacity:.42;pointer-events:none}
 .seg-menu .menuitem:focus-visible{outline:none;box-shadow:var(--ring)}
 

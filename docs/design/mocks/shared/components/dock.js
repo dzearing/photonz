@@ -25,6 +25,10 @@
       toggle();
     });
     h.addEventListener('keydown', function (e) {
+      /* Only a key pressed ON the header. A header holds its own controls
+         (the menu trigger, the add button), and Enter on one of those used
+         to bubble up here, collapse the group, and swallow the press. */
+      if (e.target !== h) return;
       if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
     });
     sync();
@@ -80,6 +84,20 @@
       all('.popover.pop.on').forEach(function (p) { if (p !== menu) p.classList.remove('on'); });
       menu.classList.toggle('on', on);
       btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+      if (on) {
+        menu.__opener = btn;
+        if (btn.matches(':focus-visible') && PZ.menu) PZ.menu.enter(menu);
+      }
+    });
+    btn.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!menu.classList.contains('on')) btn.click();
+        if (PZ.menu) PZ.menu.enter(menu);
+      } else if (e.key === 'Escape' && menu.classList.contains('on')) {
+        e.preventDefault();
+        if (PZ.menu) PZ.menu.close(menu);
+      }
     });
     // clicks inside the list must NOT dismiss it: you are checking several
     // panels at once, not picking one command.

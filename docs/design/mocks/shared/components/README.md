@@ -35,10 +35,13 @@ to disk.
   files to change one component's look, it is not split correctly.
 - **Behaviour is an idempotent upgrade pass.** Each JS component is its own
   guarded IIFE, safe to run twice, and a no-op on a page that does not use it.
-- **`core.js` runs first** and publishes the only four shared helpers on
-  `window.PZ`: `all`, `winOf`, `isNarrow`, `NARROW`. That is the entire shared
-  surface. A component must not reach into another component's internals; if it
-  needs to, the two are one component or the shared part belongs in core.
+- **`core.js` runs first** and publishes the only shared helpers on
+  `window.PZ`: `all`, `winOf`, `isNarrow`, `NARROW`, and `menu` (the keyboard
+  contract for anything that opens a menu: `enter(m)` after a keyboard open,
+  `close(m)` to dismiss and hand focus back; a component that walks its own
+  rows marks the menu `data-keys="own"`). That is the entire shared surface. A
+  component must not reach into another component's internals; if it needs
+  to, the two are one component or the shared part belongs in core.
 - **`shared/photonz-ds.{css,js}` are empty and must stay empty.** They exist only
   so the URL every page links stays valid. Adding a rule there puts it outside
   the component that owns it, which is exactly how this got out of hand.

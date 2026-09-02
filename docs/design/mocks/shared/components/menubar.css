@@ -58,8 +58,9 @@
 .mbmenu .menuitem{padding:6px var(--pad-sm);gap:var(--s5)}
 .mbmenu .menuitem .sc{font-size:10.5px;letter-spacing:.02em}
 /* a native menu highlights the whole row in the accent, not a soft tint */
-.mbmenu .menuitem:hover{background:var(--accent);color:var(--accent-ink)}
-.mbmenu .menuitem:hover .sc,.mbmenu .menuitem:hover .ic{color:var(--accent-ink);opacity:.85}
+.mbmenu .menuitem:hover,.mbmenu .menuitem:focus-visible{background:var(--accent);color:var(--accent-ink)}
+.mbmenu .menuitem:hover .sc,.mbmenu .menuitem:hover .ic,
+.mbmenu .menuitem:focus-visible .sc,.mbmenu .menuitem:focus-visible .ic{color:var(--accent-ink);opacity:.85}
 /* a narrow screen condenses the status area (macOS does the same) and then
    trims the menu, so the drop never runs off the left edge of the desk */
 @container desk (max-width:560px){ .mbar .clock{display:none} }
@@ -73,6 +74,6 @@
 button.menuitem{width:100%;border:0;background:transparent;text-align:left;
   font-family:inherit;font-size:12px;font-weight:450;line-height:1.3;
   transition:background .1s ease, color .1s ease}
-.menuitem:focus-visible{outline:none;box-shadow:var(--ring)}
+/* (.menuitem:focus-visible lives with .menuitem in app-patterns.css) */
 .menuitem.disabled,.menuitem[aria-disabled="true"],.menuitem[disabled]{
   opacity:.4;pointer-events:none}
