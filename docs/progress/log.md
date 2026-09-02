@@ -4491,3 +4491,22 @@ boxed-in full-width-rows case, and tuning the sideways travel limit.
 - Dashboard hero: a red **Sign-in needed** pill plus a strip saying nothing was charged, the digest is waiting, and the fix (run `claude`, log in). Verified in a browser against a throwaway queue served on port 8799.
 - `queue/bin/failure-drill.sh` now has two scenarios: the old spend-limit one (unchanged behaviour, plus a check that no real failure reads as sign-in) and a new one where the login expires with exit 0 and is later restored (18 checks). README and `docs/design/dashboard.md` document the case.
 - Follow-up filed: the spend-limit refusal on a digest run has the same exit-0 shape and is still stubbed as a failed digest.
+
+## 2026-09-02 — Boxed-in caliper number: decision opened (go loop)
+
+Queue task `a-caliper-boxed-in-by-two-full-width-rows-finds` (epic measure-redline, Next).
+Reproduced with a sweep of every Gap-mode gap on the audit capture
+(`temp/boxed-in/Scan.swift`): three boxed-in placements, the real one being the
+33 px space between the two settings cards, where the 44 px pill overhangs both
+cards by about 5 px a side. Rendered four answers through `DocumentRenderer`
+(`temp/boxed-in/Render.swift` → `queue/audits/2026-09-02-boxed-in-*.png`):
+straddle as today, shrink to fit the gap, step past the foot onto the next row,
+and out to the page margin on a long connector (which fails on this capture: the
+margin is narrower than the pill). Decision
+`a-caliper-boxed-in-by-two-full-width-rows-finds-when-a-gap-caliper-sits-between`
+opened with a brief; recommended keeping the straddle. Task blocked on it.
+
+Side find, filed p2 (`a-gap-caliper-whose-foot-lands-under-a-row-label`): a foot
+under a row's label text loses the row above as a subject, so the planner nudges
+the pill up onto the label. Worse than straddling, and a detection bug rather
+than a placement choice.

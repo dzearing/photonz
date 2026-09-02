@@ -5,14 +5,16 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 450,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.562Z",
-  "updated": "2026-09-02T06:31:42.563Z",
+  "updated": "2026-09-02T07:59:40.615Z",
   "deps": [],
-  "blockedBy": [],
-  "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 1. MeasureLabelPlanner.maxCrossReach caps sideways travel at three chip heights; the boxed-in fallback is the flat subjectPenalty tie-break to .onLine. Same limit shows up for Size mode on a full-width row (2026-08-23-size-readout-placement rough item 1).",
+  "blockedBy": [
+    "a-caliper-boxed-in-by-two-full-width-rows-finds-when-a-gap-caliper-sits-between"
+  ],
+  "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 1. MeasureLabelPlanner.maxCrossReach caps sideways travel at three chip heights; the boxed-in fallback is the flat subjectPenalty tie-break to .onLine. Same limit shows up for Size mode on a full-width row (2026-08-23-size-readout-placement rough item 1). Render scripts: temp/boxed-in/Scan.swift (sweep) and temp/boxed-in/Render.swift (four options); compile with swiftc -I .build/debug/Modules against .build/debug/PhotonzCore.build/*.o and PhotonzRender.build/*.o. Option renders live in queue/audits/2026-09-02-boxed-in-*.png.",
   "acceptance": [
     "A decision card offers the user two or three visible options for the boxed-in case with rendered examples on the audit capture.",
     "The chosen option is implemented in Next and the callout clearance sweep covers it."
@@ -21,6 +23,35 @@
     {
       "t": "2026-09-02T06:31:42.563Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T07:51:00.892Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T07:59:27.978Z",
+      "note": "Reproduced on the audit capture: a sweep of every Gap-mode gap (temp/boxed-in/Scan.swift, 931 gaps) finds three boxed-in placements, all vertical: the 33 px space between the two cards (y 417-450) where the 44 px pill overhangs both cards, and the two row heights measured between dividers (y 236-321, y 540-625) where the pill sits inside the row it measures, which is fine."
+    },
+    {
+      "t": "2026-09-02T07:59:27.979Z",
+      "note": "Adversarial review of the idea: the overhang is a few pixels per side at the picture scale and the feet stay visible, so the problem is smaller than the audit line suggested. The margin option fails on this capture outright (64 px margin, 93 px pill). Past-the-foot reads as the row's number. Shrink is the only option that keeps the number unmistakably at the gap, at the price of mixed pill sizes."
+    },
+    {
+      "t": "2026-09-02T07:59:27.979Z",
+      "note": "Rendered all four options through DocumentRenderer (temp/boxed-in/Render.swift): queue/audits/2026-09-02-boxed-in-{a-straddle,b-past-foot,c-shrink,d-margin}.png."
+    },
+    {
+      "t": "2026-09-02T07:59:27.979Z",
+      "note": "Opened decision a-caliper-boxed-in-by-two-full-width-rows-finds-when-a-gap-caliper-sits-between with brief; recommended straddle (keep today). If straddle wins, the implementation is to pin it in MeasureCalloutClearanceTests (the gap sweep already tolerates boxed-in) and close."
+    },
+    {
+      "t": "2026-09-02T07:59:27.979Z",
+      "note": "Side find, filed as a-gap-caliper-whose-foot-lands-under-a-row-label (p2): at x=330 the upper row is not returned as a subject and the planner nudges the pill up onto the \"Play sound on capture\" label."
+    },
+    {
+      "t": "2026-09-02T07:59:40.614Z",
+      "note": "Waiting on the decision: where the number goes when two full-width rows box the caliper in. Four options rendered on the audit capture; straddle (today) recommended."
     }
-  ]
+  ],
+  "started": "2026-09-02T07:51:00.891Z"
 }

@@ -1,0 +1,66 @@
+{
+  "id": "a-caliper-boxed-in-by-two-full-width-rows-finds-when-a-gap-caliper-sits-between",
+  "taskId": "a-caliper-boxed-in-by-two-full-width-rows-finds",
+  "question": "When a gap caliper sits between two full-width rows and its number cannot fit anywhere clear, where should the number go?",
+  "context": "A hand-drawn or Gap caliper now steps its number off the elements its feet landed on. Between two full-width rows there is nowhere within reach that is clear, so the number keeps the classic spot on the line and overhangs both rows. Rendered examples of every option on the audit capture are in the brief.",
+  "options": [
+    {
+      "id": "straddle",
+      "label": "Stay on the line, straddling both rows",
+      "summary": "What happens today. The number stays centred on the caliper, right in the gap, and its pill overhangs each row by a few pixels.",
+      "pros": [
+        "The number is always exactly where you look for it, at the gap",
+        "Every number in a spec is the same size and sits the same way",
+        "Nothing moves, so nothing surprises"
+      ],
+      "cons": [
+        "The pill covers the two row edges it is measuring, just beside the caliper feet"
+      ],
+      "mitigation": "The overhang is a few pixels each side and the feet stay visible; zooming in shows the edges past the pill."
+    },
+    {
+      "id": "shrink",
+      "label": "Shrink the number to fit inside the gap",
+      "summary": "When the gap is narrower than the pill, the pill scales down until it fits between the rows with a little breathing room. It never shrinks below about two thirds; a gap tighter than that falls back to straddling.",
+      "pros": [
+        "The number sits inside the gap it describes, touching nothing",
+        "Reads like a hand-made redline, where a small gap gets a small label"
+      ],
+      "cons": [
+        "Numbers on one spec come in different sizes, and a small pill is harder to read on a dense capture",
+        "Fights the label size slider: a size you chose gets overridden at tight spots"
+      ],
+      "mitigation": "A floor keeps the smallest pill readable, and the slider still sets the size everywhere else."
+    },
+    {
+      "id": "past-foot",
+      "label": "Step past the foot onto the blank part of the next row",
+      "summary": "The number slides along the caliper just past its lower foot, onto the empty stretch of the row below, attached to the foot. Both measured edges stay visible.",
+      "pros": [
+        "Full-size number, both row edges uncovered",
+        "Stays right beside the caliper, no long connector"
+      ],
+      "cons": [
+        "The number now sits inside a row, so at a glance it can read as that row's measurement",
+        "Depends on the row having blank space beside the foot; over a label it is no better than straddling"
+      ],
+      "mitigation": "The pill touches the caliper foot, which ties it to the gap rather than the row."
+    },
+    {
+      "id": "margin",
+      "label": "Send it out to the page margin on a long connector",
+      "summary": "The number travels sideways past the end of the rows into the page margin, tied back to the caliper by a thin connector that can run most of the picture width.",
+      "pros": [
+        "Covers no content when the margin is wide enough"
+      ],
+      "cons": [
+        "On this capture the margin is narrower than the pill, so the pill still lands on the row end and the connector runs 600 pixels",
+        "A number far from its caliper stops reading as that caliper's number"
+      ],
+      "mitigation": "Only usable when the margin fits the pill; everywhere else it would need one of the other answers anyway."
+    }
+  ],
+  "recommended": "straddle",
+  "status": "pending",
+  "created": "2026-09-02T07:58:45.291Z"
+}
