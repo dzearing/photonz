@@ -948,19 +948,20 @@ final class CanvasNSView: NSView {
     private var grabCursor: NSCursor?
 
     /// What a press at `p` (document coords) would take hold of, for cue
-    /// purposes: a caption pill or a caliper's number on the SELECTED layer.
-    /// Nil for every other press, including the handles that overlap them.
-    private func grabCue(at p: CGPoint) -> ReadoutGrab? {
+    /// purposes: a caption pill, or a caliper's number, feet or head dot, on
+    /// the SELECTED layer. Nil for every other press.
+    private func grabCue(at p: CGPoint) -> CanvasGrab? {
         guard Experiments.shared.grabCueEnabled, tool == .select, let viewport,
               let layer = selectedLayerID.flatMap({ id in document?.layer(id: id) })
         else { return nil }
-        return ReadoutGrab.hit(at: p, layer: layer, zoom: viewport.zoom,
+        return CanvasGrab.hit(at: p, layer: layer, zoom: viewport.zoom,
                                captionsEnabled: Experiments.shared.arrowCaptionsEnabled)
     }
 
-    /// Open hand while the pointer rests on a pill that drags on its own.
-    /// Nothing else on the canvas said those pills could be moved, so this is
-    /// the whole invitation. A drag in flight keeps its closed hand.
+    /// Open hand while the pointer rests on something that drags on its own —
+    /// a pill, or one of a caliper's dots. Nothing else on the canvas said
+    /// those could be moved, so this is the whole invitation. A drag in flight
+    /// keeps its closed hand.
     private func refreshGrabCursor(at viewPoint: CGPoint? = nil) {
         guard captionDrag == nil, measureHandleDrag == nil else { return }
         let point = viewPoint ?? window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) }
@@ -1220,7 +1221,9 @@ final class CanvasNSView: NSView {
                     drag.guides = measureGuideLines(excluding: id)
                 }
                 measureHandleDrag = drag
-                if grabCue(at: p) == .measureReadout { applyGrabCursor(.closedHand) }
+                // The hand that invited this drag closes for its duration —
+                // number, foot or head dot alike.
+                if grabCue(at: p) != nil { applyGrabCursor(.closedHand) }
                 refreshOverlays()
                 return
             }

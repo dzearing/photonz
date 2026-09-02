@@ -5002,3 +5002,41 @@ untouched. Tests 1464 green. Audit:
 whether the legend should dodge a measurement by depth the way a readout does,
 and whether the arrow caption should gain the pull back toward its arrow. Both
 are one-line changes now; both move pictures, so they want a user verdict.
+
+## 2026-09-02 (go loop): the feet of a caliper say they can be dragged
+
+Queue task `the-grab-points-of-a-selected-caliper-show-a-han` (epic
+`measure-redline`, Next). The open-hand cue shipped earlier today for the two
+draggable pills; it deliberately stopped at the caliper's dots, which drag just
+as much and said nothing about it.
+
+Considered a resize cursor for the feet and rejected it: a foot drag moves
+freely in BOTH axes (the opposite foot follows onto the dragged foot's cross
+axis), so a resize arrow would promise a constrained resize the drag does not
+do. One hand across all three grabs also keeps the caliper reading as one
+object.
+
+- `ReadoutGrab` is now `CanvasGrab`: a type named for readouts had started
+  reporting feet. New case `.measureHandle` covers either foot and the head dot
+  where the number is not sitting on it; the number keeps `.measureReadout`, so
+  the precedence still mirrors `CanvasView.mouseDown` exactly.
+- Fixed on the way: the hit test bailed on the whole caliper when `showLabel`
+  was off, so a numberless caliper cued nothing though its feet still dragged.
+  The `showLabel` guard now gates only the number.
+- `CanvasView` closes the hand for ANY grab the press takes, not only the
+  number.
+- Feature flag copy ("Grab cue on what you can drag") now names the feet.
+
+Verified live on the probe app, since a cursor cannot be rendered offscreen and
+macOS window captures leave the pointer out: `Scripts/playtest/grab-cue.json`
+reads the real pointer through `PlaytestHarness.cursorName()` and now covers
+arrow on an unselected foot, openHand on each selected foot, closedHand while a
+foot is dragged, openHand after the drop, and arrow off the caliper. All passed.
+Tests 1473 green. Audit:
+`queue/audits/2026-09-02-caliper-grab-cursor.json`.
+
+**Next:** arrow endpoint handles and the eight resize handles are now the only
+things on the canvas that drag without saying so. Filed as
+`every-handle-on-the-canvas-says-what-it-does-to` rather than guessed at: a
+resize handle probably wants a resize arrow, and AppKit has no public diagonal
+one, so that pass likely draws its own.

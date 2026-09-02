@@ -92,6 +92,25 @@
       "note": "pointer on the number of a DESELECTED caliper; expect cursor arrow"
     },
     {
+      "do": "move",
+      "at": [
+        200,
+        700
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1b-foot-unselected",
+      "note": "pointer on the left foot of a DESELECTED caliper; expect cursor arrow"
+    },
+    {
+      "do": "move",
+      "at": [
+        300,
+        640
+      ]
+    },
+    {
       "do": "click",
       "at": [
         300,
@@ -128,7 +147,60 @@
     {
       "do": "describe",
       "stage": "3-foot",
-      "note": "pointer on the caliper's left foot; expect cursor arrow"
+      "note": "pointer on the selected caliper's left foot; expect cursor openHand"
+    },
+    {
+      "do": "move",
+      "at": [
+        400,
+        700
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3b-foot-right",
+      "note": "pointer on the selected caliper's right foot; expect cursor openHand"
+    },
+    {
+      "do": "snapshot",
+      "name": "3b-foot-right"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        700
+      ],
+      "to": [
+        460,
+        700
+      ],
+      "steps": 8
+    },
+    {
+      "do": "describe",
+      "stage": "3c-foot-dragged",
+      "note": "the right foot dragged out; the drag line above should read cursor while down closedHand (this state line reads the real pointer, not the synthesized one)"
+    },
+    {
+      "do": "move",
+      "at": [
+        460,
+        700
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3d-foot-after-drop",
+      "note": "pointer still on the foot after the drop; expect cursor openHand"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
     },
     {
       "do": "move",

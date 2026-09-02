@@ -1,0 +1,26 @@
+{
+  "feature": "The grab points of a selected caliper show a hand",
+  "epic": "measure-redline",
+  "summary": "Rest the pointer on a selected measurement's feet and it becomes an open hand, closing while you drag, the same cue its number already had. Nothing about a caliper is silently draggable any more.",
+  "setup": "Photonz, Experiments window, release Next. \"Grab cue on what you can drag\" is on by default.",
+  "try": [
+    { "do": "Open a screenshot and press I for the measure tool." },
+    { "do": "Click, click, click to lay a caliper across something: two feet, then the head." },
+    { "do": "Press V for the pointer, then click the caliper to select it.", "shot": "2026-09-02-caliper-grab-cursor-1.png" },
+    { "do": "Rest the pointer on the left foot dot: the arrow becomes an open hand." },
+    { "do": "Press and drag that foot: the hand closes for the whole drag." },
+    { "do": "Slide the pointer along the caliper's bar between the dots: the plain arrow comes back." },
+    { "do": "Click empty picture to deselect, then rest on the same foot: still a plain arrow." }
+  ],
+  "evaluate": [
+    "Does the hand appear early enough that you find the foot without hunting for it?",
+    "Is the open hand the right shape for a foot, or would a resize arrow read better?",
+    "Does the cue turning on only for the selected measurement keep a busy screenshot calm?",
+    "Is the reach around a foot dot right, or does the hand flicker on and off as you approach?"
+  ],
+  "rough": [
+    "The screenshot cannot show this. macOS window captures leave the pointer out, so the shot shows the selected caliper and its dots but not the cursor over them. The shapes were verified instead through the playtest harness, which reads the live pointer: Scripts/playtest/grab-cue.json now checks arrow on an unselected foot, open hand on each selected foot, closed hand while a foot is dragged, open hand again after the drop, and arrow off the caliper. All passed on the probe app.",
+    "The head dot, the third grab, gets the same hand, but only where the number is not sitting on top of it. Where the number covers it the number is the grab and the whole pill cues, which is what already shipped.",
+    "An arrow's endpoint handles and a layer's eight resize handles still show a plain arrow. Now that a caliper's dots invite a drag, those are the odd ones out; filed as a follow-up rather than guessed at here, because a resize handle probably wants a resize arrow, not a hand, and that is a look worth choosing on purpose."
+  ]
+}

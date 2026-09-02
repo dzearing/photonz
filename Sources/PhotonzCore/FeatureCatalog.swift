@@ -151,8 +151,8 @@ public enum FeatureCatalog {
             Definition(
                 flag: FeatureFlag(
                     name: grabCueFlag,
-                    title: "Grab cue on draggable pills",
-                    description: "Some pills on the canvas can be dragged on their own: an arrow's caption, and a measurement's number. When the pointer rests on one of them, it becomes an open hand, and a closed hand while you drag, so the drag is findable without being told about it.",
+                    title: "Grab cue on what you can drag",
+                    description: "Parts of a selected object can be dragged on their own: an arrow's caption, a measurement's number, and a measurement's two feet. When the pointer rests on one of them, it becomes an open hand, and a closed hand while you drag, so the drag is findable without being told about it.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

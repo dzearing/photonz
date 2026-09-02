@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 110,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:27:30.281Z",
-  "updated": "2026-09-02T14:27:41.126Z",
+  "updated": "2026-09-02T21:12:17.357644Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-09-02-caliper-head.json rough 1 (no hover cue on the pill; the feet dots have none either). The app already swaps cursors in Sources/Photonz/SelectionCursor.swift and Capture/RectSelection.swift; the caliper hit-testing for the head grab landed in 392ce3b. If the arrow caption pill becomes draggable (the p2 arrow caption task), give it the same cursor in the same pass or file the follow-up.",
@@ -26,6 +26,35 @@
     {
       "t": "2026-09-02T14:27:41.126Z",
       "note": "seq 560 -> 110"
+    },
+    {
+      "t": "2026-09-02T21:05:09.045Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T21:12:17.357644Z",
+      "note": "review before building: the pill cue already shipped (0aed389) and deliberately excluded the dots, so the remaining work was the feet and the drawn head dot. Considered a resize cursor for the feet instead of a hand and rejected it: a foot drag moves freely in BOTH axes (the opposite foot follows onto the dragged foot's cross axis), so a resize arrow would promise a constrained resize the drag does not do. One hand across all three grabs also keeps the caliper reading as one object."
+    },
+    {
+      "t": "2026-09-02T21:12:17.357644Z",
+      "note": "shortest version: one new case on the existing hit test rather than a second cue path. Renamed ReadoutGrab to CanvasGrab, since a type named for readouts now reports feet."
+    },
+    {
+      "t": "2026-09-02T21:12:17.357644Z",
+      "note": "found while building: the old code returned nil for the whole caliper when showLabel was off, so a numberless caliper cued nothing even though its feet still drag. Fixed: the showLabel guard now gates only the number."
+    },
+    {
+      "t": "2026-09-02T21:12:17.357644Z",
+      "note": "review before calling it ready: ran Scripts/playtest/grab-cue.json on the probe app. arrow on an unselected foot, openHand on each selected foot, closedHand while a foot is dragged, openHand after the drop, arrow on the bar and on empty picture. All as expected."
+    },
+    {
+      "t": "2026-09-02T21:12:17.357644Z",
+      "note": "left rough: arrow endpoint handles and the eight resize handles still show a plain arrow, now the odd ones out. Filed as every-handle-on-the-canvas-says-what-it-does-to rather than guessed at, because a resize handle likely wants a resize arrow, not a hand."
+    },
+    {
+      "t": "2026-09-02T21:12:17.357644Z",
+      "note": "shipped: CanvasGrab.measureHandle; CanvasView closes the hand for any grab, not just the number; feature flag copy now mentions the feet; grab-cue walk extended; 1473 tests green. Audit: queue/audits/2026-09-02-caliper-grab-cursor.json"
     }
-  ]
+  ],
+  "started": "2026-09-02T21:05:09.044Z"
 }
