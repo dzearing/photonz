@@ -5,11 +5,11 @@
   "epic": "spec-export",
   "priority": "p2-normal",
   "seq": 480,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T10:19:18.007Z",
-  "updated": "2026-09-02T11:25:35.000Z",
+  "updated": "2026-09-02T11:25:57.050Z",
   "deps": [],
   "blockedBy": [],
   "notes": "EditorCommands.swift: the Layers CommandMenu keys every item off `selectedID` (editor?.selectedLayerID), which is nil whenever multiSelectedLayerIDs holds two or more. EditorState.deleteLayers(ids:) already batches; duplicateLayer(id:) and restack(id:) are single-layer. Add multi-aware entry points (deleteSelectedLayers, duplicateSelectedLayers, restackSelection) and enable the menu items when either store is non-empty. Same gap exists after a canvas marquee, so this also fixes the marquee case. Found while building shift/command-click list selection (audit 2026-09-02-list-multi-select rough 1). DONE: see log. Core API PhotonzDocument.restackLayers / duplicateLayers; EditorState.restackSelectedLayers / duplicateSelectedLayers / deleteSelectedLayers; menu keyed off hasLayerSelection.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-02T11:25:35.000Z",
       "note": "Verified live on the probe app with a temporary harness (removed): four rectangles added, rows 2..4 selected via clickRow plain + extend, then toFront / undo / toBack at floor (unchanged) / forward / undo / duplicate (copies selected, names end in copy) / undo / delete (three gone, menu disabled) / undo restores all three in one step / selectAll marquee toBack. Scripts/test.sh green, 1270 tests. Audit: queue/audits/2026-09-02-layers-menu-multi-select.json."
+    },
+    {
+      "t": "2026-09-02T11:25:57.050Z",
+      "note": "Layer menu Duplicate, Delete, Bring/Send commands and command-J act on the whole selection (shift-click, command-click or marquee), from the menu, shortcuts and row context menu; copies become the selection; undo prunes vanished multi-selections. Core batch restack/duplicate in PhotonzDocument with 14 tests; verified on the probe app via a scripted run; 1270 tests green. Audit queue/audits/2026-09-02-layers-menu-multi-select.json."
     }
   ],
-  "started": "2026-09-02T11:16:38.259Z"
+  "started": "2026-09-02T11:16:38.259Z",
+  "completed": "2026-09-02T11:25:57.050Z"
 }
