@@ -2,6 +2,64 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-02 — Region capture dims at once, and the loupe is gone (go loop)
+
+Queue task `region-capture-drops-the-magnifier-and-dims-the` (epic
+`measure-redline`), filed by the user.
+
+**The loupe is deleted, not defaulted off.** The magnifier beside the pointer
+shipped the same day behind `next-capture-loupe` as competitor parity, straight
+to a runner with no decision card, and the user rejected it on sight. Gone:
+`CaptureLoupe` and its 20 tests, the flag and its Pixels across parameter, the
+`Experiments` accessors, the `CaptureCenter` plumbing, the drawing in
+`SelectionView`, and the spec section. `ExperimentsTests` keeps a regression
+test that the flag stays gone, and `docs/plan/competitive-cleanshot.md` now says
+so beside the parity line that produced it, so it cannot be refiled. The drag's
+size pill, which used to step aside for it, is the one readout during a drag
+again.
+
+**The overlay goes up before the freeze.** `RectSelectionController.begin()`
+used to await a screenshot of every display before any window existed, so
+nothing happened on screen until the shots came back. It now covers every
+display synchronously (measured 10 to 18 ms from `begin()` to every panel
+ordered front) and the frozen picture slides in underneath as each shot lands
+(43 ms cold, 12 ms warm per display, `SCScreenshotManager.captureImage(in:)`).
+
+**How the freeze avoids photographing our own dim.** The panels carry
+`sharingType = .none` while the shots are in flight. Verified rather than
+assumed, with a control: a 300x200 dim panel left at `.readOnly` dropped the
+captured mean luma from 0.1938 to 0.1453, exactly its alpha; the same panel at
+`.none` left the capture pixel-identical to the clean screen. Once every shot is
+in, the panels go back to `.readOnly` so an ordinary screen recording still
+shows the overlay.
+
+**Found on the way: the dim never covered the display.** `SelectionView.draw`
+filled `bounds` with 25% black, but a view only ever repaints the rectangles
+AppKit marks dirty, so on a fresh overlay the dim covered the hovered window's
+outline and nothing else, and grew only where a drag had swept. A real screen
+capture put it at about a tenth of the display. The dim is now `DimView`, a
+shape-layer-backed view between the picture and the chrome, whose even-odd path
+is the whole display minus the selection. Two AppKit traps are written up in
+`docs/design/capture.md`: a `CAShapeLayer` added by hand as a sublayer is thrown
+away when the view joins a layer-backed window (hence `makeBackingLayer`), and
+handing the frozen picture to the layer the chrome draws into replaces what the
+chrome drew there (hence the picture's own view).
+
+**Probe-only `--capture-diag`** (`Sources/Photonz/Playtest/CaptureDiag.swift`)
+drives the overlay directly and reports the dim latency, the double-dim ratio
+and a real screenshot of a drag. A playtest walk cannot reach the overlay: it
+covers every display and owns the pointer.
+
+Suite green, 1464 tests. Current is untouched; the overlay work is shared code
+and both releases get it, which is what the user asked for.
+
+**Open:** the on-screen photograph of the finished dim is still owed. The
+machine locked partway through the session, and no client can see past the lock,
+so every capture came back as the desktop picture. The layer tree was checked in
+its place. Also worth a human's eye: the freeze now happens a frame or two after
+the overlay appears, so a menu left open when the shortcut is pressed is
+theoretically at risk of closing before it is photographed.
+
 ## 2026-08-23 (pm) — The Measure hint comes out from behind the tool bar
 
 Queue task `the-measure-hint-line-is-readable-not-hidden-beh` (epic

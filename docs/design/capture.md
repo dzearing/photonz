@@ -79,16 +79,28 @@ The `NSStatusItem` menu is the always-available entry point:
    `CaptureCenter` on the resident agent — **no editor window required**.
 2. Region capture uses the fullscreen `RectSelectionController` overlay; full
    screen / window / video are their own modes.
-   - **Freeze-frame model (revised 2026-07-02, user-proposed).** Every display
-     is screenshotted FIRST; each screen is then covered by its frozen image on
-     a borderless panel at `CGShieldingWindowLevel()` (above every window,
-     panel, and alert — nothing underneath stays interactive or can float over
-     the drag box), and the selection is dragged over the frozen picture. On
+   - **Freeze-frame model (revised 2026-07-02, user-proposed; dim-first since
+     2026-09-02).** Every display is covered by a borderless panel at
+     `CGShieldingWindowLevel()` (above every window, panel, and alert — nothing
+     underneath stays interactive or can float over the drag box), and the
+     selection is dragged on top of it. The panels go up **first**, in the same
+     turn of the run loop as the shortcut (measured under 20 ms from
+     `begin()` to every display covered), so the screen dims immediately; the
+     freeze follows and each display's picture slides in underneath as its shot
+     lands (43 ms cold, 12 ms warm per display). Until then the dim falls on the
+     live screen, which is also the permanent fallback when a shot fails.
+     The panels carry `sharingType = .none` while the freeze is in flight, so
+     the shot cannot photograph our own dim (verified: a panel left at
+     `.readOnly` dropped the captured luma by exactly its alpha; at `.none` the
+     capture was pixel-identical to the clean screen). Once every shot is in
+     they go back to `.readOnly` so an ordinary screen recording still shows
+     the overlay. On
      mouse-up the region is **cropped from the frozen bitmap** (screen points ×
      `backingScaleFactor`) — atomically WYSIWYG; the old dismiss → 60ms sleep →
      live re-capture dance survives only as a fallback when freezing fails.
      Region *recording* uses the same selection UI but ignores the crop and
-     records live (the overlay tears down before the stream starts).
+     records live (the overlay tears down before the stream starts), so it
+     dims on the same schedule.
      `animationBehavior = .none` + a disabled-actions CATransaction keep the
      freeze imperceptible — macOS's default panel fade reads as a visible flash.
      **GOTCHA (fixed 2026-07-03):** assign `level` LAST when configuring the
@@ -157,26 +169,27 @@ The `NSStatusItem` menu is the always-available entry point:
      shot, then to the frozen crop, so a click never comes back empty. NOT
      verified live as of 2026-09-02: no unmanned bundle holds a Screen
      Recording grant; the playtest audit asks the user to confirm the look.
-   - **Loupe (Next, `next-capture-loupe`, added 2026-09-02).** With the flag
-     on, a magnified patch of the frozen bitmap rides beside the pointer from
-     the moment the overlay opens: 25 device pixels across (a flag parameter)
-     at 5 pt each, nearest-neighbour, the pointer's own pixel boxed, a
-     two-tone crosshair, and a readout of the pointer, its device pixel (not
-     on 1x displays), and the selection size while dragging. The readout uses
-     the editor's unit names so a size reads the same on both sides of the
-     capture: "px" is the logical on-screen size (the editor's default,
-     Logical mode) and "actual px" is the device pixel (its Actual mode);
-     the loupe never says "pt". `CaptureLoupe`
-     in PhotonzCore owns the placement rule (beyond the pointer on the side
-     away from the drag start, so it stays outside the box and off its active
-     corner; flips per axis at a display edge; unit tested), the pixel sample
-     rect clamped to the picture with the pointer's pixel kept centred, and the
-     readout text. Drawn in `SelectionView.draw` from the bitmap the overlay
-     already holds (no extra capture), styled as the overlay's readout pill
-     with a soft shadow, invalidating only the old and new loupe frames. The
-     drag's size pill hides while the loupe shows so a drag has one readout.
-     Per-move cost measured at mean 0.2 to 0.4 ms, max about 1 ms, event plus
-     redraw, 2x display.
+   - **The dim is a layer, not a fill (fixed 2026-09-02).** `SelectionView`
+     used to paint the 25% black over `bounds` in `draw`, which only ever
+     covered the rectangles AppKit had marked dirty: on a fresh overlay that was
+     the hovered window's outline and nothing else, so most of the display sat
+     at full brightness until a drag had swept over it. The dim now belongs to
+     `DimView`, a shape-layer-backed view between the picture and the chrome,
+     whose path is the whole display with an even-odd hole where the selection
+     or the hovered window is. The compositor keeps it right without a repaint,
+     and the hole moves by setting one path inside a disabled-actions
+     transaction. Two AppKit traps to keep in mind: a `CAShapeLayer` added by
+     hand as a sublayer is discarded when the view joins a layer-backed window
+     (hence `makeBackingLayer`), and handing the frozen picture to the layer the
+     chrome draws into replaces what the chrome drew there (hence the picture's
+     own view).
+   - **No loupe (removed 2026-09-02).** A magnifier beside the pointer shipped
+     behind `next-capture-loupe` as competitor parity and the user rejected it
+     on sight: a drag shows the box and its size, nothing else. The flag, its
+     parameters, `CaptureLoupe` and its tests are deleted rather than defaulted
+     off, so nobody has anything to switch off; `ExperimentsTests` keeps a
+     regression test that the flag stays gone. The drag's size pill, which used
+     to step aside for it, is the one readout during a drag again.
    - **The overlay must NOT activate the app.** With an editor window open the
      app is `.regular`, so `NSApp.activate(ignoringOtherApps:)` would raise
      *every* Photonz window — yanking the editor to the foreground when you

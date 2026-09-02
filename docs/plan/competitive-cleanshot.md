@@ -10,7 +10,8 @@ site + third-party reviews. Use this to plan the "compete with CleanShot" phases
 
 **Capture:** region, window (smart window detection), fullscreen, **scrolling capture**
 (vertical + horizontal), capture-previous-area, self-timer, crosshair + **magnifier/loupe
-with live pixel coords**, **freeze screen** (capture hover/dropdown UI), capture history
+with live pixel coords** (Photonz built this on 2026-09-02 and removed it the same day;
+the user rejected it on sight, so do not refile it), **freeze screen** (capture hover/dropdown UI), capture history
 (~1 month, filterable), window backgrounds/shadows/padding at capture time.
 
 **Recording:** MP4 (H.264) + **direct GIF**; scope window/full/region; mic and/or system
@@ -61,7 +62,8 @@ PNG/JPEG/HEIC export.
 
 **Notable GAPS not yet in the plan (candidates to fold in):**
 - *Capture:* **scrolling capture** (signature), **window capture** w/ smart detection,
-  **freeze screen**, capture-previous-area, self-timer, magnifier/loupe + pixel coords.
+  **freeze screen**, capture-previous-area, self-timer. The magnifier/loupe was
+  built and removed the same day: parity is not a reason on its own.
 - *Annotation:* **step/counter numbers** (tutorial-grade, signature), **blur + pixelate
   redaction** (privacy — high demand), **spotlight** dim, pencil/freehand, emoji, curved arrows.
 - *Organization:* **Quick Access Overlay** (signature post-capture interaction),

@@ -178,7 +178,6 @@ final class CaptureCenter {
                 windowPicking: Experiments.shared.windowCaptureEnabled,
                 windowShadow: Experiments.shared.windowCaptureIncludesShadow,
                 producesImage: false,
-                loupe: Experiments.shared.captureLoupeEnabled ? Experiments.shared.captureLoupePixels : nil,
                 onComplete: { [weak self] screen, rect, _ in
                     // Recording wants the LIVE region, not the frozen crop — the
                     // frozen overlay is gone by the time the stream starts.
@@ -223,7 +222,6 @@ final class CaptureCenter {
         rectSelection = RectSelectionController(
             windowPicking: Experiments.shared.windowCaptureEnabled,
             windowShadow: Experiments.shared.windowCaptureIncludesShadow,
-            loupe: Experiments.shared.captureLoupeEnabled ? Experiments.shared.captureLoupePixels : nil,
             onComplete: { [weak self] screen, rect, frozenCrop in
                 guard let self else { return }
                 self.rectSelection = nil

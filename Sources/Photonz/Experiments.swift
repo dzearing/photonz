@@ -236,20 +236,6 @@ extension Experiments {
         boolean(FeatureCatalog.windowCaptureFlag, FeatureCatalog.windowCaptureShadow) ?? true
     }
 
-    /// `next-capture-loupe`: whether the region capture overlay magnifies the
-    /// pixels beside the pointer with its coordinates. Next only, so Current
-    /// always reads false and keeps the bare crosshair.
-    var captureLoupeEnabled: Bool { isEnabled(FeatureCatalog.captureLoupeFlag) }
-
-    /// `next-capture-loupe`: how many device pixels the loupe shows across.
-    /// Kept odd so the pointer's own pixel sits in the middle.
-    var captureLoupePixels: Int {
-        let raw = number(FeatureCatalog.captureLoupeFlag, FeatureCatalog.captureLoupePixels)
-            ?? Double(CaptureLoupe.defaultPixelsAcross)
-        let count = max(3, Int(raw.rounded()))
-        return count % 2 == 0 ? count + 1 : count
-    }
-
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

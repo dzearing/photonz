@@ -64,6 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             #if PHOTONZ_PLAYTEST
             // Non-shipping builds only; the probe alone acts on either of these.
             ProbeGrants.recordOnLaunch()
+            CaptureDiag.runIfRequested()
             if let coordinator = AppDelegate.coordinator {
                 PlaytestHarness.startIfRequested(coordinator: coordinator)
             }

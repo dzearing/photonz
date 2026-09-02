@@ -129,6 +129,16 @@ read coordinates straight off the fixture.
   reading that admits its limits. So the log says "nothing in the probe has
   focus" and stops marking things dimmed. Reading ANOTHER app's menus is the
   thing that needs an Accessibility grant; nothing in a walk does.
+- **The capture overlay has its own check, not a walk.** ⇧⌘4's overlay covers
+  every display and owns the pointer, so no walk can reach it.
+  `Scripts/probe-app.sh --no-build` then
+  `open -a "dist/Photonz Probe.app" --args --capture-diag` runs it once and
+  writes `/tmp/photonz-capture-diag.txt`: how long from starting a capture to
+  the screen being dim, whether the frozen picture underneath is the true
+  screen or a photograph of our own dim, and a real screenshot of a drag in
+  flight at `/tmp/photonz-capture-diag-drag.png`. It quits the probe when it is
+  done. **A locked screen invalidates the whole run** — every capture comes back
+  as the desktop picture — and the first line of the report says so.
 - **Glass and vibrancy do not render offscreen**: a snapshot shows the
   window's content, not the system's translucency. Toasts and the capture
   overlay are not covered; the walk starts at the editor.
