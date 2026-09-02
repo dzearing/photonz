@@ -81,9 +81,12 @@ struct MeasureToolModeTests {
         }
     }
 
-    @Test func everyHintFitsThePillAndTheLongTipsLiveInTheTooltip() {
-        // The pill is one line above the tool bar; the old 82-character Size
-        // line ran about 490 pt wide. Every mode now stays under the limit.
+    @Test func everyHintIsOneShortLineAndTheKeysAreTaughtWhereTheyStay() throws {
+        // The pill is one line above the tool bar. Size's line once carried
+        // the whole [ and ] tip and ran about 490 pt, almost twice the others
+        // and wide enough to sit on the legend of a narrow window. Every mode
+        // now stays under one short line's worth of characters.
+        #expect(MeasureToolMode.hintLengthLimit <= 45)
         for mode in MeasureToolMode.allCases {
             #expect(mode.hint.count <= MeasureToolMode.hintLengthLimit,
                     "\(mode) hint is \(mode.hint.count) characters")
@@ -91,9 +94,18 @@ struct MeasureToolModeTests {
         // Distance takes THREE clicks (two feet, then the number); the hint
         // has to say so or the caliper seems stuck after the second click.
         #expect(MeasureToolMode.distance.hint.contains("then click"))
-        // The [ and ] tip is still taught, in the tooltip and in the hint.
+        // The [ and ] tip left the pill. It is taught where it stays: beside
+        // the Mode control in the inspector, and in the button's tooltip.
+        #expect(!MeasureToolMode.size.hint.contains("["))
         #expect(MeasureToolMode.size.help.contains("[ and ]"))
-        #expect(MeasureToolMode.size.hint.contains("[ and ]"))
+        let tip = try #require(MeasureToolMode.size.keyTip)
+        #expect(tip.contains("[ and ]"))
+        #expect(tip.count <= MeasureToolMode.hintLengthLimit)
+        #expect(!tip.contains("—"))
+        // Only Size has keys worth a line; a tip under Distance would be noise.
+        for mode in MeasureToolMode.allCases where mode != .size {
+            #expect(mode.keyTip == nil)
+        }
     }
 
     @Test func aGapPreviewCanBorrowTheSpacingInkWithoutChangingTheRememberedRole() {

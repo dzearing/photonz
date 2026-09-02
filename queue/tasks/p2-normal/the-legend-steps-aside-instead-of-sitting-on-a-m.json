@@ -1,0 +1,27 @@
+{
+  "id": "the-legend-steps-aside-instead-of-sitting-on-a-m",
+  "title": "The legend steps aside instead of sitting on a measurement when every corner is taken",
+  "goal": "On a narrow window with measurements in both top corners, the legend now stays out from behind the tool bar and the mode hint, but it does so by sitting on top of a measurement in the top left. It should find a way to stay legible without covering what it explains, for example by shrinking to a single row of swatches or sliding down the left edge.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 520,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T11:14:53.201Z",
+  "updated": "2026-09-02T11:14:53.202Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the 2026-09-02 measure-hint task. CornerPlacement.firstClear now has occupied (soft) and blocked (hard) tiers; the fallback when no corner clears both is the first corner clear of chrome. Options: a compact one-row legend variant, or an edge slot between corners. Check with the user before building anything speculative.",
+  "acceptance": [
+    "On a canvas about 435 points wide with Size, Spacing and Alignment measurements filling both top corners, the legend covers no measurement and sits behind no chrome.",
+    "The legend never jumps while the mode hint appears and fades.",
+    "A PhotonzCore layout test pins the behaviour."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T11:14:53.202Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -279,4 +279,34 @@ struct EditorChromeLayoutTests {
                                                    contentWidth: compactBar,
                                                    budget: budget) == 0)
     }
+
+    // MARK: Bottom chrome
+
+    @Test func theNoticePillSitsCenteredAboveTheToolBar() {
+        let canvas = CGSize(width: 800, height: 600)
+        let pill = EditorChromeLayout.bottomNoticeFrame(canvasSize: canvas,
+                                                        noticeSize: CGSize(width: 360, height: 34))
+        #expect(pill.midX == 400)
+        #expect(pill.maxY == 600 - EditorChromeLayout.aboveToolBar)
+        #expect(pill.width == 360 && pill.height == 34)
+        let bar = EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 500)
+        #expect(bar.midX == 400)
+        #expect(bar.maxY == 600 - EditorChromeLayout.toolBarInset)
+        #expect(bar.height == EditorChromeLayout.toolBarHeight)
+        #expect(bar.width == 500)
+        #expect(!pill.intersects(bar))
+        #expect(EditorChromeLayout.bottomChrome(canvasSize: canvas, toolBarWidth: 500,
+                                                noticeSize: pill.size) == [pill, bar])
+    }
+
+    @Test func anUnmeasuredToolBarReservesItsWholeBudget() {
+        // Before the bar has been measured (or if it somehow overflows) the
+        // reservation is the widest it can be, never wider than the canvas
+        // allows: over-reserving only moves the legend up a little sooner.
+        let canvas = CGSize(width: 480, height: 400)
+        let budget = EditorChromeLayout.toolBarBudget(canvasWidth: 480)
+        #expect(EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 0).width == budget)
+        #expect(EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 9_999).width == budget)
+        #expect(EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 300).width == 300)
+    }
 }

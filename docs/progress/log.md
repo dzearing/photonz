@@ -4640,3 +4640,9 @@ the card's left end, over the icons.
   (decision card on the follow-up task); the toast never names Edit; the
   loupe says pt where the editor says px; a committed playtest harness.
 - Audit: `queue/audits/2026-09-02-redline-walk.json`.
+
+## 2026-09-02 (go loop) Measure mode hint fits one line, legend keeps clear
+
+- Every Measure mode hint is now one short line (36 to 43 characters, limit 45) on one two-second schedule; the [ and ] tip moved to a caption under the inspector's Mode control (Size only) and into the picker's tooltip.
+- The legend's corner walk gained a hard-blocked tier: the hint's slot (reserved whether or not a pill is up) and the tool bar's measured width. Over a measurement beats behind the bar. New EditorChromeLayout frames for the bottom chrome, tested.
+- Verified on the probe app with a temporary harness; renders under queue/audits/2026-09-02-measure-hint-*. Follow-up filed: when every corner is taken the legend still sits on a measurement.

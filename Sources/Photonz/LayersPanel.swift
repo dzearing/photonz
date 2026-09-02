@@ -700,7 +700,16 @@ struct MeasureToolInspector: View {
                     }
                     .labelsHidden().controlSize(.small)
                     .help("What a click does. The Measure button holds the same list, "
-                          + "and I cycles it.")
+                          + "and I cycles it. In Size, [ and ] pick a smaller or larger element.")
+                    // The keys the mode answers to, taught here because this
+                    // line stays: the canvas hint fades in two seconds and
+                    // used to be the only place the [ and ] keys were written.
+                    if let tip = editorState.measureToolMode.keyTip {
+                        Text(tip)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             if Experiments.shared.measureCenterSnapEnabled {

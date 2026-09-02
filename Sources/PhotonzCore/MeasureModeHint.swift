@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 /// The Measure tool's mode hint (Next, `next-measure-modes`): the glass pill
@@ -13,12 +14,18 @@ import Foundation
 /// Session chrome only: it never enters the document or the undo history.
 public struct MeasureModeHint: Hashable, Sendable {
     /// How long the chip stays up before fading. Long enough to read one line,
-    /// short enough that a fluent user never waits for it. A longer line gets a
-    /// little longer (`lifetime`), never more than `longestLifetime`.
+    /// short enough that a fluent user never waits for it. Every mode gets the
+    /// same stay: the lines are all one short line now, and the Size pill that
+    /// used to hang around 3.5 seconds read as the app being slow, not the
+    /// line being long.
     public static let lifetime: TimeInterval = 2
-    public static let longestLifetime: TimeInterval = 3.5
-    /// Reading pace the stretch is priced at, per word of the detail line.
-    static let secondsPerWord: TimeInterval = 0.22
+
+    /// The most room any of the four pills takes, measured off an offscreen
+    /// render of the chip (the widest, Distance, is 328 by 31 pt in the
+    /// callout type) with a little to spare for the glass. The legend keeps
+    /// out of this box at the bottom of the canvas whether or not a pill is
+    /// up, so it never has to jump when one appears.
+    public static let reservedSize = CGSize(width: 344, height: 34)
 
     public var mode: MeasureToolMode
     public var shownAt: Date
@@ -32,15 +39,7 @@ public struct MeasureModeHint: Hashable, Sendable {
     /// window, so a clock that runs backwards cannot pin it up forever.
     public func isLive(at now: Date) -> Bool {
         let age = now.timeIntervalSince(shownAt)
-        return age >= 0 && age < lifetime
-    }
-
-    /// This chip's own stay: the base lifetime, stretched for a line that
-    /// takes longer to read (Size's line carries the [ and ] tip and runs to
-    /// sixteen words), and capped so no mode turns the toast into a banner.
-    public var lifetime: TimeInterval {
-        let words = detail.split(whereSeparator: \.isWhitespace).count
-        return min(Self.longestLifetime, max(Self.lifetime, Double(words) * Self.secondsPerWord))
+        return age >= 0 && age < Self.lifetime
     }
 
     /// The same chip, re-shown for a new mode with its clock restarted. Three

@@ -57,24 +57,35 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
 
     /// The hint chip's line (Current: the first-run chip; Next: the mode
     /// toast). One short line, phrased as the next thing to do, and short
-    /// enough (`hintLengthLimit`) that the pill never runs a banner wide: Size's
-    /// line once carried the whole [ and ] tip and measured about 490 pt, and
-    /// Distance's never said that a THIRD click places the number, so a
-    /// first-timer clicked twice and waited. The long form of each tip lives
-    /// in `help`, the tooltip.
+    /// enough (`hintLengthLimit`) that the four pills read as one family:
+    /// Size's line once carried the whole [ and ] tip and measured about
+    /// 490 pt, almost twice the others and wide enough to sit on the legend
+    /// of a narrow window. Distance's never said that a THIRD click places
+    /// the number, so a first-timer clicked twice and waited. The long form
+    /// of each tip lives in `help`, the tooltip, and Size's keys in `keyTip`.
     public var hint: String {
         switch self {
-        case .distance: "Click two points, then click to place the number"
-        case .size: "Click an element for its size. [ and ] change the pick"
-        case .gap: "Click in the space between two elements for the gap"
-        case .alignment: "Drag a guide along an edge to check what it crosses"
+        case .distance: "Click twice, then click to place the number"
+        case .size: "Click an element for its width and height"
+        case .gap: "Click the space between two elements"
+        case .alignment: "Drag along an edge to see what lines up"
         }
     }
 
-    /// The most characters a hint line may carry: about 350 pt in the pill's
-    /// type, which reads in its two seconds and never nears the tool bar's
-    /// width.
-    public static let hintLengthLimit = 56
+    /// The most characters a hint line may carry: about 330 pt in the pill's
+    /// type, which reads in its two seconds and leaves both corners of the
+    /// narrowest canvas free.
+    public static let hintLengthLimit = 45
+
+    /// The keys worth a line of their own, taught where they stay: beside the
+    /// Mode control in the inspector, not in a pill that fades in two seconds.
+    /// Only Size has any; a tip under Distance would be noise.
+    public var keyTip: String? {
+        switch self {
+        case .size: "[ and ] pick a smaller or larger element"
+        case .distance, .gap, .alignment: nil
+        }
+    }
 
     /// Whether this mode draws a live preview of what a click would commit.
     /// Distance draws nothing under an idle pointer — that is the whole point of

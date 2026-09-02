@@ -94,6 +94,9 @@ struct EditorView: View {
                     .clipped()  // keep a transient over-wide toolbar off the panel
                     .onPreferenceChange(ToolbarContentWidthKey.self) { width in
                         toolbarContentWidth = width
+                        // The legend parks clear of the bar, so it needs the
+                        // bar's real width, not a guess.
+                        editorState.toolBarWidth = width
                         reconcileToolbarCount()
                     }
                 // The docked inspector. The 1px resize handle is the panel's own

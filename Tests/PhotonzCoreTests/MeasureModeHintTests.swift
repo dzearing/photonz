@@ -13,26 +13,30 @@ struct MeasureModeHintTests {
         let hint = MeasureModeHint(mode: .distance, shownAt: t0)
         #expect(hint.isLive(at: t0))
         #expect(hint.isLive(at: t0.addingTimeInterval(1.9)))
-        #expect(!hint.isLive(at: t0.addingTimeInterval(hint.lifetime)))
+        #expect(!hint.isLive(at: t0.addingTimeInterval(MeasureModeHint.lifetime)))
         #expect(!hint.isLive(at: t0.addingTimeInterval(60)))
-        #expect(hint.lifetime == MeasureModeHint.lifetime)
         #expect(MeasureModeHint.lifetime >= 1.5 && MeasureModeHint.lifetime <= 3)
     }
 
-    @Test func aLongerLineStaysALittleLongerButNeverBecomesABanner() {
-        // Size's line carries the [ and ] tip and is the longest; it gets a
-        // little longer than the base stay. Distance's line needs no more.
-        let size = MeasureModeHint(mode: .size, shownAt: t0)
-        let distance = MeasureModeHint(mode: .distance, shownAt: t0)
-        #expect(size.lifetime > distance.lifetime)
-        #expect(size.lifetime <= MeasureModeHint.longestLifetime)
-        #expect(size.isLive(at: t0.addingTimeInterval(2.1)))
-        #expect(!size.isLive(at: t0.addingTimeInterval(MeasureModeHint.longestLifetime)))
+    @Test func everyModeFadesOnTheSameSchedule() {
+        // Every line is now one short line, so no mode earns a longer stay:
+        // the Size pill used to hang around 3.5 seconds while the others left
+        // at 2, which read as the app being slow rather than the line long.
         for mode in MeasureToolMode.allCases {
             let hint = MeasureModeHint(mode: mode, shownAt: t0)
-            #expect(hint.lifetime >= MeasureModeHint.lifetime)
-            #expect(hint.lifetime <= MeasureModeHint.longestLifetime)
+            #expect(hint.isLive(at: t0.addingTimeInterval(MeasureModeHint.lifetime - 0.1)))
+            #expect(!hint.isLive(at: t0.addingTimeInterval(MeasureModeHint.lifetime)))
         }
+    }
+
+    @Test func thePillReservesRoomForItsWidestLineAndStillFitsTheSmallestWindow() {
+        // The legend keeps out of this box while the pill may be up, so it
+        // must cover the widest of the four pills and still leave the corners
+        // of the narrowest canvas free (480 pt less two 10 pt insets).
+        let size = MeasureModeHint.reservedSize
+        #expect(size.width >= 300 && size.width <= 420)
+        #expect(size.height >= 28 && size.height <= 48)
+        #expect(size.width < EditorChromeLayout.minWindowWidth - 2 * 10)
     }
 
     @Test func aHintShownBeforeItsClockIsNotLiveYet() {

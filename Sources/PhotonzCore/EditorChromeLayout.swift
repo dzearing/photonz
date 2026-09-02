@@ -44,6 +44,39 @@ public enum EditorChromeLayout {
     /// invisible: the hint chip spent its life at 14pt, fully covered.
     public static let aboveToolBar: CGFloat = toolBarInset + toolBarHeight + toolBarStackGap
 
+    /// Where a bottom-centre notice of `noticeSize` (the Measure mode hint,
+    /// the "Copied" pill) sits in a canvas of `canvasSize`: centred, its
+    /// bottom edge `aboveToolBar` off the floor. Top-left origin, like every
+    /// other rect the placement code takes.
+    public static func bottomNoticeFrame(canvasSize: CGSize, noticeSize: CGSize) -> CGRect {
+        CGRect(x: (canvasSize.width - noticeSize.width) / 2,
+               y: canvasSize.height - aboveToolBar - noticeSize.height,
+               width: noticeSize.width, height: noticeSize.height)
+    }
+
+    /// Where the floating tool bar sits: centred, `toolBarInset` off the
+    /// floor, `toolBarHeight` tall, and as wide as it measures. A bar that has
+    /// not been measured yet (`toolBarWidth` of 0), or one that somehow
+    /// overflows, reserves its whole `toolBarBudget`, which is the widest it
+    /// can ever be inside the canvas.
+    public static func toolBarFrame(canvasSize: CGSize, toolBarWidth: CGFloat) -> CGRect {
+        let budget = toolBarBudget(canvasWidth: canvasSize.width)
+        let width = toolBarWidth > 0 ? min(toolBarWidth, budget) : budget
+        return CGRect(x: (canvasSize.width - width) / 2,
+                      y: canvasSize.height - toolBarInset - toolBarHeight,
+                      width: width, height: toolBarHeight)
+    }
+
+    /// The chrome along the bottom of the canvas that a floating panel (the
+    /// measure legend) must never park behind: the notice pill's slot, then
+    /// the tool bar. The pill's slot is reserved whether or not a pill is up,
+    /// so the legend never has to jump when one appears for two seconds.
+    public static func bottomChrome(canvasSize: CGSize, toolBarWidth: CGFloat,
+                                    noticeSize: CGSize) -> [CGRect] {
+        [bottomNoticeFrame(canvasSize: canvasSize, noticeSize: noticeSize),
+         toolBarFrame(canvasSize: canvasSize, toolBarWidth: toolBarWidth)]
+    }
+
     // MARK: Tool bar fit
 
     /// One tool slot's share of the bar: a 28pt control plus the 14pt gap that

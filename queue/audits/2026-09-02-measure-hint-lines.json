@@ -1,0 +1,28 @@
+{
+  "feature": "The Measure mode hint fits one short line and never covers the legend",
+  "epic": "measure-redline",
+  "summary": "Switching Measure modes still raises the glass pill naming the mode, but every line is now one short sentence and all four fade on the same two-second clock. The [ and ] tip moved to a caption under the Mode control in the inspector, where it stays. The roles legend keeps out of the pill's slot and the tool bar, so on a narrow window it no longer disappears behind either.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Open any screenshot and show the inspector (the sidebar button top right).",
+  "try": [
+    { "do": "Press I, then press I three more times, pausing a second between presses. Read each pill above the tool bar.", "shot": "2026-09-02-measure-hint-lines-light.png" },
+    { "do": "Time one: every pill should be gone about two seconds after the press, Size no later than Distance." },
+    { "do": "Put the inspector in Size mode (press I until the Mode field reads Size). A grey line under the Mode control should say what [ and ] do.", "shot": "2026-09-02-measure-hint-inspector-tip.png" },
+    { "do": "Switch to Distance in the inspector. The line under Mode should leave, and the field should not jump around." },
+    { "do": "Hover the Mode control for its tooltip. It should name I and, for Size, the [ and ] keys." },
+    { "do": "Make the window about 700 points wide, zoom to 100%, and add a Size, a Gap and an Alignment measurement across the top of the picture." },
+    { "do": "Press I. The legend should stay in a top corner, over a measurement if it must, never behind the tool bar or under the pill.", "shot": "2026-09-02-measure-hint-narrow.png" }
+  ],
+  "evaluate": [
+    "Do the four lines read as one family now, or does Distance's three-click line still feel longer than the rest?",
+    "Is 'Click twice, then click to place the number' clear about the third click, or does it read as two clicks total?",
+    "Is a caption under the Mode control the right home for the [ and ] keys, or would you expect it on the canvas pill in Size mode?",
+    "On a narrow window, is the legend covering a measurement better than the legend stepping down into the pill's slot?"
+  ],
+  "rough": [
+    "When every corner is taken on a narrow canvas the legend now sits on top of a measurement in the top left rather than behind the bar. Filed as a follow-up: a compact one-row legend or an edge slot would keep it off both.",
+    "The pill's slot is reserved even while no pill is up, so on a canvas narrower than about 830 points with three legend rows the bottom corners are never used. Chosen on purpose: a legend that jumps every time you press I would be worse than one that stays put.",
+    "The legend was already able to land behind the tool bar on a narrow canvas before this task (the bar is drawn last and wins). Blocking the bar's measured width fixes that too; it is the same walk.",
+    "The renders here are offscreen: the pills and the inspector field are drawn with a material stand-in for the glass, and the narrow-window picture is a layer render of the real app in which the glass and the inspector panel do not draw. Placement, text and timing were checked on the running probe app.",
+    "Shared code: Current's first-run line now reads 'Click twice, then click to place the number' as well. Its behaviour (stays until the first measurement lands) is unchanged."
+  ]
+}

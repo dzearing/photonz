@@ -1243,7 +1243,7 @@ final class EditorState {
         measureModeHint = hint
         measureModeHintTimer?.cancel()
         measureModeHintTimer = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(hint.lifetime))
+            try? await Task.sleep(for: .seconds(MeasureModeHint.lifetime))
             guard !Task.isCancelled, let self, self.measureModeHint == hint else { return }
             self.measureModeHint = nil
         }
@@ -1352,11 +1352,24 @@ final class EditorState {
                           width: layer.frame.width * viewport.zoom,
                           height: layer.frame.height * viewport.zoom)
         }
+        // Chrome along the bottom is a hard no: a legend parked behind the
+        // tool bar is invisible, and one under the mode hint's slot gets
+        // covered for two seconds every time the mode changes. The slot is
+        // reserved even while no pill is up, so the legend never jumps.
+        let chrome = EditorChromeLayout.bottomChrome(canvasSize: viewport.viewSize,
+                                                     toolBarWidth: toolBarWidth,
+                                                     noticeSize: MeasureModeHint.reservedSize)
         return CornerPlacement.firstClear(size: Self.measureLegendSize(rows: rows),
                                           in: viewport.viewSize,
                                           inset: Self.measureLegendInset,
-                                          avoiding: occupied)
+                                          avoiding: occupied,
+                                          blocked: chrome)
     }
+
+    /// The floating tool bar's measured width, reported by the editor view so
+    /// the legend can keep clear of it. Zero until the first measurement, and
+    /// the placement then reserves the whole budget. Session chrome only.
+    var toolBarWidth: CGFloat = 0
 
     /// A generous reservation for the legend's glass panel. It is chrome laid
     /// out by SwiftUI, so its exact size is not knowable here; over-reserving
