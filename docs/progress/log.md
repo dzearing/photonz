@@ -4825,3 +4825,21 @@ the card's left end, over the icons.
   Suite green (1332). Audit `queue/audits/2026-09-02-legend-under-toggle.json`.
 - Noticed: headings are not detected as elements in Size mode (the walk uses
   a Distance caliper to occupy the corner instead).
+
+## 2026-09-02 (go loop) — mocks: capture toast and menu bar menu match what shipped
+
+- The mock author rules and the capture pages described the toast as a
+  thumbnail plus "Copied to clipboard!" with no controls, and the mock menu
+  bar menu listed Stop Recording and Preferences. Brought them in line with
+  the app, mock-ward only: `.ctoast` gains `.cedit` (full-width Edit row, ⇧⌘6
+  trailing, `.nokey` for a Touch Bar Mac) and `.cact` (hover pill: Dismiss,
+  plus Copy on `.ctoast.rec`); the injected menu in `entry.js` and the two
+  hand-authored copies say Record Screen / Video…, Edit Last Capture ⇧⌘6 and
+  Experiments…. AGENTS.md GLOBAL surfaces, PRODUCT-MODEL §4e.3 and UX-PATTERNS
+  §3 (new Canvas notice bullet: `.cnv-hint`, bottom centre above the tool
+  bar, one at a time, reserved for the Measure mode hint while that tool is
+  in hand) updated to match.
+- Left alone on purpose: the mock toast stays fixed-dark while the app's is
+  system glass; the CSS comment no longer claims tint parity.
+- Next: nothing queued from this; the next capture task builds from the mock
+  as it now stands.

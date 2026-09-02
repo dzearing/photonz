@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 110,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "mocks",
   "created": "2026-09-02T12:05:41.196Z",
-  "updated": "2026-09-02T14:18:44.000Z",
+  "updated": "2026-09-02T14:19:52.010Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: docs/design/mocks/shared/AGENTS.md lines 587 to 635 (toast described as transient with no dismissal chrome, menu lists Stop Recording) against commits 17b11b9 (toast Edit row, next-capture-toast-edit) and 50b72c3 (capture command names). Rule scrub queued by the 2026-09-02 digest design review.",
@@ -52,7 +52,12 @@
     {
       "t": "2026-09-02T14:18:44.000Z",
       "note": "Verified: node shared/build-ds.mjs rebuilt dist; check-reserved, check-selection, check-a11y-names, check-shortcuts, check-elevation, check-states, audit-keyboard all pass (menu rows 1419/1419 keyboard reachable). Chrome at 1280x900: capture-wt toast renders the Edit row with ⇧⌘6 at the end, no horizontal overflow; app-shell shows Copy on the recording card only and the hover pill appears on hover/focus."
+    },
+    {
+      "t": "2026-09-02T14:19:52.009Z",
+      "note": "Mock rules and pages now show the shipped capture toast (Edit row with Shift Command 6, Dismiss on hover, Copy on a recording, no key on a Touch Bar Mac) and the app's menu bar menu names and order (Record Screen / Video, Edit Last Capture, Experiments). AGENTS.md GLOBAL surfaces, PRODUCT-MODEL 4e.3, UX-PATTERNS section 3 Canvas notice with its slot rule, toast component, entry.js menu, capture-wt / walk / app-shell pages. No app code. Verified: build-ds, all mock check scripts and audit-keyboard pass, Chrome render at 1280x900, Scripts/test.sh green. Commit 86773ae."
     }
   ],
-  "started": "2026-09-02T14:09:39.786Z"
+  "started": "2026-09-02T14:09:39.786Z",
+  "completed": "2026-09-02T14:19:52.010Z"
 }
