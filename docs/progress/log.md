@@ -4768,3 +4768,8 @@ the card's left end, over the icons.
 - The loop now recognises a spend-limit refusal the same way it recognises an expired login: one table of environment signatures in `queue/bin/queue-lib.mjs` (`ENVIRONMENT_SIGNATURES`), each with its own status note and fix, and `reason` on `runner_failed` and `status.lastError`.
 - A digest run that prints the refusal and exits 0 is recorded as an environment failure, the loop reports unhealthy at once, the digest is deferred instead of stubbed, and the dashboard hero says "Spend limit hit" with the reset time from the message.
 - Task runs keep the per-task rule (the limit can land mid-work), only the window and hero wording changed. `queue/bin/failure-drill.sh` gained scenario 3 for it; all three scenarios pass.
+
+## 2026-09-02 (go loop): timing-budget tests on a busy machine
+
+- `Tests/PhotonzCoreTests/ElementBoundsTests.swift`: the three timing tests no longer flake under load. Reproduced first (subjects test failed 2 of 3 full runs beside a concurrent build). Wall-clock best-of-N and thread CPU time both still failed once the scheduler parked the thread on an efficiency core, so the two probe-count tests now assert a ratio against their own probe detects run back to back on the same thread (guard 1.3; doubled probes read 2.0, 1.5x read 1.5). The detect test keeps an absolute budget, widened 10 to 20 ms. Helpers print `[perf]` spreads so a flake can be told from a regression.
+- Next: nothing pending from this task. If another timing test ever flakes, reach for `costRatio` in that file rather than widening a budget.

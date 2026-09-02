@@ -98,6 +98,75 @@ private func expectRect(_ rect: CGRect?, _ expected: CGRect, slack: CGFloat = 3,
     }
 }
 
+// MARK: Timing without the machine's mood in it
+//
+// Wall-clock budgets fail when the runner is busy: a build or the rest of the
+// (parallel) suite takes the core away, and on Apple silicon the scheduler then
+// parks the test thread on an efficiency core, where the very same code runs
+// close to twice as slow with nobody stealing time from it. No absolute budget
+// can tell a slow core from extra work. So each reading below is the FASTEST
+// of several calls (other work only ever slows a call down), timed on this
+// thread's own CPU clock (descheduling does not count), and the tests that
+// mean "this many probes" say so as a ratio against those probes run alone,
+// back to back on the same thread, so whatever core is doing the work cancels
+// out. A real regression (more probes, a scan back over whole rows) slows every
+// call on every clock, so the readings still move with it. Spreads are printed
+// so a flake, if one ever gets through, can be told from a regression.
+
+private func threadCPUNow() -> Duration {
+    var ts = timespec()
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts)
+    return .seconds(ts.tv_sec) + .nanoseconds(ts.tv_nsec)
+}
+
+private func ms(_ d: Duration?) -> String {
+    String(format: "%.1f", (d ?? .zero) / .milliseconds(1))
+}
+
+/// The cost of one call: the fastest of `calls` on the thread's CPU clock,
+/// after one warm-up.
+private func fastestCall(of calls: Int, _ name: String, _ body: () -> Void) -> Duration {
+    body()
+    var cpu: [Duration] = []
+    var wall: [Duration] = []
+    for _ in 0..<calls {
+        let wallStart = ContinuousClock.now
+        let cpuStart = threadCPUNow()
+        body()
+        cpu.append(threadCPUNow() - cpuStart)
+        wall.append(ContinuousClock.now - wallStart)
+    }
+    print("[perf] \(name) over \(calls) calls: cpu fastest \(ms(cpu.min())) ms, "
+          + "slowest \(ms(cpu.max())) ms; wall fastest \(ms(wall.min())) ms, slowest \(ms(wall.max())) ms")
+    return cpu.min() ?? .zero
+}
+
+/// How much more `body` costs than `reference`, each read as its fastest of
+/// `rounds` calls, the two interleaved so they share whatever core and cache
+/// the round happened to get.
+private func costRatio(of name: String, rounds: Int, _ body: () -> Void,
+                       to reference: () -> Void) -> Double {
+    reference()
+    body()
+    var measured: [Duration] = []
+    var baseline: [Duration] = []
+    for _ in 0..<rounds {
+        var start = threadCPUNow()
+        reference()
+        baseline.append(threadCPUNow() - start)
+        start = threadCPUNow()
+        body()
+        measured.append(threadCPUNow() - start)
+    }
+    let best = measured.min() ?? .zero
+    let probesCost = baseline.min() ?? .zero
+    let ratio = probesCost > .zero ? best / probesCost : .infinity
+    print("[perf] \(name) over \(rounds) rounds: fastest \(ms(best)) ms against its probes' "
+          + "\(ms(probesCost)) ms, ratio \(String(format: "%.2f", ratio)) "
+          + "(slowest \(ms(measured.max())) ms and \(ms(baseline.max())) ms)")
+    return ratio
+}
+
 @Suite("ElementBounds hover detection")
 struct ElementBoundsTests {
 
@@ -206,11 +275,14 @@ struct ElementBoundsTests {
         c.box(CGRect(x: 900, y: 700, width: 400, height: 200), border: 90)
         let map = c.map
         let luma = c.luma
-        let start = ContinuousClock.now
-        for i in 0..<100 {
+        var i = 0
+        let perCall = fastestCall(of: 100, "detect") {
             _ = ElementBounds.detect(at: CGPoint(x: 1000 + i % 50, y: 800), in: map, luma: luma)
+            i += 1
         }
-        #expect((ContinuousClock.now - start) / 100 < .milliseconds(10))
+        // About 5 ms unoptimized on a performance core, 8 on an efficiency
+        // core; scanning whole rows again would read in the hundreds.
+        #expect(perCall < .milliseconds(20), "a hover pick took \(perCall)")
     }
 
     // MARK: The neighbours (what a readout has to steer around)
@@ -257,15 +329,24 @@ struct ElementBoundsTests {
         let map = c.map
         let luma = c.luma
         let element = CGRect(x: 900, y: 700, width: 400, height: 200)
-        let start = ContinuousClock.now
-        for _ in 0..<20 {
-            _ = ElementBounds.neighbors(of: element, in: map, luma: luma,
-                                        reaches: [ElementBounds.neighborProbeReach, 90])
+        let reaches = [ElementBounds.neighborProbeReach, 90]
+        // The eight picks the call is allowed to make: one past the middle of
+        // each side, at each reach.
+        let probes = reaches.map { CGFloat($0) }.flatMap { r in
+            [CGPoint(x: element.midX, y: element.minY - r), CGPoint(x: element.midX, y: element.maxY + r),
+             CGPoint(x: element.minX - r, y: element.midY), CGPoint(x: element.maxX + r, y: element.midY)]
         }
-        // 29 ms unoptimized for eight probes on a 3-megapixel scene, and only
-        // when the pick changes (the canvas keeps the last answer), so a
-        // release build stays well under a mouse move.
-        #expect((ContinuousClock.now - start) / 20 < .milliseconds(50))
+        // About 30 ms unoptimized for eight probes on a 3-megapixel scene, and
+        // only when the pick changes (the canvas keeps the last answer), so a
+        // release build stays well under a mouse move. What the budget guards
+        // is the probe count: the call may cost its eight picks and the little
+        // it takes to sort them, and no more.
+        let ratio = costRatio(of: "neighbours", rounds: 20) {
+            _ = ElementBounds.neighbors(of: element, in: map, luma: luma, reaches: reaches)
+        } to: {
+            for probe in probes { _ = ElementBounds.detect(at: probe, in: map, luma: luma) }
+        }
+        #expect(ratio < 1.3, "reading the neighbours cost \(ratio) times its eight probes")
     }
 
     @Test func neighborsOfAnUnanalyzedImageAreEmpty() {
@@ -527,11 +608,16 @@ struct ElementBoundsSubjectTests {
         c.box(CGRect(x: 900, y: 1000, width: 400, height: 200), border: 90)
         let map = c.map
         let luma = c.luma
-        let start = ContinuousClock.now
-        for _ in 0..<20 {
-            _ = ElementBounds.subjects(from: CGPoint(x: 1100, y: 900), to: CGPoint(x: 1100, y: 1000),
-                                       mode: .vertical, in: map, luma: luma)
+        let feet = [CGPoint(x: 1100, y: 900), CGPoint(x: 1100, y: 1000)]
+        let reach = CGFloat(ElementBounds.neighborProbeReach)
+        // The four picks the call is allowed to make: one just past each foot,
+        // on each side, along the measuring axis.
+        let probes = feet.flatMap { [CGPoint(x: $0.x, y: $0.y - reach), CGPoint(x: $0.x, y: $0.y + reach)] }
+        let ratio = costRatio(of: "subjects", rounds: 20) {
+            _ = ElementBounds.subjects(from: feet[0], to: feet[1], mode: .vertical, in: map, luma: luma)
+        } to: {
+            for probe in probes { _ = ElementBounds.detect(at: probe, in: map, luma: luma) }
         }
-        #expect((ContinuousClock.now - start) / 20 < .milliseconds(30))
+        #expect(ratio < 1.3, "reading the subjects cost \(ratio) times its four probes")
     }
 }

@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p3-low",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T08:44:12.445Z",
-  "updated": "2026-09-02T12:06:02.663Z",
+  "updated": "2026-09-02T13:01:40.775Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Tests/PhotonzCoreTests/ElementBoundsTests.swift:268 (50 ms budget over 20 runs, saw 55.9 ms) and :535 (30 ms budget, saw 30.6 ms). Options: take the best of several batches instead of one mean, run them serialized (.serialized trait) so parallel suites do not compete, or widen the budgets with a comment. Serves measure-redline only indirectly (keeps its commits unblocked); filed under the arrow-caption epic because that is where it bit.",
@@ -25,6 +25,36 @@
     {
       "t": "2026-09-02T12:06:02.662Z",
       "note": "seq 550 -> 40"
+    },
+    {
+      "t": "2026-09-02T12:47:10.261Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T13:00:43.000Z",
+      "note": "Reproduced first: full suite under a concurrent package build failed readingTheSubjectsCostsFourProbes in 2 of 3 runs (30.0 and 53.8 ms against 30); neighbours crept to 48 of 50 ms. Idle readings sit at 50 to 65 percent of budget, so contention has no room."
+    },
+    {
+      "t": "2026-09-02T13:00:43.000Z",
+      "note": "Tried best-of-N wall clock: 3 loaded passes but neighbours' fastest call hit 44.5 ms. Tried thread CPU time: fastest subjects call read 30.0 ms CPU with no descheduling, so the thread was on an efficiency core. No absolute budget can tell a slow core from extra work."
+    },
+    {
+      "t": "2026-09-02T13:00:43.000Z",
+      "note": "Fix: the two probe-count tests now assert a RATIO against their own probe detects run back to back on the same thread (fastest of 20 rounds, thread CPU clock); guard is ratio < 1.3. The detect test keeps an absolute budget widened 10 to 20 ms with a note. Helpers print spreads so a future flake can be told from a regression."
+    },
+    {
+      "t": "2026-09-02T13:00:43.000Z",
+      "note": "Verified: doubled probes in ElementBounds.swift read ratio 2.00 and 2.05, 1.5x probes read 1.51 and 1.54, all fail; core file reverted. Three consecutive full Scripts/test.sh runs under a looping swift build plus six CPU burners passed with ratios 0.92 to 1.07 while absolute times inflated up to 1.7x. Idle full run green."
+    },
+    {
+      "t": "2026-09-02T13:00:43.000Z",
+      "note": "Serves epic-uehjr1 (staged now) by keeping its commits from failing on a busy machine. Third timing test in the same file (detectionStaysWellInsideTheMouseMoveBudget) had the same flaw and was hardened in the same change."
+    },
+    {
+      "t": "2026-09-02T13:01:40.774Z",
+      "note": "ElementBoundsTests: the two probe-count timing tests now assert a ratio against their own probe detects on the same thread (guard 1.3; doubled probes read 2.0), the detect test keeps an absolute budget widened to 20 ms. Verified: 3 consecutive full Scripts/test.sh runs green under a looping swift build plus six CPU burners, doubled and 1.5x probe counts fail."
     }
-  ]
+  ],
+  "started": "2026-09-02T12:47:10.260Z",
+  "completed": "2026-09-02T13:01:40.775Z"
 }
