@@ -1072,11 +1072,57 @@ final class CanvasNSView: NSView {
 
     override func mouseMoved(with event: NSEvent) {
         handleMeasureHover(event)
+        refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
     }
 
     override func mouseExited(with event: NSEvent) {
         hoverPoint = nil
+        applyGrabCursor(nil)
         if tool == .measure { refreshMeasureCreation(modifierFlags: event.modifierFlags) }
+    }
+
+    // MARK: Grab cue (draggable readout pills)
+
+    /// The hand currently forced onto the pointer by `applyGrabCursor`, so a
+    /// move that changes nothing leaves the cursor alone and clearing it can
+    /// hand control back to the tool's cursor rects.
+    private var grabCursor: NSCursor?
+
+    /// What a press at `p` (document coords) would take hold of, for cue
+    /// purposes: a caption pill or a caliper's number on the SELECTED layer.
+    /// Nil for every other press, including the handles that overlap them.
+    private func grabCue(at p: CGPoint) -> ReadoutGrab? {
+        guard Experiments.shared.grabCueEnabled, tool == .select, let viewport,
+              let layer = selectedLayerID.flatMap({ id in document?.layer(id: id) })
+        else { return nil }
+        return ReadoutGrab.hit(at: p, layer: layer, zoom: viewport.zoom,
+                               captionsEnabled: Experiments.shared.arrowCaptionsEnabled)
+    }
+
+    /// Open hand while the pointer rests on a pill that drags on its own.
+    /// Nothing else on the canvas said those pills could be moved, so this is
+    /// the whole invitation. A drag in flight keeps its closed hand.
+    private func refreshGrabCursor(at viewPoint: CGPoint? = nil) {
+        guard captionDrag == nil, measureHandleDrag == nil else { return }
+        let point = viewPoint ?? window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) }
+        guard let viewport, let point, bounds.contains(point) else { return applyGrabCursor(nil) }
+        let hit = grabCue(at: viewport.documentPoint(fromView: point))
+        applyGrabCursor(hit == nil ? nil : .openHand)
+    }
+
+    /// Forces `cursor` onto the pointer, or gives it back. Only a CHANGE
+    /// touches `NSCursor`: mouseMoved fires constantly and re-setting the same
+    /// cursor flickers it on some setups.
+    private func applyGrabCursor(_ cursor: NSCursor?) {
+        guard cursor !== grabCursor else { return }
+        grabCursor = cursor
+        if let cursor {
+            cursor.set()
+        } else {
+            // Hand the pointer back to whatever the tool asks for.
+            window?.invalidateCursorRects(for: self)
+            (toolCursor ?? .arrow).set()
+        }
     }
 
     /// Tracks the pointer for the measure tool's hover dot + placement preview.
@@ -1739,6 +1785,7 @@ final class CanvasNSView: NSView {
                 captionDrag = CaptionDrag(layerID: id,
                                           grip: CGSize(width: p.x - center.x, height: p.y - center.y),
                                           startCenter: center, current: p)
+                applyGrabCursor(.closedHand)
                 refreshOverlays()
                 return
             }
@@ -1775,6 +1822,7 @@ final class CanvasNSView: NSView {
                     drag.guides = measureGuideLines(excluding: id)
                 }
                 measureHandleDrag = drag
+                if grabCue(at: p) == .measureReadout { applyGrabCursor(.closedHand) }
                 refreshOverlays()
                 return
             }
@@ -2117,6 +2165,7 @@ final class CanvasNSView: NSView {
             snapGuide = nil
             let (start, end, off) = drag.params()
             onMeasureEndpointCommit(drag.layerID, start, end, off)
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let drag = captionDrag {
             captionDrag = nil
@@ -2129,6 +2178,7 @@ final class CanvasNSView: NSView {
             } else {
                 onCaptionPlaceCancel()
             }
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let session = endpointDrag {
             endpointDrag = nil
@@ -2349,6 +2399,7 @@ final class CanvasNSView: NSView {
             if captionDrag != nil {
                 captionDrag = nil
                 onCaptionPlaceCancel() // no history was touched; restores the render
+                refreshGrabCursor()
                 refreshOverlays()
                 return
             }
@@ -2357,6 +2408,7 @@ final class CanvasNSView: NSView {
                 snapGuide = nil
                 let (start, end, off) = drag.originalParams()
                 onMeasureEndpointCommit(drag.layerID, start, end, off) // History no-op; restores render
+                refreshGrabCursor()
                 refreshOverlays()
                 return
             }
@@ -2541,6 +2593,7 @@ final class CanvasNSView: NSView {
                 onRegionMoveCancel()
             }
             snapGuide = nil
+            applyGrabCursor(nil)
             endpointDrag = nil
             cropDrag = nil
             transformDrag = nil
@@ -2604,6 +2657,10 @@ final class CanvasNSView: NSView {
         if moveDrag == nil, resizeDrag == nil {
             self.selectedLayerFrame = selectedLayerFrame
         }
+        // The document or the selection just changed under a resting pointer (a
+        // drag landed, an undo moved a pill): the grab cue has to agree with
+        // what is under the pointer NOW, not at the next mouse move.
+        refreshGrabCursor()
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -3082,16 +3139,22 @@ final class CanvasNSView: NSView {
     // MARK: Annotation drag preview
 
     override func resetCursorRects() {
+        if let toolCursor { addCursorRect(bounds, cursor: toolCursor) }
+    }
+
+    /// The cursor the ACTIVE TOOL paints over the whole canvas, or nil when it
+    /// leaves the plain arrow (Select, Fill). The grab cue restores this when
+    /// the pointer leaves a pill, so a hand never lingers over a crosshair tool.
+    private var toolCursor: NSCursor? {
         if tool.isRegionSelectionTool {
             // The badge mirrors the LIVE modifiers so the combine mode is
             // visible before the drag starts (⇧ +, ⌥ −, ⇧⌥ ×).
-            addCursorRect(bounds, cursor: SelectionCursor.cursor(for: selectionMode))
-        } else if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout
-            || tool == .measure {
-            addCursorRect(bounds, cursor: .crosshair)
-        } else if tool == .text {
-            addCursorRect(bounds, cursor: .iBeam)
+            return SelectionCursor.cursor(for: selectionMode)
         }
+        if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout
+            || tool == .measure { return .crosshair }
+        if tool == .text { return .iBeam }
+        return nil
     }
 
     /// The combine mode the current modifier state implies.

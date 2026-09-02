@@ -4,13 +4,32 @@
   "summary": "The label on an arrow used to land wherever the app decided, with no way to overrule it. Now you grab the pill on a selected arrow and drop it where it reads best. It stays there while the arrow is moved or reshaped, and the inspector offers a way back to the automatic spot.",
   "setup": "Photonz Dev, Experiments window, release Next. The Arrow captions flag is on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png.",
   "try": [
-    { "do": "Press A, drag from the open space below and right of Save Changes onto the button, type Primary action, press Return. The pill sits behind the tail.", "shot": "2026-09-02-caption-drag-1-before.png" },
-    { "do": "With the arrow still selected, drag the pill up and to the right, onto the Copy to clipboard row. It follows the pointer and stays where you drop it.", "shot": "2026-09-02-caption-drag-2-after.png" },
-    { "do": "Drag the arrow itself by its shaft to a new place. The pill keeps its spot relative to the tail.", "shot": "2026-09-02-caption-drag-3-arrow-moved.png" },
-    { "do": "Press Cmd Z twice. The first undoes the move, the second puts the pill back behind the tail." },
-    { "do": "Press Cmd Shift Z, then drag the arrow's head handle somewhere else. The pill does not move.", "shot": "2026-09-02-caption-drag-4-head-moved.png" },
-    { "do": "Drag the pill off the right edge of the picture and let go. It is pulled back onto the picture at the edge.", "shot": "2026-09-02-caption-drag-5-edge.png" },
-    { "do": "In the inspector, under Label size, click Reset label position. The pill returns to the automatic spot and the button disappears." }
+    {
+      "do": "Press A, drag from the open space below and right of Save Changes onto the button, type Primary action, press Return. The pill sits behind the tail.",
+      "shot": "2026-09-02-caption-drag-1-before.png"
+    },
+    {
+      "do": "With the arrow still selected, drag the pill up and to the right, onto the Copy to clipboard row. It follows the pointer and stays where you drop it.",
+      "shot": "2026-09-02-caption-drag-2-after.png"
+    },
+    {
+      "do": "Drag the arrow itself by its shaft to a new place. The pill keeps its spot relative to the tail.",
+      "shot": "2026-09-02-caption-drag-3-arrow-moved.png"
+    },
+    {
+      "do": "Press Cmd Z twice. The first undoes the move, the second puts the pill back behind the tail."
+    },
+    {
+      "do": "Press Cmd Shift Z, then drag the arrow's head handle somewhere else. The pill does not move.",
+      "shot": "2026-09-02-caption-drag-4-head-moved.png"
+    },
+    {
+      "do": "Drag the pill off the right edge of the picture and let go. It is pulled back onto the picture at the edge.",
+      "shot": "2026-09-02-caption-drag-5-edge.png"
+    },
+    {
+      "do": "In the inspector, under Label size, click Reset label position. The pill returns to the automatic spot and the button disappears."
+    }
   ],
   "evaluate": [
     "Was it obvious the pill could be grabbed, or did you only find out because this told you?",
@@ -20,7 +39,7 @@
     "The pill is only draggable while the arrow is selected, like the caliper number. Did you try to drag it on an unselected arrow first?"
   ],
   "rough": [
-    "There is still no hover cue on the pill (no cursor change or highlight) that says it can be dragged. The caliper number has none either, so the two match, but neither tells a first-time user.",
+    "The pill now shows an open-hand cursor when you rest on it, and a closed hand while you drag (see the Grab cue audit, 2026-09-02-grab-cue). Before that there was nothing telling a first-time user the pill could be moved.",
     "A pill dropped past the edge stops short of it by a few pixels: the pull-back uses the app's generous size estimate for the label, not the drawn pill, so the gap grows with the caption length. The automatic placement has always had the same slack.",
     "Where the tail handle and the pill overlap (a short caption at low zoom), the tail handle wins the grab. Take hold of the pill's far half.",
     "Dragging a pill onto the arrow's own head or shaft is allowed; the app does not push it away. The person chose the spot.",

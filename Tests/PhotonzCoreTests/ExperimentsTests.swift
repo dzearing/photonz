@@ -371,6 +371,17 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measurePanelFlag })
     }
 
+    @Test func theGrabCueFlagIsNextOnlyAndOnByDefault() {
+        // The pointer becomes a hand over a pill that drags on its own (an
+        // arrow's caption, a measurement's number). Next only; Current keeps
+        // the plain arrow everywhere.
+        #expect(FeatureCatalog.grabCueFlag == "next-grab-cue")
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.grabCueFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.grabCueFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.grabCueFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.grabCueFlag))
+    }
+
     @Test func theToolGroupsFlagIsNextOnlyAndOnByDefault() {
         // The tool bar groups tools into families (Shapes share a slot, Resize
         // rides in the Crop flyout). Next only; Current keeps one button per tool.

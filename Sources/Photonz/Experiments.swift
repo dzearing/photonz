@@ -177,6 +177,11 @@ extension Experiments {
     /// release's catalog, so Current always reads false.
     var arrowCaptionsEnabled: Bool { isEnabled(FeatureCatalog.arrowCaptionsFlag) }
 
+    /// `next-grab-cue`: whether the pointer turns into a hand over a pill that
+    /// drags on its own (an arrow's caption, a measurement's number). Exists
+    /// only in the Next release's catalog, so Current always reads false.
+    var grabCueEnabled: Bool { isEnabled(FeatureCatalog.grabCueFlag) }
+
     /// `next-tool-options`: whether the Crop tool and the Magic Wand keep their
     /// options off the floating tool bar (D15) — crop aspect in the crop
     /// button's flyout, crop actions on the canvas, wand tolerance in the

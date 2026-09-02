@@ -54,7 +54,13 @@ script; a relative path is relative to the script):
   and, after anything that changes the editor, its state: tool, Measure mode,
   hint text, copy confirmation, layer count, every measurement (name, value,
   role, feet, frame), every annotation (shape, caption, frame), legend
-  entries, whether the edge map is ready, and who has the keyboard.
+  entries, whether the edge map is ready, who has the keyboard, and the
+  pointer's shape (`cursor`: `arrow`, `openHand`, `closedHand`, `crosshair`,
+  …), which is how a walk proves a hover cue appeared. A `drag` line also
+  reports the cursor WHILE the button was down, the only moment a closed-hand
+  grab exists. The real OS pointer is not where a synthesized click is, so read
+  the cursor from a `move` step's `describe`, not from the state line right
+  after a drag.
 - `done.json`: `status` (`ok` or `failed`), how many steps completed, and the
   error when one failed. The run stops at the first failing step; the log
   keeps everything before it.

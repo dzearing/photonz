@@ -1,0 +1,355 @@
+{
+  "out": "/tmp/photonz-playtest/grab-cue",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 20
+    },
+    {
+      "do": "measureMode",
+      "mode": "distance"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        700
+      ]
+    },
+    {
+      "do": "move",
+      "at": [
+        400,
+        700
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        700
+      ]
+    },
+    {
+      "do": "move",
+      "at": [
+        400,
+        640
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        260
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        300,
+        640
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-number-unselected",
+      "note": "pointer on the number of a DESELECTED caliper; expect cursor arrow"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        300,
+        640
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-number-selected",
+      "note": "same spot, caliper now selected; expect cursor openHand"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-number-selected"
+    },
+    {
+      "do": "move",
+      "at": [
+        200,
+        700
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-foot",
+      "note": "pointer on the caliper's left foot; expect cursor arrow"
+    },
+    {
+      "do": "move",
+      "at": [
+        700,
+        260
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-empty",
+      "note": "pointer on empty picture; expect cursor arrow"
+    },
+    {
+      "do": "move",
+      "at": [
+        300,
+        640
+      ]
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        640
+      ],
+      "to": [
+        300,
+        596
+      ],
+      "steps": 8
+    },
+    {
+      "do": "describe",
+      "stage": "5-number-dragged",
+      "note": "the number dragged up; the drag line above should read cursor while down closedHand (this state line reads the real pointer, not the synthesized one)"
+    },
+    {
+      "do": "move",
+      "at": [
+        300,
+        596
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "5b-number-after-drop",
+      "note": "pointer still on the number after the drop; expect cursor openHand"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        640,
+        880
+      ],
+      "to": [
+        420,
+        810
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "captionField",
+      "timeout": 3
+    },
+    {
+      "do": "type",
+      "text": "Primary action"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "move",
+      "at": [
+        762,
+        919
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "6-caption-selected",
+      "note": "pointer on the caption pill of the selected arrow; expect cursor openHand"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-caption-selected"
+    },
+    {
+      "do": "move",
+      "at": [
+        640,
+        880
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "7-tail-handle",
+      "note": "pointer on the arrow's tail handle; expect cursor arrow"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        762,
+        919
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "8-caption-unselected",
+      "note": "same pill with nothing selected; expect cursor arrow"
+    },
+    {
+      "do": "click",
+      "at": [
+        762,
+        919
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        762,
+        919
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "9-caption-reselected",
+      "note": "arrow selected again by clicking its pill; expect cursor openHand"
+    },
+    {
+      "do": "drag",
+      "from": [
+        762,
+        919
+      ],
+      "to": [
+        980,
+        700
+      ],
+      "steps": 12
+    },
+    {
+      "do": "describe",
+      "stage": "10-caption-dragged",
+      "note": "pill dragged into open space; the drag line above should read cursor while down closedHand (this state line reads the real pointer, not the synthesized one)"
+    },
+    {
+      "do": "move",
+      "at": [
+        980,
+        700
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "11-after-drag",
+      "note": "pointer still on the pill after the drop; expect cursor openHand"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "move",
+      "at": [
+        980,
+        700
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "12-measure-tool",
+      "note": "same pill with the Measure tool in hand; expect cursor crosshair, the tool wins"
+    },
+    {
+      "do": "snapshot",
+      "name": "12-measure-tool"
+    }
+  ]
+}

@@ -45,6 +45,8 @@ public enum FeatureCatalog {
 
     public static let arrowCaptionsFlag = "next-arrow-captions"
 
+    public static let grabCueFlag = "next-grab-cue"
+
     public static let toolOptionsFlag = "next-tool-options"
 
     public static let toolGroupsFlag = "next-tool-groups"
@@ -140,6 +142,15 @@ public enum FeatureCatalog {
                     name: arrowCaptionsFlag,
                     title: "Arrow captions",
                     description: "Right after you draw an arrow, type a label and it lands in a pill at the arrow's tail, styled like the measure readout. Press Esc to skip, or drag again to draw the next arrow. Double-click an arrow to add or edit its caption.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: grabCueFlag,
+                    title: "Grab cue on draggable pills",
+                    description: "Some pills on the canvas can be dragged on their own: an arrow's caption, and a measurement's number. When the pointer rests on one of them, it becomes an open hand, and a closed hand while you drag, so the drag is findable without being told about it.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

@@ -1,0 +1,29 @@
+{
+  "feature": "Grab cue on draggable pills",
+  "epic": "epic-uehjr1",
+  "summary": "An arrow's caption and a measurement's number could always be dragged on their own, but nothing said so. Now the pointer turns into an open hand when it rests on one, and a closed hand while you drag it.",
+  "setup": "Photonz Dev, Experiments window, release Next. The new Grab cue on draggable pills flag is on by default, next to Arrow captions. Open any screenshot with a few controls in it.",
+  "try": [
+    { "do": "Press A and drag an arrow onto a button, type a label, press Return." },
+    { "do": "With the arrow still selected, rest the pointer on the caption pill. The cursor becomes an open hand." },
+    { "do": "Press and drag the pill. The hand closes while you hold it, and opens again when you drop it." },
+    { "do": "Rest the pointer on the arrow's tail handle. The plain arrow cursor comes back: that handle has its own job." },
+    { "do": "Click empty picture to deselect, then rest on the same pill. No hand, because a press there would move the whole arrow." },
+    { "do": "Press I, place a caliper, click it to select it, then rest the pointer on its number. Open hand again; drag it and the hand closes." },
+    { "do": "Rest on one of the caliper's feet. Plain arrow, same as before." },
+    { "do": "Press I again to pick the Measure tool. Over the same pill the cursor is the crosshair: the tool in hand wins." }
+  ],
+  "evaluate": [
+    "Did the hand appear early enough that you found the drag without being told about it?",
+    "Is the open hand the right cue here, or would you rather the pill lit up or lifted?",
+    "The hand only appears once the object is selected. Did you expect it on an unselected arrow or caliper too?",
+    "Does the cursor flicker or lag anywhere as you sweep across a pill?",
+    "Over a caliper's number the whole pill cues, but a foot never does. Does that split match what you can actually drag?"
+  ],
+  "rough": [
+    "The cue is the cursor only. A lift or a glow on the pill would need the whole document re-composited on every pointer move, which is the wrong price for a hint; the cursor is free and is the macOS idiom for grab.",
+    "No screenshots: a still frame cannot show the pointer's shape. The verification is a scripted walk instead (Scripts/playtest/grab-cue.json), which logs the cursor at each hover and while each drag is held.",
+    "Where the tail handle overlaps the pill, the cue disappears even though most of the pill is still grabbable. That is honest (the press would drag the endpoint), but it can read as the cue flickering on a short arrow at low zoom.",
+    "A caliper whose number has been pushed off the head line grows a head dot again, and that dot gets no hand. Only the number does."
+  ]
+}

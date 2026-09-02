@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 570,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T15:00:58.735Z",
-  "updated": "2026-09-02T15:00:58.735Z",
+  "updated": "2026-09-02T17:02:45.618Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Both grabs live in CanvasView.mouseDown: captionPillRect(_:) for arrows (captionDrag) and measureReadoutRect(_:) for calipers (measureHandleDrag .head). Cursor rects or a mouseMoved check against those rects with NSCursor.openHand / closedHand is the smallest version. Filed from the caption-drag audit rough item 1 and the caliper-head audit rough item 1.",
@@ -23,6 +23,11 @@
     {
       "t": "2026-09-02T15:00:58.735Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T17:02:45.618Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-02T17:02:45.617Z"
 }

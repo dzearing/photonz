@@ -253,10 +253,13 @@ private final class Run {
                 await screenCapture(window, name: hold)
                 held = ", held \(hold).png"
             }
+            // The pointer's shape WHILE the button is down: the only moment a
+            // closed-hand grab cue exists, and a walk cannot photograph it.
+            let heldCursor = Self.cursorName()
             if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: flags) { canvas.mouseUp(with: event) }
             await sleep(0.05)
             note(number, step.name,
-                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)",
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held), cursor while down \(heldCursor)",
                  state: describe())
 
         case .type(let text):
@@ -638,7 +641,21 @@ private final class Run {
             "tooltip": HintTooltipController.shared.visibleDescription ?? "none",
             "edgeMap": !editor.snappingEdgeMap.isEmpty,
             "firstResponder": window?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil",
+            // The pointer's shape, so a walk can prove the grab cue appeared
+            // over a draggable pill and nowhere else.
+            "cursor": Self.cursorName(),
         ]
+    }
+
+    /// A name for whatever the pointer currently looks like. The stock cursors
+    /// are shared singletons, so identity is the whole test.
+    static func cursorName() -> String {
+        let current = NSCursor.current
+        let known: [(NSCursor, String)] = [
+            (.openHand, "openHand"), (.closedHand, "closedHand"), (.arrow, "arrow"),
+            (.crosshair, "crosshair"), (.iBeam, "iBeam"), (.pointingHand, "pointingHand"),
+        ]
+        return known.first { $0.0 === current }?.1 ?? "other"
     }
 }
 #endif
