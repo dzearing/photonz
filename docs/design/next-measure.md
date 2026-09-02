@@ -393,7 +393,9 @@ difference the decision named: this guide answers a question, it is not a
 snapping ruler.
 
 Shipped shape (all behind `next-measure-align`, Next-only, default ON, with a
-px `tolerance` parameter, default 1):
+`tolerance` parameter in LOGICAL px, default 1, multiplied by the capture's
+pixel scale before it meets device-px edges: on a 2x capture one device px of
+wobble is half a point, not a misalignment):
 
 - **Creation.** The Measure tool gains a two-chip mode control (Distance |
   Alignment) in the toolbar, shown only when the flag is on. In Alignment
@@ -412,7 +414,21 @@ px `tolerance` parameter, default 1):
   fraction as strong, and before 2026-08-23 that echo became an item and won
   the worst-offender vote, so a 4px offset read "off 5 px". Block-summed
   resolution caveat: stacked elements with sub-block gaps can merge — harmless,
-  since merged items agreed with each other.
+  since merged items agreed with each other. Since 2026-09-02 the scan also
+  knows that one boundary can be read twice: a bordered button's top is its
+  outer edge and, 3 device px inside it at 2x, the fainter flank where the
+  border meets the fill, and a guide whose anchor snapped onto that inner
+  flank used to take it along the straight run and the outer edge at the
+  rounded corners, so one button became three items and read "off 1 px" with
+  4 items against the filled button beside it. Boldness cannot pick the right
+  flank (a glyph stem's two sides are equally bold), so extent does: every
+  candidate is chained into a track along the guide, and where two tracks sit
+  within `pairSeparation` (5 px, the same distance `ElementBounds` uses) and
+  one runs strictly inside the other, the shorter is the flank and is left
+  out of the pick (`AlignmentScan.borderFlanks`). A border's inner side stops
+  at the corners; a descender line stops at the descender; the edge that runs
+  the whole element is the element's. Equal-extent pairs (stems) still go to
+  the guide's own position, so text edges behave as before.
 - **Verdict (derived, never stored).** `AlignmentCheck.verdict`: the reference
   is the edge the MAJORITY of the crossed elements agree on, and the worst
   deviation beyond `tolerance` names the outlier. Fewer than two items → no

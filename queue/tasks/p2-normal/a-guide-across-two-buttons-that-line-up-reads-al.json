@@ -5,11 +5,11 @@
   "epic": "alignment-checks",
   "priority": "p2-normal",
   "seq": 490,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T10:38:44.263Z",
-  "updated": "2026-09-02T10:38:44.263Z",
+  "updated": "2026-09-02T11:39:39.365Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while rendering queue/audits/2026-09-02-guide-edge-chip-buttons.png. AlignmentScan.items splits each button top into two runs (the 16 px block-summed edge map plus the rounded corners), and the tolerance is 1 device px regardless of pixelScale (Experiments.shared.measureAlignTolerance, applied in EditorState.addAlignmentCheck). Consider expressing tolerance in logical px, or rounding item edges to the block grid before comparing. Check the scan output with temp/edge-chip/Render.swift as a starting point.",
@@ -23,6 +23,36 @@
     {
       "t": "2026-09-02T10:38:44.263Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T11:26:14.900Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T11:30:48.929Z",
+      "note": "Reproduced on the fixture (scratch test dumping every sample): 4 items, verdict 2.73 device px off. Cause: Reset is a BORDERED button. Its top has two horizontal peaks 3 px apart, the outer edge at y 755 (stronger) and the inner border edge at y 758 (fainter). The guide sits at 758, so nearest-to-guide picks the inner edge along the straight part while the rounded corners and the filled Save button only offer the outer edge: Reset splits into 756 / 758 / 756 runs, Save is 755.2."
+    },
+    {
+      "t": "2026-09-02T11:30:48.930Z",
+      "note": "Adversarial review of the fix idea. (1) Tolerance alone cannot fix it: even at 2 device px (1 logical) the delta is 2.73. (2) Picking the strongest edge within the capture radius breaks the freehand promise (a card border 10 px from a label would steal the label). (3) Snapping's own score (strength/(1+d/4)) still prefers 758. (4) ElementBounds already answers this exact question with pairSeparation 5: two boundaries within 5 px are one antialiased border read twice and only the bolder one may define an edge, which is how a switch's outer edge beats its knob. The scan will thin each sample's candidates the same way so hovering and checking agree. Plus: the tolerance is a logical-px number in the Experiments window, so the app multiplies it by the capture's pixel scale before it meets device-px edges."
+    },
+    {
+      "t": "2026-09-02T11:39:08.955Z",
+      "note": "First cut (thin each sample to the bolder of any pair within 5 px, exactly ElementBounds.pairable) fixed the buttons but broke the labels fixture: a glyph stem has two flanks 3 px apart at equal boldness, so the pick flipped by 3 px between labels and the reference moved 10 px. Boldness cannot pick a flank. Extent can: candidates are chained into tracks along the guide, and where two tracks sit within 5 px and one runs strictly inside the other, the shorter is the flank (AlignmentScan.borderFlanks). A border inner side stops at the corners, a descender line at the descender; equal-extent pairs (stems) still go to the guide position. Labels fixture unchanged (97.6 / 106 / 97.5), buttons 2 items aligned (delta 0.05 px)."
+    },
+    {
+      "t": "2026-09-02T11:39:08.956Z",
+      "note": "Tolerance: AlignmentCheck.deviceTolerance(logical:pixelScale:) multiplies the Experiments number by the capture pixel scale; EditorState.addAlignmentCheck uses it. The fixture test for the 2 logical px case doctors the capture in memory (Save Changes painted 4 device rows lower, vacated strip filled from the background row above; the crop is widened to x 220...492 so its antialiased sides come along, else the seam becomes a one-sample ghost)."
+    },
+    {
+      "t": "2026-09-02T11:39:08.956Z",
+      "note": "Verified: Scripts/test.sh green, 1278 tests (4 new core, 4 new fixture). temp/edge-chip/render rebuilt against the fixed modules: buttons items=2 label=aligned, labels still 3 items off 4 px. Picture in queue/audits/2026-09-02-guide-buttons-aligned-after.png."
+    },
+    {
+      "t": "2026-09-02T11:39:39.364Z",
+      "note": "The alignment scan now drops a border's inner flank (AlignmentScan.borderFlanks: tracks along the guide, the shorter of a tight pair is the flank) and the tolerance is logical px scaled by the capture (AlignmentCheck.deviceTolerance). Fixture: guide at y 758 over the two buttons reads Top edges aligned, 2 items; a doctored 2 logical px offset reads off 2 px; labels unchanged. 1278 tests green. Audit queue/audits/2026-09-02-guide-buttons-aligned.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T11:26:14.900Z",
+  "completed": "2026-09-02T11:39:39.365Z"
 }

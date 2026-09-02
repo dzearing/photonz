@@ -110,6 +110,54 @@ struct AlignmentScanTests {
         for item in items { #expect(abs(item.edge - 60) <= 1) }
     }
 
+    /// A bordered button beside a filled one, tops level. The border is two
+    /// boundaries 3px apart: the outer edge, and the fainter inner edge where
+    /// the border meets the fill, which the rounded corners do not reach. A
+    /// guide drawn on the INNER edge (the anchor snap can land there) has to
+    /// report each button once, at the edge they share: the two flanks of one
+    /// border are one boundary read twice, exactly as `ElementBounds` treats
+    /// them, and only the bolder one may be the element's edge.
+    private func borderedAndFilledButtons() -> Scene {
+        var s = Scene(w: 400, h: 300)
+        // Bordered: outer box at y 60, inner top flank at y 63 stopping short
+        // of the corners, 70% as bold.
+        s.addBox(CGRect(x: 40, y: 60, width: 80, height: 50))
+        s.addHorizontalEdge(row: 63, x0: 48, x1: 112, magnitude: 1.4)
+        // Filled: one boundary only.
+        s.addBox(CGRect(x: 152, y: 60, width: 80, height: 50))
+        return s
+    }
+
+    @Test func aGuideOnTheInnerFlankOfABorderStillFindsTheOuterEdge() {
+        let items = AlignmentScan.items(axis: .horizontal, position: 63, span: 36...236,
+                                        in: borderedAndFilledButtons().map)
+        #expect(items.count == 2)
+        for item in items { #expect(abs(item.edge - 60) <= 1) }
+        #expect(AlignmentCheck(items: items, tolerance: 1).verdict?.isAligned == true)
+    }
+
+    /// The same drag started in the middle of the bordered button, where the
+    /// inner flank is the first thing the guide sees: the answer may not
+    /// depend on which sample came first.
+    @Test func aGuideStartedOnTheInnerFlankAgrees() {
+        let items = AlignmentScan.items(axis: .horizontal, position: 63, span: 80...236,
+                                        in: borderedAndFilledButtons().map)
+        #expect(items.count == 2)
+        for item in items { #expect(abs(item.edge - 60) <= 1) }
+    }
+
+    /// Two boundaries further apart than a border is thick are two elements,
+    /// and the one the guide was drawn on is the one it means.
+    @Test func aRealNeighbourSixPixelsAwayIsNotAbsorbed() {
+        var s = Scene(w: 400, h: 300)
+        s.addBox(CGRect(x: 40, y: 60, width: 80, height: 50))
+        s.addHorizontalEdge(row: 66, x0: 40, x1: 120, magnitude: 1.4)
+        let items = AlignmentScan.items(axis: .horizontal, position: 66, span: 36...124,
+                                        in: s.map)
+        #expect(items.count == 1)
+        #expect(abs((items.first?.edge ?? 0) - 66) <= 1)
+    }
+
     @Test func anEmptyMapFindsNothing() {
         let items = AlignmentScan.items(axis: .vertical, position: 100, span: 0...200,
                                         in: EdgeMap.empty)
@@ -313,6 +361,18 @@ struct AlignmentVerdictTests {
                                            item(100, side: .after, span: 0...8)],
                                    tolerance: 1)
         #expect(check.referenceSide == .after)
+    }
+
+    /// The Experiments window's tolerance is a LOGICAL px number (every readout
+    /// is in points), so on a Retina capture it covers twice as many device px;
+    /// a one device px wobble on a 2x capture is half a point, not a
+    /// misalignment.
+    @Test func toleranceIsGivenInLogicalPixels() {
+        #expect(AlignmentCheck.deviceTolerance(logical: 1, pixelScale: 2) == 2)
+        #expect(AlignmentCheck.deviceTolerance(logical: 1, pixelScale: 1) == 1)
+        #expect(AlignmentCheck.deviceTolerance(logical: 0.5, pixelScale: 3) == 1.5)
+        // A capture with no scale recorded is a 1x capture, never a zero.
+        #expect(AlignmentCheck.deviceTolerance(logical: 1, pixelScale: 0) == 1)
     }
 
     @Test func twoItemsSplitTheDifference() {

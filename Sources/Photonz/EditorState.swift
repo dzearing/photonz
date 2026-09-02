@@ -1167,8 +1167,12 @@ final class EditorState {
         var content = measureStyle
         content.mode = axis
         content.headOffset = 0
-        content.alignment = AlignmentCheck(items: items,
-                                           tolerance: Experiments.shared.measureAlignTolerance)
+        // The Experiments number is in logical px, like every readout; the
+        // items are device px, so a Retina capture gets twice the room.
+        content.alignment = AlignmentCheck(
+            items: items,
+            tolerance: AlignmentCheck.deviceTolerance(logical: Experiments.shared.measureAlignTolerance,
+                                                      pixelScale: document?.pixelScale ?? 1))
         let reference = content.alignment?.verdict?.reference ?? items.first?.edge ?? position
         let start: CGPoint, end: CGPoint
         switch axis {

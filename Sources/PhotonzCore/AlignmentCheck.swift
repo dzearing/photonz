@@ -77,6 +77,16 @@ public struct AlignmentCheck: Hashable, Codable, Sendable {
         self.items = items
         self.tolerance = tolerance
     }
+
+    /// The device-px tolerance for a check on a capture of `pixelScale`, from
+    /// the LOGICAL px number the user set. Every readout is in points, so the
+    /// tolerance is too: on a Retina capture one point is two device px, and a
+    /// single device px of wobble (a border's antialiasing, a rounded corner
+    /// read a row early) is half a point, not a misalignment. A capture with
+    /// no scale recorded is a 1x capture.
+    public static func deviceTolerance(logical: CGFloat, pixelScale: CGFloat) -> CGFloat {
+        logical * max(1, pixelScale)
+    }
 }
 
 /// What an alignment check found: the reference line (the edge the majority of
@@ -216,6 +226,14 @@ public enum AlignmentScan {
     /// own.
     public static let defaultElementStrength: Double = 0.2
 
+    /// Two boundaries closer together than this are one boundary read twice:
+    /// the two flanks of a border, of a glyph stem, or of an antialiased edge.
+    /// Same distance as `ElementBounds` uses for the same call, and the two
+    /// must agree: an element sized by hovering and checked by a guide is one
+    /// element with one edge. Which flank is the element's edge is settled by
+    /// `borderFlanks`.
+    public static let pairSeparation: Double = 5
+
     /// The band, measured out from an edge, in which the scan looks for the
     /// element's own ink to learn which side it is on. It starts past the
     /// edge's antialiasing ramp and reaches far enough to catch a button's
@@ -266,6 +284,23 @@ public enum AlignmentScan {
         let sampleCount = max(1, Int((length / sampleStep).rounded(.up)))
         let half = Double(sampleStep) / 2
 
+        // Every element-strength boundary near the guide, per sample, before
+        // any is chosen: the pick needs to see whole runs, not one sample.
+        var samples: [[EdgeCandidate]] = []
+        var positions: [CGFloat] = []
+        for i in 0...sampleCount {
+            let t = span.lowerBound + length * CGFloat(i) / CGFloat(sampleCount)
+            let window = (Double(t) - half)...(Double(t) + half)
+            let candidates = (axis == .vertical
+                ? edges.verticalEdges(inYRange: window)
+                : edges.horizontalEdges(inXRange: window))
+                .filter { $0.strength >= elementStrength
+                    && abs($0.position - Double(position)) <= Double(captureRadius) }
+            samples.append(candidates)
+            positions.append(t)
+        }
+        let flanks = borderFlanks(in: samples)
+
         var items: [AlignmentItem] = []
         var run: (edges: [CGFloat], start: CGFloat, end: CGFloat)?
 
@@ -278,17 +313,13 @@ public enum AlignmentScan {
             run = nil
         }
 
-        for i in 0...sampleCount {
-            let t = span.lowerBound + length * CGFloat(i) / CGFloat(sampleCount)
-            let window = (Double(t) - half)...(Double(t) + half)
-            let candidates = (axis == .vertical
-                ? edges.verticalEdges(inYRange: window)
-                : edges.horizontalEdges(inXRange: window))
-                .filter { $0.strength >= elementStrength }
-            let nearest = candidates.min {
-                abs($0.position - Double(position)) < abs($1.position - Double(position))
-            }
-            guard let nearest, abs(nearest.position - Double(position)) <= Double(captureRadius) else {
+        for (i, candidates) in samples.enumerated() {
+            let t = positions[i]
+            let nearest = candidates.enumerated()
+                .filter { !flanks[i].contains($0.offset) }
+                .map(\.element)
+                .min { abs($0.position - Double(position)) < abs($1.position - Double(position)) }
+            guard let nearest else {
                 closeRun()
                 continue
             }
@@ -309,5 +340,82 @@ public enum AlignmentScan {
         }
         closeRun()
         return items
+    }
+
+    /// One boundary read twice, and the reading that is NOT the element's
+    /// edge: per sample, the indices into `samples[i]` of the candidates to
+    /// leave alone.
+    ///
+    /// A bordered button's top is its outer edge and, three device px inside
+    /// it on a 2x capture, the fainter edge where the border meets the fill.
+    /// Its rounded corners only reach the outer one. A guide drawn along the
+    /// inner flank (the anchor snap can land there) used to take it as the
+    /// nearest edge on the straight run and the outer edge at the corners, so
+    /// one button became three items and read 1 px out of line with the filled
+    /// button beside it, whose top is one boundary.
+    ///
+    /// Boldness cannot settle which flank is the edge: the two sides of a glyph
+    /// stem are as bold as each other, and which is bolder is noise. Extent
+    /// can. The candidates are chained into tracks along the guide (each sample
+    /// within `runMergeTolerance` of its track's running mean), and where two
+    /// tracks sit within `pairSeparation` of each other and one runs strictly
+    /// inside the other, the SHORTER one is the flank: a border's inner side
+    /// stops at the corners, a descender line stops at the descender, and the
+    /// edge that runs the whole element is the element's. Two readings of equal
+    /// extent (a stem's two sides) are left to the guide's own position.
+    static func borderFlanks(in samples: [[EdgeCandidate]]) -> [Set<Int>] {
+        struct Track {
+            var sum: Double = 0
+            var count = 0
+            var first: Int
+            var last: Int
+            var members: [(sample: Int, index: Int)] = []
+            var mean: Double { sum / Double(max(count, 1)) }
+        }
+        var open: [Track] = []
+        var closed: [Track] = []
+        for (i, candidates) in samples.enumerated() {
+            var extended = Set<Int>()
+            var claimed = Set<Int>()
+            for (c, candidate) in candidates.enumerated() {
+                var best: (track: Int, distance: Double)?
+                for (t, track) in open.enumerated() where !extended.contains(t) {
+                    let distance = abs(candidate.position - track.mean)
+                    if distance <= Double(runMergeTolerance),
+                       distance < (best?.distance ?? .infinity) {
+                        best = (t, distance)
+                    }
+                }
+                guard let best else { continue }
+                open[best.track].sum += candidate.position
+                open[best.track].count += 1
+                open[best.track].last = i
+                open[best.track].members.append((i, c))
+                extended.insert(best.track)
+                claimed.insert(c)
+            }
+            var still: [Track] = []
+            for (t, track) in open.enumerated() {
+                if extended.contains(t) { still.append(track) } else { closed.append(track) }
+            }
+            open = still
+            for (c, candidate) in candidates.enumerated() where !claimed.contains(c) {
+                open.append(Track(sum: candidate.position, count: 1, first: i, last: i,
+                                  members: [(i, c)]))
+            }
+        }
+        closed.append(contentsOf: open)
+
+        var flanks = [Set<Int>](repeating: [], count: samples.count)
+        for track in closed {
+            let isFlank = closed.contains { other in
+                abs(other.mean - track.mean) < pairSeparation
+                    && other.first <= track.first && track.last <= other.last
+                    && other.last - other.first > track.last - track.first
+            }
+            guard isFlank else { continue }
+            for member in track.members { flanks[member.sample].insert(member.index) }
+        }
+        return flanks
     }
 }

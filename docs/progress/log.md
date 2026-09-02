@@ -4653,3 +4653,36 @@ the card's left end, over the icons.
 - PhotonzCore: `PhotonzDocument.restackLayers(ids:_:)` with `RestackStep` and `duplicateLayers(ids:offsetBy:)`, Photoshop semantics (members keep order and gaps; a member pressed against the top or the locked floor pins the ones behind it). 14 tests in `LayerBatchRestackTests`.
 - Undo now prunes a multi-selection whose layers vanished (undoing a batch duplicate), so the menu never stays enabled over nothing.
 - Verified on the probe app with a temporary harness (removed); 1270 tests green. Audit: `queue/audits/2026-09-02-layers-menu-multi-select.json`.
+
+## 2026-09-02 — A guide across two level buttons reads aligned
+
+- Task `a-guide-across-two-buttons-that-line-up-reads-al` (Next,
+  `next-measure-align`). On the 2x settings capture a guide along the tops of
+  Reset and Save Changes read "Top edges, off 1 px" with 4 items. Cause: Reset
+  is a bordered button, so its top is two boundaries 3 device px apart, the
+  outer edge (y 755) and the fainter flank where the border meets the fill
+  (y 758). The guide sat on 758, so nearest-to-guide took the inner flank
+  along the straight run and the outer edge at the rounded corners: Reset
+  became three items against the filled Save button's one.
+- Fix (`AlignmentScan.borderFlanks`, core, TDD): every element-strength
+  candidate near the guide is chained into tracks along it; where two tracks
+  sit within `pairSeparation` (5 px, the distance `ElementBounds` already uses
+  for the same call) and one runs strictly inside the other, the shorter is a
+  flank and is left out of the pick. Boldness was tried first and rejected: a
+  glyph stem's two sides are equally bold, and thinning by strength moved the
+  labels fixture's reference by 10 px. Equal-extent pairs still go to the
+  guide's own position, so text edges are unchanged.
+- Tolerance is now a LOGICAL px number: `AlignmentCheck.deviceTolerance`
+  multiplies the Experiments value by the capture's pixel scale, and
+  `EditorState.addAlignmentCheck` uses it. A one device px wobble at 2x is half
+  a point, not a misalignment; a 2 logical px offset still reads "off 2 px"
+  (fixture test doctors the capture in memory with Save Changes 4 rows lower).
+- Verified: 1278 tests green (8 new). Render through `DocumentRenderer`
+  (`temp/edge-chip/render`, rebuilt with `swiftc -I
+  .build/arm64-apple-macosx/debug/Modules` plus the two modules' `.o` files):
+  buttons 2 items, aligned; labels unchanged. Audit
+  `queue/audits/2026-09-02-guide-buttons-aligned.json`.
+- Known gap: a guide that runs entirely inside a bordered button's straight
+  run (never reaching a corner) sees both flanks at equal extent and falls
+  back to the drawn position. A guide across two buttons always crosses a
+  corner, so this did not come up.
