@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 530,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T13:18:01.776Z",
-  "updated": "2026-09-02T13:26:08.716Z",
+  "updated": "2026-09-02T13:26:20.322Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the scripted playtest walk (Scripts/playtest/redline-walk.json, 2026-09-02): EditorState.addElementSize starts both calipers from measureStyle, so content.role is whatever the popover last held (.spacing here) and MeasureSpecList.derivedName then says Gap. Force role = .size for the two calipers it builds (keep mode horizontal/vertical so Width/Height derive), with a test in MeasureSpecListTests or MeasureTests.",
@@ -50,6 +50,10 @@
     {
       "t": "2026-09-02T13:26:08.716Z",
       "note": "Adversarial pass: the only judgment call was whether Size should also take Size ink when roles are on. Went with yes, mirroring Gap mode taking Spacing ink, and made the hover preview use that ink too so what you see is what lands. With roles off, the single shared ink stays and only the role is pinned."
+    },
+    {
+      "t": "2026-09-02T13:26:20.321Z",
+      "note": "Size mode's two calipers now start from the Size template (role pinned to size, Size ink when roles are on) in EditorState.addElementSize, and the Size hover previews in that ink. Verified by Scripts/test.sh (1297 tests green, new MeasureSpecListTests case) and a live gap-then-size probe walk (Scripts/playtest/gap-then-size.json): spec list reads Height 30 px (size) and Width 124 px (size) after a Gap click, and a later plain caliper still reads Gap (spacing). Commit bc41050 on main."
     }
   ],
   "started": "2026-09-02T13:23:57.882Z",
@@ -58,5 +62,6 @@
     "at": "2026-09-02T13:23:27.094Z",
     "exit": 0,
     "message": "Both results are pending; nothing further is independent of them, so I'm waiting for the notifications."
-  }
+  },
+  "completed": "2026-09-02T13:26:20.322Z"
 }
