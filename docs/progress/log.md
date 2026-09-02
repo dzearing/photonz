@@ -4773,3 +4773,10 @@ the card's left end, over the icons.
 
 - `Tests/PhotonzCoreTests/ElementBoundsTests.swift`: the three timing tests no longer flake under load. Reproduced first (subjects test failed 2 of 3 full runs beside a concurrent build). Wall-clock best-of-N and thread CPU time both still failed once the scheduler parked the thread on an efficiency core, so the two probe-count tests now assert a ratio against their own probe detects run back to back on the same thread (guard 1.3; doubled probes read 2.0, 1.5x read 1.5). The detect test keeps an absolute budget, widened 10 to 20 ms. Helpers print `[perf]` spreads so a flake can be told from a regression.
 - Next: nothing pending from this task. If another timing test ever flakes, reach for `costRatio` in that file rather than widening a budget.
+
+## 2026-09-02 — Scripted playtest harness (go loop)
+
+- Added a reusable, file-driven playtest harness for the probe app: `PlaytestScript` (PhotonzCore, tested) parses a JSON walk; `PlaytestHarness` (app, compiled only with `PHOTONZ_PLAYTEST`, acts only in the probe bundle) opens a file invisibly, presses keys, clicks, drags, snapshots the window offscreen, composites the document, and logs the editor's state per step. `Scripts/playtest.sh <walk.json>` runs one end to end; `Scripts/playtest/redline-walk.json` walks the whole redline flow. Doc: `docs/design/playtest-harness.md`.
+- Proven: release-configuration build carries no harness code; probe does; dev app untouched.
+- Findings queued from the first walk: Size mode calipers are named Gap when the style role was spacing; the selected caliper's midpoint handle covers its number.
+- Next: consider scripting the capture overlay and toast; menu shortcuts through the focused editor do nothing in the inactive probe (use `action`).

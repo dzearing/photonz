@@ -1,0 +1,118 @@
+# Scripted playtest harness
+
+A way for an unmanned run to drive the real editor: open a file in the probe
+build, press keys, click and drag on the canvas, render the window offscreen
+at the moments you care about, and read back what the editor thinks happened.
+It exists so an audit starts from a working walk instead of rebuilding one by
+hand. Three audits in a row did that before this landed.
+
+The harness lives in `Sources/Photonz/Playtest/PlaytestHarness.swift`. The
+script format lives in `PhotonzCore` (`PlaytestScript.swift`, tested) so a
+malformed script fails with a readable error before anything runs.
+
+## Who can run it
+
+- **Only the probe bundle** (`dist/Photonz Probe.app`, `com.dzearing.photonz.probe`)
+  ever acts on a script. The dev app a person works in never does, and the
+  shipping build does not contain the code: `Scripts/build-app.sh` defines
+  `PHOTONZ_PLAYTEST` for the dev and probe variants only. Dev carries the code
+  so dev and probe share one compiled product and flipping between them never
+  triggers a rebuild.
+- The probe is launched with `--playtest <script.json>` (via `open --args`).
+  Nothing is read from a fixed location, so a stale request can never fire.
+- The probe never becomes the active app. The window it opens is kept at zero
+  alpha for the whole run, so a person at the machine sees nothing and keeps
+  their keyboard focus.
+
+## Run one
+
+```bash
+Scripts/playtest.sh Scripts/playtest/redline-walk.json           # build, run, wait, quit
+Scripts/playtest.sh path/to/walk.json --no-build                 # reuse the built probe
+Scripts/playtest.sh path/to/walk.json --keep                     # leave the probe running
+PHOTONZ_PLAYTEST_TIMEOUT=300 Scripts/playtest.sh path/to/walk.json
+```
+
+The wrapper builds and launches the probe with the script, waits for
+`done.json` in the output folder, prints it plus the last log lines, lists the
+renders, and quits the probe. Exit status is 0 only when `done.json` says
+`ok`. `Scripts/probe-app.sh --playtest <script>` does the launch alone.
+
+The example walk, `Scripts/playtest/redline-walk.json`, opens the settings
+fixture and walks the whole redline flow: Distance, Size, Gap, Alignment, a
+captioned arrow, Copy as Spec List and Copy Image. Copy it and change the
+points to write a new one.
+
+## What you get back
+
+Everything lands in the script's `out` folder (default: `out` beside the
+script; a relative path is relative to the script):
+
+- `<name>.png` for every `snapshot` (the editor window at 2x, exactly what a
+  person would see) and every `render` (the composited document).
+- `log.json`: one entry per step with the elapsed time, what the step did,
+  and, after anything that changes the editor, its state: tool, Measure mode,
+  hint text, copy confirmation, layer count, every measurement (name, value,
+  role, feet, frame), every annotation (shape, caption, frame), legend
+  entries, whether the edge map is ready, and who has the keyboard.
+- `done.json`: `status` (`ok` or `failed`), how many steps completed, and the
+  error when one failed. The run stops at the first failing step; the log
+  keeps everything before it.
+
+## Script format
+
+```json
+{
+  "out": "/tmp/photonz-playtest/my-walk",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "measureMode", "mode": "size" },
+    { "do": "move", "at": [356, 786] },
+    { "do": "snapshot", "name": "size-hover" },
+    { "do": "click", "at": [356, 786] },
+    { "do": "describe", "stage": "size", "note": "Save Changes measured" }
+  ]
+}
+```
+
+Points are in **document units** (what the `open` log line reports, for a 2x
+capture that is device pixels) unless a step says `"space": "view"`. The
+`open` entry in the log states the document size and pixel scale so you can
+read coordinates straight off the fixture.
+
+| `do` | fields | what happens |
+| --- | --- | --- |
+| `open` | `file`, optional `width` `height` | Opens the file in an editor window (path relative to the script or absolute), waits until it can be driven, hides it, sizes it. Every later step targets this editor. |
+| `wait` | `seconds` | Sleeps. Prefer `waitFor`. |
+| `key` | `key`, optional `modifiers` | Presses and releases a key. `key` is one character or `return`, `escape`, `tab`, `space`, `delete`, `left`, `right`, `up`, `down`. Modifiers: `command`, `shift`, `option`, `control`. Plain keys go to the window like typing; chords are offered to the window, then the menu bar, and the log says who took them. |
+| `move` | `at` | Moves the pointer over the canvas (hover previews, snap dots). |
+| `click` | `at`, optional `count`, `modifiers` | Mouse down and up on the canvas. |
+| `drag` | `from`, `to`, optional `steps` | Mouse down, a run of drags, mouse up. |
+| `type` | `text` | Inserts text into whatever field has the keyboard. Fails when nothing does. |
+| `tool` | `tool` | Picks a tool directly (`select`, `arrow`, `measure`, and so on), for when its key was not honoured. |
+| `measureMode` | `mode` | Presses I until the Measure tool is in `distance`, `size`, `gap` or `alignment`, and logs how many presses it took. |
+| `waitFor` | `condition`, optional `value`, `timeout` | Polls until `edgeMap` (element detection done), `captionField` (a caption field has the keyboard), `tool` = `value`, or `measureMode` = `value`. Times out as a failure. |
+| `snapshot` | `name` | Renders the window's content offscreen to `<name>.png`. |
+| `render` | `name` | Composites the document itself to `<name>.png`. |
+| `describe` | `stage`, optional `note` | Logs the editor's state under `stage`. |
+| `clearClipboard` | | Empties the clipboard. |
+| `readClipboard` | `stage` | Logs the clipboard's types and text. |
+| `action` | `action` | Calls the editor directly: `copySpecList`, `copyImage`, `hideAllMeasurements`, `showAllMeasurements`. |
+
+## Things to know
+
+- **The probe remembers its settings between runs** (the last Measure mode,
+  the style popover, flags). Say what you want (`measureMode`) instead of
+  assuming a fresh state, or the walk changes with whoever ran last.
+- **Menu shortcuts that act on the focused editor do nothing.** The probe is
+  never the active app, so the menu bar takes a chord like Control Command C
+  but its focused editor is nil. The log records "taken by menu" with an
+  empty clipboard; use the `action` step for the outcome and keep the `key`
+  step if you want the shortcut's behaviour on record.
+- **Glass and vibrancy do not render offscreen**: a snapshot shows the
+  window's content, not the system's translucency. Toasts and the capture
+  overlay are not covered; the walk starts at the editor.
+- Keep the probe quit when you finish. `Scripts/playtest.sh` does that unless
+  you pass `--keep`.
+- Never point this at `dist/Photonz Dev.app`. It would not act on a script
+  anyway, and rebuilding it ends someone's session.

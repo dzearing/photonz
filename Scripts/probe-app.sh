@@ -6,6 +6,9 @@
 #   Scripts/probe-app.sh                 build, relaunch, report
 #   Scripts/probe-app.sh <file> [...]    ...and open these files in it
 #   Scripts/probe-app.sh --no-build      relaunch the existing probe bundle
+#   Scripts/probe-app.sh --playtest <script.json> [--no-build]
+#                                        ...and run a scripted playtest in it
+#                                        (Scripts/playtest.sh waits for it too)
 #   Scripts/probe-app.sh --quit          quit the probe and leave
 #
 # Why this exists: "dist/Photonz Dev.app" is somebody's app. Rebuilding it
@@ -36,10 +39,17 @@ quit_probe() {
 }
 
 BUILD=1
-case "${1:-}" in
-  --quit)     quit_probe; echo "==> Probe quit."; exit 0 ;;
-  --no-build) BUILD=0; shift ;;
-esac
+PLAYTEST=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --quit)     quit_probe; echo "==> Probe quit."; exit 0 ;;
+    --no-build) BUILD=0; shift ;;
+    --playtest)
+      [[ -f "${2:-}" ]] || { echo "!! --playtest needs a script file (got '${2:-}')" >&2; exit 1; }
+      PLAYTEST="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"; shift 2 ;;
+    *) break ;;
+  esac
+done
 
 if [[ "$BUILD" == "1" ]]; then
   Scripts/build-app.sh --probe
@@ -47,10 +57,14 @@ fi
 [[ -d "$APP" ]] || { echo "!! $APP does not exist; run without --no-build" >&2; exit 1; }
 
 quit_probe
+# A playtest script rides in as a launch argument (docs/design/playtest-harness.md);
+# only the probe bundle acts on it.
+ARGS=()
+[[ -n "$PLAYTEST" ]] && ARGS=(--args --playtest "$PLAYTEST")
 if [[ $# -gt 0 ]]; then
-  open -a "$PWD/$APP" "$@"
+  open -a "$PWD/$APP" "$@" ${ARGS[@]+"${ARGS[@]}"}
 else
-  open "$PWD/$APP"
+  open -a "$PWD/$APP" ${ARGS[@]+"${ARGS[@]}"}
 fi
 
 # The app is a menu-bar agent: no window and no Dock icon is the normal state,

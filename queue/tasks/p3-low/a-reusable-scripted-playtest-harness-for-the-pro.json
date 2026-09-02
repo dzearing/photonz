@@ -5,14 +5,14 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T10:59:36.613Z",
-  "updated": "2026-09-02T12:06:02.747Z",
+  "updated": "2026-09-02T13:19:39.894Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "temp/redline-walk/WalkHarness.swift (ignored, on this machine) is the version used for queue/audits/2026-09-02-redline-walk.json: opens a file window without activating the app, finds CanvasNSView, sends I/A through window.sendEvent, calls mouseDown/Up directly, renders contentView via cacheDisplay, drives SelectionView with a synthetic frozen picture. Gate it on the probe bundle id and compile it out of release with a build setting.",
+  "notes": "Reusable harness: script model PhotonzCore/PlaytestScript.swift (PlaytestScriptTests), driver Sources/Photonz/Playtest/PlaytestHarness.swift under #if PHOTONZ_PLAYTEST (defined by build-app.sh for dev+probe variants, not release) and gated at runtime on AppInfo.flavor == .probe. Hooks: AppDelegate.applicationDidFinishLaunching -> PlaytestHarness.startIfRequested; EditorState.canvasDidMoveToWindow -> PlaytestHarness.register. Launch: Scripts/playtest.sh <script.json> (wraps probe-app.sh --playtest, waits for done.json, quits the probe). Example: Scripts/playtest/redline-walk.json. Doc: docs/design/playtest-harness.md. The old throwaway (temp/redline-walk) is superseded. Capture overlay + toast are not scripted; menu shortcuts that use @FocusedValue no-op in the inactive probe (use the action step).",
   "acceptance": [
     "A file-triggered harness in the app drives the probe editor with synthesized events and writes renders plus a JSON log, off by default and never reachable in the shipping build",
     "A short doc says how to run it",
@@ -30,6 +30,36 @@
     {
       "t": "2026-09-02T12:06:02.746Z",
       "note": "seq 620 -> 70"
+    },
+    {
+      "t": "2026-09-02T13:02:05.373Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T13:06:29.807Z",
+      "note": "Epic unmanned-loop is staged next, not now, but triage on 2026-09-02 kept this task open because it serves the focus (measure-redline audits are how that feature reaches the user). Doing it."
+    },
+    {
+      "t": "2026-09-02T13:06:29.807Z",
+      "note": "Review before building: the old harness hardcoded the whole walk in Swift, so every audit had to edit and recompile. The reusable shape is a JSON script the probe interprets (open, key, move, click, drag, type, snapshot, describe, clipboard) so a new walk is a new file, not new code. The capture-overlay stage is left out: it needs private selection types opened up and a synthetic desktop, and it is the piece most likely to rot; noted as a rough edge. Compile gate: a PHOTONZ_PLAYTEST define set by build-app.sh for the dev and probe variants only (they share one compiled product, so no rebuild churn between them); runtime gate on the probe bundle id, so the dev app never runs it and the shipping build never contains it."
+    },
+    {
+      "t": "2026-09-02T13:19:25.631Z",
+      "note": "Built: PlaytestScript (PhotonzCore, 8 tests) + PlaytestHarness (app, #if PHOTONZ_PLAYTEST, probe flavor only) + Scripts/playtest.sh, probe-app.sh --playtest, build-app.sh define for non-release variants, docs/design/playtest-harness.md, example Scripts/playtest/redline-walk.json."
+    },
+    {
+      "t": "2026-09-02T13:19:25.631Z",
+      "note": "Verified: the example walk runs 69 steps in ~13s with status ok and 15 renders; Scripts/test.sh green (1296 tests); a release-configuration build without the define carries no harness strings while the probe bundle does; dev app untouched (never built, never killed)."
+    },
+    {
+      "t": "2026-09-02T13:19:25.631Z",
+      "note": "Review after building: chords through NSApp were dropped (inactive app has no key window), now offered to the window then the menu bar and the log says who took them; menu items acting on the focused editor still no-op because the probe is never active, so the action step covers copy outcomes. The walk found two product warts, queued: Size mode calipers named Gap, and the midpoint handle covering the readout."
+    },
+    {
+      "t": "2026-09-02T13:19:39.894Z",
+      "note": "Shipped: PlaytestScript (PhotonzCore, tested) + PlaytestHarness (app, PHOTONZ_PLAYTEST + probe-only) + Scripts/playtest.sh + example Scripts/playtest/redline-walk.json + docs/design/playtest-harness.md. Verified: the walk runs 69 steps with status ok and 15 renders; Scripts/test.sh green (1296 tests); release build carries no harness strings; dev app never touched. Audit: queue/audits/2026-09-02-playtest-harness.json"
     }
-  ]
+  ],
+  "started": "2026-09-02T13:02:05.372Z",
+  "completed": "2026-09-02T13:19:39.894Z"
 }

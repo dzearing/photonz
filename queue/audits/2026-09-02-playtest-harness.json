@@ -1,0 +1,27 @@
+{
+  "feature": "Scripted playtest harness",
+  "epic": "unmanned-loop",
+  "summary": "The loop can now drive the real editor from a JSON script: open a capture, press keys, click and drag, render the window offscreen, and read back what the editor did. The next audit edits a script instead of rebuilding a throwaway harness, and the walk it produces is repeatable.",
+  "setup": "Nothing to install. From the repo: Scripts/playtest.sh Scripts/playtest/redline-walk.json. It builds and launches the probe app (not your dev app), runs the walk invisibly, prints done.json, and quits the probe. Output lands in /tmp/photonz-playtest/redline-walk.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/redline-walk.json and watch it finish in about 15 seconds with status ok and 69 steps." },
+    { "do": "Open /tmp/photonz-playtest/redline-walk/3-distance-placed.png. This is the editor after two clicks and a third to place the number.", "shot": "2026-09-02-playtest-harness-3-distance-placed.png" },
+    { "do": "Open 4-size-landed.png, then 5-gap-landed.png and 6-align-landed.png: one Size click, one Gap click, one Alignment drag.", "shot": "2026-09-02-playtest-harness-4-size-landed.png" },
+    { "do": "Open 7-arrow-captioned.png: an arrow drawn with A, captioned by typing and Return.", "shot": "2026-09-02-playtest-harness-7-arrow-captioned.png" },
+    { "do": "Open log.json and find the 8-spec entry: the spec list the walk copied, with every measurement named and valued." },
+    { "do": "Change one point in Scripts/playtest/redline-walk.json (for example the Size click to the Reset button at [136, 786]) and run it again with --no-build." },
+    { "do": "Read docs/design/playtest-harness.md for the full step list." }
+  ],
+  "evaluate": [
+    "Is a JSON script the right level for the next audit to work at, or would you rather the loop wrote Swift again?",
+    "Do the offscreen renders show enough of the window to judge a feature by, given glass and vibrancy do not render?",
+    "Is the per-step editor state in log.json (tool, mode, hint, measurements, clipboard) the state you would want to read when a walk goes wrong?",
+    "Should the harness also drive the capture overlay and the toast, or is the editor enough for now?"
+  ],
+  "rough": [
+    "Menu shortcuts that act on the focused editor (Copy as Spec List, Copy Image) do nothing in a scripted run, because the probe is never the active app and its focused editor is nil. The log says so; the walk uses direct actions for the outcome.",
+    "The probe remembers its last Measure mode between runs, so a walk has to say which mode it wants. The example does; a script that assumes a fresh state will drift.",
+    "The capture overlay and the post-capture toast are not scriptable yet. The walk starts at the editor.",
+    "The walk exposed two product findings, now queued: Size mode names its calipers Gap when the style role was spacing, and the selected caliper's midpoint handle sits on top of its number right after placement."
+  ]
+}

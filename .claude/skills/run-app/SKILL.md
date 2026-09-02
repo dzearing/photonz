@@ -92,6 +92,11 @@ Scripts/probe-app.sh --quit          # quit it when you're done
 - Its Screen Recording grant resets whenever its binary changes (that is the
   cost of a bundle that is rebuilt constantly). Capture-dependent checks still
   need a human; everything else works.
+- To drive it from a script instead of by hand (open a file, press keys,
+  click, drag, render the window offscreen, read the editor's state back):
+  `Scripts/playtest.sh <walk.json>`. Only the probe acts on a script. Format
+  and example: `docs/design/playtest-harness.md`,
+  `Scripts/playtest/redline-walk.json`.
 
 ## Confirm it's actually running (as an agent)
 

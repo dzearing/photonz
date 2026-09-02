@@ -58,7 +58,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor static var coordinator: AppCoordinator?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        MainActor.assumeIsolated { AppDelegate.coordinator?.start() }
+        MainActor.assumeIsolated {
+            AppDelegate.coordinator?.start()
+            #if PHOTONZ_PLAYTEST
+            // Non-shipping builds only; the probe alone acts on it.
+            if let coordinator = AppDelegate.coordinator {
+                PlaytestHarness.startIfRequested(coordinator: coordinator)
+            }
+            #endif
+        }
     }
 
     /// Resident agent: closing the last editor window must NOT quit. Only the

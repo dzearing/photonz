@@ -396,6 +396,9 @@ final class EditorState {
     /// window and, for a just-opened document, hides it until it's been sized so
     /// it appears fully formed instead of snapping from SwiftUI's default size.
     func canvasDidMoveToWindow(_ window: NSWindow?) {
+        #if PHOTONZ_PLAYTEST
+        PlaytestHarness.register(self)
+        #endif
         if let window {
             hostWindow = window
             // A fresh mount during an open: hide until sized (a re-open into an

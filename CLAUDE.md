@@ -35,6 +35,7 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 | App + DMG | `Scripts/build-app.sh --dmg` |
 | Run the app | `open "dist/Photonz Dev.app"` |
 | Run the app *as an agent* | `Scripts/probe-app.sh [file]` → builds and launches `dist/Photonz Probe.app` (`….photonz.probe`). Unmanned runners use this, never the dev app — see below |
+| Scripted playtest | `Scripts/playtest.sh <walk.json>` → drives the probe editor from a JSON script (keys, clicks, drags), writes offscreen renders + `log.json`. Probe-only, compiled out of release. See `docs/design/playtest-harness.md`; example: `Scripts/playtest/redline-walk.json` |
 | Regenerate icon | `swift Scripts/make-icon.swift` (only when intentionally changing it) |
 
 ### Three bundles, three owners

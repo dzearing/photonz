@@ -97,7 +97,16 @@ if [[ "${1:-}" == "--dmg-only" ]]; then
 fi
 
 echo "==> Building Photonz $VERSION ($VARIANT, arm64)"
-swift build -c release --arch arm64
+# Non-shipping builds carry the scripted playtest harness
+# (Sources/Photonz/Playtest, docs/design/playtest-harness.md). Only the probe
+# switches it on at runtime; the dev app carries it so dev and probe share one
+# compiled product and flipping between them never rebuilds. The release build
+# compiles it out, so the shipping binary cannot be driven by a script at all.
+SWIFT_FLAGS=()
+if [[ "$VARIANT" != "release" ]]; then
+  SWIFT_FLAGS+=(-Xswiftc -DPHOTONZ_PLAYTEST)
+fi
+swift build -c release --arch arm64 ${SWIFT_FLAGS[@]+"${SWIFT_FLAGS[@]}"}
 
 echo "==> Assembling $APP"
 rm -rf "$APP"
