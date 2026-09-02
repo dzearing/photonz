@@ -118,7 +118,7 @@ struct WelcomeView: View {
             badge: "Recommended",
             body: conflicts.isEmpty
                 ? "The screenshot keys now trigger Photonz."
-                : "macOS's built-in screenshot feature still owns \(keys), so those keys can't reach Photonz yet. In Keyboard Settings choose Keyboard Shortcuts… → Screenshots and uncheck them."
+                : "macOS's built-in screenshot feature still owns \(keys), so \(conflicts.count == 1 ? "that key" : "those keys") can't reach Photonz yet. In Keyboard Settings choose Keyboard Shortcuts… → Screenshots and uncheck \(conflicts.count == 1 ? "it" : "them")."
         ) {
             if !conflicts.isEmpty {
                 Button("Open Keyboard Settings…") { onOpenKeyboardSettings() }
@@ -128,9 +128,12 @@ struct WelcomeView: View {
 
     private var footer: some View {
         HStack {
-            Text("⇧⌘4 captures a region · ⇧⌘3 the full screen · ⇧⌘5 records")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("⇧⌘4 captures a region · ⇧⌘3 the full screen · ⇧⌘5 records")
+                Text("⇧⌘6 opens the last capture for editing")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
             Spacer()
             if state.everythingReady {
                 Button("Start Capturing") { onFinish() }

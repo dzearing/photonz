@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 520,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T07:18:16.587Z",
-  "updated": "2026-09-02T07:18:16.588Z",
+  "updated": "2026-09-02T09:29:00.876Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "SystemScreenshotShortcuts (PhotonzCore) models ids 28/30/184 read from com.apple.symbolichotkeys; the Touch Bar file shortcut is id 181 (Shift-Command-6). WelcomeController reads the model. Only surface it when the machine has a Touch Bar (DFRFoundation presence or the hotkey id existing in the plist at all).",
+  "notes": "SystemScreenshotShortcuts (PhotonzCore) models ids 28/30/184 read from com.apple.symbolichotkeys; the Touch Bar file shortcut is id 181 (Shift-Command-6). WelcomeController reads the model. Only surface it when the machine has a Touch Bar (DFRFoundation presence or the hotkey id existing in the plist at all). DONE: PhotonzCore SystemScreenshotShortcuts gained Shortcut.touchBar (181), conflicting(in:touchBar:) and hasTouchBar(modelIdentifier:hotkeys:) (Touch Bar hw.model list OR id 181 in the plist; DFRFoundation/TouchBarServer exist on every Mac so they are not signals). WelcomeState reads hw.model via sysctlbyname. Snapshots: queue/audits/2026-09-02-touchbar-shortcut-*.png, audit queue/audits/2026-09-02-touchbar-shortcut.json. Not verified on real Touch Bar hardware.",
   "acceptance": [
     "On a Touch Bar Mac with the system shortcut enabled, the Welcome window lists Shift-Command-6 alongside 3, 4 and 5 as a shortcut the system is holding.",
     "On a Mac without a Touch Bar the Welcome window does not mention it.",
@@ -22,6 +22,23 @@
     {
       "t": "2026-09-02T07:18:16.588Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T09:17:51.348Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T09:21:25.158Z",
+      "note": "Adversarial review: the warning is only useful if it never fires on a Mac whose Keyboard Settings lacks the Touch Bar row (the user could not act on it), so detection errs towards false. DFRFoundation exists on every Mac (checked here on Mac16,5) and TouchBarServer runs on all of them, so neither is a signal; hw.model against the known Touch Bar models (only MacBookPro17,1 can run an arm64 build) OR hotkey id 181 present in com.apple.symbolichotkeys (this non-Touch-Bar Mac has 28/29/30/31/184 but no 181). The footer line under the card also gains what \u21e7\u23186 does, otherwise the card names a key the window never explains."
+    },
+    {
+      "t": "2026-09-02T09:21:25.158Z",
+      "note": "Wrote PhotonzCore tests first (touchBar case, conflicting(in:touchBar:), hasTouchBar(modelIdentifier:hotkeys:)), then the model, WelcomeState (reads hw.model via sysctlbyname) and the footer copy. Welcome is shared code, so Next has it."
+    },
+    {
+      "t": "2026-09-02T09:29:00.876Z",
+      "note": "Verified in the probe with a temporary harness (env vars faked the Touch Bar and the hotkey plist; ImageRenderer wrote the real WelcomeView to PNG). Three cases as designed: 3/4/5/6 held, no Touch Bar (3/4/5 only), Touch Bar with only 6 held. Fixed the footer wrapping with an orphan by making \u21e7\u23186 a deliberate second line, and made the card singular for one key. Harness removed; Scripts/test.sh green (1210 tests)."
     }
-  ]
+  ],
+  "started": "2026-09-02T09:17:51.347Z"
 }

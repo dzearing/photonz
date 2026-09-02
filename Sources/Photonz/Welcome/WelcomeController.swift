@@ -6,8 +6,8 @@ import SwiftUI
 
 /// First-run setup: a friendly window that walks through the one-time macOS
 /// settings Photonz needs — Screen Recording (required), Microphone (optional,
-/// for narrated recordings), and freeing ⇧⌘3/⇧⌘4/⇧⌘5 from the system's own
-/// screenshot shortcuts. Presented at launch until finished; reachable any
+/// for narrated recordings), and freeing ⇧⌘3/⇧⌘4/⇧⌘5 (plus ⇧⌘6 on a Touch Bar
+/// Mac) from the system's own screenshot shortcuts. Presented at launch until finished; reachable any
 /// time from the menu-bar menu and the history overlay's permission hint.
 ///
 /// "Finished" means the window was closed with Screen Recording granted (or
@@ -206,12 +206,25 @@ final class WelcomeState {
         needsRelaunch = screenRecordingGranted && !screenGrantedAtLaunch
     }
 
-    /// Which of ⇧⌘3/⇧⌘4/⇧⌘5 macOS's own screenshot shortcuts still swallow.
+    /// Which of ⇧⌘3/⇧⌘4/⇧⌘5 (and ⇧⌘6 on a Touch Bar Mac) macOS's own
+    /// screenshot shortcuts still swallow.
     private static func currentShortcutConflicts() -> [SystemScreenshotShortcuts.Shortcut] {
         let value = CFPreferencesCopyValue(
             "AppleSymbolicHotKeys" as CFString,
             "com.apple.symbolichotkeys" as CFString,
             kCFPreferencesCurrentUser, kCFPreferencesAnyHost)
-        return SystemScreenshotShortcuts.conflicting(in: value as? [String: Any])
+        let hotkeys = value as? [String: Any]
+        let touchBar = SystemScreenshotShortcuts.hasTouchBar(
+            modelIdentifier: modelIdentifier, hotkeys: hotkeys)
+        return SystemScreenshotShortcuts.conflicting(in: hotkeys, touchBar: touchBar)
     }
+
+    /// `hw.model`, e.g. "MacBookPro17,1"; empty if the kernel will not say.
+    private static let modelIdentifier: String = {
+        var size = 0
+        guard sysctlbyname("hw.model", nil, &size, nil, 0) == 0, size > 0 else { return "" }
+        var buffer = [CChar](repeating: 0, count: size)
+        guard sysctlbyname("hw.model", &buffer, &size, nil, 0) == 0 else { return "" }
+        return String(cString: buffer)
+    }()
 }

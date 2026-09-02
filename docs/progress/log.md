@@ -4570,3 +4570,9 @@ the card's left end, over the icons.
 - `WindowLister` reads `kCGWindowName`, which is only filled in for clients with the Screen Recording grant (the dev and shipping apps, not the probe). `RectSelection` composes the pill part by part in an attributed string.
 - Verified in the real overlay through a temporary harness in the probe (env var injects titled fake windows, snapshots the view's drawing; removed before commit): four cases all as designed, two snapshots kept in `queue/audits/`. Audit: `queue/audits/2026-09-02-window-highlight-title.json`.
 - Open for the playtest: trailing versus middle ellipsis, the 400 pt cap, and whether the app name still earns its place next to the title.
+
+## 2026-09-02 (go loop: Welcome warns about the Touch Bar screenshot shortcut)
+
+- **Next (shared Welcome), `measure-redline`:** on a Touch Bar Mac the Welcome window's "Free up the screenshot keys" card now lists ⇧⌘6 (macOS's "Save picture of Touch Bar as a file") beside ⇧⌘3/4/5, since it hides Edit Last Capture. The footer gained a second line saying what ⇧⌘6 does, and the card reads singular when a single key is left.
+- `SystemScreenshotShortcuts` (PhotonzCore): `Shortcut.touchBar = 181`, `conflicting(in:touchBar:)`, `hasTouchBar(modelIdentifier:hotkeys:)` (Apple's Touch Bar `hw.model` list, or id 181 present in `com.apple.symbolichotkeys`). Errs towards false: DFRFoundation and TouchBarServer exist on every Mac, so neither is a signal. 13 tests.
+- Verified through a temporary env-var harness in the probe (fake Touch Bar, fake plist, ImageRenderer snapshot of the real view; `cacheDisplay` on the hosting view draws nothing but the icon). Snapshots in `queue/audits/2026-09-02-touchbar-shortcut-*.png`; harness removed before commit. No Touch Bar Mac available, so live detection is unverified.

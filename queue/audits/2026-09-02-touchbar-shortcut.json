@@ -1,0 +1,22 @@
+{
+  "feature": "Welcome window warns about the Touch Bar screenshot shortcut",
+  "epic": "measure-redline",
+  "summary": "On a Mac with a Touch Bar, the Welcome window now lists Shift-Command-6 with 3, 4 and 5 as a key macOS still holds, so Edit Last Capture stops failing silently there. Macs without a Touch Bar see no change beyond the footer now saying what Shift-Command-6 does.",
+  "setup": "Photonz Dev, menu bar > Welcome & Permissions. Nothing to switch on. A Touch Bar Mac is needed to see the fourth key; on this machine the three snapshots came from the probe build with the machine faked, so the copy and layout are verified but the real detection on a Touch Bar Mac is not.",
+  "try": [
+    { "do": "Open Welcome & Permissions from the menu bar menu.", "shot": "2026-09-02-touchbar-shortcut-no-touchbar.png" },
+    { "do": "Read the footer under the cards: the second line explains Shift-Command-6." },
+    { "do": "If the screenshot keys card shows, check it lists only keys you can find under Keyboard Shortcuts > Screenshots." },
+    { "do": "On a Touch Bar Mac (M1 13-inch MacBook Pro), open the same window and expect Shift-Command-6 listed.", "shot": "2026-09-02-touchbar-shortcut-touchbar-all-held.png" },
+    { "do": "On that Mac, uncheck Save picture of Touch Bar as a file in Keyboard Settings and watch the card turn green within a second.", "shot": "2026-09-02-touchbar-shortcut-touchbar-only-6-held.png" }
+  ],
+  "evaluate": [
+    "Is a second footer line the right place to introduce Shift-Command-6, or does it crowd the window?",
+    "Does 'opens the last capture for editing' say what the key does better than 'Edit Last Capture' would?",
+    "On a Mac without a Touch Bar, does the window ever mention Shift-Command-6 as held by the system? It must not."
+  ],
+  "rough": [
+    "Touch Bar detection is a list of Apple's Touch Bar model identifiers plus the presence of the Touch Bar hotkey in the keyboard preferences. It was verified only by faking the machine in the probe build; no Touch Bar Mac was available.",
+    "The card's wording is now singular when only one key is held ('that key', 'uncheck it'); previously it always said 'those keys'."
+  ]
+}
