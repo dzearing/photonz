@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T09:41:37.764Z",
-  "updated": "2026-09-02T20:15:20.706700Z",
+  "updated": "2026-09-02T20:15:38.790Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked on the decision opened by the 2026-09-02 manager pass, since the user has to grant the permission by hand. dist/Photonz Probe.app (com.dzearing.photonz.probe) is signed with the stable Photonz Dev identity by Scripts/build-app.sh, so one grant survives rebuilds. Do not touch the dev app or its grants. The same denial blocks Apple Events to System Events (audit 2026-09-02-capture-menu-names rough 2), which the Accessibility or Automation grant to the loop terminal would lift.",
@@ -71,7 +71,12 @@
     {
       "t": "2026-09-02T20:15:20.706700Z",
       "note": "Note on staging: epic unmanned-loop is staged next, not now. Kept because the payoff lands on the focus epic (measure-redline audits now carry a real picture) and the user answered the decision \"grant\"."
+    },
+    {
+      "t": "2026-09-02T20:15:38.789Z",
+      "note": "Screen Recording for the probe is granted and proven: Scripts/playtest.sh wrote 13 real window captures. Scripts/probe-app.sh now prints one Grants: line every launch (probe Screen Recording granted, Ghoztty Accessibility denied), from probe-grants.json the probe writes about itself plus Scripts/permcheck.swift for the terminal, neither of which prompts. runner-prompt.md requires a real screenshot in an audit when the grant is present and plain words when it is not. Audit 2026-09-02-loop-screenshots carries a capture and the old render side by side; the render turned out to lose the whole inspector panel. Accessibility half filed as the-loop-can-read-menus-and-drive-other-apps."
     }
   ],
-  "started": "2026-09-02T20:06:55.331Z"
+  "started": "2026-09-02T20:06:55.331Z",
+  "completed": "2026-09-02T20:15:38.790Z"
 }
