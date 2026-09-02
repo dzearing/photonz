@@ -4533,3 +4533,11 @@ the card's left end, over the icons.
 - Audit: `queue/audits/2026-09-02-gap-under-label.json` with a rendered shot.
 - Still open, unchanged: the boxed-in straddle decision (the pill overhangs
   both card edges by ~5 px in a 33 px gap).
+
+## 2026-09-02 (go loop): decision opened on how far a readout may travel
+
+- Task `how-far-a-readout-may-travel-to-find-whitespace` (p3): the user has not reacted to the caliper subjects audit, so the verdict goes through a decision card with pictures instead.
+- Replayed the planner under five sideways leashes on every Gap-mode gap of the audit capture (`temp/readout-travel/Sweep.swift`, 931 gaps). 31 gaps disagree. Unbounded sends a number 1200 px across the picture, rejected without a card.
+- Finding: `maxCrossReach` is three times the chip's CROSS extent, so a vertical caliper's leash is 3 x chip width (about 280 px) against 3 x chip height (about 130 px) for a horizontal one. An 8 px gap under a row label sends its number 250 px to the right page edge today. The audit's 100 px field-to-buttons hop is inside every leash but the caliper-sized one.
+- Rendered three gaps under today's rule and a 130 px rule (`temp/readout-travel/Render.swift`, shots in `queue/audits/2026-09-02-readout-travel-*.png`). The shorter leashes land the number in worse spots on this capture because the fallback is the nearest spot along the caliper's own line.
+- Decision `how-far-a-readout-may-travel-to-find-whitespace-how-far-may-a-measurement-s-numb`: keep (recommended), even (130 px both ways), sized (leash grows with the caliper). Task blocked on it. No app code changed.

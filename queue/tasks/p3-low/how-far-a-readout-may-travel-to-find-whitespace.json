@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 460,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.592Z",
-  "updated": "2026-09-02T06:31:42.592Z",
+  "updated": "2026-09-02T08:19:07.904Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 2 and 2026-08-23-size-readout-placement rough item 2. Only worth doing after the user reacts to the audit; drop if they are happy.",
@@ -21,6 +21,35 @@
     {
       "t": "2026-09-02T06:31:42.592Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T08:10:57.622Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T08:19:07.000Z",
+      "note": "No user reaction to the caliper subjects audit yet (no reaction tasks, no decision), so the verdict has to come through a decision card with pictures."
+    },
+    {
+      "t": "2026-09-02T08:19:07.000Z",
+      "note": "Replayed the planner under five leash rules on every gap of the audit capture (temp/readout-travel/Sweep.swift, 931 gaps): 1.5, 2, 3 (today), 5 pill lengths and unbounded. 31 gaps disagree, all vertical gaps or the small horizontal gaps at the left margin. Unbounded sends the between-cards number 1200 px across the picture, so it is not an option."
+    },
+    {
+      "t": "2026-09-02T08:19:07.000Z",
+      "note": "Adversarial finding: three pill lengths means three pill WIDTHS for a vertical caliper, so the leash is about 280 px vertical versus 130 px horizontal. An 8 px gap under a row label sends its number 250 px to the right page edge today. The audit's own 100 px field-to-buttons hop is inside every leash except the caliper-sized one, so a shorter leash does not change that picture at all."
+    },
+    {
+      "t": "2026-09-02T08:19:07.000Z",
+      "note": "Rendered the three gaps through DocumentRenderer under today's rule and a 130 px rule (temp/readout-travel/Render.swift): queue/audits/2026-09-02-readout-travel-*.png. The shorter leashes land the number in worse spots on this capture (Reset's corner, between two fields with the connector through one), because the fallback is the nearest spot along the caliper's own line."
+    },
+    {
+      "t": "2026-09-02T08:19:07.000Z",
+      "note": "Opened decision how-far-a-readout-may-travel-to-find-whitespace-how-far-may-a-measurement-s-numb with a brief; recommended keeping today's leash. If keep wins, the implementation is to pin maxCrossReach in MeasureLabelPlacementTests and close. If even wins, maxCrossReach becomes 3 * chip.height for both axes; if sized wins, min(3 * cross, rawDistance + cross) with tests for a 16 px and a 300 px caliper."
+    },
+    {
+      "t": "2026-09-02T08:19:07.904Z",
+      "note": "Waiting on the decision: how far a number may travel sideways to find whitespace. Three leashes rendered on the audit capture; keeping today's three pill lengths recommended."
     }
-  ]
+  ],
+  "started": "2026-09-02T08:10:57.621Z"
 }

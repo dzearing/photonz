@@ -1,0 +1,54 @@
+{
+  "id": "how-far-a-readout-may-travel-to-find-whitespace-how-far-may-a-measurement-s-numb",
+  "taskId": "how-far-a-readout-may-travel-to-find-whitespace",
+  "question": "How far may a measurement's number travel sideways to find whitespace?",
+  "context": "A caliper's number steps off the elements its feet landed on into whitespace, on a connector. Today it may go up to three pill lengths, which on the audit capture is a 100 px hop beside Save Changes and a 250 px hop to the page edge from an 8 px gap under a row label. Shorter leashes keep the number closer but land it in worse spots on this capture. Every case is rendered in the brief.",
+  "options": [
+    {
+      "id": "keep",
+      "label": "Keep the long leash (today)",
+      "summary": "The number may step sideways up to three pill lengths to find clean whitespace, tied back to the caliper by a connector. On a dense capture that can put an 8 px gap's number 250 px away at the page edge, but it always lands on empty space.",
+      "pros": [
+        "Every number in the audit lands on clean whitespace, never on a button, a field or a row",
+        "The connector makes it obvious which caliper the number belongs to",
+        "Nothing changes for the cases you have already seen and reacted to"
+      ],
+      "cons": [
+        "A far hop can be 250 px on a dense capture, so the eye has to follow the connector",
+        "A vertical caliper's leash is over twice a horizontal one's, because the pill is wider than it is tall"
+      ],
+      "mitigation": "The connector is drawn in the caliper's own ink and the number is centred on the gap's own line, so the eye can trace it back in one move."
+    },
+    {
+      "id": "even",
+      "label": "One leash both ways, about 130 px",
+      "summary": "The leash is three pill heights whether the caliper is horizontal or vertical, so a number never travels more than about 130 px. Beyond that it takes the nearest spot along the caliper's own line, even when that is inside a neighbouring row or over a button corner.",
+      "pros": [
+        "The number always stays near its gap",
+        "Horizontal and vertical calipers behave the same"
+      ],
+      "cons": [
+        "When nothing within 130 px is clear, the number lands in a worse spot: under a row label it sits between two text fields with the connector running through one, and above Save Changes it sits on the corner of Reset",
+        "On the audit capture this changes only vertical gaps; the 100 px field-to-buttons hop stays as it is"
+      ],
+      "mitigation": "These fallbacks are the same spots a hand-dragged caliper already uses, and the number is still readable and closer to home."
+    },
+    {
+      "id": "sized",
+      "label": "The leash grows with the caliper",
+      "summary": "A tiny gap keeps its number within about one pill of itself; a long caliper may send its number further, up to three pill lengths. On the audit capture every gap is small, so this looks like the 130 px leash in every picture, but a 300 px span keeps today's reach.",
+      "pros": [
+        "Small gaps, the ones easiest to lose, keep their number closest",
+        "Long spans, which are easy to find again, keep today's freedom"
+      ],
+      "cons": [
+        "Two calipers a few pixels apart can behave differently, so the rule is harder to predict",
+        "Has the same worse fallback spots as the 130 px leash on small gaps"
+      ],
+      "mitigation": "The rule only decides how far a number MAY go; a number that can sit close always does."
+    }
+  ],
+  "recommended": "keep",
+  "status": "pending",
+  "created": "2026-09-02T08:18:25.333Z"
+}
