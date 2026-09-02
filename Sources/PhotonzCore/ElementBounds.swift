@@ -272,6 +272,70 @@ public enum ElementBounds {
         }
     }
 
+    /// How far a foot may sit from an element's painted edge and still count as
+    /// standing on it. A snapped foot lands on the clean background hugging the
+    /// element, which the antialiasing ramp or a drop shadow can put several
+    /// pixels past the boundary detection names.
+    public static let footEdgeTolerance: Double = 8
+
+    /// What a hand-drawn caliper is ABOUT: the elements its two feet landed on.
+    ///
+    /// A foot carries only a point, so this reads the element back off the
+    /// picture the way Size mode reads its neighbours: one probe just past the
+    /// foot on each side, along the measuring axis. A hit counts only when its
+    /// facing edge is at the foot (a click in the middle of a button is not a
+    /// click on its edge), and a hit the caliper runs INSIDE (a card's edge to
+    /// a button within it) is dropped, because a number cannot steer out of a
+    /// box it is standing in. Measuring one element edge to edge by hand gives
+    /// that element once, exactly what Size mode would have handed over. When
+    /// two bordered elements face each other across the caliper, the strip of
+    /// whitespace between them can read as a band of its own and come back too;
+    /// that band is the gap being measured, and keeping the number off it is
+    /// what Gap mode's head reach already does, so it is left in.
+    ///
+    /// Placement-time work only: two probes per foot, never per mouse move.
+    public static func subjects(from start: CGPoint, to end: CGPoint, mode: MeasureMode,
+                                in edges: EdgeMap, luma: LumaField,
+                                maxRadius: Double = defaultMaxRadius,
+                                spanRadius: Double = defaultSpanRadius,
+                                minElement: Double = defaultMinElement) -> [CGRect] {
+        guard !edges.isEmpty, !luma.isEmpty else { return [] }
+        let horizontal = mode == .horizontal
+        func along(_ p: CGPoint) -> CGFloat { horizontal ? p.x : p.y }
+        func alongMin(_ r: CGRect) -> CGFloat { horizontal ? r.minX : r.minY }
+        func alongMax(_ r: CGRect) -> CGFloat { horizontal ? r.maxX : r.maxY }
+        let tolerance = CGFloat(footEdgeTolerance)
+        let reach = CGFloat(neighborProbeReach)
+        let slack = CGFloat(probeSlack)
+        var found: [CGRect] = []
+        for (foot, other) in [(start, end), (end, start)] {
+            let a = along(foot), b = along(other)
+            for sign: CGFloat in [-1, 1] {
+                let probe = horizontal ? CGPoint(x: foot.x + sign * reach, y: foot.y)
+                                       : CGPoint(x: foot.x, y: foot.y + sign * reach)
+                guard probe.x >= 0, probe.y >= 0,
+                      Double(probe.x) < Double(edges.width),
+                      Double(probe.y) < Double(edges.height),
+                      let hit = detect(at: probe, in: edges, luma: luma, maxRadius: maxRadius,
+                                       spanRadius: spanRadius, minElement: minElement)
+                else { continue }
+                // The face of the hit nearest the foot has to BE the foot.
+                let facing = sign < 0 ? alongMax(hit) : alongMin(hit)
+                guard abs(facing - a) <= tolerance else { continue }
+                // The caliper may end at the hit's far edge (its own size) but
+                // not inside it: that is a container, not a subject.
+                let far = sign < 0 ? alongMin(hit) : alongMax(hit)
+                let runsInside = sign < 0 ? (b < a && far < b - tolerance)
+                                          : (b > a && far > b + tolerance)
+                guard !runsInside else { continue }
+                guard !found.contains(where: { $0.insetBy(dx: -slack, dy: -slack).contains(hit) })
+                else { continue }
+                found.append(hit)
+            }
+        }
+        return found
+    }
+
     /// How far a neighbour may bleed back over the element before it stops
     /// being a neighbour. A painted border has two flanks and detection can
     /// name either, so a couple of pixels of slop is the picture, not a nest.

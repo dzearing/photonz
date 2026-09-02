@@ -399,3 +399,139 @@ struct ElementGapTests {
         #expect(gap?.length == 40)
     }
 }
+
+/// What a hand-drawn caliper is ABOUT: the elements its two feet landed on.
+/// A foot carries only a point, so the element is read back off the picture at
+/// placement time, and the readout planner is told to stay off it the way it
+/// already stays off the element Size mode measured.
+@Suite("ElementBounds subjects of a caliper")
+struct ElementBoundsSubjectTests {
+
+    private func subjects(_ c: Capture, from start: CGPoint, to end: CGPoint,
+                          mode: MeasureMode) -> [CGRect] {
+        ElementBounds.subjects(from: start, to: end, mode: mode, in: c.map, luma: c.luma)
+    }
+
+    @Test func aCaliperBetweenTwoButtonsKnowsBothButtons() {
+        var c = Capture(w: 500, h: 200)
+        let left = CGRect(x: 60, y: 50, width: 140, height: 70)
+        let right = CGRect(x: 260, y: 50, width: 140, height: 70)
+        c.box(left, border: 90)
+        c.box(right, border: 90)
+        let found = subjects(c, from: CGPoint(x: 200, y: 85), to: CGPoint(x: 260, y: 85),
+                             mode: .horizontal)
+        #expect(found.count == 2, "\(found)")
+        expectRect(found.first { $0.midX < 230 }, left)
+        expectRect(found.first { $0.midX > 230 }, right)
+    }
+
+    @Test func aCaliperBetweenTwoStackedCardsKnowsBothCards() {
+        var c = Capture(w: 600, h: 400)
+        let top = CGRect(x: 100, y: 100, width: 400, height: 60)
+        let bottom = CGRect(x: 100, y: 184, width: 400, height: 60)
+        c.box(top, border: 90)
+        c.box(bottom, border: 90)
+        // Feet the way a foot drag lands them: on the clean background hugging
+        // each element, a pixel or two off the painted edge.
+        let found = subjects(c, from: CGPoint(x: 300, y: 161), to: CGPoint(x: 300, y: 183),
+                             mode: .vertical)
+        expectRect(found.first { $0.maxY <= 170 }, top)
+        expectRect(found.first { $0.minY >= 170 }, bottom)
+        // Two bordered cards also bound the strip of whitespace between them,
+        // which reads as a band of its own. That band is the gap being
+        // measured, so it is a fine thing for the number to stay off, but it
+        // is the only other thing that may come back.
+        let extra = found.filter { $0.maxY > 170 && $0.minY < 170 }
+        #expect(found.count - extra.count == 2, "\(found)")
+        #expect(extra.allSatisfy { $0.minY >= 155 && $0.maxY <= 190 }, "\(extra)")
+    }
+
+    @Test func theSameGapReadsTheSameSubjectsFromEitherDirection() {
+        var c = Capture(w: 500, h: 200)
+        c.box(CGRect(x: 60, y: 50, width: 140, height: 70), border: 90)
+        c.box(CGRect(x: 260, y: 50, width: 140, height: 70), border: 90)
+        let forward = subjects(c, from: CGPoint(x: 200, y: 85), to: CGPoint(x: 260, y: 85),
+                               mode: .horizontal)
+        let backward = subjects(c, from: CGPoint(x: 260, y: 85), to: CGPoint(x: 200, y: 85),
+                                mode: .horizontal)
+        #expect(Set(forward.map { "\($0)" }) == Set(backward.map { "\($0)" }))
+    }
+
+    /// Measuring one element edge to edge by hand is Size mode drawn slowly, and
+    /// it gets the same subject: that element, once.
+    @Test func anElementMeasuredEdgeToEdgeIsItsOwnSubjectOnce() {
+        var c = Capture(w: 400, h: 300)
+        let button = CGRect(x: 60, y: 50, width: 140, height: 70)
+        c.box(button, border: 90)
+        let found = subjects(c, from: CGPoint(x: 60, y: 85), to: CGPoint(x: 200, y: 85),
+                             mode: .horizontal)
+        #expect(found.count == 1, "\(found)")
+        expectRect(found.first, button)
+    }
+
+    /// A caliper from a card's edge to a button inside it runs INSIDE the card.
+    /// The number cannot steer out of a box it is standing in, so the card is
+    /// not a subject; the button is.
+    @Test func aContainerTheCaliperRunsInsideIsNotASubject() {
+        var c = Capture(w: 600, h: 500)
+        let card = CGRect(x: 20, y: 20, width: 540, height: 440)
+        let button = CGRect(x: 120, y: 120, width: 200, height: 100)
+        c.box(card, border: 180, width: 1)
+        c.box(button, border: 90)
+        let found = subjects(c, from: CGPoint(x: 20, y: 170), to: CGPoint(x: 120, y: 170),
+                             mode: .horizontal)
+        #expect(found.count == 1, "\(found)")
+        expectRect(found.first, button)
+    }
+
+    @Test func aFootOnOpenBackgroundContributesNothing() {
+        var c = Capture(w: 500, h: 200)
+        let button = CGRect(x: 60, y: 50, width: 140, height: 70)
+        c.box(button, border: 90)
+        #expect(subjects(c, from: CGPoint(x: 300, y: 85), to: CGPoint(x: 400, y: 85),
+                         mode: .horizontal).isEmpty)
+        let half = subjects(c, from: CGPoint(x: 200, y: 85), to: CGPoint(x: 400, y: 85),
+                            mode: .horizontal)
+        #expect(half.count == 1, "\(half)")
+        expectRect(half.first, button)
+    }
+
+    /// A foot dropped in the MIDDLE of a button did not snap to its edge, so
+    /// the button is not what the caliper is describing.
+    @Test func aFootInsideAnElementIsNotOnItsEdge() {
+        var c = Capture(w: 500, h: 200)
+        c.box(CGRect(x: 60, y: 50, width: 140, height: 70), border: 90)
+        #expect(subjects(c, from: CGPoint(x: 130, y: 85), to: CGPoint(x: 400, y: 85),
+                         mode: .horizontal).isEmpty)
+    }
+
+    /// The measuring line runs beside the element, not through it: nothing to
+    /// stand on, nothing read.
+    @Test func aLineDrawnPastAnElementDoesNotReadIt() {
+        var c = Capture(w: 500, h: 300)
+        c.box(CGRect(x: 60, y: 50, width: 140, height: 70), border: 90)
+        #expect(subjects(c, from: CGPoint(x: 200, y: 200), to: CGPoint(x: 300, y: 200),
+                         mode: .horizontal).isEmpty)
+    }
+
+    @Test func subjectsOfAnUnanalyzedImageAreEmpty() {
+        #expect(ElementBounds.subjects(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 90, y: 10),
+                                       mode: .horizontal, in: .empty, luma: .empty).isEmpty)
+    }
+
+    /// Two probes per foot, once per placement: nothing here runs per mouse
+    /// move, but it still has to be cheap enough to never be felt on a click.
+    @Test func readingTheSubjectsCostsFourProbes() {
+        var c = Capture(w: 2000, h: 1500)
+        c.box(CGRect(x: 900, y: 700, width: 400, height: 200), border: 90)
+        c.box(CGRect(x: 900, y: 1000, width: 400, height: 200), border: 90)
+        let map = c.map
+        let luma = c.luma
+        let start = ContinuousClock.now
+        for _ in 0..<20 {
+            _ = ElementBounds.subjects(from: CGPoint(x: 1100, y: 900), to: CGPoint(x: 1100, y: 1000),
+                                       mode: .vertical, in: map, luma: luma)
+        }
+        #expect((ContinuousClock.now - start) / 20 < .milliseconds(30))
+    }
+}

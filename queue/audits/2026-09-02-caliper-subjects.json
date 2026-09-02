@@ -1,0 +1,27 @@
+{
+  "feature": "A hand-drawn caliper keeps its number off what its feet landed on",
+  "epic": "measure-redline",
+  "summary": "A two-point Distance caliper and a Gap caliper now know which elements their feet snapped to, and the number steps off those elements into whitespace when it can, the way a Size readout already stayed off the element it measured. Before, only Size mode knew its subject, so a caliper between two buttons parked its number on one of them.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-measure-modes on (default). Open a screenshot with buttons side by side, for example the settings pane from the earlier measure audits.",
+  "try": [
+    { "do": "Press M for the Measure tool and leave it in Distance mode." },
+    { "do": "Click the right edge of the Reset button, then the left edge of Save Changes, then click just below the line to drop the head inside the button row.", "shot": "2026-09-02-caliper-subjects-buttons-hand-after.png" },
+    { "do": "Compare with how it used to land: the number sat on Save Changes.", "shot": "2026-09-02-caliper-subjects-buttons-hand-before.png" },
+    { "do": "Switch to Gap mode (I, then Gap) and hover the same space between the two buttons: the preview number sits below the buttons, and clicking commits exactly that.", "shot": "2026-09-02-caliper-subjects-buttons-gapmode-after.png" },
+    { "do": "Hover the space between the last settings row and the buttons: the number steps to the right of Save Changes, level with the gap, on a connector.", "shot": "2026-09-02-caliper-subjects-field-to-buttons-after.png" },
+    { "do": "Select a caliper and drag a foot onto a different element: the number is placed again for the new feet." },
+    { "do": "Draw a caliper between two full-width rows: the number keeps its classic spot on the line, straddling the rows, because nowhere within reach is clear." }
+  ],
+  "evaluate": [
+    "When the number steps below the two buttons, does your eye still read it as the gap's number and not the button's?",
+    "The number will travel up to three of its own heights sideways to find whitespace, on a connector. Is the 100 px hop beside Save Changes still clearly the gap's number, or is that too far?",
+    "Between two full-width rows the number stays on the line and straddles both rows. Is that the right last resort, or should it go somewhere else?",
+    "Does the Gap mode preview land exactly where the click commits, with no jump?"
+  ],
+  "rough": [
+    "A caliper whose subjects are too tall to step over within three chip heights, such as one between two full-width rows, keeps the classic on-the-line spot. Filed as a follow-up.",
+    "The sideways travel limit is a fixed rule (three chip heights). On a dense capture the connector can run 100 px, which is legible but may be further than you want. Filed as a follow-up.",
+    "A foot dropped in the middle of an element, or snapped to its center, is not on an edge, so that element is not protected. Only edges the feet stand on count.",
+    "Verified through the real render pipeline on the audit capture (before and after shots) plus a sweep of every gap on it; screen recording is not available to this session, so the live app was launched but not driven."
+  ]
+}

@@ -116,6 +116,13 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// A small extra shift along the measuring line, used to keep two nearby
     /// readouts from stacking. Zero for almost every measurement.
     public var labelNudge: CGFloat
+    /// How far off the measuring line a sideways placement pushes when the
+    /// planner had to clear what the caller said the caliper describes: the
+    /// element under a Size readout, the two elements a hand-drawn caliper's
+    /// feet landed on. Stored so drawing needs nothing from the picture; zero
+    /// for every other placement and for every document saved before it
+    /// existed. Bounded by the planner (`MeasureLabelPlanner.maxCrossReach`).
+    public var labelCrossReach: CGFloat
 
     public init(start: CGPoint = .zero, end: CGPoint = .zero,
                 headOffset: CGFloat = MeasureContent.defaultHeadOffset,
@@ -129,7 +136,8 @@ public struct MeasureContent: Hashable, Codable, Sendable {
                 role: MeasureRole = .size,
                 alignment: AlignmentCheck? = nil,
                 labelPlacement: MeasureLabelPlacement = .onLine,
-                labelNudge: CGFloat = 0) {
+                labelNudge: CGFloat = 0,
+                labelCrossReach: CGFloat = 0) {
         self.start = start
         self.end = end
         self.headOffset = headOffset
@@ -147,6 +155,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         self.alignment = alignment
         self.labelPlacement = labelPlacement
         self.labelNudge = labelNudge
+        self.labelCrossReach = labelCrossReach
     }
 
     /// Default caliper ink — the original single measure color.
@@ -163,7 +172,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         case start, end, headOffset, mode, strokeWidth, showLabel, unit, decimals, labelScale
         case role
         case alignment
-        case labelPlacement, labelNudge
+        case labelPlacement, labelNudge, labelCrossReach
         case strokeColorHex, chipColorHex, chipOpacity, textColorHex
         // Legacy keys from the pre-caliper measure model (decode-only) and the
         // pre-split single color (decode + a write-only mirror, see `encode`).
@@ -196,6 +205,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         try c.encodeIfPresent(alignment, forKey: .alignment)
         try c.encode(labelPlacement, forKey: .labelPlacement)
         try c.encode(labelNudge, forKey: .labelNudge)
+        try c.encode(labelCrossReach, forKey: .labelCrossReach)
     }
 
     /// Decodes new caliper payloads directly and **migrates** legacy measures
@@ -226,6 +236,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         labelPlacement = try c.decodeIfPresent(MeasureLabelPlacement.self,
                                                forKey: .labelPlacement) ?? .onLine
         labelNudge = try c.decodeIfPresent(CGFloat.self, forKey: .labelNudge) ?? 0
+        labelCrossReach = try c.decodeIfPresent(CGFloat.self, forKey: .labelCrossReach) ?? 0
 
         // Legacy `mode` may be "free" (no longer a case) — decode as a raw string.
         let modeString = try c.decodeIfPresent(String.self, forKey: .mode)
@@ -680,12 +691,14 @@ public enum MeasureBuilder {
     /// frame around it. The measurement itself never moves: the feet, the head,
     /// the ticks and the connector stay exactly where they were (D14 rule 5).
     public static func replanningLabel(_ layer: Layer, canvas: CGSize?,
-                                       avoiding others: [CGRect] = []) -> Layer {
+                                       avoiding others: [CGRect] = [],
+                                       describing subjects: [CGRect] = []) -> Layer {
         guard var m = layer.measure, let probe = documentSpaceContent(of: layer) else { return layer }
-        let plan = MeasureLabelPlanner.plan(for: probe, canvas: canvas, avoiding: others)
-        guard plan.placement != m.labelPlacement || plan.nudge != m.labelNudge else { return layer }
-        m.labelPlacement = plan.placement
-        m.labelNudge = plan.nudge
+        let plan = MeasureLabelPlanner.plan(for: probe, canvas: canvas, avoiding: others,
+                                            describing: subjects)
+        guard plan.placement != m.labelPlacement || plan.nudge != m.labelNudge
+                || plan.crossReach != m.labelCrossReach else { return layer }
+        m.apply(plan)
         var updated = layer
         updated.content = .measure(m)
         return updating(updated, start: probe.start, end: probe.end)

@@ -39,7 +39,7 @@ extension MeasureContent {
     }
 
     /// The cross-axis coordinate of the measuring line itself.
-    var lineCross: CGFloat { mode == .horizontal ? start.y : start.x }
+    public var lineCross: CGFloat { mode == .horizontal ? start.y : start.x }
 
     /// How far off the measuring line the thing being described actually
     /// reaches. A caliper describes the line itself; an alignment check also
@@ -80,6 +80,14 @@ extension MeasureContent {
 
     private func alongCoordinate(_ p: CGPoint) -> CGFloat { mode == .horizontal ? p.x : p.y }
 
+    /// Takes on a planner's answer in one step, so no caller can carry the
+    /// placement without the reach that goes with it.
+    public mutating func apply(_ plan: MeasureLabelPlanner.Plan) {
+        labelPlacement = plan.placement
+        labelNudge = plan.nudge
+        labelCrossReach = plan.crossReach
+    }
+
     /// The displacement the current placement asks for, from `labelAnchor`.
     /// Only the readout moves: the feet, the head, the ticks and the connector
     /// stay exactly where the measurement is (D14 rule 5).
@@ -97,9 +105,9 @@ extension MeasureContent {
         case .beforeStart:
             along -= rawDistance / 2 + halfAlong + gap
         case .clearPositive:
-            cross = max(0, subjectCrossReach + gap + halfCross - headOffset)
+            cross = max(0, max(subjectCrossReach, labelCrossReach) + gap + halfCross - headOffset)
         case .clearNegative:
-            cross = min(0, -(subjectCrossReach + gap + halfCross) - headOffset)
+            cross = min(0, -(max(subjectCrossReach, labelCrossReach) + gap + halfCross) - headOffset)
         }
         return CGPoint(x: alongUnit.x * along + crossUnit.x * cross,
                        y: alongUnit.y * along + crossUnit.y * cross)
@@ -143,7 +151,10 @@ public enum MeasureLabelPlanner {
     /// covering the subject — the same order `clearingHeadOffset` already uses
     /// when it turns a head round rather than hang the chip off the edge.
     private static let offCanvasPenalty: CGFloat = 500
-    /// A readout that covers what it is describing is disqualifying.
+    /// A readout that covers what it is describing is disqualifying, and
+    /// covering two subjects is no worse than covering one: when every spot is
+    /// on something, the number stays where you always look for it instead of
+    /// jumping to whichever spot happens to cover the least.
     private static let subjectPenalty: CGFloat = 400
     /// Covering another readout, or a neighbouring element, is bad, but not as
     /// bad as covering the subject.
@@ -156,7 +167,40 @@ public enum MeasureLabelPlanner {
     /// the closer one wins.
     private static let travelPenalty: CGFloat = 0.02
 
-    public typealias Plan = (placement: MeasureLabelPlacement, nudge: CGFloat)
+    /// `crossReach` is how far off the line a sideways placement pushes to
+    /// clear the described subjects; zero unless that placement won.
+    public typealias Plan = (placement: MeasureLabelPlacement, nudge: CGFloat,
+                             crossReach: CGFloat)
+
+    /// How far past its own line a readout will step sideways to find
+    /// whitespace: three of its own heights. Further than that the number
+    /// stops being the caliper's and the classic spot on the line, even on
+    /// top of something, is the easier read.
+    public static func maxCrossReach(for content: MeasureContent, chip: CGSize) -> CGFloat {
+        3 * (content.mode == .horizontal ? chip.height : chip.width)
+    }
+
+    /// The pushes a sideways placement may try: none, and then the far side
+    /// of each subject on that side, nearest first, as far as `maxCrossReach`
+    /// allows. Each subject's edge is its own candidate because clearing the
+    /// near one is often enough: the far one may not reach the chip at all
+    /// once a nudge slides it along.
+    private static func crossReaches(for placement: MeasureLabelPlacement,
+                                     content: MeasureContent, subjects: [CGRect],
+                                     chip: CGSize) -> [CGFloat] {
+        guard placement == .clearPositive || placement == .clearNegative,
+              !subjects.isEmpty else { return [0] }
+        let line = content.lineCross
+        let horizontal = content.mode == .horizontal
+        let limit = maxCrossReach(for: content, chip: chip)
+        let extents = subjects.map { rect -> CGFloat in
+            let lo = horizontal ? rect.minY : rect.minX
+            let hi = horizontal ? rect.maxY : rect.maxX
+            return placement == .clearPositive ? hi - line : line - lo
+        }
+        let usable = Set(extents.filter { $0 > content.subjectCrossReach && $0 <= limit })
+        return [0] + usable.sorted()
+    }
 
     /// The placement for `content`, whose feet, alignment items and `others`
     /// must all be in the same coordinate space (document space at placement
@@ -173,29 +217,34 @@ public enum MeasureLabelPlanner {
                             avoiding others: [CGRect] = [],
                             describing extraSubjects: [CGRect] = []) -> Plan {
         let chip = content.estimatedLabelSize
-        guard content.showLabel else { return (.onLine, 0) }
+        guard content.showLabel else { return (.onLine, 0, 0) }
         let subjects = content.subjectRects + extraSubjects
         let bounds = canvas.map { CGRect(origin: .zero, size: $0) }
         let step = content.chipAxisHalfExtent(chipSize: chip) + MeasureContent.chipLineGap
 
-        var best: Plan = (.onLine, 0)
+        var best: Plan = (.onLine, 0, 0)
         var bestScore = CGFloat.greatestFiniteMagnitude
         for (rank, placement) in order(for: content).enumerated() {
-            for multiple in [0, 1, -1, 2, -2] {
-                var probe = content
-                probe.labelPlacement = placement
-                probe.labelNudge = step * CGFloat(multiple)
-                let rect = probe.labelRect(chipSize: chip)
-                var score = CGFloat(rank) * rankPenalty
-                score += CGFloat(abs(multiple)) * nudgePenalty
-                score += subjectPenalty * CGFloat(subjects.filter { $0.intersects(rect) }.count)
-                score += overlapPenalty * CGFloat(others.filter { $0.intersects(rect) }.count)
-                if let bounds, !bounds.contains(rect) { score += offCanvasPenalty }
-                let offset = probe.labelOffset(chipSize: chip)
-                score += hypot(offset.x, offset.y) * travelPenalty
-                if score < bestScore {
-                    bestScore = score
-                    best = (placement, probe.labelNudge)
+            let reaches = crossReaches(for: placement, content: content, subjects: extraSubjects,
+                                       chip: chip)
+            for reach in reaches {
+                for multiple in [0, 1, -1, 2, -2] {
+                    var probe = content
+                    probe.labelPlacement = placement
+                    probe.labelNudge = step * CGFloat(multiple)
+                    probe.labelCrossReach = reach
+                    let rect = probe.labelRect(chipSize: chip)
+                    var score = CGFloat(rank) * rankPenalty
+                    score += CGFloat(abs(multiple)) * nudgePenalty
+                    if subjects.contains(where: { $0.intersects(rect) }) { score += subjectPenalty }
+                    score += overlapPenalty * CGFloat(others.filter { $0.intersects(rect) }.count)
+                    if let bounds, !bounds.contains(rect) { score += offCanvasPenalty }
+                    let offset = probe.labelOffset(chipSize: chip)
+                    score += hypot(offset.x, offset.y) * travelPenalty
+                    if score < bestScore {
+                        bestScore = score
+                        best = (placement, probe.labelNudge, reach)
+                    }
                 }
             }
         }

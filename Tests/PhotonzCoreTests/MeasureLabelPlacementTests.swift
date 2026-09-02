@@ -115,6 +115,68 @@ struct MeasureLabelPlacementTests {
         #expect(rects.contains { $0.contains(CGPoint(x: 130, y: 300)) })
     }
 
+    // MARK: - What a hand-drawn caliper describes
+
+    /// Two short elements either side of a caliper drawn through their middle,
+    /// head 10 px below the line: nowhere on the line is clear, so the number
+    /// steps down past both elements, and the plan carries the reach it took.
+    @Test func aCaliperBetweenTwoShortElementsDropsItsNumberBelowThem() {
+        // The elements reach over the caliper's ends, so the chip cannot sit
+        // between them either.
+        let m = caliper(headOffset: 10)
+        let left = CGRect(x: 0, y: 270, width: 180, height: 60)
+        let right = CGRect(x: 220, y: 270, width: 280, height: 60)
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: CGSize(width: 500, height: 600),
+                                            describing: [left, right])
+        #expect(plan.placement == .clearPositive)
+        #expect(plan.crossReach == 30)
+        var placed = m
+        placed.apply(plan)
+        let rect = placed.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(rect.minY >= 330, "\(rect)")
+        #expect(!rect.intersects(left))
+        #expect(!rect.intersects(right))
+    }
+
+    /// The same, drawn between two tall columns: clearing them would carry the
+    /// number hundreds of pixels sideways, so it stays where it always has.
+    @Test func aBoxedInCaliperKeepsTheClassicSpot() {
+        // The columns reach over the caliper's ends, leaving a 40 px slot no
+        // chip fits in, and run the full height of the picture.
+        let m = caliper(headOffset: 10)
+        let left = CGRect(x: 0, y: 0, width: 180, height: 600)
+        let right = CGRect(x: 220, y: 0, width: 280, height: 600)
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: CGSize(width: 500, height: 600),
+                                            describing: [left, right])
+        #expect(plan.placement == .onLine)
+        #expect(plan.nudge == 0)
+        #expect(plan.crossReach == 0)
+    }
+
+    /// A reach the planner did not take is not stored, so an ordinary caliper
+    /// draws exactly as it did before the field existed.
+    @Test func aClearCaliperCarriesNoReach() {
+        let plan = MeasureLabelPlanner.plan(for: caliper(), canvas: CGSize(width: 800, height: 800))
+        #expect(plan.placement == .onLine)
+        #expect(plan.crossReach == 0)
+    }
+
+    @Test func theReachSurvivesARoundTripAndDefaultsToZero() throws {
+        var m = caliper()
+        m.labelPlacement = .clearPositive
+        m.labelCrossReach = 30
+        let data = try JSONEncoder().encode(m)
+        let back = try JSONDecoder().decode(MeasureContent.self, from: data)
+        #expect(back.labelCrossReach == 30)
+        #expect(back.labelRect(chipSize: chip) == m.labelRect(chipSize: chip))
+        // A document saved before the field existed.
+        var json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+        json.removeValue(forKey: "labelCrossReach")
+        let old = try JSONDecoder().decode(
+            MeasureContent.self, from: JSONSerialization.data(withJSONObject: json))
+        #expect(old.labelCrossReach == 0)
+    }
+
     // MARK: - The planner
 
     /// The bug this task exists for: the verdict must not land on the rows.
@@ -122,8 +184,7 @@ struct MeasureLabelPlacementTests {
         let m = alignment()
         let plan = MeasureLabelPlanner.plan(for: m, canvas: CGSize(width: 800, height: 800))
         var placed = m
-        placed.labelPlacement = plan.placement
-        placed.labelNudge = plan.nudge
+        placed.apply(plan)
         let rect = placed.labelRect(chipSize: m.estimatedLabelSize)
         for subject in m.subjectRects {
             #expect(!rect.intersects(subject))
@@ -141,8 +202,7 @@ struct MeasureLabelPlacementTests {
         let canvas = CGSize(width: 400, height: 400)
         let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas)
         var placed = m
-        placed.labelPlacement = plan.placement
-        placed.labelNudge = plan.nudge
+        placed.apply(plan)
         let rect = placed.labelRect(chipSize: m.estimatedLabelSize)
         #expect(CGRect(origin: .zero, size: canvas).contains(rect))
         for subject in m.subjectRects { #expect(!rect.intersects(subject)) }
@@ -161,8 +221,7 @@ struct MeasureLabelPlacementTests {
         let m = caliper(headOffset: 3)
         let plan = MeasureLabelPlanner.plan(for: m, canvas: CGSize(width: 800, height: 800))
         var placed = m
-        placed.labelPlacement = plan.placement
-        placed.labelNudge = plan.nudge
+        placed.apply(plan)
         let rect = placed.labelRect(chipSize: m.estimatedLabelSize)
         for subject in m.subjectRects { #expect(!rect.intersects(subject)) }
     }
@@ -177,8 +236,7 @@ struct MeasureLabelPlacementTests {
         let plan = MeasureLabelPlanner.plan(for: second, canvas: CGSize(width: 800, height: 800),
                                             avoiding: [firstRect])
         var placed = second
-        placed.labelPlacement = plan.placement
-        placed.labelNudge = plan.nudge
+        placed.apply(plan)
         let rect = placed.labelRect(chipSize: second.estimatedLabelSize)
         #expect(!rect.intersects(firstRect))
     }
@@ -196,8 +254,7 @@ struct MeasureLabelPlacementTests {
                                headOffset: -31, mode: .horizontal)
         let canvas = CGSize(width: 800, height: 400)
         let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas, describing: [element])
-        m.labelPlacement = plan.placement
-        m.labelNudge = plan.nudge
+        m.apply(plan)
         let rect = m.labelRect(chipSize: m.estimatedLabelSize)
         #expect(!rect.intersects(element), "the readout sits on the element it measured: \(rect)")
         #expect(CGRect(origin: .zero, size: canvas).contains(rect))
@@ -214,8 +271,7 @@ struct MeasureLabelPlacementTests {
         let canvas = CGSize(width: 800, height: 400)
         let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas, avoiding: [below],
                                             describing: [element])
-        m.labelPlacement = plan.placement
-        m.labelNudge = plan.nudge
+        m.apply(plan)
         let rect = m.labelRect(chipSize: m.estimatedLabelSize)
         #expect(!rect.intersects(below), "the readout sits on the neighbour: \(rect)")
         #expect(!rect.intersects(element))
@@ -237,22 +293,39 @@ struct MeasureLabelPlacementTests {
         #expect(after.placement == .onLine)
     }
 
-    /// A full-bleed element flush with the bottom has nowhere clear at all:
-    /// every spot is either on the element or off the picture. The last resort
-    /// is the one you can still read - the number stays whole and on the
-    /// picture, exactly where it is today, rather than jumping off the edge.
-    @Test func aReadoutWithNowhereClearStaysWholeAndOnThePicture() {
+    /// A full-bleed bar flush with the bottom: nowhere along the line is clear
+    /// and past either end is off the picture, but the bar is short enough
+    /// that the number can step up over it, so it does, whole and on the
+    /// picture, rather than sit on the bar or run off the edge.
+    @Test func aReadoutOnAShortFullBleedBarStepsUpOverIt() {
         let canvas = CGSize(width: 800, height: 400)
         let element = CGRect(x: 0, y: 300, width: 800, height: 100)
         var m = MeasureContent(start: CGPoint(x: element.minX, y: element.maxY),
                                end: CGPoint(x: element.maxX, y: element.maxY),
                                headOffset: -31, mode: .horizontal)
+        m.apply(MeasureLabelPlanner.plan(for: m, canvas: canvas, describing: [element]))
+        let rect = m.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(CGRect(origin: .zero, size: canvas).contains(rect), "the readout ran off the picture: \(rect)")
+        #expect(!rect.intersects(element), "the readout sits on the bar: \(rect)")
+        #expect(m.labelPlacement == .clearNegative)
+    }
+
+    /// A full-bleed element too tall to step over has nowhere clear at all:
+    /// every spot is either on the element or off the picture. The last resort
+    /// is the one you can still read - the number stays whole and on the
+    /// picture, exactly where it is today, rather than jumping off the edge.
+    @Test func aReadoutWithNowhereClearStaysWholeAndOnThePicture() {
+        let canvas = CGSize(width: 800, height: 400)
+        let element = CGRect(x: 0, y: 0, width: 800, height: 400)
+        var m = MeasureContent(start: CGPoint(x: element.minX, y: element.maxY),
+                               end: CGPoint(x: element.maxX, y: element.maxY),
+                               headOffset: -31, mode: .horizontal)
         let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas, describing: [element])
-        m.labelPlacement = plan.placement
-        m.labelNudge = plan.nudge
+        m.apply(plan)
         let rect = m.labelRect(chipSize: m.estimatedLabelSize)
         #expect(CGRect(origin: .zero, size: canvas).contains(rect), "the readout ran off the picture: \(rect)")
         #expect(plan.placement == .onLine, "it jumped instead of staying put: \(plan.placement)")
+        #expect(plan.crossReach == 0)
     }
 
     // MARK: - Moving a label never moves the measurement (D14 rule 5)

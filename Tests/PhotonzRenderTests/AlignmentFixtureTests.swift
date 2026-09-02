@@ -55,8 +55,7 @@ struct AlignmentFixtureTests {
         let plan = MeasureLabelPlanner.plan(for: content,
                                             canvas: CGSize(width: Self.edges.width,
                                                            height: Self.edges.height))
-        content.labelPlacement = plan.placement
-        content.labelNudge = plan.nudge
+        content.apply(plan)
         return (content, start, end)
     }
 

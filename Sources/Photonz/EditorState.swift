@@ -923,8 +923,19 @@ final class EditorState {
         let plan = MeasureLabelPlanner.plan(for: probe, canvas: document?.canvasSize,
                                             avoiding: placedReadoutRects() + extra,
                                             describing: subjects)
-        content.labelPlacement = plan.placement
-        content.labelNudge = plan.nudge
+        content.apply(plan)
+    }
+
+    /// The elements a caliper's feet landed on, read off the capture once, at
+    /// placement time, so the readout can stay off them the way a Size readout
+    /// stays off the element it measured (UX-PATTERNS D14). Two probes per
+    /// foot on a click or a handle release; nothing runs per mouse move.
+    private func caliperSubjects(from start: CGPoint, to end: CGPoint,
+                                 mode: MeasureMode) -> [CGRect] {
+        let scale = document?.pixelScale ?? 1
+        return ElementBounds.subjects(from: start, to: end, mode: mode,
+                                      in: snappingEdgeMap, luma: measureLumaField,
+                                      minElement: max(10, 10 * scale))
     }
 
     /// Completed 3-click caliper placement: add the dimension layer with the
@@ -935,7 +946,10 @@ final class EditorState {
         var content = measureStyle
         content.mode = mode
         content.headOffset = headOffset
-        planReadout(&content, from: start, to: end)
+        // A hand-drawn caliper knows what its feet landed on, so its number
+        // stays off those elements and not just off its own thin line.
+        planReadout(&content, from: start, to: end,
+                    describing: caliperSubjects(from: start, to: end, mode: mode))
         var layer = MeasureBuilder.layer(content: content, from: start, to: end)
         // Inherit the last caliper's non-destructive effects (a drop shadow added
         // in Effects carries to the next measure), like annotations do per shape.
@@ -1013,7 +1027,9 @@ final class EditorState {
         // itself — a pill parked on a 12 px space hides the very thing measured.
         content.headOffset = MeasureBuilder.clearingHeadOffset(content: content, from: gap.start,
                                                                to: gap.end, canvas: canvas)
-        planReadout(&content, from: gap.start, to: gap.end)
+        // The two elements bounding the gap are what the number must stay off.
+        planReadout(&content, from: gap.start, to: gap.end,
+                    describing: caliperSubjects(from: gap.start, to: gap.end, mode: gap.axis))
         var layer = MeasureBuilder.layer(content: content, from: gap.start, to: gap.end)
         layer.style = measureStyles.layerStyle
         perform { $0.addLayer(layer) }
@@ -1481,11 +1497,18 @@ final class EditorState {
         previewMove = nil
         let others = placedReadoutRects(excluding: id)
         let canvas = document?.canvasSize
+        // The feet may have moved onto different elements, so they are read
+        // again; an alignment guide's subjects are its own checked runs.
+        let subjects: [CGRect] = {
+            guard let m = document?.layer(id: id)?.measure, m.alignment == nil else { return [] }
+            return caliperSubjects(from: start, to: end, mode: m.mode)
+        }()
         perform {
             $0.updateLayer(id: id) {
                 $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset)
                 // The measurement moved, so where its readout can sit changed.
-                $0 = MeasureBuilder.replanningLabel($0, canvas: canvas, avoiding: others)
+                $0 = MeasureBuilder.replanningLabel($0, canvas: canvas, avoiding: others,
+                                                    describing: subjects)
             }
         }
     }

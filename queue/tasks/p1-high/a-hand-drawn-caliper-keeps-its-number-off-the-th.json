@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:57.076Z",
-  "updated": "2026-09-02T05:50:57.076Z",
+  "updated": "2026-09-02T06:32:30.974Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MeasureLabelPlanner.plan(..., describing:) already takes subject rects and EditorState.addElementSize passes them for Size mode. For Distance, resolve ElementBounds.detect at each foot (the element whose edge the foot snapped to) at placement time in EditorState and store nothing new in the model; the planner already re-runs on endpoint commit. Rough items this comes from: queue/audits/2026-08-23-size-readout-placement.json ('Only Size mode knows what it measured') and 2026-08-23-measure-edge-readout.json ('A caliper only protects its own thin measuring line'). Shared placement code, so Current benefits too; note it in the log.",
@@ -24,6 +24,36 @@
     {
       "t": "2026-09-02T05:50:57.076Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T06:11:10.964Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T06:15:08.091Z",
+      "note": "Pre-build review. (1) Nothing new for a first-time user to learn: the only visible change is that a hand-drawn or Gap caliper number lands beside the whitespace instead of on the row or button a foot snapped to; no new control, no new gesture. (2) What the feet know: a foot only carries a point, not the edge it snapped to, so the element is re-read from the picture at placement time with a probe 12 px either side of each foot along the measuring axis (the same probe Size mode uses for neighbours); a hit counts only when its facing edge sits at the foot, so a free click in the middle of a button does not make the button a subject, and a container the caliper runs INSIDE (card edge to a button inside it) is dropped because a number cannot steer out of a box it stands in; measuring one element edge to edge by hand yields that element, the exact Size-mode case. (3) Shortest version: a pure ElementBounds.subjects(from:to:mode:in:luma:) in PhotonzCore, handed to the planner through the existing describing: parameter at the three placement sites (Distance commit, Gap commit, endpoint drag commit) and the Gap hover preview (cached per gap so a mouse move costs nothing new); nothing stored in the model. (4) Known limit going in: a caliper between two full-width rows is boxed in on every side just like Size mode on a full-width row, the planner keeps the classic on-the-line spot rather than fly the number 300 px sideways; that stays a rough item, not a guess."
+    },
+    {
+      "t": "2026-09-02T06:15:08.091Z",
+      "note": "Shared placement code: EditorState.addMeasure and the planner are shared, so Current gets the same steering. Next needs nothing carried by hand."
+    },
+    {
+      "t": "2026-09-02T06:31:42.615Z",
+      "note": "Built. PhotonzCore: ElementBounds.subjects(from:to:mode:in:luma:) reads the element at each foot (two probes per foot, facing edge at the foot, containers the caliper runs inside dropped; the whitespace band between two bordered elements may come back too and is kept as the gap itself). Planner: covering any subject is one flat penalty so a boxed-in number keeps the classic spot instead of jumping onto whichever element it covers least; clearPositive/clearNegative may now push past the described subjects (each subject edge is a candidate reach, capped at three chip heights, MeasureLabelPlanner.maxCrossReach) and the winning reach is stored as MeasureContent.labelCrossReach (Codable, defaults 0) so drawing needs nothing from the picture; MeasureContent.apply(plan) is the one way to take a plan. App: EditorState.addMeasure, addGapMeasure and commitMeasureEndpoints hand subjects to the planner; CanvasView gap preview does too, cached per gap so a mouse move inside one gap costs no detection."
+    },
+    {
+      "t": "2026-09-02T06:31:42.615Z",
+      "note": "Verified: Scripts/test.sh green (1132 tests). New: 10 ElementBoundsSubjectTests, 4 planner tests, 3 fixture tests including a sweep of every gap on the audit capture with three head positions each (no readout on an element its feet landed on where any spot in the planner vocabulary is clear). Existing test helpers that copied placement and nudge by hand now use apply(plan). Before/after proof rendered through DocumentRenderer on the audit capture: temp/caliper-subjects/Render.swift, shots copied to queue/audits/2026-09-02-caliper-subjects-*.png."
+    },
+    {
+      "t": "2026-09-02T06:31:42.615Z",
+      "note": "Post-build review: the number between two buttons now sits below them centred on the gap, which reads as the gap number; the vertical gap between the field row and the buttons sends the number 100 px right on a connector, legible but the travel limit is a fixed rule and is a rough item; between two full-width rows nothing within reach is clear and the classic straddle stays. Two follow-up tasks filed (p3-low) for those. Audit: queue/audits/2026-09-02-caliper-subjects.json."
+    },
+    {
+      "t": "2026-09-02T06:32:30.974Z",
+      "note": "Distance and Gap calipers hand the elements their feet landed on to the readout planner (ElementBounds.subjects, placement time only, gap preview cached per gap); the planner steps the number past those elements within three chip heights and keeps the classic spot when boxed in; reach stored as MeasureContent.labelCrossReach. Scripts/test.sh green (1132), sweep of every gap on the audit capture added, before/after rendered through DocumentRenderer, probe app launched with the capture. Audit queue/audits/2026-09-02-caliper-subjects.json; two p3 follow-ups filed."
     }
-  ]
+  ],
+  "started": "2026-09-02T06:11:10.963Z",
+  "completed": "2026-09-02T06:32:30.974Z"
 }

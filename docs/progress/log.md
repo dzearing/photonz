@@ -4405,3 +4405,35 @@ Audit: `queue/audits/2026-09-02-alignment-guide-row.json`.
 Next: a real playtest of the side inference on captures with buttons and cards
 (padding wider than 20px reads as "no side"), and whether "Vertical edges" is
 the right fallback wording.
+
+## 2026-09-02 — A hand-drawn caliper keeps its number off what its feet landed on
+
+Queue task `a-hand-drawn-caliper-keeps-its-number-off-the-th` (epic measure-redline, Next).
+Only Size mode knew its subject; a Distance or Gap caliper protected its own thin
+line, so its number could park on a neighbouring button or row.
+
+- `ElementBounds.subjects(from:to:mode:in:luma:)` (PhotonzCore) reads the element
+  at each foot at placement time: two probes per foot along the measuring axis,
+  a hit counts only when its facing edge is at the foot, a container the caliper
+  runs inside is dropped, an element measured edge to edge comes back once. The
+  whitespace band between two bordered elements can read as a band and is kept
+  (it is the gap being measured).
+- Planner: covering any subject is one flat penalty (a boxed-in number keeps the
+  classic spot rather than jumping onto whichever element it covers least), and
+  `clearPositive`/`clearNegative` may now push past the described subjects, each
+  subject edge a candidate reach, capped at `MeasureLabelPlanner.maxCrossReach`
+  (three chip heights). The winning reach is stored as
+  `MeasureContent.labelCrossReach` (Codable, defaults 0, legacy docs unchanged)
+  so drawing needs nothing from the picture. `MeasureContent.apply(plan)` is the
+  one way to take a plan; copying placement and nudge by hand silently drops the
+  reach (three test helpers did exactly that).
+- App: `EditorState.addMeasure`, `addGapMeasure`, `commitMeasureEndpoints` hand
+  subjects to the planner; the Gap hover preview does too, cached per gap so a
+  mouse move inside one gap costs no detection. Shared code, so Current gets it.
+
+Tests: 10 `ElementBoundsSubjectTests`, 4 planner tests, 3 fixture tests
+including a sweep of every gap on the audit capture. Full suite green (1132).
+Proof shots rendered through `DocumentRenderer` (`temp/caliper-subjects/Render.swift`,
+compiled against `.build/debug` objects). Audit:
+`queue/audits/2026-09-02-caliper-subjects.json`. Follow-ups filed (p3-low): the
+boxed-in full-width-rows case, and tuning the sideways travel limit.

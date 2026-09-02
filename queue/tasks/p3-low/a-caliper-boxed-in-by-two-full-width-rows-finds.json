@@ -1,0 +1,26 @@
+{
+  "id": "a-caliper-boxed-in-by-two-full-width-rows-finds",
+  "title": "A caliper boxed in by two full-width rows finds a better home for its number than straddling them",
+  "goal": "When you measure the space between two rows that run the full width of the picture, the number has nowhere clear within reach and stays on the line, covering a bit of both rows. Decide with the user what the better last resort is, for example tucking it in the page margin or past the rows on a longer connector.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 450,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T06:31:42.562Z",
+  "updated": "2026-09-02T06:31:42.563Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 1. MeasureLabelPlanner.maxCrossReach caps sideways travel at three chip heights; the boxed-in fallback is the flat subjectPenalty tie-break to .onLine. Same limit shows up for Size mode on a full-width row (2026-08-23-size-readout-placement rough item 1).",
+  "acceptance": [
+    "A decision card offers the user two or three visible options for the boxed-in case with rendered examples on the audit capture.",
+    "The chosen option is implemented in Next and the callout clearance sweep covers it."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T06:31:42.563Z",
+      "note": "created (manual)"
+    }
+  ]
+}

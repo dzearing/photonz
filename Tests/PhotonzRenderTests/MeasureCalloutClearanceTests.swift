@@ -41,8 +41,7 @@ struct MeasureCalloutClearanceTests {
         probe.start = start
         probe.end = end
         let plan = MeasureLabelPlanner.plan(for: probe, canvas: Self.canvas)
-        probe.labelPlacement = plan.placement
-        probe.labelNudge = plan.nudge
+        probe.apply(plan)
         return probe
     }
 
@@ -108,8 +107,7 @@ struct MeasureCalloutClearanceTests {
             c.end = feet.1
             let plan = MeasureLabelPlanner.plan(for: c, canvas: Self.canvas, avoiding: others,
                                                 describing: [rect])
-            c.labelPlacement = plan.placement
-            c.labelNudge = plan.nudge
+            c.apply(plan)
             return c
         }
         let around = neighbors ?? []
@@ -298,8 +296,7 @@ struct MeasureCalloutClearanceTests {
             probe.start = feet.0
             probe.end = feet.1
             let plan = MeasureLabelPlanner.plan(for: probe, canvas: Self.canvas, avoiding: others)
-            probe.labelPlacement = plan.placement
-            probe.labelNudge = plan.nudge
+            probe.apply(plan)
             return probe
         }
         let w = placed(width, widthFeet, avoiding: [])
@@ -311,5 +308,136 @@ struct MeasureCalloutClearanceTests {
         // Neither covers the button they are measuring.
         #expect(!wRect.intersects(rect))
         #expect(!hRect.intersects(rect))
+    }
+
+    // MARK: - Distance and Gap: the number stays off what the feet landed on
+
+    /// A hand-drawn caliper placed the way `EditorState.addMeasure` places it:
+    /// the elements at its feet are read off the capture and handed to the
+    /// planner as what the caliper describes.
+    private func caliper(from start: CGPoint, to end: CGPoint, mode: MeasureMode,
+                         headOffset: CGFloat) -> (content: MeasureContent, subjects: [CGRect]) {
+        let subjects = ElementBounds.subjects(from: start, to: end, mode: mode,
+                                              in: Self.analysis.edges, luma: Self.analysis.luma)
+        var c = MeasureContent(mode: mode, unit: .points)
+        c.headOffset = headOffset
+        c.start = start
+        c.end = end
+        c.apply(MeasureLabelPlanner.plan(for: c, canvas: Self.canvas, describing: subjects))
+        return (c, subjects)
+    }
+
+    /// Whether any spot in the planner's vocabulary (its placements, its
+    /// nudges, its bounded sideways reach) keeps the chip whole on the capture
+    /// and off every subject. Where none does, the classic spot is the answer
+    /// and the sweep below does not count it against the planner.
+    private func clearSpotExists(for content: MeasureContent, subjects: [CGRect]) -> Bool {
+        let chip = content.estimatedLabelSize
+        let step = content.chipAxisHalfExtent(chipSize: chip) + MeasureContent.chipLineGap
+        let bounds = CGRect(origin: .zero, size: Self.canvas)
+        let limit = MeasureLabelPlanner.maxCrossReach(for: content, chip: chip)
+        let line = content.lineCross
+        let horizontal = content.mode == .horizontal
+        // The far side of each subject, either way, as far as the planner is
+        // allowed to go.
+        let reaches = [CGFloat(0)] + subjects.flatMap { rect -> [CGFloat] in
+            let lo = horizontal ? rect.minY : rect.minX
+            let hi = horizontal ? rect.maxY : rect.maxX
+            return [hi - line, line - lo]
+        }.filter { $0 > 0 && $0 <= limit }
+        for placement in MeasureLabelPlacement.allCases {
+            for multiple in [0, 1, -1, 2, -2] {
+                for cross in reaches {
+                    var probe = content
+                    probe.labelPlacement = placement
+                    probe.labelNudge = step * CGFloat(multiple)
+                    probe.labelCrossReach = cross
+                    let rect = probe.labelRect(chipSize: chip)
+                    if bounds.contains(rect), !subjects.contains(where: { $0.intersects(rect) }) {
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+    /// The whitespace between the Reset and Save Changes buttons, read the way
+    /// Gap mode reads it.
+    private var buttonGap: GapMeasurement? {
+        // Reset ends at x 208 and Save Changes starts at 232.
+        ElementBounds.gap(at: CGPoint(x: 220, y: 786), in: Self.analysis.edges)
+    }
+
+    @Test func aCaliperAcrossTheGapBetweenTwoButtonsKnowsBothButtons() {
+        guard let gap = buttonGap, gap.axis == .horizontal else {
+            Issue.record("no horizontal gap read between the buttons")
+            return
+        }
+        let subjects = ElementBounds.subjects(from: gap.start, to: gap.end, mode: gap.axis,
+                                              in: Self.analysis.edges, luma: Self.analysis.luma)
+        #expect(subjects.contains { $0.maxX <= gap.start.x + 8 && $0.width > 100 },
+                "Reset was not seen: \(subjects)")
+        #expect(subjects.contains { $0.minX >= gap.end.x - 8 && $0.width > 200 },
+                "Save Changes was not seen: \(subjects)")
+    }
+
+    /// The exact misread this exists for: a hand-drawn caliper across that gap
+    /// with its head dropped a little below the line lands its number ON Save
+    /// Changes, where it reads as that button's width. Now it steps below both
+    /// buttons instead.
+    @Test func aHandDrawnCaliperBetweenTwoButtonsKeepsItsNumberOffBoth() {
+        guard let gap = buttonGap, gap.axis == .horizontal else {
+            Issue.record("no horizontal gap read between the buttons")
+            return
+        }
+        let drawn = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: 12)
+        let chip = drawn.content.labelRect(chipSize: drawn.content.estimatedLabelSize)
+        for subject in drawn.subjects {
+            #expect(!chip.intersects(subject), "the number sits on a button: \(chip) vs \(subject)")
+        }
+        #expect(CGRect(origin: .zero, size: Self.canvas).contains(chip))
+        // And it did not fly off somewhere: it is just below the buttons.
+        #expect(chip.minY > 816 && chip.minY < 816 + 40, "\(chip)")
+    }
+
+    /// Every gap Gap mode can read anywhere on the capture, measured with the
+    /// head Gap mode commits and with a hand-placed head on either side: no
+    /// readout may sit on an element its feet landed on when any spot in the
+    /// planner's vocabulary is clear.
+    @Test func noCaliperAnywhereOnTheCaptureParksItsNumberOnWhatItsFeetLandedOn() {
+        var seen = Set<String>()
+        var gaps: [GapMeasurement] = []
+        for x in stride(from: CGFloat(20), through: 1420, by: 40) {
+            for y in stride(from: CGFloat(20), through: 940, by: 40) {
+                guard let gap = ElementBounds.gap(at: CGPoint(x: x, y: y), in: Self.analysis.edges),
+                      gap.length >= 4 else { continue }
+                let key = "\(gap.axis)|\(gap.start)|\(gap.end)"
+                if seen.insert(key).inserted { gaps.append(gap) }
+            }
+        }
+        #expect(!gaps.isEmpty)
+        var protected = 0
+        var offenders: [String] = []
+        for gap in gaps {
+            var ink = MeasureContent(mode: gap.axis, unit: .points)
+            ink.mode = gap.axis
+            let gapHead = MeasureBuilder.clearingHeadOffset(content: ink, from: gap.start,
+                                                            to: gap.end, canvas: Self.canvas)
+            for head in [gapHead, 16, -16] {
+                let drawn = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head)
+                guard !drawn.subjects.isEmpty else { continue }
+                protected += 1
+                let chip = drawn.content.labelRect(chipSize: drawn.content.estimatedLabelSize)
+                guard drawn.subjects.contains(where: { chip.intersects($0) }),
+                      clearSpotExists(for: drawn.content, subjects: drawn.subjects) else { continue }
+                if offenders.count < 8 {
+                    offenders.append("\(gap.axis) \(gap.start)->\(gap.end) head=\(head) "
+                                     + "chip=\(chip) placement=\(drawn.content.labelPlacement)")
+                }
+            }
+        }
+        #expect(protected > 0, "no gap on the capture had elements at its feet")
+        #expect(offenders.isEmpty, "readouts on what their feet landed on: \(offenders)")
     }
 }

@@ -436,6 +436,9 @@ final class CanvasNSView: NSView {
     /// into another element, so the answer is kept until it does.
     private var measureElementNeighbors: [CGRect] = []
     private var measureNeighborCache: (rect: CGRect, reach: CGFloat, neighbors: [CGRect])?
+    /// The two elements bounding the gap under the pointer, kept until the gap
+    /// itself changes so a mouse move inside one gap costs no detection.
+    private var measureGapSubjectCache: (gap: GapMeasurement, subjects: [CGRect])?
     /// The gap Gap mode is previewing right now, same contract.
     private var measureGapPreview: GapMeasurement?
     /// Alignment mode (Next `next-measure-align`): whether Measure drags draw a
@@ -1226,12 +1229,27 @@ final class CanvasNSView: NSView {
         hoverHeightCaliperLayer.isHidden = true
         var ink = style
         ink.mode = gap.axis
+        // The readout is told which two elements bound the gap, exactly as the
+        // click will tell it, so the preview never lies about where it lands.
         layoutHoverCaliper(hoverWidthCaliperLayer, sprite: &hoverWidthSprite,
                            style: style, mode: gap.axis,
                            from: gap.start, to: gap.end,
                            headOffset: MeasureBuilder.clearingHeadOffset(
                                content: ink, from: gap.start, to: gap.end, canvas: canvas),
-                           viewport: viewport, pixelScale: pixelScale)
+                           viewport: viewport, pixelScale: pixelScale,
+                           describing: subjects(of: gap, pixelScale: pixelScale))
+    }
+
+    /// The elements on either side of `gap`, read once per gap rather than per
+    /// mouse move: the pointer wanders inside one gap for many events and the
+    /// answer cannot change until the gap does.
+    private func subjects(of gap: GapMeasurement, pixelScale: CGFloat) -> [CGRect] {
+        if let cached = measureGapSubjectCache, cached.gap == gap { return cached.subjects }
+        let found = ElementBounds.subjects(from: gap.start, to: gap.end, mode: gap.axis,
+                                           in: edgeMap, luma: lumaField,
+                                           minElement: max(10, 10 * pixelScale))
+        measureGapSubjectCache = (gap, found)
+        return found
     }
 
     /// Positions one transient caliper layer, rasterizing through the same
@@ -1257,16 +1275,14 @@ final class CanvasNSView: NSView {
         let plan = MeasureLabelPlanner.plan(for: probe, canvas: viewport.documentSize,
                                             avoiding: placedReadoutRects() + extra,
                                             describing: subjects)
-        content.labelPlacement = plan.placement
-        content.labelNudge = plan.nudge
-        probe.labelPlacement = plan.placement
-        probe.labelNudge = plan.nudge
+        content.apply(plan)
+        probe.apply(plan)
         let readout = probe.labelRect(chipSize: probe.estimatedLabelSize)
         let built = MeasureBuilder.layer(content: content, from: start, to: end)
         let key = "\(mode.rawValue)|\(start)|\(end)|\(style.unit.rawValue)|\(style.decimals)|"
             + "\(style.strokeColorHex)|\(style.chipColorHex)|\(style.textColorHex)|"
             + "\(style.labelScale)|\(style.strokeWidth)|\(pixelScale)|"
-            + "\(plan.placement.rawValue)|\(plan.nudge)"
+            + "\(plan.placement.rawValue)|\(plan.nudge)|\(plan.crossReach)"
         if sprite?.key != key {
             guard let measure = built.measure,
                   let image = MeasureRasterizer.rasterize(measure, size: built.frame.size,
