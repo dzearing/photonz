@@ -5,11 +5,11 @@
   "epic": "loop-robustness",
   "priority": "p2-normal",
   "seq": 590,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T19:46:19.021Z",
-  "updated": "2026-09-02T19:56:29.450Z",
+  "updated": "2026-09-02T19:56:50.682Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Root cause: queue/bin/queue-lib.mjs resolveDecision() clears blockedBy and flips status blocked -> pending for ANY choice, and nothing downstream reads answer.choice. Hit live on 2026-09-02: task point-at-a-color-and-its-value-joins-the-spec was answered later (do not build) at 15:10 and was claimed by the runner at 19:45. Suggested shape: let an option carry a decline marker (e.g. \"declines\": true, or infer from recommended-vs-chosen is not enough - be explicit), and have resolveDecision set the task to dropped with the option label in the log when the chosen option declines. Decision-opening callers in runner-prompt.md/manager-prompt.md then need to mark the do-not-build option.",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-02T19:56:29.450Z",
       "note": "Note on process: while cleaning up the sandbox server I ran an over-broad pkill and took down the real dashboard on :8791 with it. Restarted it the way the go skill does; it is serving the real queue again (200, 8 pending / 1 blocked). Nothing was lost, the queue is files."
+    },
+    {
+      "t": "2026-09-02T19:56:50.682Z",
+      "note": "A decision option can now carry \"declines\": true, the option that means do not build this. Answering with it retires the task as dropped with the answer in its history, instead of returning it to the queue the way every answer used to (the 2026-09-02 colour-sampling incident). Every other answer requeues unchanged; a late answer no longer rewrites work that already shipped or was already dropped. On the dashboard that option shows a Stop chip beside Pro/Con/Fix and a Select and stop button. Verified by new queue/bin/decision-drill.mjs (13 checks pass, 7 of them fail against the old code), by clicking through the real dashboard on a throwaway queue, and with churn-drill, failure-drill.sh and Scripts/test.sh (1451 tests) green. Shipped in fb52362."
     }
   ],
-  "started": "2026-09-02T19:46:50.180Z"
+  "started": "2026-09-02T19:46:50.180Z",
+  "completed": "2026-09-02T19:56:50.682Z"
 }

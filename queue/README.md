@@ -26,14 +26,14 @@ a task says otherwise.
 | `bin/manager-prompt.md` | The manager pass contract: assess, file executable tasks, stage epics, never block on the user. |
 | `bin/failure-drill.sh` | Runs the real loop in a throwaway queue against two fake runners, one that always exits non-zero and one whose login has expired and is later restored, and asserts what the dashboard would show. Run it after touching failure handling. |
 | `bin/churn-drill.mjs` | Replays a claim/reset storm against a throwaway queue and asserts the task log, the task file, and `history.jsonl` all stay bounded. Run it after touching logs, history, or the guard. |
-| `bin/decision-drill.mjs` | Answers decision cards in a throwaway queue and asserts that a declined answer retires its task while an approving one requeues it. Run it after touching decisions. |
+| `bin/decision-drill.mjs` | Answers decision cards in a throwaway queue and asserts that a declined answer retires its task, an approving one requeues it, and an answer that lands while the runner is still working is applied rather than overwritten by a late `blocked`. Run it after touching decisions. |
 
 ## Task lifecycle
 
 `pending` → claimed by the loop → `in_progress` → one of:
 
 - `done` (with a verification note)
-- `blocked` (a decision file exists; resolving it on the dashboard returns the task to `pending` with the answer in its log, unless the chosen option `declines` the work, which retires the task as `dropped` instead)
+- `blocked` (a decision file exists; resolving it on the dashboard returns the task to `pending` with the answer in its log, unless the chosen option `declines` the work, which retires the task as `dropped` instead). Blocking is only valid while a question is open: if the answer landed first, the block resolves into the answer instead of stranding the task, as described below.
 - `dropped` (with a why)
 
 A runner that dies mid-task is a **failure**, not a free retry. On 2026-08-23 a
@@ -113,6 +113,32 @@ task exactly as before. Before this, on 2026-09-02, a colour-sampling feature th
 user turned down at 15:10 was claimed and started by a runner at 19:45, because
 resolving a card requeued its task whatever the answer was.
 `queue/bin/decision-drill.mjs` proves both paths.
+
+## An answer that arrives first is never lost
+
+A runner works from a copy of the world that goes stale the moment it starts, so
+an answer given while it is still working can be overwritten seconds later. On
+2026-09-02 the user answered the tool bar card at 15:24:11 and the runner wrote
+its `blocked` status at 15:24:36. The task was then blocked with nothing open
+against it: no pending decision, no `blockedBy`, and nothing in the system that
+returns a task to the queue except an answer. It would have waited forever.
+
+Blocking is now only ever the answer to a question that is still open:
+
+- `setStatus(id, 'blocked')` on a task whose every question is already answered
+  applies the answer instead. An approving answer sends the task back to
+  `pending` with the answer quoted in its history; a declining one retires it
+  as `dropped`.
+- A late `blocked` on a task that is already `done` or `dropped` is ignored and
+  recorded, rather than resurrecting settled work.
+- Blocking a task that has no decision card at all still blocks it, but the task
+  history says plainly that nothing will ever hand it back.
+- `queue.mjs guard`, which the loop runs after every task, sweeps up anything
+  already stranded that way (an older build, a crash between the answer and the
+  save, a hand-edited file) and reports it as `unblocked` / `retired`. Parked
+  tasks are left alone: they are blocked for a different reason.
+
+`queue/bin/decision-drill.mjs` covers the race in both directions.
 
 ## Start / monitor
 

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 105,
-  "status": "blocked",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:54:37.045Z",
-  "updated": "2026-09-02T15:24:36.353Z",
+  "updated": "2026-09-02T20:01:50.258Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-02: the tools have weird and inconsistent grouping; selection tools are grouped in a menu but shapes are not, measuring tools are not, the paint bucket is just hanging out at the end; consider the order of buttons in Photoshop; logical grouping so the toolbar width condenses; maybe a recent tools group. Current order in EditorView.swift toolsBar: Select, selection group (rect/ellipse/wand), Arrow, Line, Rectangle, Ellipse, Highlight, Text, divider, Crop, Resize, Zoom Callout, Measure, Fill; the compact bar mirrors it through ToolbarSlot and slotButton. Photoshop order for reference: Move; Marquee group; Lasso group; Object/Quick/Magic Wand group; Crop and Slice group; Eyedropper, Ruler, Note, Count group (measurement lives with sampling); Healing, Brush, Clone, Eraser; Gradient and Paint Bucket group; Pen group; Type group; Shape group (rect, ellipse, polygon, line, custom); Hand and Zoom. A Photonz mapping to start the adversarial review from: Select | selection group | crop and resize group | measure group (Measure modes, and consider whether Zoom Callout is a measuring or annotating tool) | annotate: Arrow, shapes group (Line, Rectangle, Ellipse), Highlight, Text | Fill next to the color control it acts on. Keep Photoshop key parity (docs/plan/photoshop-parity.md and the Tool.shortcutKey table). ToolModeButton.swift already owns the mode marker and menu; the selection group in EditorView is the other group idiom, so unify on one. The recent-tools idea and the final order are UX judgments: open a decision with two to three orders as strips rather than guessing. Coordinate with the three open p1 tool bar tasks (icon brightness, hover states, tooltips): do this one first so they land on the new structure. DONE 2026-09-02 (see log): grouped bar shipped behind next-tool-groups; order A built; waiting on the decision for the final order and the Recent slot. If B or C wins, only ToolBarLayout.families (and its test) change; D adds a slot kind.",
@@ -68,7 +68,12 @@
     {
       "t": "2026-09-02T15:24:36.353Z",
       "note": "Grouped bar is built, tested and walked (order A); the final order and the Recent slot are on a decision card with strips of each option"
+    },
+    {
+      "t": "2026-09-02T20:01:50.257Z",
+      "note": "Repaired: the answer arrived (option a, Picture first) 25 seconds before the runner wrote its blocked status, so the task sat waiting on a settled question. The chosen order is the one already built, tested and audited under the next-tool-groups flag, and no Recent slot was wanted, so nothing is left to do."
     }
   ],
-  "started": "2026-09-02T15:01:30.262Z"
+  "started": "2026-09-02T15:01:30.262Z",
+  "completed": "2026-09-02T20:01:50.258Z"
 }

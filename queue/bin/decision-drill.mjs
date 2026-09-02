@@ -16,6 +16,10 @@
 //   4. an approving answer re-queues the task exactly as it always did
 //   5. a decline retires the task even when another decision is still open on it
 //   6. a late answer never reopens or rewrites a task that already finished
+//   7. an answer that lands while the runner is still working is kept, and the
+//      task is never left waiting on a question that is already settled
+//   8. a task with a question genuinely still open is still blocked
+//   9. the guard sweep repairs anything already stranded that way
 //
 // Runs against a throwaway queue; never touches the real one.
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -108,6 +112,101 @@ try {
   q.resolveDecision(dDropped.id, 'build');
   check('a late approval does not resurrect a task someone dropped on purpose',
     q.findTask(reopened.id).status === 'dropped', 'status is ' + q.findTask(reopened.id).status);
+
+  // --- 7: the answer that arrived while the runner was still working ------
+  // The live incident of 2026-09-02: answered at 15:24:11, the runner wrote
+  // `blocked` at 15:24:36, and the task sat waiting on a settled question with
+  // nothing that could ever hand it back.
+  const raced = q.addTask({ title: 'The tool bar groups its tools', priority: 'p1-high', notes: 'drill' });
+  const dRace = q.addDecision({ taskId: raced.id, question: 'Which order should the families take?', options: [BUILD, DECLINE], recommended: 'build' });
+  q.setStatus(raced.id, 'in_progress', 'claimed by go loop');
+  q.resolveDecision(dRace.id, 'build');           // the user answers first
+  q.setStatus(raced.id, 'blocked', 'waiting on the decision');  // the runner catches up
+  const settled = q.findTask(raced.id);
+  check('an answer that lands first is kept, and the task is not left waiting',
+    settled.status === 'pending', 'status is ' + settled.status);
+  check('and the task is claimable again', q.readyTasks().some((t) => t.id === raced.id));
+  check('and its history names the answer, not just the block',
+    notes(raced.id).some((n) => n.includes(BUILD.label) && n.includes('back in the queue')),
+    notes(raced.id).join(' | '));
+
+  const racedNo = q.addTask({ title: 'Colour sampling', priority: 'p1-high', notes: 'drill' });
+  const dRaceNo = q.addDecision({ taskId: racedNo.id, question: 'Build colour sampling?', options: [BUILD, DECLINE], recommended: 'later' });
+  q.setStatus(racedNo.id, 'in_progress', 'claimed by go loop');
+  q.resolveDecision(dRaceNo.id, 'later');
+  q.setStatus(racedNo.id, 'blocked', 'waiting on the decision');
+  check('a no that lands first stays a no, and the block does not revive it',
+    q.findTask(racedNo.id).status === 'dropped', 'status is ' + q.findTask(racedNo.id).status);
+  check('and nothing can claim it', !q.readyTasks().some((t) => t.id === racedNo.id));
+
+  // --- 8: a real open question still blocks, exactly as before ------------
+  const waiting = q.addTask({ title: 'Alignment checks order', priority: 'p1-high', notes: 'drill' });
+  const dOpen = q.addDecision({ taskId: waiting.id, question: 'Which alignment order?', options: [BUILD, DECLINE], recommended: 'build' });
+  q.setStatus(waiting.id, 'blocked', 'waiting on the decision');
+  check('a task with a question still open is still blocked',
+    q.findTask(waiting.id).status === 'blocked', 'status is ' + q.findTask(waiting.id).status);
+  check('and nothing sweeps it back while the question is open',
+    (q.guardStuck().unblocked || []).indexOf(waiting.id) === -1);
+  q.resolveDecision(dOpen.id, 'build');
+  check('and answering it normally still returns it to the queue',
+    q.findTask(waiting.id).status === 'pending', 'status is ' + q.findTask(waiting.id).status);
+
+  // --- 9: the sweep repairs anything already stranded ---------------------
+  // Written straight to disk, the way a task stranded by an older build looks.
+  const strandedYes = q.addTask({ title: 'Stranded by an older build', priority: 'p1-high', notes: 'drill' });
+  const dOld = q.addDecision({ taskId: strandedYes.id, question: 'Build it?', options: [BUILD, DECLINE], recommended: 'build' });
+  q.resolveDecision(dOld.id, 'build');
+  const strandedYesT = q.findTask(strandedYes.id);
+  strandedYesT.status = 'blocked';
+  q.saveTask(strandedYesT);
+
+  const strandedNo = q.addTask({ title: 'Stranded after a no', priority: 'p1-high', notes: 'drill' });
+  const dOldNo = q.addDecision({ taskId: strandedNo.id, question: 'Build it?', options: [BUILD, DECLINE], recommended: 'later' });
+  q.resolveDecision(dOldNo.id, 'later');
+  const strandedNoT = q.findTask(strandedNo.id);
+  strandedNoT.status = 'blocked';
+  q.saveTask(strandedNoT);
+
+  const swept = q.guardStuck();
+  check('the sweep returns a stranded task to the queue',
+    q.findTask(strandedYes.id).status === 'pending' && swept.unblocked.includes(strandedYes.id),
+    'status is ' + q.findTask(strandedYes.id).status);
+  check('the sweep retires a stranded task whose answer was no',
+    q.findTask(strandedNo.id).status === 'dropped' && swept.retired.includes(strandedNo.id),
+    'status is ' + q.findTask(strandedNo.id).status);
+
+  // Two questions, both answered: the history quotes the answer that came last.
+  const twoAnswers = q.addTask({ title: 'Asked twice', priority: 'p1-high', notes: 'drill' });
+  const dFirst = q.addDecision({ taskId: twoAnswers.id, question: 'Which order?', options: [BUILD, { ...BUILD, id: 'other', label: 'The other order' }], recommended: 'build' });
+  const dSecond = q.addDecision({ taskId: twoAnswers.id, question: 'And the recent slot?', options: [BUILD, { ...BUILD, id: 'other', label: 'The other order' }], recommended: 'build' });
+  q.setStatus(twoAnswers.id, 'in_progress', 'claimed by go loop');
+  q.resolveDecision(dFirst.id, 'other');
+  q.resolveDecision(dSecond.id, 'build');
+  q.setStatus(twoAnswers.id, 'blocked', 'waiting on the decisions');
+  check('with two answers in, the history quotes the one that came last',
+    notes(twoAnswers.id).some((n) => n.includes('back in the queue') && n.includes(BUILD.label)),
+    notes(twoAnswers.id).filter((n) => n.includes('back in the queue')).join(' | ') || 'no reconcile note');
+
+  // A parked task is blocked for a different reason and is not the sweep's business.
+  const parked = q.addTask({ title: 'Parked, and also once asked about', priority: 'p1-high', notes: 'drill' });
+  const dParked = q.addDecision({ taskId: parked.id, question: 'Build it?', options: [BUILD, DECLINE], recommended: 'build' });
+  q.resolveDecision(dParked.id, 'build');
+  const parkedT = q.findTask(parked.id);
+  parkedT.status = 'blocked'; parkedT.parked = true; parkedT.parkReason = 'runners keep failing on it';
+  q.saveTask(parkedT);
+  check('the sweep leaves a parked task parked',
+    !(q.guardStuck().unblocked || []).includes(parked.id) && q.findTask(parked.id).parked === true,
+    'status is ' + q.findTask(parked.id).status);
+
+  // --- 10: blocking with no card at all is still blocked, and says so -----
+  const noCard = q.addTask({ title: 'Blocked on nothing', priority: 'p1-high', notes: 'drill' });
+  q.setStatus(noCard.id, 'blocked', 'waiting on something');
+  check('blocking a task with no decision card still blocks it',
+    q.findTask(noCard.id).status === 'blocked', 'status is ' + q.findTask(noCard.id).status);
+  check('and the history warns that nothing will ever return it',
+    notes(noCard.id).some((n) => n.includes('no decision card was opened')), notes(noCard.id).join(' | '));
+  check('and the sweep leaves it alone rather than guessing',
+    !(q.guardStuck().unblocked || []).includes(noCard.id));
 } finally {
   rmSync(sandbox, { recursive: true, force: true });
 }

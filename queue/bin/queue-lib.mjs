@@ -243,6 +243,25 @@ export function setSeq(id, seq) {
 export function setStatus(id, status, note = '') {
   const t = findTask(id);
   if (!t) throw new Error(`no task ${id}`);
+  // Blocking is only ever the answer to a question that is still open. If the
+  // question has already been answered, blocking strands the task: nothing
+  // returns a task to the queue except an answer, so it waits forever on
+  // something that already happened.
+  if (status === 'blocked') {
+    // Work that already ended stays ended. A runner that marks a task waiting
+    // after the task was retired (or finished) is reporting a world that moved
+    // on without it, and honouring that write would resurrect a task the user
+    // turned down.
+    if (t.status === 'done' || t.status === 'dropped') {
+      const was = t.status;
+      appendLog(t, `a late "waiting" note arrived after this task was already ${was}${note ? `: ${note}` : ''}. It stays ${was}.`);
+      saveTask(t);
+      appendEvent('task_block_ignored', { id, status: was, ...(note ? { note } : {}) });
+      return t;
+    }
+    const settled = settleAnsweredBlock(t, note);
+    if (settled) return settled;
+  }
   const prev = t.status;
   t.status = status;
   // Moving a parked task anywhere else un-parks it and gives it a clean slate,
@@ -250,8 +269,65 @@ export function setStatus(id, status, note = '') {
   if (t.parked && status !== 'blocked') { t.parked = false; t.parkReason = ''; t.failures = 0; }
   if (note) appendLog(t, note);
   if (status === 'done') t.completed = now();
+  // Blocked with no card at all is the other way a task goes quiet. It is not
+  // safe to auto-unblock (there is no answer to act on), so say it out loud in
+  // the history where the dashboard and the next reader will see it.
+  const noQuestion = status === 'blocked' && !decisionsFor(t.id).length;
+  if (noQuestion) appendLog(t, 'waiting, but no decision card was opened against this task. Nothing returns a task to the queue except an answer, so this will sit here until someone opens one.');
   saveTask(t);
-  appendEvent(`task_${status}`, { id, from: prev, ...(note ? { note } : {}) });
+  appendEvent(`task_${status}`, { id, from: prev, ...(note ? { note } : {}), ...(noQuestion ? { noQuestion: true } : {}) });
+  return t;
+}
+
+// ---- answered-while-working -------------------------------------------------
+// A runner works from a copy of the world that goes stale the moment it starts.
+// On 2026-09-02 the user answered the tool bar card at 15:24:11 and the runner,
+// still finishing up, wrote its `blocked` status at 15:24:36. That left a task
+// with no open question, an empty blockedBy, and an answer nobody ever read: the
+// dashboard showed it waiting, and readyTasks would never hand it back. The two
+// helpers below are the repair, used both when the late write arrives
+// (setStatus) and as a sweep for anything already in that state (guardStuck).
+// `all` lets a caller with many tasks to check read the decision files once.
+function decisionsFor(taskId, all = null) {
+  return (all || readDecisions()).filter((d) => d.taskId === taskId);
+}
+const chosenOption = (d) => (d && d.status === 'resolved' && d.answer)
+  ? ((d.options || []).find((o) => o && o.id === d.answer.choice) || null) : null;
+const labelOf = (d) => (chosenOption(d) || {}).label || (d.answer || {}).choice || 'the answer';
+
+// If every question on this task is already answered, apply the answer instead
+// of leaving the task waiting. Returns the settled task, or null when there is
+// a real open question (or no question at all) and blocking is correct.
+function settleAnsweredBlock(t, note = '', reason = 'answered while this was still being worked on', allDecisions = null) {
+  if (t.status === 'done' || t.status === 'dropped') return null;
+  // A parked task is blocked because runners keep dying on it, not because a
+  // question is open. Answering some old card on it must not put it back in
+  // front of the loop that could not finish it.
+  if (t.parked) return null;
+  const mine = decisionsFor(t.id, allDecisions);
+  if (!mine.length || mine.some((d) => d.status !== 'resolved')) return null;
+  const declined = mine.find((d) => (chosenOption(d) || {}).declines);
+  const prev = t.status;
+  if (note) appendLog(t, note);
+  t.blockedBy = (t.blockedBy || []).filter((b) => !mine.some((d) => d.id === b));
+  if (declined) {
+    // The answer was "do not build this". Blocking (or unblocking) now would
+    // resurrect work the user turned down.
+    t.status = 'dropped';
+    t.parked = false;
+    t.parkReason = '';
+    appendLog(t, `${reason}: "${labelOf(declined)}" means this should not be built, so the task is retired rather than left waiting.`);
+    saveTask(t);
+    appendEvent('task_dropped', { id: t.id, from: prev, decision: declined.id, note: `declined: ${labelOf(declined)}` });
+    return t;
+  }
+  // readDecisions sorts by when a card was written; what matters here is which
+  // answer came last.
+  const answered = [...mine].sort((a, b) => ((a.answer || {}).resolved || '').localeCompare((b.answer || {}).resolved || '')).pop();
+  t.status = 'pending';
+  appendLog(t, `${reason}: the answer was "${labelOf(answered)}", so this goes back in the queue with it rather than waiting on a question that is settled.`);
+  saveTask(t);
+  appendEvent('task_unblocked', { id: t.id, decision: answered.id, reconciled: true });
   return t;
 }
 
@@ -479,7 +555,8 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
 // budget recordRunnerExit uses, so a task nothing can finish gets parked here
 // too rather than being handed back to the loop forever.
 export function guardStuck() {
-  const stuck = readAllTasks().filter((t) => t.status === 'in_progress');
+  const all = readAllTasks();
+  const stuck = all.filter((t) => t.status === 'in_progress');
   const parked = [];
   for (const t of stuck) {
     t.failures = (t.failures || 0) + 1;
@@ -493,7 +570,17 @@ export function guardStuck() {
     saveTask(t);
     appendEvent('task_reset', { id: t.id, attempt: t.failures });
   }
-  return { reset: stuck.filter((t) => !parked.includes(t.id)).map((t) => t.id), parked };
+  // Second sweep: a task left waiting on a question that is already answered.
+  // A late `blocked` write is the usual cause and setStatus now catches that
+  // one, but this also picks up anything stranded by an older build, a crash
+  // between the answer and the save, or a hand-edited status file.
+  const unblocked = [], retired = [];
+  const decisions = readDecisions();
+  for (const t of all.filter((x) => x.status === 'blocked')) {
+    const settled = settleAnsweredBlock(t, '', 'the question this was waiting on has been answered', decisions);
+    if (settled) (settled.status === 'dropped' ? retired : unblocked).push(settled.id);
+  }
+  return { reset: stuck.filter((t) => !parked.includes(t.id)).map((t) => t.id), parked, unblocked, retired };
 }
 
 // ---- decisions --------------------------------------------------------------
@@ -562,7 +649,13 @@ export function resolveDecision(id, choice, note = '') {
       saveTask(t);
       appendEvent('task_dropped', { id: t.id, from: prev, decision: id, note: `declined: ${label}` });
     } else {
-      if (!t.blockedBy.length && t.status === 'blocked') t.status = 'pending';
+      if (!t.blockedBy.length && t.status === 'blocked') {
+        t.status = 'pending';
+        // Same clean slate setStatus gives a task moved out of park: a task
+        // handed back to the loop must not still be carrying a park flag the
+        // dashboard reads as "not running this".
+        if (t.parked) { t.parked = false; t.parkReason = ''; t.failures = 0; }
+      }
       saveTask(t);
       appendEvent('task_unblocked', { id: t.id, decision: id });
     }

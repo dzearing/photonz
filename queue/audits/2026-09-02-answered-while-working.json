@@ -1,0 +1,22 @@
+{
+  "feature": "An answer given mid-task is never lost",
+  "epic": "loop-robustness",
+  "summary": "Answering a decision card while the loop is still working on that same task used to be overwritten seconds later, leaving the task waiting forever on a question you had already settled. Now the answer wins: the task either carries on with it or, if you said no, retires.",
+  "setup": "The dashboard at http://127.0.0.1:8791. Nothing to turn on; this is queue behavior, not app behavior.",
+  "try": [
+    { "do": "Open the Tasks tab and filter to blocked. Nothing should be sitting there with no question attached." },
+    { "do": "Open the task 'The tool bar groups tools the way a pro editor does'. It now reads done, not blocked." },
+    { "do": "Read the last two lines of its history: your answer of 15:24:11 was Picture first, which is the order already built, so there was nothing left to do." },
+    { "do": "Next time a card appears on Summary while the loop is running, answer it right away rather than waiting for the runner to stop." },
+    { "do": "Watch that task afterwards: it should either be back in the queue with your answer quoted in its history, or retired if you picked the option that stops the work. It should never sit at blocked." }
+  ],
+  "evaluate": [
+    "Was retiring the tool bar task the right call, given your answer picked the order that was already built?",
+    "When a task comes back after your answer, does its history read clearly enough that you can tell why it moved?",
+    "Would you rather a task you answered mid-run be paused for you to look at, instead of going straight back into the queue?"
+  ],
+  "rough": [
+    "A task blocked with no decision card at all is still a dead end. Nothing but an answer returns a task to the queue, so the code cannot guess one; it now writes a plain warning into the task history instead of failing silently. If you see one, use Put back in the queue on the dashboard.",
+    "The repaired tool bar task was set to done by judgment, not by rule: its answer chose the option already built, tested and audited, so re-queueing it would have made a runner rebuild what is already shipped."
+  ]
+}

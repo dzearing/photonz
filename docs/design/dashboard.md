@@ -37,6 +37,14 @@ every judgment call that came up waiting as a one-click decision.
   turned down at 15:10 was claimed and started by a runner at 19:45. A decline is
   only for an option that ends the whole task: "no button, copy as text instead"
   is still a yes to the task and does not carry the marker.
+- **An answer is never lost to a slow runner.** Answering a card while its task
+  is still being worked on used to be overwritten seconds later by the runner's
+  own `blocked` write, leaving a task with no open question and nothing that
+  could ever hand it back (2026-09-02, the tool bar card: answered 15:24:11,
+  re-blocked 15:24:36). Blocking now only holds while a question is actually
+  open; if every question is already answered, the block resolves into the
+  answer instead, and the guard pass the loop runs after every task sweeps up
+  anything already stranded. See `queue/README.md`.
 - **Next release only.** Runners work in the Next release unless a task
   explicitly says current (see `docs/design/experiments.md`); the porting rule
   from CLAUDE.md still applies to shared-file changes.

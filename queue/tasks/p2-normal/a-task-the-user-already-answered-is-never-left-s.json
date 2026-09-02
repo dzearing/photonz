@@ -5,11 +5,11 @@
   "epic": "loop-robustness",
   "priority": "p2-normal",
   "seq": 600,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T19:55:42.727Z",
-  "updated": "2026-09-02T19:55:42.727Z",
+  "updated": "2026-09-02T20:40:00.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-02 while fixing a-declined-decision-card-retires-its-task-instea. Task the-tool-bar-groups-tools-the-way-a-pro-editor-d: user resolved its decision at 15:24:11 (choice a, Picture first), resolveDecision set status pending, and 25s later the still-running runner called setStatus blocked. It now sits status blocked with blockedBy [] and no pending decision, so readyTasks will never return it and nothing unblocks it. Two candidate fixes: (1) setStatus blocked refuses when the task has no pending decision open against it, or auto-clears; (2) guardStuck sweeps blocked tasks whose decisions are all resolved back to pending. Prefer (2) plus a warning in (1). Also repair the live task as part of the work.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-02T19:55:42.727Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T19:57:14.601Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T20:40:00.000Z",
+      "note": "Adversarial review of the idea before building. (1) The stranding is not really a race on one field, it is a missing invariant: blocking is only ever the answer to a question that is still open, and nothing in the system enforced that. Both candidate fixes from the notes are needed, so both landed. (2) Auto-unblocking has a trap the notes did not mention: parkTask also writes status blocked, so a naive sweep would hand a parked task (one runners keep dying on) straight back to the loop, half-parked. The sweep now skips parked tasks. (3) A second trap: after a declining answer the task is already dropped, and a late blocked write would have resurrected work the user turned down, which is the exact bug fixed yesterday coming back through another door. Blocking settled work (done or dropped) is now ignored and recorded. (4) Shortest version that delivers the value: no new state, no new field, no dashboard change. The queue already knows whether a question is open."
+    },
+    {
+      "t": "2026-09-02T20:40:00.000Z",
+      "note": "Fixed in queue/bin/queue-lib.mjs. setStatus(id,'blocked') now runs settleAnsweredBlock first: if every decision on the task is resolved it applies the answer instead of blocking (approving answer -> pending with the answer quoted, declining -> dropped), a block on a done or dropped task is ignored and logged, and a block on a task with no card at all still blocks but writes a plain warning into the history so it cannot go quiet. guardStuck gained a second sweep over blocked tasks for anything already stranded, returning unblocked/retired alongside reset/parked; it skips parked tasks. resolveDecision now also clears the park flag when it returns a task to the queue, which otherwise left a claimable task still flagged parked."
+    },
+    {
+      "t": "2026-09-02T20:40:00.000Z",
+      "note": "Tests: queue/bin/decision-drill.mjs grew sections 7 to 10 (13 new checks) covering the live incident in both directions, a question genuinely still open, the sweep repairing a stranded task, two answers quoting the last one, a parked task left alone, and blocking with no card. 26 checks pass on the fix; 7 of the new ones fail against the pre-fix code. churn-drill, failure-drill.sh and Scripts/test.sh (1451 tests) all green."
+    },
+    {
+      "t": "2026-09-02T20:40:00.000Z",
+      "note": "Verified end to end on a throwaway queue with the real dev server: seeded a task in_progress with a card, answered it with a POST to /api/decide (the same call the dashboard's option button makes), then had the CLI write the runner's blocked status. Task came out pending with 'the answer was \"Picture first\"' in its history, no pending cards, and 'queue.mjs next' claimed it again. Also ran the new sweep against a copy of the real queue: it reported the-tool-bar-groups-tools-the-way-a-pro-editor-d as unblocked, the live stranding, without touching the real files."
+    },
+    {
+      "t": "2026-09-02T20:40:00.000Z",
+      "note": "Live repair: the-tool-bar-groups-tools-the-way-a-pro-editor-d set to done rather than pending. Its answer (option a, Picture first) is the order already built, tested, playtested and audited under next-tool-groups, and no Recent slot was wanted, so re-queueing it would have made a runner rebuild what is shipped. No other task in the queue was in that state."
+    },
+    {
+      "t": "2026-09-02T20:40:00.000Z",
+      "note": "Audit: queue/audits/2026-09-02-answered-while-working.json. Docs: queue/README.md gained 'An answer that arrives first is never lost' plus a lifecycle line, docs/design/dashboard.md gained the matching design decision, runner-prompt.md now tells runners to re-read their decision file before exiting and never to force a blocked status by hand."
     }
-  ]
+  ],
+  "started": "2026-09-02T19:57:14.601Z"
 }

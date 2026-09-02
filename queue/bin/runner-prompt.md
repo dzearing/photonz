@@ -90,6 +90,14 @@ Do not guess on anything the user would want to weigh in on (visual direction, s
    written into its log.
 4. If part of the task is decidable, finish that part first and say so in the log.
 
+The user may answer while you are still working. If every question on your task
+has been answered by the time you write `blocked`, the queue applies the answer
+instead of leaving the task waiting: an approving answer puts it back in the
+queue with the answer in its history, a declining one retires it. So do not
+hand-edit a status file to force `blocked`, and if you can, re-read
+`queue/decisions/<id>.json` before you exit: if it is already resolved, act on
+the answer in this run rather than blocking at all.
+
 ## Adversarial review: twice, and it is not optional
 
 **Before you build a feature**, spend real effort trying to break the idea, not the code:
