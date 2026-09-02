@@ -137,8 +137,11 @@ gone. `MeasureContent` (`PhotonzCore/Measure.swift`) is its own
   = 1 image px, not ×pixelScale); the label pill is sized in image px, so the
   pill and its head-line gap match at every zoom and the pill border equals the
   line width.
-  Selection shows 3 handle dots (two feet + head); the handle layer is raised
-  above the pill so the head dot isn't occluded by its own chip.
+  Selection shows the two feet as handle dots; the head's grab is the readout
+  pill itself (drag the number to move it), and the head dot is only drawn
+  once the pill has left the head midpoint (label relocated or nudged past its
+  own half width), since a dot on the digits made "121 px" read as "12 px"
+  (`MeasureContent.labelCoversHeadHandle`).
 - **Open follow-ups**: auto-detect `pixelScale` from the capture's DPI (fixed at
   1); tune `defaultHeadOffset`/corner radius to taste. (Label crispness past 100%
   zoom is the known trade of the one-raster model — revisit only if it bites.)

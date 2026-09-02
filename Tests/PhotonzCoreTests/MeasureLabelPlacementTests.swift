@@ -423,6 +423,54 @@ struct MeasureLabelPlacementTests {
         #expect(abs(built.end.y + layer.frame.minY - end.y) < 0.001)
     }
 
+    // MARK: - The head handle hides under a readout that sits on it
+
+    /// Right after a caliper lands its readout rides the head line, centred
+    /// on the very point the head handle is drawn at. Drawing the dot there
+    /// puts it on the digits ("121 px" reads "12 px"), so the readout itself
+    /// is the grab and the dot stays hidden.
+    @Test func aReadoutOnTheLineCoversTheHeadHandle() {
+        var m = caliper()
+        m.labelPlacement = .onLine
+        #expect(m.labelCoversHeadHandle(chipSize: chip))
+        #expect(m.labelRect(chipSize: chip).contains(m.headHandle))
+    }
+
+    @Test func aRelocatedReadoutLeavesTheHeadHandleBare() {
+        for placement in [MeasureLabelPlacement.afterEnd, .beforeStart] {
+            var m = caliper()
+            m.labelPlacement = placement
+            #expect(!m.labelCoversHeadHandle(chipSize: chip), "\(placement) still covers the head")
+        }
+        // A sideways push only moves the chip when the head hugs the line; a
+        // head already 40 px out is clear, so the chip (rightly) stays on it.
+        for placement in [MeasureLabelPlacement.clearPositive, .clearNegative] {
+            var m = caliper(headOffset: 0)
+            m.labelPlacement = placement
+            #expect(!m.labelCoversHeadHandle(chipSize: chip), "\(placement) still covers the head")
+        }
+    }
+
+    /// A nudge slides the chip along the line; the dot stays hidden only while
+    /// the chip is actually over it, and comes back the moment it is not.
+    @Test func aNudgedReadoutHidesTheHandleOnlyWhileItIsOverIt() {
+        var m = caliper()
+        m.labelPlacement = .onLine
+        m.labelNudge = 30            // chip is 90 wide: still over the anchor
+        #expect(m.labelCoversHeadHandle(chipSize: chip))
+        m.labelNudge = 60            // past its own half-width: the anchor is bare
+        #expect(!m.labelCoversHeadHandle(chipSize: chip))
+    }
+
+    @Test func aVerticalCaliperCoversItsHeadTheSameWay() {
+        var m = MeasureContent(start: CGPoint(x: 300, y: 100), end: CGPoint(x: 300, y: 300),
+                               headOffset: 40, mode: .vertical)
+        m.labelPlacement = .onLine
+        #expect(m.labelCoversHeadHandle(chipSize: chip))
+        m.labelPlacement = .afterEnd
+        #expect(!m.labelCoversHeadHandle(chipSize: chip))
+    }
+
     // MARK: - Persistence
 
     @Test func placementSurvivesACodableRoundTrip() throws {

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T13:18:01.776Z",
-  "updated": "2026-09-02T13:26:20.322Z",
+  "updated": "2026-09-02T13:26:38.599Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the scripted playtest walk (Scripts/playtest/redline-walk.json, 2026-09-02): EditorState.addElementSize starts both calipers from measureStyle, so content.role is whatever the popover last held (.spacing here) and MeasureSpecList.derivedName then says Gap. Force role = .size for the two calipers it builds (keep mode horizontal/vertical so Width/Height derive), with a test in MeasureSpecListTests or MeasureTests.",
@@ -57,7 +57,7 @@
     }
   ],
   "started": "2026-09-02T13:23:57.882Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-02T13:23:27.094Z",
     "exit": 0,

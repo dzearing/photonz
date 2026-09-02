@@ -4780,3 +4780,10 @@ the card's left end, over the icons.
 - Proven: release-configuration build carries no harness code; probe does; dev app untouched.
 - Findings queued from the first walk: Size mode calipers are named Gap when the style role was spacing; the selected caliper's midpoint handle covers its number.
 - Next: consider scripting the capture overlay and toast; menu shortcuts through the focused editor do nothing in the inactive probe (use `action`).
+
+## 2026-09-02 — A selected caliper keeps its number readable (go loop)
+
+- The head dot of a selected caliper was drawn on the head midpoint, which is also where the readout pill centres right after placement, so "121 px" read as "12 px" until you clicked away. The dot is now left out while the pill covers that point (`MeasureContent.labelCoversHeadHandle`, pure and tested), and the pill itself is the head's grab: dragging the number moves the head, with the grip offset kept so a pill grabbed near its edge does not jump. The dot comes back the moment the pill leaves the head (label relocated or nudged past its own half width).
+- Chose "pill is the handle" over "shift the dot past the pill": dragging the number is what a first-time user tries anyway, and a fourth dot beside the pill was noise. Corrected a stale comment in `CanvasView` that still said the pills were NSView subviews.
+- Verified in the probe with `Scripts/playtest/redline-walk.json` (renders 3 and 4 show whole numbers) and a throwaway pill-drag walk (grab 8 px above centre, drag 48 px: head moved exactly 48). That walk's third snapshot was racing the re-render, so the shared walk now waits 0.4 s after the third click like the size and gap steps already did. Suite green (1301).
+- Audit: `queue/audits/2026-09-02-caliper-head.json`. Open: whether the pill wants a hover cue.

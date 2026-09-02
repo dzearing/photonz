@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 540,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T13:18:01.808Z",
-  "updated": "2026-09-02T13:18:01.808Z",
+  "updated": "2026-09-02T13:35:14.568Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in the scripted playtest renders (/tmp/photonz-playtest/redline-walk/3-distance-placed.png, 4-size-landed.png, 2026-09-02): the selection's midpoint handle (white dot) is drawn centred on the caliper line at the same spot the readout pill sits when the head offset is zero. Either draw the handle under the pill, offset it along the line, or hide it while the pill covers it.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-02T13:18:01.808Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T13:26:44.334Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T13:35:14.567Z",
+      "note": "Reproduced in the probe: redline walk renders 3 and 4 show the white head dot centred on the pill (121 px reads 12 px). Cause: the head handle sits at the head midpoint, exactly where an on-line readout centres; the pill is rasterised into the composite so the dot (a CALayer above it) cannot go under it."
+    },
+    {
+      "t": "2026-09-02T13:35:14.568Z",
+      "note": "Adversarial review of the three options in the notes: under the pill is impossible without splitting the render; a dot shifted past the pill adds a fourth mystery dot on the head line; hiding the dot and making the pill the grab is what a first-time user tries anyway (drag the number). Chose the last. The dot returns whenever the pill leaves the head (relocated or nudged past its half width)."
+    },
+    {
+      "t": "2026-09-02T13:35:14.568Z",
+      "note": "Core: MeasureContent.labelCoversHeadHandle(chipSize:) with four tests (on line, relocated, nudged, vertical). Canvas: drawnMeasureHandles skips the head while covered; the pill rect (estimatedLabelSize, plus tolerance) is a head grab after the point handles; MeasureHandleDrag.grabCross keeps the grip so a pill grabbed off centre does not jump. Fixed the stale NSView-subview comment on handlesLayer."
+    },
+    {
+      "t": "2026-09-02T13:35:14.568Z",
+      "note": "Verified: full suite green (1301). Probe playtests: redline walk renders 3 and 4 show whole numbers with no dot; a pill-drag walk grabbed 8 px above centre and dragged 48 px up, head moved exactly 48. Render 3 was racing the re-render (state showed the layer, snapshot was stale), so the shared walk now waits 0.4 s after the third click. Audit written: queue/audits/2026-09-02-caliper-head.json. Probe quit."
     }
-  ]
+  ],
+  "started": "2026-09-02T13:26:44.333Z"
 }

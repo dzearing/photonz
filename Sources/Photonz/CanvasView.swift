@@ -537,13 +537,17 @@ final class CanvasNSView: NSView {
         let originalStart: CGPoint   // feet, document space
         let originalEnd: CGPoint
         let originalHeadOffset: CGFloat
+        /// Where on the cross axis the pointer took hold, relative to the head:
+        /// a head grabbed by its readout (anywhere on the pill) or a little off
+        /// its dot keeps that grip, instead of jumping under the pointer.
+        var grabCross: CGFloat = 0
         var current: CGPoint
         /// The caliper's (start, end, headOffset) with this drag applied.
         func params() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat) {
             var s = originalStart, e = originalEnd, off = originalHeadOffset
             switch handle {
             case .head:
-                off = mode == .horizontal ? current.y - s.y : current.x - s.x
+                off = (mode == .horizontal ? current.y - s.y : current.x - s.x) - grabCross
                 return (s, e, off)
             case .footA:
                 s = current
@@ -573,6 +577,33 @@ final class CanvasNSView: NSView {
               let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return [] }
         let g = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e, headOffset: m.headOffset)
         return [(.footA, g.footA), (.footB, g.footB), (.head, g.labelAnchor)]
+    }
+
+    /// A caliper's content re-based to document space (its feet are stored
+    /// layer-local), so its readout geometry compares against the pointer.
+    private func documentMeasure(_ layer: Layer) -> MeasureContent? {
+        guard var m = layer.measure, m.alignment == nil,
+              let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return nil }
+        m.start = s
+        m.end = e
+        return m
+    }
+
+    /// The readout pill's footprint in document space. Dragging the number
+    /// drags the head: it is the obvious thing to take hold of, and while the
+    /// pill sits on the head midpoint it is the ONLY grab there (see
+    /// `drawnMeasureHandles`).
+    private func measureReadoutRect(_ layer: Layer) -> CGRect? {
+        guard let m = documentMeasure(layer), m.showLabel else { return nil }
+        return m.labelRect(chipSize: m.estimatedLabelSize)
+    }
+
+    /// The handles that get a dot. The head dot is left out while the readout
+    /// covers it: a white dot on the digits made "121 px" read as "12 px",
+    /// and the pill is the grab there anyway.
+    private func drawnMeasureHandles(_ layer: Layer) -> [CGPoint] {
+        let covered = documentMeasure(layer).map { $0.labelCoversHeadHandle(chipSize: $0.estimatedLabelSize) } ?? false
+        return measureHandles(layer).compactMap { covered && $0.handle == .head ? nil : $0.point }
     }
     /// The composite that was on screen when an annotation was committed. The
     /// preview shape stays up until a *different* image arrives, so the new
@@ -852,9 +883,9 @@ final class CanvasNSView: NSView {
         alignmentPreviewLayer.zPosition = 95
         layer?.addSublayer(alignmentPreviewLayer)
 
-        // Selection handles and the snap dot must sit ABOVE the caliper label
-        // pills (which are NSView subviews), so a caliper's third (head) handle
-        // isn't hidden behind its own glass chip.
+        // Selection handles and the snap dot sit above every other overlay.
+        // (A caliper's head dot is not drawn while its readout pill covers
+        // it, see `drawnMeasureHandles`, so nothing here draws on a number.)
         handlesLayer.zPosition = 100
         snapDotLayer.zPosition = 100
 
@@ -1587,7 +1618,8 @@ final class CanvasNSView: NSView {
         }
         // A placed caliper is edited by dragging one of its three handles (the
         // two feet or the head); the others stay put and the value/label update
-        // live.
+        // live. The readout pill is the head's grab too: dragging the number
+        // moves it, and it is the only grab while it sits on the head dot.
         if let id = selectedLayerID, let layer = selectedLayer, let m = layer.measure,
            let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) {
             let tolerance = viewport.zoom > 0 ? 9 / viewport.zoom : 9
@@ -1598,11 +1630,21 @@ final class CanvasNSView: NSView {
                     best = (h.handle, d)
                 }
             }
+            if best == nil, let pill = measureReadoutRect(layer),
+               pill.insetBy(dx: -tolerance, dy: -tolerance).contains(p) {
+                best = (.head, 0)
+            }
             if let best {
                 resetDragMotion(p)
-                measureHandleDrag = MeasureHandleDrag(layerID: id, handle: best.handle, mode: m.mode,
-                                                      originalStart: s, originalEnd: e,
-                                                      originalHeadOffset: m.headOffset, current: p)
+                var drag = MeasureHandleDrag(layerID: id, handle: best.handle, mode: m.mode,
+                                             originalStart: s, originalEnd: e,
+                                             originalHeadOffset: m.headOffset, current: p)
+                if best.handle == .head {
+                    let head = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e,
+                                                              headOffset: m.headOffset).labelAnchor
+                    drag.grabCross = m.mode == .horizontal ? p.y - head.y : p.x - head.x
+                }
+                measureHandleDrag = drag
                 refreshOverlays()
                 return
             }
@@ -2808,7 +2850,7 @@ final class CanvasNSView: NSView {
                 // Calipers expose their three handles (two feet + head); lines/
                 // arrows their two ends.
                 let points: [CGPoint] = selectedLayer.measure != nil
-                    ? measureHandles(selectedLayer).map { $0.point }
+                    ? drawnMeasureHandles(selectedLayer)
                     : AnnotationEndpoint.allCases.compactMap { selectedLayer.editEndpoint($0) }
                 for dp in points {
                     let p = viewport.viewPoint(fromDocument: dp)

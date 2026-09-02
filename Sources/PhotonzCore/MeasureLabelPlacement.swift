@@ -150,6 +150,15 @@ extension MeasureContent {
         let offset = labelOffset(chipSize: chipSize)
         return abs(mode == .horizontal ? offset.y : offset.x) < 0.5
     }
+
+    /// True while the readout sits on top of the head handle, which it does
+    /// whenever it rides the line unnudged: the handle is drawn at the head
+    /// midpoint and the chip centres on the same point. A dot drawn there
+    /// lands on the digits ("121 px" reads "12 px"), so while this holds the
+    /// chip itself is the thing to grab and the dot stays hidden.
+    public func labelCoversHeadHandle(chipSize: CGSize) -> Bool {
+        showLabel && labelRect(chipSize: chipSize).contains(headHandle)
+    }
 }
 
 /// Picks where a measurement's readout should sit, once, when the measurement

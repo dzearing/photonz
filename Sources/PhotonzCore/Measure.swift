@@ -396,7 +396,9 @@ extension MeasureContent {
     public var labelAnchor: CGPoint { caliperGeometry().labelAnchor }
 
     /// The head handle's position (document/layer space): the head midpoint,
-    /// dragged perpendicular to change the offset (distance) and side.
+    /// dragged perpendicular to change the offset (distance) and side. While
+    /// the readout sits on this point (`labelCoversHeadHandle`) the readout is
+    /// the grab and no dot is drawn here, so the number stays legible.
     public var headHandle: CGPoint { labelAnchor }
 
     /// The along-axis half-length of the chip's footprint, given its size — the

@@ -1,0 +1,25 @@
+{
+  "feature": "A selected caliper keeps its number readable",
+  "epic": "measure-redline",
+  "summary": "A freshly placed measurement no longer draws a white dot over its own number, so 121 px reads as 121 px while it is selected. To move the number away from what you measured, you now drag the number itself.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Open any screenshot with a few controls in it.",
+  "try": [
+    { "do": "Press I until the hint reads Distance, then click two points on the picture and click a third time above them to place the number.", "shot": "2026-09-02-caliper-head-1-placed.png" },
+    { "do": "Look at the number pill while the caliper is still selected. It should show the whole value with no dot on it, and the two feet should show their round handles." },
+    { "do": "Drag the number pill itself straight up or down. The head line follows and the pill stays under your pointer where you grabbed it.", "shot": "2026-09-02-caliper-head-2-dragged.png" },
+    { "do": "Drag a foot handle sideways. The value updates and the number stays put." },
+    { "do": "Press I until the hint reads Size, then click a button. Both new numbers should be fully legible with the pair selected.", "shot": "2026-09-02-caliper-head-3-size.png" },
+    { "do": "Select the caliper, then use the inspector to move its label past the end of the line. A round handle should now appear at the middle of the bare head line, and both it and the pill drag the head." }
+  ],
+  "evaluate": [
+    "Does a selected caliper now read as clearly as an unselected one?",
+    "Is it obvious, without being told, that the number itself is the thing to drag to move it?",
+    "When you grab the pill near its edge, does it stay under your finger, or does it jump?",
+    "Do you miss the third dot at all, or was it only ever noise?"
+  ],
+  "rough": [
+    "There is no hover cue on the pill (no cursor change or highlight) hinting it is draggable. The feet dots have none either, so this matches the rest of the caliper, but a subtle cue may be worth adding.",
+    "The pill's grab area uses the app's generous size estimate for the label, so it is a few pixels bigger than the drawn pill. That makes it easier to hit and I did not try to tighten it.",
+    "Dragging the pill on a caliper whose label was moved off the line still moves the head, and the relocated pill follows it at the same offset. That is consistent but was not asked for; say so if it should do something else."
+  ]
+}
