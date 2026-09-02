@@ -1,0 +1,32 @@
+{
+  "feature": "The redline flow, end to end",
+  "epic": "measure-redline",
+  "summary": "The whole job now runs in one sitting: capture a window with one click, open it, take a size, a gap and an alignment check in one click or drag each, caption an arrow, and hand off picture and spec list with one copy. On the walk the hints, the spec list header and the copy menu were the parts that made a newcomer stop, and those three are fixed.",
+  "setup": "Photonz Dev, Experiments window, release Next, every flag at its default. Have a window with buttons on screen, or open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png with File > Open and start at step 3.",
+  "try": [
+    { "do": "Press Shift Command 4, rest the pointer on any window, and click it. The window lights up with its app, title and size, and a loupe rides beside the pointer.", "shot": "2026-09-02-redline-walk-1-capture-hover.png" },
+    { "do": "Hover the toast at the bottom right and click its pencil, or press Shift Command 6. The capture opens in an editor." },
+    { "do": "Press I. A pill above the tool bar reads Distance, then click two points, then click to place the number. Click two edges, watch the line follow the pointer, and click once more to set the number.", "shot": "2026-09-02-redline-walk-4-distance-two-clicks.png" },
+    { "do": "Press I twice. The pill reads Size, then click an element for its size. Hover a button: it outlines with a live width and height. Click.", "shot": "2026-09-02-redline-walk-5-size-preview.png" },
+    { "do": "Press I twice for Gap and click the space between two buttons. One blue spacing caliper lands.", "shot": "2026-09-02-redline-walk-6-gap.png" },
+    { "do": "Press I twice for Alignment and drag down the left edge of a column of labels. A dashed guide reads which edges it checked and how far the odd one is off.", "shot": "2026-09-02-redline-walk-7-alignment.png" },
+    { "do": "Press A, drag an arrow onto something, type a label, press Return.", "shot": "2026-09-02-redline-walk-8-caption-field.png" },
+    { "do": "Press Shift Command C and paste into a text field, then into a rich document. The plain field gets the spec list, headed with the capture's logical size and its scale; the rich one gets the picture.", "shot": "2026-09-02-redline-walk-10-export.png" }
+  ],
+  "evaluate": [
+    "Every measurement hands the tool back to Select, so each new one costs a press of I first. Fine for a few, or should Measure stay in hand until you press V or Esc?",
+    "Does the three-click Distance now read as intended, with the pill saying a third click places the number?",
+    "The spec list header now reads 720 × 480 px @2x above rows in logical pixels. Is that the size you expected to see, or do you want the device size too?",
+    "The toast only shows Edit when you hover it. On the first capture, did you find the way into the editor without the Welcome window's tip?",
+    "The loupe reads the drag in pt while the editor then reads the same numbers as px. Does that trip you, or is pt the right word on the overlay?"
+  ],
+  "rough": [
+    "The tool returns to Select after every measurement. Four measurements took seven presses of I on the walk. Whether it should stay in hand is a product call; a decision card is open on the follow-up task.",
+    "The toast says Copied to clipboard! and nothing else; Edit is a hover-only pencil or a double-click, and only the Welcome window ever taught Shift Command 6. Filed as a follow-up with the options.",
+    "The Measure mode sticks across launches, so a second session picks the tool up wherever the last one left it. The button glyph and the pickup pill both name the mode, so this is a surprise rather than a trap; left as is.",
+    "The loupe reads the drag size in pt; the editor calls the same logical numbers px. Filed as a follow-up.",
+    "Copy as Spec List and Copy Image could not be fired by their key chords from the scripted harness (menu chords need an active app), so those two steps were driven through the same functions the menu items call. The chords themselves were not exercised.",
+    "Fixed on this walk: the Distance pill never said a third click places the number, so after two clicks the line followed the pointer and seemed stuck; the Size pill ran about 490 pt wide (see 2026-09-02-redline-walk-0-before-size-hint.png) and now reads Click an element for its size, [ and ] change the pick at about 355 pt, with the long tip kept in the tooltip; the spec list header reported the canvas in device pixels above rows in logical pixels and now follows the rows' unit and names the scale; Copy as Spec List stays disabled and its chord does nothing while every row is hidden, instead of copying a bare header.",
+    "Screen capture is denied to the loop, so the pictures are the probe app's own windows rendered offscreen: the editor with its real tool bar, legend and pills, and the capture overlay drawn over a stand-in desktop. The inspector column renders blank offscreen, and the glass toast could not be pictured at all."
+  ]
+}

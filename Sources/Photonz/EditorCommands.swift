@@ -328,6 +328,7 @@ struct EditorCommands: Commands {
         if Experiments.shared.measurePanelEnabled {
             CommandMenu("Measure") {
                 let count = editor?.measurementCount ?? 0
+                let visibleCount = editor?.visibleMeasurementCount ?? 0
                 let selectedCount = editor?.selectedMeasureLayerIDs.count ?? 0
                 Button("Measure Tool") { editor?.setTool(.measure) }
                     .disabled(editor?.document == nil)
@@ -335,9 +336,11 @@ struct EditorCommands: Commands {
                 // ⌃⌘C: the copy family's free chord. ⇧⌘C is Copy Image (PS
                 // Copy Merged), ⌥⌘C is Canvas Size and ⌥⇧⌘C is Content-Aware
                 // Scale, both Photoshop keys.
+                // Only visible rows are listed, so with every row hidden the
+                // item is off rather than copying a bare header.
                 Button("Copy as Spec List") { editor?.copyMeasureSpecList() }
                     .keyboardShortcut("c", modifiers: [.command, .control])
-                    .disabled(count == 0)
+                    .disabled(visibleCount == 0)
                 // Plain ⌘C on a selected measurement already carries its spec
                 // line as text beside the layer payload; this is the text-only
                 // form, and the one that copies a multi-selection's lines.

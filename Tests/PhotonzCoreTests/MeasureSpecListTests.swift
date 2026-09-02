@@ -149,11 +149,32 @@ struct MeasureSpecListTests {
                              unit: .points, name: "Save button"))
 
         let text = MeasureSpecList.render(document: doc, name: "Retina")
-        // 128 raw device px at 2× reads 64 logical px under the points unit.
+        // 128 raw device px at 2× reads 64 logical px under the points unit,
+        // and the header reads the canvas the same way, naming the scale.
         #expect(text == """
-        Retina · 100 × 100 px
+        Retina · 50 × 50 px @2x
         - Save button: 64 px (size)
         """)
+    }
+
+    @Test func theHeaderFollowsTheRowsUnit() {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100), pixelScale: 2)
+        // No rows: the app measures in logical pixels by default, so an empty
+        // list on a Retina capture still heads with the logical size.
+        #expect(MeasureSpecList.headerSize(document: doc) == "50 × 50 px @2x")
+        // Every row in device pixels: the header is the device size, no suffix.
+        doc.addLayer(caliper(from: CGPoint(x: 0, y: 10), to: CGPoint(x: 128, y: 10), unit: .pixels))
+        #expect(MeasureSpecList.headerSize(document: doc) == "100 × 100 px")
+        // A mix follows the logical rows, since that is the default unit.
+        doc.addLayer(caliper(from: CGPoint(x: 0, y: 20), to: CGPoint(x: 64, y: 20), unit: .points))
+        #expect(MeasureSpecList.headerSize(document: doc) == "50 × 50 px @2x")
+        // A hidden device-pixel row does not steer the header.
+        var doc2 = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100), pixelScale: 2)
+        doc2.addLayer(caliper(from: CGPoint(x: 0, y: 10), to: CGPoint(x: 128, y: 10), unit: .pixels, visible: false))
+        #expect(MeasureSpecList.headerSize(document: doc2) == "50 × 50 px @2x")
+        // A 1x capture never carries a suffix.
+        let flat = PhotonzDocument(canvasSize: CGSize(width: 640, height: 480))
+        #expect(MeasureSpecList.headerSize(document: flat) == "640 × 480 px")
     }
 
     @Test func alignmentGuidesReadTheirVerdict() {

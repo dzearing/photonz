@@ -1452,13 +1452,23 @@ final class EditorState {
         (documentURL ?? openedFileURL)?.deletingPathExtension().lastPathComponent ?? untitledName
     }
 
+    /// How many measurements a spec list would carry right now: the visible
+    /// ones. Copy as Spec List is offered only while this is above zero, so
+    /// hiding every row disables it rather than copying a bare header.
+    var visibleMeasurementCount: Int {
+        guard let document else { return 0 }
+        return CompositeCopy.visibleMeasurementCount(in: document)
+    }
+
     /// Copy as spec list (§7): the pinned plain-text form of the visible
     /// measurements goes on the clipboard. The panel menu and the menu bar's
-    /// Measure menu both land here.
+    /// Measure menu both land here. With every row hidden there is nothing to
+    /// list, so the key does nothing and the menus show it disabled.
     func copyMeasureSpecList() {
         guard let document else { return }
+        let listed = CompositeCopy.visibleMeasurementCount(in: document)
+        guard listed > 0 else { return }
         copyText(MeasureSpecList.render(document: document, name: specListName))
-        let listed = MeasureSpecList.measureLayers(in: document).filter(\.isVisible).count
         showCopyConfirmation(.specList(measurements: listed))
     }
 

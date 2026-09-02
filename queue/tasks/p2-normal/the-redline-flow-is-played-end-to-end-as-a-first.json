@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 460,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:41:08.154Z",
-  "updated": "2026-09-02T09:41:08.154Z",
+  "updated": "2026-09-02T11:00:54.882Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Modelled on arrow-captions-get-a-playtest-and-an-audit, which found and fixed three real defects. Known candidates to look at on the walk: the Size mode hint runs about 500 pt wide (audit 2026-09-02-measure-mode-hint rough 2), Copy as Spec List stays enabled when every row is hidden (2026-09-02-copy-confirmation rough 2), the loupe reads the selection in points only (2026-09-02-capture-loupe rough 3), a green arrow gets a near-black pill (2026-09-02-arrow-captions rough 4). No unmanned copy of the app holds a Screen Recording grant, so drive the real overlay and editor with scripted events and render through DocumentRenderer, as the earlier audits did. Read docs/design/next-measure.md section 12 first so the walk checks the promises, not just the code.",
@@ -23,6 +23,36 @@
     {
       "t": "2026-09-02T09:41:08.154Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T10:39:34.714Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T10:46:49.896Z",
+      "note": "Pre-build adversarial walk (code read, to be checked on the probe app). Predicted stops: (1) the capture overlay says nothing about what a click or a drag does; the lit window with its app, title and size is the only cue. (2) The toast reads Copied to clipboard! with a thumbnail; Edit is a hover-only pencil or a double-click, and only the Welcome window ever taught Shift-Command-6. (3) The Distance hint says click two points but the caliper then follows the pointer waiting for a third click to place the number, which the hint never mentions. (4) Every measurement hands the tool back to Select, so I has to be pressed before each of Size, Gap and Alignment; the sticky mode means I lands on the last mode, then one more press moves on. (5) The Size hint is 16 words, about 500 pt. (6) Copy as Spec List stays enabled with every row hidden and copies a bare header. (7) The spec list header reports device pixels (1440 x 960 px on the 2x fixture) while each row reports logical pixels (124 px), two units in one list with no scale stated. (8) The loupe reads the drag size in pt, and the editor then reads the same numbers as px. Fix candidates that need no product call: 3, 5, 6, 7. Candidate 4 is a product call (tool stays in hand vs returns to Select) and gets a decision if the walk confirms it hurts."
+    },
+    {
+      "t": "2026-09-02T11:00:13.744Z",
+      "note": "Walked the flow on the probe app (release Next, default flags) with a temporary in-app harness (deleted before commit, kept at temp/redline-walk on this machine): a synthetic frozen desktop drove the real capture overlay (window highlight read Settings · Preferences 720 × 480, loupe 560, 200 pt / 1120, 400 px, a click captured the window, a drag read 290 × 190 pt); the editor was opened on the 2x settings fixture and driven with real key and mouse events: I picked up Measure, the Distance stage needed a third click nobody was told about, I twice reached Size and one click read the Save Changes button at 124 × 30, I twice reached Gap and one click read the Reset gap at 12 px in Spacing blue, I twice reached Alignment and a drag down the labels read Left edges, off 4 px, A plus a drag opened the caption field and Return landed Primary action, Copy as Spec List and Copy Image produced the list and PNG+TIFF+text. Every stage rendered offscreen (before: /tmp/photonz-walk/before)."
+    },
+    {
+      "t": "2026-09-02T11:00:13.744Z",
+      "note": "Confirmed stops: (1) Distance pill said click two points but the number needs a third click; (2) Size pill measured 489 pt wide, the other three 281 to 392; (3) spec list header 1440 × 960 px above rows like 124 px; (4) Copy as Spec List copied a bare header with every row hidden and the pill said so; (5) every landing hands back to Select, seven presses of I for four measurements; (6) toast never names Edit; (7) loupe says pt, editor says px for the same numbers; (8) the mode sticks across launches, so the probe's second run picked Measure up in Alignment and the Distance clicks did nothing. Not a stop: Size, Gap and Alignment read exact values first try on the fixture."
+    },
+    {
+      "t": "2026-09-02T11:00:13.744Z",
+      "note": "Fixed 1 to 4 (core copy and format changes, TDD; app menus). MeasureToolMode.hint: Distance now Click two points, then click to place the number; Size now Click an element for its size. [ and ] change the pick, with the long [ and ] tip moved into help (the tooltip); hintLengthLimit 56 pinned by MeasureToolModeTests. MeasureSpecList.headerSize: logical size plus @2x unless every visible row reads device pixels (MeasureSpecListTests). EditorState.visibleMeasurementCount gates Copy as Spec List in the Measure menu and the panel menu and the copy path itself. Re-ran the walk on the fixed build: pills 354 to 392 pt, header settings-pane-2x · 720 × 480 px @2x, hidden rows copy nothing. Scripts/test.sh green (1250)."
+    },
+    {
+      "t": "2026-09-02T11:00:13.744Z",
+      "note": "Filed: the-measure-tool-stays-in-hand-after-a-measureme (with a decision card, recommended stay), the-capture-toast-says-how-to-open-the-editor, the-capture-loupe-and-the-editor-call-the-same-n, a-reusable-scripted-playtest-harness-for-the-pro. Audit: queue/audits/2026-09-02-redline-walk.json with eleven renders."
+    },
+    {
+      "t": "2026-09-02T11:00:54.881Z",
+      "note": "Walked capture, open, Distance, Size, Gap, Alignment, caption, Copy as Spec List and Copy Image on the probe app (Next, default flags) with scripted events and offscreen renders. Fixed four stops: Distance hint names the third click, Size hint shortened to ~355 pt with the tip in the tooltip, spec list header follows the rows' unit and names the scale, Copy as Spec List disabled with every row hidden. Scripts/test.sh green (1250). Audit queue/audits/2026-09-02-redline-walk.json with eleven renders; four follow-ups filed, one with a decision card."
     }
-  ]
+  ],
+  "started": "2026-09-02T10:39:34.713Z",
+  "completed": "2026-09-02T11:00:54.882Z"
 }

@@ -81,6 +81,21 @@ struct MeasureToolModeTests {
         }
     }
 
+    @Test func everyHintFitsThePillAndTheLongTipsLiveInTheTooltip() {
+        // The pill is one line above the tool bar; the old 82-character Size
+        // line ran about 490 pt wide. Every mode now stays under the limit.
+        for mode in MeasureToolMode.allCases {
+            #expect(mode.hint.count <= MeasureToolMode.hintLengthLimit,
+                    "\(mode) hint is \(mode.hint.count) characters")
+        }
+        // Distance takes THREE clicks (two feet, then the number); the hint
+        // has to say so or the caliper seems stuck after the second click.
+        #expect(MeasureToolMode.distance.hint.contains("then click"))
+        // The [ and ] tip is still taught, in the tooltip and in the hint.
+        #expect(MeasureToolMode.size.help.contains("[ and ]"))
+        #expect(MeasureToolMode.size.hint.contains("[ and ]"))
+    }
+
     @Test func aGapPreviewCanBorrowTheSpacingInkWithoutChangingTheRememberedRole() {
         // Gap mode commits a Spacing callout, so its preview has to be drawn in
         // Spacing ink — but picking up the Gap mode must not rewrite what the

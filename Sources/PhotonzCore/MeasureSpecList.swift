@@ -68,12 +68,32 @@ public enum MeasureSpecList {
         return "- \(displayName(for: layer)): \(value) (\(roleWord(for: content)))"
     }
 
-    /// Plain-text spec list: a header line `<name> · <W> × <H> px`, then one
-    /// line per **visible** measurement in panel order:
-    /// `- <name>: <value> (<role>)`.
+    /// The header's size, in the unit the lines use. A 2x capture used to
+    /// head its list with the canvas in device pixels (1440 × 960) above rows
+    /// in logical pixels (124), two units in one list with no scale stated.
+    /// The header now follows the rows: logical size plus "@2x" unless every
+    /// listed measurement reads device pixels, in which case the device size.
+    public static func headerSize(document: PhotonzDocument) -> String {
+        let listed = measureLayers(in: document).filter(\.isVisible).compactMap(\.measure)
+        let scale = document.pixelScale > 0 ? document.pixelScale : 1
+        let devicePixels = !listed.isEmpty && listed.allSatisfy { $0.unit == .pixels }
+        let divisor: CGFloat = devicePixels ? 1 : scale
+        let w = Int((document.canvasSize.width / divisor).rounded())
+        let h = Int((document.canvasSize.height / divisor).rounded())
+        let suffix = (!devicePixels && scale != 1) ? " @\(Self.scaleText(scale))" : ""
+        return "\(w) × \(h) px\(suffix)"
+    }
+
+    /// "2x", "1.5x".
+    private static func scaleText(_ scale: CGFloat) -> String {
+        scale == scale.rounded() ? "\(Int(scale))x" : "\(scale)x"
+    }
+
+    /// Plain-text spec list: a header line `<name> · <W> × <H> px[ @2x]`
+    /// (`headerSize`), then one line per **visible** measurement in panel
+    /// order: `- <name>: <value> (<role>)`.
     public static func render(document: PhotonzDocument, name: String) -> String {
-        let header = "\(name) · \(Int(document.canvasSize.width.rounded())) × " +
-            "\(Int(document.canvasSize.height.rounded())) px"
+        let header = "\(name) · \(headerSize(document: document))"
         let lines = measureLayers(in: document)
             .filter(\.isVisible)
             .compactMap { specLine(for: $0, in: document) }

@@ -20,13 +20,13 @@ struct MeasureModeHintTests {
     }
 
     @Test func aLongerLineStaysALittleLongerButNeverBecomesABanner() {
-        // Size's line carries the [ and ] tip and runs to sixteen words; two
-        // seconds is not enough to read it. Distance's seven words need no more.
+        // Size's line carries the [ and ] tip and is the longest; it gets a
+        // little longer than the base stay. Distance's line needs no more.
         let size = MeasureModeHint(mode: .size, shownAt: t0)
         let distance = MeasureModeHint(mode: .distance, shownAt: t0)
         #expect(size.lifetime > distance.lifetime)
         #expect(size.lifetime <= MeasureModeHint.longestLifetime)
-        #expect(size.isLive(at: t0.addingTimeInterval(2.5)))
+        #expect(size.isLive(at: t0.addingTimeInterval(2.1)))
         #expect(!size.isLive(at: t0.addingTimeInterval(MeasureModeHint.longestLifetime)))
         for mode in MeasureToolMode.allCases {
             let hint = MeasureModeHint(mode: mode, shownAt: t0)

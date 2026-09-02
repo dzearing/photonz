@@ -829,6 +829,7 @@ struct MeasurementsSectionAccessory: View {
                 Button("Hide All") { editorState.setAllMeasurementsVisible(false) }
                 Divider()
                 Button("Copy as Spec List") { editorState.copyMeasureSpecList() }
+                    .disabled(editorState.visibleMeasurementCount == 0)
                 Divider()
                 Button("Clear Measurements", role: .destructive) {
                     editorState.clearAllMeasurements()

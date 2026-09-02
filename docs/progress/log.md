@@ -4623,3 +4623,20 @@ the card's left end, over the icons.
   `2026-09-02-guide-edge-chip.json`.
 - Filed: the button-tops guide on the 2x capture reads off 1 px with 4 items
   (scan tolerance in device px, runs split per button).
+
+## 2026-09-02 (go loop): the redline flow walked end to end
+
+- Played the whole redline job on the probe app in Next with default flags,
+  driven by a temporary in-app harness (real overlay view over a synthetic
+  frozen desktop; real editor with synthesized key and mouse events; every
+  stage rendered offscreen). Size, Gap and Alignment read exact values on the
+  2x settings fixture first try (124 × 30, 12 px, off 4 px).
+- Fixed the stops that needed no product call: the Distance pill now says a
+  third click places the number; the Size pill drops from ~490 pt to ~355 pt
+  with the [ and ] tip kept in the tooltip; the spec list header follows the
+  rows' unit and names the scale (720 × 480 px @2x); Copy as Spec List is
+  disabled and its chord inert while every row is hidden.
+- Open: whether the Measure tool should stay in hand after a landing
+  (decision card on the follow-up task); the toast never names Edit; the
+  loupe says pt where the editor says px; a committed playtest harness.
+- Audit: `queue/audits/2026-09-02-redline-walk.json`.

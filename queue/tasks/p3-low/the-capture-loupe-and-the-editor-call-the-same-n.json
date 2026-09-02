@@ -1,0 +1,27 @@
+{
+  "id": "the-capture-loupe-and-the-editor-call-the-same-n",
+  "title": "The capture loupe and the editor call the same numbers by the same unit",
+  "goal": "While you drag a capture region the loupe reads the size in pt. Open the capture and the editor reads that same size as px. One thing, two names. Pick one wording and use it in both places, or show both on the loupe.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 610,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T10:59:36.584Z",
+  "updated": "2026-09-02T10:59:36.585Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CaptureLoupe.readout (PhotonzCore) builds the lines; MeasureUnit.suffix is always px with points meaning logical. The 2026-09-02 capture-loupe audit already asks the user which coordinates they want; do this after that answer if it arrives.",
+  "acceptance": [
+    "The loupe selection line and the editor readouts agree on the unit for a logical size, or the loupe shows both logical and device size",
+    "CaptureLoupeTests updated and green",
+    "Current unchanged (loupe is Next-only)"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T10:59:36.585Z",
+      "note": "created (manual)"
+    }
+  ]
+}

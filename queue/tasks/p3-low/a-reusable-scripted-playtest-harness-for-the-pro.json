@@ -1,0 +1,27 @@
+{
+  "id": "a-reusable-scripted-playtest-harness-for-the-pro",
+  "title": "A reusable scripted playtest harness for the probe app",
+  "goal": "Three audits in a row have each rebuilt a throwaway harness to drive the real editor with scripted clicks and keys and render the window offscreen. Keep one in the repo, switched on only by a request file, so the next audit starts from a working walk instead of from nothing.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 620,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T10:59:36.613Z",
+  "updated": "2026-09-02T10:59:36.613Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "temp/redline-walk/WalkHarness.swift (ignored, on this machine) is the version used for queue/audits/2026-09-02-redline-walk.json: opens a file window without activating the app, finds CanvasNSView, sends I/A through window.sendEvent, calls mouseDown/Up directly, renders contentView via cacheDisplay, drives SelectionView with a synthetic frozen picture. Gate it on the probe bundle id and compile it out of release with a build setting.",
+  "acceptance": [
+    "A file-triggered harness in the app drives the probe editor with synthesized events and writes renders plus a JSON log, off by default and never reachable in the shipping build",
+    "A short doc says how to run it",
+    "Scripts/test.sh green; the dev and shipping bundles behave exactly as before"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T10:59:36.613Z",
+      "note": "created (manual)"
+    }
+  ]
+}

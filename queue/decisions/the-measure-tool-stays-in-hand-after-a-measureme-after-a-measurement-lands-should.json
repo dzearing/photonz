@@ -1,0 +1,55 @@
+{
+  "id": "the-measure-tool-stays-in-hand-after-a-measureme-after-a-measurement-lands-should",
+  "taskId": "the-measure-tool-stays-in-hand-after-a-measureme",
+  "question": "After a measurement lands, should the Measure tool stay in your hand or hand back to the arrow?",
+  "context": "Found on the end-to-end walk (queue/audits/2026-09-02-redline-walk.json): taking a distance, a size, a gap and an alignment check cost seven presses of I because every landing returns to the arrow. This is the biggest repeated stop for someone redlining a whole screen.",
+  "options": [
+    {
+      "id": "stay",
+      "label": "Stay in hand",
+      "summary": "After a size, gap, distance or guide lands, the ruler stays selected and the pointer stays a crosshair. You take the next measurement with the next click. Press V, Esc or click the arrow tool to put it down.",
+      "pros": [
+        "Measuring five things is five clicks, not five presses of I plus five clicks",
+        "Matches how the ruler works in Photoshop and Figma: a tool stays until you change it",
+        "The mode pill is not re-raised on every landing, so there is less flashing"
+      ],
+      "cons": [
+        "Pressing I after a landing now cycles the mode instead of picking the tool up, which an old habit could trip on",
+        "A stray click after the last measurement can drop an unwanted caliper, undone with Command Z"
+      ],
+      "mitigation": "The landed measurement is still selected and shown in the inspector, so a single Esc or V returns to arrow when you are done."
+    },
+    {
+      "id": "select",
+      "label": "Hand back to Select (today)",
+      "summary": "Each measurement lands selected with the arrow tool active, as every other drawing tool does. Press I again for the next one; the mode you were in is remembered.",
+      "pros": [
+        "Consistent with arrows, rectangles and text, which all hand back after one shape",
+        "The landed measurement is ready to drag or restyle at once",
+        "Nothing changes"
+      ],
+      "cons": [
+        "A redline with many numbers costs a press of I before every one",
+        "The mode pill re-raises on each pickup, seven times on the walk for four measurements"
+      ],
+      "mitigation": "The mode is sticky, so each pickup is one press, never a hunt through the modes."
+    },
+    {
+      "id": "hybrid",
+      "label": "Stay for Size and Gap only",
+      "summary": "The one-click modes, Size and Gap, keep the tool so you can click element after element; Distance and Alignment, which take several clicks or a drag, hand back to Select as today.",
+      "pros": [
+        "Fast where it matters most: sizing and spacing a whole screen",
+        "Multi-step modes keep the familiar hand-back"
+      ],
+      "cons": [
+        "Two rules for one tool; which one applies depends on the mode you are in",
+        "Harder to explain in the mode pill"
+      ],
+      "mitigation": "The pill line for Size and Gap can end with the words and keeps measuring."
+    }
+  ],
+  "recommended": "stay",
+  "status": "pending",
+  "created": "2026-09-02T11:00:13.717Z"
+}

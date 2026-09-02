@@ -1,0 +1,27 @@
+{
+  "id": "the-capture-toast-says-how-to-open-the-editor",
+  "title": "The capture toast says how to open the editor",
+  "goal": "After a capture the small toast says Copied to clipboard! and nothing else. The way into the editor, a pencil that appears only when you hover, or a double-click, or Shift Command 6, is never said on screen. Make the toast say it, so a first capture leads into editing without reading the Welcome window.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 510,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T10:59:36.556Z",
+  "updated": "2026-09-02T10:59:36.556Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on the end-to-end walk (queue/audits/2026-09-02-redline-walk.json). ToastController.ToastView: message under the thumbnail, hoverControls reveal Edit/Dismiss; double-click = Edit. Options worth a decision card if visual direction is unclear: (a) an always-visible Edit button row under the message, (b) message reads Copied · double-click to edit, (c) keep hover-only. The toast is shared code, so gate any change on a Next flag (new catalog entry).",
+  "acceptance": [
+    "The toast shows a visible way to edit without hovering, or a line naming the key, in the Next release behind a flag",
+    "Current toast unchanged with the flag off",
+    "Verified on the probe app with a render or a scripted check of the toast view"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T10:59:36.556Z",
+      "note": "created (manual)"
+    }
+  ]
+}

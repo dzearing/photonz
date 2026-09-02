@@ -49,22 +49,32 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
     public var help: String {
         switch self {
         case .distance: "Distance: click two points, then click to place the readout"
-        case .size: "Size: click the element under the pointer for its width and height"
+        case .size: "Size: click the element under the pointer for its width and height. [ and ] pick a smaller or larger one"
         case .gap: "Gap: click in the space between two elements for the gap"
         case .alignment: "Alignment: drag a guide along an edge to check everything it crosses"
         }
     }
 
-    /// The first-run hint chip, which lives until the document's first
-    /// measurement lands. One short line, phrased as the next thing to do.
+    /// The hint chip's line (Current: the first-run chip; Next: the mode
+    /// toast). One short line, phrased as the next thing to do, and short
+    /// enough (`hintLengthLimit`) that the pill never runs a banner wide: Size's
+    /// line once carried the whole [ and ] tip and measured about 490 pt, and
+    /// Distance's never said that a THIRD click places the number, so a
+    /// first-timer clicked twice and waited. The long form of each tip lives
+    /// in `help`, the tooltip.
     public var hint: String {
         switch self {
-        case .distance: "Click two points for a live distance"
-        case .size: "Click an element for its width and height. [ and ] pick a smaller or larger one"
+        case .distance: "Click two points, then click to place the number"
+        case .size: "Click an element for its size. [ and ] change the pick"
         case .gap: "Click in the space between two elements for the gap"
         case .alignment: "Drag a guide along an edge to check what it crosses"
         }
     }
+
+    /// The most characters a hint line may carry: about 350 pt in the pill's
+    /// type, which reads in its two seconds and never nears the tool bar's
+    /// width.
+    public static let hintLengthLimit = 56
 
     /// Whether this mode draws a live preview of what a click would commit.
     /// Distance draws nothing under an idle pointer — that is the whole point of
