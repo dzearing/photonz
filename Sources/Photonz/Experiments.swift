@@ -160,6 +160,10 @@ extension Experiments {
     /// release's catalog, so Current always reads false.
     var measureGuideSnapEnabled: Bool { isEnabled(FeatureCatalog.measureGuideSnapFlag) }
 
+    /// `next-measure-readout-slide`: whether dragging a readout also slides it
+    /// along its own measuring line, instead of only across it.
+    var measureReadoutSlideEnabled: Bool { isEnabled(FeatureCatalog.measureReadoutSlideFlag) }
+
     /// `next-measure-roles`: whether measurements carry Size/Spacing roles —
     /// the inspector's Role control, per-role remembered colors, the canvas
     /// legend, and the tool options' Show filter. Exists only in the Next

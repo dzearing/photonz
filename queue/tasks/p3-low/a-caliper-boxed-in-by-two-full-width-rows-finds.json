@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.562Z",
-  "updated": "2026-09-02T15:11:09.572Z",
+  "updated": "2026-09-02T17:31:47.336Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 1. MeasureLabelPlanner.maxCrossReach caps sideways travel at three chip heights; the boxed-in fallback is the flat subjectPenalty tie-break to .onLine. Same limit shows up for Size mode on a full-width row (2026-08-23-size-readout-placement rough item 1). Render scripts: temp/boxed-in/Scan.swift (sweep) and temp/boxed-in/Render.swift (four options); compile with swiftc -I .build/debug/Modules against .build/debug/PhotonzCore.build/*.o and PhotonzRender.build/*.o. Option renders live in queue/audits/2026-09-02-boxed-in-*.png.",
@@ -57,7 +57,21 @@
     {
       "t": "2026-09-02T15:11:09.572Z",
       "note": "decision \"When a gap caliper sits between two full-width rows and its number cannot fit anywhere clear, where should the number go?\" resolved: Stay on the line, straddling both rows"
+    },
+    {
+      "t": "2026-09-02T17:31:45.044Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T17:31:47.336Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
     }
   ],
-  "started": "2026-09-02T07:51:00.891Z"
+  "started": "2026-09-02T17:31:45.043Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-02T17:31:47.336Z",
+    "exit": 1,
+    "message": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+  }
 }

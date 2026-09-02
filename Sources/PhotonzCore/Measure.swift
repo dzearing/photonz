@@ -127,6 +127,12 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// and for every document saved before it existed. Bounded by the planner
     /// (`MeasureLabelPlanner.maxCrossReach`, or the picture's edge).
     public var labelCrossReach: CGFloat
+    /// True once a person has dragged the readout themselves. The planner
+    /// picks a spot for every readout it can, but the moment someone moves the
+    /// number by hand that spot is theirs: nothing re-picks it afterwards, so
+    /// a column of numbers lined up by hand stays lined up. False for every
+    /// document saved before this field existed.
+    public var labelPinned: Bool
 
     public init(start: CGPoint = .zero, end: CGPoint = .zero,
                 headOffset: CGFloat = MeasureContent.defaultHeadOffset,
@@ -141,7 +147,8 @@ public struct MeasureContent: Hashable, Codable, Sendable {
                 alignment: AlignmentCheck? = nil,
                 labelPlacement: MeasureLabelPlacement = .onLine,
                 labelNudge: CGFloat = 0,
-                labelCrossReach: CGFloat = 0) {
+                labelCrossReach: CGFloat = 0,
+                labelPinned: Bool = false) {
         self.start = start
         self.end = end
         self.headOffset = headOffset
@@ -160,6 +167,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         self.labelPlacement = labelPlacement
         self.labelNudge = labelNudge
         self.labelCrossReach = labelCrossReach
+        self.labelPinned = labelPinned
     }
 
     /// Default caliper ink — the original single measure color.
@@ -176,7 +184,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         case start, end, headOffset, mode, strokeWidth, showLabel, unit, decimals, labelScale
         case role
         case alignment
-        case labelPlacement, labelNudge, labelCrossReach
+        case labelPlacement, labelNudge, labelCrossReach, labelPinned
         case strokeColorHex, chipColorHex, chipOpacity, textColorHex
         // Legacy keys from the pre-caliper measure model (decode-only) and the
         // pre-split single color (decode + a write-only mirror, see `encode`).
@@ -209,6 +217,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         try c.encodeIfPresent(alignment, forKey: .alignment)
         try c.encode(labelPlacement, forKey: .labelPlacement)
         try c.encode(labelNudge, forKey: .labelNudge)
+        try c.encode(labelPinned, forKey: .labelPinned)
         try c.encode(labelCrossReach, forKey: .labelCrossReach)
     }
 
@@ -240,6 +249,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         labelPlacement = try c.decodeIfPresent(MeasureLabelPlacement.self,
                                                forKey: .labelPlacement) ?? .onLine
         labelNudge = try c.decodeIfPresent(CGFloat.self, forKey: .labelNudge) ?? 0
+        labelPinned = try c.decodeIfPresent(Bool.self, forKey: .labelPinned) ?? false
         labelCrossReach = try c.decodeIfPresent(CGFloat.self, forKey: .labelCrossReach) ?? 0
 
         // Legacy `mode` may be "free" (no longer a case) — decode as a raw string.
@@ -661,10 +671,20 @@ public enum MeasureBuilder {
 
     /// Redraw a caliper with a new signed `headOffset` (the head-handle drag),
     /// keeping the feet anchored in document space.
+    ///
+    /// `readout` is where the number itself sits ALONG the measuring line,
+    /// which is how it slides left and right without the measurement moving at
+    /// all. Pass nil when the drag did not touch the number, so a drag that only
+    /// deepened the fork never claims the number was placed by hand.
     public static func updating(_ layer: Layer, start: CGPoint, end: CGPoint,
-                                headOffset: CGFloat) -> Layer {
+                                headOffset: CGFloat,
+                                readout: MeasureReadoutPlacement? = nil) -> Layer {
         guard var m = layer.measure else { return layer }
         m.headOffset = headOffset
+        if let readout {
+            m.labelNudge = readout.nudge
+            m.labelPinned = readout.pinned
+        }
         var updated = layer
         updated.content = .measure(m)
         return updating(updated, start: start, end: end)
@@ -745,10 +765,14 @@ public enum MeasureBuilder {
     /// Re-picks where the readout sits after something moved, and rebuilds the
     /// frame around it. The measurement itself never moves: the feet, the head,
     /// the ticks and the connector stay exactly where they were (D14 rule 5).
+    ///
+    /// A readout someone has already dragged is left exactly where they put it:
+    /// automatic placement is a good first guess, never a second opinion.
     public static func replanningLabel(_ layer: Layer, canvas: CGSize?,
                                        avoiding others: [CGRect] = [],
                                        describing subjects: [CGRect] = []) -> Layer {
-        guard var m = layer.measure, let probe = documentSpaceContent(of: layer) else { return layer }
+        guard var m = layer.measure, !m.labelPinned,
+              let probe = documentSpaceContent(of: layer) else { return layer }
         let plan = MeasureLabelPlanner.plan(for: probe, canvas: canvas, avoiding: others,
                                             describing: subjects)
         guard plan.placement != m.labelPlacement || plan.nudge != m.labelNudge

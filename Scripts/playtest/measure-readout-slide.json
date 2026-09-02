@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/measure-readout-slide",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+
+    { "do": "click", "at": [200, 700] },
+    { "do": "move", "at": [400, 700] },
+    { "do": "click", "at": [400, 700] },
+    { "do": "move", "at": [400, 640] },
+    { "do": "click", "at": [400, 640] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-narrow", "note": "caliper A: 200 wide, its number parked at x 300" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "click", "at": [200, 560] },
+    { "do": "move", "at": [600, 560] },
+    { "do": "click", "at": [600, 560] },
+    { "do": "move", "at": [600, 480] },
+    { "do": "click", "at": [600, 480] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-wide", "note": "caliper B: 400 wide above it, its number parked at x 400 — a hundred out of line with A's" },
+    { "do": "snapshot", "name": "2-two-measurements" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "click", "at": [400, 480] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "3-selected", "note": "caliper B selected, its number is the grab" },
+
+    { "do": "drag", "from": [400, 480], "to": [304, 480], "steps": 24, "hold": "4-column-guide" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "4-slid", "note": "B's number slid left to 4px short of A's number column; it should have clicked onto x 300, the yellow guide should run down through both numbers, and B should still read 400" },
+    { "do": "snapshot", "name": "4-after-release" },
+    { "do": "render", "name": "4-render-column" },
+
+    { "do": "drag", "from": [304, 480], "to": [398, 480], "steps": 24 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-home", "note": "slid back to 2px short of its own centre; the detent should put it exactly home at x 400, with no guide" },
+    { "do": "render", "name": "5-render-home" },
+
+    { "do": "drag", "from": [400, 480], "to": [304, 480], "steps": 24, "modifiers": ["command"], "hold": "6-command-free" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "6-command", "note": "the same slide with command held should stay free at x 304, no guide" },
+    { "do": "render", "name": "6-render-free" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "drag", "from": [400, 480], "to": [700, 480], "steps": 24 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "7-off-the-bar", "note": "slid clean off the end of its own bar; a connector line should now run from the caliper to the number" },
+    { "do": "snapshot", "name": "7-off-the-bar" },
+    { "do": "render", "name": "7-render-connector" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "drag", "from": [400, 480], "to": [420, 420], "steps": 16 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "8-both-ways", "note": "one drag moving both ways at once: the fork should deepen AND the number should slide, value unchanged" },
+    { "do": "render", "name": "8-render-both-ways" }
+  ]
+}

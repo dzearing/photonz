@@ -4,13 +4,30 @@
   "summary": "Measurements now line up with each other. Drag a readout chip and it snaps into line with the other chips on the picture, and drag a foot and it snaps to the feet and head lines of the other measurements, so two calipers can share a line. The yellow guide shows what it lined up with, and Command drags free.",
   "setup": "Photonz Dev, Experiments window, release Next. The new flag is Snap to other measurements, on by default. Open any screenshot and place two measurements with the Measure tool (I).",
   "try": [
-    { "do": "Place one measurement, then press I again and place a second one somewhere else on the picture, with its number parked well out of line with the first." },
-    { "do": "Press V for Select and click the second measurement's number to select it." },
-    { "do": "Drag that number toward the first one's line and stop a few pixels short. It should jump into line and a yellow line should run through both numbers.", "shot": "2026-09-02-chip-snap-guide.png" },
-    { "do": "Undo, then do the same drag with Command held. It should stay exactly where you left it and no yellow line should appear.", "shot": "2026-09-02-chip-command-free.png" },
-    { "do": "Undo, then drag one of the second measurement's feet toward the first measurement's line. The foot should land on it, with the yellow line again.", "shot": "2026-09-02-foot-snap-guide.png" },
-    { "do": "Watch the number in the chip you moved: it must not change while you drag the chip around." },
-    { "do": "Place a third measurement with the Measure tool and notice that its feet now also line up with the two already on the picture." }
+    {
+      "do": "Place one measurement, then press I again and place a second one somewhere else on the picture, with its number parked well out of line with the first."
+    },
+    {
+      "do": "Press V for Select and click the second measurement's number to select it."
+    },
+    {
+      "do": "Drag that number toward the first one's line and stop a few pixels short. It should jump into line and a yellow line should run through both numbers.",
+      "shot": "2026-09-02-chip-snap-guide.png"
+    },
+    {
+      "do": "Undo, then do the same drag with Command held. It should stay exactly where you left it and no yellow line should appear.",
+      "shot": "2026-09-02-chip-command-free.png"
+    },
+    {
+      "do": "Undo, then drag one of the second measurement's feet toward the first measurement's line. The foot should land on it, with the yellow line again.",
+      "shot": "2026-09-02-foot-snap-guide.png"
+    },
+    {
+      "do": "Watch the number in the chip you moved: it must not change while you drag the chip around."
+    },
+    {
+      "do": "Place a third measurement with the Measure tool and notice that its feet now also line up with the two already on the picture."
+    }
   ],
   "evaluate": [
     "Does the snap catch at the distance you expect, or do you have to hunt for it?",
@@ -20,7 +37,7 @@
     "Is Command the right way to drag free here, given it is already the way out of every other magnet?"
   ],
   "rough": [
-    "A number can only move across its own measuring line, never along it. So a column of height measurements lines up beautifully, but a stack of width measurements cannot have its numbers pulled into a single column, because each number is locked to the middle of its own span. Filed as a follow-up.",
+    "A number can only move across its own measuring line, never along it. So a column of height measurements lines up beautifully, but a stack of width measurements cannot have its numbers pulled into a single column, because each number is locked to the middle of its own span. FIXED: numbers now slide along their line too, see queue/audits/2026-09-02-measure-readout-slide.json.",
     "The yellow guide draws over the numbers rather than behind them, so it crosses the digits of the chip it just lined up with. That is how the guide already behaved for feet, so nothing changed, but it reads worse now that the guide lands on a chip on purpose.",
     "The guide spans the whole picture, so when several measurements already share a line you cannot tell from the guide which one you caught."
   ]

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 580,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T16:41:12.181Z",
-  "updated": "2026-09-02T16:41:12.182Z",
+  "updated": "2026-09-02T19:16:57.689Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MeasureContent.labelNudge already exists as the along-axis shift (the planner uses it to keep two nearby readouts from stacking), so the model supports this; the head drag in CanvasView.swift (snapMeasureHead / MeasureHandleDrag.params) only writes headOffset. Extend the head drag to write labelNudge from the along-axis component of the pointer, and feed the along-axis chip lines from MeasureSnapping.chipLines (they are already collected on both axes). Found while building the cross-axis chip snap on 2026-09-02; see queue/audits/2026-09-02-measure-guide-snap.json.",
@@ -24,6 +24,87 @@
     {
       "t": "2026-09-02T16:41:12.182Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T17:16:55.687Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T17:20:49.761451Z",
+      "note": "Adversarial review before building. (1) The pill already shows an open hand on hover, so it promises it can be dragged anywhere; today it only moves one way, which reads as sticky rather than as a rule. Making it move both ways is fixing a broken promise, not adding a feature. (2) Biggest hole: on mouse-up the placer re-picks where the number sits and would throw the slide away, so the number must become PINNED the moment a person moves it by hand. Cost: a hand-placed number never auto-dodges again. Accepted, that is what by hand means. (3) Second hole: slid far enough along, an on-the-line number floats free with nothing tying it to its caliper, because the connector line is only drawn for numbers pushed sideways. Fix: draw the connector as soon as the pill leaves its own head line. (4) Snapping on BOTH axes could feel grabby, but both are wanted (a column of widths wants one x, a row wants one y) and command already drags free. (5) Shortest version: reuse labelNudge and the chip lines that are already collected on both axes. No new inspector control, no artificial travel limit. (6) Added one thing the mock did not ask for: a detent back at the number's own centred home, so a slide is undoable by hand and not only by undo."
+    },
+    {
+      "t": "2026-09-02T17:24:08.522Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-02T17:24:39.347Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T17:24:41.484Z",
+      "note": "runner failed (exit 1, attempt 2): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-02T17:26:42.134Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T17:26:44.224Z",
+      "note": "parked after 3 runner failures in a row; last error: You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-02T17:31:47.336Z",
+      "note": "unparked: runners are failing regardless of which task runs, so the earlier failures were not this task"
+    },
+    {
+      "t": "2026-09-02T17:46:48.090Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T17:46:50.227Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-02T18:16:51.052Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T18:16:53.414Z",
+      "note": "runner failed (exit 1, attempt 2): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-02T18:46:54.434Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T18:46:56.755Z",
+      "note": "runner failed (exit 1, attempt 3): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-02T19:16:57.689Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T19:40:00.000Z",
+      "note": "Built. Core: MeasureReadoutDrag.resolve holds the whole two-axis drag (grip on both axes, cross-axis snap with its landing check, along-axis snap, and a detent home); MeasureContent.labelPinned + MeasureBuilder.updating(readout:) record a hand-placed number and replanningLabel leaves it alone. The pin is earned: a drag that only deepens the fork does not pin, and sliding home hands the number back to the automatic placer, which is the only way back short of undo. labelRidesTheLine now also asks whether the pill still overlaps its own head bar, so a number slid off the end grows the rasterizer's existing connector back to its caliper (no change to any placement the planner picks today). App: CanvasView keeps the grip on both axes and delegates to the resolver; the Esc path restores the original nudge AND pin. Behind next-measure-readout-slide, Next only, on by default."
+    },
+    {
+      "t": "2026-09-02T19:41:00.000Z",
+      "note": "Adversarial review of the built thing, on the probe. (a) Both axes at once reads as one motion, verified with a diagonal drag. (b) Fixed during review: the first cut pinned every head drag, so a number pushed straight down without sliding would have stopped dodging forever, and a number slid back home stayed pinned there with no way out but undo. Now the pin follows the number: off-centre means yours, dead centre means the app's. (c) Still rough, recorded in the audit: nothing marks which numbers are hand-placed, the yellow guide still draws over the digits it just lined up with (carried over from the chip snap), and there is no travel limit along the line."
+    },
+    {
+      "t": "2026-09-02T19:42:00.000Z",
+      "note": "Verified on the probe with Scripts/playtest/measure-readout-slide.json: 400px measurement's number slid to 4px short of the 200px one's column landed exactly on x 300 with the guide through both and its value still 196 px; slid back to 2px short of home it clicked home; command held it free at 301; slid 300px along it grew a connector; one diagonal drag deepened the fork and slid the number at once; undo restored each. Scripts/test.sh green, 1447 tests."
     }
-  ]
+  ],
+  "started": "2026-09-02T19:16:57.689Z",
+  "failures": 3,
+  "lastError": {
+    "at": "2026-09-02T18:46:56.755Z",
+    "exit": 1,
+    "message": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+  },
+  "parked": false,
+  "parkReason": ""
 }

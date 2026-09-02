@@ -1794,10 +1794,12 @@ final class EditorState {
 
     /// Live handle drag of a placed caliper (no history) — re-renders so the
     /// measured value updates as a foot or the head moves.
-    func previewMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat) {
+    func previewMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat,
+                                 readout: MeasureReadoutPlacement? = nil) {
         guard var doc = document, doc.layer(id: id)?.measure != nil else { return }
         doc.updateLayer(id: id) {
-            $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset)
+            $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset,
+                                         readout: readout)
         }
         if let frame = doc.layer(id: id)?.frame { previewMove = (id, frame) }
         submit(doc)
@@ -1805,7 +1807,8 @@ final class EditorState {
 
     /// Mouse-up on a caliper handle: one undoable step. Committing the original
     /// values is a History no-op (the Esc-cancel path).
-    func commitMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat) {
+    func commitMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat,
+                                readout: MeasureReadoutPlacement? = nil) {
         previewMove = nil
         let others = placedReadoutRects(excluding: id)
         let canvas = document?.canvasSize
@@ -1817,7 +1820,8 @@ final class EditorState {
         }()
         perform {
             $0.updateLayer(id: id) {
-                $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset)
+                $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset,
+                                             readout: readout)
                 // The measurement moved, so where its readout can sit changed.
                 $0 = MeasureBuilder.replanningLabel($0, canvas: canvas, avoiding: others,
                                                     describing: subjects)

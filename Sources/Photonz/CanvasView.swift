@@ -103,8 +103,8 @@ struct CanvasView: NSViewRepresentable {
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
     let onZoomCalloutCommit: (CGPoint, CGPoint) -> Void
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat) -> Void
-    let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat) -> Void
-    let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat) -> Void
+    let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
+    let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     /// A selected arrow's caption pill dragged to a spot: live, drop, Esc.
     let onCaptionPlacePreview: (UUID, CGPoint) -> Void
     let onCaptionPlaceCommit: (UUID, CGPoint) -> Void
@@ -241,8 +241,8 @@ final class CanvasNSView: NSView {
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }
     var onGapCommit: ((GapMeasurement) -> Void) = { _ in }
     var onCandidateLevelChange: ((Int) -> Void) = { _ in }
-    var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
-    var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
+    var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void) = { _, _, _, _, _ in }
+    var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void) = { _, _, _, _, _ in }
     /// A selected arrow's caption pill being dragged: live (no history), the
     /// drop (one undo step), and Esc (restores the render).
     var onCaptionPlacePreview: ((UUID, CGPoint) -> Void) = { _, _ in }
@@ -519,39 +519,39 @@ final class CanvasNSView: NSView {
     /// `.center` when ⇧ made the drag symmetric (content stays centered).
     private var canvasResizeDrag: (handle: ResizeHandle, rect: CGRect, centered: Bool)?
 
-    /// Lines a dragged readout chip up with the other chips on the picture,
-    /// writing the settled pointer back into `drag` and returning the guide to
-    /// draw. The chip moves on ONE axis (a horizontal caliper's readout moves up
-    /// and down, a vertical one's left and right), so only that axis is offered
-    /// a guide — a line through an axis the chip cannot move on would be a lie.
+    /// Moves a dragged readout and lines it up with the other readouts on the
+    /// picture, writing the landing back into `drag` and returning the guide to
+    /// draw.
+    ///
+    /// The pill moves two ways and they mean different things: ACROSS its line
+    /// it carries the caliper's head with it (the fork gets deeper), ALONG the
+    /// line only the number moves and the measurement is untouched. Both line up
+    /// with the readouts already placed, which is the point — a stack of widths
+    /// can be pulled into one tidy column of numbers.
     ///
     /// The pointer keeps its grip on the pill, so it is the CHIP that is lined
-    /// up, not the pointer. The landing is then checked: a readout that was
+    /// up, not the pointer. The across-axis landing is then checked: a readout
     /// pushed clear of its subject keeps its own distance from the measuring
     /// line and does not ride the head, and a snap it would not honour is
     /// dropped rather than faked.
     private func snapMeasureHead(_ drag: inout MeasureHandleDrag, pointer p: CGPoint,
-                                 zoom: CGFloat) -> (x: CGFloat?, y: CGFloat?)? {
-        let horizontal = drag.mode == .horizontal
-        let rawHead = (horizontal ? p.y : p.x) - drag.grabCross
-        var head = rawHead
-        var guide: CGFloat?
-        let candidates = horizontal ? drag.guides.horizontal : drag.guides.vertical
-        if !candidates.isEmpty, let layer = document?.layer(id: drag.layerID),
-           let m = documentMeasure(layer) {
-            let chip = measureChipCross(m, headAt: rawHead)
-            if let line = EdgeSnapping.snapValue(chip, toGuides: candidates, zoom: zoom,
-                                                 snapToPixelGrid: false).guide {
-                let moved = rawHead + (line - chip)
-                if abs(measureChipCross(m, headAt: moved) - line) < 0.5 {
-                    head = moved
-                    guide = line
-                }
-            }
+                                 zoom: CGFloat, snapping: Bool) -> (x: CGFloat?, y: CGFloat?)? {
+        guard let layer = document?.layer(id: drag.layerID),
+              let m = documentMeasure(layer) else {
+            drag.current = p
+            return nil
         }
-        drag.current = horizontal ? CGPoint(x: p.x, y: head + drag.grabCross)
-                                  : CGPoint(x: head + drag.grabCross, y: p.y)
-        return horizontal ? (nil, guide) : (guide, nil)
+        let slides = Experiments.shared.measureReadoutSlideEnabled
+        let landing = MeasureReadoutDrag.resolve(m, pointer: p, grabCross: drag.grabCross,
+                                                 grabAlong: drag.grabAlong, guides: drag.guides,
+                                                 zoom: zoom, snapping: snapping,
+                                                 slidesAlong: slides)
+        drag.current = p
+        drag.head = landing.headOffset
+        // Only a drag that actually slid the number claims it was placed by
+        // hand: pinning a number nobody moved would stop it dodging forever.
+        drag.readout = slides ? landing.readout : nil
+        return (landing.guideX, landing.guideY)
     }
 
     /// Suppresses edge captures on the axis perpendicular to decisive motion.
@@ -601,18 +601,29 @@ final class CanvasNSView: NSView {
         /// a head grabbed by its readout (anywhere on the pill) or a little off
         /// its dot keeps that grip, instead of jumping under the pointer.
         var grabCross: CGFloat = 0
+        /// The same grip ALONG the line, relative to the readout pill's centre,
+        /// so a pill taken hold of by its edge does not jump under the pointer.
+        var grabAlong: CGFloat = 0
         /// The lines the OTHER measurements offer this drag, collected once at
         /// grab time: nothing else on the canvas moves while a handle is held,
         /// and rebuilding them per mouse-moved event would be wasted work.
         var guides: EdgeSnapping.GuideLines = .none
+        /// The head-drag landing, resolved against the readout's real geometry:
+        /// the signed head offset, and where the number sits along the line when
+        /// this drag moved it (nil when it did not).
+        var head: CGFloat?
+        var readout: MeasureReadoutPlacement?
+        var originalReadout: MeasureReadoutPlacement
         var current: CGPoint
-        /// The caliper's (start, end, headOffset) with this drag applied.
-        func params() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat) {
+        /// The caliper's (start, end, headOffset) with this drag applied, plus
+        /// where the drag put the number when it moved it at all.
+        func params() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat,
+                          readout: MeasureReadoutPlacement?) {
             var s = originalStart, e = originalEnd, off = originalHeadOffset
             switch handle {
             case .head:
-                off = (mode == .horizontal ? current.y - s.y : current.x - s.x) - grabCross
-                return (s, e, off)
+                off = head ?? ((mode == .horizontal ? current.y - s.y : current.x - s.x) - grabCross)
+                return (s, e, off, readout)
             case .footA:
                 s = current
                 if mode == .horizontal { e.y = current.y } else { e.x = current.x }
@@ -627,10 +638,13 @@ final class CanvasNSView: NSView {
                                               : originalStart.x + originalHeadOffset
             let feet = mode == .horizontal ? s.y : s.x
             off = headAbs - feet
-            return (s, e, off)
+            return (s, e, off, nil)
         }
-        func originalParams() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat) {
-            (originalStart, originalEnd, originalHeadOffset)
+        /// Where the caliper was before this drag, readout included — an Esc
+        /// puts the number back exactly as it was, hand-placed or not.
+        func originalParams() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat,
+                                  readout: MeasureReadoutPlacement?) {
+            (originalStart, originalEnd, originalHeadOffset, originalReadout)
         }
     }
 
@@ -658,17 +672,6 @@ final class CanvasNSView: NSView {
     private func measureChipGuideLines(excluding id: UUID) -> EdgeSnapping.GuideLines {
         guard Experiments.shared.measureGuideSnapEnabled, let document else { return .none }
         return MeasureSnapping.chipLines(in: document, excluding: id)
-    }
-
-    /// Where the readout chip would centre on the cross axis (y for a horizontal
-    /// caliper, x for a vertical one) if the head line sat at `head`. Asked
-    /// rather than derived, because a readout pushed clear of its subject keeps
-    /// its own distance from the measuring line.
-    private func measureChipCross(_ m: MeasureContent, headAt head: CGFloat) -> CGFloat {
-        var probe = m
-        probe.headOffset = head - (m.mode == .horizontal ? m.start.y : m.start.x)
-        let centre = probe.labelPosition(chipSize: probe.estimatedLabelSize)
-        return m.mode == .horizontal ? centre.y : centre.x
     }
 
     /// A caliper's content re-based to document space (its feet are stored
@@ -1810,13 +1813,20 @@ final class CanvasNSView: NSView {
             }
             if let best {
                 resetDragMotion(p)
-                var drag = MeasureHandleDrag(layerID: id, handle: best.handle, mode: m.mode,
-                                             originalStart: s, originalEnd: e,
-                                             originalHeadOffset: m.headOffset, current: p)
+                var drag = MeasureHandleDrag(
+                    layerID: id, handle: best.handle, mode: m.mode,
+                    originalStart: s, originalEnd: e, originalHeadOffset: m.headOffset,
+                    originalReadout: MeasureReadoutPlacement(nudge: m.labelNudge,
+                                                             pinned: m.labelPinned),
+                    current: p)
                 if best.handle == .head {
                     let head = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e,
                                                               headOffset: m.headOffset).labelAnchor
                     drag.grabCross = m.mode == .horizontal ? p.y - head.y : p.x - head.x
+                    if let dm = documentMeasure(layer) {
+                        let pill = dm.labelPosition(chipSize: dm.estimatedLabelSize)
+                        drag.grabAlong = m.mode == .horizontal ? p.x - pill.x : p.y - pill.y
+                    }
                     drag.guides = measureChipGuideLines(excluding: id)
                 } else {
                     drag.guides = measureGuideLines(excluding: id)
@@ -1944,11 +1954,12 @@ final class CanvasNSView: NSView {
             // HEAD is the label position, not a measured point, so the picture's
             // edges have no say over it — but the other readouts do: it lines up
             // with the chips around it. ⌘ drags either one free.
-            if event.modifierFlags.contains(.command) {
+            if drag.handle == .head {
+                snapGuide = snapMeasureHead(&drag, pointer: p, zoom: viewport.zoom,
+                                            snapping: !event.modifierFlags.contains(.command))
+            } else if event.modifierFlags.contains(.command) {
                 drag.current = p
                 snapGuide = nil
-            } else if drag.handle == .head {
-                snapGuide = snapMeasureHead(&drag, pointer: p, zoom: viewport.zoom)
             } else {
                 trackDragMotion(p)
                 // Window the edge candidates by the span from the opposite foot to
@@ -1966,8 +1977,8 @@ final class CanvasNSView: NSView {
             }
             measureHandleDrag = drag
             // Live re-render so the measured value updates as the handle moves.
-            let (start, end, off) = drag.params()
-            onMeasureEndpointPreview(drag.layerID, start, end, off)
+            let (start, end, off, readout) = drag.params()
+            onMeasureEndpointPreview(drag.layerID, start, end, off, readout)
             refreshOverlays()
         } else if var drag = captionDrag {
             drag.current = p
@@ -2163,8 +2174,8 @@ final class CanvasNSView: NSView {
         } else if let drag = measureHandleDrag {
             measureHandleDrag = nil
             snapGuide = nil
-            let (start, end, off) = drag.params()
-            onMeasureEndpointCommit(drag.layerID, start, end, off)
+            let (start, end, off, readout) = drag.params()
+            onMeasureEndpointCommit(drag.layerID, start, end, off, readout)
             refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let drag = captionDrag {
@@ -2406,8 +2417,8 @@ final class CanvasNSView: NSView {
             if let drag = measureHandleDrag {
                 measureHandleDrag = nil
                 snapGuide = nil
-                let (start, end, off) = drag.originalParams()
-                onMeasureEndpointCommit(drag.layerID, start, end, off) // History no-op; restores render
+                let (start, end, off, readout) = drag.originalParams()
+                onMeasureEndpointCommit(drag.layerID, start, end, off, readout) // History no-op; restores render
                 refreshGrabCursor()
                 refreshOverlays()
                 return

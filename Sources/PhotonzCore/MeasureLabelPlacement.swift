@@ -146,9 +146,16 @@ extension MeasureContent {
 
     /// True while the readout still rides its own line, which is the only time
     /// the line needs splitting around it.
+    ///
+    /// Slid far enough along, a number runs clean off the end of its own head
+    /// bar. There is no line left under it to split, and nothing tying it to the
+    /// measurement either, so from here it is a relocated readout like any other
+    /// and gets a connector drawn back to its caliper.
     public func labelRidesTheLine(chipSize: CGSize) -> Bool {
         let offset = labelOffset(chipSize: chipSize)
-        return abs(mode == .horizontal ? offset.y : offset.x) < 0.5
+        guard abs(mode == .horizontal ? offset.y : offset.x) < 0.5 else { return false }
+        let along = mode == .horizontal ? offset.x : offset.y
+        return abs(along) < rawDistance / 2 + chipAxisHalfExtent(chipSize: chipSize)
     }
 
     /// True while the readout sits on top of the head handle, which it does

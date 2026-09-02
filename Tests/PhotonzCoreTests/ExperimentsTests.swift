@@ -371,6 +371,20 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measurePanelFlag })
     }
 
+    @Test func theReadoutSlideFlagIsNextOnlyAndOnByDefault() {
+        // Dragging a measurement's number moves it along its own line as well
+        // as across it. Next only; Current can still only push it away.
+        #expect(FeatureCatalog.measureReadoutSlideFlag == "next-measure-readout-slide")
+        #expect(FeatureCatalog.defaultSettings(for: .next)
+            .isEnabled(FeatureCatalog.measureReadoutSlideFlag))
+        #expect(FeatureCatalog.flags(for: .next)
+            .contains { $0.name == FeatureCatalog.measureReadoutSlideFlag })
+        #expect(!FeatureCatalog.flags(for: .current)
+            .contains { $0.name == FeatureCatalog.measureReadoutSlideFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current)
+            .isEnabled(FeatureCatalog.measureReadoutSlideFlag))
+    }
+
     @Test func theGrabCueFlagIsNextOnlyAndOnByDefault() {
         // The pointer becomes a hand over a pill that drags on its own (an
         // arrow's caption, a measurement's number). Next only; Current keeps

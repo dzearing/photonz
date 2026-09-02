@@ -1,0 +1,28 @@
+{
+  "feature": "Slide a measurement's number along its own line",
+  "epic": "measure-redline",
+  "summary": "A measurement's number now moves both ways. It still pushes away from what it measures, and it now slides left and right along the measurement too, so a stack of width measurements can be pulled into one tidy column of numbers even though every span has a different midpoint.",
+  "setup": "Photonz Dev, Experiments window, release Next. The new flag is \"Slide a measurement's number along its line\", on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press I and measure something 200 px wide. Press I again and measure something 400 px wide directly above it, so the two numbers sit a hundred pixels out of line." },
+    { "do": "Press V, then click the upper measurement's number to select it." },
+    { "do": "Drag that number sideways toward the lower one's number and stop a few pixels short. It should click into line, with a yellow line down through both numbers.", "shot": "2026-09-02-readout-column.png" },
+    { "do": "Check the number itself while you drag: it must not change." },
+    { "do": "Drag it back toward the middle of its own measurement. A few pixels out it should click back onto its own centre, with no yellow line." },
+    { "do": "Drag it sideways again with Command held. It should go exactly where you drop it and ignore every line." },
+    { "do": "Drag it far off the end of its own measurement. A line should appear joining it back to the measurement it belongs to.", "shot": "2026-09-02-readout-connector.png" },
+    { "do": "Drag it diagonally in one go: it should slide sideways and deepen the fork at the same time." }
+  ],
+  "evaluate": [
+    "Does dragging in both directions at once feel like one motion, or does one axis fight the other?",
+    "Is the click back onto the number's own centre discoverable, or did you expect a menu item to re-centre it?",
+    "When you line two numbers up, is a full-height yellow line the right amount of feedback for a sideways move?",
+    "Once you place a number by hand it stays put forever and never dodges out of the way again. Is that what you expect, or would you rather it kept dodging?",
+    "Is the line drawn back to a number slid off the end of its measurement enough to keep them reading as one thing?"
+  ],
+  "rough": [
+    "A number placed by hand stops being placed automatically, so it will not dodge a later measurement that lands under it. Sliding it back onto its own centre hands it back to the app, and that is the only way back short of undo. There is no visible sign of which numbers are hand-placed.",
+    "The yellow guide still draws over the numbers rather than behind them, so it crosses the digits of the chip it just lined up with. Carried over from the chip snap, not made worse here.",
+    "Nothing limits how far along the line a number can go: it can be slid clear across the picture, away from its own measurement. The connector keeps it attached, but there is no travel limit. That is deliberate, since a redline sometimes needs a number parked in white space, but it is worth judging."
+  ]
+}
