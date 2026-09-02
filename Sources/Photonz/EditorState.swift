@@ -124,6 +124,10 @@ final class EditorState {
     /// The arrow whose caption is being edited inline. Its pill (not the
     /// arrow) is suppressed from renders while the editor overlay stands in.
     private(set) var editingCaptionLayerID: UUID?
+    /// Bumped when the tool bar asks the open caption field to close while
+    /// keeping the tool in hand (re-picking the active tool). The canvas owns
+    /// the draft, so it answers by committing with `keepTool`.
+    private(set) var captionCloseRequest = 0
     /// The layer targeted by click-to-select / drag-to-move. Nil = none.
     /// Any change to the primary selection dissolves a marquee multi-selection —
     /// the two never coexist.
@@ -694,7 +698,17 @@ final class EditorState {
     // MARK: - Tools
 
     func setTool(_ tool: Tool) {
-        guard activeTool != tool else { return }
+        guard activeTool != tool else {
+            // The Arrow button clicked while the fresh arrow's caption field is
+            // open: "done with this caption, next arrow". The field closes and
+            // the Arrow tool stays, where a different tool button would close
+            // it and switch.
+            if ArrowCaptionEntry.repickClosesField(picked: tool, current: activeTool,
+                                                   fieldOpen: editingCaptionLayerID != nil) {
+                captionCloseRequest += 1
+            }
+            return
+        }
         if tool == .crop {
             // A selected image layer makes this a per-layer crop; otherwise
             // the marquee selection seeds the rect (a common flow: marquee

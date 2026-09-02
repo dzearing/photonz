@@ -39,6 +39,9 @@ struct CanvasView: NSViewRepresentable {
     let multiSelectedLayerIDs: Set<UUID>
     let dragPreview: DragPreview?
     let tool: Tool
+    /// See `EditorState.captionCloseRequest`: each bump closes an open caption
+    /// field with the tool kept.
+    let captionCloseRequest: Int
     /// Styled content the active tool draws (color/width from the style
     /// popover), so the drag preview matches what commit will rasterize.
     let annotationContent: AnnotationContent?
@@ -148,7 +151,8 @@ struct CanvasView: NSViewRepresentable {
                    cropBounds: cropBounds, selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame,
                    multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
-                   tool: tool, annotationContent: annotationContent,
+                   tool: tool, captionCloseRequest: captionCloseRequest,
+                   annotationContent: annotationContent,
                    annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent,
                    measureToolMode: measureToolMode,
@@ -407,6 +411,7 @@ final class CanvasNSView: NSView {
     /// The active tool, echoed from EditorState. Annotation tools reroute the
     /// pointer from hit-test/marquee into drag-to-create.
     private var tool: Tool = .select
+    private var captionCloseRequest = 0
     /// In-progress drag-to-create (document coordinates).
     private var annotationDrag: AnnotationDrag?
     /// Set by a press that committed the fresh arrow's caption field with the
@@ -2277,7 +2282,8 @@ final class CanvasNSView: NSView {
                cropRect: CGRect?, cropAspect: CropAspect,
                cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                multiSelectedLayerIDs: Set<UUID>,
-               dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
+               dragPreview: DragPreview?, tool: Tool, captionCloseRequest: Int = 0,
+               annotationContent: AnnotationContent?,
                annotationStyle: LayerStyle? = nil,
                textContent: TextContent?, measureContent: MeasureContent?,
                measureToolMode: MeasureToolMode = .distance,
@@ -2345,6 +2351,16 @@ final class CanvasNSView: NSView {
             }
             pressClosedCaptionField = false
             window?.invalidateCursorRects(for: self)
+        }
+        if captionCloseRequest != self.captionCloseRequest {
+            self.captionCloseRequest = captionCloseRequest
+            // The tool bar re-picked the tool in hand while the caption field
+            // was open: commit the draft and keep the tool. Deferred a tick,
+            // like the tool-switch commit above, because this runs inside a
+            // SwiftUI update.
+            if textSession?.captionStyle != nil {
+                DispatchQueue.main.async { [weak self] in self?.commitTextSession(keepTool: true) }
+            }
         }
         // Undo while editing can delete the layer behind the editor.
         if let session = textSession, let layerID = session.layerID,

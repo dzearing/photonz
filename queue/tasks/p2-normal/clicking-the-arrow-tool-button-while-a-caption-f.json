@@ -5,14 +5,14 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T10:08:11.104Z",
-  "updated": "2026-09-02T12:06:02.493Z",
+  "updated": "2026-09-02T12:27:31.729Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Follow-up from audit 2026-09-02-second-arrow rough 2. The hand-back lives in EditorState.commitCaptionEdit via ArrowCaptionEntry.toolAfterClosing(activeTool); the tool bar button calls setTool(.arrow) which early-returns when the tool is unchanged, so the deferred focus-loss commit sees .arrow and hands back. Fix idea: the toolbar click on the active Arrow button while editingCaptionLayerID != nil commits with keepTool, or setTool records the intent so toolAfterClosing is skipped.",
+  "notes": "Follow-up from audit 2026-09-02-second-arrow rough 2. The hand-back lives in EditorState.commitCaptionEdit via ArrowCaptionEntry.toolAfterClosing(activeTool); the tool bar button calls setTool(.arrow) which early-returns when the tool is unchanged, so the deferred focus-loss commit sees .arrow and hands back. Fix idea: the toolbar click on the active Arrow button while editingCaptionLayerID != nil commits with keepTool, or setTool records the intent so toolAfterClosing is skipped. Reproduction (2026-09-02): the click was actually a no-op, not a hand-back; see log. Fix lives in ArrowCaptionEntry.repickClosesField, EditorState.captionCloseRequest, CanvasNSView.apply.",
   "acceptance": [
     "With the Arrow captions flag on in Next: draw an arrow, then click the Arrow tool button; the caption field closes with the arrow plain and the Arrow tool stays active.",
     "Return, Esc and a plain canvas click still hand back to Select as before.",
@@ -30,6 +30,28 @@
     {
       "t": "2026-09-02T12:06:02.492Z",
       "note": "seq 590 -> 30"
+    },
+    {
+      "t": "2026-09-02T12:13:49.164Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T12:27:17.888Z",
+      "note": "Reproduced with a temporary in-app event harness on the probe app: the Arrow button click while the field is open was a no-op (field stayed open and focused, tool stayed Arrow), not a hand-back to Select. An NSButton click never takes focus from the caption text view, and setTool early-returns on the unchanged tool."
+    },
+    {
+      "t": "2026-09-02T12:27:17.889Z",
+      "note": "Adversarial review: the click means done with this caption, next arrow. Closing the field and keeping Arrow is consistent with every other tool button (which closes the field and switches). A typed draft lands, like any other tool click; not decision-worthy."
+    },
+    {
+      "t": "2026-09-02T12:27:17.889Z",
+      "note": "Fix: ArrowCaptionEntry.repickClosesField (core, test-first) + EditorState.captionCloseRequest bumped by setTool on a re-pick with a field open; CanvasNSView commits with keepTool on the bump. Verified six scenarios on the probe app (Arrow button, Return, Esc, canvas click, Rectangle button, typed draft then Arrow then next drag). 1285 tests green. Audit queue/audits/2026-09-02-arrow-button-repick.json. Harness deleted before commit."
+    },
+    {
+      "t": "2026-09-02T12:27:31.728Z",
+      "note": "Clicking the Arrow tool button while the fresh arrow's caption field is open now closes the field (a typed draft lands, an empty one leaves the arrow plain) and keeps the Arrow tool; the reproduction showed the click was a no-op before, not a hand-back. Core rule ArrowCaptionEntry.repickClosesField (test-first), EditorState.captionCloseRequest, CanvasNSView commit with keepTool. Verified on the probe app with synthesized events (six scenarios); 1285 tests green. Audit queue/audits/2026-09-02-arrow-button-repick.json"
     }
-  ]
+  ],
+  "started": "2026-09-02T12:13:49.164Z",
+  "completed": "2026-09-02T12:27:31.729Z"
 }

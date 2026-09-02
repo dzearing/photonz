@@ -1,0 +1,24 @@
+{
+  "feature": "Arrow button while the caption field is open",
+  "epic": "epic-uehjr1",
+  "summary": "Right after you draw an arrow its caption field is open and the Arrow tool is still in hand. Clicking the Arrow tool button now closes that field (a typed draft lands, an empty one leaves the arrow plain) and keeps the Arrow tool, so the next drag draws the next arrow. Before, that click did nothing at all: the field stayed open and focused.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Arrow captions flag is on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png.",
+  "try": [
+    { "do": "Press A and drag an arrow anywhere. The field reads Caption, Esc to skip and the tool bar shows Arrow selected." },
+    { "do": "Click the Arrow tool button. The field closes, the arrow stays plain, and Arrow is still the selected tool." },
+    { "do": "Drag another arrow. It draws, and its own field opens." },
+    { "do": "Type a word, then click the Arrow tool button. The word lands in a pill on that arrow and Arrow stays selected." },
+    { "do": "Drag one more arrow, then click the Rectangle tool button. The field closes and Rectangle is selected, as before." },
+    { "do": "Press A, drag an arrow, and press Return, then repeat with Esc, then with a single click on empty canvas. Each closes the field and switches back to Select, as before." }
+  ],
+  "evaluate": [
+    "When you click the Arrow button with the field open, does it feel like you said done with this one, next arrow, or does the field closing surprise you?",
+    "After the click, is it clear from the tool bar that a drag will draw the next arrow?",
+    "Should a typed draft land when you click the Arrow button (it does now, like clicking any other tool), or would you expect it to be thrown away?"
+  ],
+  "rough": [
+    "The task said this click switched back to Select. Driving the real app with synthesized events showed it was a no-op instead: the field stayed open and focused. The fix targets the behavior the task asked for, not the symptom it described.",
+    "The same rule applies to the Select button while a re-edit field (double-click on a captioned arrow) is open: the field closes and Select stays.",
+    "No screenshots: this unmanned session has no Screen Recording grant. Verified with an in-app event harness that drove the tool bar buttons and canvas of the probe app, six scenarios, all as intended."
+  ]
+}

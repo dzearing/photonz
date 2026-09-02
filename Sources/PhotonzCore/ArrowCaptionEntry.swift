@@ -57,6 +57,15 @@ public enum ArrowCaptionEntry {
         tool == .arrow ? .select : tool
     }
 
+    /// A tool bar click while the field is open. A different tool is a plain
+    /// switch: the field closes on its own and that tool stays in hand. The
+    /// tool ALREADY in hand (the Arrow button right after drawing an arrow)
+    /// would otherwise be a no-op that leaves the field up; read it as "done
+    /// with this caption, next one": the field closes and the tool stays.
+    public static func repickClosesField(picked: Tool, current: Tool, fieldOpen: Bool) -> Bool {
+        fieldOpen && picked == current
+    }
+
     public enum PressOutcome: Equatable, Sendable {
         /// Commit the draft and let the press start the next arrow.
         case commitAndDraw

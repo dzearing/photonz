@@ -4733,3 +4733,10 @@ the card's left end, over the icons.
   menus on this machine. Audit `queue/audits/2026-09-02-measure-menu-parity.json`.
 - Next: user reaction to the audit (order of the groups, the longer panel
   names, whether Hide All wants a chord).
+
+## 2026-09-02 — The Arrow button keeps the Arrow tool while a caption field is open (go loop)
+
+- Task `clicking-the-arrow-tool-button-while-a-caption-f`. Reproduced first with a temporary in-app harness (env-guarded, deleted before commit) that drove the probe app's real tool bar buttons and canvas with synthesized events: the click was a NO-OP, not a hand-back to Select as the task and the second-arrow audit's rough note said. `setTool(.arrow)` early-returns when the tool is unchanged, and an NSButton click never takes focus from the caption text view, so nothing closed the field.
+- Fix: `ArrowCaptionEntry.repickClosesField(picked:current:fieldOpen:)` (PhotonzCore, test-first): re-picking the tool already in hand while a caption field is open closes the field and keeps the tool. `EditorState.setTool` bumps `captionCloseRequest` in that case; `CanvasView` passes it to the NSView, which answers with `commitTextSession(keepTool: true)` (deferred a tick, same as the tool-switch commit). A different tool button still closes the field through the existing tool-change path.
+- Harness facts worth keeping: the tool bar buttons are AppKit-backed (`SwiftUIAppKitButton`, an NSButton) whose `mouseDown` runs a tracking loop, so a synthesized click must `NSApp.postEvent` the mouse-up BEFORE calling `mouseDown` directly; SwiftUI buttons are invisible to the in-process AX tree, the AppKit pop-ups beside them are not, so button positions were derived from the Selection pop-up's frame and calibrated by clicking. `NSWindow.sendEvent` swallows clicks while the app is inactive; dispatch to the hit-tested view instead.
+- Verified: six scenarios on the probe app (Arrow button with empty field, Return, Esc, plain canvas click, Rectangle button, typed draft + Arrow button + next drag). 1285 tests green. Audit: `queue/audits/2026-09-02-arrow-button-repick.json`.

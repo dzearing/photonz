@@ -210,6 +210,7 @@ struct EditorView: View {
                        multiSelectedLayerIDs: editorState.multiSelectedLayerIDs,
                        dragPreview: editorState.dragPreview,
                        tool: editorState.activeTool,
+                       captionCloseRequest: editorState.captionCloseRequest,
                        annotationContent: editorState.activeAnnotationContent,
                        annotationStyle: editorState.activeAnnotationStyle,
                        textContent: editorState.activeTextContent,

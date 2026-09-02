@@ -49,6 +49,19 @@ struct ArrowCaptionEntryTests {
         #expect(ArrowCaptionEntry.toolAfterClosing(.rectangle) == .rectangle)
     }
 
+    /// Clicking the tool bar button of the tool ALREADY in hand while the field
+    /// is open says "done with this caption, next one": the field closes and
+    /// the tool stays. Any other tool button is a plain tool switch (the field
+    /// closes on its own, and `toolAfterClosing` leaves the new tool alone);
+    /// with no field open a re-pick is nothing at all.
+    @Test func repickingTheToolInHandClosesTheFieldAndKeepsIt() {
+        #expect(ArrowCaptionEntry.repickClosesField(picked: .arrow, current: .arrow, fieldOpen: true))
+        #expect(ArrowCaptionEntry.repickClosesField(picked: .select, current: .select, fieldOpen: true))
+        #expect(!ArrowCaptionEntry.repickClosesField(picked: .rectangle, current: .arrow, fieldOpen: true))
+        #expect(!ArrowCaptionEntry.repickClosesField(picked: .select, current: .arrow, fieldOpen: true))
+        #expect(!ArrowCaptionEntry.repickClosesField(picked: .arrow, current: .arrow, fieldOpen: false))
+    }
+
     /// A press on the canvas while the field is open: with the Arrow tool still
     /// in hand it commits the draft AND starts drawing; otherwise (a re-edit
     /// opened by double-click under Select) it only commits and is swallowed.
