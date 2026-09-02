@@ -64,7 +64,7 @@
 .tlgrid .lane>.clip.cue.live{background:color-mix(in srgb,var(--comp) 34%,transparent);border-color:var(--comp)}
 .tlgrid .lane>.clip.cue.sel{outline:2px solid var(--accent);outline-offset:1px;z-index:2}
 .wchip{position:absolute;top:3px;height:20px;min-width:20px;border-radius:var(--r1);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);display:flex;align-items:center;padding:0 5px;font-size:9.5px;font-weight:560;color:var(--dim);overflow:hidden;white-space:nowrap;box-shadow:inset 0 1px 0 var(--edge-hi);cursor:pointer;transition:var(--ctl-tr)}
-.wchip .wt{overflow:hidden;text-overflow:ellipsis}
+.wchip .wword{overflow:hidden;text-overflow:ellipsis}
 .wchip.spoken{color:var(--faint);opacity:.72}
 .wchip:hover{border-color:var(--accent-line);color:var(--ink)}
 .wchip:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -540,7 +540,7 @@
       el.style.left=pct(x.t)+"%"; el.style.width=pct(x.d)+"%";
       el.setAttribute("data-seek", x.t.toFixed(2));
       el.title=x.w+" · "+x.t.toFixed(2)+"s to "+(x.t+x.d).toFixed(2)+"s";
-      el.innerHTML='<span class="wt">'+x.w+'</span>';
+      el.innerHTML='<span class="wword">'+x.w+'</span>';
       wl.appendChild(el);
     });
     playhead=document.getElementById("capHead");

@@ -85,9 +85,9 @@
   #lang-elevation .scene .scenebody{display:grid;grid-template-columns:150px 1fr;min-height:230px}
   #lang-elevation .scene .side{background:var(--panel);border-right:1px solid var(--line);padding:var(--gap-sm)}
   #lang-elevation .scene .side .ph{font-size:10px;font-weight:620;color:var(--dim);padding:var(--s1) var(--s1) var(--gap-sm)}
-  #lang-elevation .scene .side .row{display:flex;align-items:center;gap:var(--gap-sm);font-size:10.5px;color:var(--dim);padding:var(--s1) var(--gap-sm);border-radius:var(--r1)}
-  #lang-elevation .scene .side .row.sel{background:var(--accent-soft);color:var(--accent)}
-  #lang-elevation .scene .side .row .ic{font-family:var(--mono);font-size:10px;width:12px}
+  #lang-elevation .scene .side .scene-row{display:flex;align-items:center;gap:var(--gap-sm);font-size:10.5px;color:var(--dim);padding:var(--s1) var(--gap-sm);border-radius:var(--r1)}
+  #lang-elevation .scene .side .scene-row.sel{background:var(--accent-soft);color:var(--accent)}
+  #lang-elevation .scene .side .scene-row .ic{font-family:var(--mono);font-size:10px;width:12px}
   /* the scene canvas IS the shared .canvas.mini (VISUAL RULE 5) */
   #lang-elevation .scene .cv{--artboard-glow:360px 220px;border-radius:0}
   #lang-elevation .scene .hero{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);width:168px;height:96px;border-radius:14px;background:linear-gradient(135deg,#7c4dff,#ff5d8f);box-shadow:0 0 44px -6px rgba(177,77,255,.5)}
@@ -96,7 +96,7 @@
   #lang-elevation .scene .pop .mi.hot{background:var(--accent-soft)}
   #lang-elevation .scene .pop .mi .sc{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--faint)}
   #lang-elevation .scene .pop .sep{height:1px;background:var(--line-soft);margin:var(--s1) 0}
-  #lang-elevation .scene .tag{position:absolute;left:16px;bottom:14px;font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.5)}
+  #lang-elevation .scene .scene-tag{position:absolute;left:16px;bottom:14px;font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.5)}
   #lang-elevation .zbadge{position:absolute;font-family:var(--mono);font-size:8.5px;font-weight:700;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:1px 6px;box-shadow:0 2px 6px -2px rgba(0,0,0,.4);z-index:6}
 
   /* api + light/dark full-width cards */
@@ -247,9 +247,9 @@
           <div class="scenebody">
             <div class="side">
               <div class="ph">Layers</div>
-              <div class="row sel"><span class="ic ic-frame"></span>Card</div>
-              <div class="row"><span class="ic ic-text"></span>Headline</div>
-              <div class="row"><span class="ic ic-component"></span>Button</div>
+              <div class="scene-row sel"><span class="ic ic-frame"></span>Card</div>
+              <div class="scene-row"><span class="ic ic-text"></span>Headline</div>
+              <div class="scene-row"><span class="ic ic-component"></span>Button</div>
             </div>
             <div class="canvas mini cv">
               <div class="hero"></div>
@@ -259,7 +259,7 @@
                 <div class="sep"></div>
                 <div class="mi" style="color:var(--crit)"><span>Delete</span><span class="sc">⌦</span></div>
               </div>
-              <span class="tag">stage &lt; window &lt; panel &lt; popover</span>
+              <span class="scene-tag">stage &lt; window &lt; panel &lt; popover</span>
             </div>
           </div>
           <span class="zbadge" style="left:10px;top:8px">glass titlebar · elev 2</span>

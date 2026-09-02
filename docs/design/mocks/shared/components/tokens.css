@@ -44,6 +44,12 @@
      artstack  plabel  emeta  on-light                       (canvas.css)
      rot  rotstem  tc  bc  ml  mr                            (selection.css)
 
+   Triaged by hand on 2026-09-01 (shared/RESERVED-TRIAGE.md): ten
+   borrowings renamed, the loudest being six video walkthroughs whose
+   preview `.shot` inherited this library's `width:420px` and overran
+   its frame. Everything else a page styles under a DS name was judged
+   a refinement. `check-reserved.mjs --pairs` lists the pairs again.
+
    Note `.dlg-scrim` rather than `.scrim`: `lang-elevation` uses `.scrim`
    as a compound modifier (`.vstage.scrim`) and a bare DS rule would have
    made that specimen `position:absolute` and invisible. When an existing

@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 420,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T05:05:10.462Z",
-  "updated": "2026-08-24T05:05:10.462Z",
+  "updated": "2026-09-02T02:33:13.234Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured during color-and-elevation-reference-pages-reuse-a-rese. 84 distinct DS bare class names appear as the key selector of a page rule, across 81 pages in docs/design/mocks/pages. check-reserved.mjs deliberately gates only the STRUCTURAL form (grid-template-columns/rows, grid-area, float, position:absolute|fixed) because that is the decidable damage. Widening STRUCTURAL to include padding, overflow-y and backdrop-filter was tried and produces 74 hits, nearly all legitimate refinements (.btn{flex}, .win{height}, .selwrap{width}), so it is not gateable. This task is the human triage pass the gate cannot do. Known real case fixed already: lang-motion .rail/.track/.dot -> .mo-rail/.mo-track/.mo-puck. Start by re-running the zero-overlap heuristic (page rule shares no property with the DS rule of the same name) as a shortlist, then judge each by hand.",
@@ -23,6 +23,75 @@
     {
       "t": "2026-08-24T05:05:10.462Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T21:02:47.785Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T21:19:05.765Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-08-24T21:19:11.829Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T22:37:59.727Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 2)"
+    },
+    {
+      "t": "2026-08-24T22:54:49.006Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T23:06:59.175Z",
+      "note": "parked after 3 runner failures in a row; last runner exited without finalizing the task"
+    },
+    {
+      "t": "2026-09-02T01:55:09.917Z",
+      "note": "unparked on 2026-09-01: the three failures were the machine sleeping mid-run and an expired login, not the task"
+    },
+    {
+      "t": "2026-09-02T02:21:35.598Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T02:32:23.561Z",
+      "note": "Epic design-system is staged next, not later; the loop has been running its tasks (c0f479e, f860250), so proceeding."
+    },
+    {
+      "t": "2026-09-02T02:32:23.561Z",
+      "note": "Adversarial pass on the idea: the zero-overlap heuristic is useless as a verdict (79 hits; .selwrap{width} and the real .shot bug both score zero). What works is reading the markup: is the element the DS component or a new thing wearing its name. Did that for all 272 page/class pairs across 81 pages and 83 DS names."
+    },
+    {
+      "t": "2026-09-02T02:32:23.561Z",
+      "note": "Real bug found and measured live: six video walkthroughs (cut, freeze, move, title, transition, zoom) call the fake app window in the preview frame .shot. inspector.css owns .shot{width:420px} for the redline screenshot card. The page positions it left:12%;right:12%; a set width beats right, so the window was 420px wide in a 470px frame, ended 6px past the frame edge and had no right margin. Renamed .pvshot on all six; now 56px each side, no inherited 40px drop shadow."
+    },
+    {
+      "t": "2026-09-02T02:32:23.561Z",
+      "note": "Other borrowings renamed: lang-elevation .side .row -> .scene-row (inherited margin:7px 0 from the inspector row, 24px rows at 38px pitch), lang-elevation .scene .tag -> .scene-tag, lang-spacing .align .tag -> .align-tag, draw .erase-cap .tag -> .cap-tag (tag is a reserved spec.css name), components .way .wt -> .wname and video-captions .wchip .wt -> .wword (walkthrough.js queries all(\".wt\") and only skips them because they have no steps), iconography .ramp -> .sizeramp (a row wearing the token-ramp column name). image.html .masklist .tag was the DS .rtag written out by hand: page rule deleted, markup uses .rtag.accent. dsys .dspec .ramp{width:220px} matched nothing and is removed."
+    },
+    {
+      "t": "2026-09-02T02:32:23.561Z",
+      "note": "Gate widened where it is decidable: pixel-literal width joins the structural set (62 -> 86 guarded names). Fresh run had 16 hits, 13 of them .ic recoloured/resized, plus .cpick and .work-st, all the component used as itself, so those three are allowlisted with a reason each. Mutation-tested: a page styling .shot without a width fails with the right class, property and source file; removing it passes."
+    },
+    {
+      "t": "2026-09-02T02:32:23.561Z",
+      "note": "Added check-reserved.mjs --pairs (re-runnable shortlist) and shared/RESERVED-TRIAGE.md with every verdict and the borderline calls (.plate .dot with a digit, video .prow .rl as a clickable label, .toolbar .chip rules that shell.js feeds). AGENTS.md PREFIX rule and the tokens.css RESERVED block point at both."
+    },
+    {
+      "t": "2026-09-02T02:32:23.561Z",
+      "note": "Verified: all six study guards green, 90 pages return 200, no console errors or warnings on the nine changed pages, light and dark screenshots of the shot fix and the elevation rows in queue/audits."
+    },
+    {
+      "t": "2026-09-02T02:33:13.234Z",
+      "note": "Triaged all 272 page rules keyed on a design system class across 81 pages: ten borrowings renamed (six video walkthroughs' .shot -> .pvshot fixes a real overflow measured live at 420px in a 470px frame; lang-elevation .row/.tag, lang-spacing .tag, draw .tag, components and video-captions .wt, iconography .ramp; image .masklist .tag replaced by the DS .rtag; dead dsys .ramp rule removed). Gate widened with pixel-literal width (62 -> 86 guarded, 3 allowlisted with reasons, mutation-tested) and given --pairs; verdicts in shared/RESERVED-TRIAGE.md; AGENTS.md and tokens.css point at it. Six guards green, 90 pages 200, no console errors, light and dark checked. Audit queue/audits/2026-09-01-reserved-names-triage.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T02:21:35.598Z",
+  "failures": 0,
+  "parked": false,
+  "parkReason": "",
+  "completed": "2026-09-02T02:33:13.234Z"
 }

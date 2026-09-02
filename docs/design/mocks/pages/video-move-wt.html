@@ -17,15 +17,15 @@
   #video-move-wt .pvframe{width:100%;aspect-ratio:16/9;border-radius:var(--r3);position:relative;
     overflow:hidden;background:radial-gradient(120% 115% at 26% 6%,#233070,#0e1122 60%,#07080f);
     box-shadow:0 20px 44px -16px rgba(0,0,0,.62)}
-  #video-move-wt .shot{position:absolute;left:12%;top:16%;right:12%;bottom:14%;border-radius:9px;
+  #video-move-wt .pvshot{position:absolute;left:12%;top:16%;right:12%;bottom:14%;border-radius:9px;
     background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
     border:1px solid rgba(255,255,255,.16);overflow:hidden;transform-origin:72% 62%}
-  #video-move-wt .shot .sb{height:16px;display:flex;align-items:center;gap:4px;padding:0 7px;
+  #video-move-wt .pvshot .sb{height:16px;display:flex;align-items:center;gap:4px;padding:0 7px;
     background:rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.12)}
-  #video-move-wt .shot .sb i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
-  #video-move-wt .shot .bars{display:flex;align-items:flex-end;gap:6px;height:calc(100% - 16px);padding:12px 14px}
-  #video-move-wt .shot .bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#12c2e9,#7c4dff)}
-  #video-move-wt .shot .cta{position:absolute;right:12px;bottom:12px;font-size:8px;font-weight:700;color:#0b0d18;
+  #video-move-wt .pvshot .sb i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
+  #video-move-wt .pvshot .bars{display:flex;align-items:flex-end;gap:6px;height:calc(100% - 16px);padding:12px 14px}
+  #video-move-wt .pvshot .bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#12c2e9,#7c4dff)}
+  #video-move-wt .pvshot .cta{position:absolute;right:12px;bottom:12px;font-size:8px;font-weight:700;color:#0b0d18;
     background:linear-gradient(180deg,#fff,#dfe6ff);padding:4px 9px;border-radius:6px}
 
   /* lanes that place clips at real times */
@@ -97,7 +97,7 @@
             <div class="canvas">
               <div class="pvwrap">
                 <div class="pvframe" id="cvFrame">
-                  <div class="shot">
+                  <div class="pvshot">
                     <div class="sb"><i></i><i></i><i></i></div>
                     <div class="bars">
                       <i style="height:38%"></i><i style="height:62%"></i><i style="height:47%"></i>

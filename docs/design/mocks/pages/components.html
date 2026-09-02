@@ -113,7 +113,7 @@
   .way:hover{border-color:var(--comp-line)}
   .way .wi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px;
     background:var(--comp-soft);color:var(--comp);flex:none}
-  .way .wt{font-size:12px;font-weight:640;color:var(--ink)}
+  .way .wname{font-size:12px;font-weight:640;color:var(--ink)}
   .way .wd{font-size:11px;color:var(--dim);line-height:1.45}
   .way .wk{margin-top:auto;font-size:10px;color:var(--faint);font-family:var(--mono)}
 
@@ -468,25 +468,25 @@
     <div class="ways">
       <div class="way">
         <span class="wi"><i class="ic ic-component"></i></span>
-        <div class="wt">Drag from Library</div>
+        <div class="wname">Drag from Library</div>
         <div class="wd">Pick a tile in the dock and drop it on the canvas or into a frame. Best when you want to place it precisely.</div>
         <div class="wk">this page</div>
       </div>
       <div class="way" data-target="editor">
         <span class="wi"><i class="ic ic-search"></i></span>
-        <div class="wt">Insert from the palette</div>
+        <div class="wname">Insert from the palette</div>
         <div class="wd">Double-click a tile, or run insert from ⌘K, to drop one at the center of the selection.</div>
         <div class="wk">2× click · ⌘K</div>
       </div>
       <div class="way" data-target="composites">
         <span class="wi"><i class="ic ic-layers"></i></span>
-        <div class="wt">Duplicate an instance</div>
+        <div class="wname">Duplicate an instance</div>
         <div class="wd">Copy one that is already placed. The copy stays linked to the same main component.</div>
         <div class="wk">⌘D</div>
       </div>
       <div class="way" data-target="agent">
         <span class="wi"><i class="ic ic-sparkle"></i></span>
-        <div class="wt">Ask the agent</div>
+        <div class="wname">Ask the agent</div>
         <div class="wd">Describe it in words · <i>add three Cards from the Library</i> · and the agent inserts and lays them out for you.</div>
         <div class="wk">agent</div>
       </div>

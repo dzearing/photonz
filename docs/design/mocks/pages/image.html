@@ -53,7 +53,6 @@
 
   /* mask list rows: editing highlight + tag */
   .masklist.on{color:var(--ink);font-weight:560}
-  .masklist .tag{margin-left:auto;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:1px 6px;border-radius:5px}
 
   /* live inspector slider · looks like the DS bar, driven by a real range input */
   .hsl{position:relative;flex:1;height:18px;display:flex;align-items:center;min-width:0}
@@ -298,7 +297,7 @@
               <div class="row"><span class="rl">Opacity</span><span class="bar"><i style="width:88%"></i></span><span class="val">88%</span></div>
               <div class="row"><span class="rl">Range</span><span class="bar"><i style="width:34%"></i></span><span class="val">shadows</span></div>
               <div class="row"><span class="rl">Feather</span><span class="bar"><i style="width:28%"></i></span><span class="val">2.0px</span></div>
-              <div class="masklist on"><span class="mm" style="background:linear-gradient(135deg,#111,#eee)"></span>Luminosity · shadows<span class="tag">editing</span></div>
+              <div class="masklist on"><span class="mm" style="background:linear-gradient(135deg,#111,#eee)"></span>Luminosity · shadows<span class="rtag accent">editing</span></div>
               <div class="masklist"><span class="mm" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>Subject · agent select</div>
               <div class="masklist"><span class="mm" style="background:linear-gradient(180deg,#fff,#000)"></span>Gradient · sky</div>
               <p class="note">The mask is just an alpha <b style="color:var(--ink)">Paint</b> layer. Brush it, or drop a subject, gradient or luminosity mask in. <span data-target="img-masking" style="color:var(--accent)">Masking →</span></p>

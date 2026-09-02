@@ -98,8 +98,8 @@
   #lang-spacing .align .edge::before{left:0}#lang-spacing .align .edge::after{right:0}
   #lang-spacing .align .bad{position:relative;margin-left:9px;border-color:var(--crit) !important}
   #lang-spacing .align .bad::after{content:"+9 off-grid";position:absolute;left:-9px;top:50%;transform:translateY(-50%);width:9px;height:2px;background:var(--crit)}
-  #lang-spacing .align .tag{font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:var(--s1)}
-  #lang-spacing .align .tag.g{color:var(--good)}#lang-spacing .align .tag.b{color:var(--crit)}
+  #lang-spacing .align .align-tag{font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:var(--s1)}
+  #lang-spacing .align .align-tag.g{color:var(--good)}#lang-spacing .align .align-tag.b{color:var(--crit)}
 
   #lang-spacing .note{font-size:10.5px;color:var(--faint);line-height:1.45;margin:0}
 
@@ -250,7 +250,7 @@
             <div class="cell" style="flex:2">Inspector</div>
           </div>
           <div class="lane">
-            <div class="tag g"><i class="ic ic-check xs"></i> edges line up · shared grid</div>
+            <div class="align-tag g"><i class="ic ic-check xs"></i> edges line up · shared grid</div>
           </div>
           <div class="lane">
             <div class="cell bad" style="flex:2">Layers</div>
@@ -258,7 +258,7 @@
             <div class="cell" style="flex:2">Inspector</div>
           </div>
           <div class="lane">
-            <div class="tag b"><i class="ic ic-x xs"></i> one off-grid margin breaks the column</div>
+            <div class="align-tag b"><i class="ic ic-x xs"></i> one off-grid margin breaks the column</div>
           </div>
         </div>
       </div>

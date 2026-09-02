@@ -45,10 +45,10 @@
     width:258px;max-width:100%}
   .erase-cell .artstack{width:100%;height:200px}
   .erase-cap{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:560;color:rgba(255,255,255,.72)}
-  .erase-cap .tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  .erase-cap .cap-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
     padding:1px 6px;border-radius:5px}
-  .erase-cap .tag.d{color:#ff8b8b;background:rgba(255,90,90,.16);border:1px solid rgba(255,90,90,.4)}
-  .erase-cap .tag.m{color:#7ff0b6;background:rgba(62,207,142,.16);border:1px solid rgba(62,207,142,.4)}
+  .erase-cap .cap-tag.d{color:#ff8b8b;background:rgba(255,90,90,.16);border:1px solid rgba(255,90,90,.4)}
+  .erase-cap .cap-tag.m{color:#7ff0b6;background:rgba(62,207,142,.16);border:1px solid rgba(62,207,142,.4)}
 
   /* a brush preset tile hosts a REAL stroke, rendered by the same engine that
      paints the path, inside the shared .th */
@@ -148,14 +148,14 @@
                     <span class="plabel">pixels removed</span>
                     <canvas class="surface" id="eraseDest" width="258" height="200"></canvas>
                   </div>
-                  <div class="erase-cap"><span class="tag d">Destructive</span><span>gone unless you undo</span></div>
+                  <div class="erase-cap"><span class="cap-tag d">Destructive</span><span>gone unless you undo</span></div>
                 </div>
                 <div class="erase-cell">
                   <div class="artstack">
                     <span class="plabel">mask · reversible</span>
                     <canvas class="surface" id="eraseMask" width="258" height="200"></canvas>
                   </div>
-                  <div class="erase-cap"><span class="tag m">Layer mask</span><span>restore any time</span></div>
+                  <div class="erase-cap"><span class="cap-tag m">Layer mask</span><span>restore any time</span></div>
                 </div>
               </div>
               <div class="sel-ring"></div>

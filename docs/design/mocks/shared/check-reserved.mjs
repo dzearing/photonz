@@ -1,6 +1,9 @@
 /* A page must not borrow a design-system class name to mean its own thing.
-   Run:  node shared/check-reserved.mjs        (from docs/design/mocks)
-         node shared/check-reserved.mjs --list (show the hazard set and exit)
+   Run:  node shared/check-reserved.mjs         (from docs/design/mocks)
+         node shared/check-reserved.mjs --list  (show the hazard set and exit)
+         node shared/check-reserved.mjs --pairs (every page rule keyed on ANY
+               DS bare class, with how many properties it shares with the DS
+               rule: the shortlist for the human triage in RESERVED-TRIAGE.md)
 
    WHAT GOES WRONG. tokens.css owns `.body{display:grid;grid-template-columns:
    220px 1fr}` — the app shell's rail plus content. A page that reuses `.body`
@@ -43,8 +46,13 @@ const CSS = join(HERE, 'components');
 const PAGES = join(HERE, '..', 'pages');
 
 /* Properties that move a box rather than paint it. Inheriting one of these by
-   accident is the "mystery layout bug"; inheriting a colour is not. */
-const STRUCTURAL = ['grid-template-columns', 'grid-template-rows', 'grid-area', 'float', 'position'];
+   accident is the "mystery layout bug"; inheriting a colour is not.
+   `width` counts only when the DS value is a pixel literal: six video
+   walkthroughs positioned their preview `.shot` with left:12%;right:12% and
+   inherited inspector.css's `.shot{width:420px}`, which beats `right`, so the
+   fake app window ran 6px past the frame and lost its right margin. A
+   percentage or `auto` width does not pin a box, so those stay out. */
+const STRUCTURAL = ['grid-template-columns', 'grid-template-rows', 'grid-area', 'float', 'position', 'width'];
 
 /* DS components that pages restyle in place, where the DS structure is wanted.
    One line each saying what the class actually is, so the next reader can tell
@@ -60,6 +68,9 @@ const USED_AS_ITSELF = {
   slrow: 'a slider row; the slider reference pages retune its label column',
   setrow: 'an inspector settings row',
   'cnv-hint': 'the transient hint centred on the canvas',
+  ic: 'the icon glyph; pages recolour or resize it inside their own controls',
+  cpick: 'the colour picker popover, placed by the colour reference pages',
+  'work-st': 'the agent work-area status glyph, recoloured per state',
 };
 
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -84,9 +95,12 @@ function rules(css) {
 }
 
 /* Which structural properties does this rule impose? `position:relative` is
-   not one: it does not take the box out of flow. */
+   not one: it does not take the box out of flow. A width only pins when it is
+   a pixel literal. */
 const imposed = (decls) =>
-  STRUCTURAL.filter((p) => p in decls && (p !== 'position' || /absolute|fixed/.test(decls[p])));
+  STRUCTURAL.filter((p) => p in decls
+    && (p !== 'position' || /absolute|fixed/.test(decls[p]))
+    && (p !== 'width' || /^[\d.]+px$/.test(decls[p])));
 
 /* The hazard set: a bare `.foo` rule in a DS stylesheet with no ancestor and no
    companion class, so it matches ANY element carrying that class. */
@@ -118,6 +132,53 @@ function keyClass(sel) {
 }
 
 const haz = hazards();
+
+/* --pairs: the triage listing. Not a gate. Every DS bare class (structural or
+   not) that a page styles as its key selector, with the property overlap
+   between the two rules and the class attributes the page's markup carries.
+   Zero overlap is a hint, not a verdict: `.selwrap{width}` is a refinement and
+   `.shot{position;left;right}` was a borrowing, both at zero. The verdicts
+   live in shared/RESERVED-TRIAGE.md. */
+if (process.argv.includes('--pairs')) {
+  const ds = new Map();
+  for (const f of readdirSync(CSS).filter((f) => f.endsWith('.css'))) {
+    for (const r of rules(readFileSync(join(CSS, f), 'utf8'))) {
+      const m = r.sel.match(/^\.([a-zA-Z][\w-]*)$/);
+      if (!m) continue;
+      const e = ds.get(m[1]) || { files: new Set(), props: new Set() };
+      e.files.add(f);
+      Object.keys(r.decls).forEach((p) => e.props.add(p));
+      ds.set(m[1], e);
+    }
+  }
+  const pairs = [];
+  for (const page of readdirSync(PAGES).filter((f) => f.endsWith('.html')).sort()) {
+    const src = readFileSync(join(PAGES, page), 'utf8');
+    const css = [...src.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
+    const owned = new Map();
+    for (const r of rules(css)) {
+      const cls = keyClass(r.sel);
+      if (!cls || !ds.has(cls)) continue;
+      if (!owned.has(cls)) owned.set(cls, { props: new Set(), sels: [] });
+      Object.keys(r.decls).forEach((p) => owned.get(cls).props.add(p));
+      owned.get(cls).sels.push(r.sel);
+    }
+    for (const [cls, o] of owned) {
+      const d = ds.get(cls);
+      const overlap = [...o.props].filter((p) => d.props.has(p)).length;
+      const uses = [...src.matchAll(new RegExp(`class="([^"]*\\b${cls}\\b[^"]*)"`, 'g'))].length;
+      pairs.push({ page, cls, files: [...d.files].join(','), overlap, n: o.props.size, uses, sels: o.sels });
+    }
+  }
+  const by = new Map();
+  for (const p of pairs) (by.get(p.cls) || by.set(p.cls, []).get(p.cls)).push(p);
+  console.log(`${pairs.length} page/class pairs across ${new Set(pairs.map((p) => p.page)).size} pages, ${by.size} DS classes (${ds.size} DS bare names)\n`);
+  for (const [cls, ps] of [...by].sort((a, b) => a[1].length - b[1].length || a[0].localeCompare(b[0]))) {
+    console.log(`.${cls}  [${ps[0].files}]  ${ps.length} page(s)`);
+    for (const p of ps) console.log(`   ${p.page.padEnd(30)} shares ${p.overlap}/${p.n} props, ${p.uses} element(s)   ${p.sels.join('  |  ')}`);
+  }
+  process.exit(0);
+}
 
 if (process.argv.includes('--list')) {
   console.log(`${haz.size} DS classes impose structure unconditionally:\n`);

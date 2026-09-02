@@ -1,0 +1,25 @@
+{
+  "feature": "Design study pages stop borrowing design system class names",
+  "epic": "design-system",
+  "summary": "Every page rule that styles a design system class name has been judged by hand: ten were page-local boxes wearing a component's name and are renamed, the rest refine the real component. The loudest fix is the fake app window in six video walkthroughs, which was inheriting a fixed 420px width and running off the right edge of its frame.",
+  "setup": "Design dashboard at http://127.0.0.1:8791, any page under /pages. No app build involved.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/video-cut-wt.html and look at the small app window inside the preview frame. It now has the same margin on both sides.", "shot": "2026-09-01-borrowed-names-shot-after.png" },
+    { "do": "Compare with how it looked before: the window ran into the frame's right edge and lost its margin.", "shot": "2026-09-01-borrowed-names-shot-before.png" },
+    { "do": "Switch the system to light mode and reload. The margins hold.", "shot": "2026-09-01-borrowed-names-shot-light.png" },
+    { "do": "Open http://127.0.0.1:8791/pages/lang-elevation.html and scroll to Live examples. The Layers list (Card, Headline, Button) sits as a tight list of rows instead of spaced out by an inherited margin.", "shot": "2026-09-01-borrowed-names-rows-after.png" },
+    { "do": "Open http://127.0.0.1:8791/pages/image.html and find the mask row that says EDITING. It is now the design system's own row tag rather than a hand-drawn copy.", "shot": null },
+    { "do": "From docs/design/mocks run: node shared/check-reserved.mjs. It reports 86 guarded names and passes. Add --pairs to see the full triage shortlist.", "shot": null }
+  ],
+  "evaluate": [
+    "In the video walkthroughs, does the preview window now sit centred in its frame the way the mock intended, or did the fixed width give it a proportion you preferred?",
+    "On the elevation page, is the tighter Layers list right, or did the old spacing read better in that small scene?",
+    "On the image page, the EDITING tag lost its thin outline when it became the shared row tag. Is the shared look acceptable there?",
+    "Is the write-up in shared/RESERVED-TRIAGE.md the kind of record you would want the next agent to read before naming a page class?"
+  ],
+  "rough": [
+    "The gate still cannot tell a refinement from a borrowing in general; it now catches fixed widths on top of grids, floats and absolute position, and the rest stays a human judgment recorded in RESERVED-TRIAGE.md.",
+    "The elevation page's 'glass titlebar · elev 2' annotation still sits on top of the window title in the Live examples scene. That is the already filed task an-elevation-annotation-covers-the-window-title, not touched here.",
+    "The video walkthrough preview also lost a heavy 40px drop shadow it had been inheriting. It looks flatter and, I think, more like a window inside a recording, but it is a visible change you did not ask for."
+  ]
+}

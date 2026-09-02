@@ -62,12 +62,22 @@ it. Nothing in the page's own CSS looked wrong.
   pages refine real DS components all day (`#dashboard .db-ttrow .btn{…}`) and
   no grep can tell that apart from a page inventing its own meaning. What it
   catches is the damage: a DS stylesheet imposing a STRUCTURAL property
-  (`grid-template-columns/rows`, `grid-area`, `float`, `position:absolute|fixed`)
-  on a bare class, and a page styling that same bare class as its key selector
-  **without redeclaring that property**. Then the page's box is being positioned
-  by a rule its author never wrote. `--list` prints the guarded set. If an
-  element really IS that DS component, add it to `USED_AS_ITSELF` in the script
-  with one line saying what the class is; keep that list short.
+  (`grid-template-columns/rows`, `grid-area`, `float`, `position:absolute|fixed`,
+  a pixel-literal `width`) on a bare class, and a page styling that same bare
+  class as its key selector **without redeclaring that property**. Then the
+  page's box is being positioned by a rule its author never wrote. `--list`
+  prints the guarded set. If an element really IS that DS component, add it to
+  `USED_AS_ITSELF` in the script with one line saying what the class is; keep
+  that list short. The `width` guard exists because six video walkthroughs
+  positioned their preview `.shot` with `left:12%;right:12%` and inherited the
+  redline screenshot card's `width:420px`, which beats `right`: the fake app
+  window ran past its frame and lost its right margin.
+- **Everything the gate cannot decide has been triaged by hand once**:
+  `shared/RESERVED-TRIAGE.md` records, for every DS name a page styles, whether
+  it is a refinement or was a borrowing (renamed), with the borderline calls.
+  `node shared/check-reserved.mjs --pairs` regenerates the shortlist. When you
+  add a page rule keyed on a DS name, ask the question that file asks: is the
+  element that component, or a new thing wearing its name?
 
 - **Prefix every local class with a page tag** — `#video-motion .mg-tag`,
   `#export-share .ex-body`, `#lang-frame .lf-spec`.
