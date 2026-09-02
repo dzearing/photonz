@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 580,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T16:41:12.181Z",
-  "updated": "2026-09-02T19:16:57.689Z",
+  "updated": "2026-09-02T19:29:34.544Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MeasureContent.labelNudge already exists as the along-axis shift (the planner uses it to keep two nearby readouts from stacking), so the model supports this; the head drag in CanvasView.swift (snapMeasureHead / MeasureHandleDrag.params) only writes headOffset. Extend the head drag to write labelNudge from the along-axis component of the pointer, and feed the along-axis chip lines from MeasureSnapping.chipLines (they are already collected on both axes). Found while building the cross-axis chip snap on 2026-09-02; see queue/audits/2026-09-02-measure-guide-snap.json.",
@@ -96,6 +96,10 @@
     {
       "t": "2026-09-02T19:42:00.000Z",
       "note": "Verified on the probe with Scripts/playtest/measure-readout-slide.json: 400px measurement's number slid to 4px short of the 200px one's column landed exactly on x 300 with the guide through both and its value still 196 px; slid back to 2px short of home it clicked home; command held it free at 301; slid 300px along it grew a connector; one diagonal drag deepened the fork and slid the number at once; undo restored each. Scripts/test.sh green, 1447 tests."
+    },
+    {
+      "t": "2026-09-02T19:29:34.543Z",
+      "note": "A measurement's number now drags in both directions: across its line it still deepens the fork, along the line only the number moves. Both axes snap to the other readouts with the yellow guide at the same tolerance, command drags free, and the measured value never moves. Core MeasureReadoutDrag + labelPinned (a hand-placed number is never re-placed; sliding it back home hands it back), a number slid off its bar grows a connector. Behind next-measure-readout-slide, Next only, on by default. Verified on the probe with Scripts/playtest/measure-readout-slide.json, Scripts/test.sh green (1447). Commit 6d824cf, audit queue/audits/2026-09-02-measure-readout-slide.json."
     }
   ],
   "started": "2026-09-02T19:16:57.689Z",
@@ -106,5 +110,6 @@
     "message": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
   },
   "parked": false,
-  "parkReason": ""
+  "parkReason": "",
+  "completed": "2026-09-02T19:29:34.544Z"
 }
