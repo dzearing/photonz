@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 530,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T07:18:16.616Z",
-  "updated": "2026-09-02T07:18:16.617Z",
+  "updated": "2026-09-02T09:33:17.909Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MenuBarMenu in Sources/Photonz/PhotonzApp.swift vs CommandMenu(\"Capture\") in Sources/Photonz/EditorCommands.swift. History items also differ: Show History vs Show Capture History. Pick the shorter menu bar wording unless the Capture menu context needs the noun. Docs listing the menu: docs/design/mocks/shared/PRODUCT-MODEL.md and AGENTS.md.",
@@ -21,6 +21,28 @@
     {
       "t": "2026-09-02T07:18:16.617Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T09:29:53.872Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T09:31:46.696988Z",
+      "note": "Adversarial review: a person who learns Capture Region (⇧⌘4) from the menu bar icon opens the editor's Capture menu and finds Capture Rectangle on the same shortcut, which reads as a second, different command; same for Show History vs Show Capture History. Kept the menu bar wording: Capture Region already appears in the Welcome window (\"⇧⌘4 captures a region\"), the design study menu, and docs/design/capture.md, and inside a menu titled Capture the word Capture in Show Capture History is redundant. Also put Capture Region before Capture Full Screen in the Capture menu so both menus list the commands in the same order."
+    },
+    {
+      "t": "2026-09-02T09:31:46.696988Z",
+      "note": "Both menus live in shared code (Sources/Photonz/EditorCommands.swift, PhotonzApp.swift) with no Next fork, so the rename reaches Next and Current together; forking or flagging a menu label would be absurd. Welcome window and design study (PRODUCT-MODEL.md, AGENTS.md, components/entry.js) already used Capture Region and Show History, so no doc change was needed."
+    },
+    {
+      "t": "2026-09-02T09:33:08.718963Z",
+      "note": "Verified: swift build clean; Scripts/test.sh green (1210 tests, 150 suites); probe app built and launched, and the built binary no longer contains Show/Hide Capture History while Capture Full Screen and Edit Last Capture remain. Reading live menu names via System Events was refused (Apple Events not authorized), so the live-menu check is left for the user; audit written at queue/audits/2026-09-02-capture-menu-names.json. Probe app quit."
+    },
+    {
+      "t": "2026-09-02T09:33:17.908Z",
+      "note": "Capture menu now says Capture Region and Show/Hide History, listed in the same order as the menu bar menu (Sources/Photonz/EditorCommands.swift, shared, so Next and Current both). Verified by build, Scripts/test.sh (1210 tests green), and the built probe binary; audit at queue/audits/2026-09-02-capture-menu-names.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T09:29:53.871Z",
+  "completed": "2026-09-02T09:33:17.909Z"
 }

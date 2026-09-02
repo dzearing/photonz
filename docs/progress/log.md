@@ -4576,3 +4576,13 @@ the card's left end, over the icons.
 - **Next (shared Welcome), `measure-redline`:** on a Touch Bar Mac the Welcome window's "Free up the screenshot keys" card now lists ⇧⌘6 (macOS's "Save picture of Touch Bar as a file") beside ⇧⌘3/4/5, since it hides Edit Last Capture. The footer gained a second line saying what ⇧⌘6 does, and the card reads singular when a single key is left.
 - `SystemScreenshotShortcuts` (PhotonzCore): `Shortcut.touchBar = 181`, `conflicting(in:touchBar:)`, `hasTouchBar(modelIdentifier:hotkeys:)` (Apple's Touch Bar `hw.model` list, or id 181 present in `com.apple.symbolichotkeys`). Errs towards false: DFRFoundation and TouchBarServer exist on every Mac, so neither is a signal. 13 tests.
 - Verified through a temporary env-var harness in the probe (fake Touch Bar, fake plist, ImageRenderer snapshot of the real view; `cacheDisplay` on the hosting view draws nothing but the icon). Snapshots in `queue/audits/2026-09-02-touchbar-shortcut-*.png`; harness removed before commit. No Touch Bar Mac available, so live detection is unverified.
+
+## 2026-09-02 — Capture menu names match the menu bar menu
+
+- The editor's Capture menu now says Capture Region and Show/Hide History, the
+  same names the menu bar icon menu, the Welcome window, the design study and
+  docs/design/capture.md already used, and lists Capture Region first so both
+  menus read in the same order. Shared code (EditorCommands.swift), so Next
+  and Current both have it. Audit: queue/audits/2026-09-02-capture-menu-names.json.
+- Next: nothing pending from this task. Open question for the user in the
+  audit: is Region the right noun, or Rectangle / Selection?

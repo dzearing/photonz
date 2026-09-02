@@ -1,0 +1,22 @@
+{
+  "feature": "One name for each capture command",
+  "epic": "measure-redline",
+  "summary": "The menu bar icon menu and the editor's Capture menu now call every capture command by the same name, in the same order: Capture Region, Capture Full Screen, Record Screen / Video, Edit Last Capture, Show History.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags involved; the change is in shared menu code so Current shows it too.",
+  "try": [
+    { "do": "Click the Photonz viewfinder icon in the menu bar and read the first five items." },
+    { "do": "Open any editor window (New Window from that same menu)." },
+    { "do": "Open the Capture menu in the editor's menu bar and compare it item for item." },
+    { "do": "Choose Capture Region from the Capture menu and drag a rectangle to confirm it is the same command as ⇧⌘4." },
+    { "do": "Press ⇧⌘H, then reopen the Capture menu: it should read Hide History, matching the menu bar icon." }
+  ],
+  "evaluate": [
+    "Is Capture Region the right name, or would you rather both menus say Capture Rectangle or Capture Selection?",
+    "In the Capture menu, does Show History read clearly enough without the word Capture in front of it?",
+    "Does Capture Region belong first in the Capture menu, ahead of Capture Full Screen, as it is in the menu bar menu?"
+  ],
+  "rough": [
+    "The File menu still has Save to Capture History. That is a different command (it files the current document into history), so it kept its longer name.",
+    "Menu names could not be read from the running app in this session because Apple Events to System Events were not authorized, so verification was by build, tests, and the strings in the built binary."
+  ]
+}

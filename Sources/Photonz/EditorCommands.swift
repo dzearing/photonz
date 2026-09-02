@@ -110,10 +110,12 @@ struct EditorCommands: Commands {
             // discoverable and clickable, and work with no editor window open.
             // ⇧⌘3/⇧⌘4 only reach us once the system Screenshots shortcuts are
             // disabled in System Settings.
+            // Same names and order as the menu bar menu (MenuBarMenu), so a
+            // command learned in one menu is found in the other.
+            Button("Capture Region") { coordinator.capture.beginRectCapture() }
+                .keyboardShortcut("4", modifiers: [.command, .shift])
             Button("Capture Full Screen") { coordinator.capture.captureFullScreen() }
                 .keyboardShortcut("3", modifiers: [.command, .shift])
-            Button("Capture Rectangle") { coordinator.capture.beginRectCapture() }
-                .keyboardShortcut("4", modifiers: [.command, .shift])
             Button(coordinator.capture.isRecording ? "Stop Recording" : "Record Screen / Video…") {
                 coordinator.capture.toggleRecording()
             }
@@ -122,7 +124,7 @@ struct EditorCommands: Commands {
             Button("Edit Last Capture") { coordinator.editLastCapture() }
                 .keyboardShortcut("6", modifiers: [.command, .shift])
                 .disabled(coordinator.lastCapture == nil)
-            Button(coordinator.isHistoryShown ? "Hide Capture History" : "Show Capture History") {
+            Button(coordinator.isHistoryShown ? "Hide History" : "Show History") {
                 coordinator.toggleHistory()
             }
             .keyboardShortcut("h", modifiers: [.command, .shift])
