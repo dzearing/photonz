@@ -1,0 +1,28 @@
+{
+  "id": "shift-click-and-command-click-pick-several-rows",
+  "title": "Shift-click and command-click pick several rows in the Layers and Measurements lists",
+  "goal": "Today the only way to select more than one measurement is to drag a marquee on the canvas, so Copy Measurements from the menu cannot be aimed from the list. Shift-clicking a row should extend the selection to a range and command-clicking a row name should add or remove one, the way Photoshop and the Finder do, for both layer rows and measurement rows.",
+  "epic": "spec-export",
+  "priority": "p2-normal",
+  "seq": 430,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T09:40:38.074Z",
+  "updated": "2026-09-02T09:40:38.075Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From audit 2026-09-02-spec-export-menu rough 3 (the Measurements panel has no click-to-multi-select). Code: row tap in Sources/Photonz/LayersPanel.swift calls editorState.selectLayer; the command-modified TapGesture near LayersPanel.swift:568 selects pixels (keep that on the thumbnail per Photoshop, move to name-toggle on the label if that is where it sits today); EditorState.multiSelectedLayerIDs and selectedLayerID are the two selection stores, selectedMeasureLayerIDs derives from them. Measurement rows come from MeasureSpecList.measureLayers, top-most first, so a shift range is over that order. Shared code, so Current gets the same gesture; that is fine, it is a list convention not a Next feature.",
+  "acceptance": [
+    "In the Next release with next-measure-panel on: click one measurement row, shift-click another two rows down, and all three are selected on the canvas, in the list and in the inspector; Copy Measurements from the Measure menu copies exactly those three lines.",
+    "Command-click on a row name toggles that row in and out of the selection; command-click on a layer thumbnail still loads its pixels as a selection, as it does today.",
+    "The same gestures work on ordinary layer rows, and Delete, Duplicate and the arrange commands act on the whole selection as they do after a canvas marquee.",
+    "Selection logic lives in PhotonzCore with tests written first; Scripts/test.sh green; audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T09:40:38.075Z",
+      "note": "created (manager)"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "hide-all-measurements-joins-the-measure-menu-so",
+  "title": "Hide All Measurements joins the Measure menu so the menu and the panel menu offer the same set",
+  "goal": "The Measurements panel menu can show all, hide all, copy the spec list and clear, but the Measure menu in the menu bar is missing Hide All. Someone working from the keyboard has to open the panel for the one command. The two menus should offer the same commands in the same order.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 535,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T09:41:21.752Z",
+  "updated": "2026-09-02T09:42:54.402Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/EditorCommands.swift:329 (Measure menu: Measure Tool, Copy as Spec List, Copy Measurement, Show All Measurements, Clear Measurements) against the panel menu in Sources/Photonz/LayersPanel.swift (MeasurementsSectionAccessory: Show All, Hide All, Copy as Spec List, Clear). EditorState.setAllMeasurementsVisible(false) already exists. Same shape as the capture-menu naming task finished 2026-09-02.",
+  "acceptance": [
+    "In the Next release with next-measure-panel on, the Measure menu lists Show All Measurements and Hide All Measurements together, each disabled when it would change nothing, and Hide All is one undo step.",
+    "The panel menu and the Measure menu list their shared commands in the same order with the same names.",
+    "Scripts/test.sh green; audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T09:41:21.753Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T09:42:54.402Z",
+      "note": "seq 560 -> 535"
+    }
+  ]
+}

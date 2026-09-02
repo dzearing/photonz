@@ -1,0 +1,28 @@
+{
+  "id": "the-measure-mode-hint-fits-one-short-line-and-ne",
+  "title": "The Measure mode hint fits one short line and never covers the legend",
+  "goal": "Switching Measure modes raises a short pill naming the mode. The Size line runs sixteen words, so its pill is about 500 points wide, stays almost twice as long as the others, and on a narrow window can sit on top of the roles legend. Every hint should be one short line, and the bracket keys it teaches should be taught somewhere that stays, next to the Mode control.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 470,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T09:41:15.862Z",
+  "updated": "2026-09-02T09:41:15.862Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From audit 2026-09-02-measure-mode-hint rough 2, 3 and 4. Code: Sources/PhotonzCore/MeasureModeHint.swift holds the lines and the timing; EditorView.canvasNoticeChip shows the pill bottom-centre above the tool bar and shares its slot with the Copied pill; the legend is placed by CornerPlacement.swift. Inspector Mode picker: Sources/Photonz/LayersPanel.swift around line 656. Flag next-measure-modes; Current keeps its first-run line.",
+  "acceptance": [
+    "In the Next release with next-measure-modes on: press I and cycle modes; every hint reads in one short line (under about 45 characters) and all four pills fade on the same schedule.",
+    "The [ and ] tip appears beside the Mode control in the Measure Tool section of the inspector, so it is never lost.",
+    "With measurements piled into a top corner on a canvas under 800 points wide, the hint and the legend never overlap, verified by a layout test in PhotonzCore.",
+    "Scripts/test.sh green; audit written under queue/audits/ with a render of all four hints; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T09:41:15.862Z",
+      "note": "created (manager)"
+    }
+  ]
+}

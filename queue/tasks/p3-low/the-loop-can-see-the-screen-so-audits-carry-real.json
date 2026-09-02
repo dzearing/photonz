@@ -1,0 +1,32 @@
+{
+  "id": "the-loop-can-see-the-screen-so-audits-carry-real",
+  "title": "The loop can see the screen, so audits carry real screenshots",
+  "goal": "Every audit written this week says the same thing: the unmanned copy of the app cannot record the screen, so nothing was verified live and every picture is an offscreen render. If the loop may take screenshots, each audit gets a real picture of the app and window capture, the loupe and the toast can be checked for real. This needs a one-time permission grant only a person can make.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 580,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T09:41:37.764Z",
+  "updated": "2026-09-02T09:42:35.659Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Blocked on the decision opened by the 2026-09-02 manager pass, since the user has to grant the permission by hand. dist/Photonz Probe.app (com.dzearing.photonz.probe) is signed with the stable Photonz Dev identity by Scripts/build-app.sh, so one grant survives rebuilds. Do not touch the dev app or its grants. The same denial blocks Apple Events to System Events (audit 2026-09-02-capture-menu-names rough 2), which the Accessibility or Automation grant to the loop terminal would lift.",
+  "acceptance": [
+    "Scripts/probe-app.sh reports whether the probe app holds Screen Recording and whether the loop terminal holds Accessibility, in one line, on every launch.",
+    "queue/bin/runner-prompt.md tells runners to save a real screenshot of the probe window under the audit when the grant is present, and to say plainly when it is not.",
+    "The first feature task finished after this one ships an audit with a real screenshot; the loop never prompts for the permission more than once per launch.",
+    "Anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T09:41:37.765Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T09:42:35.659Z",
+      "note": "Waiting on the decision: may the loop take screenshots of the probe app"
+    }
+  ]
+}

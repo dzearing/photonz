@@ -1,0 +1,28 @@
+{
+  "id": "one-copy-hands-off-both-the-redlined-picture-and",
+  "title": "One copy hands off both the redlined picture and its spec list",
+  "goal": "Handing a redline to a teammate takes two copies today: Copy Image for the picture, then Copy as Spec List for the text. When a document has measurements, Copy Image should put the spec list on the clipboard as text beside the picture, so pasting into a document or chat drops the picture and pasting into a plain text field drops the list, with nothing extra to learn.",
+  "epic": "spec-export",
+  "priority": "p2-normal",
+  "seq": 440,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T09:40:47.962Z",
+  "updated": "2026-09-02T09:40:47.963Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Open thread from the 2026-09-01 manager pass. Code: EditorState.copyCompositeToClipboard writes .png and .tiff only (Sources/Photonz/EditorState.swift:546); copyMeasureSpecList already builds the text via MeasureSpecList.render(document:name:). NSPasteboard lets one item carry several types; declare the image types first so image-aware apps take them. Verify the paste order claim in real apps: some chat clients take the string when both exist, which is the thing to test before committing. Flag next-measure-panel; Current unchanged with the flag off.",
+  "acceptance": [
+    "In the Next release with next-measure-panel on and at least one measurement: Copy Image (or the inspector Export section button), then paste into Notes or TextEdit, and the picture lands; paste into a plain text field (Spotlight, Terminal, a Safari address bar) and the spec list lands.",
+    "Pasting into Messages, Slack or Mail pastes the picture, not the text; this is checked by hand on at least two of them on the probe app before shipping. If any of them prefers the text, the change is withdrawn and a decision is opened with the observed behaviour instead.",
+    "A document with no measurements copies exactly what it copies today.",
+    "The Copied pill says what landed (picture, and the list when present); tests pin the pasteboard representations; Scripts/test.sh green; audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T09:40:47.963Z",
+      "note": "created (manager)"
+    }
+  ]
+}

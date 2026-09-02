@@ -1,0 +1,40 @@
+{
+  "id": "the-loop-can-see-the-screen-so-audits-carry-real-may-the-unmanned-loop-take-scree",
+  "taskId": "the-loop-can-see-the-screen-so-audits-carry-real",
+  "question": "May the unmanned loop take screenshots of its own copy of the app?",
+  "context": "All sixteen audits from 2026-09-02 say the loop has no Screen Recording grant, so nothing was seen live and menu names could not even be read from the running app. The probe app is a separate bundle owned by the loop, never the app you work in.",
+  "options": [
+    {
+      "id": "grant",
+      "label": "Grant the probe app Screen Recording and the loop terminal Accessibility",
+      "summary": "You add Photonz Probe to Screen Recording and the terminal that runs the loop to Accessibility in System Settings, once. From then on every audit carries a real screenshot of the probe window, and window capture, the loupe and the toast are checked live.",
+      "pros": [
+        "Audits show the app as you will see it, not an offscreen render",
+        "Live checks catch the class of bug the renders cannot: focus, menus, hotkeys, the real freeze frame",
+        "One grant, kept across rebuilds because the probe is signed with the stable dev identity"
+      ],
+      "cons": [
+        "An unattended process can then read your screen while it runs",
+        "The loop terminal gains the ability to send keystrokes to other apps"
+      ],
+      "mitigation": "Only the probe bundle and the loop terminal are named; the dev app and the shipping app are untouched, and the grants can be pulled in System Settings at any time."
+    },
+    {
+      "id": "offscreen",
+      "label": "Keep verification offscreen",
+      "summary": "Nothing changes. Runners keep rendering through the real pipeline and driving the probe with scripted events, and each audit keeps saying which checks were left for you.",
+      "pros": [
+        "No unattended screen access",
+        "Works today"
+      ],
+      "cons": [
+        "Every audit this week says the same thing: not verified live",
+        "Window capture with its shadow and the live freeze frame remain untested until you try them"
+      ],
+      "mitigation": "Audits keep listing the exact steps for you to check by hand."
+    }
+  ],
+  "recommended": "grant",
+  "status": "pending",
+  "created": "2026-09-02T09:42:03.109Z"
+}

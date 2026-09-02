@@ -1,0 +1,32 @@
+{
+  "id": "point-at-a-color-and-its-value-joins-the-spec",
+  "title": "Point at a color and its value joins the spec",
+  "goal": "A spec hand-off usually carries colors as well as sizes, and Figma and Sketch show an element color beside its dimensions. Photonz cannot read a color off the picture. A Color mode in the Measure tool would let you click a spot and get a small swatch pill with the hex value, listed with the measurements and included in the spec list.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 570,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T09:41:30.132Z",
+  "updated": "2026-09-02T09:42:35.633Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Blocked on the decision opened by the 2026-09-02 manager pass: the user has said speculative features get confirmed before they are built. Sampling reads the composited base image through ImageStore in PhotonzRender; the readout can reuse the measure pill (PillRasterizer) and MeasureSpecList.specLine gains a color case. Open thread since the 2026-09-01 manager pass (Figma and Sketch parity).",
+  "acceptance": [
+    "With a new next-measure-color flag on in the Next release: pick Measure, choose Color, hover and a swatch pill follows the pointer with the hex value of the pixel under it; click and the swatch lands as a measurement row named by its value.",
+    "The spec list carries a line per color swatch in the same format as measurements, with the role word color.",
+    "Option-click samples the average of a small area instead of one pixel, so anti-aliased text does not mislead.",
+    "Core logic (sampling, naming, spec line) lives in PhotonzCore with tests first; Scripts/test.sh green; audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T09:41:30.132Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T09:42:35.632Z",
+      "note": "Waiting on the decision: should Measure read colors off the picture"
+    }
+  ]
+}

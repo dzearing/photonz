@@ -1,0 +1,28 @@
+{
+  "id": "the-redline-flow-is-played-end-to-end-as-a-first",
+  "title": "The redline flow is played end to end as a first-time user and its rough edges fixed",
+  "goal": "Every measure feature has been checked on its own, but nobody has walked the whole job in one sitting: capture a screen, open it, measure sizes and gaps, check an alignment, caption an arrow, and hand the spec off. Walk it as someone who has never seen the app, count the steps, note every stop and surprise, fix the ones that need no product call, and write the rest down.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 460,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T09:41:08.154Z",
+  "updated": "2026-09-02T09:41:08.154Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Modelled on arrow-captions-get-a-playtest-and-an-audit, which found and fixed three real defects. Known candidates to look at on the walk: the Size mode hint runs about 500 pt wide (audit 2026-09-02-measure-mode-hint rough 2), Copy as Spec List stays enabled when every row is hidden (2026-09-02-copy-confirmation rough 2), the loupe reads the selection in points only (2026-09-02-capture-loupe rough 3), a green arrow gets a near-black pill (2026-09-02-arrow-captions rough 4). No unmanned copy of the app holds a Screen Recording grant, so drive the real overlay and editor with scripted events and render through DocumentRenderer, as the earlier audits did. Read docs/design/next-measure.md section 12 first so the walk checks the promises, not just the code.",
+  "acceptance": [
+    "The walk is scripted against the probe app in the Next release with the default flags: Shift-Command-4 (or the menu), click a window, Edit from the toast or Shift-Command-6, I for Measure, one Size, one Gap, one alignment guide, one captioned arrow, Copy as Spec List and Copy Image. The audit lists each step, what the screen offered, and where the tester had to already know something.",
+    "At least three concrete stops or surprises are fixed in this task, each small enough to need no decision; anything that needs a product call gets a decision card with rendered options.",
+    "Fixes ship behind the flag that owns the surface and Current stays byte-identical with flags off.",
+    "Scripts/test.sh green; audit written under queue/audits/ as the flow log with renders of each stage; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T09:41:08.154Z",
+      "note": "created (manager)"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "an-alignment-guide-on-the-canvas-says-which-edge",
+  "title": "An alignment guide on the canvas says which edges it checked",
+  "goal": "A guide reads aligned or off 4 px on the canvas, but only the inspector says whether it checked left edges, tops or centers. Anyone reading the exported picture cannot tell. The guide chip should name its edge, so the picture stands on its own.",
+  "epic": "alignment-checks",
+  "priority": "p2-normal",
+  "seq": 450,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T09:40:56.290Z",
+  "updated": "2026-09-02T09:40:56.291Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From audit 2026-09-02-alignment-guide-row rough 4 (the settled edge is a readout in the inspector only). Code: MeasureContent.label for alignment verdicts at Sources/PhotonzCore/Measure.swift:325 (aligned / off N px), the edge word already derived for the row in MeasureSpecList.derivedName and AlignmentCheck side inference (ink within 20 px). MeasureLabelPlacement.plan uses estimatedLabelSize, so the wider chip changes candidates; MeasureRasterizer bakes it. Keep the spec line format pinned by MeasureSpecListTests unchanged.",
+  "acceptance": [
+    "In the Next release with next-measure-align on: draw a guide along the left edges of three stacked elements and the chip reads Left edges aligned; nudge one element in a test fixture and the chip reads Left edges, off 4 px.",
+    "When the scan cannot tell the side, the chip reads Vertical edges or Horizontal edges, matching the row name in the Measurements list.",
+    "The longer chip still finds a clear spot: the readout planner uses the new width, checked by the existing placement tests plus one for a guide near the picture edge.",
+    "Exports bake the new wording; spec lines are unchanged; Scripts/test.sh green; audit written under queue/audits/ with a rendered before and after; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T09:40:56.291Z",
+      "note": "created (manager)"
+    }
+  ]
+}

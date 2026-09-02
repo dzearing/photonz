@@ -1,0 +1,29 @@
+{
+  "id": "a-second-arrow-can-follow-the-first-without-a-st",
+  "title": "A second arrow can follow the first without a stray letter landing in its caption",
+  "goal": "Right after you draw an arrow, the caption field takes the keyboard, so pressing A to draw another arrow types an a into a label you never wanted. The way to start the next arrow should be obvious on screen and should never leave a stray letter behind. The Caption field in the inspector should also save what you typed when you click away, like every other Mac text field, instead of only when you press Return.",
+  "epic": "epic-uehjr1",
+  "priority": "p1-high",
+  "seq": 100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T09:40:28.308Z",
+  "updated": "2026-09-02T09:40:28.308Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From audit 2026-09-02-arrow-captions rough 1 (A right after an arrow lands types into the label) and 2026-09-02-arrow-caption-one-draft rough 3 (inspector Caption field commits on Return only). Code: the inline caption editor in Sources/Photonz/CanvasView.swift (opened by the fresh-arrow flow), the hand-back to Select in EditorState after an annotation lands, the Caption field in Sources/Photonz/LayersPanel.swift. Recommended shape, decide after the adversarial walk: while the fresh-arrow caption field is open and empty, the Arrow tool stays live so a canvas drag commits the empty caption and starts the next arrow; letters still go to the caption (a caption can start with a); the field shows a placeholder like Caption, Esc to skip. Keep Current byte-identical (flag off).",
+  "acceptance": [
+    "With the next-arrow-captions flag on in the Next release: draw an arrow, then start a second one the way the screen suggests; the first arrow ends with an empty caption, never a one-letter one, and the second arrow lands.",
+    "The open caption field says how to skip it and how to keep drawing (placeholder text or a short hint), verified on the probe app with scripted events.",
+    "Typing a caption into the inspector Caption field and clicking elsewhere commits it as one undo step; Esc still discards the draft.",
+    "If the fix needs a product call (for example whether the Arrow tool stays live while a caption is pending), a decision is opened with rendered options instead of guessing.",
+    "Tests cover the caption-field key handling that lives in PhotonzCore; Scripts/test.sh green; audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T09:40:28.308Z",
+      "note": "created (manager)"
+    }
+  ]
+}
