@@ -955,6 +955,49 @@ final class EditorState {
         saveAnnotationStyles()
     }
 
+    /// Live drag of a caption pill (no history): the pill follows the pointer,
+    /// pulled back onto the picture at the edges, and the frame follows it.
+    func previewCaptionPlacement(id: UUID, center: CGPoint) {
+        guard var doc = document, doc.layer(id: id)?.annotation?.hasCaption == true else { return }
+        discardDragPreview()
+        let canvas = doc.canvasSize
+        doc.updateLayer(id: id) { $0 = AnnotationBuilder.placingCaption($0, at: center, canvas: canvas) }
+        if let frame = doc.layer(id: id)?.frame { previewMove = (id, frame) }
+        submit(doc)
+    }
+
+    /// The drop: one undo step that pins the pill where it landed. Undo
+    /// returns it to the spot the app picked; so does Reset position in the
+    /// inspector (`resetCaptionPlacement`).
+    func commitCaptionPlacement(id: UUID, center: CGPoint) {
+        previewMove = nil
+        guard document?.layer(id: id)?.annotation?.hasCaption == true else {
+            rerender()
+            return
+        }
+        perform { document in
+            let canvas = document.canvasSize
+            document.updateLayer(id: id) { $0 = AnnotationBuilder.placingCaption($0, at: center, canvas: canvas) }
+        }
+    }
+
+    /// Esc mid-drag, or a press on the pill that never moved: nothing was
+    /// committed, so the last committed document just renders again.
+    func cancelCaptionPlacement() {
+        previewMove = nil
+        rerender()
+    }
+
+    /// Hands a hand-placed pill back to the app's placement (one undo step).
+    func resetCaptionPlacement(id: UUID) {
+        guard document?.layer(id: id)?.annotation?.captionPinned == true else { return }
+        discardDragPreview()
+        perform { document in
+            let canvas = document.canvasSize
+            document.updateLayer(id: id) { $0 = AnnotationBuilder.releasingCaption($0, canvas: canvas) }
+        }
+    }
+
     /// Caption entry abandoned (Esc): the arrow keeps whatever caption it had,
     /// and is finished, so the Arrow tool that stayed live hands back to Select.
     func cancelCaptionEdit() {

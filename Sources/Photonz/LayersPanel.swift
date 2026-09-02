@@ -1296,6 +1296,17 @@ struct AnnotationInspector: View {
                                           layerID: layer.id, (captionSizeDraft ?? a.captionFontSize).rounded())
                                       captionSizeDraft = nil
                                   })
+                        // A pill dragged by hand stays where it was put; this
+                        // is the way back to the spot the app picks, without
+                        // an undo trip. Shown only while there is a hand spot.
+                        if a.captionPinned {
+                            Button("Reset label position") {
+                                editorState.resetCaptionPlacement(id: layer.id)
+                            }
+                            .font(.caption)
+                            .controlSize(.small)
+                            .help("Put the label back where the app places it")
+                        }
                     }
                 }
                 if a.shape == .arrow {

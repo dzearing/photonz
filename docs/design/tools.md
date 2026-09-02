@@ -44,6 +44,17 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
   is non-destructive (baked at render time into the layer raster, so exports and
   layer effects carry it). Current release: flag absent, no entry points; a
   Next-authored document with captions still renders them (document fidelity).
+  **Placement (2026-09-02):** `CaptionPlanner.plan` picks the spot (behind the
+  tail when it fits, else beside it, on the picture) and stores it as
+  `captionOffset` relative to the tail; `AnnotationBuilder.planningCaption`
+  re-picks after every arrow change. **Dragging the pill** on a selected arrow
+  (`CanvasView.captionDrag`, same grip-keeping grab as the caliper readout)
+  pins it: `captionPinned` is set and `captionOffset` is the hand spot, which
+  the planner then leaves alone (`CaptionPlanner.keepingOnCanvas` only pulls it
+  back onto the picture). Live drag re-renders per move like the caliper head;
+  the drop is one undo step (`EditorState.commitCaptionPlacement`); a press
+  that never moved commits nothing. The inspector shows **Reset label
+  position** while a pill is pinned (`AnnotationBuilder.releasingCaption`).
 - Rendered by a CoreGraphics rasterizer in `PhotonzRender` (pixel-tested), then composited like any image layer.
 - **Styling & per-object editing:** `AnnotationStyles` holds the per-shape defaults new annotations get — color, stroke width, `arrowheadScale`, `cornerRadius`, and `fillColorHex` — and persists to UserDefaults. EVERY inspector commit writes back to the shape's defaults, so "the next rectangle reuses the last-touched rectangle's settings" holds for all of them (corner radius was missing from `ShapeDefaults` entirely until 2026-07-03 — a user-reported bug). Two surfaces edit annotations: the toolbar **style popover** (color swatches + Width/Arrowhead sliders) sets defaults / restyles the selected one, and the Layers-panel **AnnotationInspector** gives per-object Color / Thickness / Head Size. Both preview live via `EditorState.previewAnnotationRestyle` (no history) and commit one undo step on release via `setAnnotationStrokeWidth` / `setAnnotationArrowheadScale`. (`AppState` was split into per-window `EditorState` + resident `AppCoordinator` in Phase 11.1 — see `capture.md`.) Endpoint-drag/resize remap goes through `AnnotationBuilder.restyled`/`updating`/`resized`.
 

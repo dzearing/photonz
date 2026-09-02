@@ -149,8 +149,10 @@ extension AnnotationBuilder {
     /// Picks where a captioned arrow's pill sits so it stays on the picture.
     /// The default spot (behind the tail) wins whenever it fits; otherwise the
     /// pill moves beside the tail, clear of the shaft and the head, and the
-    /// frame is rebuilt around it. Endpoints never move. Pass nil for `canvas`
-    /// to skip planning; captionless layers pass through.
+    /// frame is rebuilt around it. A hand-placed pill (`captionPinned`) is
+    /// not re-picked: it keeps its offset from the tail and is only pulled
+    /// back onto the picture. Endpoints never move. Pass nil for `canvas` to
+    /// skip planning; captionless layers pass through.
     public static func planningCaption(_ layer: Layer, canvas: CGSize?) -> Layer {
         guard let canvas, let a = layer.annotation, a.hasCaption,
               let start = layer.annotationEndpoint(.start),
@@ -158,13 +160,49 @@ extension AnnotationBuilder {
         var probe = a
         probe.start = start
         probe.end = end
-        let offset = CaptionPlanner.plan(for: probe, canvas: canvas)
+        let offset: CGSize?
+        if a.captionPinned, let pinned = a.captionOffset {
+            offset = CaptionPlanner.keepingOnCanvas(pinned, for: probe, canvas: canvas)
+        } else {
+            offset = CaptionPlanner.plan(for: probe, canvas: canvas)
+        }
         guard offset != a.captionOffset else { return layer }
         var content = a
         content.captionOffset = offset
         var updated = layer
         updated.content = .annotation(content)
         return updating(updated, start: start, end: end)
+    }
+
+    /// The pill dragged by hand to center on `center` (document space): the
+    /// spot is pinned relative to the tail so it rides along when the arrow
+    /// moves, pulled back onto the picture if it would leave it, and the frame
+    /// is rebuilt around it. Captionless layers pass through.
+    public static func placingCaption(_ layer: Layer, at center: CGPoint, canvas: CGSize?) -> Layer {
+        guard let a = layer.annotation, a.hasCaption,
+              let tail = layer.annotationEndpoint(.start) else { return layer }
+        var content = a
+        content.captionPinned = true
+        content.captionOffset = CGSize(width: center.x - tail.x, height: center.y - tail.y)
+        var updated = layer
+        updated.content = .annotation(content)
+        // Rebuild the frame around the new spot even without a canvas to clamp
+        // against, then clamp when there is one.
+        guard let end = layer.annotationEndpoint(.end) else { return layer }
+        return planningCaption(updating(updated, start: tail, end: end), canvas: canvas)
+    }
+
+    /// Hands a hand-placed pill back to the planner: the automatic spot again.
+    public static func releasingCaption(_ layer: Layer, canvas: CGSize?) -> Layer {
+        guard let a = layer.annotation, a.captionPinned,
+              let start = layer.annotationEndpoint(.start),
+              let end = layer.annotationEndpoint(.end) else { return layer }
+        var content = a
+        content.captionPinned = false
+        content.captionOffset = nil
+        var updated = layer
+        updated.content = .annotation(content)
+        return planningCaption(updating(updated, start: start, end: end), canvas: canvas)
     }
 }
 
@@ -211,6 +249,18 @@ public enum CaptionPlanner {
         }
         guard let best else { return nil }
         return CGSize(width: best.anchor.x - tail.x, height: best.anchor.y - tail.y)
+    }
+
+    /// A hand-placed pill's offset, pulled back onto the picture if the spot
+    /// (`offset` from the tail) would leave it. The person chose the spot, so
+    /// nothing else is second-guessed: it may sit on the shaft or the head.
+    public static func keepingOnCanvas(_ offset: CGSize, for content: AnnotationContent,
+                                       canvas: CGSize) -> CGSize {
+        let bounds = CGRect(origin: .zero, size: canvas)
+        let tail = content.start
+        let anchor = slidOntoCanvas(CGPoint(x: tail.x + offset.width, y: tail.y + offset.height),
+                                    size: content.estimatedCaptionSize, bounds: bounds)
+        return CGSize(width: anchor.x - tail.x, height: anchor.y - tail.y)
     }
 
     private static func rect(at anchor: CGPoint, size: CGSize) -> CGRect {

@@ -1,0 +1,253 @@
+{
+  "out": "/tmp/photonz-playtest/arrow-caption-drag",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        640,
+        880
+      ],
+      "to": [
+        420,
+        810
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "captionField",
+      "timeout": 3
+    },
+    {
+      "do": "type",
+      "text": "Primary action"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-captioned",
+      "note": "captioned arrow at its automatic spot, still selected"
+    },
+    {
+      "do": "render",
+      "name": "1-before"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-before-window"
+    },
+    {
+      "do": "drag",
+      "from": [
+        762,
+        919
+      ],
+      "to": [
+        980,
+        700
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-dragged",
+      "note": "pill dragged up and right into open space; expect pill (980, 700) pinned"
+    },
+    {
+      "do": "render",
+      "name": "2-after"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-after-window"
+    },
+    {
+      "do": "drag",
+      "from": [
+        530,
+        845
+      ],
+      "to": [
+        380,
+        545
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-arrow-moved",
+      "note": "whole arrow dragged by its shaft by (-150, -300); expect pill (830, 400) pinned"
+    },
+    {
+      "do": "render",
+      "name": "3-arrow-moved"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-undo-move",
+      "note": "undo the move; expect pill (980, 700) pinned"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-undo-drag",
+      "note": "undo the pill drag; expect pill (762, 919) not pinned"
+    },
+    {
+      "do": "render",
+      "name": "5-undone"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-redo-drag",
+      "note": "redo; expect pill (980, 700) pinned"
+    },
+    {
+      "do": "click",
+      "at": [
+        980,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "7-click-pill",
+      "note": "a press on the pill with no movement; expect no change"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "8-undo-after-click",
+      "note": "the click added no step, so this undo removes the drag; expect pill (762, 919)"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        810
+      ],
+      "to": [
+        300,
+        700
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "9-head-moved",
+      "note": "head endpoint dragged; expect pill still (980, 700) pinned"
+    },
+    {
+      "do": "render",
+      "name": "9-head-moved"
+    },
+    {
+      "do": "drag",
+      "from": [
+        980,
+        700
+      ],
+      "to": [
+        1500,
+        700
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "10-edge",
+      "note": "pill dropped past the right edge; expect it pulled back on, pinned"
+    },
+    {
+      "do": "render",
+      "name": "10-edge"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-edge-window"
+    }
+  ]
+}

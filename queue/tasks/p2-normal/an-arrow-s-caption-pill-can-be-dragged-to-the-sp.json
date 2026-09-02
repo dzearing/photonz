@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 15,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:27:30.276Z",
-  "updated": "2026-09-02T14:27:41.072Z",
+  "updated": "2026-09-02T15:00:58.764Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-09-02-arrow-captions.json rough 5 (the tool picks, you cannot overrule it) and the manager open thread of 2026-09-02 02:40; the caliper pill became the head grab in 392ce3b, so the two pills now disagree. The model already carries ArrowContent.captionOffset (Sources/PhotonzCore/Layer.swift:86) as the planned offset from the tail when the default spot left the picture; a hand-placed pill needs a flag that tells CaptionPlanner.plan (AnnotationEditing.swift near line 174) to leave the offset alone, and AnnotationEditing line 185 currently clears the offset when the arrow changes. Hit-testing on the canvas: CanvasView.swift near line 1601 (beginCaptionSession) is where the caption is already hit. Decode default for old documents: not pinned.",
@@ -27,6 +27,24 @@
     {
       "t": "2026-09-02T14:27:41.072Z",
       "note": "seq 550 -> 15"
+    },
+    {
+      "t": "2026-09-02T14:49:41.128Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T14:53:40.247Z",
+      "note": "Adversarial review before building. (1) The pill is only a grab while the arrow is selected, like the caliper number: clicking an unselected arrow by its pill selects and moves the arrow, which is the Mac select-first rule and what the caliper already does. After Return on a fresh caption the arrow is selected, so the first-time flow (draw, type, Return, drag the pill) works with no extra step. (2) The grip is kept: a pill grabbed near its edge stays under the pointer instead of jumping (the caliper lesson from 392ce3b). (3) A hand-placed pill is never second-guessed except to pull it back onto the picture; it may sit on the shaft or head if the person wants it there. (4) The way back to the automatic spot is undo, plus a small Reset position button in the inspector that shows only while the pill is hand-placed, so a pill moved last week is not stuck. (5) A press-release on the pill with no movement is not an undo step. (6) Live preview re-renders the document per move exactly as the caliper head drag does; no new preview machinery. (7) Esc mid-drag restores the pill. Shortest version: one Bool on the model (captionPinned), the existing captionOffset carries the hand-placed spot, the planner clamps instead of picking when pinned."
+    },
+    {
+      "t": "2026-09-02T15:00:24.858Z",
+      "note": "Built and verified on the probe. Core: captionPinned flag, CaptionPlanner.keepingOnCanvas, AnnotationBuilder.placingCaption/releasingCaption, 9 tests first (all 39 caption tests green). Canvas: captionDrag session with kept grip, live preview, one-step commit, no step for a no-move press, Esc/tool-switch cancel; inspector Reset label position while pinned. Harness: pill center + pinned in describe, undo/redo actions. Walk Scripts/playtest/arrow-caption-drag.json: drop (980,700) pinned; arrow move carried it to (830,399); undo x2 restored (762,919) unpinned; redo; click added no step; head move left it at (980,700); off-edge drop clamped to x=1319. Renders in queue/audits/2026-09-02-caption-drag-*.png."
+    },
+    {
+      "t": "2026-09-02T15:00:58.763Z",
+      "note": "Shipped in Next: drag a selected arrow's caption pill and it stays where dropped (captionPinned + captionOffset in PhotonzCore, planner only pulls it back onto the picture), one undo step, no step for a no-move press, Esc cancels, arrow moves and endpoint edits keep the spot, inspector Reset label position. 9 new core tests written first; suite green (1362). Verified on the probe with Scripts/playtest/arrow-caption-drag.json; audit queue/audits/2026-09-02-caption-drag.json with five offscreen renders."
     }
-  ]
+  ],
+  "started": "2026-09-02T14:49:41.127Z",
+  "completed": "2026-09-02T15:00:58.763Z"
 }

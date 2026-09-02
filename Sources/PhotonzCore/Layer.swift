@@ -84,6 +84,11 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// default. Relative to the tail so an endpoint rebuild keeps it valid;
     /// `AnnotationBuilder.planningCaption` picks it against the canvas.
     public var captionOffset: CGSize?
+    /// Arrow-only: true once the pill was dragged by hand. `captionOffset` is
+    /// then the spot the user chose (relative to the tail) and the planner
+    /// leaves it alone, only pulling it back onto the picture; false means
+    /// the planner owns the offset and re-picks it whenever the arrow changes.
+    public var captionPinned: Bool
 
     public init(shape: AnnotationShape, strokeWidth: CGFloat = 4, colorHex: String = "#FF3B30",
                 start: CGPoint = .zero, end: CGPoint = .zero, arrowheadScale: CGFloat = 1,
@@ -100,6 +105,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         self.caption = caption
         self.captionFontSize = captionFontSize
         self.captionOffset = nil
+        self.captionPinned = false
     }
 
     public init(from decoder: Decoder) throws {
@@ -121,6 +127,8 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
             ?? Self.captionFontSizeDefault
         // Planned placement postdates captions; absent = the tail default.
         captionOffset = try c.decodeIfPresent(CGSize.self, forKey: .captionOffset)
+        // Hand placement postdates planning; an old offset was the planner's.
+        captionPinned = try c.decodeIfPresent(Bool.self, forKey: .captionPinned) ?? false
     }
 }
 

@@ -1,0 +1,28 @@
+{
+  "id": "a-draggable-readout-pill-shows-it-can-be-grabbed",
+  "title": "A draggable readout pill shows it can be grabbed when the pointer is over it",
+  "goal": "An arrow caption pill and a caliper number can both be dragged, but nothing tells you so until you try. When the pointer rests on a pill that can be moved, the app should give a small cue, such as the open-hand cursor or a faint lift, so a first-time user finds the drag without being told.",
+  "epic": "epic-uehjr1",
+  "priority": "p2-normal",
+  "seq": 570,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T15:00:58.735Z",
+  "updated": "2026-09-02T15:00:58.735Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Both grabs live in CanvasView.mouseDown: captionPillRect(_:) for arrows (captionDrag) and measureReadoutRect(_:) for calipers (measureHandleDrag .head). Cursor rects or a mouseMoved check against those rects with NSCursor.openHand / closedHand is the smallest version. Filed from the caption-drag audit rough item 1 and the caliper-head audit rough item 1.",
+  "acceptance": [
+    "Hovering a selected arrow caption pill or a selected caliper number changes the cursor to the grab hand (and a closed hand while dragging).",
+    "No cue appears on an unselected arrow or caliper, where a press moves the whole object.",
+    "The cue does not appear over the endpoint handles, which keep their own behaviour.",
+    "Verified on the probe app; audit rough lines in queue/audits/2026-09-02-caption-drag.json and 2026-09-02-caliper-head.json updated or referenced."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T15:00:58.735Z",
+      "note": "created (manual)"
+    }
+  ]
+}

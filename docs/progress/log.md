@@ -4865,3 +4865,26 @@ the card's left end, over the icons.
   `Scripts/playtest/text-line.json`.
 - Next: readout placement for a row label's width (goes above with a leader
   when the next row is close), half-point display.
+
+## 2026-09-02 (go loop) — an arrow's caption pill can be dragged where you want it
+
+- `AnnotationContent.captionPinned` (PhotonzCore, decode default false): once
+  the pill is dragged by hand, `captionOffset` is the chosen spot relative to
+  the tail and `planningCaption` stops re-picking it; the only correction is
+  `CaptionPlanner.keepingOnCanvas`, which pulls the pill back onto the
+  picture. `AnnotationBuilder.placingCaption(_:at:canvas:)` pins,
+  `releasingCaption` hands it back to the planner. Nine new tests in
+  `AnnotationCaptionTests` (pinning suite).
+- Canvas: a selected arrow's pill is a grab (`captionDrag`), with the grip
+  kept like the caliper readout. Live drag re-renders per move
+  (`EditorState.previewCaptionPlacement`), the drop is one undo step
+  (`commitCaptionPlacement`), a press that never moved commits nothing, Esc
+  and a tool switch cancel. The inspector shows "Reset label position" while
+  a pill is pinned.
+- Playtest harness: `describe` now reports each captioned arrow's pill center
+  and whether it is pinned; `action` grew `undo` and `redo`. Walk:
+  `Scripts/playtest/arrow-caption-drag.json` (drag, move, undo, redo, click
+  without moving, head move, off-edge drop; every step matched).
+- Audit: `queue/audits/2026-09-02-caption-drag.json`.
+- Next: a hover cue on draggable pills (caption and caliper), and the
+  pull-back slack that comes from the estimated pill size.

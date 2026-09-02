@@ -158,6 +158,9 @@ public enum PlaytestCondition: Hashable, Sendable {
 public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case copySpecList, copyImage, hideAllMeasurements, showAllMeasurements
     case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
+    /// Undo and redo are menu chords too, so a walk that checks an undo step
+    /// asks for it here.
+    case undo, redo
 }
 
 public enum PlaytestStep: Sendable, Equatable {

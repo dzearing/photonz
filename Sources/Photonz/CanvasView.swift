@@ -105,6 +105,10 @@ struct CanvasView: NSViewRepresentable {
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat) -> Void
+    /// A selected arrow's caption pill dragged to a spot: live, drop, Esc.
+    let onCaptionPlacePreview: (UUID, CGPoint) -> Void
+    let onCaptionPlaceCommit: (UUID, CGPoint) -> Void
+    let onCaptionPlaceCancel: () -> Void
     /// Completed alignment-guide drag: (guide axis, cross-axis position,
     /// along-axis span), all in document coordinates.
     let onAlignmentCommit: (MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void
@@ -188,6 +192,9 @@ struct CanvasView: NSViewRepresentable {
         view.onCandidateLevelChange = onCandidateLevelChange
         view.onMeasureEndpointPreview = onMeasureEndpointPreview
         view.onMeasureEndpointCommit = onMeasureEndpointCommit
+        view.onCaptionPlacePreview = onCaptionPlacePreview
+        view.onCaptionPlaceCommit = onCaptionPlaceCommit
+        view.onCaptionPlaceCancel = onCaptionPlaceCancel
         view.onToolChange = onToolChange
         view.onTextEditBegin = onTextEditBegin
         view.onTextCommit = onTextCommit
@@ -236,6 +243,11 @@ final class CanvasNSView: NSView {
     var onCandidateLevelChange: ((Int) -> Void) = { _ in }
     var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
     var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
+    /// A selected arrow's caption pill being dragged: live (no history), the
+    /// drop (one undo step), and Esc (restores the render).
+    var onCaptionPlacePreview: ((UUID, CGPoint) -> Void) = { _, _ in }
+    var onCaptionPlaceCommit: ((UUID, CGPoint) -> Void) = { _, _ in }
+    var onCaptionPlaceCancel: (() -> Void) = {}
     var onToolChange: ((Tool) -> Void) = { _ in }
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
@@ -469,6 +481,19 @@ final class CanvasNSView: NSView {
     private var measureFirstFootPress = false
     /// In-flight drag of one of a placed caliper's three handles (a foot or head).
     private var measureHandleDrag: MeasureHandleDrag?
+    /// Dragging a selected arrow's caption pill to the spot you want (Next
+    /// `next-arrow-captions`). The grip is kept, like the caliper's readout
+    /// grab: a pill taken hold of near its edge stays under the pointer.
+    private struct CaptionDrag {
+        let layerID: UUID
+        /// Pointer minus pill center at the grab, document space.
+        let grip: CGSize
+        let startCenter: CGPoint
+        var current: CGPoint
+        /// Where the pill centers with this drag applied.
+        var center: CGPoint { CGPoint(x: current.x - grip.width, y: current.y - grip.height) }
+    }
+    private var captionDrag: CaptionDrag?
     /// Detected UI edges, mirrored from EditorState; measure corners magnetize to
     /// these (and the pixel grid) while dragging.
     private var edgeMap = EdgeMap.empty
@@ -596,6 +621,17 @@ final class CanvasNSView: NSView {
     private func measureReadoutRect(_ layer: Layer) -> CGRect? {
         guard let m = documentMeasure(layer), m.showLabel else { return nil }
         return m.labelRect(chipSize: m.estimatedLabelSize)
+    }
+
+    /// A captioned arrow's pill footprint in document space (the same estimate
+    /// the model hits and reserves with). Dragging it moves the label.
+    private func captionPillRect(_ layer: Layer) -> CGRect? {
+        guard let a = layer.annotation, a.hasCaption else { return nil }
+        let anchor = a.captionAnchor()
+        let size = a.estimatedCaptionSize
+        return CGRect(x: layer.frame.minX + anchor.x - size.width / 2,
+                      y: layer.frame.minY + anchor.y - size.height / 2,
+                      width: size.width, height: size.height)
     }
 
     /// The handles that get a dot. The head dot is left out while the readout
@@ -1622,6 +1658,22 @@ final class CanvasNSView: NSView {
             refreshOverlays()
             return
         }
+        // A selected arrow's caption pill is a grab of its own: drag it to the
+        // spot you want and it stays there (Next flag). Endpoint handles won
+        // above, so the tail handle keeps priority where the two overlap.
+        if let id = selectedLayerID, let layer = selectedLayer, !layer.isLocked,
+           Experiments.shared.arrowCaptionsEnabled,
+           let pill = captionPillRect(layer) {
+            let tolerance = viewport.zoom > 0 ? 6 / viewport.zoom : 6
+            if pill.insetBy(dx: -tolerance, dy: -tolerance).contains(p) {
+                let center = CGPoint(x: pill.midX, y: pill.midY)
+                captionDrag = CaptionDrag(layerID: id,
+                                          grip: CGSize(width: p.x - center.x, height: p.y - center.y),
+                                          startCenter: center, current: p)
+                refreshOverlays()
+                return
+            }
+        }
         // A placed caliper is edited by dragging one of its three handles (the
         // two feet or the head); the others stay put and the value/label update
         // live. The readout pill is the head's grab too: dragging the number
@@ -1791,6 +1843,12 @@ final class CanvasNSView: NSView {
             // Live re-render so the measured value updates as the handle moves.
             let (start, end, off) = drag.params()
             onMeasureEndpointPreview(drag.layerID, start, end, off)
+            refreshOverlays()
+        } else if var drag = captionDrag {
+            drag.current = p
+            captionDrag = drag
+            // Live re-render so the pill follows the pointer.
+            onCaptionPlacePreview(drag.layerID, drag.center)
             refreshOverlays()
         } else if var session = endpointDrag {
             session.drag.update(to: p)
@@ -1982,6 +2040,18 @@ final class CanvasNSView: NSView {
             snapGuide = nil
             let (start, end, off) = drag.params()
             onMeasureEndpointCommit(drag.layerID, start, end, off)
+            refreshOverlays()
+        } else if let drag = captionDrag {
+            captionDrag = nil
+            // A press with no movement is a click on the pill, not a placement:
+            // no undo step, the render just settles back.
+            let moved = hypot(drag.center.x - drag.startCenter.x,
+                              drag.center.y - drag.startCenter.y) * viewport.zoom >= 2
+            if moved {
+                onCaptionPlaceCommit(drag.layerID, drag.center)
+            } else {
+                onCaptionPlaceCancel()
+            }
             refreshOverlays()
         } else if let session = endpointDrag {
             endpointDrag = nil
@@ -2199,6 +2269,12 @@ final class CanvasNSView: NSView {
                 refreshOverlays()
                 return
             }
+            if captionDrag != nil {
+                captionDrag = nil
+                onCaptionPlaceCancel() // no history was touched; restores the render
+                refreshOverlays()
+                return
+            }
             if let drag = measureHandleDrag {
                 measureHandleDrag = nil
                 snapGuide = nil
@@ -2375,6 +2451,10 @@ final class CanvasNSView: NSView {
             measureFirstFootPress = false
             measurePressDownView = nil
             measureHandleDrag = nil
+            if captionDrag != nil {
+                captionDrag = nil
+                onCaptionPlaceCancel()
+            }
             alignmentDrag = nil
             alignmentPreviewLayer.isHidden = true
             regionDrag = nil
@@ -2815,10 +2895,13 @@ final class CanvasNSView: NSView {
         }
         let dragInFlight = moveDrag != nil || resizeDrag != nil || transformDrag != nil
             || endpointDrag != nil || endpointHoldLayerID != nil || measureHandleDrag != nil
+            || captionDrag != nil
         // The blue selection outline hides during a RESIZE (frame handles,
-        // annotation endpoints, or a caliper handle) so the edges being aligned
-        // stay unobstructed; it still tracks moves and rotates.
+        // annotation endpoints, a caliper handle, or a caption pill drag that
+        // re-shapes the frame) so the edges being aligned stay unobstructed;
+        // it still tracks moves and rotates.
         let resizing = resizeDrag != nil || endpointDrag != nil || measureHandleDrag != nil
+            || captionDrag != nil
 
         // The outline (and frame-handle placement) follows the layer's
         // transform — the in-flight one during a rotate/skew drag.

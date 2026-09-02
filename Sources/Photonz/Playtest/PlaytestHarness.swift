@@ -276,6 +276,8 @@ private final class Run {
             case .zoomIn: editor.zoomIn()
             case .zoomOut: editor.zoomOut()
             case .zoomToFit: editor.zoomToFit()
+            case .undo: editor.undo()
+            case .redo: editor.redo()
             }
             await sleep(0.2)
             note(number, step.name, action.rawValue, state: describe())
@@ -464,7 +466,15 @@ private final class Run {
         }
         let arrows = layers.compactMap { layer -> String? in
             guard let annotation = layer.annotation else { return nil }
-            return "\(annotation.shape) caption=\(annotation.caption ?? "nil") frame \(layer.frame.integral)"
+            var line = "\(annotation.shape) caption=\(annotation.caption ?? "nil") frame \(layer.frame.integral)"
+            if annotation.hasCaption {
+                // The pill's center in document space, and whether it was
+                // placed by hand, so a walk can prove a drag landed.
+                let anchor = annotation.captionAnchor()
+                let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
+                line += " pill \(short(center))\(annotation.captionPinned ? " pinned" : "")"
+            }
+            return line
         }
         return [
             "tool": editor.activeTool.rawValue,

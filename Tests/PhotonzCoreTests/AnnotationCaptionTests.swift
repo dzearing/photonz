@@ -387,3 +387,140 @@ struct AnnotationCaptionLegibilityTests {
         #expect(decoded.captionFontSize(forShape: .arrow) == 28)
     }
 }
+
+// MARK: - Hand-placed pills
+
+@Suite("Annotation caption pinning")
+struct AnnotationCaptionPinningTests {
+
+    private let canvas = CGSize(width: 1440, height: 960)
+    private var bounds: CGRect { CGRect(origin: .zero, size: canvas) }
+
+    /// A captioned arrow in open space, planned (so the pill is at its default).
+    private func openSpaceArrow() -> Layer {
+        AnnotationBuilder.planningCaption(
+            AnnotationBuilder.layer(content: arrowContent(caption: "Primary action"),
+                                    from: CGPoint(x: 760, y: 650), to: CGPoint(x: 500, y: 770)),
+            canvas: canvas)
+    }
+
+    @Test func placingPinsThePillWhereItWasDropped() {
+        let layer = openSpaceArrow()
+        #expect(layer.annotation?.captionPinned == false)
+        let target = CGPoint(x: 900, y: 500)
+        let placed = AnnotationBuilder.placingCaption(layer, at: target, canvas: canvas)
+        #expect(placed.annotation?.captionPinned == true)
+        let pill = pillRect(placed)
+        #expect(abs(pill.midX - target.x) < 0.5)
+        #expect(abs(pill.midY - target.y) < 0.5)
+        // Endpoints did not move; the frame reserves room for the pill.
+        #expect(placed.annotationEndpoint(.start) == layer.annotationEndpoint(.start))
+        #expect(placed.annotationEndpoint(.end) == layer.annotationEndpoint(.end))
+        #expect(placed.frame.contains(pill))
+        // The offset is relative to the tail.
+        let tail = placed.annotationEndpoint(.start)!
+        #expect(placed.annotation?.captionOffset == CGSize(width: target.x - tail.x, height: target.y - tail.y))
+    }
+
+    @Test func plannerLeavesAPinnedPillAlone() {
+        let target = CGPoint(x: 900, y: 500)
+        let placed = AnnotationBuilder.placingCaption(openSpaceArrow(), at: target, canvas: canvas)
+        let replanned = AnnotationBuilder.planningCaption(placed, canvas: canvas)
+        #expect(replanned == placed)
+    }
+
+    @Test func pinnedPillRidesWithTheTailWhenTheArrowMoves() {
+        let target = CGPoint(x: 900, y: 500)
+        let placed = AnnotationBuilder.placingCaption(openSpaceArrow(), at: target, canvas: canvas)
+        let moved = AnnotationBuilder.planningCaption(
+            placed.resized(to: placed.frame.offsetBy(dx: -200, dy: 100)), canvas: canvas)
+        #expect(moved.annotation?.captionPinned == true)
+        #expect(moved.annotation?.captionOffset == placed.annotation?.captionOffset)
+        let pill = pillRect(moved)
+        #expect(abs(pill.midX - (target.x - 200)) < 0.5)
+        #expect(abs(pill.midY - (target.y + 100)) < 0.5)
+    }
+
+    @Test func pinnedPillStaysPutWhenAnEndpointMoves() {
+        // Only the head moves: the pill keeps its spot relative to the tail,
+        // which did not move, so it stays exactly where it was dropped.
+        let target = CGPoint(x: 900, y: 500)
+        let placed = AnnotationBuilder.placingCaption(openSpaceArrow(), at: target, canvas: canvas)
+        let tail = placed.annotationEndpoint(.start)!
+        let moved = AnnotationBuilder.planningCaption(
+            AnnotationBuilder.updating(placed, start: tail, end: CGPoint(x: 300, y: 900)), canvas: canvas)
+        #expect(moved.annotation?.captionPinned == true)
+        let pill = pillRect(moved)
+        #expect(abs(pill.midX - target.x) < 0.5)
+        #expect(abs(pill.midY - target.y) < 0.5)
+    }
+
+    @Test func pinnedPillSurvivesTextAndSizeEdits() {
+        let target = CGPoint(x: 900, y: 500)
+        let placed = AnnotationBuilder.placingCaption(openSpaceArrow(), at: target, canvas: canvas)
+        let retyped = AnnotationBuilder.planningCaption(
+            AnnotationBuilder.restyled(placed, caption: .some("A much longer caption than before")),
+            canvas: canvas)
+        #expect(retyped.annotation?.captionPinned == true)
+        #expect(abs(pillRect(retyped).midX - target.x) < 0.5)
+        #expect(abs(pillRect(retyped).midY - target.y) < 0.5)
+        #expect(retyped.frame.contains(pillRect(retyped)))
+        let resized = AnnotationBuilder.planningCaption(
+            AnnotationBuilder.restyled(placed, captionFontSize: 36), canvas: canvas)
+        #expect(resized.annotation?.captionPinned == true)
+        #expect(abs(pillRect(resized).midX - target.x) < 0.5)
+        #expect(abs(pillRect(resized).midY - target.y) < 0.5)
+    }
+
+    @Test func pinnedPillIsPulledBackOntoThePicture() {
+        // Dropped past the right edge: it lands as far right as it can go, and
+        // stays pinned there.
+        let placed = AnnotationBuilder.placingCaption(openSpaceArrow(), at: CGPoint(x: 1500, y: 500),
+                                                      canvas: canvas)
+        #expect(placed.annotation?.captionPinned == true)
+        let pill = pillRect(placed)
+        #expect(bounds.contains(pill))
+        #expect(abs(pill.maxX - canvas.width) < 0.5)
+        #expect(abs(pill.midY - 500) < 0.5)
+        // Then the arrow is dragged so the pinned spot would be off the top:
+        // the pill is pulled back on but keeps its x.
+        let dragged = AnnotationBuilder.planningCaption(
+            placed.resized(to: placed.frame.offsetBy(dx: 0, dy: -600)), canvas: canvas)
+        let pulled = pillRect(dragged)
+        #expect(bounds.contains(pulled))
+        #expect(dragged.annotation?.captionPinned == true)
+        #expect(abs(pulled.midX - pill.midX) < 0.5)
+        #expect(abs(pulled.minY) < 0.5)
+    }
+
+    @Test func releasingReturnsThePillToTheAutomaticSpot() {
+        let layer = openSpaceArrow()
+        let placed = AnnotationBuilder.placingCaption(layer, at: CGPoint(x: 900, y: 500), canvas: canvas)
+        let released = AnnotationBuilder.releasingCaption(placed, canvas: canvas)
+        #expect(released.annotation?.captionPinned == false)
+        #expect(released.annotation?.captionOffset == nil)
+        #expect(released == layer)
+    }
+
+    @Test func placingACaptionlessArrowDoesNothing() {
+        let plain = AnnotationBuilder.layer(content: arrowContent(), from: CGPoint(x: 100, y: 100),
+                                            to: CGPoint(x: 300, y: 100))
+        #expect(AnnotationBuilder.placingCaption(plain, at: CGPoint(x: 50, y: 50), canvas: canvas) == plain)
+    }
+
+    @Test func pinnedFlagRoundTripsAndLegacyPayloadsAreUnpinned() throws {
+        var content = arrowContent(caption: "x")
+        content.captionPinned = true
+        content.captionOffset = CGSize(width: 40, height: -30)
+        let decoded = try JSONDecoder().decode(AnnotationContent.self, from: JSONEncoder().encode(content))
+        #expect(decoded.captionPinned)
+        #expect(decoded.captionOffset == CGSize(width: 40, height: -30))
+        let legacy = """
+        {"shape":"arrow","strokeWidth":4,"colorHex":"#FF3B30","start":[10,20],"end":[110,20],
+         "caption":"x","captionOffset":[12,-40]}
+        """.data(using: .utf8)!
+        let old = try JSONDecoder().decode(AnnotationContent.self, from: legacy)
+        #expect(!old.captionPinned)
+        #expect(old.captionOffset == CGSize(width: 12, height: -40))
+    }
+}
