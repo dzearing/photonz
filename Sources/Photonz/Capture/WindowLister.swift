@@ -26,7 +26,9 @@ enum WindowLister {
                 frame: bounds,
                 layer: info[kCGWindowLayer as String] as? Int ?? 0,
                 alpha: info[kCGWindowAlpha as String] as? Double ?? 1,
-                ownerName: info[kCGWindowOwnerName as String] as? String ?? "")
+                ownerName: info[kCGWindowOwnerName as String] as? String ?? "",
+                // Only populated for clients with the Screen Recording grant.
+                title: info[kCGWindowName as String] as? String ?? "")
         }
     }
 

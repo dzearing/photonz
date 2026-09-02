@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 500,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T07:11:35.107Z",
-  "updated": "2026-09-02T09:03:21.569Z",
+  "updated": "2026-09-02T09:04:49.059Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today the click path crops the frozen full-screen bitmap to the window bounds (RectSelectionController.finish -> crop). The system look needs a per-window capture (SCScreenshotManager with an SCContentFilter for that window id, or CGWindowListCreateImage with kCGWindowImageBoundsIgnoreFraming off) taken at freeze time or after dismiss; note the filter path drops shadows unless asked for them. Depends on next-window-capture. Shipped 2026-09-02: WindowShot (PhotonzCore) decides the style (shadow default, Option flips, flag parameter 'shadow' flips the default) and sanity-checks the shot size; ScreenCapturer.captureWindow uses the macOS 26 SCScreenshotManager.captureScreenshot(contentFilter:configuration:) with SCContentFilter(desktopIndependentWindow:), ignoreShadows = !includeShadow, ignoreClipping = true. RectSelectionController.finish takes the shot live after dismiss, falling back shadow -> bare -> frozen crop. Region recording passes producesImage: false. NOT verified live (no Screen Recording grant for the loop); see the audit.",
@@ -38,7 +38,12 @@
     {
       "t": "2026-09-02T09:03:21.569Z",
       "note": "Adversarial review after building: (1) A click during region recording went through the per-window shot too and threw the image away; fixed with producesImage=false on that path, which also skips the pointless frozen crop it did before. (2) The shot is unverified live (no Screen Recording grant anywhere the loop may use), so the audit tells the user which of three results to expect and asks which they saw; the fallback chain guarantees the worst case is the old crop. (3) Latency after the click is one shareable-content query plus one screenshot, unmeasured; the audit asks about it. (4) The frozen picture and the live shot can disagree if the window changed between freeze and click; same as the system capture, noted. (5) A click over the desktop still cancels, and drags are untouched (the drag path passes no window). (6) The flag description tells you about Option, so nothing to learn beyond the system habit."
+    },
+    {
+      "t": "2026-09-02T09:04:49.058Z",
+      "note": "Next: clicking a highlighted window captures it through ScreenCaptureKit's per-window screenshot with transparent corners and, by default, its shadow (Option-click for bare bounds; the next-window-capture flag has an Include the window shadow checkbox). WindowShot in PhotonzCore with 5 tests; suite green (1198). Fallback chain shadow -> bare -> frozen crop. Not verified live (no Screen Recording grant for the loop); audit queue/audits/2026-09-02-window-capture-shadow.json asks the user to confirm. Committed and pushed to main."
     }
   ],
-  "started": "2026-09-02T08:50:48.945Z"
+  "started": "2026-09-02T08:50:48.945Z",
+  "completed": "2026-09-02T09:04:49.059Z"
 }

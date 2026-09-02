@@ -1,0 +1,27 @@
+{
+  "feature": "Window highlight shows the window title",
+  "epic": "measure-redline",
+  "summary": "During a region capture, the pill on the highlighted window now reads app, window title and size, so when an app has several windows open you can see which one you are about to capture before you click.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag Capture a window by clicking it is on by default. Open two windows of the same app (two Safari windows on different pages, say) and have one long-titled page, one very narrow window, and a window whose title is just its app's name, like Calculator.",
+  "try": [
+    { "do": "Press Shift Command 4 and move over one of the two Safari windows. The pill should read Safari, a dot, the page title in lighter text, then the size.", "shot": "2026-09-02-window-title-safari.png" },
+    { "do": "Move to the other Safari window. The title should change and be enough to tell the two apart." },
+    { "do": "Move over a browser window with a long page title. The title should end in an ellipsis and the pill should stay inside the window, never past its right edge.", "shot": "2026-09-02-window-title-edge.png" },
+    { "do": "Move over a window in Microsoft Edge or Chrome. The trailing app name the browser adds to its own title should not appear twice." },
+    { "do": "Move over Calculator, or any window titled after its app. The pill should read just the app and the size, with no repeated name." },
+    { "do": "Shrink a window until it is narrower than its own pill. The pill should hang just below the window and still be cut short before it grows past about 400 pt." },
+    { "do": "Move between windows quickly and drag out a region. Nothing about the highlight or the drag should feel slower than before." }
+  ],
+  "evaluate": [
+    "With two windows of one app open, does the title actually let you tell them apart, or is what matters cut off by the ellipsis?",
+    "Does the lighter title read as detail under the app name, or does the three-part pill feel like too much text over the corner you are looking at?",
+    "Is 400 pt the right ceiling for the pill, or would you rather see more of a long title on a wide window?",
+    "Is the app name still worth its place, now that the title is there, or does the title alone plus the size do the job?"
+  ],
+  "rough": [
+    "The two screenshots were drawn by the real overlay in the probe build over invented windows, since no unmanned copy of the app can read window titles or the screen. The dev app holds the Screen Recording grant, so it will show real titles; the probe would show none.",
+    "Titles are cut at the end. A title that only differs at its end (two documents named Report v1 and Report v2 in a long folder path) will look the same once shortened; cutting in the middle would fix that at the cost of reading less naturally.",
+    "The app name is stripped from a title only when it sits at either end after a dash, an en or em dash, or a bar. Apps that phrase it differently keep the repetition.",
+    "Without the Screen Recording grant every title is empty and the pill reads as before, app and size only, with no hint that anything is missing."
+  ]
+}

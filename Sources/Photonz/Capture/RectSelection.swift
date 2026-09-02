@@ -418,6 +418,9 @@ private final class SelectionView: NSView {
     private static let labelInset: CGFloat = 8
     private static let labelPadding = CGSize(width: 8, height: 4)
     private static let labelFont = NSFont.systemFont(ofSize: 12, weight: .semibold)
+    /// The window title sits between the app and the size in a lighter voice,
+    /// so a long title reads as detail rather than shouting over the outline.
+    private static let titleFont = NSFont.systemFont(ofSize: 12, weight: .regular)
 
     /// Redraws only what changed: the old and new highlight (outline and label
     /// included), not the whole display, so tracking the pointer stays cheap
@@ -430,30 +433,63 @@ private final class SelectionView: NSView {
     /// Everything the hover highlight for `window` paints: outline plus label.
     private func chrome(for window: ScreenWindow?) -> CGRect {
         guard let window, let rect = WindowPick.captureRect(for: window, within: bounds) else { return .null }
-        return chrome(for: rect, text: WindowPick.label(for: window))
+        return chrome(for: rect, label: highlightLabel(for: window, in: rect))
     }
 
     /// Everything the drag box for `rect` paints: outline plus size label.
     private func dragChrome(for rect: CGRect?) -> CGRect {
         guard let rect else { return .null }
-        return chrome(for: rect, text: WindowPick.sizeLabel(for: rect.size))
+        return chrome(for: rect, label: sizeOnlyLabel(for: rect))
     }
 
-    private func chrome(for rect: CGRect, text: String) -> CGRect {
-        rect.insetBy(dx: -2, dy: -2).union(labelFrame(for: rect, text: text))
+    private func chrome(for rect: CGRect, label: WindowLabel) -> CGRect {
+        rect.insetBy(dx: -2, dy: -2).union(labelFrame(for: rect, label: label))
     }
 
-    private func attributedLabel(_ text: String) -> NSAttributedString {
-        NSAttributedString(string: text, attributes: [
-            .font: Self.labelFont,
-            .foregroundColor: NSColor.white,
-        ])
+    private func sizeOnlyLabel(for rect: CGRect) -> WindowLabel {
+        WindowLabel(app: "", size: WindowPick.sizeLabel(for: rect.size))
     }
 
-    private func labelFrame(for rect: CGRect, text: String) -> CGRect {
-        let textSize = attributedLabel(text).size()
-        let size = CGSize(width: ceil(textSize.width) + Self.labelPadding.width * 2,
-                          height: ceil(textSize.height) + Self.labelPadding.height * 2)
+    /// The window's app, title and size, the title cut to keep the pill
+    /// inside the window (or the display, when it hangs below a small one).
+    private func highlightLabel(for window: ScreenWindow, in rect: CGRect) -> WindowLabel {
+        WindowPick.fittedLabel(for: window, in: rect, within: bounds, inset: Self.labelInset) {
+            pillSize(for: $0)
+        }
+    }
+
+    /// The label's text with the app and size in bold and the title lighter,
+    /// spelled out part by part so it always matches `WindowLabel.text`.
+    private func attributedLabel(_ label: WindowLabel) -> NSAttributedString {
+        let strong: [NSAttributedString.Key: Any] = [
+            .font: Self.labelFont, .foregroundColor: NSColor.white,
+        ]
+        let soft: [NSAttributedString.Key: Any] = [
+            .font: Self.titleFont, .foregroundColor: NSColor.white.withAlphaComponent(0.85),
+        ]
+        let out = NSMutableAttributedString()
+        func append(_ text: String, _ attributes: [NSAttributedString.Key: Any]) {
+            out.append(NSAttributedString(string: text, attributes: attributes))
+        }
+        if !label.app.isEmpty { append(label.app, strong) }
+        if let title = label.title, !title.isEmpty {
+            if out.length > 0 { append(" · ", soft) }
+            append(title, soft)
+        }
+        if out.length > 0 { append("  ", strong) }
+        append(label.size, strong)
+        return out
+    }
+
+    /// The pill's full size for `label`, padding included.
+    private func pillSize(for label: WindowLabel) -> CGSize {
+        let textSize = attributedLabel(label).size()
+        return CGSize(width: ceil(textSize.width) + Self.labelPadding.width * 2,
+                      height: ceil(textSize.height) + Self.labelPadding.height * 2)
+    }
+
+    private func labelFrame(for rect: CGRect, label: WindowLabel) -> CGRect {
+        let size = pillSize(for: label)
         let origin = WindowPick.labelOrigin(for: rect, labelSize: size, inset: Self.labelInset,
                                             within: bounds)
         return CGRect(origin: origin, size: size)
@@ -469,11 +505,11 @@ private final class SelectionView: NSView {
             cutOut(rect, lineWidth: 1)
             // The size pill steps aside while the loupe carries the size, so a
             // drag has one readout, at the corner being placed.
-            if windowPicking, loupeLayout == nil { drawLabel(WindowPick.sizeLabel(for: rect.size), for: rect) }
+            if windowPicking, loupeLayout == nil { drawLabel(sizeOnlyLabel(for: rect), for: rect) }
         } else if let hovered, let rect = WindowPick.captureRect(for: hovered, within: bounds) {
             // …or the window under the pointer, which is what a click captures.
             cutOut(rect, lineWidth: 2)
-            drawLabel(WindowPick.label(for: hovered), for: rect)
+            drawLabel(highlightLabel(for: hovered, in: rect), for: rect)
         }
         if let layout = loupeLayout, layout.dirty.intersects(dirtyRect), let frozenImage {
             drawLoupe(layout, from: frozenImage)
@@ -490,12 +526,12 @@ private final class SelectionView: NSView {
     }
 
     /// The readout pill: what a click (or the drag) would capture, in points.
-    private func drawLabel(_ text: String, for rect: CGRect) {
-        let frame = labelFrame(for: rect, text: text)
+    private func drawLabel(_ label: WindowLabel, for rect: CGRect) {
+        let frame = labelFrame(for: rect, label: label)
         NSColor.black.withAlphaComponent(0.72).setFill()
         NSBezierPath(roundedRect: frame, xRadius: 6, yRadius: 6).fill()
-        attributedLabel(text).draw(at: CGPoint(x: frame.minX + Self.labelPadding.width,
-                                               y: frame.minY + Self.labelPadding.height))
+        attributedLabel(label).draw(at: CGPoint(x: frame.minX + Self.labelPadding.width,
+                                                y: frame.minY + Self.labelPadding.height))
     }
 
     // MARK: - Loupe

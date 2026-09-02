@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 510,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T07:11:35.134Z",
-  "updated": "2026-09-02T07:11:35.134Z",
+  "updated": "2026-09-02T09:17:25.999Z",
   "deps": [],
   "blockedBy": [],
   "notes": "kCGWindowName is only populated for apps with the Screen Recording grant, which the real app has and the probe does not. Add a title field to ScreenWindow, read it in WindowLister, extend WindowPick.label(for:). Depends on next-window-capture.",
@@ -22,6 +22,32 @@
     {
       "t": "2026-09-02T07:11:35.134Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T09:05:05.338Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T09:07:47.030Z",
+      "note": "Pre-build review. Value is real only when an app has several similar windows (two browser windows, two editor windows); the label already names the app, so the title must be visually secondary or the pill turns into a wall of text over the very corner the eye uses to judge the outline. Decisions: app and size stay semibold white, the title sits between them in a lighter weight and slightly dimmer, separated by a middle dot; the title alone shortens (trailing ellipsis), never the app or the size; the pill is capped at 400 pt and never wider than the window it sits in (or the display when it hangs below a small window); titles that repeat the app name (Chromium-style 'Page - Microsoft Edge', or a window simply titled after its app) lose that repetition; a title that would shorten to under three characters is dropped rather than shown as a stub. No decision card: none of this changes what the feature does, only how the pill reads, and the audit asks the user to judge the look."
+    },
+    {
+      "t": "2026-09-02T09:07:47.031Z",
+      "note": "Cannot be verified live: kCGWindowName needs the Screen Recording grant, which neither this shell nor the probe bundle holds (checked: every on-screen window lists a nil name from here). Label text and shortening are unit tested in PhotonzCore; the probe run only confirms the title-less path still draws."
+    },
+    {
+      "t": "2026-09-02T09:17:07.437Z",
+      "note": "Built. PhotonzCore: ScreenWindow.title, WindowLabel (app / title / size, text), WindowPick.displayTitle (tidy, drop app-name repeats at either end), WindowPick.label(for:fitting:measure:) (bisects the title with a trailing ellipsis, drops it under 3 characters), WindowPick.fittedLabel (window room when the plain pill fits inside, else display room, cap 400 pt). 8 new tests in WindowPickTests, 17 total. App: WindowLister reads kCGWindowName; RectSelection draws the label in parts (app and size semibold white, title regular at 85% white, middle dot between) and fits it through the core with a real NSAttributedString measure. Flag description and docs/design/capture.md updated."
+    },
+    {
+      "t": "2026-09-02T09:17:07.438Z",
+      "note": "Verified on the real overlay: a temporary env-var harness in the probe injected four titled fake windows and snapshotted the view's own drawing (harness removed before commit). Results: 'Safari · Apple  640 × 300'; the Edge title cut to fit inside a 360 pt window with its '- Microsoft Edge' suffix gone; a 90 pt Finder window put the pill below itself, cut at the 400 pt cap; 'Calculator' titled 'Calculator' read app and size only. Two of those snapshots are in queue/audits as the audit's pictures. Full suite green (1205 tests) apart from the known ElementBounds timing flake, which passes alone."
+    },
+    {
+      "t": "2026-09-02T09:17:25.998Z",
+      "note": "Next: the region-capture highlight pill now reads app, window title and size (title lighter, cut to fit the window, the display, and a 400 pt cap; app-name repeats dropped). PhotonzCore WindowPick + WindowLabel, 8 new tests, 1205 green. Verified on the real overlay via a temporary probe harness; snapshots and audit in queue/audits/2026-09-02-window-highlight-title.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T09:05:05.337Z",
+  "completed": "2026-09-02T09:17:25.999Z"
 }

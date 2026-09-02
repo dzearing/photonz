@@ -116,7 +116,19 @@ The `NSStatusItem` menu is the always-available entry point:
      highlights the frontmost layer-0, visible, non-shield window under the
      pointer with an app-and-size pill (`WindowPick` in PhotonzCore decides
      which window, what counts as a click, and where the label goes; unit
-     tested). A press that moves under 4 pt captures that window's bounds
+     tested). Since 2026-09-02 the pill also carries the window's title
+     between the app and the size, in a lighter weight ("Safari · Apple
+     1440 × 900"), so one of an app's several windows is tellable from the
+     rest. `WindowLister` reads `kCGWindowName`, which the window server
+     only fills in for clients holding the Screen Recording grant (the dev
+     and shipping apps; not the probe). `WindowPick.displayTitle` drops a
+     title that only repeats the app name, including the Chromium-style
+     "Page - Microsoft Edge" suffix; `WindowPick.fittedLabel` shortens the
+     title alone (trailing ellipsis, never fewer than three characters, else
+     dropped) so the pill stays inside the window when it sits there, inside
+     the display when it hangs below a small window, and never wider than
+     400 pt. The app measures, the core decides. A press that moves under 4
+     pt captures that window's bounds
      clamped to the display, cropped from the same frozen bitmap a drag uses;
      a bigger move becomes the ordinary region drag, which now also shows a
      size pill. A click over nothing pickable cancels, as a bare click always

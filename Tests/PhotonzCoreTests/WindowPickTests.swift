@@ -85,10 +85,137 @@ struct WindowPickTests {
 
     @Test func labelNamesTheAppAndTheSizeInWholePoints() {
         let w = window(1, CGRect(x: 0, y: 0, width: 1440.6, height: 900), owner: "Safari")
-        #expect(WindowPick.label(for: w) == "Safari  1441 × 900")
+        #expect(WindowPick.label(for: w).text == "Safari  1441 × 900")
         let anonymous = window(2, CGRect(x: 0, y: 0, width: 300, height: 200), owner: "")
-        #expect(WindowPick.label(for: anonymous) == "300 × 200")
+        #expect(WindowPick.label(for: anonymous).text == "300 × 200")
         #expect(WindowPick.sizeLabel(for: CGSize(width: 300, height: 200)) == "300 × 200")
+    }
+
+    // MARK: Window title in the label
+
+    private func titled(_ title: String, owner: String = "Safari",
+                        frame: CGRect = CGRect(x: 0, y: 0, width: 1440, height: 900)) -> ScreenWindow {
+        ScreenWindow(id: 1, frame: frame, layer: 0, alpha: 1, ownerName: owner, title: title)
+    }
+
+    @Test func labelPutsTheTitleBetweenTheAppAndTheSize() {
+        let label = WindowPick.label(for: titled("Apple"))
+        #expect(label.app == "Safari")
+        #expect(label.title == "Apple")
+        #expect(label.size == "1440 × 900")
+        #expect(label.text == "Safari · Apple  1440 × 900")
+        // No title (no Screen Recording grant, or an untitled window): app and size only.
+        #expect(WindowPick.label(for: titled("")).text == "Safari  1440 × 900")
+        #expect(WindowPick.label(for: titled("   ")).title == nil)
+        // A title with no app name to hang off still reads.
+        #expect(WindowPick.label(for: titled("Apple", owner: "")).text == "Apple  1440 × 900")
+        // Asking for the plain label leaves the title out.
+        #expect(WindowPick.label(for: titled("Apple"), includingTitle: false).text == "Safari  1440 × 900")
+    }
+
+    @Test func titleIsTidiedBeforeItIsShown() {
+        // Surrounding whitespace and line breaks never reach the pill.
+        #expect(WindowPick.displayTitle("  Apple\nStart ", app: "Safari") == "Apple Start")
+        // A window titled after its own app says nothing new.
+        #expect(WindowPick.displayTitle("Calculator", app: "Calculator") == nil)
+        #expect(WindowPick.displayTitle("calculator", app: "Calculator") == nil)
+        // Browsers and Electron apps suffix the app name; the pill already has it.
+        #expect(WindowPick.displayTitle("Apple - Microsoft Edge", app: "Microsoft Edge") == "Apple")
+        #expect(WindowPick.displayTitle("Apple — Google Chrome", app: "Google Chrome") == "Apple")
+        #expect(WindowPick.displayTitle("Apple – Google Chrome", app: "Google Chrome") == "Apple")
+        #expect(WindowPick.displayTitle("Apple | Slack", app: "Slack") == "Apple")
+        // Some apps lead with their name instead.
+        #expect(WindowPick.displayTitle("Photonz — Untitled 2", app: "Photonz") == "Untitled 2")
+        // Only the app name at an end goes; a name in the middle is content.
+        #expect(WindowPick.displayTitle("Why Safari beats Chrome", app: "Safari") == "Why Safari beats Chrome")
+        // Nothing left once the app name goes: no title.
+        #expect(WindowPick.displayTitle(" - Microsoft Edge", app: "Microsoft Edge") == nil)
+    }
+
+    /// A fake measure: every character is 10 pt wide, so widths are easy to
+    /// reason about.
+    private func tenPerCharacter(_ label: WindowLabel) -> CGFloat {
+        CGFloat(label.text.count) * 10
+    }
+
+    @Test func longTitlesAreShortenedToFitAndTheAppAndSizeNeverAre() {
+        let w = titled("A very long page title that goes on and on")
+        // Plenty of room: the whole label.
+        let whole = WindowPick.label(for: w, fitting: 10_000, measure: tenPerCharacter)
+        #expect(whole.text == "Safari · A very long page title that goes on and on  1440 × 900")
+        // Tight: the title loses its tail and gains an ellipsis; app and size stay whole.
+        let tight = WindowPick.label(for: w, fitting: 300, measure: tenPerCharacter)
+        #expect(tight.app == "Safari")
+        #expect(tight.size == "1440 × 900")
+        #expect(tight.title?.hasSuffix("…") == true)
+        #expect(tenPerCharacter(tight) <= 300)
+        // The shortening takes as much of the title as fits, not less.
+        #expect(tight.text.count == 30)
+        #expect(tight.text == "Safari · A very l…  1440 × 900")
+        // Fits exactly: no ellipsis.
+        let exact = WindowPick.label(for: titled("Apple"), fitting: 260, measure: tenPerCharacter)
+        #expect(exact.title == "Apple")
+    }
+
+    @Test func aTitleThatWouldShrinkToAStubIsDroppedInstead() {
+        let w = titled("A very long page title")
+        // Room for "Safari · " and "  1440 × 900" (21 characters) plus three:
+        // a title of "A…" would say nothing, so it goes.
+        let stub = WindowPick.label(for: w, fitting: 240, measure: tenPerCharacter)
+        #expect(stub.title == nil)
+        #expect(stub.text == "Safari  1440 × 900")
+        // Not even the plain label fits: it is still the answer, whole.
+        let cramped = WindowPick.label(for: w, fitting: 50, measure: tenPerCharacter)
+        #expect(cramped.text == "Safari  1440 × 900")
+        #expect(WindowPick.minimumTitleLength == 3)
+    }
+
+    @Test func shorteningKeepsWholeCharacters() {
+        // Grapheme clusters (flags, emoji with skin tones) never get split.
+        let w = titled("🇬🇧🇬🇧🇬🇧🇬🇧🇬🇧🇬🇧🇬🇧🇬🇧")
+        let short = WindowPick.label(for: w, fitting: 250, measure: tenPerCharacter)
+        #expect(short.title?.hasSuffix("…") == true)
+        #expect(short.title?.hasPrefix("🇬🇧🇬🇧🇬🇧") == true)
+        #expect(short.title?.dropLast().allSatisfy { $0 == "🇬🇧" } == true)
+    }
+
+    @Test func fittedLabelStaysInsideTheWindowOrElseTheDisplay() {
+        let display = CGRect(x: 0, y: 0, width: 800, height: 600)
+        // The pill's size: 10 pt per character, 22 pt tall.
+        func pill(_ label: WindowLabel) -> CGSize { CGSize(width: tenPerCharacter(label), height: 22) }
+        let title = "A very long page title that goes on and on"
+        // A 400 pt wide window holds the plain label, so the pill lives inside
+        // it and the title is cut to keep it there (400 minus 8 pt insets each side).
+        let roomy = titled(title, frame: CGRect(x: 100, y: 100, width: 400, height: 300))
+        let inside = WindowPick.fittedLabel(for: roomy, in: roomy.frame, within: display, inset: 8, measure: pill)
+        #expect(inside.title?.hasSuffix("…") == true)
+        #expect(pill(inside).width <= 400 - 16)
+        #expect(pill(inside).width > 300)
+        // A window too narrow for even the plain label puts the pill below
+        // itself, where the display is the limit, so more of the title survives.
+        let narrow = titled(title, frame: CGRect(x: 100, y: 100, width: 100, height: 300))
+        let below = WindowPick.fittedLabel(for: narrow, in: narrow.frame, within: display, inset: 8, measure: pill)
+        #expect(pill(below).width > pill(inside).width)
+        #expect(pill(below).width <= WindowPick.maxLabelWidth)
+        // A window too short for the pill does the same, however wide it is.
+        let short = titled(title, frame: CGRect(x: 100, y: 100, width: 700, height: 20))
+        let beside = WindowPick.fittedLabel(for: short, in: short.frame, within: display, inset: 8, measure: pill)
+        #expect(pill(beside).width == pill(below).width)
+        // The result always lands where labelOrigin will put it, inside the display.
+        for (window, label) in [(roomy, inside), (narrow, below), (short, beside)] {
+            let origin = WindowPick.labelOrigin(for: window.frame, labelSize: pill(label), inset: 8, within: display)
+            #expect(display.contains(CGRect(origin: origin, size: pill(label))))
+        }
+    }
+
+    @Test func fittedLabelNeverGrowsPastTheCapOnAHugeWindow() {
+        let display = CGRect(x: 0, y: 0, width: 5120, height: 2880)
+        func pill(_ label: WindowLabel) -> CGSize { CGSize(width: tenPerCharacter(label), height: 22) }
+        let title = String(repeating: "word ", count: 40)
+        let huge = titled(title, frame: display)
+        let label = WindowPick.fittedLabel(for: huge, in: huge.frame, within: display, inset: 8, measure: pill)
+        #expect(pill(label).width <= WindowPick.maxLabelWidth)
+        #expect(label.title?.hasSuffix("…") == true)
     }
 
     @Test func labelSitsInsideTheWindowsTopLeftWhenItFitsElseBelowOrOnScreen() {

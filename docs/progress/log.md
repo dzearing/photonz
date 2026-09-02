@@ -4562,3 +4562,11 @@ the card's left end, over the icons.
 - `WindowShot` (PhotonzCore, 5 tests) picks the style and sanity-checks the shot's pixel size against the window (shadowed must be larger, bare never smaller); a rejected or failed shot falls back to the bare shot and then to the frozen crop.
 - NOT verified live: neither the terminal nor the probe bundle has a Screen Recording grant and the dev app is off limits, so the shadow output is unconfirmed. Audit `queue/audits/2026-09-02-window-capture-shadow.json` asks the user to check it.
 - Known flake: the ElementBounds timing-budget tests fail by a hair in the full run on this loaded machine and pass in isolation.
+
+## 2026-09-02 (go loop: window highlight shows the window title)
+
+- **Next, `next-window-capture`:** the highlight pill during a region capture now reads app, window title and size ("Safari · Apple  1440 × 900"), the title in a lighter weight between the two, so one of an app's several windows is tellable from the rest before the click.
+- `PhotonzCore/WindowPick.swift`: `ScreenWindow.title`, `WindowLabel` (parts plus `text`), `displayTitle` (whitespace tidy; drops a title that only repeats the app name, including the Chromium-style "Page - Microsoft Edge" suffix and a leading "App — " prefix), `label(for:fitting:measure:)` (bisects the title with a trailing ellipsis; under three characters it goes), `fittedLabel` (the window's width when the plain pill fits inside it, else the display's, never over 400 pt). The app supplies the measure, the core decides. 8 new tests.
+- `WindowLister` reads `kCGWindowName`, which is only filled in for clients with the Screen Recording grant (the dev and shipping apps, not the probe). `RectSelection` composes the pill part by part in an attributed string.
+- Verified in the real overlay through a temporary harness in the probe (env var injects titled fake windows, snapshots the view's drawing; removed before commit): four cases all as designed, two snapshots kept in `queue/audits/`. Audit: `queue/audits/2026-09-02-window-highlight-title.json`.
+- Open for the playtest: trailing versus middle ellipsis, the 400 pt cap, and whether the app name still earns its place next to the title.
