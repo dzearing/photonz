@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 6,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T20:30:19.370Z",
-  "updated": "2026-09-02T21:04:31.203882Z",
+  "updated": "2026-09-02T21:04:41.742Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-02: when I use the arrow, drag it and then automatically a text bubble should appear at the tail so I can type, similar to the pill for the measure tool; Escape shows an arrow without the bubble; the bubble should have border, background and foreground just like the measure pill. The flow itself exists behind next-arrow-captions (on by default in Next) and the draw-then-type field was made to actually stay open on 2026-09-02 01:43 (audit 2026-09-02-arrow-caption-one-draft.json). The delta is styling and continuity: the pill today darkens the arrow color for its background (audit 2026-09-02-arrow-captions.json, colors shot), while the measure pill uses MeasureContent chipColorHex, chipOpacity and textColorHex with its border treatment (MeasureStyles.swift, the chip drawing in the measure renderer). Reuse the measure chip drawing for the caption pill, and make the inline editor (CanvasView caption field, AnnotationEditing.planningCaption) draw the same bubble around the text field so the typing state and the committed state are one shape. If the arrow color should tint the bubble at all, open a decision rather than guessing. Ask the user to confirm on the Dev build that the field opens on draw at all; if it does not, that is a p1 bug to file separately.",
@@ -52,7 +52,12 @@
     {
       "t": "2026-09-02T21:04:31.203882Z",
       "note": "acceptance item 5 asked for offscreen renders; the loop holds Screen Recording, so the audit ships real window captures instead, which is strictly what the rule prefers."
+    },
+    {
+      "t": "2026-09-02T21:04:41.741Z",
+      "note": "The caption field now draws the same bubble the committed caption lands in: pill numbers moved onto AnnotationContent, the rasterizer and the on-canvas field both read them, chip is as solid as the measure chip. Verified with real window captures on the probe (Scripts/playtest/arrow-caption-pill.json), tests green, audit 2026-09-02-arrow-caption-pill.json with a side-by-side against a live caliper readout."
     }
   ],
-  "started": "2026-09-02T20:47:56.977Z"
+  "started": "2026-09-02T20:47:56.977Z",
+  "completed": "2026-09-02T21:04:41.742Z"
 }
