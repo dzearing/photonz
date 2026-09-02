@@ -43,6 +43,8 @@ public enum FeatureCatalog {
 
     public static let toolOptionsFlag = "next-tool-options"
 
+    public static let windowCaptureFlag = "next-window-capture"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -142,6 +144,15 @@ public enum FeatureCatalog {
                     name: measureCenterSnapFlag,
                     title: "Snap to centers",
                     description: "Adds a Snap option to the Measure Tool section of the inspector. With Edges and centers, measure points also magnetize to element and gap centers, the midpoint between neighboring edges. Hold Command to drag free.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: windowCaptureFlag,
+                    title: "Capture a window by clicking it",
+                    description: "During a region capture, the window under the pointer lights up with its app and size. Click it to capture exactly that window; drag to select a region as before. Off means the overlay is drag only.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

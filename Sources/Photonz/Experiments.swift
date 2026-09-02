@@ -172,6 +172,12 @@ extension Experiments {
     /// reads false and keeps both option rows in the bar.
     var toolOptionsEnabled: Bool { isEnabled(FeatureCatalog.toolOptionsFlag) }
 
+    /// `next-window-capture`: whether the region-capture overlay highlights
+    /// the window under the pointer and captures it on a click. Exists only in
+    /// the Next release's catalog, so Current always reads false and its
+    /// overlay stays drag only.
+    var windowCaptureEnabled: Bool { isEnabled(FeatureCatalog.windowCaptureFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

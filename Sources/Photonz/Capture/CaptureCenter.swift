@@ -168,6 +168,7 @@ final class CaptureCenter {
             // Drag a region first, then record exactly that rect on its screen.
             guard rectSelection == nil else { return }
             rectSelection = RectSelectionController(
+                windowPicking: Experiments.shared.windowCaptureEnabled,
                 onComplete: { [weak self] screen, rect, _ in
                     // Recording wants the LIVE region, not the frozen crop — the
                     // frozen overlay is gone by the time the stream starts.
@@ -210,6 +211,7 @@ final class CaptureCenter {
         guard ensurePermission() else { return }
         guard rectSelection == nil else { return }
         rectSelection = RectSelectionController(
+            windowPicking: Experiments.shared.windowCaptureEnabled,
             onComplete: { [weak self] screen, rect, frozenCrop in
                 guard let self else { return }
                 self.rectSelection = nil

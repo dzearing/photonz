@@ -1,0 +1,29 @@
+{
+  "feature": "Capture a window by clicking it",
+  "epic": "measure-redline",
+  "summary": "During a region capture the window under the pointer now lights up with its app name and size, and one click captures exactly that window. Dragging a region works as before, and the drag box now shows its size too.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag Capture a window by clicking it ships on. Have two or three app windows overlapping on the desktop before you start.",
+  "try": [
+    { "do": "Press Shift Command 4 with the pointer already over an app window. The window should be lit and labelled before you move at all.", "shot": "2026-09-02-window-capture-1-hover.png" },
+    { "do": "Slide the pointer across two overlapping windows. The highlight should jump to the front one under the pointer without lag." },
+    { "do": "Move onto the menu bar, then onto the Dock. Neither should light up; whatever window sits behind them does, or nothing." },
+    { "do": "Click once on a window. The capture toast should show that window at its exact bounds, and Edit should open it at the display's pixel scale." },
+    { "do": "Press Shift Command 4 again and drag out a region across a window. The drag box should show its size, and the result should be the region, not the window.", "shot": "2026-09-02-window-capture-2-drag.png" },
+    { "do": "Press Shift Command 4 and press Escape. Then press Shift Command 4 and click on bare desktop. Both should cancel with nothing captured." },
+    { "do": "Press Shift Command 5 for a region recording, click a window, and stop the recording. The recording should cover that window's bounds." }
+  ],
+  "evaluate": [
+    "Is the app name plus size the right label, or do you want the window title as well?",
+    "Does the highlight land on the window you meant, or does a full-screen browser behind everything catch the pointer too often?",
+    "Is a click over bare desktop cancelling the right call, or should it capture the whole display?",
+    "Does the size pill on a drag help, or is it noise you would rather not have?",
+    "The capture stops at the window's bounds, no shadow and with the desktop showing through the rounded corners. Is that what you want from a window capture?"
+  ],
+  "rough": [
+    "The crop is a rectangle of the frozen screen, so a window's rounded corners keep whatever was behind them and no drop shadow is included. macOS's own window capture does the opposite by default. Filed as a follow-up.",
+    "The label says the app, not the window title, so two Safari windows read the same. The highlight itself shows which one. Filed as a follow-up.",
+    "Anything floating over the window in the frozen picture, such as a panel or a notification, is captured along with it, because the crop is the picture, not the window's own buffer.",
+    "A window straddling two displays captures only the part on the display you clicked in.",
+    "Verified on the loop's probe app with scripted mouse events on the real overlay: window pick, click, drag, desktop click and Escape all behaved. Live end-to-end with a real freeze is for you to try, since the loop has no Screen Recording grant."
+  ]
+}

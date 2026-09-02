@@ -324,6 +324,15 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measureModesFlag })
     }
 
+    @Test func theWindowCaptureFlagIsNextOnlyAndOnByDefault() {
+        // Most redlines start from one app window: during a region capture the
+        // window under the pointer lights up and a click captures it. Next only.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.windowCaptureFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.windowCaptureFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.windowCaptureFlag })
+        #expect(FeatureCatalog.windowCaptureFlag == "next-window-capture")
+    }
+
     @Test func theHoverMeasureFlagIsGoneNowThatMeasureHasModes() {
         // Hover-to-measure was an always-on readout that nobody asked for, and
         // playtesting killed it. Its successor is not a flag: Size is one of the

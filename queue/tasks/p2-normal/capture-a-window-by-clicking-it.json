@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:57.203Z",
-  "updated": "2026-09-02T05:50:57.204Z",
+  "updated": "2026-09-02T07:12:30.104Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "RectSelectionController owns the freeze-frame overlay (docs/design/capture.md, Capture flow). Window list from CGWindowListCopyWindowInfo with on-screen-only, filtered to layer 0 and nonzero alpha, converted into the display's coordinate space; exclude Photonz's own shield panels. Competitive baseline: docs/plan/competitive-cleanshot.md lists window capture with smart detection as a gap. Window shadows are out of scope (crop to bounds). Declare the flag in FeatureCatalog with the Next-only pattern the measure flags use.",
+  "notes": "RectSelectionController owns the freeze-frame overlay (docs/design/capture.md, Capture flow). Window list from CGWindowListCopyWindowInfo with on-screen-only, filtered to layer 0 and nonzero alpha, converted into the display's coordinate space; exclude Photonz's own shield panels. Competitive baseline: docs/plan/competitive-cleanshot.md lists window capture with smart detection as a gap. Window shadows are out of scope (crop to bounds). Declare the flag in FeatureCatalog with the Next-only pattern the measure flags use. Shipped: WindowPick (PhotonzCore, tested) + WindowLister (app) + RectSelectionController(windowPicking:) with SelectionView hover/click/drag threshold and size pills; flag next-window-capture in FeatureCatalog; Experiments.windowCaptureEnabled; both beginRectCapture and the region-recording path pass the flag. Design note in docs/design/capture.md. Audit queue/audits/2026-09-02-window-capture.json.",
   "acceptance": [
     "In Next behind a new flag next-window-capture (default on in Next, absent in Current), starting a rectangle capture highlights the frontmost window under the pointer with its size shown; a click without a drag captures that window's bounds from the frozen screen image.",
     "A drag behaves exactly as today; Esc cancels; the highlight keeps up with the pointer (per-move cost measured and noted in the log).",
@@ -24,6 +24,42 @@
     {
       "t": "2026-09-02T05:50:57.204Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T06:56:20.208Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T06:58:46.334Z",
+      "note": "Adversarial review before building: (1) a bare click today cancels the overlay, so with the flag on a click over a window captures it and a click over bare desktop still cancels; Esc stays the cancel path. (2) The highlight has to be there the instant the overlay opens (computed from the pointer position at show time), not after the first move, or the feature reads as broken. (3) Window bounds from the window server exclude the shadow and include the rounded-corner region; cropping the frozen frame keeps whatever sat behind the corners. Accepted scope, noted as rough. (4) The same overlay serves region recording, so a click there records that window region live; kept under the same flag for consistency. (5) The drag gets the same size pill as the window highlight so it does not vanish the moment a drag starts; selection behavior itself is unchanged. (6) Size shown in points, the macOS screenshot idiom; the editor reports pixels once the capture opens. (7) Menus, the menu bar, and the Dock are not layer-0 windows and are not pickable; a drag still covers them."
+    },
+    {
+      "t": "2026-09-02T07:06:11.763Z",
+      "note": "runner failed (exit 0, attempt 1): Waiting on the probe run to finish before reading its snapshots and timings."
+    },
+    {
+      "t": "2026-09-02T07:06:42.605Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T07:11:35.000Z",
+      "note": "Resumed. The first attempt stalled because the probe bundle has no Screen Recording grant and the probe hook went through beginRectCapture's permission gate. Repointed the temporary hook at RectSelectionController directly, ran three scripted modes on the real overlay view (click, drag, desktop click): click landed rect (0,33,1728,1027) at scale 2 as a 3456x2054 crop; drag landed (864,546.5,260,140) as 520x280, identical to the pre-flag drag; desktop click cancelled; Esc cancels via the existing monitors. Per-move cost over a 240-step sweep: mean 0.002 ms, max 0.14 ms, p95 0.002 ms (only the old and new chrome rects are invalidated). Temporary hooks removed before commit."
+    },
+    {
+      "t": "2026-09-02T07:11:35.000Z",
+      "note": "Adversarial review after building: (1) the crop is a rectangle of the frozen picture, so rounded corners keep the desktop behind them and no shadow is included; the system's window capture does the opposite by default. Filed as a follow-up rather than guessed. (2) The label names the app, not the window title; two windows of one app read alike, the highlight disambiguates. Filed as a follow-up (the title needs the Screen Recording grant the real app already has). (3) Anything floating over the window in the frozen picture is captured with it. Noted in the audit. (4) A window straddling displays captures only the part on the clicked display. Noted. (5) The highlight is there at show time, verified: 0-initial snapshot already carried the pill."
+    },
+    {
+      "t": "2026-09-02T07:12:30.103Z",
+      "note": "Next region capture highlights the window under the pointer (app + size pill) and a click captures its bounds from the frozen frame; drag unchanged with its own size pill; Esc and desktop-click cancel. Flag next-window-capture (Next only, on). WindowPick in PhotonzCore with 10 tests; suite green (1157). Verified on the probe overlay with scripted events; per-move cost mean 0.002 ms, max 0.14 ms. Audit queue/audits/2026-09-02-window-capture.json; two follow-ups filed."
     }
-  ]
+  ],
+  "started": "2026-09-02T07:06:42.604Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-02T07:06:11.763Z",
+    "exit": 0,
+    "message": "Waiting on the probe run to finish before reading its snapshots and timings."
+  },
+  "completed": "2026-09-02T07:12:30.104Z"
 }

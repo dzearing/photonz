@@ -109,6 +109,21 @@ The `NSStatusItem` menu is the always-available entry point:
      global top-left coordinates — `cgGlobalRect(for:on:)` converts from the
      screen-local top-left rects callers pass (conversion verified pixel-exact
      with a known-position window).
+   - **Window picking (Next, `next-window-capture`, added 2026-09-02).** With
+     the flag on, `RectSelectionController` lists the on-screen windows once at
+     freeze time (`WindowLister`, `CGWindowListCopyWindowInfo` on-screen-only,
+     converted into each display's top-left points space) and the overlay
+     highlights the frontmost layer-0, visible, non-shield window under the
+     pointer with an app-and-size pill (`WindowPick` in PhotonzCore decides
+     which window, what counts as a click, and where the label goes; unit
+     tested). A press that moves under 4 pt captures that window's bounds
+     clamped to the display, cropped from the same frozen bitmap a drag uses;
+     a bigger move becomes the ordinary region drag, which now also shows a
+     size pill. A click over nothing pickable cancels, as a bare click always
+     did. The highlight is computed at show time from the pointer, not after
+     the first move. Region recording shares the overlay, so a click there
+     records that window's region live. Per-move cost measured at well under
+     0.2 ms (partial invalidation of old and new chrome only).
    - **The overlay must NOT activate the app.** With an editor window open the
      app is `.regular`, so `NSApp.activate(ignoringOtherApps:)` would raise
      *every* Photonz window — yanking the editor to the foreground when you

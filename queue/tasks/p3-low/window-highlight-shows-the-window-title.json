@@ -1,0 +1,27 @@
+{
+  "id": "window-highlight-shows-the-window-title",
+  "title": "Window highlight shows the window title",
+  "goal": "During a region capture the highlighted window is labelled with its app name and size. When an app has several windows open, adding the window title to that label tells you which one you are about to capture.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 510,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T07:11:35.134Z",
+  "updated": "2026-09-02T07:11:35.134Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "kCGWindowName is only populated for apps with the Screen Recording grant, which the real app has and the probe does not. Add a title field to ScreenWindow, read it in WindowLister, extend WindowPick.label(for:). Depends on next-window-capture.",
+  "acceptance": [
+    "The highlight label reads app, title and size when the window has a title, and app and size otherwise",
+    "Long titles are shortened so the pill stays inside the window or the display",
+    "Unit tests in PhotonzCore cover the label text and truncation"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T07:11:35.134Z",
+      "note": "created (manual)"
+    }
+  ]
+}

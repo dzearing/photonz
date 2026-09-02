@@ -1,0 +1,27 @@
+{
+  "id": "window-capture-keeps-the-shadow-and-rounded-corn",
+  "title": "Window capture keeps the shadow and rounded corners",
+  "goal": "When you capture a window by clicking it, the result should look like the window itself: its drop shadow around it and see-through rounded corners, the way the built-in macOS window capture does, instead of a hard rectangle with the desktop showing through the corners.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 500,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T07:11:35.107Z",
+  "updated": "2026-09-02T07:11:35.107Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Today the click path crops the frozen full-screen bitmap to the window bounds (RectSelectionController.finish -> crop). The system look needs a per-window capture (SCScreenshotManager with an SCContentFilter for that window id, or CGWindowListCreateImage with kCGWindowImageBoundsIgnoreFraming off) taken at freeze time or after dismiss; note the filter path drops shadows unless asked for them. Depends on next-window-capture.",
+  "acceptance": [
+    "Clicking a window during a region capture produces an image with the window shadow and transparent rounded corners, matching the system window capture",
+    "A setting or modifier lets you capture the bare bounds instead, and the audit says which is the default",
+    "Existing drag captures are unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T07:11:35.107Z",
+      "note": "created (manual)"
+    }
+  ]
+}
