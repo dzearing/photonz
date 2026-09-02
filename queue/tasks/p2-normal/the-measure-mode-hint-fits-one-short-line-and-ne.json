@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 470,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:41:15.862Z",
-  "updated": "2026-09-02T11:14:53.000Z",
+  "updated": "2026-09-02T11:16:18.504Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From audit 2026-09-02-measure-mode-hint rough 2, 3 and 4. Code: Sources/PhotonzCore/MeasureModeHint.swift holds the lines and the timing; EditorView.canvasNoticeChip shows the pill bottom-centre above the tool bar and shares its slot with the Copied pill; the legend is placed by CornerPlacement.swift. Inspector Mode picker: Sources/Photonz/LayersPanel.swift around line 656. Flag next-measure-modes; Current keeps its first-run line. DONE: see log. Reservation numbers live in MeasureModeHint.reservedSize and EditorState.measureLegendSize; if the pill's type or padding changes, re-measure with an ImageRenderer script (temp/measure-hint/render-hints.swift pattern) and update reservedSize.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-02T11:14:53.000Z",
       "note": "Renders: queue/audits/2026-09-02-measure-hint-lines-{light,dark}.png (the four pills), -inspector-tip.png (Mode field, Size vs Distance), -narrow.png (real-app layer render of the 435 pt canvas; glass and the inspector panel do not draw offscreen)."
+    },
+    {
+      "t": "2026-09-02T11:16:18.504Z",
+      "note": "Four Measure hints cut to one short line (36 to 43 chars, limit 45) on one 2 s fade; [ and ] tip now a caption under the inspector Mode control (Size) and in its tooltip; legend blocks the hint slot and the tool bar in CornerPlacement, with EditorChromeLayout frames. Verified on the probe app with a harness (435 pt canvas: old placement crossed bar and hint, new keeps top-left) and by PhotonzCore layout tests; Scripts/test.sh green (1256). Audit queue/audits/2026-09-02-measure-hint-lines.json with four renders; one follow-up filed."
     }
   ],
-  "started": "2026-09-02T11:01:19.435Z"
+  "started": "2026-09-02T11:01:19.435Z",
+  "completed": "2026-09-02T11:16:18.504Z"
 }
