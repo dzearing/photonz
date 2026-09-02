@@ -1,0 +1,22 @@
+{
+  "feature": "Elevation reference page: readable titlebar annotation",
+  "epic": "design-system",
+  "summary": "On the elevation reference page, the label that names the glass titlebar now sits inside the bar to the right of the window title, so the traffic lights, the title and the label are all readable at once.",
+  "setup": "Design dashboard at http://127.0.0.1:8791, open pages/lang-elevation.html and scroll to block 05, Live examples. Toggle the theme to check both.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/lang-elevation.html and scroll to 05 Live examples.", "shot": "2026-09-01-elevation-annotation-dark.png" },
+    { "do": "Read the window title: hero-card 1200 x 630 should be fully visible next to the traffic lights." },
+    { "do": "Find the glass titlebar label to the right of the title, centred in the bar." },
+    { "do": "Switch the site to light and look again.", "shot": "2026-09-01-elevation-annotation-light.png" },
+    { "do": "Compare with the old placement, where the label sat on the lights and the title.", "shot": "2026-09-01-elevation-annotation-before.png" }
+  ],
+  "evaluate": [
+    "Does the label read as naming the titlebar strip, or does it look like a control that lives in the window?",
+    "Is the gap between the title and the label wide enough that the two do not read as one line of text?",
+    "Do the three labels (titlebar, panel, menu) now feel like one family of annotations?"
+  ],
+  "rough": [
+    "The menu label still floats over the purple hero card rather than on the menu it names. It is legible, but it is the same kind of drift.",
+    "The labels use fixed pixel positions, so if the scene's title text ever gets longer the titlebar label will need moving again."
+  ]
+}

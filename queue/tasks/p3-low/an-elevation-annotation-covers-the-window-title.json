@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 430,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T05:05:21.962Z",
-  "updated": "2026-08-24T05:05:21.962Z",
+  "updated": "2026-09-02T02:36:29.188Z",
   "deps": [],
   "blockedBy": [],
   "notes": "docs/design/mocks/pages/lang-elevation.html, the Live examples specimen. The .tag annotations are absolutely positioned over their targets; the titlebar one lands on the .ttl text (hero-card 1200 x 630). See queue/audits/2026-08-24-reserved-body-elevation-light.png. Note .tag is itself a reserved DS name that this page shadows (#lang-elevation .scene .tag), so fix the name at the same time.",
@@ -22,6 +22,63 @@
     {
       "t": "2026-08-24T05:05:21.962Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T23:07:04.817Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T23:26:41.235Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-08-24T23:26:47.420Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T23:54:09.976Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 2)"
+    },
+    {
+      "t": "2026-08-25T00:11:52.165Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-25T01:05:09.708Z",
+      "note": "parked after 3 runner failures in a row; last runner exited without finalizing the task"
+    },
+    {
+      "t": "2026-09-02T01:55:09.884Z",
+      "note": "unparked on 2026-09-01: the three failures were the machine sleeping mid-run and an expired login, not the task"
+    },
+    {
+      "t": "2026-09-02T02:33:41.293Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T02:36:17.880Z",
+      "note": "Reproduced in a real browser before touching anything: the 'glass titlebar · elev 2' badge sat at x11-141, y9-21 inside the scene, over the traffic lights (x13-58) and the title text (x66-190, y13-26). The reserved-name half of the notes was already done by b5a186e (.tag is now .zbadge), so only the placement remained."
+    },
+    {
+      "t": "2026-09-02T02:36:17.880Z",
+      "note": "Adversarial pass on the idea: the simplest honest fix is to keep the label in the strip it names, to the right of the title, vertically centred, rather than inventing a leader line or moving it outside the window. That keeps it consistent with the panel and menu badges, which also sit on their targets. Changed one inline style: left:206px;top:13px (title ends at x190, badge is 12px tall in a 38px bar)."
+    },
+    {
+      "t": "2026-09-02T02:36:17.880Z",
+      "note": "Verified after: badge x207-337 y14-26, zero overlap with title or lights, fully inside the titlebar. Screenshots in light and dark saved beside the audit queue/audits/2026-09-01-elevation-annotation.json. All six study guards green. Observed but left alone: the menu badge floats over the hero card rather than on the menu; noted in the audit's rough list."
+    },
+    {
+      "t": "2026-09-02T02:36:17.880Z",
+      "note": "Stage gate: design-system is staged next, not now, but the user unparked this task by hand on 2026-09-01 and the loop shipped sibling design-system fixes today (reference-pages-borrow-design-system-names-witho), so treating that as the go-ahead for a one-line fix."
+    },
+    {
+      "t": "2026-09-02T02:36:29.187Z",
+      "note": "Elevation reference page: the glass titlebar label now sits inside the bar to the right of the window title (one inline style on pages/lang-elevation.html, left:206px;top:13px) instead of on top of the traffic lights and title. Reproduced in a real browser first (badge overlapped both), verified after by measurement (zero overlap, inside the bar) and by eye in light and dark; six study guards green. The reserved .tag rename in the notes had already landed as .zbadge in b5a186e. Audit queue/audits/2026-09-01-elevation-annotation.json with before, dark and light screenshots."
     }
-  ]
+  ],
+  "started": "2026-09-02T02:33:41.293Z",
+  "failures": 0,
+  "parked": false,
+  "parkReason": "",
+  "completed": "2026-09-02T02:36:29.188Z"
 }
