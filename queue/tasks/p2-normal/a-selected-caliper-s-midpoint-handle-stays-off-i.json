@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 540,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T13:18:01.808Z",
-  "updated": "2026-09-02T13:35:14.568Z",
+  "updated": "2026-09-02T13:35:38.934Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in the scripted playtest renders (/tmp/photonz-playtest/redline-walk/3-distance-placed.png, 4-size-landed.png, 2026-09-02): the selection's midpoint handle (white dot) is drawn centred on the caliper line at the same spot the readout pill sits when the head offset is zero. Either draw the handle under the pill, offset it along the line, or hide it while the pill covers it.",
@@ -42,7 +42,12 @@
     {
       "t": "2026-09-02T13:35:14.568Z",
       "note": "Verified: full suite green (1301). Probe playtests: redline walk renders 3 and 4 show whole numbers with no dot; a pill-drag walk grabbed 8 px above centre and dragged 48 px up, head moved exactly 48. Render 3 was racing the re-render (state showed the layer, snapshot was stale), so the shared walk now waits 0.4 s after the third click. Audit written: queue/audits/2026-09-02-caliper-head.json. Probe quit."
+    },
+    {
+      "t": "2026-09-02T13:35:38.933Z",
+      "note": "The head dot no longer covers a selected caliper's number: it is hidden while the readout pill sits on the head (MeasureContent.labelCoversHeadHandle, 4 core tests) and the pill itself is the head's drag target with the grip kept so it does not jump (CanvasView). Verified in the probe via Scripts/playtest/redline-walk.json (renders 3 and 4 show whole numbers; the walk now waits for the re-render before render 3) and a pill-drag walk. Suite green (1301). Audit: queue/audits/2026-09-02-caliper-head.json. Commit 392ce3b on main."
     }
   ],
-  "started": "2026-09-02T13:26:44.333Z"
+  "started": "2026-09-02T13:26:44.333Z",
+  "completed": "2026-09-02T13:35:38.934Z"
 }
