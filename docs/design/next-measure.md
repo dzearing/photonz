@@ -342,6 +342,21 @@ spec line as text beside the private layer payload, so ⌘C then ⌘V in a chat
 pastes the line while Photonz's own paste still lands the layer. The mock's
 "Copy measurement" lived in a Properties panel menu Photonz does not have.
 
+Added 2026-09-02 (one copy hands off both): with `next-measure-panel` on,
+**Copy Image** (⇧⌘C, and the inspector's Export button) also puts the spec
+list on the clipboard as plain text whenever the document has at least one
+visible measurement. `CompositeCopy` in `PhotonzCore` pins the flavors and
+their order (PNG, TIFF, then text; `CompositeCopyTests`), and
+`EditorState.copyCompositeToClipboard` walks that list. Image-aware consumers
+take the picture (probed: `NSTextView` with `importsGraphics`, which is
+TextEdit rich and Notes, and a WebKit editable field, which is Mail compose),
+text-only fields take the list (`NSTextField`, plain `NSTextView`). A
+header-only list (measurements present but all hidden) is not attached: it
+says nothing the picture does not and would leave a stray line in a plain
+field. The "Copied" notice gains an `image(measurements:)` subject: "Image",
+or "Image and spec list with N measurements". A document without
+measurements copies exactly what it did before, and Current is untouched.
+
 ## 8. Snapping option: centers — `next-measure-center-snap` (shipped)
 
 Mock: `redline.html` tool options row `Snap: Edges and centers`.

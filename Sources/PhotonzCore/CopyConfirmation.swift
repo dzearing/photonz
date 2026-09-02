@@ -1,7 +1,8 @@
 import Foundation
 
 /// The "Copied" notice (Next, `next-measure-panel`): the glass pill at the
-/// bottom of the canvas that answers Copy as Spec List and Copy Measurement.
+/// bottom of the canvas that answers Copy as Spec List, Copy Measurement and
+/// Copy Image.
 ///
 /// Nothing else on screen changes when text lands on the clipboard, so without
 /// it a person cannot tell whether the key was taken. It is a glance, not a
@@ -18,6 +19,9 @@ public struct CopyConfirmation: Hashable, Sendable {
     public enum Subject: Hashable, Sendable {
         case specList(measurements: Int)
         case measurements(count: Int)
+        /// Copy Image: the picture, plus the spec list when `measurements`
+        /// is above zero (`CompositeCopy`).
+        case image(measurements: Int)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -55,6 +59,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "Spec list with \(count == 0 ? "no visible measurements" : Self.measurementPhrase(count))"
         case .measurements(let count):
             return Self.measurementPhrase(count)
+        case .image(let count):
+            return count == 0 ? "Image" : "Image and spec list with \(Self.measurementPhrase(count))"
         }
     }
 

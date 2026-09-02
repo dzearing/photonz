@@ -1652,7 +1652,7 @@ struct MeasureInspector: View {
         field("Export") {
             HStack(spacing: 8) {
                 Button("Copy Image") { editorState.copyCompositeToClipboard() }
-                    .help("Copies the flattened image, measurements included")
+                    .help("Copies the flattened image, measurements included, with the spec list as text for plain text fields")
                 Button("Export PNG") { editorState.exportComposite(format: .png, scale: 1) }
                     .help("Saves the flattened image as a PNG, measurements included")
             }

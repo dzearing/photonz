@@ -1,0 +1,26 @@
+{
+  "feature": "One copy hands off the picture and its spec list",
+  "epic": "spec-export",
+  "summary": "Copy Image now puts the spec list on the clipboard as text beside the picture whenever the document has a visible measurement. Paste into a document or chat and the picture lands; paste into a plain text field and the list lands. Before, that took Copy Image and then Copy as Spec List.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag Measurements panel on. Open any screenshot and drop two measurements on it with the Measure tool (press i).",
+  "try": [
+    { "do": "Press Shift-Command-C. A pill at the bottom of the canvas should read Copied, Image and spec list with 2 measurements." },
+    { "do": "Paste into a TextEdit rich text document or a Notes note. The picture should land, with no text under it." },
+    { "do": "Paste into Spotlight, a Safari address bar or Terminal. The two-line spec list should land." },
+    { "do": "Paste into a Mail compose window. Expect the picture." },
+    { "do": "Paste into Messages, then into Slack or Discord. Note which of them pastes the picture and which pastes the list." },
+    { "do": "Turn both measurements off with their eyes, press Shift-Command-C again, and paste into Terminal. Nothing should land, because the list would only be a header." },
+    { "do": "Open a screenshot with no measurements and press Shift-Command-C. The pill should read Copied, Image, and the clipboard is the picture alone." }
+  ],
+  "evaluate": [
+    "Did every chat client you tried paste the picture? If one pasted the list instead, that is the case where this change should be withdrawn.",
+    "Does the pill line, Image and spec list with 2 measurements, tell you what you will get when you paste, or is it too much to read in a glance?",
+    "Would you rather the list travel with the picture even when it is only the header line?",
+    "Does one Copy Image feel like enough of a hand-off, or do you still reach for Copy as Spec List?"
+  ],
+  "rough": [
+    "Messages, Slack and Discord were not tried by a person this session: the agent has no permission to drive other apps, so the chat-client check the task called for is yours to make in step 5. The equivalents that could be probed (rich NSTextView, a WebKit editable field, plain text fields) all behaved as intended.",
+    "A rich text view that does not accept graphics falls through to the list, which is what a paste has to do there, but it may surprise in an app that shows formatted text yet no images.",
+    "Copy Image showed no confirmation at all before; the pill is new for it. If it feels like noise for a picture-only copy, the picture-only case could stay silent."
+  ]
+}

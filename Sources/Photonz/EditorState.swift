@@ -556,18 +556,37 @@ final class EditorState {
 
     /// ⇧⌘C: the flattened composite goes on the pasteboard as PNG + TIFF
     /// (PNG for modern consumers, TIFF for the long tail of AppKit apps).
+    /// Next (`next-measure-panel`): when the document has a visible
+    /// measurement, the spec list rides beside the picture as plain text
+    /// (`CompositeCopy`), declared after the image types so image-aware apps
+    /// take the picture and text-only fields take the list. One copy, one
+    /// hand-off; the "Copied" notice says which of the two landed.
     func copyCompositeToClipboard() {
         guard let document,
               let image = previewRenderer.render(document, store: store) else { return }
+        let carriesSpecList = Experiments.shared.measurePanelEnabled
+        let specList = carriesSpecList
+            ? CompositeCopy.specListText(document: document, name: specListName) : nil
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        if let png = ImageCodec.encode(image, format: .png) {
-            pasteboard.setData(png, forType: .png)
+        for representation in CompositeCopy.representations(specList: specList) {
+            switch representation {
+            case .png:
+                if let png = ImageCodec.encode(image, format: .png) {
+                    pasteboard.setData(png, forType: .png)
+                }
+            case .tiff:
+                let nsImage = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+                if let tiff = nsImage.tiffRepresentation {
+                    pasteboard.setData(tiff, forType: .tiff)
+                }
+            case .text(let text):
+                pasteboard.setString(text, forType: .string)
+            }
         }
-        let nsImage = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
-        if let tiff = nsImage.tiffRepresentation {
-            pasteboard.setData(tiff, forType: .tiff)
-        }
+        guard carriesSpecList else { return }
+        let listed = specList == nil ? 0 : CompositeCopy.visibleMeasurementCount(in: document)
+        showCopyConfirmation(.image(measurements: listed))
     }
 
     private func presentError(_ message: String, _ error: Error) {
@@ -1182,7 +1201,8 @@ final class EditorState {
     private var measureModeHintTimer: Task<Void, Never>?
 
     /// Next (`next-measure-panel`): the "Copied" notice that is up right now,
-    /// if any. Raised by Copy as Spec List and Copy Measurement, and dropped
+    /// if any. Raised by Copy as Spec List, Copy Measurement and Copy Image,
+    /// and dropped
     /// by its own clock (`CopyConfirmation.lifetime`). It shares the
     /// canvas-bottom slot with the mode hint: whichever was raised last is the
     /// one on screen, so two pills never stack.

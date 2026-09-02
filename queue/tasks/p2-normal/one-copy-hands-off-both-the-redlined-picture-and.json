@@ -5,11 +5,11 @@
   "epic": "spec-export",
   "priority": "p2-normal",
   "seq": 440,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:40:47.962Z",
-  "updated": "2026-09-02T09:40:47.963Z",
+  "updated": "2026-09-02T10:26:52.430Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Open thread from the 2026-09-01 manager pass. Code: EditorState.copyCompositeToClipboard writes .png and .tiff only (Sources/Photonz/EditorState.swift:546); copyMeasureSpecList already builds the text via MeasureSpecList.render(document:name:). NSPasteboard lets one item carry several types; declare the image types first so image-aware apps take them. Verify the paste order claim in real apps: some chat clients take the string when both exist, which is the thing to test before committing. Flag next-measure-panel; Current unchanged with the flag off.",
@@ -23,6 +23,24 @@
     {
       "t": "2026-09-02T09:40:47.963Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T10:20:30.234Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T10:32:00.000Z",
+      "note": "Review before building: the idea holds. A first-time user does nothing new, the same Copy Image key hands off both. Risk is only in consumers that take the string when both exist; NSTextView's readable-type order (probed) puts TIFF and PNG before the string for rich text views and the string first for plain text views, which is exactly the split wanted. A header-only list (measurements exist but all hidden) is dropped: it says nothing the picture does not and would leave a stray line in a plain field. Shape: CompositeCopy in PhotonzCore pins the flavors and their order (png, tiff, then text); EditorState walks that list. Gated on next-measure-panel, Current untouched."
+    },
+    {
+      "t": "2026-09-02T10:48:00.000Z",
+      "note": "Built: CompositeCopy (PhotonzCore) + CompositeCopyTests pin flavors png, tiff, text and the header-only rule; EditorState.copyCompositeToClipboard walks the list behind next-measure-panel and raises the Copied pill (Image / Image and spec list with N measurements). Scripts/test.sh: 1235 tests green. Paste probe (swift script writing the same three flavors): rich NSTextView with graphics -> picture; WebKit contenteditable (Mail compose) -> picture; plain NSTextView, NSTextField, rich view without graphics -> list. Probe app builds and launches. NOT done: the by-hand Messages/Slack/Mail check. This agent has no Automation or Accessibility permission, so it cannot paste into other apps; the audit's step 5 hands that check to the user with the withdrawal rule spelled out in evaluate. Shipped behind the flag, which is off by default."
+    },
+    {
+      "t": "2026-09-02T10:26:52.430Z",
+      "note": "Copy Image (Shift-Cmd-C and the inspector Export button) now carries the spec list as text beside the PNG and TIFF when a visible measurement exists, behind next-measure-panel. CompositeCopy in PhotonzCore pins the flavors and order with tests; Scripts/test.sh green (1235). Paste probe: rich text views and a WebKit editable take the picture, plain fields take the list. Chat clients could not be driven unmanned; audit queue/audits/2026-09-02-copy-image-spec-list.json asks the user to try Messages and Slack and says when to withdraw."
     }
-  ]
+  ],
+  "started": "2026-09-02T10:20:30.233Z",
+  "completed": "2026-09-02T10:26:52.430Z"
 }

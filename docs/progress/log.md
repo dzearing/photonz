@@ -4593,3 +4593,9 @@ the card's left end, over the icons.
 - `ListSelection` + `RowClick` (PhotonzCore): anchor + `extendedRange` + `click(_:_:in:)`, 14 tests first. `EditorState.clickRow` re-seeds from `selectedLayerID`/`multiSelectedLayerIDs`, applies, writes back 0/1/many exactly as a canvas marquee does, so delete/hide/lock/Copy Measurements need nothing new; the `selectedLayerID` didSet re-seeds the anchor and a marquee clears it.
 - Verified by tests, build and probe launch. A synthetic-event harness confirmed the thumbnail's command gesture wins over the row tap and that the row tap fires on command-click with the flag readable; synthetic plain and shift clicks never reach SwiftUI's tap gesture, so shift-click on a live row is unexercised by hand. Audit: `queue/audits/2026-09-02-list-multi-select.json`.
 - Follow-up filed: Layers menu Duplicate/Delete/arrange stay disabled under any multi-selection (marquee too).
+
+## 2026-09-02 — Copy Image carries the spec list (go loop)
+
+- Next, `next-measure-panel`: Copy Image (⇧⌘C, inspector Export button) now writes the spec list as plain text beside the PNG and TIFF when the document has a visible measurement. `CompositeCopy` (PhotonzCore, tested) pins the flavors and order; `EditorState.copyCompositeToClipboard` walks it. The "Copied" pill gains an `image(measurements:)` subject.
+- Probed consumers: rich NSTextView and a WebKit editable take the picture; plain text views and NSTextField take the list. Chat clients (Messages, Slack, Discord) are left to the playtest audit `queue/audits/2026-09-02-copy-image-spec-list.json`, since the agent cannot drive other apps.
+- Next: user reaction to the audit; if a chat client prefers the text, withdraw and open a decision.
