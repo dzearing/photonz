@@ -149,6 +149,7 @@ if [[ "$SCREEN" != "granted" ]]; then
   echo "    Audio Recording: tick \"Photonz Probe\"."
 fi
 if [[ "$AX" != "granted" ]]; then
-  echo "    No driving other apps: menu titles and keystrokes through System Events fail."
+  echo "    No driving OTHER apps: keystrokes and clicks aimed outside Photonz fail."
+  echo "    Photonz's own menu bar does not need this: a playtest \"menus\" step reads it."
   echo "    Fix once in System Settings > Privacy & Security > Accessibility: tick \"$TERM_APP\"."
 fi

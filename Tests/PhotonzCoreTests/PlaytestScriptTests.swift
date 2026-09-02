@@ -106,6 +106,35 @@ struct PlaytestScriptTests {
         #expect(relative.outputDirectory(besides: request).path == "/tmp/photonz-playtest/renders/one")
     }
 
+    // The unmanned loop reads the app's own menu bar this way. Reading another
+    // app's menus needs an Accessibility grant only a person can give, but the
+    // probe is our app, so it can simply say what is in its own menu bar and an
+    // audit can name a real menu item instead of one guessed from the source.
+    @Test func aMenusStepReadsTheWholeMenuBarOrOneMenu() throws {
+        let script = try decode("""
+        {
+          "steps": [
+            { "do": "menus", "stage": "capture-names" },
+            { "do": "menus", "stage": "capture-only", "menu": "Capture" }
+          ]
+        }
+        """)
+        guard case .menus(let allStage, let allMenu) = script.steps[0] else { Issue.record("menus"); return }
+        #expect(allStage == "capture-names")
+        #expect(allMenu == nil)
+        guard case .menus(let oneStage, let oneMenu) = script.steps[1] else { Issue.record("menus"); return }
+        #expect(oneStage == "capture-only")
+        #expect(oneMenu == "Capture")
+        #expect(script.steps[0].name == "menus")
+        #expect(PlaytestStep.names.contains("menus"))
+    }
+
+    @Test func aMenusStepNeedsAStage() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("{ \"steps\": [ { \"do\": \"menus\" } ] }")
+        }
+    }
+
     @Test func anUnknownStepNamesTheOnesThatExist() {
         #expect(throws: PlaytestScriptError.self) {
             try decode("{ \"steps\": [ { \"do\": \"tap\", \"at\": [1, 1] } ] }")

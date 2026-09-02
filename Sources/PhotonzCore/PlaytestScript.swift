@@ -207,6 +207,14 @@ public enum PlaytestStep: Sendable, Equatable {
     case clearClipboard
     /// Log what is on the clipboard.
     case readClipboard(stage: String)
+    /// Write the app's own menu bar to the log and to `menus-<stage>.json`:
+    /// every menu, item, shortcut and enabled state, exactly as it reads on
+    /// screen. `menu` narrows it to one top-level menu by title.
+    ///
+    /// This is how an unmanned runner names a real menu item. Reading ANOTHER
+    /// app's menus needs an Accessibility grant only a person can give, but the
+    /// probe is our own app and can always say what is in its own menu bar.
+    case menus(stage: String, menu: String?)
     case action(PlaytestAction)
 
     public static let defaultTimeout: Double = 10
@@ -215,7 +223,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
         "action", "clearClipboard", "click", "describe", "drag", "hover", "key", "measureMode",
-        "move", "open", "readClipboard", "render", "snapshot", "tool", "type", "wait", "waitFor",
+        "menus", "move", "open", "readClipboard", "render", "snapshot", "tool", "type", "wait",
+        "waitFor",
     ]
 
     /// The `do` name this step answers to.
@@ -237,6 +246,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .describe: "describe"
         case .clearClipboard: "clearClipboard"
         case .readClipboard: "readClipboard"
+        case .menus: "menus"
         case .action: "action"
         }
     }
@@ -302,6 +312,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .clearClipboard
         case "readClipboard":
             self = .readClipboard(stage: try f.string("stage"))
+        case "menus":
+            self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"))
         case "action":
             self = .action(try f.enumValue("action", PlaytestAction.self))
         default:

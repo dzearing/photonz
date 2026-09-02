@@ -61,6 +61,9 @@ script; a relative path is relative to the script):
   grab exists. The real OS pointer is not where a synthesized click is, so read
   the cursor from a `move` step's `describe`, not from the state line right
   after a drag.
+- `menus-<stage>.json` and `menus-<stage>.txt` for every `menus` step: the menu
+  bar as a tree for a program, and the same reading as indented text you can
+  `cat` when you want to quote a menu item.
 - `done.json`: `status` (`ok` or `failed`), how many steps completed, and the
   error when one failed. The run stops at the first failing step; the log
   keeps everything before it.
@@ -104,6 +107,7 @@ read coordinates straight off the fixture.
 | `describe` | `stage`, optional `note` | Logs the editor's state under `stage`. |
 | `clearClipboard` | | Empties the clipboard. |
 | `readClipboard` | `stage` | Logs the clipboard's types and text. |
+| `menus` | `stage`, optional `menu` | Writes the app's own menu bar to the log and to `menus-<stage>.json` (plus a `.txt` you can read): every menu, item, shortcut, submenu and enabled state, plus the windows that are open. `menu` narrows it to one top-level menu by title ("Capture"). This is how a runner names a real menu item instead of one guessed from the source, and it needs no privacy grant of any kind. See below for what the dimming is worth. |
 | `action` | `action` | Calls the editor directly: `copySpecList`, `copyImage`, `hideAllMeasurements`, `showAllMeasurements`, `hideInspector`, `showInspector`, `zoomIn`, `zoomOut`, `zoomToFit`. The inspector toggle is a button and the zoom commands are menu chords, so this is how a walk gets a wide canvas or a big picture. |
 
 ## Things to know
@@ -116,6 +120,15 @@ read coordinates straight off the fixture.
   but its focused editor is nil. The log records "taken by menu" with an
   empty clipboard; use the `action` step for the outcome and keep the `key`
   step if you want the shortcut's behaviour on record.
+- **A `menus` step reads titles exactly and dimming only loosely.** Reading
+  our OWN menu bar needs no permission, so titles, order, shortcuts and
+  submenus are exact and an audit can quote them. What is greyed out is a
+  different matter: SwiftUI disables every window-scoped command while nothing
+  has focus, and a walk never brings the probe to the front, because an
+  unmanned loop that steals focus from whoever is working is worse than a
+  reading that admits its limits. So the log says "nothing in the probe has
+  focus" and stops marking things dimmed. Reading ANOTHER app's menus is the
+  thing that needs an Accessibility grant; nothing in a walk does.
 - **Glass and vibrancy do not render offscreen**: a snapshot shows the
   window's content, not the system's translucency. Toasts and the capture
   overlay are not covered; the walk starts at the editor.

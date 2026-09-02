@@ -1,0 +1,127 @@
+nothing in the probe has focus, so what is dimmed here is not what a person would see; titles, order and shortcuts are exact. Menu bar reads:
+  Photonz (Probe)
+    About Photonz Next (Probe)
+    Check for Updates…
+    ---
+    Experiments…
+    ---
+    Services
+    ---
+    Hide Photonz (Probe)  ⌘H
+    Hide Others  ⌥⌘H
+    Show All
+    ---
+    Quit Photonz (Probe)  ⌘Q
+  File
+    New Window  ⇧⌘N
+    New from Clipboard  ⌥⌘N
+    Open…  ⌘O
+    ---
+    Save  ⌘S
+    Save As…  ⇧⌘S
+    Save to Capture History  ⌥⌘S
+    ---
+    Export…  ⇧⌘E
+    Copy Image  ⇧⌘C
+    ---
+    ---
+    Close  ⌘W
+    Close All  ⌥⌘W
+  Edit
+    Undo  ⌘Z
+    Redo  ⇧⌘Z
+    ---
+    Cut  ⌘X
+    Copy  ⌘C
+    Paste  ⌘V
+    ---
+    Select All  ⌘A
+    Deselect  ⌘D
+    Invert Selection  ⇧⌘I
+    ---
+    AutoFill
+      Contact…
+      Passwords…
+      Credit Card…
+    Start Dictation  🎤
+    Start Dictation  D  (hidden)
+    Emoji & Symbols  ⌘Space
+    Emoji & Symbols  ⌃⌘Space  (hidden)
+    Emoji & Symbols  E  (hidden)
+  View
+    Show Layers  ⌥⌘L
+    Zoom In  ⌘=
+    Zoom Out  ⌘-
+    Zoom to Fit  ⌘0
+    Actual Size  ⌘1
+    ---
+  Capture
+    Capture Region  ⇧⌘4
+    Capture Full Screen  ⇧⌘3
+    Record Screen / Video…  ⇧⌘5
+    ---
+    Edit Last Capture  ⇧⌘6
+    Show History  ⇧⌘H
+    ---
+    Request Screen Recording Access…
+  Image
+    Resize Image…  ⌥⌘I
+    Canvas Size…  ⌥⌘C
+  Video
+    Play  Space
+    ---
+    Set Trim Start to Playhead  I
+    Set Trim End to Playhead  O
+    ---
+    Crop to Region
+    Reset Crop
+    ---
+    Revert to Original
+    ---
+    Export MP4…
+    Export GIF
+      High (24 fps, ≤1280px)
+      Standard (15 fps, ≤800px)
+      Small (10 fps, ≤480px)
+    Export HEIC
+      High (24 fps, ≤1280px)
+      Standard (15 fps, ≤800px)
+      Small (10 fps, ≤480px)
+  Layer
+    New Layer  ⌘N
+    New Layer via Copy  ⌘J
+    Blur Behind Selection  ⇧⌘B
+    ---
+    Duplicate Layer
+    Merge Down  ⌘E
+    Rasterize Layer
+    Arrange in Collage
+    New Collage Layer
+    ---
+    Bring to Front  ⇧⌘]
+    Bring Forward  ⌘]
+    Send Backward  ⌘[
+    Send to Back  ⇧⌘[
+    ---
+    Delete Layer  ⌘⌫
+  Measure
+    Measure Tool
+    ---
+    Show All Measurements
+    Hide All Measurements
+    ---
+    Copy as Spec List  ⌃⌘C
+    Copy Measurement
+    ---
+    Clear Measurements
+  Window
+    Minimize  ⌘M
+    Zoom
+    ---
+    Bring All to Front
+    ---
+    settings-pane-2x.png (Next)
+  Help
+    Photonz (Probe) Help  ⌘?
+    Toggle Sidebar  (hidden)
+  windows open: Item-0, settings-pane-2x.png (Next)

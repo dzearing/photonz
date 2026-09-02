@@ -335,6 +335,22 @@ private final class Run {
             note(number, stage, "clipboard types \(types); text:\n\(text ?? "nil")",
                  state: ["types": types, "text": text ?? NSNull()])
 
+        case .menus(let stage, let menu):
+            let tree = try readMenuBar(only: menu)
+            write(json: tree, to: "menus-\(stage).json")
+            let focused = tree["focused"] as? Bool ?? false
+            let outline = Self.outline(tree["menus"] as? [[String: Any]] ?? [], dimming: focused)
+            let heading = focused
+                ? "\(tree["focus"] as? String ?? "a window") has focus; menu bar reads:"
+                : "nothing in the probe has focus, so what is dimmed here is not what a person would see; titles, order and shortcuts are exact. Menu bar reads:"
+            let open = (tree["windows"] as? [[String: Any]] ?? [])
+                .map { $0["title"] as? String ?? "?" }.joined(separator: ", ")
+            let reading = "\(heading)\n\(outline)\n  windows open: \(open)"
+            // The same reading as a file you can just `cat`. The JSON is for a
+            // program; nobody should have to unpick log.json to quote a menu.
+            try? Data(reading.utf8).write(to: out.appendingPathComponent("menus-\(stage).txt"))
+            note(number, step.name, reading, state: tree)
+
         case .action(let action):
             let editor = try requireEditor()
             switch action {
@@ -395,6 +411,109 @@ private final class Run {
         self.window = window
         let documentSize = opened.document?.canvasSize ?? .zero
         note(number, "open", "\(url.lastPathComponent): document \(Int(documentSize.width))x\(Int(documentSize.height)) at pixelScale \(opened.document?.pixelScale ?? 0) (points are in these units); window \(Int(window.frame.width))x\(Int(window.frame.height)) pt; canvas \(Int(canvas?.bounds.width ?? 0))x\(Int(canvas?.bounds.height ?? 0)) pt; zoom \(String(format: "%.3f", opened.viewport?.zoom ?? 0))", state: describe())
+    }
+
+    // MARK: - Menus
+
+    /// The app's own menu bar, exactly as it reads on screen.
+    ///
+    /// Everything here is about our OWN process, so it needs no privacy grant
+    /// at all. Reading another app's menus would need Accessibility or Apple
+    /// Events, which only a person can tick, and the probe is our app, so it
+    /// never has to ask: it just says what is in its own menu bar.
+    ///
+    /// `update()` on every submenu first, because that is what runs validation.
+    /// Without it an item that renames itself ("Show History" becoming "Hide
+    /// History") reports whatever title it was last left with, which is exactly
+    /// the sort of "verified" that is not.
+    private func readMenuBar(only wanted: String?) throws -> [String: Any] {
+        guard let bar = NSApp.mainMenu else { throw Failure(description: "the app has no menu bar yet") }
+        bar.update()
+        var top = bar.items
+        if let wanted {
+            // Exact title, then a prefix, then a mention: "Capture" is the
+            // menu, and the app menu answers to "Photonz" whatever it is
+            // suffixed with.
+            guard let found = top.first(where: { $0.title == wanted })
+                    ?? top.first(where: { $0.title.hasPrefix(wanted) })
+                    ?? top.first(where: { $0.title.range(of: wanted, options: .caseInsensitive) != nil }) else {
+                let names = top.map(\.title).joined(separator: ", ")
+                throw Failure(description: "no menu called \"\(wanted)\"; the menu bar has: \(names)")
+            }
+            top = [found]
+        }
+        // Whether the reading of what is DIMMED can be trusted. A walk never
+        // brings the probe to the front, because an unmanned loop that steals
+        // focus from whoever is working is worse than a menu reading that
+        // admits its limits, and macOS refuses a background app the activation
+        // anyway. With nothing focused, SwiftUI's window-scoped commands all
+        // report themselves disabled, so the step says so instead of pretending.
+        let focus = NSApp.keyWindow.map { $0.title.isEmpty ? "an untitled window" : $0.title }
+        // The open windows come along because half of what a menu title says
+        // depends on them ("Show History" versus "Hide History"), and a reader
+        // who cannot see the screen otherwise has no way to tell.
+        let windows = NSApp.windows.filter(\.isVisible).map { window -> [String: Any] in
+            ["title": window.title.isEmpty ? "(untitled)" : window.title,
+             "key": window.isKeyWindow, "panel": window is NSPanel]
+        }
+        return [
+            "menus": top.map { Self.describe(item: $0, depth: 0) },
+            "focused": focus != nil,
+            "focus": focus ?? NSNull(),
+            "windows": windows,
+        ]
+    }
+
+    /// One item and, when it has one, its whole submenu. Depth is capped so a
+    /// menu that somehow refers to itself cannot spin.
+    private static func describe(item: NSMenuItem, depth: Int) -> [String: Any] {
+        if item.isSeparatorItem { return ["separator": true] }
+        var entry: [String: Any] = ["title": item.title, "enabled": item.isEnabled]
+        if let shortcut = shortcut(for: item) { entry["shortcut"] = shortcut }
+        if item.isHidden { entry["hidden"] = true }
+        switch item.state {
+        case .on: entry["state"] = "on"
+        case .mixed: entry["state"] = "mixed"
+        default: break
+        }
+        if let submenu = item.submenu, depth < 4 {
+            submenu.update()
+            entry["items"] = submenu.items.map { describe(item: $0, depth: depth + 1) }
+        }
+        return entry
+    }
+
+    /// The chord as a person reads it on the menu: ⇧⌘4, not "4" plus a mask.
+    private static func shortcut(for item: NSMenuItem) -> String? {
+        guard !item.keyEquivalent.isEmpty else { return nil }
+        let flags = item.keyEquivalentModifierMask
+        var chord = ""
+        if flags.contains(.control) { chord += "⌃" }
+        if flags.contains(.option) { chord += "⌥" }
+        if flags.contains(.shift) { chord += "⇧" }
+        if flags.contains(.command) { chord += "⌘" }
+        let names: [String: String] = [
+            "\u{8}": "⌫", "\u{7F}": "⌦", "\r": "↩", "\t": "⇥", " ": "Space", "\u{1B}": "⎋",
+            "\u{F700}": "↑", "\u{F701}": "↓", "\u{F702}": "←", "\u{F703}": "→",
+        ]
+        return chord + (names[item.keyEquivalent] ?? item.keyEquivalent.uppercased())
+    }
+
+    /// The same tree as indented plain text, so the log line is readable
+    /// without opening the JSON.
+    private static func outline(_ items: [[String: Any]], dimming: Bool, indent: String = "  ") -> String {
+        items.map { entry -> String in
+            if entry["separator"] as? Bool == true { return indent + "---" }
+            var line = indent + (entry["title"] as? String ?? "?")
+            if let shortcut = entry["shortcut"] as? String { line += "  \(shortcut)" }
+            if dimming, entry["enabled"] as? Bool == false { line += "  (dimmed)" }
+            if let state = entry["state"] as? String { line += "  (\(state))" }
+            if entry["hidden"] as? Bool == true { line += "  (hidden)" }
+            if let children = entry["items"] as? [[String: Any]], !children.isEmpty {
+                line += "\n" + outline(children, dimming: dimming, indent: indent + "  ")
+            }
+            return line
+        }.joined(separator: "\n")
     }
 
     private static func findAll<T: NSView>(_ type: T.Type, in view: NSView) -> [T] {

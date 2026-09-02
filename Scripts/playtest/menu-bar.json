@@ -1,0 +1,37 @@
+{
+  "out": "/tmp/photonz-playtest/menu-bar",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "1-editor"
+    },
+    {
+      "do": "menus",
+      "stage": "1-whole-bar"
+    },
+    {
+      "do": "menus",
+      "stage": "2-capture",
+      "menu": "Capture"
+    },
+    {
+      "do": "tool",
+      "tool": "measure"
+    },
+    {
+      "do": "menus",
+      "stage": "3-measure",
+      "menu": "Measure"
+    }
+  ]
+}

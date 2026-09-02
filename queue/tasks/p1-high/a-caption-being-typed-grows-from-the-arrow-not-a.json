@@ -1,0 +1,32 @@
+{
+  "id": "a-caption-being-typed-grows-from-the-arrow-not-a",
+  "title": "A caption being typed grows from the arrow, not away from it",
+  "goal": "While typing an arrow caption, the text drifts further from the arrow with every character, so you watch your label walk away from the thing it points at. The bubble should stay anchored at the arrow tail and grow away from it in the direction that has room, the way the measure chip behaves, so what you see while typing is where the caption lands.",
+  "epic": "epic-uehjr1",
+  "priority": "p1-high",
+  "seq": 104,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T22:22:39.695Z",
+  "updated": "2026-09-02T22:22:39.728Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-02 after the pill styling landed (task the-arrow-caption-is-a-bubble-in-the-measure-pil, audit 2026-09-02-arrow-caption-pill.json): the arrow text experience is weird, I type and the text moves away from the arrow as it grows in length; I want a pill with the text field within it so I can visualize it while typing. The pill now exists; this is about anchoring. Likely cause: the on-canvas field and AnnotationEditing.planningCaption keep the caption centered on the tail anchor (AnnotationContent.captionAnchor), so a wider string expands in both directions and the visual center walks. Anchor the bubble by the edge facing the arrow instead, pick the growth side once at open time from MeasureLabelPlacement style logic or the caption planner, and hold it for the session of that field. Files: Sources/Photonz/CanvasView.swift caption field layout, Sources/PhotonzCore/AnnotationEditing.swift planningCaption, and the rasterizer that draws the committed pill.",
+  "acceptance": [
+    "Typing a long caption keeps the bubble edge nearest the arrow tail fixed in place; the bubble extends away from the arrow rather than sliding as a whole",
+    "The direction of growth is chosen once when the field opens, from the room available on the picture, and does not flip mid-typing",
+    "The committed pill sits exactly where the field was at the last keystroke, with no jump on Return",
+    "Verified on the probe by typing a short and a long caption at four arrow directions, with renders in the audit under queue/audits/, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T22:22:39.696Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-02T22:22:39.727Z",
+      "note": "seq 140 -> 104"
+    }
+  ]
+}

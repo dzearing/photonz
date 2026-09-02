@@ -1,0 +1,33 @@
+{
+  "id": "region-capture-drops-the-magnifier-and-dims-the",
+  "title": "Region capture drops the magnifier and dims the screen the instant it starts",
+  "goal": "Starting a region capture should dim the screen immediately, the moment the shortcut is pressed, and dragging the box should show nothing but the box and its size. The magnifier that follows the pointer is unwanted: remove it entirely rather than leaving it behind a flag.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 102,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T22:22:07.504Z",
+  "updated": "2026-09-02T22:22:07.534Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked by the user on 2026-09-02: there is this magnified overlay when dragging a box to screenshot, I do not like it, remove it, and show the dimmed overlay immediately on start of grabbing a screenshot region. The loupe was filed by the manager pass as competitor parity (task a-loupe-with-pixel-coordinates-while-you-drag-a, flag next-capture-loupe, on by default in Next) and shipped without a decision card; the user rejected it on sight, so delete rather than default off. Code: Sources/Photonz/Capture/RectSelection.swift (CaptureLoupe, LoupeLayout, drawLoupe, loupePixels, the size pill stepping aside for the loupe), CaptureCenter.swift plumbing, FeatureCatalog captureLoupeFlag and captureLoupePixels, Experiments.swift accessor. Dim latency: RectSelection.begin() awaits freezeAndShow(), which screenshots every display with ScreenCapturer before any SelectionWindow exists, so nothing is on screen until the captures return. Put the selection windows up first with the 0.25 black dim over the live screen, then set frozenImage on each when its capture lands (the draw already handles a nil frozen image as the dim-the-live-screen fallback). Keep the no-flash rule at line 204 in mind when the frozen image swaps in. Update docs/design/capture.md and next-measure.md wherever the loupe is mentioned.",
+  "acceptance": [
+    "Pressing the region capture shortcut dims every display within one frame, before the frozen screenshot is ready; the frozen picture slides in underneath without a visible flash when it arrives",
+    "Dragging a capture box shows no magnifier at any zoom or display; the size pill returns as the one readout during a drag",
+    "The loupe code, its flag and its parameters are deleted from the app, the feature catalog, the Experiments window and the spec; no user has to turn anything off",
+    "Screen recording region selection behaves the same way, since it shares the overlay",
+    "Audit written under queue/audits/ with a note of the measured time from shortcut to dim, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T22:22:07.505Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-02T22:22:07.534Z",
+      "note": "seq 140 -> 102"
+    }
+  ]
+}

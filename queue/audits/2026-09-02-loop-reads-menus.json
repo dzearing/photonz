@@ -1,0 +1,27 @@
+{
+  "feature": "The loop reads the app's own menus",
+  "epic": "unmanned-loop",
+  "summary": "A scripted walk can now write out the running app's whole menu bar, so an audit quotes a menu item it actually read instead of one guessed from the source. It needs no privacy grant, so nothing waits on a tick in System Settings.",
+  "setup": "Nothing to set up in the app. This is loop plumbing: one command in a terminal from the repo root.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/menu-bar.json" },
+    { "do": "Read /tmp/photonz-playtest/menu-bar/menus-1-whole-bar.txt: that is the running app's menu bar, top to bottom." },
+    { "do": "Compare its Capture menu against the one in this folder, 2026-09-02-loop-reads-menus-bar.txt." },
+    { "do": "Open Photonz yourself and open the Capture menu, and check it item for item against that text." },
+    { "do": "Note the shortcuts came out as chords a person reads them: Capture Region is ⇧⌘4, Copy as Spec List is ⌃⌘C.", "shot": "2026-09-02-loop-reads-menus-editor.png" },
+    { "do": "Read the first line of the text: it says nothing had focus, which is the step admitting which part of its reading is soft." }
+  ],
+  "evaluate": [
+    "Is a plain indented text file the right thing for a runner to quote from, or would you rather see it on the dashboard?",
+    "The reading says exactly what a menu is titled but only loosely what is greyed out. Is that trade right, given the alternative is the loop pulling focus away from you mid-sentence?",
+    "The earlier capture-names audit could not verify its menu list. Does reading it back like this settle that question for you?",
+    "Should a walk be able to read the menu bar icon's menu too, or is the editor menu bar enough?"
+  ],
+  "rough": [
+    "The task asked for a tick in System Settings so the loop could drive other apps through the accessibility layer. It is still not ticked, and this does not need it: the probe is our own app, so it can simply say what is in its own menu bar. The grant is still worth having the day something needs to drive an app that is not ours, and every probe launch still prints how to give it.",
+    "Enabled and dimmed states are not trustworthy. Nothing in the probe has focus while a walk runs, so every window-scoped command reports itself disabled. The reading says so in its first line and stops marking items dimmed rather than printing a wrong picture. Getting it right would mean the loop pulling itself to the front while you work, which is worse.",
+    "The screenshot is the probe's editor window, not a menu. macOS menus belong to the frontmost app, and the probe is never frontmost, which is the whole reason the step reads the menu from inside the app instead of photographing it.",
+    "While testing this I pressed ⇧⌘H at the probe and the Capture menu still read Show History a beat later, with no history window open. That looks like the shortcut not landing on an unfocused app rather than a stale title, but it means the capture-names audit's step 5 is still unverified. Filed separately.",
+    "The menu bar icon's own menu is not covered. It is a separate menu the system builds on click, and no walk reads it yet."
+  ]
+}
