@@ -29,13 +29,21 @@ public enum PanelPlacement {
     /// `inset`, lands clear of everything in `occupied` and in `blocked`. All
     /// rects are in the surface's own top-left-origin space.
     ///
+    /// The ranking is `LabelPlacer`'s, the same one the measurement readout
+    /// and the arrow caption go through, so "never cover the subject" is one
+    /// rule for all three. This surface only says which slots exist, in the
+    /// order it prefers them, and what each list means.
+    ///
     /// The two lists differ in what gives when every slot is busy.
-    /// `occupied` is content (the measurements the legend explains): a slot
-    /// over one is a last resort. `blocked` is chrome drawn on top of the
-    /// panel (the tool bar, the notice pill): a slot under it is never
-    /// taken, since a panel behind the tool bar is simply invisible. So the
-    /// walk is: a slot clear of both, else a slot clear of the chrome, else
-    /// the first anchor in `order`, which is where the user last saw it.
+    /// `occupied` is content (the measurements the legend explains): the
+    /// panel's subject, so a slot over one is a last resort, and a slot over
+    /// two is no worse than a slot over one — when they are all busy the panel
+    /// stays where the user last saw it rather than hopping to whichever slot
+    /// happens to be least covered. `blocked` is chrome drawn on top of the
+    /// panel (the tool bar, the notice pill): never taken at any price, since a
+    /// panel behind the tool bar is simply invisible. So the walk is: a slot
+    /// clear of both, else a slot clear of the chrome, else the first anchor in
+    /// `order`, which is where the user last saw it.
     ///
     /// `clearing` is a third kind of chrome: something small that lives IN a
     /// corner (the inspector toggle). It neither takes the corner away nor
@@ -47,12 +55,15 @@ public enum PanelPlacement {
                                   clearing cornerChrome: [CGRect] = [], gap: CGFloat = 0,
                                   order: [PanelAnchor] = PanelAnchor.allCases) -> PanelAnchor {
         guard let fallback = order.first else { return .topLeading }
-        let frames = order.map { ($0, frame(for: $0, size: size, in: bounds, inset: inset,
-                                            clearing: cornerChrome, gap: gap)) }
-        let open = frames.filter { _, rect in !blocked.contains(where: { $0.intersects(rect) }) }
-        if let clear = open.first(where: { _, rect in
-            !occupied.contains(where: { $0.intersects(rect) }) }) { return clear.0 }
-        return open.first?.0 ?? fallback
+        let candidates = order.enumerated().map { rank, anchor in
+            LabelCandidate(rect: frame(for: anchor, size: size, in: bounds, inset: inset,
+                                       clearing: cornerChrome, gap: gap),
+                           payload: anchor,
+                           cost: CGFloat(rank) * LabelPlacer.rankCost)
+        }
+        let avoid = [LabelAvoidance(rects: blocked, weight: .forbidden),
+                     LabelAvoidance(rects: occupied, weight: .flat(LabelPlacer.subjectCost))]
+        return LabelPlacer.best(among: candidates, avoiding: avoid) ?? fallback
     }
 
     /// Where a `size` box sits when parked at `anchor`. Corners sit `inset`

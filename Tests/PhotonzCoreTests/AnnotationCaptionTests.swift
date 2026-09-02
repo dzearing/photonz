@@ -343,6 +343,25 @@ struct AnnotationCaptionPlacementTests {
         #expect(CGRect(origin: .zero, size: canvas).contains(pillRect(planned)))
     }
 
+    /// An arrow with both ends on the same point has no shaft, so there is
+    /// nothing for the pill to run across and it keeps its first choice — the
+    /// default spot behind the point, pulled back onto the picture. It used to
+    /// be charged for crossing a shaft of zero length and stepped down the
+    /// order to avoid a line that was not there.
+    @Test func aZeroLengthArrowHasNoShaftForItsPillToCross() {
+        let corner = CGPoint(x: 0, y: 0)
+        var content = arrowContent(caption: "Save")
+        content.start = corner
+        content.end = corner
+        let size = content.estimatedCaptionSize
+        let plan = CaptionPlanner.plan(for: content, canvas: canvas)
+        #expect(plan == CGSize(width: size.width / 2, height: size.height / 2))
+        // Which is the default spot clamped onto the picture, not a step down
+        // the order: the pill's corner sits on the picture's corner.
+        #expect(CGRect(origin: .zero, size: canvas)
+            .contains(CGRect(x: 0, y: 0, width: size.width, height: size.height)))
+    }
+
     @Test func noCanvasMeansNoPlan() {
         let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
                                             from: CGPoint(x: 24, y: 496), to: CGPoint(x: 880, y: 496))

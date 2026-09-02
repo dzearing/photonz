@@ -209,13 +209,17 @@ extension AnnotationBuilder {
 /// Where an arrow's caption pill goes when the tail is too close to the edge
 /// of the picture for the default spot. Pure geometry: `content` must be in
 /// document space (endpoints and canvas in the same coordinates).
+///
+/// The ranking is `LabelPlacer`'s, the same one the measurement readout and
+/// the roles legend go through: this only says which spots exist and what the
+/// pill has to keep off.
 public enum CaptionPlanner {
     /// Nil when the default spot behind the tail fits the canvas; otherwise
     /// the pill center relative to the tail. Candidates, in order: the default
     /// spot slid back onto the picture, then above, below, left of and right of
-    /// the tail (each slid onto the picture). Sitting on the head or the shaft
-    /// costs more than a lower-ranked spot, so the label never hides what the
-    /// arrow is pointing at.
+    /// the tail (each slid onto the picture). Sitting on the head costs more
+    /// than any lower-ranked spot, and sitting on the shaft more than the rank
+    /// gap, so the label never hides what the arrow is pointing at.
     public static func plan(for content: AnnotationContent, canvas: CGSize) -> CGSize? {
         let bounds = CGRect(origin: .zero, size: canvas)
         let size = content.estimatedCaptionSize
@@ -227,28 +231,34 @@ public enum CaptionPlanner {
         let tail = content.start
         let head = content.end
         let gap = AnnotationContent.captionGap
-        let candidates = [
+        let spots = [
             defaultAnchor,
             CGPoint(x: tail.x, y: tail.y - gap - size.height / 2),
             CGPoint(x: tail.x, y: tail.y + gap + size.height / 2),
             CGPoint(x: tail.x - gap - size.width / 2, y: tail.y),
             CGPoint(x: tail.x + gap + size.width / 2, y: tail.y),
         ]
+        // What the arrow is POINTING AT is the subject: the pill may never sit
+        // on it. Its own shaft is softer — a pill on the shaft still reads as
+        // this arrow's, it just crowds the line — so it is priced like any
+        // other leader running through something.
         let headRadius = content.strokeWidth * 3 * content.arrowheadScale + gap
         let headZone = CGRect(x: head.x - headRadius, y: head.y - headRadius,
                               width: 2 * headRadius, height: 2 * headRadius)
-        var best: (anchor: CGPoint, score: CGFloat)?
-        for (rank, candidate) in candidates.enumerated() {
-            let anchor = slidOntoCanvas(candidate, size: size, bounds: bounds)
+        let candidates = spots.enumerated().map { rank, spot -> LabelCandidate<CGPoint> in
+            let anchor = slidOntoCanvas(spot, size: size, bounds: bounds)
             let pill = rect(at: anchor, size: size)
-            var score = CGFloat(rank)
-            if pill.intersects(headZone) { score += 100 }
-            if crossesShaft(pill.insetBy(dx: -gap / 2, dy: -gap / 2), from: tail, to: head) { score += 50 }
-            if !bounds.contains(pill) { score += 1000 }
-            if score < (best?.score ?? .infinity) { best = (anchor, score) }
+            var cost = CGFloat(rank) * LabelPlacer.rankCost
+            if LabelPlacer.segment(from: tail, to: head,
+                                   crosses: [pill.insetBy(dx: -gap / 2, dy: -gap / 2)]) {
+                cost += LabelPlacer.crossingCost
+            }
+            return LabelCandidate(rect: pill, payload: anchor, cost: cost)
         }
-        guard let best else { return nil }
-        return CGSize(width: best.anchor.x - tail.x, height: best.anchor.y - tail.y)
+        let avoid = [LabelAvoidance(rects: [headZone], weight: .flat(LabelPlacer.subjectCost))]
+        guard let best = LabelPlacer.best(among: candidates, avoiding: avoid,
+                                          within: bounds) else { return nil }
+        return CGSize(width: best.x - tail.x, height: best.y - tail.y)
     }
 
     /// A hand-placed pill's offset, pulled back onto the picture if the spot
@@ -276,19 +286,6 @@ public enum CaptionPlanner {
         }
         return CGPoint(x: clamp(anchor.x, bounds.minX + size.width / 2, bounds.maxX - size.width / 2),
                        y: clamp(anchor.y, bounds.minY + size.height / 2, bounds.maxY - size.height / 2))
-    }
-
-    /// Whether the shaft from `a` to `b` passes through `rect`, sampled along
-    /// its length (the shaft is a segment, the pill a box; 32 samples resolve
-    /// any pill wider than a few pixels).
-    private static func crossesShaft(_ rect: CGRect, from a: CGPoint, to b: CGPoint) -> Bool {
-        let steps = 32
-        for i in 0...steps {
-            let t = CGFloat(i) / CGFloat(steps)
-            let p = CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
-            if rect.contains(p) { return true }
-        }
-        return false
     }
 }
 

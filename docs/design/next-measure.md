@@ -220,6 +220,63 @@ mock's `From / To / Distance / Units` fields in Properties map to the shipped
 feet coordinates and `rawDistance`; exposing them read-only in the measure
 inspector is part of § 6.
 
+### 4.1 Where every label lands — one placer, one fallback order
+
+Three things get parked on the picture by the app rather than by the user: a
+measurement's readout, an arrow's caption pill, and the roles legend. They all
+go through **one** scorer, `LabelPlacer` (PhotonzCore). Each surface says only
+which spots it would accept, in the order it prefers them, and what the label
+has to keep off; the ranking lives in the placer, so UX-PATTERNS **D14** ("a
+callout never covers what it is talking about") is one rule in one place.
+
+**The ladder, worst to cheapest.** The gaps between the rungs are the point:
+nothing lower can ever outvote something higher, however many times it is
+charged.
+
+| Rung | Cost | What it means |
+| --- | --- | --- |
+| Forbidden | veto | Chrome drawn ON TOP of the label (tool bar, mode-hint slot). A slot behind it is not a worse spot, it is no spot: the label would be invisible. |
+| Off the picture | 500 | A number you cannot read is not a measurement. Outranks even covering the subject. |
+| On the subject | 400 | What the label is describing: the measured span, the element in Size mode, the arrowhead, the measurements the legend explains. **Flat** — covering two is no worse than covering one. |
+| Into a neighbour | 120 | Another readout, the row next door. **By depth**, as a share of the label's own extent across the line, so clipping a corner is not priced as parking in the middle of the row. |
+| Leader across something | 100 | The line home runs over the subject, or the arrow's shaft runs under its own pill. |
+| One step down the order | 4 | The surface's own preference order. |
+| One nudge along the line | 1 | A readout sliding along its own line. |
+| Travel | 0.02 / pt | A pull back toward the thing being labelled, so of two clear spots the nearer wins. A tie-breaker only. |
+
+**The fallback order each surface offers.**
+
+- **Caliper readout** (Distance, Size, Gap): on the line → out past the head
+  → past the far end → past the near end → out on the other side. The head bar
+  is space the caliper already claimed off the thing being measured, so the
+  number stays there and only steps further out when the head is too shallow.
+- **Alignment verdict**: past the far end → past the near end → on the line →
+  out to one side → out to the other. A guide runs THROUGH the elements it is
+  judging, so anywhere along it is on top of the evidence; sideways is the last
+  resort because which side the elements are on cannot be read from the edges.
+- **Arrow caption**: the default spot behind the tail → above the tail → below
+  it → left of it → right of it, each pulled back onto the picture first.
+- **Roles legend**: top-left → top-right → bottom-left → bottom-right → middle
+  of the left edge → middle of the right edge.
+
+Each caliper spot is also tried at five slides along the line (centre, ±1, ±2
+chip steps) and, for the sideways ones, at the far edge of each subject in
+reach.
+
+**Two user decisions are baked into this ladder** and un-picking either changes
+pictures the user has already judged (`MeasureLabelPlacementTests` and
+`MeasureCalloutClearanceTests` fail if they do):
+
+- **Boxed in** (2026-09-02): a gap caliper between two full-width rows, with
+  nothing clear in reach, keeps its number ON the line straddling both rows,
+  rather than shrinking it, stepping past a foot, or sending it to the page
+  margin. That is what the flat subject cost buys.
+- **How far a number may travel** (2026-09-02): a readout steps sideways up to
+  three of its own cross extents to find whitespace, and no further, on a
+  connector home. The pill is wider than it is tall, so a vertical
+  measurement's number may travel further than a horizontal one's; the even
+  leash was offered and turned down.
+
 ## 5. Measurement roles — `next-measure-roles`
 
 Mock: `redline.html` legend (Size red / Spacing blue / Alignment dashed), the
@@ -584,6 +641,8 @@ wobble is half a point, not a misalignment):
 | D2 | Two-point measure: stay H/V-only (16.12 decision) or offer the mock's free-angle caliper? | `next-measure-free-angle-two-point-measure-blocke` |
 | D3 | ~~Measurement names: derived defaults + rename, or OCR semantic names like the mock's "Save Changes · width"?~~ **Resolved 2026-08-22: derived automatic names + double-click rename, no OCR (§ 6, shipped)** | `next-measure-measurement-naming-blocked-on-decis` |
 | D4 | ~~The mock's "Describe specs" agent action: omit, script-surface only, or build?~~ **Resolved 2026-08-22: omitted (§ 7)** | `next-measure-describe-specs-agent-action-blocked` |
+| D5 | ~~Where does a gap caliper's number go when two full-width rows box it in?~~ **Resolved 2026-09-02: stay on the line, straddling both rows (§ 4.1)** | `a-caliper-boxed-in-by-two-full-width-rows-finds` |
+| D6 | ~~How far may a readout travel sideways to find whitespace?~~ **Resolved 2026-09-02: keep the long leash, three of the pill's own cross extents (§ 4.1)** | `how-far-a-readout-may-travel-to-find-whitespace` |
 
 ## 11. Shown in the mocks but deliberately out of scope
 

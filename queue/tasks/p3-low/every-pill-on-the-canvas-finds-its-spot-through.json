@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T12:05:41.105Z",
-  "updated": "2026-09-02T12:06:02.832Z",
+  "updated": "2026-09-02T20:46:53.107889Z",
   "deps": [
     "a-caliper-boxed-in-by-two-full-width-rows-finds",
     "how-far-a-readout-may-travel-to-find-whitespace"
@@ -34,6 +34,59 @@
     {
       "t": "2026-09-02T12:06:02.831Z",
       "note": "seq 630 -> 100"
+    },
+    {
+      "t": "2026-09-02T20:26:50.067Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Both blocking decisions were already resolved and pinned before this run (boxed-in: straddle; travel: keep the long leash), so there was nothing to wait for and nothing new to decide."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Adversarial pass on the idea before building: the three placers share one shape (list candidate rects, score them against what is underneath, take the winner) but differ in kind, so a naive merge would move pictures. CaptionPlanner slides candidates onto the canvas then scores 1/100/50/1000; MeasureLabelPlanner scores 4/400/120/100/500/0.02 with a per-candidate edge slide; PanelPlacement is not a scorer at all, it is first-fit with a hard veto. Shortest version that delivers the value: ONE scorer plus three candidate generators, with the generators staying exactly where they are."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Checked the merge preserves each surface's ordering before writing it. Caption today is lexicographic on (covers head, covers shaft, rank) because 100 > 50+4 and 50 > 4; on the shared ladder it is lexicographic on the same triple because 400 > 100+16 and 100 > 16. Panel first-fit is reproduced exactly by a FLAT occupied cost (400 > 5 slots x 4 rank), which is also the honest reading: it is the legend's subject. A counted or depth-weighted cost would have changed it."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Built Sources/PhotonzCore/LabelPlacer.swift: LabelCandidate (rect + payload + the cost only the surface can judge), LabelAvoidance with three weights (forbidden / flat / depth-across-an-axis), the cost ladder as named constants, and the Liang-Barsky segment test both the readout's leader and the arrow's shaft need. 12 tests written first (LabelPlacerTests), each pinning one rung of the ladder."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Verification is a golden replay, not a spot check: temp/one-placer/Golden.swift prints 6107 placement decisions on the real settings-pane capture (1690 gap-caliper plans over 338 gaps x 5 heads x 4 subject/neighbour/canvas combinations, 206 size-mode plans, 94 alignment verdicts, 3536 arrow captions over a tail/head grid, 576 legend slots over 3 canvases x 3 sizes x 64 occupancy masks with chrome and corner chrome). Captured before, diffed after each surface was rewired."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Measure planner: 1990 of 1990 decisions identical to the character. Legend: 576 of 576 identical. Arrow caption: 38 of 3536 moved, and every one of them is either a zero-length arrow (34) or an arrow whose head is off the picture (4)."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Ran down the 38 rather than waving at them. Cause is the shared segment test returning false for a run of zero length, where the old sampled version returned true if the point fell inside the pill. A zero-length arrow has no shaft, and its arrowhead is already the subject, so the old code charged twice for the same point. drag.isClick in CanvasView stops such an arrow being drawn at all; it takes dragging one endpoint exactly onto the other. Kept the new behaviour, pinned it in AnnotationCaptionTests.aZeroLengthArrowHasNoShaftForItsPillToCross, and said so in the audit's rough."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "The four named audit renders: gap-under-label and boxed-in straddle come out byte-identical to the shipped PNGs. caliper-subjects and guide-edge-chip differ from the shipped PNGs but are byte-identical to a baseline re-rendered from HEAD with my change removed, so the drift is from today's earlier commits, not from this one. legend-edge-slot is a live app shot rather than a script render; the 576-case legend sweep covers its decision space exhaustively and PanelPlacementTests passes unchanged."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Second adversarial pass on the built thing, on the real app: Scripts/playtest.sh redline-walk on the probe (Screen Recording granted, so these are real window captures). Gap, size, alignment and arrow caption all land where they should, nothing covers its subject, the verdict stays on the picture."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Honest cost: one plan went from 39.3 to 46.6 microseconds (200k rounds, temp/one-placer/Bench.swift), +19%. It runs once per pointer move, so it is 0.3% of a frame; reserveCapacity did not recover it and a streaming scorer would trade real API complexity for 7 microseconds, so it stands and is recorded in the audit."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Fallback order for all four surfaces, the cost ladder, and both user decisions written into docs/design/next-measure.md section 4.1; the decision index gains D5 and D6 pointing at the two resolved tasks."
+    },
+    {
+      "t": "2026-09-02T20:46:53.107889Z",
+      "note": "Scripts/test.sh green at 1464 tests (1451 + 12 LabelPlacer + 1 caption). Audit: queue/audits/2026-09-02-one-label-placer.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-02T20:26:50.067Z"
 }

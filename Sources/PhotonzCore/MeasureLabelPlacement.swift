@@ -171,54 +171,49 @@ extension MeasureContent {
 /// Picks where a measurement's readout should sit, once, when the measurement
 /// lands or its endpoints move.
 ///
-/// It scores candidate placements against three things: the rects the
-/// measurement is describing (which it must never cover), the canvas edges
-/// (a readout half off the image is not a readout), and the readouts already on
-/// the canvas (two stacked numbers are worse than one). The classic
-/// on-the-line placement is ranked first, so nothing moves that was never in
-/// the way.
+/// It lists the spots a readout would accept — five placements, each slid
+/// along the line and, sideways, pushed past each subject in reach — and hands
+/// them to `LabelPlacer`, which is where the ranking lives. The classic
+/// on-the-line placement is offered first, so nothing moves that was never in
+/// the way, and the placer weighs the rest against the rects the measurement is
+/// describing (never cover them), the canvas edges (a readout half off the
+/// image is not a readout) and the readouts already on the canvas (two stacked
+/// numbers are worse than one).
+///
+/// The arrow caption and the roles legend go through the same placer, so a
+/// change to what covering a subject is worth reaches all three at once.
 public enum MeasureLabelPlanner {
 
-    /// Running off the picture is the worst thing a readout can do: a number
-    /// you cannot read is not a measurement at all, so this outranks even
-    /// covering the subject — the same order `clearingHeadOffset` already uses
-    /// when it turns a head round rather than hang the chip off the edge.
-    private static let offCanvasPenalty: CGFloat = 500
-    /// A readout that covers what it is describing is disqualifying, and
-    /// covering two subjects is no worse than covering one: when every spot is
-    /// on something, the number stays where you always look for it instead of
-    /// jumping to whichever spot happens to cover the least.
+    /// What is local to a measurement is only which spots exist and in what
+    /// order — see `order(for:)` — plus these three, which price a
+    /// measurement's own two degrees of freedom and its leader line. Everything
+    /// a spot costs because of what is UNDER it is `LabelPlacer`'s.
     ///
-    /// The flat cost is the chosen answer, not a shortcut. Asked what a caliper
-    /// boxed in between two full-width rows should do with its number, the user
-    /// picked "stay on the line, straddling both rows" over shrinking it,
-    /// stepping past a foot, or sending it to the page margin: the number is
-    /// always at the gap, always the same size, and the overhang is a few
-    /// pixels. Weighting this by how many subjects a spot covers, or by how
-    /// deeply, un-picks that choice — `MeasureCalloutClearanceTests` fails when
-    /// it does.
-    private static let subjectPenalty: CGFloat = 400
-    /// Covering another readout, or a neighbouring element, is bad, but not as
-    /// bad as covering the subject — and it is bad IN PROPORTION. A number that
-    /// clips the top corner of the row below has not moved into that row; one
-    /// parked in the middle of it has. This is the full cost, charged when a
-    /// neighbour covers the whole readout and pro-rated when it covers less, so
-    /// a row label's number can lean into the empty band under its own caliper
-    /// instead of flying off to find a spot that touches nothing at all.
-    private static let overlapPenalty: CGFloat = 120
+    /// Each step down the preference order.
+    private static let rankPenalty = LabelPlacer.rankCost
+    /// Each nudge step away from centre.
+    private static let nudgePenalty = LabelPlacer.nudgeCost
     /// A readout pushed sideways draws a line home, and when it lands on the far
     /// side of what it is measuring that line runs straight across the subject —
     /// the very thing D14 keeps the pill itself off. So the trip costs about as
     /// much as clipping a neighbour does, which is what makes staying under the
     /// caliper the better trade whenever the clip is a shallow one.
-    private static let leaderCrossingPenalty: CGFloat = 100
-    /// Each step down the preference order.
-    private static let rankPenalty: CGFloat = 4
-    /// Each nudge step away from centre.
-    private static let nudgePenalty: CGFloat = 1
-    /// A gentle pull back toward the measurement, so of two clear placements
-    /// the closer one wins.
-    private static let travelPenalty: CGFloat = 0.02
+    private static let leaderCrossingPenalty = LabelPlacer.crossingCost
+
+    /// Covering what the readout is describing. Flat, so covering two subjects
+    /// is no worse than covering one.
+    ///
+    /// The flat charge is the chosen answer, not a shortcut. Asked what a
+    /// caliper boxed in between two full-width rows should do with its number,
+    /// the user picked "stay on the line, straddling both rows" over shrinking
+    /// it, stepping past a foot, or sending it to the page margin: the number is
+    /// always at the gap, always the same size, and the overhang is a few
+    /// pixels. Weighting this by how many subjects a spot covers, or by how
+    /// deeply, un-picks that choice — `MeasureCalloutClearanceTests` fails when
+    /// it does.
+    private static func subjectAvoidance(_ rects: [CGRect]) -> LabelAvoidance {
+        LabelAvoidance(rects: rects, weight: .flat(LabelPlacer.subjectCost))
+    }
 
     /// `crossReach` is how far off the line a sideways placement pushes to
     /// clear the described subjects; zero unless that placement won.
@@ -271,56 +266,12 @@ public enum MeasureLabelPlanner {
         return [0] + usable.sorted()
     }
 
-    /// How far the readout reaches INTO each of `others`, across the measuring
-    /// line, as a share of the readout's own cross extent — 1 when a neighbour
-    /// swallows it, a quarter when it dips a quarter of its height past the
-    /// neighbour's near edge.
-    ///
-    /// Depth across the line, rather than area, is what decides whether a number
-    /// reads as the next row's: sliding the same chip along its own line does
-    /// not move it into or out of the row below, so it must not change the
-    /// price either, or the readout buys itself a discount by drifting off
-    /// centre. Counted once per rect rather than as a union, so two neighbours
-    /// over the same spot cost twice, exactly as the old count did.
-    private static func intrusion(of rect: CGRect, into others: [CGRect],
-                                  horizontal: Bool) -> CGFloat {
-        let extent = horizontal ? rect.height : rect.width
-        guard extent > 0 else { return others.contains { $0.intersects(rect) } ? 1 : 0 }
-        return others.reduce(0) { total, other in
-            let hit = rect.intersection(other)
-            guard !hit.isNull, !hit.isEmpty else { return total }
-            return total + (horizontal ? hit.height : hit.width) / extent
-        }
-    }
-
     /// The placements that carry the readout off its own line entirely, so what
     /// keeps it attached is a drawn leader rather than plain adjacency. A chip
     /// past the end of the line is not one of them: it sits against the head it
     /// belongs to, and its leader runs ALONG the measurement, never over it.
     private static func pushedSideways(_ placement: MeasureLabelPlacement) -> Bool {
         placement == .clearPositive || placement == .clearNegative
-    }
-
-    /// Whether the straight run from `anchor` to `end` passes through any of
-    /// `rects`. Liang-Barsky, so a diagonal run (a nudged sideways chip) is
-    /// handled as honestly as a square one.
-    private static func crosses(_ rects: [CGRect], from anchor: CGPoint, to end: CGPoint) -> Bool {
-        let dx = end.x - anchor.x, dy = end.y - anchor.y
-        guard dx != 0 || dy != 0 else { return false }
-        return rects.contains { rect in
-            var enter: CGFloat = 0, exit: CGFloat = 1
-            for (p, q) in [(-dx, anchor.x - rect.minX), (dx, rect.maxX - anchor.x),
-                           (-dy, anchor.y - rect.minY), (dy, rect.maxY - anchor.y)] {
-                if p == 0 {
-                    if q < 0 { return false }
-                    continue
-                }
-                let t = q / p
-                if p < 0 { enter = max(enter, t) } else { exit = min(exit, t) }
-                if enter > exit { return false }
-            }
-            return true
-        }
     }
 
     /// The placement for `content`, whose feet, alignment items and `others`
@@ -343,8 +294,9 @@ public enum MeasureLabelPlanner {
         let bounds = canvas.map { CGRect(origin: .zero, size: $0) }
         let step = content.chipAxisHalfExtent(chipSize: chip) + MeasureContent.chipLineGap
 
-        var best: Plan = (.onLine, 0, 0)
-        var bestScore = CGFloat.greatestFiniteMagnitude
+        // Describe every spot this measurement would accept, best first, and
+        // let the shared placer say which one survives what is under it.
+        var candidates: [LabelCandidate<Plan>] = []
         for (rank, placement) in order(for: content).enumerated() {
             let reaches = crossReaches(for: placement, content: content, subjects: extraSubjects,
                                        chip: chip)
@@ -366,27 +318,27 @@ public enum MeasureLabelPlanner {
                         probe.labelCrossReach = slide
                     }
                     let rect = probe.labelRect(chipSize: chip)
-                    var score = CGFloat(rank) * rankPenalty
-                    score += CGFloat(abs(multiple)) * nudgePenalty
-                    if subjects.contains(where: { $0.intersects(rect) }) { score += subjectPenalty }
-                    score += overlapPenalty * intrusion(of: rect, into: others,
-                                                        horizontal: content.mode == .horizontal)
+                    var cost = CGFloat(rank) * rankPenalty
+                    cost += CGFloat(abs(multiple)) * nudgePenalty
                     if pushedSideways(placement),
-                       crosses(subjects, from: probe.labelAnchor,
-                               to: probe.labelPosition(chipSize: chip)) {
-                        score += leaderCrossingPenalty
+                       LabelPlacer.segment(from: probe.labelAnchor,
+                                           to: probe.labelPosition(chipSize: chip),
+                                           crosses: subjects) {
+                        cost += leaderCrossingPenalty
                     }
-                    if let bounds, !bounds.contains(rect) { score += offCanvasPenalty }
-                    let offset = probe.labelOffset(chipSize: chip)
-                    score += hypot(offset.x, offset.y) * travelPenalty
-                    if score < bestScore {
-                        bestScore = score
-                        best = (placement, probe.labelNudge, probe.labelCrossReach)
-                    }
+                    candidates.append(LabelCandidate(rect: rect,
+                                                     payload: (placement, probe.labelNudge,
+                                                               probe.labelCrossReach),
+                                                     cost: cost))
                 }
             }
         }
-        return best
+        let avoid = [subjectAvoidance(subjects),
+                     LabelAvoidance(rects: others,
+                                    weight: .depth(LabelPlacer.overlapCost,
+                                                   horizontal: content.mode == .horizontal))]
+        return LabelPlacer.best(among: candidates, avoiding: avoid, within: bounds,
+                                anchoredAt: content.labelAnchor) ?? (.onLine, 0, 0)
     }
 
     /// Preference order.

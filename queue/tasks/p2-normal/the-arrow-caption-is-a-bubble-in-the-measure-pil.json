@@ -1,0 +1,33 @@
+{
+  "id": "the-arrow-caption-is-a-bubble-in-the-measure-pil",
+  "title": "The arrow caption is a bubble in the measure pill style from the first keystroke",
+  "goal": "After drawing an arrow, the caption you type should sit in a bubble at the tail that looks exactly like the measure readout pill: same border, background and text color, while you are typing and after you commit. Today the caption takes the arrow color as its background and the typing field does not look like the finished pill, so the moment of typing feels like a different control. Escape still leaves a plain arrow.",
+  "epic": "epic-uehjr1",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T20:30:19.370Z",
+  "updated": "2026-09-02T20:30:19.405Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked by the user on 2026-09-02: when I use the arrow, drag it and then automatically a text bubble should appear at the tail so I can type, similar to the pill for the measure tool; Escape shows an arrow without the bubble; the bubble should have border, background and foreground just like the measure pill. The flow itself exists behind next-arrow-captions (on by default in Next) and the draw-then-type field was made to actually stay open on 2026-09-02 01:43 (audit 2026-09-02-arrow-caption-one-draft.json). The delta is styling and continuity: the pill today darkens the arrow color for its background (audit 2026-09-02-arrow-captions.json, colors shot), while the measure pill uses MeasureContent chipColorHex, chipOpacity and textColorHex with its border treatment (MeasureStyles.swift, the chip drawing in the measure renderer). Reuse the measure chip drawing for the caption pill, and make the inline editor (CanvasView caption field, AnnotationEditing.planningCaption) draw the same bubble around the text field so the typing state and the committed state are one shape. If the arrow color should tint the bubble at all, open a decision rather than guessing. Ask the user to confirm on the Dev build that the field opens on draw at all; if it does not, that is a p1 bug to file separately.",
+  "acceptance": [
+    "Drawing an arrow opens a bubble at the tail that already has the measure pill border, background and text color, with the caret inside it, before anything is typed",
+    "Committing with Return keeps the bubble in place with no visual jump between the typing state and the finished caption",
+    "Pressing Escape leaves a plain arrow with no bubble; this already works and must keep working",
+    "The bubble colors follow the measure chip and text settings in the inspector, not the arrow color, and stay readable on every arrow color",
+    "Offscreen renders in the audit show the typing state and the committed state side by side with a measure pill for comparison; anything rough is filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T20:30:19.371Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-02T20:30:19.404Z",
+      "note": "seq 610 -> 6"
+    }
+  ]
+}

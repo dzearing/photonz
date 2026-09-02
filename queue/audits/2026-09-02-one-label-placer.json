@@ -1,0 +1,28 @@
+{
+  "feature": "One placer for every label on the picture",
+  "epic": "measure-redline",
+  "summary": "Nothing moves on screen. The three separate pieces of code that decided where a measurement's number, an arrow's caption and the roles legend go are now one, so a placement rule like never cover the subject is written once and holds for all three instead of being fixed in whichever one you noticed.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Open a screenshot of some UI.",
+  "try": [
+    { "do": "Press M, then ] until the mode reads Gap. Click between two rows: the number lands in the clear space, not on either row." },
+    { "do": "Press [ for Size and click a button: the width and height numbers land off the button and off each other.", "shot": "2026-09-02-one-label-placer-2-readouts.png" },
+    { "do": "Drag an alignment guide down the left edges of a few labels. The verdict lands past the end of the guide, off every label it is judging." },
+    { "do": "Press A, drag an arrow onto that button, and type a caption. The pill lands behind the arrow's tail, clear of the arrowhead.", "shot": "2026-09-02-one-label-placer-1-all-three.png" },
+    { "do": "Drag the arrow so its tail sits in a corner of the picture. The pill stays fully on the picture." },
+    { "do": "Add measurements until the roles legend has to move. It steps corner to corner and then to an edge, never behind the tool bar." }
+  ],
+  "evaluate": [
+    "Does any label land somewhere it did not land yesterday? Nothing should have moved, so anything that did is a bug worth naming.",
+    "When a number cannot find a clear spot, does staying put on its own line still read better than hopping to the least covered spot nearby?",
+    "The arrow caption still ignores how far it has travelled, while a measurement number is pulled back toward its caliper. Does the caption ever land further away than it needed to?",
+    "Should the roles legend dodge a measurement it only clips the corner of, the way a measurement number dodges a neighbouring row by depth?"
+  ],
+  "rough": [
+    "This is foundation work, so there is nothing new to use. It earns its place by making the next placement fix land in all three surfaces at once instead of one.",
+    "Verified by replaying 6107 placement decisions on the real settings-pane capture before and after: every measurement readout (1990) and every legend slot (576) comes out identical to the character.",
+    "One behaviour did change, in a corner nobody can reach on purpose: an arrow whose two ends sit on the same point used to be charged for covering its own shaft, and a shaft of zero length is not a shaft. Such an arrow's caption now keeps its first choice instead of stepping one spot down the order.",
+    "One placer does not yet mean one behaviour. The legend still treats a measurement it barely clips the same as one it sits on top of, and the arrow caption still has no pull back toward its arrow. Both were left exactly as they were so no picture would move; they are now one-line changes if the answers above say they should.",
+    "Placing one readout costs about 47 microseconds, up from 39. That is a third of a percent of a frame and it runs once per pointer move, so it is not felt, but it is a real cost for no user gain.",
+    "The screenshots are real window captures from the loop's probe app, not offscreen renders."
+  ]
+}
