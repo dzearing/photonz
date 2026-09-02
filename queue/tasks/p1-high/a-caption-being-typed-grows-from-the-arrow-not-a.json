@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 104,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T22:22:39.695Z",
-  "updated": "2026-09-02T23:24:56.910725Z",
+  "updated": "2026-09-02T23:26:10.278Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-02 after the pill styling landed (task the-arrow-caption-is-a-bubble-in-the-measure-pil, audit 2026-09-02-arrow-caption-pill.json): the arrow text experience is weird, I type and the text moves away from the arrow as it grows in length; I want a pill with the text field within it so I can visualize it while typing. The pill now exists; this is about anchoring. Likely cause: the on-canvas field and AnnotationEditing.planningCaption keep the caption centered on the tail anchor (AnnotationContent.captionAnchor), so a wider string expands in both directions and the visual center walks. Anchor the bubble by the edge facing the arrow instead, pick the growth side once at open time from MeasureLabelPlacement style logic or the caption planner, and hold it for the session of that field. Files: Sources/Photonz/CanvasView.swift caption field layout, Sources/PhotonzCore/AnnotationEditing.swift planningCaption, and the rasterizer that draws the committed pill.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-02T23:24:56.910725Z",
       "note": "rough, in the audit: the field's bubble is ~10px wider than the committed pill (two different text measurers), so the FAR edge can settle on Return; the near edge does not move."
+    },
+    {
+      "t": "2026-09-02T23:26:10.277Z",
+      "note": "The caption bubble now hangs off the arrow's tail and grows away from it: the model stores the attachment plus a growth direction, the rasterizer and the on-canvas field both place the MEASURED pill off that point, and the field freezes its spot when it opens so nothing re-picks on Return. Verified on the probe (Scripts/playtest/arrow-caption-anchor.json, real screen captures): near edge 788px typing short, 788px typing long, 789px committed, all five captions on the picture. Audit queue/audits/2026-09-02-arrow-caption-anchor.json; the field-vs-pill width mismatch filed as the-caption-bubble-you-type-in-is-the-exact-widt."
     }
   ],
-  "started": "2026-09-02T22:59:15.914Z"
+  "started": "2026-09-02T22:59:15.914Z",
+  "completed": "2026-09-02T23:26:10.278Z"
 }
