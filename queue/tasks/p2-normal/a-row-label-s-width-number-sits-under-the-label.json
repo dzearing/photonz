@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 560,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:48:50.092Z",
-  "updated": "2026-09-02T14:48:50.092Z",
+  "updated": "2026-09-02T17:02:00.530Z",
   "deps": [],
   "blockedBy": [],
   "notes": "See queue/audits/2026-09-02-text-line-3-label-hover-zoom.png. The planner (MeasureLabelPlanner.plan describing:/avoiding:) is handed the label as subject and the neighbours from ElementBounds.neighbors(of:) at two reaches; the far probe lands on the next row (or its label), so the space under the caliper counts as on a neighbour and the above-right slot with a leader wins. Options: let the strip between the subject and the next neighbour count as clear when the chip fits in it, or weigh a neighbour that is a row less than one that is a control.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-02T14:48:50.092Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T16:47:49.422Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T17:02:00.530Z",
+      "note": "Reproduced on the real fixture before touching anything: the Launch at login label is 181x25 at (98,181), its width chip is 95x43, and the next row starts 28.5 px below the words. The chip cannot fit that band whatever it does, so the acceptance line asking for it ABOVE the row divider is not achievable at any label size; the achievable and wanted thing is the number under the caliper."
+    },
+    {
+      "t": "2026-09-02T17:02:00.530Z",
+      "note": "Adversarial pass on the idea. Neither option in the notes works on its own: the band is too narrow to count as clear, and the planner only sees rects so it cannot tell a row from a control. Two real reasons the old answer was bad: the escape spot was on the FAR side of the label, so its leader ran straight across the very thing being measured (the D14 rule the pill itself obeys), and a chip clipping the top 25 px of an 89 px row was being charged the same as one parked in the middle of it."
+    },
+    {
+      "t": "2026-09-02T17:02:00.530Z",
+      "note": "Fix, in MeasureLabelPlanner only: a neighbour now costs in proportion to how deep the readout reaches into it across the measuring line (depth, not area, so sliding along the line cannot buy a discount), and a sideways placement whose leader would cross a subject pays leaderCrossingPenalty. Label width readout goes from clearNegative+leader to onLine, centred, under the words."
+    },
+    {
+      "t": "2026-09-02T17:02:00.530Z",
+      "note": "Verified: the two new pinning tests fail on the old planner and pass on the new one; full Scripts/test.sh green at 1405 tests; playtested on Photonz Probe against the settings fixture, screenshots in queue/audits/2026-09-02-row-label-readout-*.png. Heading, Reset/Save Changes and whole-row readouts all land where they landed before."
     }
-  ]
+  ],
+  "started": "2026-09-02T16:47:49.421Z"
 }

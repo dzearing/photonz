@@ -1,0 +1,25 @@
+{
+  "feature": "A row label's number sits under its own caliper",
+  "epic": "measure-redline",
+  "summary": "Size-measuring a text label inside a settings row now leaves the width number in the band under the words, on its own caliper line, instead of throwing it back above the label on a leader because the next row starts close beneath.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png.",
+  "try": [
+    { "do": "Press I for the Measure tool, then press I until the pill reads Size." },
+    { "do": "Hover the Launch at login label. The label outlines, with a width number below it and a height number to its right." },
+    { "do": "Click it. The width number stays under the words, no leader line.", "shot": "2026-09-02-row-label-readout-3-zoom.png" },
+    { "do": "Press I for Size again and click the General heading. Its two numbers land exactly where they always did.", "shot": "2026-09-02-row-label-readout-1-label.png" },
+    { "do": "Press I for Size again and click in the blank half of the Launch at login row, to measure the whole row." },
+    { "do": "The row's width number still steps up into the gap above the card, because parking it in the next row would cover Show in menu bar.", "shot": "2026-09-02-row-label-readout-2-row.png" }
+  ],
+  "evaluate": [
+    "Is the number under the label the first place your eye goes, compared with the old spot above it?",
+    "The number covers the hairline divider under the row. Does that read as fine, or do you want the divider kept visible?",
+    "The whole row's number still flies above the card. Is that the right call for the row, given the label's now stays put?",
+    "Does the label's height number, to the right of the last letter, still feel like it is crowding the word?"
+  ],
+  "rough": [
+    "The number cannot fit entirely between the label and the divider: the band is 14 points tall and the pill is 21, so it straddles the divider. The task asked for it above the divider, which no pill this size can do; it clears the next row's words by 5 points, which is what makes it readable.",
+    "Under the hood a neighbour now costs the readout in proportion to how deep it reaches in, and a readout that would run its leader back across the thing it is measuring pays for the trip. Both are new judgement calls and could be tuned the wrong way on a capture with tighter rows.",
+    "The label's height number and its short leader still brush the last letter of the word. Unchanged by this task and worth its own look."
+  ]
+}

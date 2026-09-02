@@ -327,6 +327,53 @@ struct MeasureLabelPlacementTests {
         #expect(CGRect(origin: .zero, size: canvas).contains(rect))
     }
 
+    /// The row-label case, in the exact numbers the settings capture gives:
+    /// a line of text 25 px tall with the next row starting 28 px below it, and
+    /// a readout 43 px tall that cannot fit in that band whatever it does.
+    ///
+    /// The number stays under its own caliper and leans into the top of the row
+    /// below, rather than jumping back over the label to the only spot that
+    /// touches nothing. Nothing is covered either way, and the spot under the
+    /// caliper is the one a redliner reads without following a leader line.
+    @Test func aRowLabelsNumberStaysUnderItsCaliperRatherThanClimbOverTheLabel() {
+        let label = CGRect(x: 98, y: 181, width: 181, height: 25)
+        let rowBelow = CGRect(x: 96, y: 234.5, width: 1248, height: 89)
+        let headingAbove = CGRect(x: 65, y: 66, width: 157, height: 34)
+        var m = MeasureContent(start: CGPoint(x: label.minX, y: label.maxY),
+                               end: CGPoint(x: label.maxX, y: label.maxY),
+                               headOffset: 32.5, mode: .horizontal)
+        let canvas = CGSize(width: 1440, height: 960)
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas,
+                                            avoiding: [headingAbove, rowBelow],
+                                            describing: [label])
+        m.apply(plan)
+        let rect = m.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(plan.placement == .onLine, "the number left its line for \(plan.placement)")
+        #expect(plan.nudge == 0, "the number drifted off centre by \(plan.nudge)")
+        #expect(rect.minY > label.maxY, "the number climbed over the label: \(rect)")
+        #expect(!rect.intersects(label))
+    }
+
+    /// And the limit on that leniency: once the neighbour would swallow the
+    /// readout whole, leaning in is no longer leaning, and the number goes
+    /// looking for room again. This is the same capture's whole settings row,
+    /// whose number would land squarely on the next row's own label.
+    @Test func aReadoutStillLeavesTheLineWhenTheNeighbourWouldSwallowIt() {
+        let row = CGRect(x: 96, y: 147.5, width: 1248, height: 88)
+        let rowBelow = CGRect(x: 96, y: 234.5, width: 1248, height: 89)
+        var m = MeasureContent(start: CGPoint(x: row.minX, y: row.maxY),
+                               end: CGPoint(x: row.maxX, y: row.maxY),
+                               headOffset: 32.5, mode: .horizontal)
+        let canvas = CGSize(width: 1440, height: 960)
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas, avoiding: [rowBelow],
+                                            describing: [row])
+        m.apply(plan)
+        let rect = m.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(plan.placement == .clearNegative)
+        #expect(!rect.intersects(rowBelow), "the number parked in the row below: \(rect)")
+        #expect(!rect.intersects(row))
+    }
+
     /// The neighbour case: a row with another row directly below it. The head
     /// stands clear of the measured row, but lands in the row underneath.
     @Test func plannerSteersTheReadoutAroundTheNeighbourBelow() {

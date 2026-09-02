@@ -183,8 +183,19 @@ public enum MeasureLabelPlanner {
     /// jumping to whichever spot happens to cover the least.
     private static let subjectPenalty: CGFloat = 400
     /// Covering another readout, or a neighbouring element, is bad, but not as
-    /// bad as covering the subject.
+    /// bad as covering the subject — and it is bad IN PROPORTION. A number that
+    /// clips the top corner of the row below has not moved into that row; one
+    /// parked in the middle of it has. This is the full cost, charged when a
+    /// neighbour covers the whole readout and pro-rated when it covers less, so
+    /// a row label's number can lean into the empty band under its own caliper
+    /// instead of flying off to find a spot that touches nothing at all.
     private static let overlapPenalty: CGFloat = 120
+    /// A readout pushed sideways draws a line home, and when it lands on the far
+    /// side of what it is measuring that line runs straight across the subject —
+    /// the very thing D14 keeps the pill itself off. So the trip costs about as
+    /// much as clipping a neighbour does, which is what makes staying under the
+    /// caliper the better trade whenever the clip is a shallow one.
+    private static let leaderCrossingPenalty: CGFloat = 100
     /// Each step down the preference order.
     private static let rankPenalty: CGFloat = 4
     /// Each nudge step away from centre.
@@ -234,6 +245,58 @@ public enum MeasureLabelPlanner {
         return [0] + usable.sorted()
     }
 
+    /// How far the readout reaches INTO each of `others`, across the measuring
+    /// line, as a share of the readout's own cross extent — 1 when a neighbour
+    /// swallows it, a quarter when it dips a quarter of its height past the
+    /// neighbour's near edge.
+    ///
+    /// Depth across the line, rather than area, is what decides whether a number
+    /// reads as the next row's: sliding the same chip along its own line does
+    /// not move it into or out of the row below, so it must not change the
+    /// price either, or the readout buys itself a discount by drifting off
+    /// centre. Counted once per rect rather than as a union, so two neighbours
+    /// over the same spot cost twice, exactly as the old count did.
+    private static func intrusion(of rect: CGRect, into others: [CGRect],
+                                  horizontal: Bool) -> CGFloat {
+        let extent = horizontal ? rect.height : rect.width
+        guard extent > 0 else { return others.contains { $0.intersects(rect) } ? 1 : 0 }
+        return others.reduce(0) { total, other in
+            let hit = rect.intersection(other)
+            guard !hit.isNull, !hit.isEmpty else { return total }
+            return total + (horizontal ? hit.height : hit.width) / extent
+        }
+    }
+
+    /// The placements that carry the readout off its own line entirely, so what
+    /// keeps it attached is a drawn leader rather than plain adjacency. A chip
+    /// past the end of the line is not one of them: it sits against the head it
+    /// belongs to, and its leader runs ALONG the measurement, never over it.
+    private static func pushedSideways(_ placement: MeasureLabelPlacement) -> Bool {
+        placement == .clearPositive || placement == .clearNegative
+    }
+
+    /// Whether the straight run from `anchor` to `end` passes through any of
+    /// `rects`. Liang-Barsky, so a diagonal run (a nudged sideways chip) is
+    /// handled as honestly as a square one.
+    private static func crosses(_ rects: [CGRect], from anchor: CGPoint, to end: CGPoint) -> Bool {
+        let dx = end.x - anchor.x, dy = end.y - anchor.y
+        guard dx != 0 || dy != 0 else { return false }
+        return rects.contains { rect in
+            var enter: CGFloat = 0, exit: CGFloat = 1
+            for (p, q) in [(-dx, anchor.x - rect.minX), (dx, rect.maxX - anchor.x),
+                           (-dy, anchor.y - rect.minY), (dy, rect.maxY - anchor.y)] {
+                if p == 0 {
+                    if q < 0 { return false }
+                    continue
+                }
+                let t = q / p
+                if p < 0 { enter = max(enter, t) } else { exit = min(exit, t) }
+                if enter > exit { return false }
+            }
+            return true
+        }
+    }
+
     /// The placement for `content`, whose feet, alignment items and `others`
     /// must all be in the same coordinate space (document space at placement
     /// time). `canvas` is that space's bounds; pass nil to skip the edge check.
@@ -280,7 +343,13 @@ public enum MeasureLabelPlanner {
                     var score = CGFloat(rank) * rankPenalty
                     score += CGFloat(abs(multiple)) * nudgePenalty
                     if subjects.contains(where: { $0.intersects(rect) }) { score += subjectPenalty }
-                    score += overlapPenalty * CGFloat(others.filter { $0.intersects(rect) }.count)
+                    score += overlapPenalty * intrusion(of: rect, into: others,
+                                                        horizontal: content.mode == .horizontal)
+                    if pushedSideways(placement),
+                       crosses(subjects, from: probe.labelAnchor,
+                               to: probe.labelPosition(chipSize: chip)) {
+                        score += leaderCrossingPenalty
+                    }
                     if let bounds, !bounds.contains(rect) { score += offCanvasPenalty }
                     let offset = probe.labelOffset(chipSize: chip)
                     score += hypot(offset.x, offset.y) * travelPenalty

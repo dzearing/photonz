@@ -160,6 +160,39 @@ struct MeasureCalloutClearanceTests {
         }
     }
 
+    /// Size-click the Launch at login label. Its width number belongs in the
+    /// band under the words, between the label and the divider, where the
+    /// heading's number already lands — not back above the label on a leader,
+    /// which is where the next row being close beneath used to send it.
+    @Test func aRowLabelsWidthNumberLandsUnderTheLabel() {
+        guard let label = element(at: CGPoint(x: 190, y: 192)) else {
+            Issue.record("no row label detected on the capture")
+            return
+        }
+        #expect(label.height < 40, "the pick climbed to the row: \(label)")
+        let width = elementSize(label, neighbors: neighbors(of: label)).width
+        let chip = width.labelRect(chipSize: width.estimatedLabelSize)
+        #expect(width.labelPlacement == .onLine,
+                "the number left its line for \(width.labelPlacement)")
+        #expect(chip.minY > label.maxY, "the number climbed over the label: \(chip)")
+        #expect(!chip.intersects(label))
+        #expect(CGRect(origin: .zero, size: Self.canvas).contains(chip))
+    }
+
+    /// And the heading above it is untouched: its number has always sat under
+    /// the words and still does.
+    @Test func theHeadingsWidthNumberIsWhereItAlwaysWas() {
+        guard let heading = element(at: CGPoint(x: 140, y: 83)) else {
+            Issue.record("no heading detected on the capture")
+            return
+        }
+        let width = elementSize(heading, neighbors: neighbors(of: heading)).width
+        let chip = width.labelRect(chipSize: width.estimatedLabelSize)
+        #expect(width.labelPlacement == .onLine)
+        #expect(width.labelNudge == 0)
+        #expect(chip.minY > heading.maxY)
+    }
+
     /// The Reset button, with Save Changes 25 px to its right: the height
     /// number reaches out over the neighbour unless it is told to steer.
     @Test func theHeightOfAButtonKeepsItsNumberOffTheButtonBesideIt() {
