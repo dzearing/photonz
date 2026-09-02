@@ -833,16 +833,24 @@ struct MeasurementsSectionAccessory: View {
                 .padding(.horizontal, 6)
                 .padding(.vertical, 1)
                 .background(Capsule().fill(.quaternary))
+            // The same commands as the menu bar's Measure menu, in its order
+            // and under its names (§6's mirror rule), so nothing learned here
+            // is wrong there. Each is off when it would change nothing.
+            let count = editorState.measurementCount
+            let visibleCount = editorState.visibleMeasurementCount
             Menu {
-                Button("Show All") { editorState.setAllMeasurementsVisible(true) }
-                Button("Hide All") { editorState.setAllMeasurementsVisible(false) }
+                Button("Show All Measurements") { editorState.setAllMeasurementsVisible(true) }
+                    .disabled(visibleCount == count)
+                Button("Hide All Measurements") { editorState.setAllMeasurementsVisible(false) }
+                    .disabled(visibleCount == 0)
                 Divider()
                 Button("Copy as Spec List") { editorState.copyMeasureSpecList() }
-                    .disabled(editorState.visibleMeasurementCount == 0)
+                    .disabled(visibleCount == 0)
                 Divider()
                 Button("Clear Measurements", role: .destructive) {
                     editorState.clearAllMeasurements()
                 }
+                .disabled(count == 0)
             } label: {
                 Image(systemName: "ellipsis.circle")
                     .font(.system(size: 12))

@@ -1,0 +1,26 @@
+{
+  "feature": "Measure menu and Measurements panel menu offer the same commands",
+  "epic": "measure-redline",
+  "summary": "Hide All Measurements now lives in the menu bar's Measure menu beside Show All, so every whole-document measurement command is reachable without opening the panel. Both menus list the same commands in the same order under the same names, and each command is greyed out when it would change nothing.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-measure-panel is on by default. Open a screenshot and draw three measurements with the Measure tool (I).",
+  "try": [
+    { "do": "Open the Measure menu in the menu bar. Read the order: Measure Tool, then Show All Measurements and Hide All Measurements, then Copy as Spec List and Copy Measurement, then Clear Measurements." },
+    { "do": "Note Show All Measurements is greyed out, since every measurement is already showing." },
+    { "do": "Choose Hide All Measurements. All three calipers vanish from the canvas and every row's eye in the Measurements panel closes." },
+    { "do": "Open the Measure menu again. Hide All Measurements and Copy as Spec List are greyed out; Show All Measurements is live." },
+    { "do": "Press command-Z once. All three measurements return together." },
+    { "do": "Open the Measurements panel's circled-ellipsis menu. It reads Show All Measurements, Hide All Measurements, Copy as Spec List, Clear Measurements, with the same greyed-out items as the menu bar." },
+    { "do": "Click one row's eye to hide just that measurement, then open either menu. Both Show All and Hide All are live." }
+  ],
+  "evaluate": [
+    "Does the Measure menu's order (show and hide first, copy second, clear last) match how you think about measurements, or would you put the copy commands first?",
+    "Do the full names in the panel menu (Show All Measurements rather than Show All) read as reassuring or as padding, given the panel already says Measurements above them?",
+    "Is greying out Show All while everything is showing helpful, or would you rather the item always be live so the menu never looks broken?",
+    "Would you want a keyboard shortcut on Hide All Measurements, and if so which key, given command-H hides the app?"
+  ],
+  "rough": [
+    "No screenshots: the loop's shell cannot capture the screen or drive menus on this machine, so the menus were verified by reading the code and checking the enable logic on a fixture document in each state, not by eye.",
+    "Copy Measurement stays menu-bar only. It acts on the selection rather than the whole document, and the rule written into the design doc is one way (a panel menu never offers what the menu bar lacks), so the panel menu does not gain it.",
+    "Neither Show All nor Hide All has a keyboard shortcut. Someone on the keyboard still reaches them through the Measure menu itself rather than a chord."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:41:21.752Z",
-  "updated": "2026-09-02T12:07:28.412Z",
+  "updated": "2026-09-02T12:13:27.739Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/EditorCommands.swift:329 (Measure menu: Measure Tool, Copy as Spec List, Copy Measurement, Show All Measurements, Clear Measurements) against the panel menu in Sources/Photonz/LayersPanel.swift (MeasurementsSectionAccessory: Show All, Hide All, Copy as Spec List, Clear). EditorState.setAllMeasurementsVisible(false) already exists. Same shape as the capture-menu naming task finished 2026-09-02.",
@@ -44,6 +44,36 @@
     {
       "t": "2026-09-02T12:07:28.412Z",
       "note": "folded in: write the panel-menu mirror rule into next-measure.md while fixing this instance (digest design review 2026-09-02: third command-surface drift task in 24 hours)"
+    },
+    {
+      "t": "2026-09-02T12:09:09.676Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T12:13:11.000Z",
+      "note": "adversarial review (before): the panel used short names (Show All / Hide All) and the menu bar long ones; picked the long form for both so the rule (one name) holds and the panel is consistent with its own Clear Measurements. Considered a chord for Hide All: cmd-H is Hide app and Show All has none, so neither gets one. Copy Measurement stays menu-bar only since it acts on the selection, not the document; the rule is one-directional."
+    },
+    {
+      "t": "2026-09-02T12:13:11.000Z",
+      "note": "acceptance 3 (panel Copy as Spec List disabled when every row is hidden) had already shipped in 44c9eeb; verified by reading LayersPanel.swift, nothing to change."
+    },
+    {
+      "t": "2026-09-02T12:13:11.000Z",
+      "note": "shipped: EditorCommands.swift Measure menu now Measure Tool | Show All Measurements, Hide All Measurements | Copy as Spec List, Copy Measurement(s) | Clear Measurements, each disabled when a no-op; LayersPanel.swift MeasurementsSectionAccessory menu renamed to the same names, same order, same disabled rules; docs/design/next-measure.md section 6 carries the mirror rule."
+    },
+    {
+      "t": "2026-09-02T12:13:11.000Z",
+      "note": "verified: swift build clean; Scripts/test.sh 1284 tests green; probe app opened a generated three-measurement fixture (one hidden) without error; enable logic checked in all four states (one hidden, all hidden, all shown, none) with a PhotonzCore script. Accessibility automation and screencapture are both denied to this shell, so the menus were not photographed."
+    },
+    {
+      "t": "2026-09-02T12:13:11.000Z",
+      "note": "adversarial review (after): the change is small and reads right in code; the one thing still worth a human eye is whether the longer panel names feel padded. Filed nothing: the rough items are judgment calls for the audit, not defects."
+    },
+    {
+      "t": "2026-09-02T12:13:27.738Z",
+      "note": "Measure menu now lists Show All / Hide All Measurements together, then Copy as Spec List and Copy Measurement, then Clear; the Measurements panel menu uses the same names, order and disabled rules (Sources/Photonz/EditorCommands.swift, LayersPanel.swift). Mirror rule written into docs/design/next-measure.md section 6. Verified: swift build, Scripts/test.sh 1284 green, probe opened a three-measurement fixture and the enable logic was checked in all four states; screenshots not possible from the loop. Audit queue/audits/2026-09-02-measure-menu-parity.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T12:09:09.675Z",
+  "completed": "2026-09-02T12:13:27.739Z"
 }

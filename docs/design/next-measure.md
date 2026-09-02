@@ -289,6 +289,20 @@ The measure inspector gains the read-only From/To/Distance/Units grid (feet in
 document coordinates from `caliperGeometry()` + the layer frame). All behind
 `next-measure-panel` (Next, default ON).
 
+**Mirror rule (2026-09-02).** A panel menu never offers a command the menu bar
+lacks, and both call it by one name, in one order. The panel menu is the
+close-at-hand copy of the Measure menu, not a second vocabulary: someone who
+learns "Hide All Measurements" in the panel finds it under Measure too, and
+someone working from the keyboard never has to open the panel for a command.
+Both menus now read Show All Measurements / Hide All Measurements / Copy as
+Spec List / Clear Measurements (the Measure menu adds Measure Tool first and
+Copy Measurement beside the spec list, since those act on the tool and the
+selection rather than the whole document). Every item is disabled when it
+would change nothing: Show All while all are showing, Hide All and Copy as
+Spec List while none is, Clear while there are none. Show All and Hide All
+are one undo step each. The rule generalizes: when a command grows a second
+home, it keeps its name and its neighbours.
+
 Added 2026-09-02: a guide's derived name says which edges it judged and how
 many things it checked ("Left edges, 4 items"; "Vertical edges, 4 items" when
 the scan could not tell the side, see § 9). The mock's "Left edge alignment,

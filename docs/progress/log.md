@@ -4720,3 +4720,16 @@ the card's left end, over the icons.
   canvas and pinned by `PanelPlacementTests`.
 - Next: user reaction to `queue/audits/2026-09-02-legend-edge-slot.json`
   (compact one-row legend is the alternative if the edge slot reads as lost).
+
+## 2026-09-02 (go loop): Hide All Measurements joins the Measure menu
+
+- The menu bar's Measure menu gains Hide All Measurements beside Show All, and
+  both it and the Measurements panel menu now list Show All / Hide All / Copy
+  as Spec List / Clear Measurements in that order under those names, each
+  greyed out when it would change nothing. `docs/design/next-measure.md` § 6
+  carries the mirror rule: a panel menu never offers a command the menu bar
+  lacks, and both call it by one name. Tests green (1284); the enable logic
+  was checked on a fixture in every state, but the loop cannot photograph
+  menus on this machine. Audit `queue/audits/2026-09-02-measure-menu-parity.json`.
+- Next: user reaction to the audit (order of the groups, the longer panel
+  names, whether Hide All wants a chord).

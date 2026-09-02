@@ -315,8 +315,12 @@ struct EditorCommands: Commands {
         }
 
         // The mock's Measure command group (§6, `next-measure-panel`): the tool,
-        // the two copy actions (§7), and the two whole-document actions. The
-        // flag exists only in Next's catalog, so Current never grows this menu.
+        // then the same commands the Measurements panel menu offers, in the
+        // panel's order and under the panel's names (§6's mirror rule: a panel
+        // menu never offers a command the menu bar lacks, and both call it by
+        // one name). Copy Measurement is the one extra here, since it acts on
+        // the selection rather than the whole document. The flag exists only
+        // in Next's catalog, so Current never grows this menu.
         if Experiments.shared.measurePanelEnabled {
             CommandMenu("Measure") {
                 let count = editor?.measurementCount ?? 0
@@ -324,6 +328,14 @@ struct EditorCommands: Commands {
                 let selectedCount = editor?.selectedMeasureLayerIDs.count ?? 0
                 Button("Measure Tool") { editor?.setTool(.measure) }
                     .disabled(editor?.document == nil)
+                Divider()
+                // Each is off when it would change nothing: Show All while
+                // every measurement is already showing, Hide All while none
+                // is. Either one is a single undo step.
+                Button("Show All Measurements") { editor?.setAllMeasurementsVisible(true) }
+                    .disabled(visibleCount == count)
+                Button("Hide All Measurements") { editor?.setAllMeasurementsVisible(false) }
+                    .disabled(visibleCount == 0)
                 Divider()
                 // ⌃⌘C: the copy family's free chord. ⇧⌘C is Copy Image (PS
                 // Copy Merged), ⌥⌘C is Canvas Size and ⌥⇧⌘C is Content-Aware
@@ -341,8 +353,6 @@ struct EditorCommands: Commands {
                 }
                 .disabled(selectedCount == 0)
                 Divider()
-                Button("Show All Measurements") { editor?.setAllMeasurementsVisible(true) }
-                    .disabled(count == 0)
                 Button("Clear Measurements") { editor?.clearAllMeasurements() }
                     .disabled(count == 0)
             }
