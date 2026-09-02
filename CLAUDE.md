@@ -45,12 +45,18 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 `dist/Photonz.app` is the shipping build. They carry different bundle ids so
 each holds its own permissions, settings and menu-bar identity.
 
-Rebuilding the dev app quits whoever is using it, and macOS re-authorizes any
-screen-capture client whose binary changed, so it also re-prompts them for
-Screen Recording. `Scripts/build-app.sh` therefore refuses to rebuild the dev
-bundle while `queue/playtest.lock` exists (override for your own session with
-`PHOTONZ_ALLOW_DEV_BUILD=1`, or delete the lock). Automation that needs a
-running app uses `Scripts/probe-app.sh`, which never touches the dev bundle.
+Rebuilding the dev app quits whoever is using it, so `Scripts/build-app.sh`
+refuses to rebuild the dev bundle while `queue/playtest.lock` exists (override
+for your own session with `PHOTONZ_ALLOW_DEV_BUILD=1`, or delete the lock).
+**A task runner never rebuilds the dev app**: automation that needs a running
+app uses `Scripts/probe-app.sh`, which never touches the dev bundle.
+
+The one exception is the loop itself, between tasks: after a task lands code
+under `Sources/`, `queue/bin/refresh-dev-app.sh` rebuilds the dev bundle and
+puts it back as it found it, so the user is never reviewing a stale build
+(asked for on 2026-09-02). That is safe because the dev cert is stable, so the
+Screen Recording grant survives a rebuild. `PHOTONZ_AUTO_REFRESH=0` turns it
+off.
 
 ### Dev signing & Screen Recording permission (grant once per machine)
 

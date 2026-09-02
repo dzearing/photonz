@@ -17,6 +17,8 @@
 #                         Default claude-opus-5: the user asked on 2026-09-01
 #                         that the loop run on Opus 5 with high thinking.
 #   PHOTONZ_RUNNER_EFFORT effort level for those runners. Default high.
+#   PHOTONZ_AUTO_REFRESH  0 to stop the loop rebuilding and relaunching the
+#                         user's dev app after a task lands app code. Default 1.
 #   PHOTONZ_DIGEST_HOUR   earliest local hour for the daily digest. Default 5
 #                         (drills set 0 so the digest pass runs whenever).
 set -u
@@ -95,6 +97,25 @@ manager_pass() { # $1 = ready task count (for the log)
   record_exit - "$rc"
   echo "[go-loop] $(date +%T) manager pass exited $rc, $(Q ready) task(s) now ready" | tee -a "$LOG"
   Q event manager_pass "{\"exit\":$rc,\"ready\":$(Q ready)}"
+}
+
+# Keep the user's app on what the loop just landed. After a task pushes changes
+# under Sources/ or the package manifest, the dev bundle is rebuilt and put back
+# the way it was found (running or not). Asked for on 2026-09-02: they were
+# reviewing a build that was hours behind the fixes they had asked for.
+AUTO_REFRESH="${PHOTONZ_AUTO_REFRESH:-1}"
+refresh_dev_app() { # $1 = git rev before the task ran
+  (( SANDBOX == 0 )) || return 0
+  (( AUTO_REFRESH )) || return 0
+  local before=$1 after
+  after=$(git rev-parse HEAD 2>/dev/null) || return 0
+  [[ "$before" == "$after" ]] && return 0
+  git diff --name-only "$before" "$after" -- Sources Package.swift Package.resolved 2>/dev/null | grep -q . || return 0
+  echo "[go-loop] $(date +%T) app code landed, refreshing the dev app" | tee -a "$LOG"
+  Q note "rebuilding your dev app on the change that just landed"
+  banner "**Go loop** rebuilding your dev app on the change that just landed"
+  queue/bin/refresh-dev-app.sh >> "$LOG" 2>&1 \
+    || echo "[go-loop] $(date +%T) dev app refresh failed; see the log" | tee -a "$LOG"
 }
 
 banner() { printf '\033]7778;%s\007' "$1"; }   # sticky Ghoztty pane banner
@@ -224,6 +245,7 @@ while :; do
     continue
   fi
 
+  REV_BEFORE=$(git rev-parse HEAD 2>/dev/null || echo "")
   TASK_ID=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).id)" "$TASK_FILE")
   TASK_TITLE=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).title)" "$TASK_FILE")
   echo "[go-loop] $(date +%T) running task $TASK_ID" | tee -a "$LOG"
@@ -246,6 +268,7 @@ TASK FILE: $TASK_FILE"
   [[ $SANDBOX == 0 ]] && { git push -q origin main >> "$LOG" 2>&1 || true }
 
   if [[ "$OUTCOME" == "ok" ]]; then
+    [[ -n "$REV_BEFORE" ]] && refresh_dev_app "$REV_BEFORE"
     Q note "between tasks"
     sleep 5
     continue
