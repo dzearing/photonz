@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 110,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:27:30.281Z",
-  "updated": "2026-09-02T21:12:17.357644Z",
+  "updated": "2026-09-02T21:12:47.151Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-09-02-caliper-head.json rough 1 (no hover cue on the pill; the feet dots have none either). The app already swaps cursors in Sources/Photonz/SelectionCursor.swift and Capture/RectSelection.swift; the caliper hit-testing for the head grab landed in 392ce3b. If the arrow caption pill becomes draggable (the p2 arrow caption task), give it the same cursor in the same pass or file the follow-up.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-02T21:12:17.357644Z",
       "note": "shipped: CanvasGrab.measureHandle; CanvasView closes the hand for any grab, not just the number; feature flag copy now mentions the feet; grab-cue walk extended; 1473 tests green. Audit: queue/audits/2026-09-02-caliper-grab-cursor.json"
+    },
+    {
+      "t": "2026-09-02T21:12:47.150Z",
+      "note": "A selected caliper's feet and head dot now show the open hand on hover and the closed hand while dragging, the same cue its number already had; a numberless caliper cues its feet too. CanvasGrab.measureHandle (renamed from ReadoutGrab), CanvasView closes the hand for any grab. Verified live on the probe app through Scripts/playtest/grab-cue.json, which reads the real pointer: arrow unselected, openHand on each foot, closedHand while dragging, arrow off the caliper. 1473 tests green. Audit queue/audits/2026-09-02-caliper-grab-cursor.json; follow-up filed for the arrow and resize handles."
     }
   ],
-  "started": "2026-09-02T21:05:09.044Z"
+  "started": "2026-09-02T21:05:09.044Z",
+  "completed": "2026-09-02T21:12:47.151Z"
 }
