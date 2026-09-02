@@ -229,6 +229,16 @@ public enum MeasureLabelPlanner {
     /// whitespace: three of its own heights. Further than that the number
     /// stops being the caliper's and the classic spot on the line, even on
     /// top of something, is the easier read.
+    ///
+    /// The distance is the chosen answer, not a placeholder. Shown the same
+    /// three gaps rendered under a shorter leash, an even one, and no leash at
+    /// all, the user kept this one: a far number on clean whitespace with a
+    /// connector home beats a near number on a button's corner or wedged
+    /// between two fields. The asymmetry rides along with it — the pill is
+    /// wider than it is tall, so a vertical measurement's number may travel
+    /// over twice as far as a horizontal one's, and that was on the table as
+    /// its own option and turned down. `MeasureLabelPlacementTests` fails if
+    /// either the multiple or the asymmetry changes.
     public static func maxCrossReach(for content: MeasureContent, chip: CGSize) -> CGFloat {
         3 * (content.mode == .horizontal ? chip.height : chip.width)
     }

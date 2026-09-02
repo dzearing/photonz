@@ -161,6 +161,57 @@ struct MeasureLabelPlacementTests {
         #expect(plan.crossReach == 0)
     }
 
+    // MARK: - How far a number may travel to find whitespace
+
+    /// The leash, as the user settled it. Asked how far a measurement's number
+    /// may step sideways before it stops reading as that measurement's, they
+    /// picked "keep the long leash": three of the pill's own extent across the
+    /// line. Because the pill is wider than it is tall that is about a hundred
+    /// pixels for a horizontal caliper and nearly three hundred for a vertical
+    /// one, and the asymmetry is part of the verdict, not an oversight. The
+    /// even leash and the caliper-sized leash were both on the table and both
+    /// bought closeness by parking the number on a button's corner or between
+    /// two fields with the connector running through one. See
+    /// `queue/decisions/how-far-a-readout-may-travel-to-find-whitespace-how-far-may-a-measurement-s-numb.md`.
+    @Test func theSidewaysLeashIsThreePillsAcrossTheLine() {
+        let pill = CGSize(width: 90, height: 34)
+        #expect(MeasureLabelPlanner.maxCrossReach(for: caliper(), chip: pill) == 3 * pill.height)
+        #expect(MeasureLabelPlanner.maxCrossReach(for: alignment(), chip: pill) == 3 * pill.width)
+        // Longer for a vertical measurement, deliberately.
+        #expect(MeasureLabelPlanner.maxCrossReach(for: alignment(), chip: pill)
+                > MeasureLabelPlanner.maxCrossReach(for: caliper(), chip: pill))
+    }
+
+    /// What the leash decides, in a picture: a caliper drawn inside a band that
+    /// leaves nothing clear on its own line. While the band's far edge is
+    /// within the leash the number steps past it and draws a connector home;
+    /// one pixel further and the trip is not worth it, so the number stays in
+    /// the classic spot even though the band is under it.
+    @Test func aNumberStepsPastASubjectAtTheLimitAndStaysPutOnePixelBeyond() {
+        let m = caliper(headOffset: 10)
+        let canvas = CGSize(width: 500, height: 900)
+        let limit = MeasureLabelPlanner.maxCrossReach(for: m, chip: m.estimatedLabelSize)
+        // Deep above the line so the only way out is downward, past the edge
+        // whose distance the leash is being tested against.
+        func band(reaching depth: CGFloat) -> CGRect {
+            CGRect(x: 0, y: 100, width: 500, height: 200 + depth)
+        }
+
+        let atTheLimit = MeasureLabelPlanner.plan(for: m, canvas: canvas,
+                                                  describing: [band(reaching: limit)])
+        #expect(atTheLimit.placement == .clearPositive)
+        #expect(atTheLimit.crossReach == limit)
+        var placed = m
+        placed.apply(atTheLimit)
+        #expect(!placed.labelRect(chipSize: m.estimatedLabelSize)
+            .intersects(band(reaching: limit)))
+
+        let pastIt = MeasureLabelPlanner.plan(for: m, canvas: canvas,
+                                              describing: [band(reaching: limit + 1)])
+        #expect(pastIt.placement == .onLine)
+        #expect(pastIt.crossReach == 0)
+    }
+
     @Test func theReachSurvivesARoundTripAndDefaultsToZero() throws {
         var m = caliper()
         m.labelPlacement = .clearPositive

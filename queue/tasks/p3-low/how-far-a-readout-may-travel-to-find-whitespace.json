@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.592Z",
-  "updated": "2026-09-02T15:11:00.706Z",
+  "updated": "2026-09-02T19:44:53.486Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 2 and 2026-08-23-size-readout-placement rough item 2. Only worth doing after the user reacts to the audit; drop if they are happy.",
@@ -57,7 +57,36 @@
     {
       "t": "2026-09-02T15:11:00.706Z",
       "note": "decision \"How far may a measurement's number travel sideways to find whitespace?\" resolved: Keep the long leash (today)"
+    },
+    {
+      "t": "2026-09-02T19:40:46.994Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T19:44:48.101091Z",
+      "note": "Verdict is in: the user picked \"Keep the long leash (today)\" on the decision card, having seen the field-to-buttons hop and the two other gaps rendered under a shorter leash, an even leash and no leash. So maxCrossReach keeps 3 * (horizontal ? chip.height : chip.width) and the work is to pin it."
+    },
+    {
+      "t": "2026-09-02T19:44:48.101091Z",
+      "note": "Adversarial pass on the pin itself: a test that only asserts the formula would pass even if the leash stopped governing the picture (say the filter flipped to < limit, or the planner stopped consulting it). So there are two tests. theSidewaysLeashIsThreePillsAcrossTheLine pins the value AND the asymmetry the user kept; aNumberStepsPastASubjectAtTheLimitAndStaysPutOnePixelBeyond pins the behaviour at the edge: a full-width band whose far edge is exactly one leash past the line gets stepped over on a connector, and one pixel further the number keeps the classic spot."
+    },
+    {
+      "t": "2026-09-02T19:44:48.101091Z",
+      "note": "Mutation-checked all three rejected options against the new tests: the even leash (3 * chip.height both axes) fails on the asymmetry, a 2-pill leash fails on the value, and an unbounded leash fails both tests with 7 issues. The pins are real, not tautologies."
+    },
+    {
+      "t": "2026-09-02T19:44:48.101091Z",
+      "note": "Recorded the verdict in the maxCrossReach doc comment, in the same style as subjectPenalty's, so the next person to look at 3 * chip.height sees it was chosen against alternatives rather than guessed."
+    },
+    {
+      "t": "2026-09-02T19:44:48.101091Z",
+      "note": "No behaviour change shipped, so no new audit: the pictures the user judged are already queue/audits/2026-09-02-readout-travel-*.png and the brief that frames them is queue/decisions/how-far-a-readout-may-travel-to-find-whitespace-how-far-may-a-measurement-s-numb.md. Scripts/test.sh green (1451 tests), swift build clean."
+    },
+    {
+      "t": "2026-09-02T19:44:53.486Z",
+      "note": "User's verdict on the decision card was keep today's leash, so MeasureLabelPlanner.maxCrossReach stays at three of the pill's own cross extent and is now pinned by two tests in MeasureLabelPlacementTests (the value plus the asymmetry, and the behaviour one pixel either side of the limit). Verdict recorded in the source comment. Mutation-checked against all three rejected leashes; Scripts/test.sh green at 1451 tests, swift build clean."
     }
   ],
-  "started": "2026-09-02T08:10:57.621Z"
+  "started": "2026-09-02T19:40:46.993Z",
+  "completed": "2026-09-02T19:44:53.486Z"
 }

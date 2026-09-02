@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.562Z",
-  "updated": "2026-09-02T19:40:21.241Z",
+  "updated": "2026-09-02T19:40:41.133Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 1. MeasureLabelPlanner.maxCrossReach caps sideways travel at three chip heights; the boxed-in fallback is the flat subjectPenalty tie-break to .onLine. Same limit shows up for Size mode on a full-width row (2026-08-23-size-readout-placement rough item 1). Render scripts: temp/boxed-in/Scan.swift (sweep) and temp/boxed-in/Render.swift (four options); compile with swiftc -I .build/debug/Modules against .build/debug/PhotonzCore.build/*.o and PhotonzRender.build/*.o. Option renders live in queue/audits/2026-09-02-boxed-in-*.png.",
@@ -100,7 +100,7 @@
     }
   ],
   "started": "2026-09-02T19:30:00.753Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-02T17:31:47.336Z",
     "exit": 1,
