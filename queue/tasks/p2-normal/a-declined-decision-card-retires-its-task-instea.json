@@ -1,0 +1,28 @@
+{
+  "id": "a-declined-decision-card-retires-its-task-instea",
+  "title": "A declined decision card retires its task instead of re-queueing it",
+  "goal": "When you answer one of these decision cards with the option that means do not build this, the work quietly comes back into the queue anyway and can get built. Answering no should retire the card and its work for good, so a choice you already made is not undone by the build loop.",
+  "epic": "loop-robustness",
+  "priority": "p2-normal",
+  "seq": 590,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T19:46:19.021Z",
+  "updated": "2026-09-02T19:46:19.022Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Root cause: queue/bin/queue-lib.mjs resolveDecision() clears blockedBy and flips status blocked -> pending for ANY choice, and nothing downstream reads answer.choice. Hit live on 2026-09-02: task point-at-a-color-and-its-value-joins-the-spec was answered later (do not build) at 15:10 and was claimed by the runner at 19:45. Suggested shape: let an option carry a decline marker (e.g. \"declines\": true, or infer from recommended-vs-chosen is not enough - be explicit), and have resolveDecision set the task to dropped with the option label in the log when the chosen option declines. Decision-opening callers in runner-prompt.md/manager-prompt.md then need to mark the do-not-build option.",
+  "acceptance": [
+    "Answering a decision with an option marked as a decline leaves its task retired, not waiting to be picked up again.",
+    "Answering a decision with an option that approves the work returns the task to the queue exactly as it does today.",
+    "The task history says which answer retired it, in plain language, so the dashboard shows why it stopped.",
+    "A test covers both paths: declined answer retires, approving answer re-queues."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T19:46:19.022Z",
+      "note": "created (manual)"
+    }
+  ]
+}

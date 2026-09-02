@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 50,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:41:30.132Z",
-  "updated": "2026-09-02T15:10:29.624Z",
+  "updated": "2026-09-02T19:46:23.072Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked on the decision opened by the 2026-09-02 manager pass: the user has said speculative features get confirmed before they are built. Sampling reads the composited base image through ImageStore in PhotonzRender; the readout can reuse the measure pill (PillRasterizer) and MeasureSpecList.specLine gains a color case. Open thread since the 2026-09-01 manager pass (Figma and Sketch parity).",
@@ -35,6 +35,31 @@
     {
       "t": "2026-09-02T15:10:29.624Z",
       "note": "decision \"Should the Measure tool read colors off the picture for the spec?\" resolved: Not now, ask again after the measure tools have been tried"
+    },
+    {
+      "t": "2026-09-02T19:45:23.479Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T19:46:08.132Z",
+      "note": "Pre-build review: the decision attached to this task was already resolved by the user on 2026-09-02 and the answer was \"Not now, ask again after the measure tools have been tried\". That is a decision NOT to build this, so building it would ship a feature the user explicitly declined."
+    },
+    {
+      "t": "2026-09-02T19:46:08.133Z",
+      "note": "Why it came back anyway: resolving a decision returns its task to pending regardless of which option was picked (queue/bin/queue-lib.mjs:528 resolveDecision clears blockedBy and sets status pending for any choice). Nothing reads answer.choice to tell an approval from a decline, so a declined task re-enters the queue looking approved. Filed as a follow-up."
+    },
+    {
+      "t": "2026-09-02T19:46:08.133Z",
+      "note": "Also on the merits: colour sampling serves spec hand-off, but the user chose to redline real captures with Size and Gap first and see what is actually missing. Shottr and CleanShot X ship no colour readout; only Figma/Sketch inspect do, and those read design tokens, not rendered pixels. Speculative until the measure tools have been used in anger."
+    },
+    {
+      "t": "2026-09-02T19:46:08.133Z",
+      "note": "Dropped without code changes. The card can be reopened by a future manager pass once Size and Gap have real mileage."
+    },
+    {
+      "t": "2026-09-02T19:46:23.072Z",
+      "note": "The user already answered this task's decision card with \"Not now, ask again after the measure tools have been tried\" on 2026-09-02. Building it would ship a feature they explicitly declined, so no code was written. It returned to the queue only because resolving a decision re-queues its task whatever the answer; filed as a-declined-decision-card-retires-its-task-instea."
     }
-  ]
+  ],
+  "started": "2026-09-02T19:45:23.478Z"
 }
