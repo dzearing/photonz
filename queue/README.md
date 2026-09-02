@@ -18,7 +18,7 @@ a task says otherwise.
 | `history.jsonl` | Append-only event log; the dashboard's charts are computed from it. Self-compacting: once past 512KB, churn events (`task_started`, `task_reset`, `runner_failed`) that are older than 48 hours, or beyond the most recent 200, collapse into one entry per task per day carrying `repeats` and `until`. Every other event is kept forever, so the charts stay exact. `queue.mjs compact` runs it by hand. |
 | `status.json` | Live loop heartbeat: state, current task, note, pid, plus loop health (`health`, `consecutiveFailures`, `lastError`) so a wedged loop is visible instead of silent. |
 | `loop.log` | Runner output from each iteration. Rotated to `loop.log.1` past 32MB. Untracked. |
-| `bin/go-loop.sh` | The loop: daily digest+triage, a manager pass whenever the queue runs low, then one task at a time via a fresh headless agent per task. Records every runner exit, backs off on failure, parks tasks that keep failing. |
+| `bin/go-loop.sh` | The loop: daily digest+triage, a manager pass whenever the queue runs low, then one task at a time via a fresh headless agent per task. Every runner is Opus 5 at high effort (`PHOTONZ_RUNNER_MODEL`, `PHOTONZ_RUNNER_EFFORT`), by the user's choice on 2026-09-01. Records every runner exit, backs off on failure, parks tasks that keep failing. |
 | `bin/queue.mjs` | CLI for every queue mutation (see its header). Never hand-edit status or history when a command exists. |
 | `bin/queue-lib.mjs` | Shared implementation; the mock dev server imports it for the `/api` endpoints. |
 | `bin/runner-prompt.md` | The contract each task runner follows (status protocol, decision protocol, next-release rule). |

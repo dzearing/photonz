@@ -13,6 +13,10 @@
 #   PHOTONZ_MANAGER_LOW_WATER  run the manager pass when fewer than this many
 #                         tasks are ready to claim. Default 3; 0 disables it.
 #   PHOTONZ_MANAGER_COOLDOWN   seconds between manager passes. Default 1200.
+#   PHOTONZ_RUNNER_MODEL  model every runner (task, manager, digest) runs on.
+#                         Default claude-opus-5: the user asked on 2026-09-01
+#                         that the loop run on Opus 5 with high thinking.
+#   PHOTONZ_RUNNER_EFFORT effort level for those runners. Default high.
 #   PHOTONZ_DIGEST_HOUR   earliest local hour for the daily digest. Default 5
 #                         (drills set 0 so the digest pass runs whenever).
 set -u
@@ -27,7 +31,10 @@ LOG="$QDIR/loop.log"
 mkdir -p "$QDIR/digests"
 # stream-json + the formatter give this window a live feed of what each runner
 # is doing (tool by tool), instead of dead air until a task ends.
-CLAUDE_FLAGS=(--dangerously-skip-permissions --output-format stream-json --verbose)
+RUNNER_MODEL="${PHOTONZ_RUNNER_MODEL:-claude-opus-5}"
+RUNNER_EFFORT="${PHOTONZ_RUNNER_EFFORT:-high}"
+CLAUDE_FLAGS=(--dangerously-skip-permissions --output-format stream-json --verbose
+              --model "$RUNNER_MODEL" --effort "$RUNNER_EFFORT")
 # Set by run_runner: the last non-blank line the runner complained with. This is
 # what the dashboard shows when the loop goes unhealthy, so a wedged loop names
 # its own cause ("Credit balance is too low") instead of just sitting there.
@@ -115,7 +122,7 @@ cleanup() {
 trap cleanup INT TERM
 title "photonz: go-loop"
 
-echo "[go-loop] started pid=$$ repo=$REPO queue=$QDIR" | tee -a "$LOG"
+echo "[go-loop] started pid=$$ repo=$REPO queue=$QDIR model=$RUNNER_MODEL effort=$RUNNER_EFFORT" | tee -a "$LOG"
 Q event loop_started "{\"pid\":$$}"
 Q reset-health
 Q busy "starting up"
