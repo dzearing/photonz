@@ -4895,3 +4895,9 @@ the card's left end, over the icons.
 - Measured at 1280pt: tools span 561pt before, 422pt after; nothing overflows. Walk: `Scripts/playtest/tool-bar-families.json` (80 steps, every letter and every shift cycle).
 - Found and worked around: SwiftUI `keyboardShortcut` matches a letter with modifiers and case ignored, arbitrary winner among duplicates (standalone repro in the task log). `KeyModifierTracker` records the flags of the key press in flight (event monitor; the playtest harness feeds it for synthetic keys) and each family letter is registered once. Current's old M / Shift M pair has the same coin toss and was left alone (Current is not touched from the queue).
 - Open: decision card on the order (A built and recommended, B redline first, C Photoshop literal, D A plus a Recent slot). Audit: `queue/audits/2026-09-02-tool-bar-families.json`.
+
+## 2026-09-02 (go loop): tool bar icons at one weight
+
+- Next: the selection, crop, measure and shapes buttons looked disabled. Cause: `Menu(primaryAction:)` under `.buttonStyle(.borderless)` draws its label at about 58%. Both menu-backed tool buttons now use `.buttonStyle(.plain)`; click and press-and-hold verified unchanged with synthetic events. Real capture: every enabled glyph 244 (was 155 for the four).
+- Playtest harness: `snapshot` also writes `<name>-sc.png`, a ScreenCaptureKit capture of the probe's own window, when the probe holds Screen Recording (preflighted, never prompts). The offscreen render draws some plain buttons pure black on the dark bar, so colour judgments must use the capture. Documented in `docs/design/playtest-harness.md`.
+- Open: the Current release's selection slot has the same dimness (task filed, p3). The user also saw zoom callout and fill dim in a Dev build from before the tool families landed; not reproducible here.

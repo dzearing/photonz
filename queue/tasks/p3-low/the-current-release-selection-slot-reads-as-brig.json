@@ -1,0 +1,26 @@
+{
+  "id": "the-current-release-selection-slot-reads-as-brig",
+  "title": "The Current release selection slot reads as bright as its neighbours",
+  "goal": "In the Current release tool bar, the shared selection slot (rectangle select, ellipse select, magic wand) looks dimmer than the other tools, as if it were disabled. It should look the same as every other enabled tool.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 550,
+  "status": "pending",
+  "release": "current",
+  "area": "app",
+  "created": "2026-09-02T15:45:27.111Z",
+  "updated": "2026-09-02T15:45:27.112Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Same root cause as the Next fix in ToolModeButton/ToolGroupButton: Menu(primaryAction:) under .buttonStyle(.borderless) draws its label at about 58% (measured 155 vs 244). selectionGroupButton in EditorView.swift still uses .borderless; switch it to .plain. Left alone on 2026-09-02 because that task was Next-only and the rule is never to touch Current behaviour without a task saying so. Verify with Scripts/playtest.sh and the -sc.png capture (docs/design/playtest-harness.md).",
+  "acceptance": [
+    "A real capture of the Current tool bar shows the selection slot glyph at the same luminance as the plain tool buttons",
+    "Click still picks the remembered selector and press-and-hold still lists the three"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T15:45:27.112Z",
+      "note": "created (manual)"
+    }
+  ]
+}

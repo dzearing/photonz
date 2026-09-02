@@ -10,6 +10,7 @@
 //    script. The dev app a person works in carries the code but never runs it.
 #if PHOTONZ_PLAYTEST
 import AppKit
+import ScreenCaptureKit
 import PhotonzCore
 import PhotonzRender
 
@@ -241,6 +242,7 @@ private final class Run {
             let window = try requireWindow()
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
             try snapshot(content, name: name)
+            await screenCapture(window, name: name)
             note(number, step.name, "\(name).png \(Int(content.bounds.width))x\(Int(content.bounds.height)) pt")
 
         case .render(let name):
@@ -448,6 +450,43 @@ private final class Run {
             throw Failure(description: "could not encode \(name).png")
         }
         try png.write(to: out.appendingPathComponent("\(name).png"))
+    }
+
+    /// The window as the screen actually shows it, beside the offscreen
+    /// render: `<name>-sc.png`, from ScreenCaptureKit, of this window alone.
+    /// The offscreen draw is what the harness always had, but it resolves
+    /// colors per layer and gets some of them wrong (a plain tool button came
+    /// out black on the dark bar), so anything judged by color or weight
+    /// reads the capture instead. Only when the probe already holds Screen
+    /// Recording: the preflight never prompts, so an ungranted probe just
+    /// logs that it skipped and the walk goes on.
+    private func screenCapture(_ window: NSWindow, name: String) async {
+        guard CGPreflightScreenCaptureAccess() else {
+            note(0, "capture", "no Screen Recording grant; skipped")
+            return
+        }
+        do {
+            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+            guard let scWindow = content.windows.first(where: { $0.windowID == CGWindowID(window.windowNumber) }) else {
+                note(0, "capture", "window \(window.windowNumber) not in shareable content")
+                return
+            }
+            let filter = SCContentFilter(desktopIndependentWindow: scWindow)
+            let config = SCStreamConfiguration()
+            let scale = window.backingScaleFactor
+            config.width = Int(scWindow.frame.width * scale)
+            config.height = Int(scWindow.frame.height * scale)
+            config.showsCursor = false
+            config.captureResolution = .best
+            let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+            let rep = NSBitmapImageRep(cgImage: image)
+            if let png = rep.representation(using: .png, properties: [:]) {
+                try png.write(to: out.appendingPathComponent("\(name)-sc.png"))
+                note(0, "capture", "\(name)-sc.png \(image.width)x\(image.height)")
+            }
+        } catch {
+            note(0, "capture", "failed: \(error)")
+        }
     }
 
     // MARK: - State

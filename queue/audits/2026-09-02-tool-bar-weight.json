@@ -1,0 +1,24 @@
+{
+  "feature": "Every tool bar icon reads at the same weight",
+  "epic": "measure-redline",
+  "summary": "The selection, crop, measure and shapes buttons in the tool bar no longer look disabled. Every enabled tool now draws at the same brightness, and the small corner wedge that marks a button with more inside it is finally visible.",
+  "setup": "Photonz Dev, Experiments window, release Next, tool groups and tool options on (the defaults). Rebuild the dev app to pick the change up.",
+  "try": [
+    { "do": "Open any screenshot and look at the floating tool bar at the bottom.", "shot": "2026-09-02-tool-bar-weight-after.png" },
+    { "do": "Compare it with how it looked before.", "shot": "2026-09-02-tool-bar-weight-before.png" },
+    { "do": "Click the Crop button once: the tool switches, nothing opens." },
+    { "do": "Press and hold the Crop button: the aspect list opens above it." },
+    { "do": "Press M, then press and hold the selection button: the three selectors are listed." },
+    { "do": "Press I twice: Measure changes mode and the button's glyph changes with it, at full brightness." }
+  ],
+  "evaluate": [
+    "Does every tool now read as available, with nothing in the bar looking greyed out?",
+    "Is the small wedge in the corner of the selection, crop, shapes and measure buttons a clear enough hint that there is more inside, without being noisy?",
+    "Does a click on a wedged button still feel like a plain tool pick, with the list only on hold?"
+  ],
+  "rough": [
+    "Measured on a real capture: plain tool glyphs draw at 244 and the four menu-backed ones at 155 before, 244 after. The fill bucket, a hand-drawn shape, draws at 255, which is 4 percent brighter than the SF Symbol glyphs; not visible by eye, left alone.",
+    "The Current release's selection slot has the same dimness and was left alone, since this task was Next-only. Filed as its own task.",
+    "The playtest harness now also saves a real screen capture next to each offscreen snapshot when the probe has Screen Recording (it does on this machine). The offscreen render draws some plain buttons pure black, so it must not be used to judge colour."
+  ]
+}

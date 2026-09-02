@@ -132,7 +132,13 @@ struct ToolGroupButton: View {
         }
         .menuIndicator(.hidden)
         .menuStyle(.button)
-        .buttonStyle(.borderless)
+        // Plain, not borderless: a `Menu` with a primary action under the
+        // borderless style draws its label at about two thirds strength, so
+        // this button sat in the bar looking disabled beside the plain tool
+        // buttons (measured 155 vs 244 on a real capture). The plain style
+        // leaves the glyph's own foreground alone and keeps the click and
+        // the press-and-hold.
+        .buttonStyle(.plain)
         .fixedSize()
         .help(tooltip)
         .accessibilityLabel("\(group.title): \(remembered.barTitle)")

@@ -1,0 +1,62 @@
+{
+  "id": "every-tool-bar-icon-reads-at-the-same-weight-and",
+  "title": "Every tool bar icon reads at the same weight and brightness",
+  "goal": "In the editor tool bar, some tools (the selection group, crop, resize, the zoom callout, measure and fill) look dimmer than the arrow, line, rectangle, ellipse, highlight and text tools, so they read as disabled when they are not. Every enabled tool should look identical at rest.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 110,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:52:46.380Z",
+  "updated": "2026-09-02T15:46:25.651Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-02 in Photonz Dev, release Next: some of the tools in the toolbox look disabled (diminished) but they are not. Reproduced offscreen with Scripts/playtest.sh on settings-pane-2x.png, release next: the snapshot shows the selection group, crop, resize, measure (and in the user screenshot also zoom callout and fill) grayer than arrow/line/rect/ellipse/highlight/text. Code: EditorView.swift toolsBar; toolButton draws Image(systemName:).font(15, medium).foregroundStyle(Color.primary) for every tool, so the difference is not a foregroundStyle. Suspects, verify each: the selection group is a Menu (selectionGroupButton) and crop/measure are ToolModeButton which becomes a Menu when it has modes, and a menu label inside .buttonStyle(.borderless) may render with the menu label style rather than primary; resizeButton is a plain Button with .disabled(document == nil); PaintBucketIcon is a custom Path drawn in the inherited foreground. Everything dim sits after the Divider().frame(height: 20) too, so also test whether the divider changes the sibling rendering. Do not trust the ImageRenderer harness alone (see memory on its limits); confirm with a probe playtest snapshot.\n\nOutcome 2026-09-02: root cause is Menu(primaryAction:) + .buttonStyle(.borderless) applying ~58% opacity to its label. Fixed with .buttonStyle(.plain) in Sources/Photonz/ToolModeButton.swift and Sources/Photonz/ToolGroupButton.swift. Verification path: Scripts/playtest.sh with a snapshot step, read the <name>-sc.png real capture (new), measure with a luminance script over the bar strip. Do not judge colour from the offscreen <name>.png.",
+  "acceptance": [
+    "An offscreen render of the tool bar (Scripts/playtest.sh snapshot) shows every enabled tool glyph at the same luminance, measured, not eyeballed",
+    "Disabled tools, when any exist, use one shared dimmed treatment that is visibly different from enabled ones",
+    "The active tool keeps its accent circle",
+    "Audit written under queue/audits/ with before and after strips of the bar"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:52:46.380Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-02T15:25:07.972Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T15:46:25.620Z",
+      "note": "Reproduced in the probe (release next). Offscreen snapshot: plain buttons 255, menu-backed (selection, crop, measure, shapes) 164; activating the probe app changed nothing, so it is not inactive-window dimming."
+    },
+    {
+      "t": "2026-09-02T15:46:25.620Z",
+      "note": "The offscreen render is unreliable for colour: highlight, text and zoom came out pure black on the dark bar. Added a ScreenCaptureKit capture of the probe's own window to the snapshot step (<name>-sc.png, preflighted, never prompts); the probe already has Screen Recording. Real capture: plain 244, menu-backed 155."
+    },
+    {
+      "t": "2026-09-02T15:46:25.620Z",
+      "note": "Adversarial pass on the idea: nothing to cut, the ask is one look for every enabled tool. The user also named zoom callout and fill as dim; their Dev build is from 2026-09-01 22:37 (before the families change) and those two are plain buttons in every capture here, so that part could not be reproduced. Ask again after a rebuild."
+    },
+    {
+      "t": "2026-09-02T15:46:25.620Z",
+      "note": "Cause found with an offscreen variant test: Menu(primaryAction:) under .buttonStyle(.borderless) draws its label at ~58% (158 vs 222), even with an explicit white foreground, so it is an opacity, not a colour. .buttonStyle(.plain) on the Menu renders 222 and a synthetic-event test showed click still fires the primary action and press-and-hold still opens the menu (run loop entered event tracking)."
+    },
+    {
+      "t": "2026-09-02T15:46:25.620Z",
+      "note": "Fix: .buttonStyle(.plain) in ToolModeButton.modeMenu and ToolGroupButton (both Next-only through the tool groups and tool options flags). Real capture after: every enabled glyph 244, the fill bucket 255 (hand-drawn path, 4% brighter, not visible). The corner wedges, which the same dimming had hidden, now show."
+    },
+    {
+      "t": "2026-09-02T15:46:25.620Z",
+      "note": "Current's selectionGroupButton has the same bug and was left alone (Next-only task); filed the-current-release-selection-slot-reads-as-brig. Scripts/test.sh green (1374 tests). Audit: queue/audits/2026-09-02-tool-bar-weight.json with before and after strips."
+    },
+    {
+      "t": "2026-09-02T15:46:25.651Z",
+      "note": "Menu-backed tool buttons (selection, crop, measure, shapes) now use the plain button style so their glyphs draw at full strength: real capture shows every enabled glyph at 244 where four sat at 155. Fix in ToolModeButton.swift and ToolGroupButton.swift (Next-only via flags). Harness snapshot now also writes a real -sc.png capture. Tests green; audit queue/audits/2026-09-02-tool-bar-weight.json."
+    }
+  ],
+  "started": "2026-09-02T15:25:07.971Z",
+  "completed": "2026-09-02T15:46:25.651Z"
+}

@@ -92,7 +92,7 @@ read coordinates straight off the fixture.
 | `tool` | `tool` | Picks a tool directly (`select`, `arrow`, `measure`, and so on), for when its key was not honoured. |
 | `measureMode` | `mode` | Presses I until the Measure tool is in `distance`, `size`, `gap` or `alignment`, and logs how many presses it took. |
 | `waitFor` | `condition`, optional `value`, `timeout` | Polls until `edgeMap` (element detection done), `captionField` (a caption field has the keyboard), `tool` = `value`, or `measureMode` = `value`. Times out as a failure. |
-| `snapshot` | `name` | Renders the window's content offscreen to `<name>.png`. |
+| `snapshot` | `name` | Renders the window's content offscreen to `<name>.png`. When the probe holds Screen Recording it also writes `<name>-sc.png`, the window as the screen shows it; read that one for anything judged by color or weight (see below). |
 | `render` | `name` | Composites the document itself to `<name>.png`. |
 | `describe` | `stage`, optional `note` | Logs the editor's state under `stage`. |
 | `clearClipboard` | | Empties the clipboard. |
@@ -112,6 +112,13 @@ read coordinates straight off the fixture.
 - **Glass and vibrancy do not render offscreen**: a snapshot shows the
   window's content, not the system's translucency. Toasts and the capture
   overlay are not covered; the walk starts at the editor.
+- **The offscreen render gets some colors wrong.** It resolves each layer's
+  colors on its own, and a plain tool button has come out pure black on the
+  dark bar while its neighbour came out pure white. Never judge brightness,
+  weight or a disabled look from `<name>.png`; use `<name>-sc.png`, which is
+  the real picture. It is only written when the probe holds Screen Recording
+  (the harness preflights and never prompts), and the log's `capture` line
+  says whether it was.
 - Keep the probe quit when you finish. `Scripts/playtest.sh` does that unless
   you pass `--keep`.
 - Never point this at `dist/Photonz Dev.app`. It would not act on a script
