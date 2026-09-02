@@ -155,7 +155,7 @@ chat at ⌘K)*.
 
 This is the complete list. **A feature that needs chrome outside this list is a
 signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req.
-6). Learn these seven and you can read every surface in the app.
+6). Learn these ten and you can read every surface in the app.
 
 - **Dock** (`.pdock`) — ONE persistent column on the right holding stacked panel
   groups. Resizable by a `.splitter.v`, collapsible to a `.drail`. There is no
@@ -189,8 +189,20 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
 - **Popover / menu** (`.popover.pop` + `.menu`/`.menuitem`) — transient, anchored
   to its trigger via `[data-menu="#id"]`. Color pickers, add-adjustment menus,
   panel menus, tool-bar overflow, context menus. Dismiss on outside-click or Esc.
+- **Canvas notice** (`.cnv-hint`, bottom centre) — the one transient pill on
+  the canvas, shared by the Measure tool's mode hint ("**Gap** Click the space
+  between two elements") and the "Copied" confirmation after ⌘C. Its slot
+  rule: **bottom centre of the canvas, just above the floating tool bar, never
+  behind it; one notice at a time**, never a stack, with a confirmation winning
+  over a hint while it is up. **While the Measure tool is in hand the slot is reserved for its mode
+  hint**, so nothing else may park there. It takes no input, has no close
+  control, and fades with whatever put it up. Not a tooltip (D12): it is on
+  screen unprompted and never anchored to a control.
 - **Modal + toast** — rare document-scoped dialogs (export, new document), and
-  transient confirmations ("Saved", "42 instances updated").
+  transient confirmations ("Saved", "42 instances updated"). The **capture
+  toast** is the global one: it belongs to the menu-bar agent, sits bottom
+  right of the screen, and carries its own Edit row (AGENTS.md, GLOBAL
+  surfaces).
 
 Audit failing examples: a component catalog rendered as a bespoke centered card
 with no dock and no open/close affordance; a panel that grows the window instead

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 110,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "mocks",
   "created": "2026-09-02T12:05:41.196Z",
-  "updated": "2026-09-02T12:07:28.409Z",
+  "updated": "2026-09-02T14:18:44.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: docs/design/mocks/shared/AGENTS.md lines 587 to 635 (toast described as transient with no dismissal chrome, menu lists Stop Recording) against commits 17b11b9 (toast Edit row, next-capture-toast-edit) and 50b72c3 (capture command names). Rule scrub queued by the 2026-09-02 digest design review.",
@@ -32,6 +32,27 @@
     {
       "t": "2026-09-02T12:07:28.408Z",
       "note": "folded in: UX-PATTERNS section 3 gains the canvas notice pill (digest design review 2026-09-02)"
+    },
+    {
+      "t": "2026-09-02T14:09:39.787Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T14:18:44.000Z",
+      "note": "Adversarial review before editing: the shipped toast (ToastController, next-capture-toast-edit) is picture, green check + message, a full-width Edit row with ⇧⌘6 trailing; hover shows Dismiss, and Copy only on a recording (Copy Video / Copy GIF). Copy is not on a screenshot toast, so the rule says so instead of promising it. The toast is system glass in the app but fixed-dark in the mock; left the tint alone (shape is the deliverable) and made the CSS comment stop claiming tint parity."
+    },
+    {
+      "t": "2026-09-02T14:18:44.000Z",
+      "note": "Menu: the mock menus said Stop Recording (disabled) and Preferences…; the app says Record Screen / Video… (Stop Recording only while recording), has Edit Last Capture ⇧⌘6 after the first separator, and Experiments…, no Preferences. Fixed the rule text, entry.js (the injected menu every walkthrough uses), app-shell.html and walk.html, and the video-entry-wt step copy that described the grayed row."
+    },
+    {
+      "t": "2026-09-02T14:18:44.000Z",
+      "note": "Toast component: .cedit Edit row, .cact hover pill (Dismiss; .copy shown on .ctoast.rec), .nokey modifier for the Touch Bar case; toast.js Dismiss hides the specimen (wt-off) and removes clones, clones strip wt-off. Pages: capture-wt, walk, app-shell (both specimens). Docs: AGENTS.md GLOBAL surfaces, PRODUCT-MODEL §4e.3, UX-PATTERNS §3 Canvas notice bullet with the slot rule."
+    },
+    {
+      "t": "2026-09-02T14:18:44.000Z",
+      "note": "Verified: node shared/build-ds.mjs rebuilt dist; check-reserved, check-selection, check-a11y-names, check-shortcuts, check-elevation, check-states, audit-keyboard all pass (menu rows 1419/1419 keyboard reachable). Chrome at 1280x900: capture-wt toast renders the Edit row with ⇧⌘6 at the end, no horizontal overflow; app-shell shows Copy on the recording card only and the hover pill appears on hover/focus."
     }
-  ]
+  ],
+  "started": "2026-09-02T14:09:39.786Z"
 }

@@ -53,8 +53,9 @@
       '<div class="popover menu mbmenu pop" id="mbMenu" role="menu" aria-label="Photonz">' +
         '<button type="button" class="menuitem" role="menuitem" id="miCapture">Capture Region <span class="sc">⇧⌘4</span></button>' +
         '<button type="button" class="menuitem" role="menuitem" id="miCaptureFull">Capture Full Screen <span class="sc">⇧⌘3</span></button>' +
-        '<button type="button" class="menuitem disabled" role="menuitem" id="miRecord" aria-disabled="true">Stop Recording <span class="sc">⇧⌘5</span></button>' +
+        '<button type="button" class="menuitem" role="menuitem" id="miRecord">Record Screen / Video… <span class="sc">⇧⌘5</span></button>' +
         '<div class="menu-sep"></div>' +
+        '<button type="button" class="menuitem" role="menuitem" id="miEditLast">Edit Last Capture <span class="sc">⇧⌘6</span></button>' +
         '<button type="button" class="menuitem" role="menuitem" id="miHistory">Show History <span class="sc">⇧⌘H</span></button>' +
         '<div class="menu-sep"></div>' +
         '<button type="button" class="menuitem" role="menuitem" id="miNewWindow">New Window</button>' +
@@ -63,7 +64,7 @@
         '<div class="menu-sep"></div>' +
         '<button type="button" class="menuitem" role="menuitem">Check for Updates…</button>' +
         '<button type="button" class="menuitem" role="menuitem">Welcome &amp; Permissions…</button>' +
-        '<button type="button" class="menuitem" role="menuitem">Preferences…</button>' +
+        '<button type="button" class="menuitem" role="menuitem">Experiments…</button>' +
         '<button type="button" class="menuitem" role="menuitem">About Photonz</button>' +
         '<div class="menu-sep"></div>' +
         '<button type="button" class="menuitem" role="menuitem">Quit Photonz <span class="sc">⌘Q</span></button>' +

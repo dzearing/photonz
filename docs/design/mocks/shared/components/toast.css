@@ -2,29 +2,40 @@
    SHELL SURFACE 2 · THE CAPTURE TOAST
    PRODUCT-MODEL.md §4e.3 — the "it worked, and it's on your
    clipboard" feedback. A floating result card over the screen
-   holding the ACTUAL captured thumbnail, with a green check and
-   "Copied to clipboard!" beneath it. Multiple captures STACK as
-   separate cards, newest in the corner, older ones above.
-   Transient: it needs no dismissal and carries no close button.
+   holding the ACTUAL captured thumbnail, a green check and
+   "Copied to clipboard!" beneath it, and under that a full-width
+   Edit row with the key that does the same once the card has gone
+   (⇧⌘6). Multiple captures STACK as separate cards, newest in the
+   corner, older ones above. It leaves on its own; pointing at it
+   pins it open and reveals a small pill in its top corner with
+   Dismiss (and, on a recording, Copy).
 
    Compose:
      .ctoast-stack               ← bottom-right of the .desk
-       └─ .ctoast                ← one capture
+       └─ .ctoast                ← one capture (.rec for a recording,
+            │                       .nokey on a Touch Bar Mac)
             ├─ .cshot            ← the real thumbnail (never a gray box)
             │    └─ .wshot | gradient | .pl + .dur for a recording
-            └─ .cfm > .ok + text ← green check + "Copied to clipboard!"
+            ├─ .cfm > .ok + text ← green check + "Copied to clipboard!"
+            ├─ .cedit > .ic + Edit + .sc ← the way in, key at the end
+            └─ .cact > button…   ← hover pill: [Copy] Dismiss
 
    The card is deliberately fixed-dark in both themes: it is a HUD
-   floating over an arbitrary desktop, exactly like the shipping
-   app, so it carries its own local tokens instead of the page's.
+   floating over an arbitrary desktop, so it carries its own local
+   tokens instead of the page's. (The shipping toast is system glass
+   and follows the desktop's appearance; the shape is what this
+   specimen keeps honest, not the tint.)
    ============================================================ */
 
 .ctoast-stack{position:absolute;right:var(--s4);bottom:var(--s4);z-index:35;
   display:flex;flex-direction:column;align-items:flex-end;gap:var(--gap-sm);
   pointer-events:none}
+/* the gaps between stacked cards stay click-through; the cards themselves
+   take the pointer, because hovering one pins it and shows its actions */
+.ctoast{pointer-events:auto}
 .ctoast{--ct-bg:rgba(14,16,22,.74); --ct-edge:rgba(255,255,255,.13);
   --ct-ink:rgba(255,255,255,.94); --ct-dim:rgba(255,255,255,.66);
-  flex:none;width:212px;padding:var(--pad-sm);border-radius:var(--r5);
+  flex:none;position:relative;width:212px;padding:var(--pad-sm);border-radius:var(--r5);
   background:var(--ct-bg);backdrop-filter:var(--lg-blur);
   -webkit-backdrop-filter:var(--lg-blur);border:1px solid var(--ct-edge);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.14), var(--lg-shadow);
@@ -41,6 +52,45 @@
 .ctoast .cfm .ok{flex:none;width:15px;height:15px;border-radius:50%;
   display:grid;place-items:center;background:var(--good);color:#fff}
 .ctoast .cfm .ok .ic{width:9px;height:9px}
+/* the Edit row: a full-width soft pill as wide as the thumbnail, Edit at
+   the leading end and the key at the trailing end. Always on screen, so a
+   first capture leads into editing without hovering, reading the Welcome
+   window or guessing at a double-click. Sized by the card, never by the
+   message above it, so a long recording message cannot push it wider. */
+.ctoast .cedit{display:flex;align-items:center;gap:6px;width:100%;
+  margin-top:var(--gap-sm);padding:5px 10px;border-radius:999px;
+  border:0;background:rgba(255,255,255,.1);color:var(--ct-ink);
+  font:inherit;font-size:11.5px;font-weight:600;text-align:left;
+  cursor:pointer;transition:background .14s ease,transform .1s ease}
+.ctoast .cedit .ic{width:12px;height:12px;flex:none}
+.ctoast .cedit .sc{margin-left:auto;font-family:var(--mono);font-size:10.5px;
+  font-weight:500;letter-spacing:.02em;color:var(--ct-dim)}
+.ctoast .cedit:hover{background:rgba(255,255,255,.18)}
+.ctoast .cedit:active{transform:scale(.98)}
+.ctoast .cedit:focus-visible{outline:none;box-shadow:var(--ring)}
+/* on a Touch Bar Mac macOS still owns ⇧⌘6, so the row promises no key */
+.ctoast.nokey .cedit .sc{display:none}
+/* the hover pill: Dismiss, and Copy on a recording (.rec). Hidden until the
+   card is pointed at or focused, so the card at rest is picture, message,
+   Edit. Never a pencil here: with the Edit row on screen it would say it
+   twice. */
+.ctoast .cact{position:absolute;top:6px;right:6px;display:flex;gap:2px;
+  padding:3px;border-radius:999px;background:rgba(14,16,22,.82);
+  border:1px solid var(--ct-edge);opacity:0;transform:scale(.9);
+  transition:opacity .14s ease,transform .14s ease;pointer-events:none}
+.ctoast:hover .cact,.ctoast:focus-within .cact{opacity:1;transform:none;pointer-events:auto}
+.ctoast .cact button{width:22px;height:22px;border-radius:50%;border:0;
+  display:grid;place-items:center;background:transparent;color:var(--ct-ink);
+  cursor:pointer;padding:0}
+.ctoast .cact button .ic{width:11px;height:11px}
+.ctoast .cact button:hover{background:rgba(255,255,255,.14)}
+.ctoast .cact button:active{transform:scale(.92)}
+.ctoast .cact button:focus-visible{outline:none;box-shadow:var(--ring)}
+.ctoast .cact .copy{display:none}
+.ctoast.rec .cact .copy{display:grid}
+@media (prefers-reduced-motion:reduce){
+  .ctoast .cact{transition:none}
+}
 /* a recording reads as a recording: same play + duration vocabulary as
    a .filmcard, so kind is legible wherever a capture appears */
 .ctoast .cshot .pl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);

@@ -382,8 +382,9 @@
                 <div class="popover menu mbmenu" role="menu" aria-label="Photonz">
                   <button type="button" class="menuitem" role="menuitem" data-toast="#toastShot">Capture Region <span class="sc">⇧⌘4</span></button>
                   <button type="button" class="menuitem" role="menuitem">Capture Full Screen <span class="sc">⇧⌘3</span></button>
-                  <button type="button" class="menuitem" role="menuitem">Stop Recording <span class="sc">⇧⌘5</span></button>
+                  <button type="button" class="menuitem" role="menuitem">Record Screen / Video… <span class="sc">⇧⌘5</span></button>
                   <div class="menu-sep"></div>
+                  <button type="button" class="menuitem" role="menuitem">Edit Last Capture <span class="sc">⇧⌘6</span></button>
                   <button type="button" class="menuitem" role="menuitem">Show History <span class="sc">⇧⌘H</span></button>
                   <div class="menu-sep"></div>
                   <button type="button" class="menuitem" role="menuitem">New Window</button>
@@ -392,7 +393,7 @@
                   <div class="menu-sep"></div>
                   <button type="button" class="menuitem" role="menuitem">Check for Updates…</button>
                   <button type="button" class="menuitem" role="menuitem">Welcome &amp; Permissions…</button>
-                  <button type="button" class="menuitem" role="menuitem">Preferences…</button>
+                  <button type="button" class="menuitem" role="menuitem">Experiments…</button>
                   <button type="button" class="menuitem" role="menuitem">About Photonz</button>
                   <div class="menu-sep"></div>
                   <button type="button" class="menuitem" role="menuitem">Quit Photonz <span class="sc">⌘Q</span></button>
@@ -423,7 +424,7 @@
            ============================================================ -->
       <div class="spec wide">
         <div class="spec-h"><i class="ic sm ic-check"></i> Capture toast
-          <span class="sub">(the result card · newest in the corner · transient, no dismissal)</span></div>
+          <span class="sub">(the result card · newest in the corner · leaves on its own · Edit row is the way in)</span></div>
         <div class="spec-b">
           <div class="desk tdesk">
             <div class="mbar">
@@ -453,7 +454,7 @@
               <div class="ctoast-stack">
 
                 <!-- a recording reads as a recording: poster frame, play, duration -->
-                <div class="ctoast">
+                <div class="ctoast rec">
                   <span class="cshot" style="background:linear-gradient(135deg,#12c2e9,#7c4dff 58%,#ff5d8f)">
                     <span class="shotttl">Onboarding</span>
                     <span class="shotsub">first run, end to end</span>
@@ -461,6 +462,8 @@
                     <span class="dur">0:12</span>
                   </span>
                   <span class="cfm"><span class="ok"><i class="ic ic-check"></i></span> Copied to clipboard!</span>
+                  <button type="button" class="cedit"><i class="ic ic-edit"></i> Edit <span class="sc">⇧⌘6</span></button>
+                  <span class="cact"><button type="button" class="copy" title="Copy as…"><i class="ic ic-copy"></i></button><button type="button" title="Dismiss" data-ctoast="dismiss"><i class="ic ic-x"></i></button></span>
                 </div>
 
                 <!-- the newest capture: a real screenshot, never a gray box -->
@@ -481,14 +484,18 @@
                     </span>
                   </span>
                   <span class="cfm"><span class="ok"><i class="ic ic-check"></i></span> Copied to clipboard!</span>
+                  <button type="button" class="cedit"><i class="ic ic-edit"></i> Edit <span class="sc">⇧⌘6</span></button>
+                  <span class="cact"><button type="button" class="copy" title="Copy as…"><i class="ic ic-copy"></i></button><button type="button" title="Dismiss" data-ctoast="dismiss"><i class="ic ic-x"></i></button></span>
                 </div>
               </div>
             </div>
           </div>
           <p class="note">The card holds the <b>actual capture</b>, not an icon, so you can tell at a glance that you got the
-            right thing. A green check plus <b>Copied to clipboard!</b> beneath it says the paste will work. Fire a burst and the
-            cards stack upward from the corner; each one leaves on its own, so there is nothing to dismiss and no close button
-            to draw. It is fixed dark in both themes because it floats over your desktop, not over the app.</p>
+            right thing. A green check plus <b>Copied to clipboard!</b> beneath it says the paste will work, and the
+            <b>Edit</b> row under that is the way in, with <code>⇧⌘6</code> at its end so you learn the key that does the
+            same once the card has gone. Fire a burst and the cards stack upward from the corner; each one leaves on its
+            own. Point at one and it stays, with Dismiss in its top corner (a recording adds Copy, for the clip or a GIF).
+            It is fixed dark in both themes because it floats over your desktop, not over the app.</p>
           <button class="btn ghost sm" data-toast="#toastShot"><i class="ic ic-plus"></i> Capture again</button>
         </div>
       </div>

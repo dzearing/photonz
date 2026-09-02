@@ -246,11 +246,15 @@ The chromeless global pane described in §4b requirement 5. Invoked by `⇧⌘H`
 ### 3. The capture toast
 After a screenshot or recording completes, a **floating result card** appears over
 the screen: the **actual captured thumbnail** in a rounded dark glass card, with a
-confirmation row beneath it — a green check plus **"Copied to clipboard!"**.
-Multiple captures **stack** as separate cards. The toast is a real preview of what
-you just captured, not a text-only notification, and it is the immediate
-"it worked, and it's on your clipboard" feedback that makes the capture path feel
-instant. It is transient and requires no dismissal.
+confirmation row beneath it — a green check plus **"Copied to clipboard!"** — and
+under that a full-width **Edit** row with **⇧⌘6** at its end, so the way into the
+editor is on screen from the first capture and the key that does the same later
+is learned in passing. Multiple captures **stack** as separate cards. The toast is
+a real preview of what you just captured, not a text-only notification, and it is
+the immediate "it worked, and it's on your clipboard" feedback that makes the
+capture path feel instant. It leaves on its own; pointing at it pins it open and
+shows Dismiss (and Copy, for a recording) in its corner, and that is all the
+chrome it has.
 
 ### 4. The editor window(s)
 The lean canvas-first shell of §4b: image documents, video documents, and any new

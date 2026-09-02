@@ -119,8 +119,9 @@
             <div class="popover menu mbmenu pop" id="mbMenu" role="menu" aria-label="Photonz">
               <button type="button" class="menuitem" role="menuitem" id="miCapture">Capture Region <span class="sc">⇧⌘4</span></button>
               <button type="button" class="menuitem" role="menuitem">Capture Full Screen <span class="sc">⇧⌘3</span></button>
-              <button type="button" class="menuitem disabled" role="menuitem" aria-disabled="true">Stop Recording <span class="sc">⇧⌘5</span></button>
+              <button type="button" class="menuitem" role="menuitem">Record Screen / Video… <span class="sc">⇧⌘5</span></button>
               <div class="menu-sep"></div>
+              <button type="button" class="menuitem" role="menuitem">Edit Last Capture <span class="sc">⇧⌘6</span></button>
               <button type="button" class="menuitem" role="menuitem" id="miHistory" data-sheet="#histSheet">Show History <span class="sc">⇧⌘H</span></button>
               <div class="menu-sep"></div>
               <button type="button" class="menuitem" role="menuitem">New Window</button>
@@ -129,7 +130,7 @@
               <div class="menu-sep"></div>
               <button type="button" class="menuitem" role="menuitem">Check for Updates…</button>
               <button type="button" class="menuitem" role="menuitem">Welcome &amp; Permissions…</button>
-              <button type="button" class="menuitem" role="menuitem">Preferences…</button>
+              <button type="button" class="menuitem" role="menuitem">Experiments…</button>
               <button type="button" class="menuitem" role="menuitem">About Photonz</button>
               <div class="menu-sep"></div>
               <button type="button" class="menuitem" role="menuitem">Quit Photonz <span class="sc">⌘Q</span></button>
@@ -403,7 +404,7 @@
             </div>
           </div>
 
-          <!-- SHELL SURFACE 3 · THE CAPTURE TOAST · transient, no dismissal -->
+          <!-- SHELL SURFACE 3 · THE CAPTURE TOAST · leaves on its own; Edit row is the way in -->
           <div class="ctoast-stack">
             <div class="ctoast wt-off" id="capToast">
               <span class="cshot" style="display:grid;place-items:center;background:#0d1017">
@@ -420,6 +421,8 @@
                 </span>
               </span>
               <span class="cfm"><span class="ok"><i class="ic ic-check"></i></span> Copied to clipboard!</span>
+              <button type="button" class="cedit"><i class="ic ic-edit"></i> Edit <span class="sc">⇧⌘6</span></button>
+              <span class="cact"><button type="button" class="copy" title="Copy as…"><i class="ic ic-copy"></i></button><button type="button" title="Dismiss" data-ctoast="dismiss"><i class="ic ic-x"></i></button></span>
             </div>
           </div>
 
@@ -566,7 +569,7 @@
           <span class="wt-n">3</span>
           <p class="wt-do" data-verb="Drag">the selection across the pricing page and let go</p>
           <p class="wt-where">the screen itself, wherever the thing you want lives</p>
-          <p class="wt-res">a <b>capture toast</b> slides into the corner with the real thumbnail, a green check, and <b>Copied to clipboard!</b> It is already pasteable, and the card leaves on its own.</p>
+          <p class="wt-res">a <b>capture toast</b> slides into the corner with the real thumbnail, a green check, <b>Copied to clipboard!</b> and an <b>Edit</b> row with <code>⇧⌘6</code> at its end. It is already pasteable; the card leaves on its own, and Edit opens it now.</p>
         </div>
       </li>
 

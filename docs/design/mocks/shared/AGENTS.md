@@ -606,31 +606,47 @@ and the specimen stays honest (PRODUCT-MODEL §4c: a specimen wears no app chrom
   the shipping app draws); it fills with the accent while its menu is open, via
   `.on` or `aria-expanded="true"`. It is a **native menu**, so build it out of
   `.menuitem` + `.sc` + `.menu-sep` and nothing else: no icons, no custom widget.
-  Contents in order, groups split by `.menu-sep`:
-  `Capture Region ⇧⌘4` · `Capture Full Screen ⇧⌘3` · `Stop Recording ⇧⌘5` /
-  `Edit Last Capture ⇧⌘6` · `Show History ⇧⌘H` / `New Window` ·
-  `New from Clipboard` · `Open…` / `Check for Updates…` ·
+  Contents in order, groups split by `.menu-sep`, and these are the names the
+  app's own Capture menu uses, so the two read the same:
+  `Capture Region ⇧⌘4` · `Capture Full Screen ⇧⌘3` ·
+  `Record Screen / Video… ⇧⌘5` (it reads `Stop Recording` only while a
+  recording is running) / `Edit Last Capture ⇧⌘6` · `Show History ⇧⌘H` /
+  `New Window` · `New from Clipboard` · `Open…` / `Check for Updates…` ·
   `Welcome & Permissions…` · `Experiments…` · `About Photonz` /
-  `Quit Photonz ⌘Q`.
+  `Quit Photonz ⌘Q`. There is no Preferences row: the app has no settings
+  window yet, and a row that only promises one is a dead end.
   Author each row as a `<button class="menuitem">` so it has real hover, focus,
   and `.disabled` states; hover fills the whole row in the accent like a real
   macOS menu. Add `[data-menu="#id"]` to make it toggleable, or leave `.pop` off
   and it stays open, which is what an anatomy specimen wants.
 - **`.ctoast-stack` › `.ctoast`** — the **capture toast**, the "it worked, and
   it's on your clipboard" feedback. Anchored bottom-right of the `.deskbody`,
-  newest card in the corner, older ones stacking upward. One card is:
-  `.cshot` (the **actual captured thumbnail**, 16:10, subtle inner border) then
-  `.cfm` › `.ok` (green check) + **"Copied to clipboard!"**. A recording carries
-  the same `.pl` + `.dur` vocabulary a `.filmcard` does, so kind is legible
-  everywhere. It is **transient: no close button, no dismissal chrome**, and it
-  is fixed-dark in both themes because it floats over a desktop, not over the app.
+  newest card in the corner, older ones stacking upward. One card is, top to
+  bottom: `.cshot` (the **actual captured thumbnail**, 16:10, subtle inner
+  border), `.cfm` › `.ok` (green check) + **"Copied to clipboard!"**, then
+  `.cedit`, a **full-width Edit row** as wide as the picture: `ic-edit` +
+  "Edit" at the leading end and `.sc` **⇧⌘6** at the trailing end, the key
+  that does the same once the card has gone. The row is always on screen, so a
+  first capture leads into editing without hovering or knowing a gesture. Add
+  `.nokey` for a Touch Bar Mac, where macOS still owns ⇧⌘6 and the row shows
+  no key. Last comes `.cact`, the **hover pill** in the top corner: hidden at
+  rest, shown while the card is pointed at or focused, holding **Dismiss**
+  (`title="Dismiss" data-ctoast="dismiss"`, `ic-x`) and, on a recording only
+  (`.ctoast.rec`), **Copy** (`.copy`, `ic-copy`, the clip or a GIF). Never a
+  pencil in the pill: with the Edit row on screen it would say it twice. A
+  recording also carries the same `.pl` + `.dur` vocabulary a `.filmcard`
+  does, so kind is legible everywhere. The card **leaves on its own**; hovering
+  pins it open, Dismiss sends it away early, and there is no other dismissal
+  chrome. It is fixed-dark in both themes because it floats over a desktop, not
+  over the app.
 - **`.wshot`** — miniature "screenshot of a window" artwork for a `.cshot` or a
   `.filmcard .th`, so a capture is never an empty gray rectangle:
   `.wshot` › `.w` › `.tb`>i·i·i + `.bd` › `.sd` + `.mn` › `.ln`/`.ln.s`/`.ln.a`.
 - **`[data-toast="#someToast"]`** — JS hook: fires another copy of that `.ctoast`
   into the `.ctoast-stack` it lives in and removes it a few seconds later, so a
-  page can show the real behavior (captures stack, each one leaves on its own).
-  The card you point at stays put; only the clones come and go.
+  page can show the real behavior (captures stack, each one leaves on its own,
+  Dismiss in the hover pill ends one early). The card you point at stays put;
+  only the clones come and go.
 
 ### Still true
 
