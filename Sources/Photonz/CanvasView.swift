@@ -458,6 +458,10 @@ final class CanvasNSView: NSView {
     /// In-progress marquee (document coordinates). While set, it is what the
     /// ants display — same zero-latency-echo pattern as pan/zoom.
     private var marquee: MarqueeDrag?
+    /// What the press that started `marquee` meant for the selection, latched
+    /// at gesture start: plain replaces it, ⇧ spares it (a ⇧-click that missed
+    /// the layer it was aimed at).
+    private var marqueePress: BareCanvasPress = .replaces
     /// In-progress region-select drag (rect/ellipse tools). The combine mode
     /// is latched from the modifiers at gesture start (⇧ add, ⌥ subtract,
     /// ⇧⌥ intersect); the ants preview the live boolean combination.
@@ -1476,10 +1480,20 @@ final class CanvasNSView: NSView {
                                     ? (document?.snapPeers(excluding: hit.id) ?? []) : [],
                                 snapped: Snapping.Result(origin: hit.frame.origin))
         } else {
-            onClickedNothing()
-            if selectedLayerFrame != nil || isCanvasSelected {
-                selectedLayerFrame = nil
-                onSelectLayer(nil) // also drops the Canvas pseudo-selection
+            // A ⇧-click is aimed at a layer, so one that lands on bare canvas
+            // is a miss, not a deselect: it must not throw away the selection
+            // it was about to be added to. The rubber band still starts either
+            // way, so ⇧-dragging out on the canvas is unchanged; only the
+            // press that never moves is spared, and mouse-up finishes the rule.
+            let press = BareCanvasPress(shift: tool == .select
+                && event.modifierFlags.contains(.shift))
+            marqueePress = press
+            if press.clearsSelectionOnPress {
+                onClickedNothing()
+                if selectedLayerFrame != nil || isCanvasSelected {
+                    selectedLayerFrame = nil
+                    onSelectLayer(nil) // also drops the Canvas pseudo-selection
+                }
             }
             marquee = MarqueeDrag(anchor: p)
         }
@@ -1883,9 +1897,20 @@ final class CanvasNSView: NSView {
             }
         } else if let drag = marquee {
             marquee = nil
+            let press = marqueePress
+            marqueePress = .replaces
+            guard press.commitsOnRelease(isClick: drag.isClick(atZoom: viewport.zoom)) else {
+                // A ⇧-click that landed on nothing: the band comes down and
+                // the selection stays exactly as it was.
+                refreshOverlays()
+                return
+            }
             if drag.isClick(atZoom: viewport.zoom) {
                 commitSelection(nil, capture: true) // a plain click deselects
             } else {
+                // A sweep decides the selection whatever started it, so the
+                // Library tile lets go here the way the plain press already did.
+                if !press.clearsSelectionOnPress { onClickedNothing() }
                 let square = event.modifierFlags.contains(.shift)
                 let rect = drag.selectionRect(constrainSquare: square, in: viewport.documentSize)
                 commitSelection(rect.map(Geometry.pixelAligned).flatMap(SelectionRegion.rect),
@@ -2583,9 +2608,17 @@ final class CanvasNSView: NSView {
             multiSelectOutlineLayer.isHidden = true
             return
         }
-        let captured = marquee != nil
-            ? marqueeRect.map { Set(document.layerIDs(fullyInside: $0)) } ?? []
-            : multiSelectedLayerIDs
+        // Mid-sweep the band says what is picked. A ⇧-press that has not moved
+        // is not a sweep — it spares the selection — so what is already picked
+        // stays outlined rather than blinking out while the button is down.
+        let captured: Set<UUID>
+        if marquee != nil, let rect = marqueeRect {
+            captured = Set(document.layerIDs(fullyInside: rect))
+        } else if marquee != nil, marqueePress.clearsSelectionOnPress {
+            captured = []
+        } else {
+            captured = multiSelectedLayerIDs
+        }
         let outlines = CGMutablePath()
         // Canvas coordinates, so a member that lives inside a group is outlined
         // where it draws rather than where it is stored.

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 800,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:32:42.349Z",
-  "updated": "2026-09-03T06:32:42.350Z",
+  "updated": "2026-09-03T11:52:54.222Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building next-align-layers on 2026-09-03: the Arrange row needs two or more layers and the canvas has no way to build that selection except a marquee. CanvasView mouseDown reaches groupAwarePick and starts a MoveDrag; shift and command are both unused there for the Select tool. EditorState.clickRow already implements Finder-style plain/extend/toggle over an order, so the canvas wants a toggle path onto multiSelectedLayerIDs rather than new selection state. Watch the drag: a shift-click that also drags should still move what it just added.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-03T06:32:42.350Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T11:52:54.222Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T12:00:40.920966Z",
+      "note": "Adversarial review before building: most of this task was already shipped by 8a2e23d (duplicate task shift-click-on-the-canvas-adds-a-layer-to-the-se, done 08:23). Verified the three items that were already met on the real app rather than assuming: a probe playtest shows a plain click then a shift-click picks both rectangles, the Layers list says '2 layers selected' with both rows lit, and the Arrange row is on screen. Shift-clicking a picked layer drops it (existing shift-click-select-walk, stages 3 and 4)."
+    },
+    {
+      "t": "2026-09-03T12:00:40.920966Z",
+      "note": "Reproduced the one item that was NOT met: acceptance 3's second half. A shift-click landing on bare canvas fell through to the deselect-and-rubber-band branch, so it wiped the selection. Playtest before the fix: stage 2-shift-miss selection = [] with two rectangles picked a moment earlier. This is the worst kind of miss, because a shift-click is aimed at a layer and being a few pixels off costs you the whole selection you were building."
+    },
+    {
+      "t": "2026-09-03T12:00:40.920966Z",
+      "note": "Built it test-first: PhotonzCore gains BareCanvasPress (replaces vs spares) with the two rules a press on bare canvas needs, clearsSelectionOnPress and commitsOnRelease(isClick:), and five tests. CanvasView latches it at mouse-down and honours it at mouse-up, so a shift-click on nothing changes nothing while a shift-DRAG still sweeps exactly as before. The multi-select outlines read the same latch, so the selection no longer blinks out while the button is held."
+    },
+    {
+      "t": "2026-09-03T12:00:40.920966Z",
+      "note": "Also: the playtest describe payload now reports canAlign, the same value the Arrange section's own if reads, so acceptance 4 is provable from a log instead of by eye."
+    },
+    {
+      "t": "2026-09-03T12:00:40.920966Z",
+      "note": "Verified: Scripts/test.sh 2088 tests green. New walk Scripts/playtest/shift-click-miss-walk.json on the probe reads 1-two ['Rectangle','Rectangle'] canAlign true, 2-shift-miss unchanged, 3-plain-miss [], 4-shift-sweep []. The existing shift-click-select-walk re-run stage for stage with no change. Audit at queue/audits/2026-09-03-canvas-multi-pick.json with two real window captures."
+    },
+    {
+      "t": "2026-09-03T12:00:40.920966Z",
+      "note": "Left alone deliberately: shift-DRAG on bare canvas still replaces the selection and still constrains to a square. Both belong to the queued task 'Shift-dragging a marquee adds what it sweeps to the selection', which will have to settle the square-vs-add collision. Noted in the audit's rough."
     }
-  ]
+  ],
+  "started": "2026-09-03T11:52:54.222Z"
 }

@@ -1,0 +1,26 @@
+{
+  "feature": "Pick several layers on the picture",
+  "epic": "ui-building",
+  "summary": "Shift-clicking a layer on the picture adds it to what is already picked and shift-clicking a picked one drops it, and a shift-click that misses and lands on bare canvas now changes nothing instead of throwing the whole selection away.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Open a blank canvas and draw three rectangles with the Rectangle tool, apart from each other." },
+    { "do": "Press V for the Select tool, then click the top rectangle." },
+    { "do": "Shift-click the middle rectangle. Both should be lit in the Layers list and outlined on the picture, and the Arrange row should appear in the inspector.", "shot": "2026-09-03-canvas-multi-pick-1-two-sc.png" },
+    { "do": "Shift-click empty white canvas well away from any rectangle. Nothing should change.", "shot": "2026-09-03-canvas-multi-pick-2-miss-sc.png" },
+    { "do": "Shift-click the middle rectangle again. It should drop out, leaving the top one picked." },
+    { "do": "Click empty canvas with no modifier. Everything should let go." },
+    { "do": "Pick two rectangles again and press an Arrange button to line them up." }
+  ],
+  "evaluate": [
+    "When you shift-click and miss the layer you were aiming at, does keeping the selection feel right, or did you expect the miss to deselect?",
+    "Shift-DRAGGING on bare canvas still sweeps a fresh selection and replaces what was picked. Does that feel inconsistent next to the shift-click that spares it?",
+    "Does the Arrange row arriving on the second layer land where your eye already is, or does the inspector jumping feel unsettling?",
+    "Is it obvious enough on the picture which layers are picked, or do you find yourself checking the Layers list?"
+  ],
+  "rough": [
+    "A shift-click that lands on a layer swallows the press: you cannot shift-click and drag in one motion to add a layer and move the group. Moving a multi-selection on the canvas is a separate queued task and is not built yet.",
+    "Shift held during a canvas rubber band still constrains it to a square, left over from the region tools. That collides with the queued task that wants shift-drag to ADD what it sweeps, and one of the two will have to give.",
+    "Screen Recording was granted, so both pictures here are real window captures, not offscreen renders."
+  ]
+}

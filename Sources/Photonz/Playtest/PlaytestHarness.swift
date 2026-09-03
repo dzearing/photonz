@@ -1209,6 +1209,10 @@ private final class Run {
             // Whether Layer ▸ Group would do anything, which is exactly what
             // that menu row dims itself on.
             "canGroup": editor.canGroupSelection,
+            // Whether the Arrange row is on screen. The inspector section reads
+            // this same value, so a walk can prove the row arrived with the
+            // second layer without measuring pixels in a snapshot.
+            "canAlign": editor.canAlignSelection,
             // Whether Layer ▸ Make Alternatives is there at all. That row is
             // absent rather than dimmed, and a walk cannot photograph an absent
             // row: the probe never comes to the front, so its menu bar reads

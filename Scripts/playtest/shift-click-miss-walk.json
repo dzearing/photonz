@@ -1,0 +1,170 @@
+{
+  "out": "/tmp/photonz-playtest/shift-click-miss",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        100
+      ],
+      "to": [
+        280,
+        160
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        220
+      ],
+      "to": [
+        370,
+        280
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        130
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        260,
+        250
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-two",
+      "note": "two rectangles picked by shift-click"
+    },
+    {
+      "do": "snapshot",
+      "name": "miss-1-two"
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        600
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-shift-miss",
+      "note": "a shift-click on bare canvas: the selection should still hold BOTH rectangles"
+    },
+    {
+      "do": "snapshot",
+      "name": "miss-2-shift-miss"
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        600
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-plain-miss",
+      "note": "a plain click on bare canvas still clears everything"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        130
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        260,
+        250
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        600,
+        450
+      ],
+      "to": [
+        860,
+        640
+      ],
+      "steps": 8,
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-shift-sweep",
+      "note": "a shift-DRAG on bare canvas is still a sweep: it should replace the selection with what it swept, which here is nothing"
+    }
+  ]
+}

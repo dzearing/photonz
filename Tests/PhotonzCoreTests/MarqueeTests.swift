@@ -98,3 +98,35 @@ struct MarqueeTests {
         #expect(r.width >= 1 && r.height >= 1)
     }
 }
+
+@Suite("BareCanvasPress")
+struct BareCanvasPressTests {
+    @Test func plainPressLetsGoOfTheSelection() {
+        let press = BareCanvasPress(shift: false)
+        #expect(press == .replaces)
+        #expect(press.clearsSelectionOnPress)
+    }
+
+    @Test func shiftPressKeepsTheSelection() {
+        // A ⇧-click is aimed at a layer. Missing it by a few pixels must not
+        // throw away the selection it was about to be added to.
+        let press = BareCanvasPress(shift: true)
+        #expect(press == .spares)
+        #expect(!press.clearsSelectionOnPress)
+    }
+
+    @Test func plainClickOnNothingDeselects() {
+        #expect(BareCanvasPress(shift: false).commitsOnRelease(isClick: true))
+    }
+
+    @Test func shiftClickOnNothingChangesNothing() {
+        #expect(!BareCanvasPress(shift: true).commitsOnRelease(isClick: true))
+    }
+
+    @Test func aSweepAlwaysDecidesTheSelection() {
+        // Only the click that never moved is spared: a rubber band that was
+        // actually dragged still says what is picked, ⇧ or not.
+        #expect(BareCanvasPress(shift: false).commitsOnRelease(isClick: false))
+        #expect(BareCanvasPress(shift: true).commitsOnRelease(isClick: false))
+    }
+}
