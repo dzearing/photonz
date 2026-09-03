@@ -1136,28 +1136,53 @@ final class EditorState {
         }
     }
 
-    /// Live inspector-slider caption size (no undo step).
-    func previewCaptionFontSize(layerID: UUID, _ size: CGFloat) {
-        guard var doc = document, doc.layer(id: layerID)?.annotation?.shape == .arrow else { return }
+    /// Live inspector-slider caption size (no undo step), over every picked
+    /// arrow: three labelled arrows resize their words together.
+    func previewCaptionFontSize(ids: [UUID], _ size: CGFloat) {
+        guard var doc = document else { return }
+        let targets = captionTargets(ids, in: doc)
+        guard !targets.isEmpty else { return }
         discardDragPreview()
-        doc.updateLayer(id: layerID) { $0 = AnnotationBuilder.restyled($0, captionFontSize: size) }
+        for id in targets {
+            doc.updateLayer(id: id) { $0 = AnnotationBuilder.restyled($0, captionFontSize: size) }
+        }
         submit(doc)
     }
 
-    /// Slider release: one undo step; the pill re-picks its spot for the new
-    /// size, and the next arrow's caption starts at it.
-    func commitCaptionFontSize(layerID: UUID, _ size: CGFloat) {
-        guard document?.layer(id: layerID)?.annotation?.shape == .arrow else { return }
+    func previewCaptionFontSize(layerID: UUID, _ size: CGFloat) {
+        previewCaptionFontSize(ids: [layerID], size)
+    }
+
+    /// Slider release: ONE undo step however many arrows it reached; each
+    /// pill re-picks its spot for the new size, and the next arrow's caption
+    /// starts at it.
+    func commitCaptionFontSize(ids: [UUID], _ size: CGFloat) {
+        guard let doc = document else { return }
+        let targets = captionTargets(ids, in: doc)
+        guard !targets.isEmpty else { return }
         discardDragPreview()
         perform { document in
             let canvas = document.canvasSize
-            document.updateLayer(id: layerID) {
-                $0 = AnnotationBuilder.planningCaption(
-                    AnnotationBuilder.restyled($0, captionFontSize: size), canvas: canvas)
+            for id in targets {
+                document.updateLayer(id: id) {
+                    $0 = AnnotationBuilder.planningCaption(
+                        AnnotationBuilder.restyled($0, captionFontSize: size), canvas: canvas)
+                }
             }
         }
         annotationStyles.setCaptionFontSize(size, forShape: .arrow)
         saveAnnotationStyles()
+    }
+
+    func commitCaptionFontSize(layerID: UUID, _ size: CGFloat) {
+        commitCaptionFontSize(ids: [layerID], size)
+    }
+
+    /// The picked layers a caption row may touch: arrows, unlocked.
+    private func captionTargets(_ ids: [UUID], in doc: PhotonzDocument) -> [UUID] {
+        ids.filter {
+            doc.layer(id: $0).map { $0.annotation?.shape == .arrow && !$0.isLocked } == true
+        }
     }
 
     /// Live drag of a caption pill (no history): the pill follows the pointer,
@@ -1196,12 +1221,22 @@ final class EditorState {
     }
 
     /// Hands a hand-placed pill back to the app's placement (one undo step).
-    func resetCaptionPlacement(id: UUID) {
-        guard document?.layer(id: id)?.annotation?.captionPinned == true else { return }
+    func resetCaptionPlacement(id: UUID) { resetCaptionPlacement(ids: [id]) }
+
+    /// The same over every picked arrow whose pill was moved by hand: they all
+    /// go back to the spot the app picks, in one undo step.
+    func resetCaptionPlacement(ids: [UUID]) {
+        guard let doc = document else { return }
+        let targets = ids.filter { doc.layer(id: $0)?.annotation?.captionPinned == true }
+        guard !targets.isEmpty else { return }
         discardDragPreview()
         perform { document in
             let canvas = document.canvasSize
-            document.updateLayer(id: id) { $0 = AnnotationBuilder.releasingCaption($0, canvas: canvas) }
+            for id in targets {
+                document.updateLayer(id: id) {
+                    $0 = AnnotationBuilder.releasingCaption($0, canvas: canvas)
+                }
+            }
         }
     }
 
@@ -2213,30 +2248,78 @@ final class EditorState {
     /// inherits it.
     func previewAnnotationRestyle(layerID: UUID, strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil,
                                   cornerRadius: CGFloat? = nil) {
-        guard var doc = document, let shape = doc.layer(id: layerID)?.annotation?.shape else { return }
-        if let strokeWidth, shape != .highlight { annotationStyles.setStrokeWidth(strokeWidth, forShape: shape) }
-        if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
-        discardDragPreview()
-        doc.updateLayer(id: layerID) {
-            $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth, arrowheadScale: arrowheadScale,
-                                            cornerRadius: cornerRadius)
-        }
-        submit(doc)
+        previewAnnotationRestyle(ids: [layerID], strokeWidth: strokeWidth,
+                                 arrowheadScale: arrowheadScale, cornerRadius: cornerRadius)
     }
 
     /// Inspector slider release: one undo step + persist the shape default.
     func commitAnnotationRestyle(layerID: UUID, strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil,
                                  cornerRadius: CGFloat? = nil) {
-        guard let shape = document?.layer(id: layerID)?.annotation?.shape else { return }
+        commitAnnotationRestyle(ids: [layerID], strokeWidth: strokeWidth,
+                                arrowheadScale: arrowheadScale, cornerRadius: cornerRadius)
+    }
+
+    /// The same drag, over EVERY picked shape: one pull on Thickness reaches
+    /// all of them at once. No undo step while the knob is moving.
+    ///
+    /// Each shape kind remembers the number for itself, so a rectangle and an
+    /// arrow both set to 6pt each start their next object at 6pt.
+    func previewAnnotationRestyle(ids: [UUID], strokeWidth: CGFloat? = nil,
+                                  arrowheadScale: CGFloat? = nil, cornerRadius: CGFloat? = nil) {
+        guard var doc = document else { return }
+        let targets = annotationRestyleTargets(ids, in: doc)
+        guard !targets.isEmpty else { return }
+        rememberAnnotationDefaults(targets, in: doc, strokeWidth: strokeWidth,
+                                   arrowheadScale: arrowheadScale, cornerRadius: nil)
         discardDragPreview()
-        perform { $0.updateLayer(id: layerID) {
-            $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth, arrowheadScale: arrowheadScale,
-                                            cornerRadius: cornerRadius)
-        } }
-        if let strokeWidth, shape != .highlight { annotationStyles.setStrokeWidth(strokeWidth, forShape: shape) }
-        if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
-        if let cornerRadius { annotationStyles.setCornerRadius(cornerRadius, forShape: shape) }
+        for id in targets {
+            doc.updateLayer(id: id) {
+                $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth,
+                                                arrowheadScale: arrowheadScale,
+                                                cornerRadius: cornerRadius)
+            }
+        }
+        submit(doc)
+    }
+
+    /// Letting go of that slider: ONE undo step, however many shapes it
+    /// reached, plus each kind's remembered default.
+    func commitAnnotationRestyle(ids: [UUID], strokeWidth: CGFloat? = nil,
+                                 arrowheadScale: CGFloat? = nil, cornerRadius: CGFloat? = nil) {
+        guard let doc = document else { return }
+        let targets = annotationRestyleTargets(ids, in: doc)
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            for id in targets {
+                document.updateLayer(id: id) {
+                    $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth,
+                                                    arrowheadScale: arrowheadScale,
+                                                    cornerRadius: cornerRadius)
+                }
+            }
+        }
+        rememberAnnotationDefaults(targets, in: doc, strokeWidth: strokeWidth,
+                                   arrowheadScale: arrowheadScale, cornerRadius: cornerRadius)
         saveAnnotationStyles()
+    }
+
+    /// The picked layers a shape slider may touch: shapes, unlocked.
+    private func annotationRestyleTargets(_ ids: [UUID], in doc: PhotonzDocument) -> [UUID] {
+        ids.filter { doc.layer(id: $0).map { $0.annotation != nil && !$0.isLocked } == true }
+    }
+
+    /// What the next object of each picked kind starts at.
+    private func rememberAnnotationDefaults(_ ids: [UUID], in doc: PhotonzDocument,
+                                            strokeWidth: CGFloat?, arrowheadScale: CGFloat?,
+                                            cornerRadius: CGFloat?) {
+        for shape in Set(ids.compactMap { doc.layer(id: $0)?.annotation?.shape }) {
+            if let strokeWidth, shape != .highlight {
+                annotationStyles.setStrokeWidth(strokeWidth, forShape: shape)
+            }
+            if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
+            if let cornerRadius { annotationStyles.setCornerRadius(cornerRadius, forShape: shape) }
+        }
     }
 
     /// Inspector color pick on `layerID`: one undo step + persist the shape default.
@@ -2726,10 +2809,77 @@ final class EditorState {
     /// step. Also updates the new-text default so the next block inherits it.
     func setTextStyle(layerID: UUID, fontName: String? = nil, fontSize: CGFloat? = nil,
                       weight: TextWeight? = nil, colorHex: String? = nil) {
-        guard let layer = document?.layer(id: layerID),
-              case .text = layer.content else { return }
-        restyleSelectedText(layer, fontName: fontName, fontSize: fontSize,
-                            weight: weight, colorHex: colorHex)
+        setTextStyle(ids: [layerID], fontName: fontName, fontSize: fontSize,
+                     weight: weight, colorHex: colorHex)
+    }
+
+    /// The same over EVERY picked text layer, in ONE undo step: three labels
+    /// made 14pt is one trip round the panel and one press of undo, not three.
+    ///
+    /// Each label keeps its own wrap width while its words are re-set, so one
+    /// dragged wide stays wide. The re-measure needs CoreText, which is why it
+    /// happens here rather than in the core, and why several layers means
+    /// several measurements inside the one step.
+    func setTextStyle(ids: [UUID], fontName: String? = nil, fontSize: CGFloat? = nil,
+                      weight: TextWeight? = nil, colorHex: String? = nil) {
+        let targets = ids.filter { id in
+            guard let layer = document?.layer(id: id), !layer.isLocked,
+                  case .text(let words) = layer.content else { return false }
+            // Only the labels this actually changes. Picking 14pt when they are
+            // all already 14pt is a menu closing, not an undo step.
+            if let fontName, words.fontName != fontName { return true }
+            if let fontSize, words.fontSize != fontSize { return true }
+            if let weight, words.weight != weight { return true }
+            if let colorHex, words.colorHex != colorHex { return true }
+            return false
+        }
+        guard !targets.isEmpty else {
+            // Nothing to change in the document, but this is still what the
+            // next block of text should start at.
+            rememberTextDefaults(fontName: fontName, fontSize: fontSize,
+                                 weight: weight, colorHex: colorHex)
+            return
+        }
+        // How much room each label's words get at the new type. A box somebody
+        // made bigger than its words — a paragraph, or a label told to stretch
+        // — keeps the room it was given, so restyling re-wraps in place. A box
+        // still hugging its words re-hugs them, instead of wrapping the moment
+        // bold makes them a few points wider than the box they just fitted.
+        // (Current has no stretching, so it keeps its old rule untouched.)
+        let widths: [UUID: CGFloat] = targets.reduce(into: [:]) { widths, id in
+            guard let layer = document?.layer(id: id) else { return }
+            guard Experiments.shared.placementEnabled, let words = layer.text else {
+                widths[id] = layer.frame.width
+                return
+            }
+            let hugged = TextRasterizer.naturalSize(words, maxWidth: layer.frame.width,
+                                                    minWidth: TextRasterizer.minimumTextWidth)
+            widths[id] = layer.frame.width > hugged.width + 0.5
+                ? layer.frame.width : .greatestFiniteMagnitude
+        }
+        discardDragPreview()
+        perform { document in
+            for id in targets {
+                guard let maxWidth = widths[id] else { continue }
+                document.updateLayer(id: id) { l in
+                    l = TextBuilder.restyled(layer: l, fontName: fontName, fontSize: fontSize,
+                                             weight: weight, colorHex: colorHex)
+                    if case .text(let content) = l.content {
+                        let size = TextRasterizer.naturalSize(
+                            content, maxWidth: maxWidth,
+                            minWidth: TextRasterizer.minimumTextWidth)
+                        l.frame = CGRect(origin: l.frame.origin, size: size)
+                    }
+                }
+            }
+        }
+        rememberTextDefaults(fontName: fontName, fontSize: fontSize,
+                             weight: weight, colorHex: colorHex)
+    }
+
+    /// What the next block of text starts at.
+    private func rememberTextDefaults(fontName: String?, fontSize: CGFloat?,
+                                      weight: TextWeight?, colorHex: String?) {
         if let fontName { textStyles.fontName = fontName }
         if let fontSize { textStyles.fontSize = fontSize }
         if let weight { textStyles.weight = weight }
@@ -2744,16 +2894,37 @@ final class EditorState {
     /// wide. It is not a new-text default either — a fresh block starts at the
     /// left, where text has always started.
     func setTextAlignment(layerID: UUID, _ alignment: TextAlign) {
-        guard document?.layer(id: layerID)?.text != nil else { return }
-        discardDragPreview()
-        perform { $0.setTextAlignment(id: layerID, alignment) }
+        setTextAlignment(ids: [layerID], alignment)
     }
 
     /// The same, down the box.
     func setTextAlignment(layerID: UUID, _ alignment: TextVerticalAlign) {
-        guard document?.layer(id: layerID)?.text != nil else { return }
+        setTextAlignment(ids: [layerID], alignment)
+    }
+
+    /// Every picked label's words move across their boxes together, in one
+    /// undo step.
+    func setTextAlignment(ids: [UUID], _ alignment: TextAlign) {
+        let targets = textAlignmentTargets(ids)
+        guard !targets.isEmpty else { return }
         discardDragPreview()
-        perform { $0.setTextAlignment(id: layerID, alignment) }
+        perform { document in
+            for id in targets { document.setTextAlignment(id: id, alignment) }
+        }
+    }
+
+    /// And down them.
+    func setTextAlignment(ids: [UUID], _ alignment: TextVerticalAlign) {
+        let targets = textAlignmentTargets(ids)
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            for id in targets { document.setTextAlignment(id: id, alignment) }
+        }
+    }
+
+    private func textAlignmentTargets(_ ids: [UUID]) -> [UUID] {
+        ids.filter { document?.layer(id: $0).map { $0.text != nil && !$0.isLocked } == true }
     }
 
     /// An inline edit began. Re-editing an existing layer adopts its style (so
@@ -3749,6 +3920,21 @@ final class EditorState {
         return document.layerStyleSelection(layerIDs: colorStyleTargetIDs) { layer in
             self.previewedStyle(of: layer.id) ?? layer.style
         }
+    }
+
+    /// What the type rows show: the picked TEXT layers and what they are set
+    /// in. One label picked or ten, this is the same reading, which is what
+    /// lets three labels be made 14pt in one go instead of three.
+    var textSelection: TextLayerSelection {
+        guard let document else { return TextLayerSelection(members: [], selectionCount: 0) }
+        return document.textSelection(layerIDs: colorStyleTargetIDs)
+    }
+
+    /// The same for the shape rows: the picked shapes, the settings they all
+    /// have, and what those settings read across them.
+    var shapeSelection: ShapeSelection {
+        guard let document else { return ShapeSelection(members: [], selectionCount: 0) }
+        return document.shapeSelection(layerIDs: colorStyleTargetIDs)
     }
 
     /// Whether anything picked can be restyled at all, which is what decides

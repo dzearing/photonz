@@ -48,3 +48,16 @@ extension AnnotationShape {
         }
     }
 }
+
+extension AnnotationShape {
+    /// The shape's name for a section speaking for several of them at once.
+    public var pluralTitle: String {
+        switch self {
+        case .arrow: return "Arrows"
+        case .line: return "Lines"
+        case .rectangle: return "Rectangles"
+        case .ellipse: return "Ellipses"
+        case .highlight: return "Highlights"
+        }
+    }
+}

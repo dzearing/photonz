@@ -548,6 +548,40 @@ private final class Run {
                 dragStyleSlider(editor, through: [0.9, 0.7, 0.55, 0.45]) { style, v in
                     style.opacity = v
                 }
+            case .setTextSize:
+                let ids = editor.textSelection.layerIDs
+                if !ids.isEmpty { editor.setTextStyle(ids: ids, fontSize: 14) }
+            case .setTextWeight:
+                let ids = editor.textSelection.layerIDs
+                if !ids.isEmpty { editor.setTextStyle(ids: ids, weight: .bold) }
+            case .setTextSizeLarge:
+                let ids = editor.textSelection.layerIDs
+                if !ids.isEmpty { editor.setTextStyle(ids: ids, fontSize: 40) }
+            case .setTextWeightRegular:
+                let ids = editor.textSelection.layerIDs
+                if !ids.isEmpty { editor.setTextStyle(ids: ids, weight: .regular) }
+            case .dragThickness:
+                let ids = editor.shapeSelection.layerIDs
+                if !ids.isEmpty {
+                    for width in [5.0, 7.0, 9.0] as [CGFloat] {
+                        editor.previewAnnotationRestyle(ids: ids, strokeWidth: width)
+                    }
+                    editor.commitAnnotationRestyle(ids: ids, strokeWidth: 9)
+                }
+            case .dragThicknessThin:
+                let ids = editor.shapeSelection.layerIDs
+                if !ids.isEmpty { editor.commitAnnotationRestyle(ids: ids, strokeWidth: 3) }
+            case .dragShapeCornersSquare:
+                let ids = editor.shapeSelection.layerIDs
+                if !ids.isEmpty { editor.commitAnnotationRestyle(ids: ids, cornerRadius: 0) }
+            case .dragShapeCorners:
+                let ids = editor.shapeSelection.layerIDs
+                if !ids.isEmpty {
+                    for radius in [8.0, 14.0, 18.0] as [CGFloat] {
+                        editor.previewAnnotationRestyle(ids: ids, cornerRadius: radius)
+                    }
+                    editor.commitAnnotationRestyle(ids: ids, cornerRadius: 18)
+                }
             case .toggleShadow:
                 editor.setSelectionShadowEnabled(!editor.layerStyleSelection.hasShadowEverywhere)
             case .followOriginalLook:
@@ -1240,6 +1274,38 @@ private final class Run {
                 return "\(slot.rawValue) \(body) ×\(selection.count)"
             }
         }()
+        // What the type rows read for the picked layers, in the words the rows
+        // show. With several picked this is what proves one pick reached all
+        // of them, and it prints the same word the row does when they differ.
+        let textRows: [String] = {
+            let selection = editor.textSelection
+            guard !selection.isEmpty else { return [] }
+            func row<V: Hashable & Sendable>(_ name: String, _ reading: StyleReading<V>,
+                                             _ text: (V) -> String) -> String {
+                let body = reading.isMixed ? "mixed" : (reading.value.map(text) ?? "none")
+                return "\(name) \(body) ×\(selection.count)"
+            }
+            return [row("font", selection.reading { $0.fontName }, { $0 }),
+                    row("size", selection.number { $0.fontSize }, { "\(Int($0))" }),
+                    row("weight", selection.reading { $0.weight }, { $0.rawValue }),
+                    row("across", selection.reading { $0.usedAlignment }, { $0.rawValue }),
+                    row("down", selection.reading { $0.usedVerticalAlignment }, { $0.rawValue })]
+        }()
+        // The same for the shape rows, plus which rows the picked shapes share
+        // at all — a walk cannot photograph an absent row.
+        let shapeRows: [String] = {
+            let selection = editor.shapeSelection
+            guard !selection.isEmpty else { return [] }
+            func number(_ name: String, _ reading: StyleReading<CGFloat>) -> String {
+                let body = reading.isMixed ? "mixed" : (reading.value.map { "\(Int($0.rounded()))" } ?? "none")
+                return "\(name) \(body) ×\(selection.count)"
+            }
+            var rows = ["offers " + selection.rows.map(\.rawValue).joined(separator: ", ")]
+            rows.append(number("thickness", selection.number { $0.strokeWidth }))
+            rows.append(number("cornerRadius", selection.number { $0.cornerRadius }))
+            rows.append(number("labelSize", selection.number { $0.captionFontSize }))
+            return rows
+        }()
         // The layer tree in CANVAS coordinates, one line per layer, indented by
         // how deep it sits. This is what a walk reads to prove a group carried
         // — or scaled — everything inside it, in the same units its clicks are
@@ -1294,6 +1360,9 @@ private final class Run {
             "canvas": document.map { "\(Int($0.canvasSize.width))x\(Int($0.canvasSize.height))" } ?? "none",
             "measures": measures,
             "arrows": arrows,
+            "textRows": textRows,
+            "shapeRows": shapeRows,
+            "shapeSection": editor.shapeSelection.title,
             "selected": editor.selectedLayerID?.uuidString ?? "nil",
             // Everything the Layers menu would act on, by name and in draw
             // order: one layer clicked, several ⇧-clicked, or a whole sweep.

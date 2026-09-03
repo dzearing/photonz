@@ -1,0 +1,27 @@
+{
+  "id": "the-type-menus-say-what-they-are-not-just-what-t",
+  "title": "The type menus say what they are, not just what they read",
+  "goal": "In the Text settings, the font, size and weight menus have no names beside them. With one label picked you can guess from what they say (SF Pro, 24 pt, Regular). With several picked, one of them just says Mixed, and a bare word in a row of three unlabelled menus does not say which setting differs.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 640,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T21:14:17.809Z",
+  "updated": "2026-09-03T21:14:17.810Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "TextInspector in Sources/Photonz/LayersPanel.swift. The menus are labelsHidden() Pickers; SelectionMenu now carries a .help() string but nothing visible. Options: a leading caption per row like the Effects sliders, or writing the mixed entry as the setting name (for example \"Mixed sizes\").",
+  "acceptance": [
+    "With several text layers picked and their sizes differing, it is readable on screen which setting is mixed without hovering",
+    "The Text section still fits the dock at its normal width",
+    "One text layer picked reads no worse than it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T21:14:17.810Z",
+      "note": "created (manual)"
+    }
+  ]
+}

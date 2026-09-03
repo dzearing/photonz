@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 880,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:30:39.737Z",
-  "updated": "2026-09-03T17:32:32.405Z",
+  "updated": "2026-09-03T21:14:40.709004Z",
   "deps": [
     "fade-blur-corners-and-shadow-reach-everything-yo"
   ],
@@ -36,6 +36,35 @@
     {
       "t": "2026-09-03T17:32:32.427Z",
       "note": "deps set to the Effects and Shadow task by the manager pass"
+    },
+    {
+      "t": "2026-09-03T20:51:30.863Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T21:14:40.709004Z",
+      "note": "Adversarial review BEFORE building. (1) An arrow's Caption is CONTENT, not looks: one field over three arrows could only give all three the same words, which nobody wants. Cut from the multi-selection: the field is offered for one arrow only, while Label size (which IS looks) reaches all of them. (2) The rows a shape offers differ per shape, so a selection offers the INTERSECTION: an arrow and a rectangle together get the thickness they share and nothing else, rather than a Corner Radius slider that does nothing to the arrow. (3) A highlight has nothing but a color, so it sits the section out rather than emptying it for the box beside it - the same rule the shadow rows follow for an unshadowed layer. (4) A section headed Annotation was already fixed to be headed after the shape; over several it needed a plural (Rectangles) and a word for a mixture (Shapes). (5) The mixed treatment for a MENU had to be decided: a blank box says nothing, so Mixed is a real entry in the menu, and choosing anything makes them agree."
+    },
+    {
+      "t": "2026-09-03T21:14:40.709004Z",
+      "note": "Built: PhotonzCore/ContentSelection.swift (TextLayerSelection, ShapeSelection, ShapeSettingRow, AnnotationContent.settingRows, AnnotationShape.pluralTitle, PhotonzDocument.textSelection/shapeSelection) with 25 tests written first. EditorState gained setTextStyle(ids:), setTextAlignment(ids:), previewAnnotationRestyle(ids:)/commitAnnotationRestyle(ids:), previewCaptionFontSize(ids:)/commitCaptionFontSize(ids:) and resetCaptionPlacement(ids:) - each ONE undo step over the whole selection - plus textSelection/shapeSelection readings. TextInspector and AnnotationInspector rewritten to speak for the selection; LayersPanel availableSections now offers .text and .annotation whenever the picked layers have anything to answer for, instead of only inside `if let layer = selectedLayer`."
+    },
+    {
+      "t": "2026-09-03T21:14:40.709004Z",
+      "note": "Two fixes found while building. (a) Restyling text always re-measured inside the box's OLD width, so making a label bold wrapped it onto a second line the moment bold made it a few points wider. A box still hugging its words now re-hugs them at the new type; a box someone stretched keeps the room it was given. Gated on placementEnabled, so Current keeps its old rule untouched. (b) Picking a size the layers already wear recorded an empty undo step, which meant the next Command Z undid the wrong thing. setTextStyle now only touches the labels it actually changes."
+    },
+    {
+      "t": "2026-09-03T21:14:40.709004Z",
+      "note": "Adversarial review AFTER building, on the real app (probe build, Screen Recording granted, real window captures). The three type menus carry no labels on screen, so a Size menu reading Mixed is a bare word in a row of three: added hover text saying which is which, and filed the visible fix as the-type-menus-say-what-they-are-not-just-what-t. Everything else held up."
+    },
+    {
+      "t": "2026-09-03T21:14:40.709004Z",
+      "note": "Verified in the app with Scripts/playtest/selection-type-and-shape-walk.json (15 stages, real window captures). Three labels: Size reads mixed, one pick makes all three 14pt, ONE undo puts back 14/40/40, one weight pick bolds all three and each re-hugs its own words (80->87, 135->146, 93->101 wide, heights unchanged at 52). Two rectangles: section headed Rectangles, Thickness mixed, one pull rounds both to 18pt and ONE undo takes both back to 0. An arrow with a box: headed Shapes, offers thickness only. A label with a box: both sections present, each reading 'Applies to 1 of the 2 selected layers'. 2435 tests green."
+    },
+    {
+      "t": "2026-09-03T21:14:40.709004Z",
+      "note": "Note for a future run: the probe remembers each tool's last style, so a walk whose premise is 'these differ' must SET both states itself rather than trusting what a new object starts at. This walk does that with setTextSizeLarge/setTextWeightRegular and dragThicknessThin/dragShapeCornersSquare. A first run without them read 14pt everywhere where it should have read mixed, and nothing was wrong with the app."
     }
-  ]
+  ],
+  "started": "2026-09-03T20:51:30.862Z"
 }

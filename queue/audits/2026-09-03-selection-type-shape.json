@@ -1,0 +1,30 @@
+{
+  "feature": "The type and shape settings reach everything you picked",
+  "epic": "ui-building",
+  "summary": "Pick several labels and the Text settings stay in the panel and speak for all of them: one size, font or weight reaches every one in a single undo step. Same for shapes: pick two boxes and Thickness and Corner Radius reach both. Where the picked layers disagree the setting reads Mixed, and setting it makes them agree.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to turn on.",
+  "try": [
+    { "do": "Type three text labels on a blank canvas, then press Escape." },
+    { "do": "Band-select all three with the Select tool.", "shot": "2026-09-03-selection-type-shape-1.png" },
+    { "do": "Set one of them to a different size first, reselect all three, and read the Size menu: it says Mixed." },
+    { "do": "Pick 14 pt from the Size menu once, and watch all three change." },
+    { "do": "Press Command Z once: all three go back at the same time." },
+    { "do": "Draw two rectangles, make one thicker on its own, then band-select both.", "shot": "2026-09-03-selection-type-shape-2.png" },
+    { "do": "Pull Corner Radius once and watch both round; Command Z once puts both back." },
+    { "do": "Shift-click a label together with a rectangle: both sections are there, each saying it applies to 1 of the 2.", "shot": "2026-09-03-selection-type-shape-3.png" }
+  ],
+  "evaluate": [
+    "With three labels picked, does the Text section read as speaking for all three, or does it look like it is describing one of them?",
+    "Is Mixed in a menu with no label beside it clear enough, or do the Font, Size and Weight menus need their names on screen?",
+    "Picking an arrow and a rectangle together leaves only Thickness. Is losing the corner and arrowhead rows the right call, or would you rather see them dimmed so you can tell they exist?",
+    "The Caption field disappears the moment you pick a second arrow, because one field cannot give three arrows different words. Does that feel right, or should it stay and edit the first one?",
+    "When a label and a box are picked together, two sections each say they apply to 1 of the 2. Is that helpful, or is it too much small print?"
+  ],
+  "rough": [
+    "The three type menus have no labels on screen, so a Size menu reading Mixed is a bare word in a row of three. Hover text now says which is which, but the row could be clearer. Filed as a follow-up.",
+    "A rectangle still shows two different sliders both called Corner Radius, one in its own section and one under Effects. Already filed as one-corner-radius-not-two.",
+    "Making a label bold used to wrap its words onto a second line, because a restyle always re-measured inside the box's old width. A box still hugging its words now re-hugs them at the new type. A box someone stretched keeps the width it was given, as before. Current is untouched: it has no stretching.",
+    "A label whose box was stretched DOWNWARD still loses that extra height when its type changes. Pre-existing, not touched here.",
+    "Screen Recording was granted, so every picture in this audit is a real window capture, not an offscreen render."
+  ]
+}

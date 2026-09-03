@@ -188,6 +188,20 @@ struct InspectorPanel: View {
             set.insert(.effects)
             set.insert(.shadow)
         }
+        // The picked shapes' own settings: thickness, corners, an arrow's head
+        // and caption — for EVERYTHING picked, like the rows above. Present
+        // whenever the picked shapes share at least one setting, so two arrows
+        // keep their settings instead of losing them the moment a second one
+        // is picked, and a highlight (which has nothing but a color) still
+        // brings no section rather than an empty one headed with its name.
+        if !editorState.shapeSelection.rows.isEmpty {
+            set.insert(.annotation)
+        }
+        // And the picked text's own type: font, size, weight, alignment. Three
+        // labels made 14pt should be one trip round the panel.
+        if !editorState.textSelection.isEmpty {
+            set.insert(.text)
+        }
         if let layer = selectedLayer {
             // A frame's own properties: its size, its clipping, its surface
             // (Next, `next-frames`). Only a frame has any of them.
@@ -209,15 +223,6 @@ struct InspectorPanel: View {
                layer.isMainComponent || layer.isComponentInstance {
                 set.insert(.component)
             }
-            // A shape's own settings: thickness, corners, an arrow's head and
-            // caption. Its colors are in the Color section, so a highlight —
-            // which has nothing but a color — brings no section at all rather
-            // than an empty one headed with its name.
-            if let annotation = layer.annotation,
-               annotation.shape.hasSettingsBesidesColor {
-                set.insert(.annotation)
-            }
-            if case .text = layer.content { set.insert(.text) }
             if layer.measure != nil { set.insert(.measure) }
             if layer.collage != nil { set.insert(.collage) }
         }
@@ -297,8 +302,9 @@ struct InspectorPanel: View {
         guard Experiments.shared.colorStylesEnabled else { return id.title }
         switch id {
         case .annotation:
-            // The shape's own name: Rectangle, Ellipse, Arrow, Line, Highlight.
-            return selectedLayer?.annotation?.shape.title ?? id.title
+            // The picked shapes' own name: Rectangle for one, Rectangles for
+            // several, Shapes for a mixture.
+            return editorState.shapeSelection.title
         case .measure:
             // What is selected is a measurement, not the act of measuring.
             // (The Measure Tool section, which IS about the act, keeps its
@@ -343,13 +349,9 @@ struct InspectorPanel: View {
         case .color:
             SelectionColorInspector()
         case .annotation:
-            if let layer = selectedLayer, layer.annotation != nil {
-                AnnotationInspector(layer: layer)
-            }
+            AnnotationInspector()
         case .text:
-            if let layer = selectedLayer, case .text = layer.content {
-                TextInspector(layer: layer)
-            }
+            TextInspector()
         case .measure:
             if let layer = selectedLayer, layer.measure != nil {
                 MeasureInspector(layer: layer)
@@ -1623,9 +1625,9 @@ func soleLayerID(_ ids: [UUID]) -> UUID? { ids.count == 1 ? ids.first : nil }
 
 /// What a style section says out loud before anything is dragged, and after:
 /// how many layers it is talking to, and anything it is quietly skipping.
-private func selectionCaption(_ count: Int) -> String? {
+private func selectionCaption(_ count: Int, _ lead: String = "A slider here") -> String? {
     guard count > 1 else { return nil }
-    return "\(count) layers. A slider here changes every one of them, in one step."
+    return "\(count) layers. \(lead) changes every one of them, in one step."
 }
 
 /// The small print under a style section: what it skips, where the picked
@@ -1704,239 +1706,288 @@ struct LayerStyleSlider: View {
 
 // MARK: - Annotation inspector
 
-/// Per-object annotation properties for the selected arrow/line/shape: color,
-/// thickness, and (arrows only) arrowhead size. Sliders preview live and commit
-/// one undo step on release, mirroring the toolbar style popover.
+/// The picked shapes' own settings: thickness, an arrow's caption and head, a
+/// rectangle's corners — over the WHOLE selection.
+///
+/// Colors are not here: they live in the Color section, which is where they
+/// live whatever is picked, so shift-clicking a second layer widens what a row
+/// speaks for instead of moving it. These rows now work the same way. Pick two
+/// arrows and Thickness is still there, speaking for both; pick an arrow and a
+/// box and only the setting they share is offered, because a Corner Radius
+/// slider over an arrow is a control that does nothing.
+///
+/// Sliders preview live and commit one undo step on release, however many
+/// shapes they reached.
 struct AnnotationInspector: View {
     @Environment(EditorState.self) private var editorState
-    let layer: Layer
-    @State private var widthDraft: CGFloat?
-    @State private var headDraft: CGFloat?
-    @State private var radiusDraft: CGFloat?
-    @State private var captionDraft: String = ""
-    @FocusState private var captionFocused: Bool
-    /// True from the moment the Caption field takes focus until its draft has
-    /// been committed or dropped, so a field that disappears mid-edit (the
-    /// arrow was deselected by a canvas click) still lands what was typed.
-    @State private var captionEditing = false
-    @State private var captionSizeDraft: CGFloat?
-
-    private var annotation: AnnotationContent? {
-        editorState.document?.layer(id: layer.id)?.annotation
-    }
 
     var body: some View {
-        if let a = annotation {
-            // The shape's colors are NOT here: they live in the Color section,
-            // which is where they live whatever is picked, so shift-clicking a
-            // second layer widens what the row speaks for instead of moving it.
+        let selection = editorState.shapeSelection
+        let ids = selection.layerIDs
+        let rows = selection.rows.filter {
+            // Captions are a Next feature; without it an arrow is a plain
+            // arrow and neither the field nor its size row belongs here.
+            Experiments.shared.arrowCaptionsEnabled || ($0 != .caption && $0 != .labelSize)
+        }
+        if !rows.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                if a.shape != .highlight {
-                    sliderRow("Thickness", value: widthDraft ?? a.strokeWidth,
-                              display: "\(Int((widthDraft ?? a.strokeWidth).rounded())) pt",
-                              range: AnnotationStyles.strokeWidthRange,
-                              set: { v in
-                                  widthDraft = v
-                                  editorState.previewAnnotationRestyle(layerID: layer.id, strokeWidth: v.rounded())
-                              },
-                              commit: {
-                                  editorState.commitAnnotationRestyle(layerID: layer.id,
-                                                                   strokeWidth: (widthDraft ?? a.strokeWidth).rounded())
-                                  widthDraft = nil
-                              })
+                ForEach(rows, id: \.self) { row in
+                    self.row(row, selection: selection, ids: ids)
                 }
-                if a.shape == .arrow, Experiments.shared.arrowCaptionsEnabled {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Caption").font(.caption).foregroundStyle(.secondary)
-                        TextField("Add a caption", text: $captionDraft)
-                            .textFieldStyle(.roundedBorder)
-                            .controlSize(.small)
-                            .focused($captionFocused)
-                            .onSubmit {
-                                editorState.setAnnotationCaption(layerID: layer.id, captionDraft)
-                            }
-                            // Return lands the caption, Esc drops the draft and
-                            // shows the arrow's caption again, and both hand the
-                            // keyboard to the picture. Clearing `captionEditing`
-                            // first is what stops the focus loss that follows
-                            // from landing the same words a second time.
-                            // (The field the canvas opens on a new arrow has its
-                            // own rule, in `ArrowCaptionEntry`.)
-                            .nameFieldKeys(
-                                commit: {
-                                    captionEditing = false
-                                    editorState.setAnnotationCaption(layerID: layer.id, captionDraft)
-                                },
-                                revert: {
-                                    captionDraft = a.caption ?? ""
-                                    captionEditing = false
-                                })
-                            // Like every Mac text field, clicking away commits
-                            // what you typed (one undo step; none if unchanged).
-                            // Not when the canvas has just opened its own editor
-                            // on this arrow: that editor owns the draft now.
-                            .onChange(of: captionFocused) { _, focused in
-                                if focused {
-                                    captionEditing = true
-                                } else if captionEditing {
-                                    captionEditing = false
-                                    commitInspectorCaption(layer.id)
-                                }
-                            }
-                            .onDisappear {
-                                if captionEditing {
-                                    captionEditing = false
-                                    commitInspectorCaption(layer.id)
-                                }
-                            }
+                // The label pills a hand has dragged, put back where the app
+                // places them. Offered only while there is one to put back.
+                if !selection.pinnedCaptionIDs.isEmpty,
+                   Experiments.shared.arrowCaptionsEnabled {
+                    let pinned = selection.pinnedCaptionIDs
+                    Button(pinned.count > 1 ? "Reset label positions" : "Reset label position") {
+                        editorState.resetCaptionPlacement(ids: pinned)
                     }
-                    // Track the model (initially, after undo, on layer switch);
-                    // typing edits only the draft until Return commits.
-                    .onChange(of: a.caption ?? "", initial: true) { _, new in
-                        captionDraft = new
-                    }
-                    // The canvas opening its own editor on this arrow closes
-                    // the inspector's draft (one draft at a time): the field
-                    // falls back to the caption the canvas editor starts from.
-                    // In practice the click that opens the canvas editor takes
-                    // focus first, so a pending draft has already landed by
-                    // then (verified on the probe app); this is the fallback.
-                    .onChange(of: editorState.editingCaptionLayerID) { _, editing in
-                        if editing == layer.id {
-                            captionEditing = false
-                            captionDraft = annotation?.caption ?? ""
-                        }
-                    }
-                    if a.hasCaption {
-                        sliderRow("Label size", value: captionSizeDraft ?? a.captionFontSize,
-                                  display: "\(Int((captionSizeDraft ?? a.captionFontSize).rounded())) px",
-                                  range: MeasureContent.labelSizeRangePx,
-                                  set: { v in
-                                      captionSizeDraft = v
-                                      editorState.previewCaptionFontSize(layerID: layer.id, v.rounded())
-                                  },
-                                  commit: {
-                                      editorState.commitCaptionFontSize(
-                                          layerID: layer.id, (captionSizeDraft ?? a.captionFontSize).rounded())
-                                      captionSizeDraft = nil
-                                  })
-                        // A pill dragged by hand stays where it was put; this
-                        // is the way back to the spot the app picks, without
-                        // an undo trip. Shown only while there is a hand spot.
-                        if a.captionPinned {
-                            Button("Reset label position") {
-                                editorState.resetCaptionPlacement(id: layer.id)
-                            }
-                            .font(.caption)
-                            .controlSize(.small)
-                            .help("Put the label back where the app places it")
-                        }
-                    }
+                    .font(.caption)
+                    .controlSize(.small)
+                    .help(pinned.count > 1
+                          ? "Put all \(pinned.count) labels back where the app places them"
+                          : "Put the label back where the app places it")
                 }
-                if a.shape == .arrow {
-                    sliderRow("Head Size", value: headDraft ?? a.arrowheadScale,
-                              display: "×\(String(format: "%.1f", headDraft ?? a.arrowheadScale))",
-                              range: AnnotationStyles.arrowheadScaleRange,
-                              set: { v in
-                                  headDraft = v
-                                  editorState.previewAnnotationRestyle(layerID: layer.id, arrowheadScale: v)
-                              },
-                              commit: {
-                                  editorState.commitAnnotationRestyle(layerID: layer.id,
-                                                                   arrowheadScale: headDraft ?? a.arrowheadScale)
-                                  headDraft = nil
-                              })
-                }
-                if a.shape == .rectangle {
-                    sliderRow("Corner Radius", value: radiusDraft ?? a.cornerRadius,
-                              display: "\(Int((radiusDraft ?? a.cornerRadius).rounded())) pt",
-                              range: 0...120,
-                              set: { v in
-                                  radiusDraft = v
-                                  editorState.previewAnnotationRestyle(layerID: layer.id, cornerRadius: v.rounded())
-                              },
-                              commit: {
-                                  editorState.commitAnnotationRestyle(layerID: layer.id,
-                                                                   cornerRadius: (radiusDraft ?? a.cornerRadius).rounded())
-                                  radiusDraft = nil
-                              })
-                }
+                SelectionStyleNotes(notes: [selection.note],
+                                    caption: selectionCaption(selection.count))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
         }
     }
 
-    /// The inspector Caption field landing its draft (Return or focus loss).
-    /// Skipped while the canvas editor is open on the same arrow: the two
-    /// fields share one draft and the canvas holds it.
-    private func commitInspectorCaption(_ layerID: UUID) {
-        guard editorState.editingCaptionLayerID != layerID else { return }
-        editorState.setAnnotationCaption(layerID: layerID, captionDraft)
-    }
-
     @ViewBuilder
-    private func sliderRow(_ label: String, value: CGFloat, display: String,
-                           range: ClosedRange<CGFloat>,
-                           set: @escaping (CGFloat) -> Void,
-                           commit: @escaping () -> Void) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text(label).font(.caption).foregroundStyle(.secondary)
-                Spacer()
-                Text(display).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+    private func row(_ row: ShapeSettingRow, selection: ShapeSelection, ids: [UUID]) -> some View {
+        switch row {
+        case .thickness:
+            ShapeSlider(layerIDs: ids, label: "Thickness",
+                        reading: selection.number { $0.strokeWidth },
+                        range: AnnotationStyles.strokeWidthRange,
+                        format: { "\(Int($0.rounded())) pt" },
+                        preview: { editorState.previewAnnotationRestyle(ids: $0, strokeWidth: $1) },
+                        commit: { editorState.commitAnnotationRestyle(ids: $0, strokeWidth: $1) })
+        case .caption:
+            // ONE arrow only. A single field over three arrows could only give
+            // all three the same words, and a caption is what the arrow says,
+            // not how it looks.
+            if let only = selection.members.first, selection.count == 1 {
+                ArrowCaptionField(layerID: only.id)
             }
-            Slider(value: Binding(get: { value }, set: { set($0) }), in: range) { editing in
-                if !editing { commit() }
-            }
-            .controlSize(.small)
+        case .labelSize:
+            ShapeSlider(layerIDs: ids, label: "Label size",
+                        reading: selection.number { $0.captionFontSize },
+                        range: MeasureContent.labelSizeRangePx,
+                        format: { "\(Int($0.rounded())) px" },
+                        preview: { editorState.previewCaptionFontSize(ids: $0, $1) },
+                        commit: { editorState.commitCaptionFontSize(ids: $0, $1) })
+        case .headSize:
+            ShapeSlider(layerIDs: ids, label: "Head Size",
+                        reading: selection.number { $0.arrowheadScale },
+                        range: AnnotationStyles.arrowheadScaleRange,
+                        format: { "×\(String(format: "%.1f", $0))" },
+                        round: { $0 },
+                        preview: { editorState.previewAnnotationRestyle(ids: $0, arrowheadScale: $1) },
+                        commit: { editorState.commitAnnotationRestyle(ids: $0, arrowheadScale: $1) })
+        case .cornerRadius:
+            ShapeSlider(layerIDs: ids, label: "Corner Radius",
+                        reading: selection.number { $0.cornerRadius },
+                        range: 0...max(1, selection.cornerRadiusLimit),
+                        format: { "\(Int($0.rounded())) pt" },
+                        preview: { editorState.previewAnnotationRestyle(ids: $0, cornerRadius: $1) },
+                        commit: { editorState.commitAnnotationRestyle(ids: $0, cornerRadius: $1) })
         }
     }
 }
 
-/// Docked per-layer text inspector (13.1): change a placed text element's font
-/// face, size, weight, and color. Mirrors `AnnotationInspector` — each change
-/// is one undo step and re-measures the layer frame via the core builder.
-struct TextInspector: View {
-    @Environment(EditorState.self) private var editorState
-    let layer: Layer
+/// A shape-settings slider over every picked shape: dragging previews without
+/// recording undo; release commits ONE step, however many shapes it reached.
+///
+/// While the shapes differ the readout says Mixed and the knob sits at the
+/// first picked shape's number, so the position is a starting point rather
+/// than a claim. The moment the knob moves they agree, and it says so.
+private struct ShapeSlider: View {
+    let layerIDs: [UUID]
+    let label: String
+    let reading: StyleReading<CGFloat>
+    let range: ClosedRange<CGFloat>
+    let format: (CGFloat) -> String
+    /// How this row rounds the number it sends. Thicknesses and radii are
+    /// whole points; an arrowhead multiplier is not.
+    var round: (CGFloat) -> CGFloat = { $0.rounded() }
+    let preview: ([UUID], CGFloat) -> Void
+    let commit: ([UUID], CGFloat) -> Void
 
-    private var content: TextContent? {
-        if case .text(let c)? = editorState.document?.layer(id: layer.id)?.content { return c }
-        return nil
+    /// Where the knob is while the hand is on it, so it moves smoothly even
+    /// though what it sends is rounded.
+    @State private var draft: CGFloat?
+
+    private var knob: CGFloat {
+        min(max(draft ?? reading.value ?? range.lowerBound, range.lowerBound), range.upperBound)
+    }
+
+    /// Mixed only until the drag starts: once it has, they all wear the number
+    /// under the knob.
+    private var showsMixed: Bool { draft == nil && reading.isMixed }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(label).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text(showsMixed ? LayerStyleSelection.mixedText : format(knob))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(showsMixed ? AnyShapeStyle(.tertiary)
+                                                : AnyShapeStyle(.secondary))
+            }
+            Slider(value: Binding(
+                get: { knob },
+                set: { v in
+                    draft = v
+                    preview(layerIDs, round(v))
+                }), in: range) { editing in
+                if !editing {
+                    commit(layerIDs, round(draft ?? knob))
+                    draft = nil
+                }
+            }
+            .controlSize(.small)
+            .disabled(layerIDs.isEmpty)
+        }
+    }
+}
+
+/// One arrow's caption. Its own view because it holds a draft and the keyboard:
+/// typing edits the draft, and Return, Escape or clicking away all land or drop
+/// it exactly once.
+private struct ArrowCaptionField: View {
+    @Environment(EditorState.self) private var editorState
+    let layerID: UUID
+    @State private var captionDraft: String = ""
+    @FocusState private var captionFocused: Bool
+    /// True from the moment the field takes focus until its draft has been
+    /// committed or dropped, so a field that disappears mid-edit (the arrow was
+    /// deselected by a canvas click) still lands what was typed.
+    @State private var captionEditing = false
+
+    private var annotation: AnnotationContent? {
+        editorState.document?.layer(id: layerID)?.annotation
     }
 
     var body: some View {
-        if let c = content {
-            // The ink is in the Color section with every other color; this is
-            // the type itself.
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Caption").font(.caption).foregroundStyle(.secondary)
+            TextField("Add a caption", text: $captionDraft)
+                .textFieldStyle(.roundedBorder)
+                .controlSize(.small)
+                .focused($captionFocused)
+                .onSubmit {
+                    editorState.setAnnotationCaption(layerID: layerID, captionDraft)
+                }
+                // Return lands the caption, Esc drops the draft and shows the
+                // arrow's caption again, and both hand the keyboard to the
+                // picture. Clearing `captionEditing` first is what stops the
+                // focus loss that follows from landing the same words a second
+                // time. (The field the canvas opens on a new arrow has its own
+                // rule, in `ArrowCaptionEntry`.)
+                .nameFieldKeys(
+                    commit: {
+                        captionEditing = false
+                        editorState.setAnnotationCaption(layerID: layerID, captionDraft)
+                    },
+                    revert: {
+                        captionDraft = annotation?.caption ?? ""
+                        captionEditing = false
+                    })
+                // Like every Mac text field, clicking away commits what you
+                // typed (one undo step; none if unchanged). Not when the canvas
+                // has just opened its own editor on this arrow: that editor
+                // owns the draft now.
+                .onChange(of: captionFocused) { _, focused in
+                    if focused {
+                        captionEditing = true
+                    } else if captionEditing {
+                        captionEditing = false
+                        commitInspectorCaption()
+                    }
+                }
+                .onDisappear {
+                    if captionEditing {
+                        captionEditing = false
+                        commitInspectorCaption()
+                    }
+                }
+        }
+        // Track the model (initially, after undo, on layer switch); typing
+        // edits only the draft until Return commits.
+        .onChange(of: annotation?.caption ?? "", initial: true) { _, new in
+            captionDraft = new
+        }
+        // The canvas opening its own editor on this arrow closes the
+        // inspector's draft (one draft at a time): the field falls back to the
+        // caption the canvas editor starts from. In practice the click that
+        // opens the canvas editor takes focus first, so a pending draft has
+        // already landed by then (verified on the probe app); this is the
+        // fallback.
+        .onChange(of: editorState.editingCaptionLayerID) { _, editing in
+            if editing == layerID {
+                captionEditing = false
+                captionDraft = annotation?.caption ?? ""
+            }
+        }
+    }
+
+    /// The field landing its draft (Return or focus loss). Skipped while the
+    /// canvas editor is open on the same arrow: the two fields share one draft
+    /// and the canvas holds it.
+    private func commitInspectorCaption() {
+        guard editorState.editingCaptionLayerID != layerID else { return }
+        editorState.setAnnotationCaption(layerID: layerID, captionDraft)
+    }
+}
+
+/// The picked text layers' type (13.1): font face, size, weight and alignment,
+/// over the WHOLE selection.
+///
+/// Pick three labels and one size reaches all three, in one undo step. Where
+/// they differ the menu says Mixed and choosing anything makes them agree. The
+/// ink is in the Color section with every other color; this is the type itself.
+struct TextInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        let selection = editorState.textSelection
+        let ids = selection.layerIDs
+        if !selection.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Picker("Font", selection: Binding(
-                    get: { c.fontName },
-                    set: { editorState.setTextStyle(layerID: layer.id, fontName: $0) })) {
-                    ForEach(fontFamilies(current: c.fontName), id: \.self) { Text($0).tag($0) }
+                SelectionMenu(label: "Font",
+                              reading: selection.reading { $0.fontName },
+                              options: fontFamilies(selection),
+                              title: { $0 },
+                              help: help("font", selection.count)) {
+                    editorState.setTextStyle(ids: ids, fontName: $0)
                 }
-                .pickerStyle(.menu).labelsHidden().controlSize(.small)
                 HStack(spacing: 8) {
-                    Picker("Size", selection: Binding(
-                        get: { c.fontSize },
-                        set: { editorState.setTextStyle(layerID: layer.id, fontSize: $0) })) {
-                        ForEach(sizes(current: c.fontSize), id: \.self) { Text("\(Int($0)) pt").tag($0) }
+                    SelectionMenu(label: "Size",
+                                  reading: selection.number { $0.fontSize },
+                                  options: sizes(selection),
+                                  title: { "\(Int($0)) pt" },
+                                  help: help("size", selection.count)) {
+                        editorState.setTextStyle(ids: ids, fontSize: $0)
                     }
-                    .pickerStyle(.menu).labelsHidden().controlSize(.small)
-                    Picker("Weight", selection: Binding(
-                        get: { c.weight },
-                        set: { editorState.setTextStyle(layerID: layer.id, weight: $0) })) {
-                        ForEach(TextWeight.allCases, id: \.self) {
-                            Text($0.rawValue.capitalized).tag($0)
-                        }
+                    SelectionMenu(label: "Weight",
+                                  reading: selection.reading { $0.weight },
+                                  options: TextWeight.allCases,
+                                  title: { $0.rawValue.capitalized },
+                                  help: help("weight", selection.count)) {
+                        editorState.setTextStyle(ids: ids, weight: $0)
                     }
-                    .pickerStyle(.menu).labelsHidden().controlSize(.small)
                 }
-                // Where the words sit inside their own box. Only tells while
-                // the box is bigger than the words, which is what a box told
-                // to stretch is (Next, `next-placement`).
-                if Experiments.shared.placementEnabled { alignRow(c) }
+                // Where the words sit inside their own boxes. Only tells while
+                // a box is bigger than its words, which is what a box told to
+                // stretch is (Next, `next-placement`).
+                if Experiments.shared.placementEnabled { alignRow(selection, ids: ids) }
+                SelectionStyleNotes(notes: [selection.note],
+                                    caption: selectionCaption(selection.count, "A change here"))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
@@ -1947,39 +1998,85 @@ struct TextInspector: View {
     ///
     /// Two segmented controls rather than menus, because this is the one thing
     /// in the section that is read as a picture, and because every tool that
-    /// has it draws it exactly this way.
-    private func alignRow(_ c: TextContent) -> some View {
-        HStack(spacing: 8) {
-            Picker("Words across the box", selection: Binding(
-                get: { c.usedAlignment },
-                set: { editorState.setTextAlignment(layerID: layer.id, $0) })) {
-                Image(systemName: "text.alignleft").tag(TextAlign.left)
-                Image(systemName: "text.aligncenter").tag(TextAlign.center)
-                Image(systemName: "text.alignright").tag(TextAlign.right)
+    /// has it draws it exactly this way. Layers that differ leave both controls
+    /// showing nothing picked, which is the Mac's own way of saying Mixed on a
+    /// row of buttons.
+    private func alignRow(_ selection: TextLayerSelection, ids: [UUID]) -> some View {
+        let across = selection.reading { $0.usedAlignment }
+        let down = selection.reading { $0.usedVerticalAlignment }
+        return HStack(spacing: 8) {
+            Picker("Words across the box", selection: Binding<TextAlign?>(
+                get: { across.isMixed ? nil : across.value },
+                set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
+                Image(systemName: "text.alignleft").tag(TextAlign?.some(.left))
+                Image(systemName: "text.aligncenter").tag(TextAlign?.some(.center))
+                Image(systemName: "text.alignright").tag(TextAlign?.some(.right))
             }
             .pickerStyle(.segmented).labelsHidden().controlSize(.small)
-            .help("Where the words sit across the box")
-            Picker("Words down the box", selection: Binding(
-                get: { c.usedVerticalAlignment },
-                set: { editorState.setTextAlignment(layerID: layer.id, $0) })) {
-                Image(systemName: "align.vertical.top").tag(TextVerticalAlign.top)
-                Image(systemName: "align.vertical.center").tag(TextVerticalAlign.middle)
-                Image(systemName: "align.vertical.bottom").tag(TextVerticalAlign.bottom)
+            .help(across.isMixed
+                  ? "The picked layers sit their words differently across the box. Choosing one sets all of them."
+                  : "Where the words sit across the box")
+            Picker("Words down the box", selection: Binding<TextVerticalAlign?>(
+                get: { down.isMixed ? nil : down.value },
+                set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
+                Image(systemName: "align.vertical.top").tag(TextVerticalAlign?.some(.top))
+                Image(systemName: "align.vertical.center").tag(TextVerticalAlign?.some(.middle))
+                Image(systemName: "align.vertical.bottom").tag(TextVerticalAlign?.some(.bottom))
             }
             .pickerStyle(.segmented).labelsHidden().controlSize(.small)
-            .help("Where the words sit down the box")
+            .help(down.isMixed
+                  ? "The picked layers sit their words differently down the box. Choosing one sets all of them."
+                  : "Where the words sit down the box")
         }
     }
 
-    /// Curated families plus the current one if it's off-list (keeps it valid).
-    private func fontFamilies(current: String) -> [String] {
-        TextStyles.fonts.contains(current) ? TextStyles.fonts : TextStyles.fonts + [current]
+    /// What a menu says it is. Over a selection it says how far it reaches, so
+    /// a menu reading Mixed also says what it is mixed about.
+    private func help(_ part: String, _ count: Int) -> String {
+        count > 1 ? "The \(part) of all \(count) selected layers" : "The \(part) of this text"
     }
 
-    /// Preset sizes plus the current one if it's off-list (e.g. a custom size).
-    private func sizes(current: CGFloat) -> [CGFloat] {
-        TextStyles.fontSizes.contains(current) ? TextStyles.fontSizes
-            : (TextStyles.fontSizes + [current]).sorted()
+    /// Curated families plus any the picked labels are already set in, so a
+    /// label in an off-list font does not lose it just by being picked.
+    private func fontFamilies(_ selection: TextLayerSelection) -> [String] {
+        TextStyles.fonts + selection.fontNames.filter { !TextStyles.fonts.contains($0) }
+    }
+
+    /// Preset sizes plus any the picked labels already wear.
+    private func sizes(_ selection: TextLayerSelection) -> [CGFloat] {
+        let extra = selection.fontSizes.filter { !TextStyles.fontSizes.contains($0) }
+        return extra.isEmpty ? TextStyles.fontSizes : (TextStyles.fontSizes + extra).sorted()
+    }
+}
+
+/// A menu that speaks for the whole selection: the one thing they all say, or
+/// the word Mixed. Choosing anything makes them agree — which is exactly what
+/// the word is there to offer, so it is a real entry in the menu rather than a
+/// blank box.
+private struct SelectionMenu<Value: Hashable & Sendable>: View {
+    let label: String
+    let reading: StyleReading<Value>
+    let options: [Value]
+    let title: (Value) -> String
+    /// What this menu is, in words: three menus in a row with no labels on
+    /// them, one of which says Mixed, is three menus you have to guess at.
+    let help: String
+    let choose: (Value) -> Void
+
+    var body: some View {
+        Picker(label, selection: Binding<Value?>(
+            get: { reading.isMixed ? nil : reading.value },
+            set: { if let value = $0 { choose(value) } })) {
+            if reading.isMixed {
+                Text(LayerStyleSelection.mixedText).tag(Value?.none)
+            }
+            ForEach(options, id: \.self) { option in
+                Text(title(option)).tag(Value?.some(option))
+            }
+        }
+        .pickerStyle(.menu).labelsHidden().controlSize(.small)
+        .accessibilityLabel(label)
+        .help(help)
     }
 }
 

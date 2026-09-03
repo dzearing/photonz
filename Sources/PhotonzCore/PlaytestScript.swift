@@ -293,6 +293,21 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// same preview-and-commit path the panel does rather than a shortcut past
     /// it. One undo step lands per drag, however many layers it reached.
     case dragCornerRadius, dragOpacity
+    /// The type rows over the whole selection (`ui-building`, step D9): the
+    /// Size menu set to 14pt, and the Weight menu set to Bold. Both are menus
+    /// in the dock, which a walk cannot reach with the pointer, so this is how
+    /// a walk proves one pick reached every picked label.
+    case setTextSize, setTextWeight
+    /// The same menus set the other way, so a walk can put the picked labels
+    /// into a known state whatever the last walk left the new-text default at.
+    case setTextSizeLarge, setTextWeightRegular
+    /// The shape rows over the whole selection: one pull on Thickness, and one
+    /// on Corner Radius, reaching every picked shape.
+    case dragThickness, dragShapeCorners
+    /// The same two sliders pulled the other way, so a walk can put the picked
+    /// shapes into a known state whatever the last walk left the shape default
+    /// at (each kind remembers what its last object was set to).
+    case dragThicknessThin, dragShapeCornersSquare
     /// The Shadow section's switch, over the whole selection.
     case toggleShadow
     /// Put the selected copy's whole look back to the original's, which is

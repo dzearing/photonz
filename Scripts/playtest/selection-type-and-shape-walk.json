@@ -1,0 +1,538 @@
+{
+  "out": "/tmp/photonz-playtest/selection-type-shape",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1100,
+      "canvasHeight": 700,
+      "width": 1400,
+      "height": 1080
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        160
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "First"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        260
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Second"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        360
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Third"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        90,
+        120
+      ],
+      "to": [
+        700,
+        460
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "setTextWeightRegular"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "setTextSizeLarge"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-three-at-40",
+      "note": "three labels, all 40pt regular: a known starting point whatever the last walk left behind"
+    },
+    {
+      "do": "click",
+      "at": [
+        1040,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        170,
+        180
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-one-label",
+      "note": "one label picked: the Text section is where it has always been"
+    },
+    {
+      "do": "snapshot",
+      "name": "type-shape-1-one-label"
+    },
+    {
+      "do": "action",
+      "action": "setTextSize"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-first-is-14",
+      "note": "the first label alone set to 14pt, so the three now really do disagree"
+    },
+    {
+      "do": "drag",
+      "from": [
+        90,
+        120
+      ],
+      "to": [
+        700,
+        460
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-three-picked",
+      "note": "a band round all three: the Text section is STILL there and Size reads mixed"
+    },
+    {
+      "do": "snapshot",
+      "name": "type-shape-2-three-mixed"
+    },
+    {
+      "do": "action",
+      "action": "setTextSize"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-all-14",
+      "note": "one size pick: all three are 14pt and the row reads a number again"
+    },
+    {
+      "do": "snapshot",
+      "name": "type-shape-3-all-14"
+    },
+    {
+      "do": "render",
+      "name": "three-at-14"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-one-undo",
+      "note": "ONE undo puts all three back: the first is 14pt again and the other two are 40pt"
+    },
+    {
+      "do": "action",
+      "action": "setTextWeight"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-all-bold",
+      "note": "one weight pick makes all three bold, in one step, and each label re-hugs its own words instead of wrapping"
+    },
+    {
+      "do": "render",
+      "name": "three-bold"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "8-unbolded",
+      "note": "one undo takes the bold off all three"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        800,
+        140
+      ],
+      "to": [
+        980,
+        260
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        800,
+        320
+      ],
+      "to": [
+        980,
+        440
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        760,
+        110
+      ],
+      "to": [
+        1020,
+        470
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "dragThicknessThin"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "dragShapeCornersSquare"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "9-two-square-boxes",
+      "note": "two boxes, both 3pt and square: a known starting point whatever the last walk left behind"
+    },
+    {
+      "do": "click",
+      "at": [
+        1040,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        890,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "dragThickness"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "10-one-box-thick",
+      "note": "the first box alone pulled to 9pt, so the two shapes now disagree"
+    },
+    {
+      "do": "drag",
+      "from": [
+        760,
+        110
+      ],
+      "to": [
+        1020,
+        470
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "11-two-boxes",
+      "note": "both boxes picked: the section is headed Rectangles, Thickness reads mixed and Corner Radius is offered"
+    },
+    {
+      "do": "snapshot",
+      "name": "type-shape-4-two-boxes-mixed"
+    },
+    {
+      "do": "action",
+      "action": "dragShapeCorners"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "12-both-rounded",
+      "note": "one pull on Corner Radius rounds both"
+    },
+    {
+      "do": "render",
+      "name": "two-boxes-rounded"
+    },
+    {
+      "do": "snapshot",
+      "name": "type-shape-5-both-rounded"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "13-one-undo-shapes",
+      "note": "ONE undo takes both roundings away"
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        560
+      ],
+      "to": [
+        560,
+        620
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        890,
+        200
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        480,
+        590
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "14-arrow-and-box",
+      "note": "an arrow and a box together: the section is headed Shapes and offers ONLY the thickness they share"
+    },
+    {
+      "do": "snapshot",
+      "name": "type-shape-6-arrow-and-box"
+    },
+    {
+      "do": "click",
+      "at": [
+        170,
+        175
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        890,
+        200
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "15-label-and-box",
+      "note": "a label and a box: both sections are there and each says it reaches 1 of the 2"
+    },
+    {
+      "do": "snapshot",
+      "name": "type-shape-7-label-and-box"
+    }
+  ]
+}
