@@ -163,12 +163,18 @@ public struct ComponentPropertyCandidate: Hashable, Sendable {
     /// Only the kinds that mean something for this layer, and only the ones it
     /// is not already exposed as.
     public var kinds: [ComponentPropertyKind]
+    /// What an unnamed text layer says, so a menu of rows all reading "Text" is
+    /// still a menu you can choose from. Nil for anything the author named,
+    /// where the name already says which layer this is.
+    public var words: String?
 
-    public init(layerID: UUID, name: String, path: [String], kinds: [ComponentPropertyKind]) {
+    public init(layerID: UUID, name: String, path: [String], kinds: [ComponentPropertyKind],
+                words: String? = nil) {
         self.layerID = layerID
         self.name = name
         self.path = path
         self.kinds = kinds
+        self.words = words
     }
 
     /// How deep inside the original it sits.
@@ -176,6 +182,14 @@ public struct ComponentPropertyCandidate: Hashable, Sendable {
 
     /// The whole path in one line, for a menu row.
     public var pathLabel: String { path.joined(separator: " ▸ ") }
+
+    /// What the Add menu row reads. An unnamed text layer carries its words
+    /// here so two of them can be told apart, which is the one job the words
+    /// do well: read once while choosing, never kept as the knob's name.
+    public var menuLabel: String {
+        guard let words else { return pathLabel }
+        return "\(pathLabel) \u{201C}\(words)\u{201D}"
+    }
 }
 
 // MARK: - Reading a layer's knobs
@@ -249,7 +263,8 @@ extension PhotonzDocument {
                 let here = path + [layer.name]
                 if !kinds.isEmpty {
                     found.append(ComponentPropertyCandidate(layerID: layer.id, name: layer.name,
-                                                            path: here, kinds: kinds))
+                                                            path: here, kinds: kinds,
+                                                            words: Self.menuWords(of: layer)))
                 }
                 // A copy's insides belong to ITS original, so there is nothing
                 // here to expose.
@@ -258,6 +273,16 @@ extension PhotonzDocument {
         }
         walk(main.children, path: [])
         return found
+    }
+
+    /// The words a menu row shows beside an unnamed text layer, shortened so a
+    /// paragraph does not become a menu row nobody can read. A layer the author
+    /// named needs none: the name is the better hint.
+    static func menuWords(of layer: Layer) -> String? {
+        guard ComponentNaming.isPlaceholderLayerName(layer.name),
+              case .text(let content) = layer.content,
+              let words = ComponentNaming.normalized(content.string) else { return nil }
+        return words.count > 24 ? String(words.prefix(24)) + "\u{2026}" : words
     }
 
     /// Whether a layer inside the original could take this kind of knob, which
@@ -375,20 +400,19 @@ extension PhotonzDocument {
     ///
     /// Every text layer in the app is called "Text" and every group the Group
     /// command makes is called "Group", so a knob named after one of those says
-    /// nothing on a copy's panel. Two fallbacks, in order:
+    /// nothing on a copy's panel. Those fall back to what the knob DOES
+    /// ("Wording", "Show", "Shape").
     ///
-    /// - a wording knob on an unnamed text layer takes the WORDS ("Auto-enhance");
-    /// - a knob on an unnamed group takes what the knob DOES ("Choice").
+    /// A knob is named for what it CONTROLS and never for what its layer
+    /// happens to say. A wording knob that took the words would be called
+    /// "Save", and the first copy to answer "Cancel" leaves a panel reading
+    /// Save above Cancel, which looks like a bug in the app. The words still
+    /// appear while the author is choosing the layer, on the Add menu row.
     ///
-    /// Both are starting points. The name is a field on the original's list, so
-    /// anything better is one rename away.
+    /// Every one of these is a starting point. The name is a field on the
+    /// original's list, so anything better is one rename away.
     static func defaultPropertyName(for layer: Layer, kind: ComponentPropertyKind) -> String {
-        if kind == .text, layer.name == TextBuilder.defaultLayerName,
-           case .text(let content) = layer.content,
-           let words = ComponentNaming.normalized(content.string) {
-            return String(words.prefix(24))
-        }
-        if ComponentNaming.isAutoGroupName(layer.name) { return kind.defaultName }
+        if ComponentNaming.isPlaceholderLayerName(layer.name) { return kind.defaultName }
         return layer.name
     }
 

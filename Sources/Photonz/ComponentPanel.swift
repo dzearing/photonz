@@ -618,6 +618,10 @@ struct ComponentPropertyList: View {
     /// sit only the layers that knob makes sense for: wording under a text
     /// layer, a choice under a group with alternatives in it. A layer already
     /// exposed one way does not appear that way twice.
+    ///
+    /// A row for a text layer nobody has named shows what it says, because
+    /// otherwise two of them are two rows both reading "Text". That is the only
+    /// place the words belong: read once while choosing, never kept as a name.
     @ViewBuilder private var addMenu: some View {
         Menu {
             if candidates.isEmpty {
@@ -628,7 +632,7 @@ struct ComponentPropertyList: View {
                 if !rows.isEmpty {
                     Section(kind.label) {
                         ForEach(rows, id: \.layerID) { candidate in
-                            Button(candidate.pathLabel) {
+                            Button(candidate.menuLabel) {
                                 editorState.addComponentProperty(componentID: componentID,
                                                                  target: candidate.layerID,
                                                                  kind: kind)
@@ -679,8 +683,27 @@ private struct ComponentPropertyRow: View {
             .buttonStyle(.borderless)
             .help("Stop letting copies change this. Copies go back to showing what the original shows")
         }
-        .onAppear { draft = property.name }
+        .onAppear {
+            draft = property.name
+            claimNameIfJustAdded()
+        }
+        .onChange(of: editorState.componentPropertyAwaitingName) { _, _ in claimNameIfJustAdded() }
         .onChange(of: property.name) { _, name in if !focused { draft = name } }
+    }
+
+    /// Takes the focus the Add menu handed over, once, and selects the name so
+    /// the first keystroke replaces it.
+    ///
+    /// A knob arrives named for what it does ("Wording"), which is honest but
+    /// says nothing about WHICH wording. Landing in the field means the author
+    /// types "Label" while they are still thinking about it, and ignoring the
+    /// field leaves a name that is at least never wrong.
+    private func claimNameIfJustAdded() {
+        guard editorState.componentPropertyAwaitingName == property.id else { return }
+        editorState.componentPropertyAwaitingName = nil
+        draft = property.name
+        focused = true
+        DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
     }
 
     private func commit() {

@@ -23,7 +23,7 @@
     { "do": "action", "action": "exposeWording" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "1-exposed",
-      "note": "the original's section grew an Adjustable list with one wording knob on it" },
+      "note": "the original's section grew an Adjustable list with one wording knob on it, called Wording for what it controls and waiting with its name selected" },
     { "do": "snapshot", "name": "component-override-1-exposed" },
     { "do": "menus", "stage": "1-layer-menu", "menu": "Layer" },
 
@@ -35,7 +35,7 @@
       "note": "a copy is placed and selected, and its section shows the one knob the original exposed" },
     { "do": "snapshot", "name": "component-override-2-copy" },
 
-    { "do": "focus", "field": "Auto-enhance" },
+    { "do": "focus", "field": "Wording" },
     { "do": "type", "text": "Sharpen" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.8 },

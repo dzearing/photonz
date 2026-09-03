@@ -151,8 +151,20 @@ public enum ComponentNaming {
     /// True for the name the grouping command minted ("Group", "Group 2"),
     /// which is a placeholder rather than a name anyone chose.
     public static func isAutoGroupName(_ name: String) -> Bool {
-        guard name.hasPrefix("Group") else { return false }
-        let tail = name.dropFirst("Group".count).trimmingCharacters(in: .whitespaces)
+        isAutoName(name, stem: "Group")
+    }
+
+    /// True for a name the APP wrote rather than a person: "Group", "Group 2",
+    /// "Text", "Text 2". Anything named this way tells a reader nothing, so
+    /// nothing that has to be readable later should borrow it.
+    public static func isPlaceholderLayerName(_ name: String) -> Bool {
+        isAutoGroupName(name) || isAutoName(name, stem: TextBuilder.defaultLayerName)
+    }
+
+    /// "Stem", "Stem 2", "Stem 17": the shape every automatic name takes.
+    private static func isAutoName(_ name: String, stem: String) -> Bool {
+        guard name.hasPrefix(stem) else { return false }
+        let tail = name.dropFirst(stem.count).trimmingCharacters(in: .whitespaces)
         return tail.isEmpty || Int(tail) != nil
     }
 }

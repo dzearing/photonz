@@ -1,0 +1,47 @@
+{
+  "feature": "A knob is named for what it controls",
+  "epic": "ui-components",
+  "summary": "Making a word of your component adjustable no longer names the knob after that word. The knob arrives called Wording, with its name selected so you can type a better one, and a copy that says something else no longer makes the panel contradict itself.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components are on by default. Nothing in a document you already have is renamed.",
+  "try": [
+    {
+      "do": "Draw a rectangle, press T, click inside it and type Save."
+    },
+    {
+      "do": "Select both, press ⌘G, then ⌥⌘K, and name it Save button."
+    },
+    {
+      "do": "In the Component section open Add, and read the row under Wording: it says Text “Save”."
+    },
+    {
+      "do": "Choose that row. The knob lands called Wording with its name already selected.",
+      "shot": "2026-09-03-knob-naming-1-added-sc.png"
+    },
+    {
+      "do": "Type Label and press Return, without clicking anywhere first."
+    },
+    {
+      "do": "Drag the Save button tile off the Library onto the canvas."
+    },
+    {
+      "do": "Select that copy and type Cancel into its Label field.",
+      "shot": "2026-09-03-knob-naming-2-overridden-sc.png"
+    },
+    {
+      "do": "Select the original again and read its Adjustable list."
+    }
+  ],
+  "evaluate": [
+    "On the copy, does Label above Cancel read like a setting rather than like a mistake?",
+    "Is Wording the right word for a knob that arrives unnamed, or would Label or Text be the one you expect?",
+    "Landing in the name field the moment a knob is added: welcome, or does it steal the keyboard from you?",
+    "In the Add menu, does Text “Save” tell you which layer you are about to expose?",
+    "Two unnamed text layers give you Wording and Wording 2 if you skip both name fields. Is that enough to work with?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures are real screen captures of the probe app, not offscreen renders.",
+    "The Add menu itself is not photographed: a menu inside the dock cannot be opened by a scripted walk, so the words on its rows are covered by a test rather than a picture.",
+    "Nothing suggests a name from where a layer sits, so a component with several unnamed text layers still leans on you naming them.",
+    "Knobs on documents made before today keep the names they have, including ones named after their words. That is deliberate, but it means an old file can still show Save above Cancel until you rename that knob."
+  ]
+}

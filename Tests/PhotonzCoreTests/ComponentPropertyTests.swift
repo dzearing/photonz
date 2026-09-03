@@ -74,22 +74,74 @@ struct ComponentPropertyTests {
         #expect(c.doc.componentProperties(of: c.componentID).map(\.name) == ["Label", "Label 2"])
     }
 
-    /// Every text layer in the app is called "Text", so a wording knob on one
-    /// would be called "Text" too. It takes the words instead.
-    @Test func aWordingKnobOnAnUnnamedTextLayerIsNamedAfterItsWords() {
+    /// A knob is named for what it CONTROLS, never for what the layer happens
+    /// to say right now. A wording knob named "Save" reads as a mistake the
+    /// moment a copy answers "Cancel", so an unnamed text layer gives its knobs
+    /// what they do instead.
+    @Test func aKnobOnAnUnnamedTextLayerIsNamedAfterWhatItDoes() {
         var doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400),
                                   layers: [box("Box", CGRect(x: 0, y: 0, width: 40, height: 20)),
-                                           text(TextBuilder.defaultLayerName, "Auto-enhance",
+                                           text(TextBuilder.defaultLayerName, "Save",
                                                 CGRect(x: 0, y: 30, width: 80, height: 20))])
         let labelID = doc.layers[1].id
         let group = doc.groupLayers(ids: Set(doc.layers.map(\.id)), name: "Setting")!
         let componentID = doc.makeComponent(id: group.id)!
         let property = doc.addComponentProperty(componentID: componentID, target: labelID, kind: .text)!
-        #expect(doc.componentProperty(componentID: componentID, propertyID: property)?.name == "Auto-enhance")
-        // ...but a show-or-hide knob on the same layer is about the layer, not
-        // its words, so it keeps the layer's name.
+        #expect(doc.componentProperty(componentID: componentID, propertyID: property)?.name == "Wording")
+        // ...and the words are nowhere in the name, so a copy that says
+        // something else does not make the panel contradict itself.
+        let copy = doc.insertComponentInstance(of: componentID, at: CGPoint(x: 200, y: 200))!
+        let set = doc.setInstanceOverride(instance: copy, property: property, value: .text("Cancel"))
+        #expect(set)
+        #expect(doc.componentProperty(componentID: componentID, propertyID: property)?.name == "Wording")
+        // A show-or-hide knob on the same layer has the same problem, since
+        // every text layer in the app is called "Text".
         let shown = doc.addComponentProperty(componentID: componentID, target: labelID, kind: .visible)!
-        #expect(doc.componentProperty(componentID: componentID, propertyID: shown)?.name == "Text")
+        #expect(doc.componentProperty(componentID: componentID, propertyID: shown)?.name == "Show")
+    }
+
+    /// A knob named after its words in a document made before the rule changed
+    /// keeps that name. Nothing renames it behind the author's back, and it
+    /// still answers to a rename by hand.
+    @Test func aKnobNamedBeforeTheRuleChangedKeepsItsName() {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400),
+                                  layers: [box("Box", CGRect(x: 0, y: 0, width: 40, height: 20)),
+                                           text(TextBuilder.defaultLayerName, "Save",
+                                                CGRect(x: 0, y: 30, width: 80, height: 20))])
+        let labelID = doc.layers[1].id
+        let group = doc.groupLayers(ids: Set(doc.layers.map(\.id)), name: "Setting")!
+        let componentID = doc.makeComponent(id: group.id)!
+        let property = doc.addComponentProperty(componentID: componentID, target: labelID,
+                                                kind: .text, name: "Save")!
+        let copy = doc.insertComponentInstance(of: componentID, at: CGPoint(x: 200, y: 200))!
+        let set = doc.setInstanceOverride(instance: copy, property: property, value: .text("Cancel"))
+        #expect(set)
+        doc.syncComponentInstances()
+        #expect(doc.componentProperty(componentID: componentID, propertyID: property)?.name == "Save")
+        #expect(words(doc, in: copy, named: TextBuilder.defaultLayerName) == "Cancel")
+        // Saved and opened again, it is still the name the author had.
+        let reopened = try! JSONDecoder().decode(PhotonzDocument.self,
+                                                 from: JSONEncoder().encode(doc))
+        #expect(reopened.componentProperty(componentID: componentID, propertyID: property)?.name == "Save")
+        doc.renameComponentProperty(componentID: componentID, propertyID: property, to: "Label")
+        #expect(doc.componentProperty(componentID: componentID, propertyID: property)?.name == "Label")
+    }
+
+    /// The words still have a job: they tell the author WHICH text layer a menu
+    /// row means, since two unnamed ones both read "Text". They belong in the
+    /// menu, where they are read once, not in the name, where they are kept.
+    @Test func theAddMenuShowsTheWordsOfAnUnnamedTextLayer() {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400),
+                                  layers: [text(TextBuilder.defaultLayerName, "Save",
+                                                CGRect(x: 0, y: 0, width: 80, height: 20)),
+                                           text(TextBuilder.defaultLayerName, "Cancel",
+                                                CGRect(x: 0, y: 30, width: 80, height: 20)),
+                                           text("Title", "Rename this file",
+                                                CGRect(x: 0, y: 60, width: 80, height: 20))])
+        let group = doc.groupLayers(ids: Set(doc.layers.map(\.id)), name: "Bar")!
+        let componentID = doc.makeComponent(id: group.id)!
+        let rows = doc.componentPropertyCandidates(componentID: componentID)
+        #expect(rows.map(\.menuLabel) == ["Text \u{201C}Save\u{201D}", "Text \u{201C}Cancel\u{201D}", "Title"])
     }
 
     /// A group the Group command made is called "Group", which says nothing on
@@ -440,6 +492,13 @@ struct ComponentPropertyTests {
 
     private func piece(_ doc: PhotonzDocument, in root: UUID, named name: String) -> Layer? {
         doc.layer(id: root)?.selfAndDescendants.first { $0.name == name }
+    }
+
+    /// The words of one named piece inside a copy.
+    private func words(_ doc: PhotonzDocument, in root: UUID, named name: String) -> String? {
+        guard let layer = piece(doc, in: root, named: name),
+              case .text(let content) = layer.content else { return nil }
+        return content.string
     }
 
     private func wording(_ doc: PhotonzDocument, in root: UUID) -> String? {

@@ -3571,9 +3571,19 @@ final class EditorState {
     }
 
     /// Exposes one layer inside an original as a knob.
-    func addComponentProperty(componentID: UUID, target: UUID, kind: ComponentPropertyKind) {
-        guard componentsEnabled else { return }
-        perform { $0.addComponentProperty(componentID: componentID, target: target, kind: kind) }
+    /// A knob the author just added and has not named yet, so its name field
+    /// can take the focus with its text selected. Same New Folder idiom the
+    /// component's own Name field follows: a knob lands with a name that says
+    /// what it does ("Wording"), and saying what it IS is one word of typing.
+    var componentPropertyAwaitingName: UUID?
+
+    @discardableResult
+    func addComponentProperty(componentID: UUID, target: UUID, kind: ComponentPropertyKind) -> UUID? {
+        guard componentsEnabled else { return nil }
+        var added: UUID?
+        perform { added = $0.addComponentProperty(componentID: componentID, target: target, kind: kind) }
+        componentPropertyAwaitingName = added
+        return added
     }
 
     func removeComponentProperty(componentID: UUID, propertyID: UUID) {

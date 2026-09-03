@@ -29,8 +29,13 @@
 
     { "do": "action", "action": "exposeWording" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "2-adjustable", "note": "the label is now the one adjustable thing about this component" },
+    { "do": "describe", "stage": "2-adjustable", "note": "the label is now the one adjustable thing about this component, and the knob arrived called Wording, for what it controls rather than for the word it holds" },
     { "do": "snapshot", "name": "e2e-2-adjustable" },
+    { "do": "type", "text": "Label" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2b-knob-named", "note": "the new knob landed with its name selected, so naming it Label was typing" },
+    { "do": "snapshot", "name": "e2e-2b-knob-named" },
 
     { "do": "action", "action": "pickFirstComponent" },
     { "do": "wait", "seconds": 0.4 },
@@ -52,11 +57,11 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "4-copy-picked", "note": "the middle copy is selected and its panel shows the one knob the original exposed" },
     { "do": "snapshot", "name": "e2e-4-copy-picked" },
-    { "do": "focus", "field": "Save" },
+    { "do": "focus", "field": "Label" },
     { "do": "type", "text": "Cancel" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.9 },
-    { "do": "describe", "stage": "5-overridden", "note": "the middle copy alone says Cancel; the original and the other two are untouched" },
+    { "do": "describe", "stage": "5-overridden", "note": "the middle copy alone says Cancel, under a knob still called Label; the original and the other two are untouched" },
     { "do": "snapshot", "name": "e2e-5-overridden" },
     { "do": "render", "name": "e2e-5-overridden-doc" },
 

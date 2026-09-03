@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 760,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:55:20.211Z",
-  "updated": "2026-09-03T05:55:20.212Z",
+  "updated": "2026-09-03T11:00:07.314Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the step E9 sitting on 2026-09-03, see queue/audits/2026-09-03-component-e2e-4-overridden.png. The five starter components dodge this by shipping the knob pre-named Label; only hand authored components hit it. Naming lives in ComponentProperties.swift / the Adjustable list in ComponentPanel.swift. The current rule is documented in docs/design/ui-building.md under the C6 landing note, so change that too.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-03T05:55:20.212Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T10:48:59.595Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T10:51:44.398Z",
+      "note": "Adversarial review before building. Walked it as a first-time author: draw a rect plus a text layer that says Save, group, Make component, Adjustable > Wording > the only row, which says 'Text'. Today the knob lands named 'Save' and the panel looks right until a copy says Cancel, then the original's list reads Save while the copy reads Cancel under the heading Save. Findings: (1) the words are a fine thing to SHOW while picking and a bad thing to KEEP as a name, so move them out of the name and into the add menu row; (2) the same placeholder problem hits show-or-hide on an unnamed text layer, which is named 'Text' today and says nothing either, so the rule should be one rule for every kind: a name the app assigned itself is not a name; (3) a generic default ('Wording', 'Wording 2') is honest but lazy unless naming is right there, so the new knob's name field takes focus with its text selected, the same way the component Name field already behaves; (4) no migration: renaming knobs inside documents people already have is exactly the behind-your-back change the task forbids."
+    },
+    {
+      "t": "2026-09-03T11:00:07.289Z",
+      "note": "Landed. One naming rule for every kind: a knob takes its layer's name unless that name is one the app wrote itself (Group, Group 2, Text, Text 2), in which case it takes what the knob does (Wording, Show, Shape). ComponentNaming.isPlaceholderLayerName is the single judgement; defaultPropertyName is now two lines and the words-as-name branch is gone. The words moved to the Add menu row (Text \"Save\", clipped at 24 characters) so two unnamed text layers are still tellable apart, and a new knob lands with its name field focused and selected via EditorState.componentPropertyAwaitingName, the same New Folder idiom the component Name field uses. Nothing renames existing documents. Second adversarial review on the real app, via the probe: component-end-to-end-walk and component-override-walk both updated and green, plus component-choice-walk. Verified in the screen captures: the knob arrives as Wording with its text selected, typing Label renames it with no click, and the overridden copy's panel reads Label above Cancel. Still rough: two unnamed text layers give Wording and Wording 2 if you skip both name fields; the Add menu cannot be photographed by a scripted walk so its wording is covered by a test; and old documents keep knobs named after their words on purpose. 2046 tests green. Audit: queue/audits/2026-09-03-knob-naming.json."
+    },
+    {
+      "t": "2026-09-03T11:00:07.314Z",
+      "note": "Acceptance checked one by one: (1) a wording knob on an unnamed text layer is named Wording, proven by aKnobOnAnUnnamedTextLayerIsNamedAfterWhatItDoes and by the capture of the overridden copy; (2) aKnobNamedBeforeTheRuleChangedKeepsItsName sets a knob called Save, overrides a copy, syncs, saves and reopens, and the name is still Save; (3) the walk types Label straight into the new knob's name field and later finds that field by its new name, and the rename test still covers blank names; (4) queue/audits/2026-09-03-knob-naming-2-overridden-sc.png is a real screen capture showing Label above Cancel."
     }
-  ]
+  ],
+  "started": "2026-09-03T10:48:59.595Z"
 }

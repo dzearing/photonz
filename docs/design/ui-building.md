@@ -800,10 +800,11 @@ being a picture you can only move.
   headings and only the layers each knob makes sense for sit under them, with a
   layer already exposed that way dropping out.
 - **A knob is named after the layer it exposes**, except where that name says
-  nothing: every text layer in the app is called "Text", so a wording knob takes
-  the WORDS ("Auto-enhance"), and every group the Group command makes is called
-  "Group", so a knob on one takes what it does ("Shape", "Show"). Both are
-  starting points; the name is a field in the list.
+  nothing: every text layer in the app is called "Text" and every group the
+  Group command makes is called "Group", so a knob on either takes what it DOES
+  ("Wording", "Show", "Shape"). It is never named after what the layer says, for
+  the reason under "a knob is named for what it controls" below. A starting
+  point either way; the name is a field in the list.
 - **The answers live on the copy and are applied AFTER it is refilled from the
   original.** That order is the whole trick: an edit to the original reaches
   every copy, including one that has overridden something else, because each
@@ -1026,6 +1027,7 @@ What the sitting found, each filed as its own task rather than fixed here:
   "type the new width" and "reach for Measure".
 - A wording knob is named after the words it holds, so an overridden copy reads
   "Save → Cancel". The five starters dodge it by shipping the knob as "Label".
+  (Fixed: "a knob is named for what it controls", below.)
 - The Library opens below the fold. ⌥⌘K opens the shelf and picks the new
   component, and on a 900 pt window the shelf is off the bottom of the dock.
 - Text typed by hand keeps the screenshot contrast halo inside a component, so
@@ -1188,3 +1190,37 @@ name and whether it is hidden are still its own, which is what lets copies sit
 in different spots at all.
 
 Walked end to end by `Scripts/playtest/component-look-walk.json`.
+
+## Landed: a knob is named for what it controls (Next, `next-components`, 2026-09-03)
+
+The E9 sitting's second finding. A wording knob took the words of the layer it
+exposed, so a button that said "Save" got a knob called "Save"; the first copy
+to answer "Cancel" left a panel reading Save above Cancel, which reads as a bug
+in the app rather than as a copy doing its job.
+
+- **One naming rule for every kind now.** A knob takes the name of the layer it
+  exposes, unless that name is one the APP wrote rather than a person ("Group",
+  "Group 2", "Text", "Text 2"), in which case it takes what the knob does:
+  "Wording", "Show", "Shape". `ComponentNaming.isPlaceholderLayerName` is the
+  one place that judgement lives, and `defaultPropertyName` is now two lines.
+  Show-or-hide on an unnamed text layer used to land as "Text · show", which
+  said nothing either, and is caught by the same rule.
+- **The words moved to the Add menu**, which is the one place they help: two
+  unnamed text layers are two rows both reading "Text", so a row now reads
+  Text “Save”. Read once while choosing, never kept as a name. Clipped at 24
+  characters so a paragraph does not become a menu row.
+- **A new knob lands with its name selected**, the New Folder idiom the
+  component's own Name field already follows. "Wording" is honest but says
+  nothing about WHICH wording, so the author types "Label" while they are still
+  thinking about it, and ignoring the field leaves a name that is at least never
+  wrong. `EditorState.componentPropertyAwaitingName` hands the focus over.
+- **Nothing is renamed in documents that already exist.** The rule only decides
+  the name a knob is BORN with, so a knob somebody has called "Save" stays
+  "Save", saves, opens and renames exactly as before.
+- The five starters were never affected: their text layers are named ("Label",
+  "Title", "Body"), so their knobs always borrowed a real name.
+
+Deliberately left: a component with two unnamed text layers still gets "Wording"
+and "Wording 2" if the author skips both name fields, and nothing suggests a
+better name from where the layer sits. Naming the layers, or the knobs, is the
+answer, and both are one field away.
