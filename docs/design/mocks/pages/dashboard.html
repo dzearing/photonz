@@ -619,7 +619,10 @@
       if (stop) pc += '<span class="stop">Retires this task. It will not be built, and no runner picks it up again.</span>';
       if (pc) h += '<div class="db-pc">' + pc + '</div>';
       h += '<div class="db-opt-act">';
-      h += '<input class="input sm" name="note-' + esc(noteKey) + '" placeholder="Optional note" data-notefor="' + esc(noteKey) + '">';
+      // the class names the WELL, so it goes on the wrapper and the real field
+      // lives inside it — on the field itself you get the dark well and none of
+      // the ink. See shared/check-fieldwrap.mjs.
+      h += '<label class="input sm"><input name="note-' + esc(noteKey) + '" placeholder="Optional note" data-notefor="' + esc(noteKey) + '"></label>';
       h += '<button class="btn sm ' + (rec ? 'primary' : 'secondary') + '" data-act="decide" data-id="' + esc(d.id) + '" data-choice="' + esc(o.id) + '">' + (stop ? 'Select and stop' : 'Select') + '</button>';
       h += '</div></div>';
     });
@@ -767,10 +770,10 @@
   function renderTasks() {
     var h = '<div class="db-card"><div class="db-card-h"><i class="ic ic-plus"></i><h3>Queue a task</h3><span class="k">lands as pending, the loop picks it up by priority, then sequence</span></div><div class="db-card-b">';
     h += '<div class="db-addform">';
-    h += '<input class="input block" id="db-new-title" placeholder="What should get done?">';
+    h += '<label class="input block"><input id="db-new-title" placeholder="What should get done?"></label>';
     h += '<select class="select block" id="db-new-prio"><option value="p1-high">P1 high</option><option value="p2-normal" selected>P2 normal</option><option value="p3-low">P3 low</option><option value="p0-critical">P0 critical</option></select>';
     h += '<button class="btn primary" data-act="add">Add to queue</button>';
-    h += '<textarea class="input area block notes" id="db-new-notes" rows="2" placeholder="Notes for the runner: context, constraints, what done looks like"></textarea>';
+    h += '<label class="input area block notes"><textarea id="db-new-notes" rows="2" placeholder="Notes for the runner: context, constraints, what done looks like"></textarea></label>';
     h += '</div></div></div>';
 
     h += '<div class="db-card db-tt" style="margin-top:var(--gap)">';
@@ -1211,7 +1214,7 @@
     if (filed[key]) h += '<span class="db-afiled"><i class="ic ic-check"></i>filed</span>';
     if (open) {
       h += '<div class="db-acomposer">' +
-        '<textarea class="input area block" id="db-ctext" rows="2" placeholder="What is wrong with this, or what would you rather?"></textarea>' +
+        '<label class="input area block"><textarea id="db-ctext" rows="2" placeholder="What is wrong with this, or what would you rather?"></textarea></label>' +
         '<div class="db-acta"><button class="btn sm ghost" data-act="audit-cancel">Cancel</button>' +
         '<button class="btn sm primary" data-act="audit-send" data-anchor="' + esc(anchor) + '" data-quote="' + esc(quote) + '">File as task</button></div>' +
         '</div>';

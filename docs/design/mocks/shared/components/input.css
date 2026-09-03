@@ -10,6 +10,13 @@
      <label class="input search"><i class="ic ic-search"></i><input placeholder="Search"></label>
      <label class="input area"><textarea rows="3"></textarea></label>
 
+   THE CLASS GOES ON THE WRAPPER, NEVER ON THE FIELD. `.input` paints the well;
+   `.input>input` paints the ink. `<input class="input">` gets the dark well and
+   keeps the browser's black text, which on a dark theme is invisible while you
+   type. `node shared/check-fieldwrap.mjs` fails on one, for every wrapper
+   component in the system (`.input`, `.stepper`, `.slider`, `.switch`, `.check`,
+   `.radio`, `.composer`).
+
    ROUNDED RECTANGLE, NOT A CAPSULE, and this is deliberate. Buttons are
    capsules because a capsule reads as "press me". A text field is a container
    you put content into and it should read as a well: capsule sides waste the

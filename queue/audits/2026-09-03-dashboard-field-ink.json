@@ -1,0 +1,28 @@
+{
+  "feature": "Typed text is readable in every dashboard field",
+  "epic": "dashboard-polish",
+  "summary": "Every field on the status dashboard now shows what you type in the normal text color instead of black on a black well, in both the dark and the light theme.",
+  "setup": "The design dashboard at http://127.0.0.1:8791. Nothing to enable. Try it once in your normal theme, then flip your Mac between Dark and Light in System Settings > Appearance and try it again.",
+  "try": [
+    { "do": "Open the Tasks section and type a title into 'What should get done?'.", "shot": "2026-09-03-dashboard-field-ink-1.png" },
+    { "do": "Type a couple of lines into the notes box under it." },
+    { "do": "Type into 'Filter tasks' at the top right of the All tasks list." },
+    { "do": "Click any task row, then type a number into the Seq field at the bottom of the dialog." },
+    { "do": "Open Ready to try, click the speech bubble on any line, and type into the box that opens.", "shot": "2026-09-03-dashboard-field-ink-2.png" },
+    { "do": "On Summary, if a decision is waiting, type into the 'Optional note' box on an option.", "shot": "2026-09-03-dashboard-field-ink-3.png" },
+    { "do": "Switch your Mac between Dark and Light and read all six again." }
+  ],
+  "evaluate": [
+    "Can you read every character as you type it, in both themes?",
+    "The notes box and the feedback box are now a little taller than before, because they take the system's own multiline height. Does that feel right, or was the shorter two-line box better?",
+    "The text in these fields is now the same size and typeface as the rest of the dashboard. Does the page read as one thing now?",
+    "Is the focus ring around a field clear enough to tell you where your typing is going?"
+  ],
+  "rough": [
+    "This was a plain bug, not a design change: the shared field style paints the dark recessed well on a wrapper and the ink on the field inside it, and four fields wore the style on the field itself, so they got the well and kept the browser's black text.",
+    "The only visible change beyond color is height and typeface on the two multiline boxes, which now match every other multiline field in the system.",
+    "A check now fails the build if anyone puts a wrapper style on a bare field again, for all seven components that work this way, and the rule is written into the component file and the design-system guide.",
+    "The pictures are real screenshots of the real dashboard taken in Chrome, not renders. This surface is a web page, so no macOS screen recording grant was involved.",
+    "The decision card in the third picture is a fake one injected only so the note field could be typed into: no real decision was waiting at the time, and nothing was answered."
+  ]
+}

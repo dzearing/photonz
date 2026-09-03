@@ -5,11 +5,11 @@
   "epic": "dashboard-polish",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:47:29.777Z",
-  "updated": "2026-09-03T00:47:29.807Z",
+  "updated": "2026-09-03T01:04:33.483493Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-02: when I type in an input on the status site, the input text is black on a dark background. Root cause found by reading: the shared design system styles the WELL on .input and the TEXT on .input>input (docs/design/mocks/shared/components/input.css lines 33 to 49), so the class belongs on a wrapper element with the real field inside it. Four places in docs/design/mocks/pages/dashboard.html put the class on the field itself instead: line 622 (the per-decision note), 770 (new task title), 773 (new task notes textarea), 1214 (the audit feedback textarea). Those get the dark well background but never the --ink color, so the text falls back to the browser default black. The same file gets it right at line 782 (filter) and 961 (Seq), both of which wrap an input in a label carrying the class. Fix by wrapping, not by adding a color rule for bare elements, unless the design system decides bare elements are legal, in which case make .input,textarea.input,select.input carry the color and say so in the component file. Also check the other mock pages for the same mistake.",
@@ -27,6 +27,35 @@
     {
       "t": "2026-09-03T00:47:29.806Z",
       "note": "seq 160 -> 5"
+    },
+    {
+      "t": "2026-09-03T00:55:03.344Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T01:04:33.483493Z",
+      "note": "epic staging: dashboard-polish sits under unmanned-loop, staged next, not now. Doing it anyway and saying so: this is a user-filed p1 at seq 5 about the dashboard being unusable to type into, and the dashboard is the surface the user steers every other epic from. A blind field is not polish."
+    },
+    {
+      "t": "2026-09-03T01:04:33.483493Z",
+      "note": "adversarial review before building. Walked it as a first-time user: you click 'What should get done?', type, and see nothing but a caret moving. There is no recovery and no clue, so you assume the page is broken. Nothing here is decorative and there is no shorter version than fixing the four fields. The one real judgment call was whether to legalise the bare form (add a colour rule for input.input) or wrap: wrapping wins because the component already documents the wrapper form, five other fields on this same page already use it, and legalising bare elements means every future rule has to be written twice. No visible consequence either way, so no decision card: decided in the log per the runner contract."
+    },
+    {
+      "t": "2026-09-03T01:04:33.483493Z",
+      "note": "shipped. The four fields at dashboard.html 622/770/773/1214 are now <label class=\"input …\"> with the real control inside, matching the filter and Seq fields that were always right. Corpus scan first: those four were the only offenders across all 90 pages."
+    },
+    {
+      "t": "2026-09-03T01:04:33.483493Z",
+      "note": "guard added: shared/check-fieldwrap.mjs reads the wrapper list OUT OF the CSS (any class with a > input|textarea|select child rule) so it covers .input, .stepper, .slider, .switch, .check, .radio and .composer without a hand-maintained list, and fails on a bare control wearing one. Proved it catches the regression by running it against the pre-fix dashboard.html from git: 4 offenders, exit 1. Rule also written into components/input.css and shared/AGENTS.md. .select is deliberately not caught: it documents the bare form and carries color:var(--ink) itself."
+    },
+    {
+      "t": "2026-09-03T01:04:33.483493Z",
+      "note": "verified in real Chrome (Playwright, both themes, deviceScaleFactor 2), by typing into each field and measuring computed ink against the resolved well: decision note, new task title, new task notes, task filter, seq, audit feedback all PASS at 15.66:1 dark and 14.94:1 light, all six typed text landed, all six sit inside a .input parent, zero console errors. Seq needed a task dialog open, so it ran in a second pass with every POST aborted so the check could not renumber a real task. Objectives titles are contenteditable spans inheriting row colour, unaffected. Gates green: check-fieldwrap, check-elevation, check-states, check-a11y-names, check-reserved, check-selection. build-ds.mjs leaves dist byte-identical (comment-only CSS change)."
+    },
+    {
+      "t": "2026-09-03T01:04:33.483493Z",
+      "note": "review of the built thing: the two multiline boxes are now ~52px tall instead of two default rows, and pick up the system sans at 12px, because that is what .input.area>textarea says. That is the only visible change beyond colour and it is the design system's own size, so I kept it rather than overriding it, and put it in the audit as a question. Audit: queue/audits/2026-09-03-dashboard-field-ink.json with three real Chrome screenshots."
     }
-  ]
+  ],
+  "started": "2026-09-03T00:55:03.344Z"
 }

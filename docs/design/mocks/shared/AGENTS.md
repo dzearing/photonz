@@ -377,6 +377,16 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   setting `--glow-c` on it · `--ring` focus, recoloured with `--ring-c`. Canvas
   ARTWORK is exempt. `node shared/check-elevation.mjs` fails the build on a
   hand-written one. Ladder + tokens live in `shared/components/elevation.css`.
+- **A field's class goes on the WRAPPER, never on the field.** `.input`,
+  `.stepper`, `.slider`, `.switch`, `.check`, `.radio` and `.composer` all draw a
+  well or a track around a real control that lives inside them, and the ink,
+  font and transparent background come from the child rule (`.input>input`).
+  Write `<label class="input"><input …></label>`. Put the class on the control
+  itself and you get half a component: the recessed dark well paints and the
+  text stays the browser's black, so on the dark theme you cannot read what you
+  are typing. That shipped on the dashboard and made four fields unusable.
+  `node shared/check-fieldwrap.mjs` reads the wrapper list out of the CSS and
+  fails on a bare control wearing one.
 - **Home:** every `.cmdpop` gets a trailing **Home** item automatically (the
   shell component appends it). Do not author one per page.
 - **`.elev-0/1/2` and `.elev-3`**, the only surface allowed to sit
