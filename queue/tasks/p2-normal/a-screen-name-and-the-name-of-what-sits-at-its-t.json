@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 840,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T13:25:36.094Z",
-  "updated": "2026-09-03T19:58:02.532Z",
+  "updated": "2026-09-03T20:14:14.273Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Visible in queue/audits/2026-09-03-library-drag-2-over-frame.png: the frame caption \"Frame\" and the component mark plus name \"Button\" collide. Frame name geometry is FrameNameLabels in PhotonzCore (tested, owns where a name draws and which wins when two overlap); the component mark is drawn in CanvasFrames.swift. The tested overlap rule already exists for two FRAME names, so the fix is likely extending it to cover a component name in the same strip.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-03T20:14:09.199573Z",
       "note": "Filed dragging-a-component-onto-a-screen-puts-it-insid: dragging an existing component onto a screen leaves it a sibling, while a Library drop joins it."
+    },
+    {
+      "t": "2026-09-03T20:14:14.273Z",
+      "note": "Names in a screen's top left corner now stack instead of printing on top of each other: CanvasNameLabels.stacked/chipBox in PhotonzCore (14 new tests, Scripts/test.sh green at 2383) plus one ordered chip list in CanvasNames used by drawing, clicking and the rename field. Verified live in the probe with Scripts/playtest/corner-names-walk.json; audit at queue/audits/2026-09-03-corner-names.json."
     }
   ],
-  "started": "2026-09-03T19:58:02.532Z"
+  "started": "2026-09-03T19:58:02.532Z",
+  "completed": "2026-09-03T20:14:14.273Z"
 }
