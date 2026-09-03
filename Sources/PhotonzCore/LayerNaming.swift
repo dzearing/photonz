@@ -60,6 +60,50 @@ public enum LayerNaming {
         let tail = name.dropFirst(stem.count).trimmingCharacters(in: .whitespaces)
         return tail.isEmpty || Int(tail) != nil
     }
+
+    /// The word a copy adds to a name somebody chose.
+    static let copyWord = "copy"
+
+    /// What to call a copy of a layer called `source`, given every name
+    /// already spoken for.
+    ///
+    /// A name the app wrote is numbered exactly as a freshly drawn shape is, so
+    /// duplicating a rectangle reads "Rectangle 2" and matches what you get by
+    /// drawing another one or pasting the first. A name a person typed is
+    /// theirs: the copy keeps their word and adds "copy", then numbers that
+    /// ("Card copy", "Card copy 2"), and copying a copy never stacks the word
+    /// up into "Card copy copy".
+    public static func copyName(of source: String, taken: Set<String>) -> String {
+        firstFree(base: stem(of: source) ?? "\(copyBase(of: source)) \(copyWord)", taken: taken)
+    }
+
+    /// `base`, then "base 2", "base 3"… — the first one nobody is using.
+    static func firstFree(base: String, taken: Set<String>) -> String {
+        guard taken.contains(base) else { return base }
+        var n = 2
+        while taken.contains("\(base) \(n)") { n += 1 }
+        return "\(base) \(n)"
+    }
+
+    /// The word a copy's name is built on: "Card" for "Card", for "Card copy"
+    /// and for "Card copy 4" alike.
+    static func copyBase(of name: String) -> String {
+        var base = name
+        while let shorter = withoutCopySuffix(base) { base = shorter }
+        return base
+    }
+
+    /// `name` with one trailing "copy", and the number after it, taken off, or
+    /// nil when it does not end that way.
+    private static func withoutCopySuffix(_ name: String) -> String? {
+        var head = Substring(name)
+        if let space = head.lastIndex(of: " "), Int(head[head.index(after: space)...]) != nil {
+            head = head[..<space]
+        }
+        guard head.hasSuffix(" \(copyWord)") else { return nil }
+        let base = head.dropLast(copyWord.count + 1)
+        return base.isEmpty ? nil : String(base)
+    }
 }
 
 extension PhotonzDocument {
@@ -69,6 +113,27 @@ extension PhotonzDocument {
     /// screens included, because the layers list can show all of them at once.
     public func freshLayerName(base: String) -> String {
         freshGroupName(base: base)
+    }
+
+    /// Names the copies a duplicate just made, once they are all in place.
+    ///
+    /// Each entry pairs a copy with the name of the layer it came from. The
+    /// naming happens here, after the tree is rebuilt, rather than as each copy
+    /// is inserted, because until the walk is finished the document does not
+    /// know every name that is spoken for — which is how duplicating one layer
+    /// twice used to leave two rows both reading "Rectangle copy". The copies
+    /// themselves do not count as taken, so the first one is free to keep the
+    /// obvious name, and each name is booked as it is handed out so the second
+    /// copy cannot take the first one's.
+    mutating func nameDuplicates(_ made: [(copy: UUID, source: String)]) {
+        guard !made.isEmpty else { return }
+        let copies = Set(made.map(\.copy))
+        var taken = Set(allLayers.lazy.filter { !copies.contains($0.id) }.map(\.name))
+        for entry in made {
+            let name = LayerNaming.copyName(of: entry.source, taken: taken)
+            taken.insert(name)
+            updateLayer(id: entry.copy) { $0.name = name }
+        }
     }
 
     /// The layer as it should be filed. An automatic name already in use takes

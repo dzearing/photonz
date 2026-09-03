@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 970,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T22:02:21.768Z",
-  "updated": "2026-09-03T22:02:21.769Z",
+  "updated": "2026-09-03T22:45:49.560583Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-second-rectangle-is-not-called-rectangle (2026-09-03). New layers are numbered in PhotonzDocument.uniquelyNamed, called from addLayer/addLayerOnFrame. Duplicate does not go through those: Document.duplicateLayers, duplicateLayers(movingCopiesTo:) and duplicateLayer insert copies straight into the sibling list inside a walk, so the taken-name set is mid-flight and the rename has to happen in a pass after the walk. Layer.duplicated mints the name (name + \" copy\"), so the policy question is whether the second copy reads \"Rectangle copy 2\" or takes the next plain number.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-03T22:02:21.769Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T22:38:21.250Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T22:45:49.560583Z",
+      "note": "Adversarial review before building. The real question was policy, not code: should the second copy read \"Rectangle copy 2\" or take a plain number? Walked it as a first-timer. The app already answers this twice elsewhere: drawing a second rectangle gives \"Rectangle 2\", and PASTING one gives \"Rectangle 2\" (pasteLayer restores the source name and lets uniquelyNamed number it). Making duplicate say \"Rectangle copy 2\" would leave three ways of naming the same shape in one list. So: a name the app wrote is numbered; a name a person typed keeps their word and gains \"copy\", numbered after that (Finder's rule). No decision card needed, the task goal already says \"a free name the way a newly drawn layer now does\"."
+    },
+    {
+      "t": "2026-09-03T22:45:49.560583Z",
+      "note": "Considered and rejected: making a duplicated component copy keep the component's plain name (so option-dragging a Button gives four rows all reading \"Button\", matching what dragging four off the shelf gives). It reads better for a toolbar, but it directly contradicts acceptance item 1 (\"two differently named copies\"), so it is a separate call for the user. Raised in the audit's rough instead."
+    },
+    {
+      "t": "2026-09-03T22:45:49.560583Z",
+      "note": "Shortest version that delivers the value: one rule in PhotonzCore (LayerNaming.copyName), one rename pass (PhotonzDocument.nameDuplicates) run AFTER each duplicate walk finishes so the taken-name set is settled, wired into the three duplicate entry points. No UI change, no new setting."
+    },
+    {
+      "t": "2026-09-03T22:45:49.560583Z",
+      "note": "Landed. LayerNaming gains copyName(of:taken:), firstFree(base:taken:) and copyBase(of:); freshGroupName now reuses firstFree. Document.duplicateLayers(ids:), duplicateLayers(movingCopiesTo:) and duplicateLayer(id:) collect (copy id, source name) and call nameDuplicates, then re-read the renamed layers for their return values. Copies do not count as taken names, and each handed-out name is booked, so the second copy cannot take the first's. 12 new tests in Tests/PhotonzCoreTests/LayerDuplicateNamingTests.swift; full suite 2524 tests green."
+    },
+    {
+      "t": "2026-09-03T22:45:49.560583Z",
+      "note": "Verified live on the probe (Screen Recording granted) with Scripts/playtest/duplicate-names-walk.json: layers list read Rectangle / Rectangle 2 / Rectangle 3, two undos put it back to a single Rectangle, and a hand-named layer duplicated twice read Renamed Layer / Renamed Layer copy / Renamed Layer copy 2. Shots in queue/audits/2026-09-03-duplicate-names-*.png."
+    },
+    {
+      "t": "2026-09-03T22:45:49.560583Z",
+      "note": "Core change, so both releases get it; nothing under Releases/Next forks the duplicate path. Remaining gap noted in the audit: pasting a layer a person named still repeats the exact name."
     }
-  ]
+  ],
+  "started": "2026-09-03T22:38:21.250Z"
 }

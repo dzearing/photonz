@@ -1,0 +1,45 @@
+{
+  "out": "/tmp/photonz-playtest/duplicate-names",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1400, "height": 1080 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 140], "to": [420, 320], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-one-box",
+      "note": "one box, called Rectangle" },
+    { "do": "snapshot", "name": "dup-1-one-box" },
+
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [280, 230] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-duplicated-twice",
+      "note": "duplicating the same box twice: the tree should read Rectangle, Rectangle 2, Rectangle 3 with no row repeated" },
+    { "do": "snapshot", "name": "dup-2-twice" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-undone",
+      "note": "both duplicates undone: one box called Rectangle again" },
+    { "do": "snapshot", "name": "dup-3-undone" },
+
+    { "do": "click", "at": [280, 230] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "renameSelectedLayer" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [280, 230] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-named-by-hand",
+      "note": "a box a person named, duplicated twice: Renamed Layer copy and Renamed Layer copy 2, their word kept" },
+    { "do": "snapshot", "name": "dup-4-named-by-hand" }
+  ]
+}

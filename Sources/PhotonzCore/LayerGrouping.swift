@@ -59,11 +59,7 @@ extension PhotonzDocument {
     /// "Group 3"… so two groups made a second apart are tellable apart in the
     /// layers list.
     public func freshGroupName(base: String = "Group") -> String {
-        let taken = Set(allLayers.map(\.name))
-        guard taken.contains(base) else { return base }
-        var n = 2
-        while taken.contains("\(base) \(n)") { n += 1 }
-        return "\(base) \(n)"
+        LayerNaming.firstFree(base: base, taken: Set(allLayers.map(\.name)))
     }
 
     /// Dissolves every group in `ids` in ONE mutation, so ⇧⌘G over a

@@ -1,0 +1,27 @@
+{
+  "feature": "A copy takes a free name",
+  "epic": "ui-components",
+  "summary": "Duplicating a layer no longer leaves two rows reading the same word. A shape the app named is numbered the way a freshly drawn one is (Rectangle, Rectangle 2, Rectangle 3), and a layer you named keeps your word and gains copy (Card copy, Card copy 2).",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Draw a rectangle with R, then press V to go back to the pointer." },
+    { "do": "Press Command J to duplicate it." },
+    { "do": "Click the box underneath, at its bottom left corner, and press Command J again.", "shot": "2026-09-03-duplicate-names-1.png" },
+    { "do": "Read the layers list: three rows, none repeated." },
+    { "do": "Press Command Z twice and watch the list go back to one Rectangle." },
+    { "do": "Double click a layer's name, type Hero card, press Return." },
+    { "do": "Press Command J twice, clicking a box in between.", "shot": "2026-09-03-duplicate-names-2.png" },
+    { "do": "Read the list: Hero card, Hero card copy, Hero card copy 2." }
+  ],
+  "evaluate": [
+    "When you duplicate an unnamed shape, is Rectangle 2 what you expected, or were you looking for the word copy?",
+    "Does numbering a duplicate the same way a newly drawn shape is numbered make the list easier to scan, or does it hide which shapes came from which?",
+    "For a layer you named yourself, does Hero card copy 2 read better than Hero card copy copy would have?",
+    "After Command Z, does the list look exactly the way it did before you duplicated?"
+  ],
+  "rough": [
+    "Duplicating a component copy still gets its own name (Button copy, Button copy 2), while dragging a second one off the Library shelf gives another plain Button. Two ways of making the same thing, two different rows. Left alone because the task asked for copies to be tellable apart, but it is worth a decision.",
+    "Pasting a layer you named yourself still repeats the exact name: copy a Card and paste it and you get two rows both reading Card. Only duplicate was in scope here.",
+    "Copies inside a group are left as they were: duplicating a group called Card gives Card 2 holding the same child names, because two buttons in two cards are meant to read alike."
+  ]
+}

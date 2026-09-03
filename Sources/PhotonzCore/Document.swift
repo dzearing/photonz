@@ -456,7 +456,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// history step. Returns the copies bottom-up. Unknown ids are ignored.
     @discardableResult
     public mutating func duplicateLayers(ids: Set<UUID>, offsetBy offset: CGPoint = .zero) -> [Layer] {
-        var copies: [Layer] = []
+        var copies: [(copy: UUID, source: String)] = []
         func walk(_ list: inout [Layer]) {
             var result: [Layer] = []
             result.reserveCapacity(list.count)
@@ -469,14 +469,15 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                 result.append(layer)
                 if ids.contains(layer.id) {
                     let copy = layer.duplicated(offsetBy: offset)
-                    copies.append(copy)
+                    copies.append((copy.id, layer.name))
                     result.append(copy)
                 }
             }
             list = result
         }
         walk(&layers)
-        return copies
+        nameDuplicates(copies)
+        return copies.compactMap { layer(id: $0.copy) }
     }
 
     /// ⌥-drag: every layer in `origins` gets a copy directly above it, and it
@@ -493,6 +494,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     public mutating func duplicateLayers(movingCopiesTo origins: [UUID: CGPoint]) -> [UUID] {
         guard !origins.isEmpty else { return [] }
         var made: [(id: UUID, origin: CGPoint)] = []
+        var sources: [(copy: UUID, source: String)] = []
         func walk(_ list: inout [Layer]) {
             var result: [Layer] = []
             result.reserveCapacity(list.count)
@@ -502,6 +504,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                 if let origin = origins[layer.id] {
                     let copy = layer.duplicated()
                     made.append((copy.id, origin))
+                    sources.append((copy.id, layer.name))
                     result.append(copy)
                 }
             }
@@ -511,6 +514,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // Placed after the whole tree is built, because a canvas origin is only
         // knowable once the copy is sitting in its parent.
         for entry in made { moveLayer(id: entry.id, toCanvasOrigin: entry.origin) }
+        nameDuplicates(sources)
         return made.map(\.id)
     }
 
@@ -518,13 +522,15 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// of a copied layer reuses `Layer.duplicated`). Returns the copy.
     @discardableResult
     public mutating func duplicateLayer(id: UUID, offsetBy offset: CGPoint = .zero) -> Layer? {
-        var copy: Layer?
+        var copy: (copy: UUID, source: String)?
         withSiblings(of: id) { siblings, index in
             let made = siblings[index].duplicated(offsetBy: offset)
+            copy = (made.id, siblings[index].name)
             siblings.insert(made, at: index + 1)
-            copy = made
         }
-        return copy
+        guard let copy else { return nil }
+        nameDuplicates([copy])
+        return layer(id: copy.copy)
     }
 
     // MARK: - Grouping

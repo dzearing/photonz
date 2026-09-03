@@ -7046,3 +7046,31 @@ border-color walk now uses frames. Audit:
 
 Next: the width row is still called Thickness while its color row is called
 Outline. Left alone deliberately; it is the first question in the audit.
+
+## 2026-09-03 — A copy takes a free name
+
+Duplicating one layer twice left two rows reading exactly the same word
+("Rectangle copy", "Rectangle copy"), so the only way to tell them apart was to
+click each one and watch the canvas. Reproduced on the probe first.
+
+The question was policy, not plumbing. The app already answers it twice: drawing
+a second rectangle gives "Rectangle 2", and pasting one gives "Rectangle 2" too,
+because paste restores the source name and lets `uniquelyNamed` number it. A
+duplicate now follows the same rule, so one shape reads one way wherever it came
+from. A name a person typed is theirs: the copy keeps their word and gains
+"copy", numbered after that ("Card copy", "Card copy 2"), and copying a copy
+never stacks up into "Card copy copy".
+
+`LayerNaming` gains `copyName(of:taken:)` with `firstFree` and `copyBase`;
+`freshGroupName` reuses `firstFree`. The rename is a pass over the finished
+tree (`PhotonzDocument.nameDuplicates`) rather than something each insert does,
+because inside the duplicate walk the set of taken names is still mid-flight.
+All three duplicate paths feed it: ⌘J, the multi-selection duplicate, and the
+⌥-drag copy. 12 new core tests; playtest walk
+`Scripts/playtest/duplicate-names-walk.json`. Audit:
+`queue/audits/2026-09-03-duplicate-names.json`.
+
+Next: pasting a layer a person named still repeats the exact name, and a
+duplicated component copy gets "Button copy" while a second one dragged off the
+shelf is another plain "Button". Both are in the audit as questions rather than
+fixed here.
