@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 950,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T20:13:50.135Z",
-  "updated": "2026-09-03T22:17:37.695787Z",
+  "updated": "2026-09-03T22:17:57.345Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in Scripts/playtest/corner-names-walk.json: after dragging a main component onto the frame corner the tree reads Frame [frame] and Component [group] as siblings, while dropComponent from the Library nests the copy under the frame. The Library drop path already does the adoption; the canvas move path (EditorState drag commit) does not.",
@@ -35,7 +35,12 @@
     {
       "t": "2026-09-03T22:17:37.695787Z",
       "note": "Built and verified in the probe app (Screen Recording granted, so the pictures are real window captures). Core: FrameAdoption.swift (frameAdoption / frameAdoptionHost / adoptMovedLayers) plus canMoveSubtree in ComponentInstances.swift; 16 new tests, whole suite 2493 green. App: EditorState.commitCanvasDrop and commitCanvasOrigins(_:joiningScreens:) reparent inside the SAME perform as the move, so one undo takes both back; the drop opens the screen in the layers list; CanvasNSView draws the Library shelf's dashed host box while a move drag is in the air. Walk Scripts/playtest/screen-adoption-walk.json proves all four acceptance items plus the arrow-key rule and the option-drag copy. Post-build review: the clumsy part is getting the layer back OUT - a single click on a screen picks the whole screen, so you double click first. That is the existing group rule, filed separately as 'clicking-something-on-a-screen-picks-that-thing'. Also noted in the audit: a drag whose members land on two different screens draws no box but still reparents each one, and clipping only appears at the moment of the drop. Engineering note not worth the audit: the hint is gated on Experiments.framesEnabled (chrome, Next only) while the reparent follows document.hasFrames, exactly as addLayerDrawnOnFrame already does - so a Next-made document opened in Current adopts on a drag with no hint, which is the behaviour drawing already had."
+    },
+    {
+      "t": "2026-09-03T22:17:57.344Z",
+      "note": "Dragging a layer onto a screen now makes that screen its parent, and dragging it back off takes it out. Core rule in PhotonzCore/FrameAdoption.swift (centre decides, same as a drawn shape and a Library drop), wired into the drag-only commit paths in EditorState so one undo takes back both the move and the change of parent; the drop opens the screen in the layers list and the screen wears a dashed box while the drag is in the air. 16 new tests, whole suite 2493 green, and all four acceptance items walked in the probe app via Scripts/playtest/screen-adoption-walk.json. Audit: queue/audits/2026-09-03-screen-adoption.json."
     }
   ],
-  "started": "2026-09-03T22:03:53.677Z"
+  "started": "2026-09-03T22:03:53.677Z",
+  "completed": "2026-09-03T22:17:57.345Z"
 }
