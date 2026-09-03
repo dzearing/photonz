@@ -5347,3 +5347,30 @@ working around it.
 Audit: `queue/audits/2026-09-03-geometry-fields.json`. Follow-ups filed for
 several layers selected at once, and for the harness's ⌘Z blind spot. Next in
 `ui-building`: step 1 of the order of work, layers that nest.
+
+## 2026-09-03 — dashboard fields take ink
+
+Fixed the user-reported bug where typing into the status dashboard showed
+black text on a black well. `.input` paints the recessed well and
+`.input>input` paints the ink, so the class belongs on a wrapper with the
+real control inside it; four fields in `docs/design/mocks/pages/dashboard.html`
+(new task title, new task notes, the per-decision optional note, the audit
+feedback box) wore it on the control itself and kept the browser's black.
+Wrapped all four. A corpus scan found no others in the 90 pages.
+
+Added `shared/check-fieldwrap.mjs`, which derives the wrapper list from the
+CSS itself (any class with a `> input|textarea|select` child rule) so it
+covers `.input`, `.stepper`, `.slider`, `.switch`, `.check`, `.radio` and
+`.composer` with no hand-kept list, and fails on a bare control wearing one.
+Proved it flags the pre-fix file. The rule is also written into
+`components/input.css` and `shared/AGENTS.md`.
+
+Verified in real Chrome in both themes by typing into all six fields:
+15.66:1 dark, 14.94:1 light, every value landed, zero console errors; the
+Seq check ran with POSTs aborted so it could not renumber a real task. All
+shared gates green. Only visible change beyond colour: the two multiline
+boxes now take the system's multiline height and typeface, which is an
+evaluate question in the audit.
+
+Audit: `queue/audits/2026-09-03-dashboard-field-ink.json`. Commit 0e86bda.
+Next: back to the queue.

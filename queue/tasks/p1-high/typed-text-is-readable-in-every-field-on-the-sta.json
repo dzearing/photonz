@@ -5,11 +5,11 @@
   "epic": "dashboard-polish",
   "priority": "p1-high",
   "seq": 5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:47:29.777Z",
-  "updated": "2026-09-03T01:04:33.483493Z",
+  "updated": "2026-09-03T01:04:54.672Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-02: when I type in an input on the status site, the input text is black on a dark background. Root cause found by reading: the shared design system styles the WELL on .input and the TEXT on .input>input (docs/design/mocks/shared/components/input.css lines 33 to 49), so the class belongs on a wrapper element with the real field inside it. Four places in docs/design/mocks/pages/dashboard.html put the class on the field itself instead: line 622 (the per-decision note), 770 (new task title), 773 (new task notes textarea), 1214 (the audit feedback textarea). Those get the dark well background but never the --ink color, so the text falls back to the browser default black. The same file gets it right at line 782 (filter) and 961 (Seq), both of which wrap an input in a label carrying the class. Fix by wrapping, not by adding a color rule for bare elements, unless the design system decides bare elements are legal, in which case make .input,textarea.input,select.input carry the color and say so in the component file. Also check the other mock pages for the same mistake.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-03T01:04:33.483493Z",
       "note": "review of the built thing: the two multiline boxes are now ~52px tall instead of two default rows, and pick up the system sans at 12px, because that is what .input.area>textarea says. That is the only visible change beyond colour and it is the design system's own size, so I kept it rather than overriding it, and put it in the audit as a question. Audit: queue/audits/2026-09-03-dashboard-field-ink.json with three real Chrome screenshots."
+    },
+    {
+      "t": "2026-09-03T01:04:54.672Z",
+      "note": "All six dashboard fields (new task title, new task notes, decision optional note, audit feedback, task filter, seq) now show typed text in the normal ink. The four that wore the .input class on the control itself are wrapped the way the component documents; they were the only four in the 90-page corpus. New gate shared/check-fieldwrap.mjs derives the wrapper list from the CSS and fails on a bare control wearing one, and the rule is written into input.css and AGENTS.md. Verified in real Chrome in both themes by typing into each field: 15.66:1 dark, 14.94:1 light, zero console errors; all shared gates green. Audit at queue/audits/2026-09-03-dashboard-field-ink.json with three screenshots. Commit 0e86bda."
     }
   ],
-  "started": "2026-09-03T00:55:03.344Z"
+  "started": "2026-09-03T00:55:03.344Z",
+  "completed": "2026-09-03T01:04:54.672Z"
 }
