@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 820,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T13:00:26.415Z",
-  "updated": "2026-09-03T13:00:26.415Z",
+  "updated": "2026-09-03T19:44:45.740Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the placement audit 2026-09-03 (queue/audits/2026-09-03-ui-components-placement.json). Today Stretch widens the layer frame and TextRasterizer draws at the natural size from the frame origin, so nothing visibly moves. Real reflow is auto layout (ui-layout, staged later), so the short version here is probably a text alignment inside the frame, or hiding Stretch for text content.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-03T13:00:26.415Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T19:19:14.693Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T19:24:17.816Z",
+      "note": "Adversarial pre-review. Walked it as a first-timer: select the word inside a Button, Layout > Horizontal > Stretch. The box widens and the glyphs do not move, because the app has no idea where words sit inside their own box: TextRasterizer always draws from the top left. So the missing thing is not stretch, it is text alignment, which this app has never had at all (you cannot centre a caption over a picture today except by dragging it by eye). Rejected the cheap option of hiding Stretch for text: a WRAPPED paragraph already reflows when its box widens (the rasterizer wraps to the frame), which is exactly what a card body wants, so hiding it would remove the one thing that works. Shortest version that delivers the value: give text an Align (words across, words down), honour it in the rasterizer, and have Stretch set Align to Center/Middle when the text has none of its own, so the choice does something the moment it is made and the Layout row can say so in words. Cut: justified text, per-paragraph controls, any reflow of point size (that is auto layout's job)."
+    },
+    {
+      "t": "2026-09-03T19:29:48.373Z",
+      "note": "Core + renderer landed, TDD. TextContent carries an optional alignment and verticalAlignment (nil = the top left every older document drew at, no key written); TextRasterizer honours both (a paragraph style across, a shortened lay-out box down, and a box too small for the words keeps every line by drawing exactly what it always drew); setPlacement on a text layer with stretch on an axis sets Center/Middle on that axis when the words have never been placed, in the same one edit. 27 rasterizer tests + 12 new core tests green."
+    },
+    {
+      "t": "2026-09-03T19:34:10.699Z",
+      "note": "App layer landed: an Align row (two segmented controls, words across and words down) in the Text section behind next-placement; the Layout section's caption for a stretched piece of text says the box fills and Align places the words; re-editing text keeps a box bigger than its words at that width and types the draft in the alignment it will commit to, so a centred label does not spring left mid-edit. Decision written into docs/design/ui-building.md as 'Where the words sit in their box'. Full suite green (2364 tests)."
+    },
+    {
+      "t": "2026-09-03T19:44:45.739Z",
+      "note": "Reviewed on the real app (probe, Screen Recording granted): Scripts/playtest/stretched-words-walk.json, 56 steps, ok. Verified acceptance 1: setting Stretch on a text layer flips the Align row to Center and adds a line saying what stretch means for words, and the next resize stretches the box and carries the words to the middle of it (words-3-wider-sc.png shows the word 130 points right of where it was pinned before). Honest caveat: nothing on the canvas moves at the MOMENT of the pick, which is true of every Layout rule, so the visible proof is one drag away. Acceptance 2: a label centred in a button is still centred at any width, both through the button's own Center rule (unchanged) and through stretch+Center (covered by aStretchedLabelStaysCentred). Acceptance 3: docs/design/ui-building.md, 'Where the words sit in their box'. Audit written to queue/audits/2026-09-03-stretched-words.json with three real screenshots. Also filed a-screen-repaints-its-surface-as-soon-as-it-is-r: during the walk the frame's painted surface stayed the old size in the window while the offscreen render of the same step was right."
     }
-  ]
+  ],
+  "started": "2026-09-03T19:19:14.693Z"
 }

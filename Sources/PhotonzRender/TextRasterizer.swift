@@ -19,9 +19,12 @@ public enum TextRasterizer {
     /// a sensible minimum. Shared by the canvas inline editor and `naturalSize`.
     public static let minimumTextWidth: CGFloat = 80
 
-    /// Renders `text` top-left aligned, word-wrapped inside `size` (in pixels).
-    /// A `borderWidth > 0` strokes the glyph OUTLINES in `borderColorHex` (a text
-    /// outline), not a box — the layer's box border is suppressed for text.
+    /// Renders `text` word-wrapped inside `size` (in pixels), sitting where its
+    /// `alignment` and `verticalAlignment` say — top left for text that has
+    /// never been given a place, which is every document written before those
+    /// existed. A `borderWidth > 0` strokes the glyph OUTLINES in
+    /// `borderColorHex` (a text outline), not a box — the layer's box border is
+    /// suppressed for text.
     public static func rasterize(_ text: TextContent, size: CGSize,
                                  borderWidth: CGFloat = 0,
                                  borderColorHex: String = "#000000") -> CGImage? {
@@ -36,8 +39,8 @@ public enum TextRasterizer {
             return nil
         }
 
-        let path = CGPath(rect: CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height)),
-                          transform: nil)
+        let box = CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height))
+        let path = CGPath(rect: laidOutBox(text, in: box), transform: nil)
         func draw(_ attributed: NSAttributedString) {
             let framesetter = CTFramesetterCreateWithAttributedString(attributed)
             let frame = CTFramesetterCreateFrame(framesetter, CFRange(location: 0, length: 0), path, nil)
@@ -59,6 +62,30 @@ public enum TextRasterizer {
         }
 
         return context.makeImage()
+    }
+
+    /// The part of `box` the lines are laid out in, so text that does not fill
+    /// its box sits where `verticalAlignment` says.
+    ///
+    /// CoreText fills a frame from its TOP edge down, so "top" is the whole box
+    /// — byte for byte what this drew before alignment existed — and the other
+    /// two shrink the box to the height the lines actually need and slide it.
+    /// Text that needs at least the box it has keeps the whole box: a rect even
+    /// a hair short makes CoreText drop the last line, and losing a word is
+    /// worse than a line of text hugging the top of a box too small for it.
+    private static func laidOutBox(_ text: TextContent, in box: CGRect) -> CGRect {
+        guard text.verticalAlignment != nil, text.usedVerticalAlignment != .top,
+              !text.string.isEmpty else { return box }
+        let framesetter = CTFramesetterCreateWithAttributedString(attributedString(text))
+        let suggested = CTFramesetterSuggestFrameSizeWithConstraints(
+            framesetter, CFRange(location: 0, length: 0), nil,
+            CGSize(width: box.width, height: .greatestFiniteMagnitude), nil)
+        // One point of slack: the suggestion and the frame it is handed back to
+        // round differently, and the cost of being one short is a dropped line.
+        let needed = ceil(suggested.height) + 1
+        guard needed < box.height else { return box }
+        let y = text.usedVerticalAlignment == .middle ? ((box.height - needed) / 2).rounded() : 0
+        return CGRect(x: box.minX, y: box.minY + y, width: box.width, height: needed)
     }
 
     /// The size a frame must be for `text` to lay out without wrapping beyond
@@ -207,6 +234,13 @@ public enum TextRasterizer {
             NSAttributedString.Key(kCTFontAttributeName as String): font ?? self.font(for: text),
             NSAttributedString.Key(kCTForegroundColorAttributeName as String): color,
         ]
+        // Where the words sit across the box. Left is CoreText's own default,
+        // so text that has never been placed carries no paragraph style at all
+        // and lays out exactly as it did before alignment existed.
+        if let alignment = text.alignment, alignment != .left,
+           let paragraph = paragraphStyle(alignment) {
+            attrs[NSAttributedString.Key(kCTParagraphStyleAttributeName as String)] = paragraph
+        }
         if borderWidth > 0, text.fontSize > 0 {
             let brgba = RGBA(hex: borderColorHex) ?? RGBA(r: 0, g: 0, b: 0)
             let strokeColor = CGColor(srgbRed: brgba.r, green: brgba.g, blue: brgba.b, alpha: brgba.a)
@@ -219,6 +253,18 @@ public enum TextRasterizer {
             attrs[NSAttributedString.Key(kCTStrokeWidthAttributeName as String)] = percent
         }
         return NSAttributedString(string: text.string, attributes: attrs)
+    }
+
+    /// A paragraph style that says nothing but which edge the lines line up on.
+    private static func paragraphStyle(_ alignment: TextAlign) -> CTParagraphStyle? {
+        var value: CTTextAlignment = alignment == .center ? .center : .right
+        return withUnsafeBytes(of: &value) { raw -> CTParagraphStyle? in
+            guard let base = raw.baseAddress else { return nil }
+            var setting = CTParagraphStyleSetting(spec: .alignment,
+                                                  valueSize: MemoryLayout<CTTextAlignment>.size,
+                                                  value: base)
+            return CTParagraphStyleCreate(&setting, 1)
+        }
     }
 }
 

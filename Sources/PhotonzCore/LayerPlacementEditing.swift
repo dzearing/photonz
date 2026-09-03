@@ -36,16 +36,29 @@ extension PhotonzDocument {
 
     /// What ONE piece does, overriding whatever its container says. Passing nil
     /// for an axis hands that axis back to the container.
+    ///
+    /// Telling TEXT to stretch also moves its words to the middle of the box
+    /// they now fill, unless they have been given a place of their own, so the
+    /// choice does something the moment it is made rather than widening an
+    /// invisible box. One edit, one undo. See `Layer.textAlignedToFill`.
     public mutating func setPlacement(id: UUID, horizontal: HorizontalPlacement?) {
         guard let layer = layer(id: id) else { return }
         let next = layer.settingPlacement(horizontal: horizontal)
-        updateLayer(id: id) { $0.placement = next }
+        let filled = layer.textAlignedToFill(horizontal: horizontal)
+        updateLayer(id: id) {
+            $0.placement = next
+            if let filled { $0.content = .text(filled) }
+        }
     }
 
     public mutating func setPlacement(id: UUID, vertical: VerticalPlacement?) {
         guard let layer = layer(id: id) else { return }
         let next = layer.settingPlacement(vertical: vertical)
-        updateLayer(id: id) { $0.placement = next }
+        let filled = layer.textAlignedToFill(vertical: vertical)
+        updateLayer(id: id) {
+            $0.placement = next
+            if let filled { $0.content = .text(filled) }
+        }
     }
 
     /// The group a layer sits in, or nil when it sits loose on the canvas —

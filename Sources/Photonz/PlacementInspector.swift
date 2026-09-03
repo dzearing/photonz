@@ -98,6 +98,12 @@ struct PlacementInspector: View {
     private var isOnAScreen: Bool { container?.isFrame == true }
 
     private func childCaption(_ resolved: ResolvedPlacement) -> String {
+        // Stretch means something different for words than it does for a box:
+        // the box fills, and where the words sit in it is the Text section's
+        // Align. Said here because this is where the choice is made.
+        if current.text != nil, resolved.horizontal == .stretch || resolved.vertical == .stretch {
+            return "Stretch fills the box with the words placed by Align, in Text."
+        }
         if resolved.followsHorizontal, resolved.followsVertical {
             return isOnAScreen
                 ? "Following the screen. Pick something here to give this one layer its own rule."

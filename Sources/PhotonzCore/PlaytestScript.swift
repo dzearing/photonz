@@ -319,6 +319,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// pointer, and this is the switch that makes every row of a stack fill
     /// the width the stack was given.
     case stretchContentsAcross
+    /// Put the selected text's words back on the left of the box they fill,
+    /// which is what the Text section's Align row does (Next,
+    /// `next-placement`). The control is in the dock, which a walk cannot
+    /// reach with the pointer, so this is how a walk shows that where the
+    /// words sit after a stretch is still the user's to change.
+    case alignWordsLeft
     /// Paint the selected screen's surface a strong colour, which is what the
     /// Frame section's Background swatch does. The swatch is in the dock,
     /// which a walk cannot reach with the pointer, and a white screen is the

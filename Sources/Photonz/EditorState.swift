@@ -2738,6 +2738,24 @@ final class EditorState {
         if let colorHex { recordRecentColor(hex: colorHex) }
     }
 
+    /// Moves a text layer's words across their box. One undo step, and the box
+    /// itself never moves: alignment says where the words sit in the room they
+    /// already have, so a label dragged wide or told to stretch stays that
+    /// wide. It is not a new-text default either — a fresh block starts at the
+    /// left, where text has always started.
+    func setTextAlignment(layerID: UUID, _ alignment: TextAlign) {
+        guard document?.layer(id: layerID)?.text != nil else { return }
+        discardDragPreview()
+        perform { $0.setTextAlignment(id: layerID, alignment) }
+    }
+
+    /// The same, down the box.
+    func setTextAlignment(layerID: UUID, _ alignment: TextVerticalAlign) {
+        guard document?.layer(id: layerID)?.text != nil else { return }
+        discardDragPreview()
+        perform { $0.setTextAlignment(id: layerID, alignment) }
+    }
+
     /// An inline edit began. Re-editing an existing layer adopts its style (so
     /// the font picker edits what's on screen) and hides the layer until
     /// commit/cancel — the editor overlay visually replaces it.
@@ -2757,13 +2775,38 @@ final class EditorState {
     func commitTextEdit(layerID: UUID?, origin: CGPoint, string: String, maxWidth: CGFloat) {
         editingTextLayerID = nil
         let isEmpty = string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        let content = textStyles.content(string: string)
+        var content = textStyles.content(string: string)
+        // Where the words sit belongs to the layer, not to the new-text style,
+        // so re-wording a centred label keeps it centred instead of dropping it
+        // back to the left edge.
+        let edited = layerID.flatMap { document?.layer(id: $0) }
+        if let existing = edited?.text {
+            content.alignment = existing.alignment
+            content.verticalAlignment = existing.verticalAlignment
+        }
+        // A box somebody made bigger than its words — a paragraph, or a label
+        // told to stretch — keeps the room it was given, so re-wording it
+        // re-wraps in place instead of collapsing back around the words and
+        // pulling centred text off centre. A box still hugging its words
+        // re-hugs them.
+        var roomyWidth: CGFloat?
+        var roomyHeight: CGFloat?
+        // Next only, with the rest of placement: Current has no Align, so no
+        // text in it can be pulled off centre by a box that re-hugs.
+        if Experiments.shared.placementEnabled, let layer = edited, let words = layer.text {
+            let hugged = TextRasterizer.naturalSize(words, maxWidth: layer.frame.width,
+                                                    minWidth: TextRasterizer.minimumTextWidth)
+            if layer.frame.width > hugged.width + 0.5 { roomyWidth = layer.frame.width }
+            if layer.frame.height > hugged.height + 0.5 { roomyHeight = layer.frame.height }
+        }
         if let layerID {
             if isEmpty {
                 perform { $0.removeLayer(id: layerID) }
             } else {
-                let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth,
+                var size = TextRasterizer.naturalSize(content, maxWidth: roomyWidth ?? maxWidth,
                                                       minWidth: TextRasterizer.minimumTextWidth)
+                if let roomyWidth { size.width = roomyWidth }
+                if let roomyHeight { size.height = max(size.height, roomyHeight) }
                 perform { document in
                     document.updateLayer(id: layerID) {
                         $0.content = .text(content)

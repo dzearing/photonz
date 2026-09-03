@@ -638,6 +638,10 @@ private final class Run {
                 if let id = editor.selectedLayerID {
                     editor.setPlacement(id: id, horizontal: .stretch)
                 }
+            case .alignWordsLeft:
+                if let id = editor.selectedLayerID {
+                    editor.setTextAlignment(layerID: id, TextAlign.left)
+                }
             case .stretchContentsAcross:
                 if let id = editor.selectedLayerID {
                     editor.setContentPlacement(id: id, horizontal: .stretch)

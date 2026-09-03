@@ -1,0 +1,31 @@
+{
+  "feature": "A label told to stretch does something you can see",
+  "epic": "ui-components",
+  "summary": "Text now says where its words sit inside their own box, across it and down it, and telling a piece of text to stretch moves them to the middle of the box it fills. Before this, stretching a label widened an invisible box and left the words exactly where they were.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Say where the pieces sit when something is resized\" (next-placement), on by default. Nothing in an existing document changes: text with no Align set draws from the top left, as it always did.",
+  "try": [
+    { "do": "Draw a screen with the Frame tool, anywhere on a blank canvas." },
+    { "do": "With the Text tool, click near the screen's top left and type Settings." },
+    { "do": "Switch to Select, click the word, and find the new Align row in the Text section, under Font and Size." },
+    { "do": "In the Layout section, set Horizontal to Stretch, then read the Align row and the line under the Layout rows.", "shot": "2026-09-03-stretch-words-2-chosen-sc.png" },
+    { "do": "Click the screen itself and drag its bottom right corner well out to the right.", "shot": "2026-09-03-stretch-words-3-wider-sc.png" },
+    { "do": "Click the word again and press the left segment of Align.", "shot": "2026-09-03-stretch-words-4-back-to-left-sc.png" },
+    { "do": "Press the middle segment again, then double click the word and re-word it to Settings and privacy." },
+    { "do": "Drag a Button out of the Library, double click its word, and set its Horizontal to Stretch." }
+  ],
+  "evaluate": [
+    "Picking Stretch flips Align to Center and nothing on the canvas moves until the next resize. Is the inspector changing enough of a sign that something happened?",
+    "After the screen is dragged wider, does the word land where you expected, or did you expect it centred on the SCREEN rather than in the middle of its own box?",
+    "Is Center the right thing for stretching to choose for you, or should it leave the words at the left and make you pick?",
+    "Two rows of small icons under Font, Size and Weight: is that the right shape and the right home for Align?",
+    "A piece of text that FOLLOWS a group already set to Stretch keeps its words at the left. Should following count as choosing?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the real window, not an offscreen render.",
+    "Nothing moves on the canvas at the moment you pick Stretch. That is true of every Layout rule (they are all promises for the next resize), but it means the visible proof of this one is one drag away.",
+    "The words centre in the LAYER's box, which stretches keeping the gap it had on each side, not in the container. That is what Stretch has always meant, and at a glance it does not look like the middle of the screen.",
+    "Only text you set Stretch on yourself is nudged to Center. Text inheriting Stretch from its group is left alone, because moving several labels at once from one menu pick in a group's own section would be a surprise.",
+    "Re-wording a box that is bigger than its words now keeps that width instead of collapsing back around the words. That was needed here (a centred label would otherwise jump to the left the moment you edited it) and it changes editing for wide paragraphs too, which is the behaviour they always wanted.",
+    "While the walk ran, a screen's painted surface stayed at its old size in the window after its corner was dragged, while the same document rendered offscreen was correct. Nothing to do with words; filed as its own task."
+  ]
+}

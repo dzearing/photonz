@@ -37,14 +37,24 @@ public struct TextContent: Hashable, Codable, Sendable {
     public var fontSize: CGFloat
     public var colorHex: String
     public var weight: TextWeight
+    /// Where the words sit across their box, or nil for the left edge every
+    /// piece of text was drawn at before this existed. Only visible when the
+    /// box is wider than the words — which is exactly what stretching one does.
+    /// See `TextAlign.swift`.
+    public var alignment: TextAlign?
+    /// And down it, or nil for the top edge.
+    public var verticalAlignment: TextVerticalAlign?
 
     public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24,
-                colorHex: String = "#FFFFFF", weight: TextWeight = .regular) {
+                colorHex: String = "#FFFFFF", weight: TextWeight = .regular,
+                alignment: TextAlign? = nil, verticalAlignment: TextVerticalAlign? = nil) {
         self.string = string
         self.fontName = fontName
         self.fontSize = fontSize
         self.colorHex = colorHex
         self.weight = weight
+        self.alignment = alignment
+        self.verticalAlignment = verticalAlignment
     }
 
     public init(from decoder: Decoder) throws {
@@ -55,6 +65,11 @@ public struct TextContent: Hashable, Codable, Sendable {
         colorHex = try container.decode(String.self, forKey: .colorHex)
         // `weight` postdates TextContent; old payloads omit it.
         weight = try container.decodeIfPresent(TextWeight.self, forKey: .weight) ?? .regular
+        // So do both alignments: text saved before them draws from the top
+        // left, which is what a missing key means here.
+        alignment = try container.decodeIfPresent(TextAlign.self, forKey: .alignment)
+        verticalAlignment = try container.decodeIfPresent(TextVerticalAlign.self,
+                                                          forKey: .verticalAlignment)
     }
 }
 

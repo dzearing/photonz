@@ -187,6 +187,52 @@ unflagged, because a layer with nothing set behaves exactly as it always did.
 **On disk**, a document saved before any of this decodes unchanged, because a
 flat list is a tree of depth one and an unset placement writes nothing.
 
+### Where the words sit in their box (landed 2026-09-03)
+
+**The decision: a label told to stretch fills the box and centres its words, and
+text gains an Align of its own.** The alternative was to stop offering Stretch
+for text at all, and it was rejected: a wrapped paragraph already re-wraps when
+its box widens, which is exactly what a card body wants, so hiding the choice
+would take away the one thing that worked to tidy up the one that did not.
+
+Text has always been drawn from the top left of its box. That is invisible while
+the box hugs the words and wrong the moment the box is bigger than they are, so
+the missing half was never stretch, it was **where the words sit in the room
+they have**. `TextContent` now carries an `alignment` (left, center, right) and
+a `verticalAlignment` (top, middle, bottom), and the Text section of the
+inspector has an Align row with the two of them, behind `next-placement`.
+
+- **Nothing set is the top left**, which is what every document written before
+  this drew, and no key is written for it. Left carries no paragraph style at
+  all, so the render is byte for byte what it was.
+- **Telling text to stretch centres it on that axis**, but only while it has
+  never been given a place of its own: horizontal Stretch sets Align to Center,
+  vertical Stretch sets it to Middle, in the same one edit, one undo. That is
+  what makes the choice do something you can see instead of widening an
+  invisible box. The Layout section says so in a line under the rows.
+- **After that the Align row belongs to the user.** Coming off Stretch never
+  rewrites it, and neither does stretching again.
+- **Alignment never moves the box.** It says where the words sit in the room the
+  box already has, so a stretched label stays stretched and a paragraph keeps
+  its wrap width.
+- **A box too small for its words keeps every line.** CoreText fills a frame
+  from the top down and drops what does not fit, so text that needs at least the
+  box it has is drawn exactly as it always was rather than centred into losing
+  its last line.
+- **A box bigger than its words keeps that room when it is re-worded.** Typing
+  in it happens at that width with the draft aligned the way the committed words
+  will be, so a centred label does not spring to the left edge for the length of
+  the edit and back on Return.
+
+**Where it lives.** `TextAlign`, `TextVerticalAlign` and the stretch rule are in
+`Sources/PhotonzCore/TextAlign.swift`; the drawing is `TextRasterizer`
+(a paragraph style across, a shortened lay-out box down); the Align row is in
+`TextInspector` and the caption in `PlacementInspector`.
+
+**What this is not.** It is not auto layout: nothing re-flows the type size, and
+a label whose words outgrow a shrinking button still overhangs it. That stays
+`ui-layout`'s job.
+
 ### The Library is a panel group, not a place you go
 
 The Library joins Layers and the inspector sections in the existing right dock,

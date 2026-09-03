@@ -1956,9 +1956,41 @@ struct TextInspector: View {
                     }
                     .pickerStyle(.menu).labelsHidden().controlSize(.small)
                 }
+                // Where the words sit inside their own box. Only tells while
+                // the box is bigger than the words, which is what a box told
+                // to stretch is (Next, `next-placement`).
+                if Experiments.shared.placementEnabled { alignRow(c) }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
+        }
+    }
+
+    /// Align: where the words sit across their box and down it.
+    ///
+    /// Two segmented controls rather than menus, because this is the one thing
+    /// in the section that is read as a picture, and because every tool that
+    /// has it draws it exactly this way.
+    private func alignRow(_ c: TextContent) -> some View {
+        HStack(spacing: 8) {
+            Picker("Words across the box", selection: Binding(
+                get: { c.usedAlignment },
+                set: { editorState.setTextAlignment(layerID: layer.id, $0) })) {
+                Image(systemName: "text.alignleft").tag(TextAlign.left)
+                Image(systemName: "text.aligncenter").tag(TextAlign.center)
+                Image(systemName: "text.alignright").tag(TextAlign.right)
+            }
+            .pickerStyle(.segmented).labelsHidden().controlSize(.small)
+            .help("Where the words sit across the box")
+            Picker("Words down the box", selection: Binding(
+                get: { c.usedVerticalAlignment },
+                set: { editorState.setTextAlignment(layerID: layer.id, $0) })) {
+                Image(systemName: "align.vertical.top").tag(TextVerticalAlign.top)
+                Image(systemName: "align.vertical.center").tag(TextVerticalAlign.middle)
+                Image(systemName: "align.vertical.bottom").tag(TextVerticalAlign.bottom)
+            }
+            .pickerStyle(.segmented).labelsHidden().controlSize(.small)
+            .help("Where the words sit down the box")
         }
     }
 

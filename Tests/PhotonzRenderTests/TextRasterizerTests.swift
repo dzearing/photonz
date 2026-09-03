@@ -281,4 +281,99 @@ struct TextRasterizerTests {
         #expect(inkCount(output, r: 0...220, g: 0...220, b: 0...220) > 30,
                 "the auto-contrast shadow should darken pixels around the glyphs")
     }
+
+    // MARK: - Where the words sit in their box (ui-building)
+
+    /// The columns and rows that carry ink, so "did the words move" is one
+    /// comparison rather than an eyeball.
+    private func inkBounds(_ image: CGImage) -> (columns: ClosedRange<Int>, rows: ClosedRange<Int>)? {
+        let width = image.width
+        let height = image.height
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        let context = CGContext(data: &data, width: width, height: height,
+                                bitsPerComponent: 8, bytesPerRow: width * 4,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        var minX = width, maxX = -1, minY = height, maxY = -1
+        for y in 0..<height {
+            for x in 0..<width where data[(y * width + x) * 4 + 3] > 80 {
+                minX = min(minX, x); maxX = max(maxX, x)
+                minY = min(minY, y); maxY = max(maxY, y)
+            }
+        }
+        guard maxX >= 0 else { return nil }
+        // A bitmap context stores its rows top down, whichever way its drawing
+        // coordinates run, so row 0 here is the top of the picture.
+        return (minX...maxX, minY...maxY)
+    }
+
+    private func words(_ string: String = "Button", _ alignment: TextAlign? = nil,
+                       _ verticalAlignment: TextVerticalAlign? = nil) -> TextContent {
+        TextContent(string: string, fontSize: 20, colorHex: "#FFFFFF",
+                    alignment: alignment, verticalAlignment: verticalAlignment)
+    }
+
+    /// The ink of one piece of text drawn in one box.
+    private func bounds(_ text: TextContent,
+                        _ size: CGSize) throws -> (columns: ClosedRange<Int>, rows: ClosedRange<Int>) {
+        let image = try #require(TextRasterizer.rasterize(text, size: size))
+        return try #require(inkBounds(image))
+    }
+
+    @Test("Words with nothing set still start at the left edge")
+    func unplacedWordsStartAtTheLeft() throws {
+        let box = CGSize(width: 400, height: 40)
+        let plain = try bounds(words(), box)
+        let left = try bounds(words("Button", .left), box)
+        #expect(plain.columns.lowerBound < 8)
+        #expect(left.columns == plain.columns, "picking Left is the same picture as never picking")
+    }
+
+    @Test("Centred words sit in the middle of the box they fill")
+    func centredWordsSitInTheMiddle() throws {
+        let box = CGSize(width: 400, height: 40)
+        let centred = try bounds(words("Button", .center), box)
+        let middle = (centred.columns.lowerBound + centred.columns.upperBound) / 2
+        #expect(abs(middle - 200) <= 3, "the word should straddle the middle, not the left edge")
+        #expect(centred.columns.lowerBound > 100, "and it should have left the left edge")
+    }
+
+    @Test("Right-aligned words end at the right edge")
+    func rightAlignedWordsEndAtTheRight() throws {
+        let box = CGSize(width: 400, height: 40)
+        let right = try bounds(words("Button", .right), box)
+        #expect(right.columns.upperBound > 390)
+    }
+
+    @Test("Words told to sit down the middle leave the top of the box empty")
+    func middleWordsLeaveTheTopEmpty() throws {
+        let box = CGSize(width: 400, height: 200)
+        let top = try bounds(words(), box)
+        let middle = try bounds(words("Button", nil, .middle), box)
+        let bottom = try bounds(words("Button", nil, .bottom), box)
+        #expect(top.rows.lowerBound < 8)
+        #expect(middle.rows.lowerBound > 80, "the lines should have come down the box")
+        #expect(bottom.rows.lowerBound > middle.rows.lowerBound, "and further still at the bottom")
+        #expect(bottom.rows.upperBound > 180)
+    }
+
+    @Test("Text taller than its box keeps every line rather than centring some away")
+    func textTallerThanItsBoxKeepsEveryLine() throws {
+        let long = words("the quick brown fox jumps over the lazy dog again and again", nil, .middle)
+        let short = TextContent(string: long.string, fontSize: 20, colorHex: "#FFFFFF")
+        let box = CGSize(width: 200, height: 40)
+        let centred = try #require(TextRasterizer.rasterize(long, size: box))
+        let plain = try #require(TextRasterizer.rasterize(short, size: box))
+        #expect(inkCount(centred, r: 200...255, g: 200...255, b: 200...255)
+                == inkCount(plain, r: 200...255, g: 200...255, b: 200...255),
+                "a box too small for the words draws exactly what it always drew")
+    }
+
+    @Test("Moving the words never changes how big the box needs to be")
+    func alignmentDoesNotChangeMeasurement() {
+        let plain = TextRasterizer.naturalSize(words("Button"))
+        let centred = TextRasterizer.naturalSize(words("Button", .center, .middle))
+        #expect(plain == centred)
+    }
 }

@@ -3690,6 +3690,15 @@ final class CanvasNSView: NSView {
             storage.addAttributes([.font: font, .foregroundColor: color],
                                   range: NSRange(location: 0, length: storage.length))
         }
+        // The draft sits where the committed words will: a centred label is
+        // typed centred rather than jumping on Return.
+        if textSession?.captionStyle == nil {
+            switch content.usedAlignment {
+            case .left: editor.alignment = .left
+            case .center: editor.alignment = .center
+            case .right: editor.alignment = .right
+            }
+        }
         layoutTextEditor()
     }
 
@@ -3719,8 +3728,13 @@ final class CanvasNSView: NSView {
         }
         let topLeft = viewport.viewPoint(fromDocument: session.origin)
         let minView = TextRasterizer.minimumTextWidth * viewport.zoom
-        let capView = max(minView, textWrapWidth(origin: session.origin) * viewport.zoom)
-        var contentWidth = minView
+        // A box bigger than its words — a paragraph, or a label told to stretch
+        // across what holds it — is typed in at the width it already has, so
+        // centred words are typed where they will land instead of springing to
+        // the left edge for the length of the edit.
+        let roomy = roomyBoxWidth(session).map { $0 * viewport.zoom }
+        let capView = roomy ?? max(minView, textWrapWidth(origin: session.origin) * viewport.zoom)
+        var contentWidth = roomy ?? minView
         var height = (editor.font?.pointSize ?? 20) * 1.4
         if let container = editor.textContainer, let layoutManager = editor.layoutManager {
             container.containerSize = NSSize(width: capView, height: .greatestFiniteMagnitude)
@@ -3728,10 +3742,21 @@ final class CanvasNSView: NSView {
             let used = layoutManager.usedRect(for: container)
             // Hug the longest laid-out line (+ caret slack), floored at the
             // minimum and capped at the wrap width.
-            contentWidth = min(capView, max(minView, ceil(used.width) + 3))
+            if roomy == nil { contentWidth = min(capView, max(minView, ceil(used.width) + 3)) }
             height = max(height, used.height + 2)
         }
         editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: ceil(height))
+    }
+
+    /// The width of the box being re-edited, when that box is wider than the
+    /// words in it; nil for a new block and for a box that hugs its words.
+    private func roomyBoxWidth(_ session: TextEditSession) -> CGFloat? {
+        guard Experiments.shared.placementEnabled,
+              session.captionStyle == nil, let layerID = session.layerID,
+              let layer = document?.canvasLayer(id: layerID), let words = layer.text else { return nil }
+        let hugged = TextRasterizer.naturalSize(words, maxWidth: layer.frame.width,
+                                                minWidth: TextRasterizer.minimumTextWidth)
+        return layer.frame.width > hugged.width + 0.5 ? layer.frame.width : nil
     }
 
     /// A caption field IS the pill it commits to. Its frame comes straight from

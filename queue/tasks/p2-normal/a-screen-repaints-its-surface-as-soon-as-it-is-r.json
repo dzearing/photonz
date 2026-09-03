@@ -1,0 +1,27 @@
+{
+  "id": "a-screen-repaints-its-surface-as-soon-as-it-is-r",
+  "title": "A screen repaints its surface as soon as it is resized",
+  "goal": "When you drag a screen bigger by its corner, the colour you painted it should fill the new shape straight away. Right now the surface can stay the old size in the window while everything on the screen has already moved, so the picture on screen disagrees with the picture that gets exported.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 930,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T19:43:03.824Z",
+  "updated": "2026-09-03T19:43:03.825Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on 2026-09-03 during the stretched-words walk (Scripts/playtest/stretched-words-walk.json, stage 3-wider). The live snapshot words-3-wider-sc.png shows the frame background still 620x340 while the inspector reads 880x500 and the child text has already moved; the offscreen render words-3-wider-doc.png taken at the same step is correct, so the model and the renderer are right and the canvas view is serving something stale. Suspect the frame surface raster or the incremental RenderDiff path in DocumentRenderer/CanvasView rather than the frame model. Reproduce first: it may be a snapshot-timing artefact rather than a bug.",
+  "acceptance": [
+    "Dragging a screen bigger by any corner leaves no unpainted band inside its outline once the drag ends",
+    "The window and an exported picture of the same document agree after a resize",
+    "A playtest of the resize proves it with a real screenshot"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T19:43:03.825Z",
+      "note": "created (manual)"
+    }
+  ]
+}
