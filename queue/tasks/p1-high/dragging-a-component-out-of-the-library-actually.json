@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 6,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:31:47.909Z",
-  "updated": "2026-09-03T13:26:00.655642Z",
+  "updated": "2026-09-03T13:26:18.436Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-03: when I drag a component from the library to the canvas, there is no drag and drop support. The plumbing exists, so this is about why it does not fire, not about building it from nothing: LibraryPanel.swift line 301 and ComponentPanel.swift line 357 attach .onDrag, ComponentPanel.ComponentDrag builds an NSItemProvider with type com.photonz.component-id, and CanvasView registers that type (CanvasView.swift line 992) and routes drops through onDropComponent (EditorView.swift line 290). Two suspects, verify both rather than guessing: (1) each tile puts .onTapGesture(count: 2) and .onTapGesture ahead of .onDrag, and a tap gesture can win over the drag so the drag never begins; if so the fix is a gesture order or a simultaneous gesture, not removing double click to place. (2) .onDrag is used without a preview, so even a drag that does start shows nothing following the pointer and reads as broken; SwiftUI has onDrag(preview:) for exactly this. Also check that the canvas gives drag feedback at all: draggingEntered and draggingUpdated exist at CanvasView.swift line 1000, but nothing draws a landing indicator. Per the users standing rule, reproduce before claiming a cause.",
@@ -74,7 +74,12 @@
     {
       "t": "2026-09-03T13:26:00.655642Z",
       "note": "Style tiles do not drag at all and were left alone: a named color has nowhere to land, it paints what is selected. Filed as a follow-up: a screen's name and the name of a component at its top left corner print on top of each other (old chrome, visible in the audit pictures)."
+    },
+    {
+      "t": "2026-09-03T13:26:18.435Z",
+      "note": "Root cause was an undeclared pasteboard type: the drag carried com.photonz.component-id with zero bytes behind it, so the canvas refused every drop. Declared it in build-app.sh (every variant, guarded by the build), added onDrag previews on component and media tiles, and a canvas landing box plus a dashed outline round the screen a copy would join, all decided by two new tested PhotonzCore answers. Verified on the probe with Scripts/playtest/library-drag-walk.json (real screen captures in queue/audits/2026-09-03-library-drag.json); 2134 tests green. Not verified, and said so in the audit: that pressing and dragging a tile starts the drag, which needs a real mouse this machine will not grant."
     }
   ],
-  "started": "2026-09-03T13:02:16.134Z"
+  "started": "2026-09-03T13:02:16.134Z",
+  "completed": "2026-09-03T13:26:18.436Z"
 }
