@@ -191,19 +191,19 @@ struct LibraryStyleTile: View {
     private var isSelected: Bool { editorState.selectedLibraryItemID == entry.id }
 
     var body: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: LibraryShelfLayout.captionSpacing) {
             RoundedRectangle(cornerRadius: 5)
                 .fill(Color(hex: style.colorHex))
-                .frame(height: 44)
+                .frame(height: LibraryShelfLayout.thumbnailHeight)
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.12)))
             Text(entry.name)
-                .font(.system(size: 10))
+                .font(.system(size: LibraryShelfLayout.captionFontSize))
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
         }
         .frame(maxWidth: .infinity)
-        .padding(4)
+        .padding(LibraryShelfLayout.tilePadding)
         .background(
             RoundedRectangle(cornerRadius: 7)
                 .fill(isSelected ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))

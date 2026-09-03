@@ -323,16 +323,16 @@ struct LibraryComponentTile: View {
     private var isSelected: Bool { editorState.selectedLibraryItemID == entry.id }
 
     var body: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: LibraryShelfLayout.captionSpacing) {
             thumbnail
             Text(entry.name)
-                .font(.system(size: 10))
+                .font(.system(size: LibraryShelfLayout.captionFontSize))
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
         }
         .frame(maxWidth: .infinity)
-        .padding(4)
+        .padding(LibraryShelfLayout.tilePadding)
         .background(
             RoundedRectangle(cornerRadius: 7)
                 .fill(isSelected ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))
@@ -361,7 +361,7 @@ struct LibraryComponentTile: View {
     private var thumbnail: some View {
         RoundedRectangle(cornerRadius: 5)
             .fill(.quaternary)
-            .frame(height: 44)
+            .frame(height: LibraryShelfLayout.thumbnailHeight)
             .overlay {
                 if let image {
                     Image(decorative: image, scale: 1)

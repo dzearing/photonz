@@ -6211,3 +6211,31 @@ Next: the follow-up task to name a dropped file's layer after the file.
 
 Next: open questions in that audit are whether the clock time is the right
 recogniser and whether identical placed files need a number on the end.
+
+## 2026-09-03 — The Library shelf takes only the room its tiles need
+
+- The Library reserved its full ceiling the moment it held anything, so one
+  component tile sat above ~150pt of empty dock. It now takes
+  `min(content, ceiling)` like the layers area.
+- The height is ARITHMETIC, not a measurement. Verified in a hosted SwiftUI
+  harness first: the `.background(GeometryReader → preference)` idiom the
+  layers area uses reports 0 for a `LazyVGrid` and the real height for a plain
+  `VStack` — which is why layers works and why the grid cannot copy it. Also
+  found `.background(GeometryReader)` on a `ScrollView` reports the wrong
+  width; `onGeometryChange` reports it correctly, so that is what the panel
+  uses to learn how wide it is.
+- `LibraryShelfLayout` (PhotonzCore, 11 tests first) owns the tile metrics,
+  the adaptive column count and the row math. Its expectations were taken from
+  a real `LazyVGrid` at five dock widths, so the arithmetic is pinned to
+  SwiftUI's own layout. `LibraryTile`, `LibraryComponentTile` and
+  `LibraryStyleTile` now build themselves from those same metrics.
+- Height changes animate on the tile count only: a search glides, and the
+  first layout pass (where the shelf learns its width) lands silently.
+- Walk: `Scripts/playtest/library-shelf-height-walk.json`. Audit:
+  `queue/audits/2026-09-03-library-shelf-height.json`, two real captures.
+- Harness gap found: synthetic mouse events go to the canvas view, so a walk
+  cannot hover or drag anything in the right dock. The shelf's ceiling was
+  checked by presetting `inspector.libraryHeight` instead.
+
+Next: the audit asks whether the shelf growing under a search reads as helpful
+or as jitter, and whether the grab bar is still findable tucked under the tiles.

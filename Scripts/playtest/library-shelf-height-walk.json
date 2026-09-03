@@ -1,0 +1,135 @@
+{
+  "out": "/tmp/photonz-playtest/library-shelf-height",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-two-rows",
+      "note": "five starters wrap into two rows, and the shelf ends right under them"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-1-two-rows"
+    },
+    {
+      "do": "focus",
+      "field": "Search components"
+    },
+    {
+      "do": "type",
+      "text": "badge"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-one-tile",
+      "note": "narrowed to one tile: the shelf is one tile tall, not a tall empty box"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-2-one-tile"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "3-back",
+      "note": "clearing the search puts all five back and the shelf grows to two rows again"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-3-back"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1107,
+        417
+      ],
+      "to": [
+        1107,
+        350
+      ],
+      "space": "view",
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-capped",
+      "note": "the grab bar pulled up: the shelf caps short of its two rows and scrolls on its own"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-4-capped"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1107,
+        373
+      ],
+      "to": [
+        1107,
+        490
+      ],
+      "space": "view",
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-restored",
+      "note": "pulling the bar back down raises the ceiling again, and the shelf hugs its two rows"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-5-restored"
+    }
+  ]
+}

@@ -29,6 +29,9 @@ struct LibraryPanel: View {
     /// the bottom.
     @AppStorage("inspector.libraryHeight") private var maxHeight = 220.0
     @State private var query = ""
+    /// How much room the shelf has across, which is all that has to be
+    /// measured: the rest of the height is arithmetic.
+    @State private var shelfWidth: CGFloat = 0
 
     static let scopeKey = "library.scope"
     static let minHeight: CGFloat = 104
@@ -158,24 +161,48 @@ struct LibraryPanel: View {
         visibleEntries.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
     }
 
+    /// How many tiles the shelf is showing right now, whatever scope they came
+    /// from — the shelf only ever draws one scope at a time.
+    private var tileCount: Int {
+        visibleEntries.count + visibleComponents.count + visibleStyles.count
+    }
+
+    /// The height the shelf takes: its tiles, capped at the ceiling the grab
+    /// bar sets. A shelf holding one thing is one tile tall, so the dock under
+    /// it is not a patch of empty glass.
+    private var shelfHeight: CGFloat {
+        LibraryShelfLayout.shelfHeight(tileCount: tileCount, width: shelfWidth, cap: maxHeight)
+    }
+
     @ViewBuilder
     private var tiles: some View {
         if isEmpty {
-            // An empty shelf takes only the room its sentence needs. Measuring
-            // a full one is not on: a lazy grid materialises the rows you can
-            // see, so asking it how tall it is answers with how tall it was
-            // told to be.
+            // An empty shelf takes only the room its sentence needs.
             emptyState
         } else {
             ScrollView(.vertical) { grid }
-                .frame(height: maxHeight)
+                .frame(height: shelfHeight)
                 .scrollBounceBehavior(.basedOnSize)
+                // Only the WIDTH is measured. How tall the shelf wants to be
+                // is worked out from the tile count instead, because a lazy
+                // grid only builds the rows it can see and so answers a
+                // measurement with the height it was given rather than the
+                // height it wants.
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
+                    shelfWidth = width
+                }
+                // The shelf grows and shrinks as a search narrows it, so let it
+                // move rather than jump. Keyed on the tile count on purpose:
+                // the first pass, where the shelf learns how wide it is, must
+                // land silently instead of sliding down from the ceiling.
+                .animation(.spring(duration: 0.22), value: tileCount)
         }
     }
 
     private var grid: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 68), spacing: 8)],
-                  alignment: .leading, spacing: 8) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: LibraryShelfLayout.tileMinimumWidth),
+                                    spacing: LibraryShelfLayout.tileSpacing)],
+                  alignment: .leading, spacing: LibraryShelfLayout.tileSpacing) {
             ForEach(visibleEntries) { entry in
                 LibraryTile(item: item(for: entry), entry: entry,
                             store: coordinator.capture.store)
@@ -187,7 +214,7 @@ struct LibraryPanel: View {
                 LibraryStyleTile(entry: pair.entry, style: pair.style)
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, LibraryShelfLayout.gridVerticalPadding)
     }
 
     private var emptyState: some View {
@@ -218,7 +245,7 @@ struct LibraryPanel: View {
         // Nothing to resize while the shelf is empty, so no grab bar either.
         if !isEmpty {
             PanelAreaResizeHandle(maxHeight: $maxHeight,
-                              currentHeight: maxHeight,
+                              currentHeight: shelfHeight,
                               minHeight: Self.minHeight,
                               maxAllowedHeight: Self.maxAllowedHeight,
                               help: "Drag to resize the Library")
@@ -238,16 +265,16 @@ private struct LibraryTile: View {
     private var isSelected: Bool { editorState.selectedLibraryItemID == item.id }
 
     var body: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: LibraryShelfLayout.captionSpacing) {
             thumbnail
             Text(item.name)
-                .font(.system(size: 10))
+                .font(.system(size: LibraryShelfLayout.captionFontSize))
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
         }
         .frame(maxWidth: .infinity)
-        .padding(4)
+        .padding(LibraryShelfLayout.tilePadding)
         .background(
             RoundedRectangle(cornerRadius: 7)
                 .fill(isSelected ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))
@@ -277,7 +304,7 @@ private struct LibraryTile: View {
     private var thumbnail: some View {
         RoundedRectangle(cornerRadius: 5)
             .fill(.quaternary)
-            .frame(height: 44)
+            .frame(height: LibraryShelfLayout.thumbnailHeight)
             .overlay {
                 if let image = store.image(for: entry) {
                     Image(decorative: image, scale: 1)

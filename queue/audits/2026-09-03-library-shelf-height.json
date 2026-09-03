@@ -1,0 +1,28 @@
+{
+  "feature": "The Library shelf hugs its tiles",
+  "epic": "ui-components",
+  "summary": "The Library no longer reserves a tall block of dock for a shelf that holds one thing. It takes exactly the room its tiles need and only starts scrolling once there are more than the ceiling allows.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Library and Components flags are on by default. Any picture will do, including a blank one.",
+  "try": [
+    { "do": "Open the right dock and switch the Library shelf to Comps." },
+    { "do": "Look at the gap between the last row of tiles and the grab bar under them.", "shot": "2026-09-03-library-shelf-height-2.png" },
+    { "do": "Type \"badge\" into the shelf's search field." },
+    { "do": "Watch the shelf shrink to the single tile that matched.", "shot": "2026-09-03-library-shelf-height-1.png" },
+    { "do": "Clear the search and watch it grow back to two rows." },
+    { "do": "Drag the grab bar under the shelf upward until the tiles no longer fit." },
+    { "do": "Scroll inside the shelf and check the sections below it never move." }
+  ],
+  "evaluate": [
+    "With one component on the shelf, does the dock still look like it is holding something back?",
+    "Does the shelf growing and shrinking as you type read as helpful, or as the panel jittering under your hands?",
+    "Is the grab bar still findable now that it sits tight under the tiles instead of floating in empty space?",
+    "When you pull the grab bar up so the tiles scroll, does the cut-off row read as more to see, or as a mistake?",
+    "Narrow the dock until the tiles wrap differently. Does the shelf resize the way you expected?"
+  ],
+  "rough": [
+    "The grab bar shows even when the shelf is shorter than its ceiling, where dragging DOWN does nothing visible (dragging up still forces scrolling). That matches the layers area next door, so it was left alone rather than made a special case.",
+    "How tall the shelf wants to be is arithmetic, not a measurement: a lazy grid answers a measurement with the height it was told, never the height it wants. That was checked against a real grid at five dock widths and is pinned by tests, but a future change to how a tile is drawn has to go through the shared metrics or the shelf will be a few points out.",
+    "For one frame when the panel first appears, the shelf still stands at its ceiling: nothing has measured the dock's width yet, and standing tall for a frame looked better than guessing a tall column and collapsing.",
+    "Screen Recording was granted, so every picture here is a real capture of the window."
+  ]
+}

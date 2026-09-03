@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 710,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T03:55:23.639Z",
-  "updated": "2026-09-03T03:55:23.640Z",
+  "updated": "2026-09-03T09:10:39.416Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "LibraryPanel.tiles applies .frame(height: maxHeight) unconditionally once anything is showing. The layers area next door already solves this: it measures its natural content height and takes min(contentHeight, maxHeight). A LazyVGrid reports its told height rather than its natural one, so the measurement has to come from the row count and the adaptive column width, or the grid has to be swapped for a measured VStack of rows. Noticed while auditing next-components on 2026-09-03: one component tile sat above roughly 150pt of empty dock.",
+  "notes": "LibraryPanel.tiles applies .frame(height: maxHeight) unconditionally once anything is showing. The layers area next door already solves this: it measures its natural content height and takes min(contentHeight, maxHeight). A LazyVGrid reports its told height rather than its natural one, so the measurement has to come from the row count and the adaptive column width, or the grid has to be swapped for a measured VStack of rows. Noticed while auditing next-components on 2026-09-03: one component tile sat above roughly 150pt of empty dock. DONE: the height is computed, not measured \u2014 LibraryShelfLayout in PhotonzCore owns the tile metrics and the row math, LibraryPanel reads its width with onGeometryChange and takes min(content, ceiling). A lazy grid genuinely cannot be measured (verified in a hosted harness: the background-GeometryReader idiom reports 0 for a LazyVGrid and the real height for a VStack, which is why the layers area works). Height changes animate on tile count only, so search glides but the first layout pass lands silently.",
   "acceptance": [
     "A Library scope holding one tile is no taller than that tile plus its padding",
     "A scope with more tiles than fit still scrolls internally and never pushes the sections below it off the bottom",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-03T03:55:23.640Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T09:10:39.416Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T09:29:15.178794Z",
+      "note": "Adversarial pass before building: the shelf is not a mock, it is a real complaint, and the shortest fix is a height that follows the tile count. Rejected making the grab bar disappear when the shelf is short (it is the only way to force a long shelf to scroll) and rejected swapping the lazy grid for a plain stack of rows (Media can hold 60 full-size thumbnails)."
+    },
+    {
+      "t": "2026-09-03T09:29:15.178794Z",
+      "note": "Reproduced the note's claim before trusting it. In a hosted SwiftUI harness, the background-GeometryReader idiom the layers area uses reports 0 for a LazyVGrid (it reports correctly for a plain VStack, which is why layers works). So measuring is off the table and the height is arithmetic instead."
+    },
+    {
+      "t": "2026-09-03T09:29:15.178794Z",
+      "note": "Also found that .background(GeometryReader) on the ScrollView reports the wrong width; onGeometryChange reports it correctly. The panel measures its width with onGeometryChange and computes the rest."
+    },
+    {
+      "t": "2026-09-03T09:29:15.178794Z",
+      "note": "Shipped: LibraryShelfLayout (PhotonzCore, 11 tests written first, expectations taken from a real LazyVGrid at five dock widths). LibraryPanel takes min(content, ceiling). The three tile views now build themselves from the same metrics so the drawing and the arithmetic cannot drift."
+    },
+    {
+      "t": "2026-09-03T09:29:15.178794Z",
+      "note": "Verified in the probe app with Scripts/playtest/library-shelf-height-walk.json and a second run with the ceiling preset to 104: one tile is 72pt tall, five tiles are two rows at 148pt, and a 104pt ceiling clips the second row and scrolls without moving the sections below. Real captures in queue/audits/."
+    },
+    {
+      "t": "2026-09-03T09:29:15.178794Z",
+      "note": "Could not drive the grab bar itself from a walk: synthetic mouse events go to the canvas view, so the dock's hover and drag never fire. Checked the ceiling's effect by presetting inspector.libraryHeight instead. Worth a harness task."
     }
-  ]
+  ],
+  "started": "2026-09-03T09:10:39.416Z"
 }

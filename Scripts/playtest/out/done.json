@@ -1,0 +1,8 @@
+{
+  "error" : "step 11 (key): \"key\" must be a non-empty string",
+  "out" : "\/Users\/dzearing\/git\/photonz\/Scripts\/playtest\/out",
+  "script" : "\/Users\/dzearing\/git\/photonz\/Scripts\/playtest\/library-shelf-height-walk.json",
+  "seconds" : 0.01,
+  "status" : "failed",
+  "steps" : 0
+}
