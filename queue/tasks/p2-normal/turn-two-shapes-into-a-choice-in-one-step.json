@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 730,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T04:51:59.280Z",
-  "updated": "2026-09-03T10:04:03.485297Z",
+  "updated": "2026-09-03T10:04:42.923Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the C6 audit (queue/audits/2026-09-03-component-overrides.json). Today: PhotonzDocument.addComponentProperty(kind: .variant) requires a group with 2+ children as its target and settles it on one visible child. The missing rung is a Layer menu command that groups the selection and exposes it in one undo step. See docs/design/ui-building.md, the C6 Landed section.",
@@ -39,7 +39,12 @@
     {
       "t": "2026-09-03T10:04:03.485297Z",
       "note": "Post-build review. Kept: the alternatives keep their drawn names, so a copy's menu reads Rectangle / Rectangle 2 until somebody renames the layers, and the new group's box spans the hidden alternative. Both are pre-existing rules, both are in the audit. The knob still lands on the original's Adjustable list, which is off screen while you work inside the component; the pill names it rather than yanking the selection out to the original."
+    },
+    {
+      "t": "2026-09-03T10:04:42.922Z",
+      "note": "Layer > Make Alternatives (Next): two shapes picked inside a component become a group of alternatives with the choice knob over them, in one command and one undo. Core in Sources/PhotonzCore/ComponentChoice.swift with 14 tests first, plus a Choice added pill because settling hides one of the shapes. Row is absent, not dimmed, when the selection cannot become a choice. Verified in the probe with Scripts/playtest/component-choice-one-step-walk.json (condition true only inside the component with two shapes picked, one undo removes group and knob together, a copy drew the other alternative). All 2014 tests green. Audit: queue/audits/2026-09-03-component-choice-one-step.json, two real captures."
     }
   ],
-  "started": "2026-09-03T09:47:51.400Z"
+  "started": "2026-09-03T09:47:51.400Z",
+  "completed": "2026-09-03T10:04:42.923Z"
 }
