@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 710,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T03:55:23.639Z",
-  "updated": "2026-09-03T09:10:39.416Z",
+  "updated": "2026-09-03T09:29:45.406Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "LibraryPanel.tiles applies .frame(height: maxHeight) unconditionally once anything is showing. The layers area next door already solves this: it measures its natural content height and takes min(contentHeight, maxHeight). A LazyVGrid reports its told height rather than its natural one, so the measurement has to come from the row count and the adaptive column width, or the grid has to be swapped for a measured VStack of rows. Noticed while auditing next-components on 2026-09-03: one component tile sat above roughly 150pt of empty dock. DONE: the height is computed, not measured \u2014 LibraryShelfLayout in PhotonzCore owns the tile metrics and the row math, LibraryPanel reads its width with onGeometryChange and takes min(content, ceiling). A lazy grid genuinely cannot be measured (verified in a hosted harness: the background-GeometryReader idiom reports 0 for a LazyVGrid and the real height for a VStack, which is why the layers area works). Height changes animate on tile count only, so search glides but the first layout pass lands silently.",
+  "notes": "LibraryPanel.tiles applies .frame(height: maxHeight) unconditionally once anything is showing. The layers area next door already solves this: it measures its natural content height and takes min(contentHeight, maxHeight). A LazyVGrid reports its told height rather than its natural one, so the measurement has to come from the row count and the adaptive column width, or the grid has to be swapped for a measured VStack of rows. Noticed while auditing next-components on 2026-09-03: one component tile sat above roughly 150pt of empty dock. DONE: the height is computed, not measured — LibraryShelfLayout in PhotonzCore owns the tile metrics and the row math, LibraryPanel reads its width with onGeometryChange and takes min(content, ceiling). A lazy grid genuinely cannot be measured (verified in a hosted harness: the background-GeometryReader idiom reports 0 for a LazyVGrid and the real height for a VStack, which is why the layers area works). Height changes animate on tile count only, so search glides but the first layout pass lands silently.",
   "acceptance": [
     "A Library scope holding one tile is no taller than that tile plus its padding",
     "A scope with more tiles than fit still scrolls internally and never pushes the sections below it off the bottom",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-03T09:29:15.178794Z",
       "note": "Could not drive the grab bar itself from a walk: synthetic mouse events go to the canvas view, so the dock's hover and drag never fire. Checked the ceiling's effect by presetting inspector.libraryHeight instead. Worth a harness task."
+    },
+    {
+      "t": "2026-09-03T09:29:45.406Z",
+      "note": "The Library shelf now takes min(content, ceiling) instead of always reserving its ceiling. LibraryShelfLayout in PhotonzCore (11 tests, expectations taken from a real LazyVGrid at five dock widths) owns the tile metrics and row math; LibraryPanel reads its width with onGeometryChange. Verified in the probe app: one tile 72pt, five tiles 148pt over two rows, a 104pt ceiling clips and scrolls without moving the sections below. Audit queue/audits/2026-09-03-library-shelf-height.json with two real captures; walk Scripts/playtest/library-shelf-height-walk.json. Full suite green (1981 tests), pushed as eb3ff22."
     }
   ],
-  "started": "2026-09-03T09:10:39.416Z"
+  "started": "2026-09-03T09:10:39.416Z",
+  "completed": "2026-09-03T09:29:45.406Z"
 }
