@@ -1464,44 +1464,21 @@ struct EffectsInspector: View {
                              format: points, field: .cornerRadius) { style, v in
                 style.cornerRadius = CGFloat(v)
             }
-            HStack(spacing: 8) {
-                LayerStyleSlider(layerIDs: ids, label: "Border",
-                                 reading: selection.number { $0.borderWidth }, range: 0...20,
-                                 format: points, field: .border) { style, v in
-                    style.borderWidth = CGFloat(v)
-                }
-                borderColorPicker(ids)
-                if let only = soleLayerID(ids) {
-                    InstanceStyleRevert(layerID: only, field: .borderColor)
-                }
+            // The width only. The color a border is painted is a color like any
+            // other, so it lives in the Color section with the rest rather than
+            // in a swatch of its own down here — and the moment this slider
+            // leaves zero, the Border row is up there waiting.
+            LayerStyleSlider(layerIDs: ids, label: "Border",
+                             reading: selection.number { $0.borderWidth }, range: 0...20,
+                             format: points, field: .border) { style, v in
+                style.borderWidth = CGFloat(v)
             }
-            SelectionStyleNotes(notes: [selection.note, borderColorNote(selection)],
+            .help("The color of the border is in the Color section above")
+            SelectionStyleNotes(notes: [selection.note],
                                 caption: selectionCaption(selection.count))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-    }
-
-    private var borderColorReading: StyleReading<String> {
-        editorState.layerStyleSelection.reading { $0.borderColorHex }
-    }
-
-    private func borderColorNote(_ selection: LayerStyleSelection) -> String? {
-        guard selection.reading({ $0.borderColorHex }).isMixed else { return nil }
-        return "Border colors differ. Picking one paints them all."
-    }
-
-    private func borderColorPicker(_ ids: [UUID]) -> some View {
-        ColorPicker("Border color", selection: Binding(
-            get: { Color(hex: borderColorReading.value ?? "#000000") },
-            set: { color in
-                if let hex = color.hexString {
-                    editorState.setLayerStyle(ids: ids) { $0.borderColorHex = hex }
-                    editorState.recordRecentColor(hex: hex)
-                }
-            }), supportsOpacity: false)
-            .labelsHidden()
-            .controlSize(.small)
     }
 }
 
@@ -1642,7 +1619,7 @@ private func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }
 /// The revert arrow belongs to ONE layer's override of its component, so it is
 /// offered only when the section is speaking for one layer. Over a selection
 /// there is no single copy for it to answer for.
-private func soleLayerID(_ ids: [UUID]) -> UUID? { ids.count == 1 ? ids.first : nil }
+func soleLayerID(_ ids: [UUID]) -> UUID? { ids.count == 1 ? ids.first : nil }
 
 /// What a style section says out loud before anything is dragged, and after:
 /// how many layers it is talking to, and anything it is quietly skipping.

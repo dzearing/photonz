@@ -1030,9 +1030,18 @@ styles exist.
   says where the color came from. So the renderer, export, thumbnails and the
   package writer learn nothing about styles, and a copy of a component keeps
   drawing correctly whatever happens to the shelf.
-- **Four colors can wear one**: a box's interior, a box or line's ink, a text
-  block's ink, and a frame's surface. Each is a `ColorSlot` on the layer, so
-  adding another later is a case in two switches.
+- **Five colors can wear one**: a box's interior, a box or line's ink, a text
+  block's ink, a frame's surface, and the border a layer's own styling draws
+  around it. Each is a `ColorSlot` on the layer, so adding another later is a
+  case in two switches.
+- **A border's color is a color like the rest.** The Effects section sets how
+  THICK a border is; what it is painted lives in the Color section with
+  everything else, so it can be set on a whole selection at once and can wear a
+  saved color. The Border row turns up only once a border is actually drawn: a
+  color nobody can see is a dead control, and the way to a border is its width
+  rather than a checkbox on the row. A border pointed at a saved color keeps its
+  row while the width sits at zero, so taking a border off for a moment does not
+  quietly lose the name.
 - **One Color section, whatever is picked.** The mock hangs "Save as style" off
   a Fill section of its own. The app has a Color section that holds every color
   the picked layers have, and the styles button sits on each of its rows. It was
@@ -1041,7 +1050,8 @@ styles exist.
   the color you were editing into a different section the moment you
   shift-clicked a second layer, so the section is now always there and it is the
   only place a color is.
-- **A row is named by its slot, not by what is picked**: Outline, Fill, Text. A
+- **A row is named by its slot, not by what is picked**: Outline, Fill, Text,
+  Border. A
   label that read "Color" over a lone arrow and "Outline" the moment a box
   joined the selection would move house the same way the section used to.
 - **A color that can be absent carries a checkbox**: a box's inside, a frame's

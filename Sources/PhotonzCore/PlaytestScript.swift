@@ -254,6 +254,18 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// clicking it in the Color section does: it switches a box's inside, or a
     /// frame's surface, on or off across the whole selection.
     case toggleFillSwitch
+    /// Give every picked layer a border, which is what pulling the Effects
+    /// section's Border slider off zero over a selection does. It is what puts
+    /// the Border row in the Color section, so a walk can photograph it.
+    case borderSelection
+    /// Paint every picked layer's BORDER one crimson (#B0184A), which is what
+    /// choosing a color in the Border row's well does. Same reason as
+    /// `paintSelectionColor`: the well opens a popover a walk cannot reach.
+    case paintSelectionBorderColor
+    /// Open the name field under the Border row, which is what Save as Style
+    /// on that row does. The field takes typing like any other, and Return
+    /// saves the border color under that name.
+    case saveBorderColorStyle
     /// Pick the first style on the Library shelf, which is what a click on its
     /// tile does, so its own section can be photographed.
     case pickFirstColorStyle

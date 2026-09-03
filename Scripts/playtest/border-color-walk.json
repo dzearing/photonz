@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/border-color",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 140], "to": [320, 260], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [380, 140], "to": [580, 260], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "click", "at": [220, 200] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-no-border", "note": "one box, no border: the Color section holds Fill and Outline and nothing else, and the Effects section's Border row is the slider alone" },
+    { "do": "snapshot", "name": "border-color-1-no-border" },
+
+    { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "borderSelection" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-bordered", "note": "both boxes given a border: a Border row has appeared in the Color section, under Fill and Outline" },
+    { "do": "snapshot", "name": "border-color-2-row-appears" },
+
+    { "do": "action", "action": "paintSelectionBorderColor" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-painted", "note": "one pick in the Border row paints both borders, in one step" },
+    { "do": "snapshot", "name": "border-color-3-both-painted" },
+    { "do": "render", "name": "both-borders-crimson" },
+
+    { "do": "action", "action": "saveBorderColorStyle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "Hairline" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "4-naming", "note": "the name field opens under the Border row itself" },
+    { "do": "snapshot", "name": "border-color-4-naming" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-saved", "note": "both borders now wear the saved color Hairline, and its tile is on the Styles shelf" },
+    { "do": "snapshot", "name": "border-color-5-saved" },
+
+    { "do": "action", "action": "pickFirstColorStyle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "recolorPickedColorStyle" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "6-restyled", "note": "editing the saved color repaints every border wearing it, in one step" },
+    { "do": "render", "name": "both-borders-green" },
+    { "do": "snapshot", "name": "border-color-6-restyled" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-undone", "note": "one undo puts both borders back" },
+    { "do": "render", "name": "undo-puts-both-back" }
+  ]
+}

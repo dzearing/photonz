@@ -365,7 +365,7 @@ struct ColorStyleSelectionTests {
     @Test func everySlotHasAnUnambiguousLabelForAMixedSelection() {
         // Two rows both saying "Color" is what this exists to avoid.
         let titles = ColorSlot.allCases.map(\.selectionTitle)
-        #expect(titles == ["Fill", "Outline", "Text"])
+        #expect(titles == ["Fill", "Outline", "Text", "Border"])
         #expect(Set(titles).count == titles.count)
     }
 

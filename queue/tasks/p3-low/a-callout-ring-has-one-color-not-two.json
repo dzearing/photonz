@@ -1,0 +1,28 @@
+{
+  "id": "a-callout-ring-has-one-color-not-two",
+  "title": "A callout ring has one color, not two",
+  "goal": "A zoom callout is drawn with a colored ring around it. That ring color can now be set in two different places that do not know about each other: the swatch in the toolbar while the callout tool is up, and a Border row in the Color section when the callout is picked. Pick one home for it so nobody has to wonder which one is the real one.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 630,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T20:50:14.751Z",
+  "updated": "2026-09-03T20:50:14.752Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Fallout from a-border-color-sits-with-the-other-colors: ColorSlot.border is on any layer with style.borderWidth > 0, and a callout defaults to a 3pt ring (ZoomCalloutBuilder.defaultStyle), so a picked callout now gets a Color section holding just Border. The toolbar path is EditorState.setCalloutBorderColor / EditorView.activeToolColorHex; the new path is setSelectionColor(slot: .border). Both perform one undo step and both write style.borderColorHex, so they agree on the value; what they do not share is any wording saying they are the same thing. Cheapest honest answer is probably to let the Color section be the home and have the toolbar swatch keep working as the tool default.",
+  "acceptance": [
+    "Setting a picked callout ring color and setting it from the toolbar reach the same place and read the same value back",
+    "There is one obvious control for the ring color, and any second one is clearly the same control rather than a rival",
+    "A picked callout still shows its ring color somewhere, whichever answer is chosen",
+    "Nothing about the rest of the Color section changes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T20:50:14.752Z",
+      "note": "created (manual)"
+    }
+  ]
+}

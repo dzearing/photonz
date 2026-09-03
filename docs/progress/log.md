@@ -6957,3 +6957,35 @@ window captures, audit at `queue/audits/2026-09-03-align-in-group.json`.
 
 Next: nothing outstanding here. Not built and worth deciding later — whether an
 align press should also write a lasting Layout rule rather than a one-off move.
+
+## 2026-09-03 — A border's color joins the other colors
+
+The one color that had not moved into the Color section was the color of a
+layer's border: it stayed behind as a small swatch beside the Border slider in
+Effects, opening the system color panel, which is the one-undo-step-per-drag-tick
+problem the Color rows already solved. It is now a row like the rest.
+
+`ColorSlot` gains `.border` (PhotonzCore, `ColorStyles.swift`), ink-roled like an
+outline, so it reads and paints over a whole selection, wears a saved color, and
+follows an edit to that saved color in one step. The question the task left open
+— what a Border row means at zero width — is answered by `Layer.hasBorderColor`:
+the slot exists once a border is actually drawn, because a color nobody can see
+is a dead control and the way to a border is its width rather than a checkbox on
+the row. It ALSO stays while a saved color is pointed at it, so pulling the width
+to zero for a moment does not let the reconcile pass quietly break the link.
+
+The swatch and its Mixed note are gone from `EffectsInspector`; the Border slider
+is full width like the three above it and carries a hover tip saying where the
+color went. The component revert arrow for `borderColor` moved with the control
+it undoes, onto the Border row, via a new `accessory` on `ColorPartRow`.
+
+14 new PhotonzCore tests; the probe walk is
+`Scripts/playtest/border-color-walk.json` (three new probe actions:
+`borderSelection`, `paintSelectionBorderColor`, `saveBorderColorStyle`) and it is
+verified with real window captures. Audit at
+`queue/audits/2026-09-03-border-color.json`.
+
+Next: a zoom callout's ring is a border, so a picked callout now has two places
+that set its ring color — the toolbar swatch and the new Border row. They agree
+on the value and each lands one undo step, but nothing says they are the same
+control. Filed as `a-callout-ring-has-one-color-not-two`.

@@ -28,6 +28,10 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     case stroke
     /// A text block's ink.
     case text
+    /// The ring a layer's own styling draws around it — the Border in the
+    /// Effects section. Last, because it sits over whatever the layer is
+    /// rather than saying what the layer is.
+    case border
 
     /// What the inspector calls this slot in a sentence about it.
     public var title: String {
@@ -35,6 +39,7 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         case .fill: return "Fill"
         case .stroke: return "Color"
         case .text: return "Color"
+        case .border: return "Border"
         }
     }
 
@@ -44,7 +49,7 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     public var styleRole: ColorStyleRole {
         switch self {
         case .fill: return .surface
-        case .stroke, .text: return .ink
+        case .stroke, .text, .border: return .ink
         }
     }
 }
@@ -129,16 +134,35 @@ extension Layer {
     /// A layer with none of them (an image, a group that is not a frame) can
     /// never wear a style.
     public var colorSlots: [ColorSlot] {
+        var slots: [ColorSlot]
         switch content {
         case .annotation(let annotation):
             switch annotation.shape {
-            case .rectangle, .ellipse: return [.fill, .stroke]
-            case .line, .arrow, .highlight: return [.stroke]
+            case .rectangle, .ellipse: slots = [.fill, .stroke]
+            case .line, .arrow, .highlight: slots = [.stroke]
             }
-        case .text: return [.text]
-        case .group(let group): return group.isFrame ? [.fill] : []
-        default: return []
+        case .text: slots = [.text]
+        case .group(let group): slots = group.isFrame ? [.fill] : []
+        default: slots = []
         }
+        if hasBorderColor { slots.append(.border) }
+        return slots
+    }
+
+    /// Whether this layer has a border color to talk about.
+    ///
+    /// A border is not part of what a layer IS — it is styling laid over
+    /// whatever the layer happens to be — so any kind of layer can have one,
+    /// including a picture and a plain group. It counts as a color only once
+    /// there is a border to paint: a Border row over a layer with no border
+    /// would be a color nobody can see, and the way to a border is its width
+    /// in the Effects section rather than a checkbox on the row.
+    ///
+    /// A border pointed at a saved color keeps its slot at zero width, so
+    /// taking the border off for a moment does not quietly lose the name.
+    var hasBorderColor: Bool {
+        style.borderWidth > 0
+            || (colorStyleBindings ?? []).contains { $0.slot == .border }
     }
 
     /// The color in a slot right now, or nil when the slot is empty (a box with
@@ -154,6 +178,8 @@ extension Layer {
             return annotation.colorHex
         case (.text, .text(let text)):
             return text.colorHex
+        case (.border, _):
+            return hasBorderColor ? style.borderColorHex : nil
         default:
             return nil
         }
@@ -196,6 +222,11 @@ extension Layer {
             // halo that every other way of coloring text maintains.
             guard let hex else { return }
             self = TextBuilder.restyled(layer: self, colorHex: hex)
+        case (.border, _):
+            // A border is always painted something; there is no empty border
+            // color, only a border with no width.
+            guard let hex else { return }
+            style.borderColorHex = hex
         default:
             return
         }

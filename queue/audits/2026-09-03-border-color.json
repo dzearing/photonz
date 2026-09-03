@@ -1,0 +1,31 @@
+{
+  "feature": "A border's color sits with the other colors",
+  "epic": "ui-building",
+  "summary": "The color a layer's border is painted is now a row in the Color section, alongside Fill and Outline, instead of a small swatch tucked beside the Border slider in Effects. It can be set on everything picked in one step, and it can wear a saved color.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on; saved colors need the styles flag, which is on by default.",
+  "try": [
+    { "do": "Start a blank canvas from the welcome card." },
+    { "do": "Press R and drag out two boxes side by side." },
+    { "do": "Press V, click the first box, shift-click the second." },
+    { "do": "In Effects, pull Border off zero. A Border row appears in the Color section above.", "shot": "2026-09-03-border-color-row.png" },
+    { "do": "Click the Border swatch and pick a color. Both borders take it, and one undo puts both back." },
+    { "do": "Click the styles button beside it, choose Save as Style, type Hairline, press Return.", "shot": "2026-09-03-border-color-saved.png" },
+    { "do": "In the Library's Styles shelf, click the Hairline tile and give it a different color. Both borders follow, in one step." },
+    { "do": "Pull Border back to zero on both. The row goes away with the border." }
+  ],
+  "evaluate": [
+    "Is Border the right name for that row, given a box already has a row called Outline right above it?",
+    "The row shows up only once there is a border to paint. Did you find it, or did you go looking for the old swatch in Effects first?",
+    "Border is the last row, under Fill and Outline. Does that order match the way you think about a box?",
+    "Setting the color now needs two sections: thickness in Effects, color in Color. Is that better than the one cramped row it replaced, or does it feel like a trip?",
+    "A saved color made off a border is offered on outlines and text too, since they are all ink. Is that the grouping you want, or should borders be their own kind?"
+  ],
+  "rough": [
+    "The screenshots are real captures of the running app, taken by the probe build with Screen Recording granted.",
+    "On a text layer, the Border width strokes the letters rather than drawing a box, so the row reads Border over something that is really a text outline. That wording was already in Effects and it came across unchanged; naming the row per layer kind is exactly what the one-home work removed, so it stays Border.",
+    "A zoom callout's ring is a border, so a picked callout now brings a Color section with a Border row in it. That is a second place to set the ring color beside the tool's own swatch in the toolbar. Both work and both land one undo step, but nothing says they are the same color.",
+    "The Border row is two sections above the Border slider that creates it, so somebody who just dragged a border out has to look up the dock for its color. The slider now carries a hover tip saying where the color went; whether that is enough is the second question above.",
+    "A border pointed at a saved color keeps its row while the width sits at zero, so you can see a Border row over a border nobody can see. That is deliberate: without it, taking a border off for a moment would quietly break the link to the saved color.",
+    "This is shared code, so the change lands in Current as well as Next, the same way the Color section itself did."
+  ]
+}

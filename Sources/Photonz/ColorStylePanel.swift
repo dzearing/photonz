@@ -231,6 +231,11 @@ struct ColorPartRow: View {
     /// The color the row edits directly. Nil for the row over several picked
     /// layers, which brings a well of its own: one that paints all of them.
     private let well: AnyView?
+    /// A small control that belongs to this row and sits after the color: the
+    /// way back for a copy of a component whose border color is its own. It
+    /// goes where the color it undoes is, rather than staying behind in the
+    /// section the color came from.
+    private var accessory: AnyView?
 
     init(part: String, slot: ColorSlot, @ViewBuilder well: () -> some View) {
         self.part = part
@@ -267,6 +272,13 @@ struct ColorPartRow: View {
         self.well = nil
     }
 
+    /// Hangs a small control off the end of the row.
+    func accessory(@ViewBuilder _ content: () -> some View) -> ColorPartRow {
+        var copy = self
+        copy.accessory = AnyView(content())
+        return copy
+    }
+
     var body: some View {
         // Top aligned: the menu can open a name field under itself, which
         // makes the row two lines tall, and the label belongs beside the color
@@ -293,6 +305,7 @@ struct ColorPartRow: View {
             } else {
                 ColorStyleRow(slot: slot, part: part)
             }
+            if let accessory { accessory }
             Spacer(minLength: 0)
         }
     }
@@ -558,8 +571,10 @@ struct SelectionColorInspector: View {
         VStack(alignment: .leading, spacing: 2) {
             if editorState.colorSwitch(slot: slot).isOffered {
                 ColorPartRow(part: part, slot: slot, switchControl: switchControl(slot, part))
+                    .accessory { styleRevert(slot) }
             } else {
                 ColorPartRow(part: part, slot: slot)
+                    .accessory { styleRevert(slot) }
             }
             // A Fill row that quietly skips the arrow in the selection says so
             // here, rather than looking as though it did nothing — and so does
@@ -569,6 +584,17 @@ struct SelectionColorInspector: View {
                 Text(note).font(.caption2).foregroundStyle(.tertiary)
                     .padding(.leading, ColorPartLayout.labelWidth + ColorPartLayout.spacing)
             }
+        }
+    }
+
+    /// The way back for a copy of a component that has picked its own border
+    /// color. Only the border is a part of the LOOK a copy can own; a shape's
+    /// ink and a text block's ink are its content, and they follow the
+    /// original by other means. It came down here with the color it undoes.
+    @ViewBuilder private func styleRevert(_ slot: ColorSlot) -> some View {
+        if slot == .border,
+           let only = soleLayerID(editorState.colorStyleSelection(slot: slot).layerIDs) {
+            InstanceStyleRevert(layerID: only, field: .borderColor)
         }
     }
 

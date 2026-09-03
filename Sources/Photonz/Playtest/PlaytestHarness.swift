@@ -586,6 +586,15 @@ private final class Run {
                 // frame's "No background": one click, every picked layer.
                 let fill = editor.colorSwitch(slot: .fill)
                 if fill.isOffered { editor.setColorEnabled(slot: .fill, on: !fill.isOn) }
+            case .borderSelection:
+                // The Effects Border slider over everything picked: this is
+                // what makes the Border row appear in the Color section.
+                let ids = editor.layerStyleSelection.layerIDs
+                if !ids.isEmpty { editor.setLayerStyle(ids: ids) { $0.borderWidth = 4 } }
+            case .paintSelectionBorderColor:
+                editor.setSelectionColor(slot: .border, hex: "#B0184A")
+            case .saveBorderColorStyle:
+                editor.beginNamingColorStyle(slot: .border)
             case .pickFirstColorStyle:
                 if let first = editor.colorStyleEntries.first {
                     editor.selectLibraryItem(first.id)

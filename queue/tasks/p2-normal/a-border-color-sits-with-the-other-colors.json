@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 870,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:31:06.576Z",
-  "updated": "2026-09-03T17:32:32.374Z",
+  "updated": "2026-09-03T20:34:59.987Z",
   "deps": [],
   "blockedBy": [],
   "notes": "ColorSlot (PhotonzCore/ColorStyles.swift:24) has fill, stroke and text; the layer style border color is not one of them, so it stayed behind as a raw SwiftUI ColorPicker in EffectsInspector.borderColorPicker (LayersPanel.swift, around line 1490) and opens the system panel, which is the one-undo-step-per-drag-tick problem the Color section already solved. Adding a slot means a case in ColorSlot with styleRole .ink, and Layer.colorSlots / colorHex(for:) / startingColorHex answering for it. Decide what a border color row means on a layer whose border width is zero: the honest reading is that the row appears with the rest and setting it is harmless, but the alternative of only offering it above zero width is worth a line in the audit either way. Evidence: the Color one-home work (queue/audits/2026-09-03-color-one-home.json) moved every other color and left this one, visible in queue/audits/2026-09-03-auto-layout-2.png where Effects still carries a color control.",
@@ -31,6 +31,15 @@
     {
       "t": "2026-09-03T17:32:32.374Z",
       "note": "seq 890 -> 870"
+    },
+    {
+      "t": "2026-09-03T20:34:59.987Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T20:40:37.865630Z",
+      "note": "adversarial review before building. (1) Border width lives in Effects, the color row will live in Color, two sections up: someone who just dragged a border out has to look up the dock for its color. Mitigated by a hover tip on the Border slider saying where the color went, and by the row appearing the moment a border does. (2) A box would show Outline (the shape's own ink) and Border (the styling ring) at once. They are genuinely two different things and both already exist; the row only turns up once a border does, so they are never both there for nothing. (3) On a text layer the border width strokes the GLYPHS, not a box, so the row reading Border over text is the existing Effects wording carried across; a row named per layer kind is exactly what the one-home work removed, so it stays Border and goes in the audit. (4) Shortest version: one new slot, no new controls, the effects swatch deleted. (5) Zero-width question answered: the row appears only when a border is actually drawn, because a color you cannot see is a dead control, and it ALSO stays while the color is pointed at a saved color, so dropping the width to zero for a moment does not quietly break the link."
     }
-  ]
+  ],
+  "started": "2026-09-03T20:34:59.986Z"
 }

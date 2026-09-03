@@ -193,6 +193,7 @@ extension ColorSlot {
         case .fill: return "Fill"
         case .stroke: return "Outline"
         case .text: return "Text"
+        case .border: return "Border"
         }
     }
 }
