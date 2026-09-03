@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "render",
   "created": "2026-09-03T00:00:37.165Z",
-  "updated": "2026-09-03T01:47:30.936Z",
+  "updated": "2026-09-03T01:47:57.582Z",
   "deps": [
     "layers-can-hold-layers"
   ],
@@ -49,7 +49,12 @@
     {
       "t": "2026-09-03T01:47:30.936Z",
       "note": "Second review, on the built thing. There is no way to make a group in the app, so the honest artifacts are a real capture proving no regression plus a rendered before/after of three cards loose versus grouped. In that render the group's rounded corners clip the children, which is right for a card but is a product choice the user should confirm, and blend isolation inside a styled group is the one place behavior differs from loose layers. Both are questions in the audit rather than guesses. Audit: queue/audits/2026-09-03-group-draws-as-one-thing.json."
+    },
+    {
+      "t": "2026-09-03T01:47:57.582Z",
+      "note": "A group now paints as one object: children composite first, then the group's blur, corners, border, shadow and opacity apply once. A group with no styling of its own passes through, so grouping changes no pixels and a highlight still multiplies with the canvas. Buffer sized by the new Layer.renderBounds so child shadows are never clipped; renderSprite and RenderDiff learned groups too. 21 new tests, Scripts/test.sh green at 1601, redline-walk playtest clean on the probe. Perf: drag inside a plain group 5.7ms (under budget), inside a canvas-sized styled group 35.0ms (repaints whole, inherent), cold full render 27.0ms vs 36.3ms ungrouped. Audit: queue/audits/2026-09-03-group-draws-as-one-thing.json"
     }
   ],
-  "started": "2026-09-03T01:29:35.741Z"
+  "started": "2026-09-03T01:29:35.741Z",
+  "completed": "2026-09-03T01:47:57.582Z"
 }
