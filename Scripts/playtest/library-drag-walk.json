@@ -1,0 +1,49 @@
+{
+  "out": "/tmp/photonz-playtest/library-drag-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-picked", "note": "a starter tile is picked on the shelf, nothing placed yet" },
+
+    { "do": "dragComponent", "at": [640, 420] },
+    { "do": "snapshot", "name": "drag-1-over-canvas" },
+    { "do": "describe", "stage": "2-over-canvas", "note": "held over bare canvas: the landing box shows where the copy goes" },
+
+    { "do": "dropComponent", "at": [640, 420] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "snapshot", "name": "drag-2-dropped" },
+    { "do": "render", "name": "drag-2-dropped-doc" },
+    { "do": "describe", "stage": "3-dropped", "note": "one copy landed where it was shown, selected" },
+
+    { "do": "action", "action": "frameSelection" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "620" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "focus", "field": "H" },
+    { "do": "type", "text": "420" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "4-framed", "note": "the copy is now on a screen, so the next drag has a frame to join" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dragComponent", "at": [760, 620] },
+    { "do": "snapshot", "name": "drag-3-over-frame" },
+    { "do": "describe", "stage": "5-over-frame", "note": "held over the screen: the landing box plus a dashed box round the frame it would join" },
+
+    { "do": "dropComponent", "at": [760, 620] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "snapshot", "name": "drag-4-joined" },
+    { "do": "describe", "stage": "6-joined", "note": "the copy joined the frame it was shown joining" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-undone", "note": "one undo takes the whole drop back" },
+    { "do": "render", "name": "drag-5-undone-doc" }
+  ]
+}

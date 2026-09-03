@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 6,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:31:47.909Z",
-  "updated": "2026-09-03T12:31:47.941Z",
+  "updated": "2026-09-03T13:26:00.655642Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-03: when I drag a component from the library to the canvas, there is no drag and drop support. The plumbing exists, so this is about why it does not fire, not about building it from nothing: LibraryPanel.swift line 301 and ComponentPanel.swift line 357 attach .onDrag, ComponentPanel.ComponentDrag builds an NSItemProvider with type com.photonz.component-id, and CanvasView registers that type (CanvasView.swift line 992) and routes drops through onDropComponent (EditorView.swift line 290). Two suspects, verify both rather than guessing: (1) each tile puts .onTapGesture(count: 2) and .onTapGesture ahead of .onDrag, and a tap gesture can win over the drag so the drag never begins; if so the fix is a gesture order or a simultaneous gesture, not removing double click to place. (2) .onDrag is used without a preview, so even a drag that does start shows nothing following the pointer and reads as broken; SwiftUI has onDrag(preview:) for exactly this. Also check that the canvas gives drag feedback at all: draggingEntered and draggingUpdated exist at CanvasView.swift line 1000, but nothing draws a landing indicator. Per the users standing rule, reproduce before claiming a cause.",
@@ -30,6 +30,51 @@
     {
       "t": "2026-09-03T12:31:47.940Z",
       "note": "seq 170 -> 6"
+    },
+    {
+      "t": "2026-09-03T13:02:16.135Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "Adversarial review BEFORE building: the shortest thing that delivers the value is (1) make the drop actually work, (2) make the drag visible, (3) say where it will land. Everything else the mock could suggest (animated ants, a snapping grid, a drop shadow under the ghost) is decoration and was cut. One thing the task did not list was added because a first-time user hits it: a drop that will be refused now answers with the ordinary no-entry pointer instead of accepting the drag and scolding after the fact."
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "REPRODUCED, and neither suspect in the task was the cause. Accessibility is denied to this terminal and the dev app is off limits, so a real mouse drag could not be driven; instead a throwaway SwiftUI app was built with the same gesture stack and driven with posted mouse events. Finding 1: the drag closure fires fine with .onTapGesture(count: 2) and .onTapGesture ahead of .onDrag, so taps are NOT swallowing the drag. Finding 2: the drag pasteboard receives the type com.photonz.component-id and ZERO BYTES behind it, on the main thread and off it, however the item provider is built (ownProcess or all, lazy or eager, registerDataRepresentation or registerItem). Finding 3: the same provider on public.utf8-plain-text carries its payload fine, so the lazy promise machinery works. Finding 4: declaring com.photonz.component-id in the test app's Info.plist made the ORIGINAL code deliver 36 bytes. Cause: the app never declared its own pasteboard type, so the canvas saw a component arrive, read nothing, and refused every drop. (The layers list drags fine because it travels as plain text.)"
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "Fix: Scripts/build-app.sh declares the type for every variant including the probe, conforming to public.item so a component claims no files and offers the Finder no file promise, and the build now FAILS if the finished Info.plist does not carry it. A plain swift build binary with no bundle still cannot drag, which is noted at ComponentDrag.typeIdentifier."
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "PhotonzCore (TDD, 9 new tests in ComponentDropTargetTests): PhotonzDocument.componentDropTarget(of:at:) returns refused / frame(id) / canvas, and componentDropSize(of:) returns the box a drop would fill, handling a starter that is not in the document yet. The canvas reads both mid-drag and EditorState reads componentDropTarget for its refusal, so the picture and the drop cannot disagree. EditorState's private enclosesComponent was removed in favour of the shared one."
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "App: onDrag(preview:) on the component tiles and the media tiles so a picture of the thing follows the pointer. Both onDrag closures stopped mutating app state - the repro showed a state change inside the closure makes SwiftUI redraw the tile and ask for the item a second time, i.e. two drags for one press. Selecting the tile there was pointless anyway: a successful drop clears the library pick."
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "Canvas: trackComponentDrag draws a filled accent box the exact size of the copy centred on the pointer, plus a dashed accent box round the frame it would join. The frame box is drawn three points OUTSIDE the frame because the first version drew it on the edge and a component the same size as its screen hid the cue completely - caught by looking at the playtest picture, not by reasoning."
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "New playtest step dragComponent (TDD in PlaytestScriptTests): holds the picked component over a point without letting go, so what a drag looks like in flight can be photographed. Documented in docs/design/playtest-harness.md."
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "Verified: Scripts/playtest/library-drag-walk.json on the probe. Over bare canvas the log says 'would place a copy, box (576, 402) (128, 36), loose on the canvas' and the copy lands exactly there; over a screen it says 'joining a frame' and the copy joins it; one undo takes the whole drop back. Real screen captures (Screen Recording granted) in queue/audits/. Full suite green: 2134 tests."
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "NOT verified, and said so in the audit: that pressing and dragging a tile starts the drag in the real app. That needs a real mouse, which needs an Accessibility grant this machine has not given. The cause and the fix were both proven at the pasteboard level in a real bundle."
+    },
+    {
+      "t": "2026-09-03T13:26:00.655642Z",
+      "note": "Style tiles do not drag at all and were left alone: a named color has nowhere to land, it paints what is selected. Filed as a follow-up: a screen's name and the name of a component at its top left corner print on top of each other (old chrome, visible in the audit pictures)."
     }
-  ]
+  ],
+  "started": "2026-09-03T13:02:16.134Z"
 }

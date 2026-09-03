@@ -372,6 +372,22 @@ private final class Run {
             }
             note(number, step.name, "\(condition) holds", state: describe())
 
+        case .dragComponent(let at):
+            let canvas = try requireCanvas()
+            guard let componentID = editor?.selectedComponentID
+                    ?? editor?.selectedStarterComponent?.componentID else {
+                throw Failure(description: "no component is picked on the Library shelf to drag")
+            }
+            let p = try viewPoint(at)
+            let operation = canvas.trackComponentDrag(componentID, atViewPoint: p)
+            await sleep(0.15)
+            let landing = canvas.componentLandingDescription
+            let answer = operation.contains(.copy) ? "would place a copy" : "refused"
+            let where_ = landing.map { "box \(short($0.rect.origin)) \(short(CGPoint(x: $0.rect.width, y: $0.rect.height)))"
+                                       + ($0.host == nil ? ", loose on the canvas" : ", joining a frame") } ?? "nothing shown"
+            note(number, step.name, "at \(short(at.point)) \(at.space.rawValue): \(answer), \(where_)",
+                 state: describe())
+
         case .dropComponent(let at):
             let canvas = try requireCanvas()
             // A starter the document has not taken yet has no component layer

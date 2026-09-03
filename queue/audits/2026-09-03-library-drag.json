@@ -1,0 +1,29 @@
+{
+  "feature": "Dragging a component out of the Library",
+  "epic": "ui-components",
+  "summary": "Dragging a tile off the Library shelf onto the canvas now works, and shows you what it is doing: a picture of the component follows the pointer, the canvas draws the exact box the copy will fill, and over a screen it draws a dashed box round the screen the copy will join.",
+  "setup": "Photonz Dev, release Next, Library panel set to Comps. Nothing to turn on. The dev app has to be a fresh build: the fix is partly in the app bundle itself, so an old copy still behaves the old way.",
+  "try": [
+    { "do": "Open the Library and pick the Comps tab." },
+    { "do": "Press on the Button tile and drag it slowly onto the middle of the canvas.", "shot": "2026-09-03-library-drag-1-over-canvas.png" },
+    { "do": "Let go. One button lands centred where the box was." },
+    { "do": "Press Command Z once." },
+    { "do": "Select the button and choose Layer, Frame Selection, then drag its corner out to make a big screen." },
+    { "do": "Drag the Button tile over the middle of that screen and stop.", "shot": "2026-09-03-library-drag-2-over-frame.png" },
+    { "do": "Let go. The copy joins the screen rather than floating above it.", "shot": "2026-09-03-library-drag-3-joined.png" },
+    { "do": "Drag a tile out and let go over the Library panel instead of the canvas. Nothing changes." }
+  ],
+  "evaluate": [
+    "Does the picture that follows the pointer look like the component you grabbed, or like a generic file badge?",
+    "Is the landing box enough to place something precisely, or do you want it to snap to what is already there?",
+    "When you hold a component over a screen, is the dashed outline round the screen clear enough that you know it will join it?",
+    "Does a single click on a tile still just select it, and a double click still place one in the middle?",
+    "Dragging a picture out of the Media tab: does it feel the same as dragging a component, or noticeably different?"
+  ],
+  "rough": [
+    "The drag GESTURE itself could not be exercised end to end in this run: driving a real mouse needs an Accessibility grant this machine has not given the terminal, and the loop is not allowed near your dev app. What was proven, and how: the cause was reproduced in a throwaway app (the component's pasteboard type was undeclared, so the drag carried the type name with zero bytes behind it and the canvas refused every drop), and declaring the type made the same drag carry its payload. In the real app the canvas tracking and the drop are driven and photographed by Scripts/playtest/library-drag-walk.json. So the pictures here are the real app, but a person still has to confirm that pressing and dragging a tile actually starts the drag.",
+    "Style tiles do not drag at all, and this did not change that. A named color has nowhere on the canvas to land, it paints whatever is already selected. If you want dragging a style onto a shape to paint it, that is its own feature.",
+    "The dashed frame outline is drawn three points OUTSIDE the screen on purpose. Drawn on the edge, a component the same size as the screen sat exactly on top of it and the cue vanished, which is what the first version did.",
+    "A frame's name and the name of a component inside it are drawn on top of each other at the top left corner (visible in the second and third pictures). That is old chrome, not part of this change, and is filed separately."
+  ]
+}

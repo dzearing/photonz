@@ -115,16 +115,35 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 # unmistakable which build is running.
 cp .build/arm64-apple-macosx/release/Photonz "$APP/Contents/MacOS/$APP_NAME"
 
-# Only the shipping and dev bundles EXPORT the .photonz type. The probe is a
-# throwaway the loop rebuilds all day; letting a third claimant into the
+# The type a component tile carries while it is being dragged. EVERY variant
+# declares it, the probe included: a type identifier the system has never heard
+# of is written onto the drag pasteboard with ZERO BYTES behind it, so the
+# canvas sees the type arrive, reads nothing, and refuses the drop — which is
+# exactly how Library drag and drop looked broken until 2026-09-03. It carries
+# no filename extension and conforms to `public.item` rather than `public.data`,
+# so it claims no files and offers no file promise to the Finder.
+DRAG_TYPE=$(cat <<'TYPES'
+        <dict>
+            <key>UTTypeIdentifier</key><string>com.photonz.component-id</string>
+            <key>UTTypeDescription</key><string>Photonz Component</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.item</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict/>
+        </dict>
+TYPES
+)
+
+# Only the shipping and dev bundles EXPORT the .photonz DOCUMENT type. The probe
+# is a throwaway the loop rebuilds all day; letting a third claimant into the
 # default-handler race could hand a person's own files to it. It still DECLARES
 # the document types, which is what `open -a "Photonz Probe.app" <file>` needs.
 if [[ "$VARIANT" == "probe" ]]; then
-  EXPORTED_TYPES=""
+  DOCUMENT_TYPE=""
 else
-  EXPORTED_TYPES=$(cat <<'TYPES'
-    <key>UTExportedTypeDeclarations</key>
-    <array>
+  DOCUMENT_TYPE=$(cat <<'TYPES'
         <dict>
             <key>UTTypeIdentifier</key><string>com.photonz.document</string>
             <key>UTTypeDescription</key><string>Photonz Document</string>
@@ -140,10 +159,15 @@ else
                 </array>
             </dict>
         </dict>
-    </array>
 TYPES
 )
 fi
+
+EXPORTED_TYPES="    <key>UTExportedTypeDeclarations</key>
+    <array>
+${DRAG_TYPE}
+${DOCUMENT_TYPE}
+    </array>"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -232,6 +256,16 @@ else
     echo "==> Codesigning (ad-hoc — stable identity unavailable; Screen Recording resets each build)"
     codesign --force --deep --sign - "$APP"
   fi
+fi
+
+# A pasteboard type the bundle does not declare carries no data, and the only
+# symptom is a feature that silently stops working (Library drag and drop, fixed
+# 2026-09-03). Cheaper to fail the build than to find that again by hand.
+if ! /usr/libexec/PlistBuddy -c "Print :UTExportedTypeDeclarations" "$APP/Contents/Info.plist" 2>/dev/null \
+     | grep -q "com.photonz.component-id"; then
+  echo "==> FAILED: Info.plist does not declare com.photonz.component-id;" >&2
+  echo "    dragging a component out of the Library would land nothing." >&2
+  exit 1
 fi
 
 if [[ "${1:-}" == "--dmg" ]]; then

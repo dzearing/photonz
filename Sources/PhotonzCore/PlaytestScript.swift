@@ -350,6 +350,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// drag cannot start a real drag session, so this lands the drop the way
     /// the canvas's drag destination does, pasteboard and all.
     case dropComponent(at: PlaytestPoint)
+    /// Hold the component picked on the Library shelf over a point WITHOUT
+    /// letting go, so a `snapshot` taken next photographs the landing outline
+    /// and the frame it would join. The log line says what the canvas answered.
+    case dragComponent(at: PlaytestPoint)
     /// A file let go over the canvas, the way one arrives from the Finder.
     /// `file` is relative to the script, like `open`.
     case dropImage(file: String, at: PlaytestPoint)
@@ -378,7 +382,8 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "blank", "clearClipboard", "click", "describe", "drag", "dropComponent",
+        "action", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
+        "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
         "readClipboard", "render", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
@@ -401,6 +406,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .measureMode: "measureMode"
         case .waitFor: "waitFor"
         case .dropComponent: "dropComponent"
+        case .dragComponent: "dragComponent"
         case .dropImage: "dropImage"
         case .snapshot: "snapshot"
         case .render: "render"
@@ -486,6 +492,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .snapshot(name: try f.string("name"))
         case "dropComponent":
             self = .dropComponent(at: try f.point("at"))
+        case "dragComponent":
+            self = .dragComponent(at: try f.point("at"))
         case "dropImage":
             self = .dropImage(file: try f.string("file"), at: try f.point("at"))
         case "render":

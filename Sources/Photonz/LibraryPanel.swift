@@ -298,9 +298,15 @@ private struct LibraryTile: View {
         .onTapGesture { editorState.selectLibraryItem(item.id) }
         // The canvas already accepts a dropped image file (from Finder, from
         // the history overlay), so dragging a tile onto it needs nothing new.
+        // The preview is the picture itself, so a media tile and a component
+        // tile are picked up the same way. Nothing in here touches the app's
+        // state: a change made while the drag is being handed over redraws the
+        // tile and SwiftUI asks for the item all over again.
         .onDrag {
-            editorState.selectLibraryItem(item.id)
-            return NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
+            NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
+        } preview: {
+            thumbnail.frame(width: LibraryShelfLayout.tileMinimumWidth,
+                            height: LibraryShelfLayout.thumbnailHeight)
         }
         .help("\(item.name) • \(item.detail). Double click to place it.")
     }

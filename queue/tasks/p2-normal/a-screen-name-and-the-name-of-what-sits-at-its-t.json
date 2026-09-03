@@ -1,0 +1,27 @@
+{
+  "id": "a-screen-name-and-the-name-of-what-sits-at-its-t",
+  "title": "A screen name and the name of what sits at its top left stop overlapping",
+  "goal": "When a component sits at the very top left of a screen, the screen name and the component name are drawn in the same place and print on top of each other, so neither can be read. Each name should be legible.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 840,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T13:25:36.094Z",
+  "updated": "2026-09-03T13:25:36.095Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Visible in queue/audits/2026-09-03-library-drag-2-over-frame.png: the frame caption \"Frame\" and the component mark plus name \"Button\" collide. Frame name geometry is FrameNameLabels in PhotonzCore (tested, owns where a name draws and which wins when two overlap); the component mark is drawn in CanvasFrames.swift. The tested overlap rule already exists for two FRAME names, so the fix is likely extending it to cover a component name in the same strip.",
+  "acceptance": [
+    "A component placed at a screen top left corner leaves both names readable",
+    "No name is drawn over another name at any zoom level",
+    "A playtest screenshot shows the two names apart"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T13:25:36.095Z",
+      "note": "created (manual)"
+    }
+  ]
+}

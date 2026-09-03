@@ -395,6 +395,15 @@ final class CanvasNSView: NSView {
     /// The collage slot a drag (file drop / photo layer / slot swap) is
     /// currently over — filled accent highlight.
     private let slotHighlightLayer = CAShapeLayer()
+    /// Where a component being dragged off the Library shelf would land: an
+    /// outline the size of the copy, centred where the pointer is.
+    private let componentLandingLayer = CAShapeLayer()
+    /// The frame that copy would join, lit up so joining a screen is visible
+    /// before the button comes up rather than discovered afterwards.
+    private let componentHostFrameLayer = CAShapeLayer()
+    /// The component under the pointer mid-drag, and where it would land.
+    /// Nil whenever no component drag is over this canvas.
+    private var componentLanding: (rect: CGRect, host: UUID?)?
     /// Crop mode chrome: dimmed surround (even-odd fill), thirds grid,
     /// border, and handles.
     private let cropDimLayer = CAShapeLayer()
@@ -871,6 +880,7 @@ final class CanvasNSView: NSView {
         }
 
         for shape in [collageWellsLayer, slotHighlightLayer,
+                      componentLandingLayer, componentHostFrameLayer,
                       selectionBaseLayer, selectionAntsLayer, layerOutlineLayer,
                       multiSelectOutlineLayer, snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
@@ -884,6 +894,15 @@ final class CanvasNSView: NSView {
         slotHighlightLayer.strokeColor = NSColor.controlAccentColor.cgColor
         slotHighlightLayer.fillColor = NSColor.controlAccentColor.withAlphaComponent(0.18).cgColor
         slotHighlightLayer.lineWidth = 2
+        // The landing box is solid where the copy will be and the host frame is
+        // dashed around it, so the two never read as one shape.
+        componentLandingLayer.strokeColor = NSColor.controlAccentColor.cgColor
+        componentLandingLayer.fillColor = NSColor.controlAccentColor.withAlphaComponent(0.14).cgColor
+        componentLandingLayer.lineWidth = 2
+        componentHostFrameLayer.strokeColor = NSColor.controlAccentColor.withAlphaComponent(0.8).cgColor
+        componentHostFrameLayer.fillColor = nil
+        componentHostFrameLayer.lineWidth = 2
+        componentHostFrameLayer.lineDashPattern = [5, 4]
         // Crop chrome stacks above the composite and the selection chrome
         // (which is hidden in crop mode anyway).
         cropDimLayer.fillColor = CGColor(gray: 0, alpha: 0.55)
@@ -998,14 +1017,16 @@ final class CanvasNSView: NSView {
     // MARK: - Drag destination (drop an image to add it as a layer)
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        if droppedComponent(sender) != nil { return .copy }
+        if droppedComponent(sender) != nil { return trackComponentDrag(sender) }
         return droppedURL(sender) != nil ? .copy : []
     }
 
     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
         // A component off the shelf lands wherever the pointer is: there is no
-        // collage slot to highlight, and the copy is centred on the drop.
-        if droppedComponent(sender) != nil { return .copy }
+        // collage slot to highlight, and the copy is centred on the drop. What
+        // it needs instead is the box it would fill and the frame it would
+        // join, drawn while the button is still down.
+        if droppedComponent(sender) != nil { return trackComponentDrag(sender) }
         guard droppedURL(sender) != nil else { return [] }
         // Highlight the collage slot under the pointer — dropping there fills
         // the slot instead of adding a floating layer.
@@ -1016,11 +1037,13 @@ final class CanvasNSView: NSView {
 
     override func draggingExited(_ sender: NSDraggingInfo?) {
         hoverSlot = nil
+        componentLanding = nil
         refreshOverlays()
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         hoverSlot = nil
+        componentLanding = nil
         refreshOverlays()
         if let componentID = droppedComponent(sender) {
             return dropComponent(componentID, atViewPoint: convert(sender.draggingLocation, from: nil))
@@ -1048,6 +1071,53 @@ final class CanvasNSView: NSView {
     private func droppedComponent(_ sender: NSDraggingInfo) -> UUID? {
         ComponentDrag.componentID(on: sender.draggingPasteboard)
     }
+
+    /// Follows a component drag across the canvas: works out the box the copy
+    /// would fill and the frame it would join, draws both, and answers the drag
+    /// with what letting go here would actually do. A drop that would be
+    /// refused (a copy landing inside its own original) says so with the
+    /// ordinary no-entry pointer instead of accepting the drag and scolding
+    /// afterwards.
+    private func trackComponentDrag(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard let componentID = droppedComponent(sender) else {
+            componentLanding = nil
+            refreshOverlays()
+            return []
+        }
+        return trackComponentDrag(componentID,
+                                  atViewPoint: convert(sender.draggingLocation, from: nil))
+    }
+
+    /// The same tracking from a point in this view. Internal so a playtest can
+    /// hold a component over the canvas without synthesising a drag session,
+    /// which is the only way to photograph what a drag looks like mid air.
+    @discardableResult
+    func trackComponentDrag(_ componentID: UUID, atViewPoint viewPoint: CGPoint) -> NSDragOperation {
+        guard let viewport, let document else {
+            componentLanding = nil
+            refreshOverlays()
+            return []
+        }
+        let point = viewport.documentPoint(fromView: viewPoint)
+        let target = document.componentDropTarget(of: componentID, at: point)
+        guard target != .refused,
+              let size = document.componentDropSize(of: componentID,
+                                                    measure: { TextRasterizer.naturalSize($0) }) else {
+            componentLanding = nil
+            refreshOverlays()
+            return []
+        }
+        let host: UUID? = if case .frame(let id) = target { id } else { nil }
+        componentLanding = (CGRect(x: point.x - size.width / 2, y: point.y - size.height / 2,
+                                   width: size.width, height: size.height),
+                            host)
+        refreshOverlays()
+        return .copy
+    }
+
+    /// What the canvas is currently showing a component drag: the box the copy
+    /// would fill and the frame it would join, for a playtest to read back.
+    var componentLandingDescription: (rect: CGRect, host: UUID?)? { componentLanding }
 
     /// Places a copy at a point in this view, which is what a drag from the
     /// shelf ends in. Internal so a playtest can land the same drop without
@@ -2445,6 +2515,7 @@ final class CanvasNSView: NSView {
         refreshPreviewSprite()
         refreshTextEditorDisplay()
         refreshCollageChrome()
+        refreshComponentLanding()
         refreshMeasureCreation(modifierFlags: NSEvent.modifierFlags)
     }
 
@@ -2492,6 +2563,32 @@ final class CanvasNSView: NSView {
             }
         }
         slotHighlightLayer.isHidden = true
+    }
+
+    /// Where a component being dragged off the Library shelf would land: a
+    /// filled outline the exact size of the copy, plus a dashed box around the
+    /// frame it would join. Both are gone the moment the drag leaves or lands.
+    private func refreshComponentLanding() {
+        guard let viewport, let landing = componentLanding else {
+            componentLandingLayer.isHidden = true
+            componentHostFrameLayer.isHidden = true
+            return
+        }
+        let rect = viewRect(forDocRect: landing.rect, in: viewport)
+        let radius = min(6, rect.width / 2, rect.height / 2)
+        componentLandingLayer.path = CGPath(roundedRect: rect, cornerWidth: radius,
+                                            cornerHeight: radius, transform: nil)
+        componentLandingLayer.isHidden = false
+
+        // Drawn just OUTSIDE the frame: a component the same size as the screen
+        // it is joining would otherwise hide the very cue that says so.
+        if let host = landing.host, let bounds = document?.canvasBounds(of: host) {
+            let box = viewRect(forDocRect: bounds, in: viewport).insetBy(dx: -3, dy: -3)
+            componentHostFrameLayer.path = CGPath(rect: box, transform: nil)
+            componentHostFrameLayer.isHidden = false
+        } else {
+            componentHostFrameLayer.isHidden = true
+        }
     }
 
     /// The topmost visible, unlocked collage layer whose slot contains the

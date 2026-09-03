@@ -98,6 +98,13 @@ struct ComponentMark: View {
 /// be mistaken for each other, and so a component dragged out of Photonz means
 /// nothing anywhere else.
 enum ComponentDrag {
+    /// DECLARED in the app's Info.plist (`Scripts/build-app.sh`,
+    /// `UTExportedTypeDeclarations`). It has to be: an identifier the system
+    /// has never heard of is accepted onto the drag pasteboard and then carries
+    /// zero bytes, so the canvas sees a component arrive and reads nothing out
+    /// of it. That is how Library drag and drop looked broken until 2026-09-03,
+    /// and a plain `swift build` binary with no bundle around it still behaves
+    /// that way.
     static let typeIdentifier = "com.photonz.component-id"
     static let pasteboardType = NSPasteboard.PasteboardType(typeIdentifier)
 
@@ -354,10 +361,16 @@ struct LibraryComponentTile: View {
         // the original is the Select Original button in the section below.
         .onTapGesture(count: 2) { place() }
         .onTapGesture { editorState.selectLibraryItem(entry.id) }
+        // A picture of the component itself follows the pointer, so picking a
+        // tile up looks like picking anything up on a Mac. Nothing in here
+        // touches the app's state: a change made while the drag is being handed
+        // over redraws the tile and SwiftUI asks for the item all over again.
         .onDrag {
-            editorState.selectLibraryItem(entry.id)
             guard let componentID = layer.componentID else { return NSItemProvider() }
             return ComponentDrag.itemProvider(componentID: componentID)
+        } preview: {
+            thumbnail.frame(width: max(wellWidth, LibraryShelfLayout.tileMinimumWidth),
+                            height: LibraryShelfLayout.thumbnailHeight)
         }
         .help(helpText)
     }

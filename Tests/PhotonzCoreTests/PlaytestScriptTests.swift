@@ -109,6 +109,18 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("blank"))
     }
 
+    @Test("A dragComponent step holds the picked component over a point without letting go")
+    func dragComponentStepHoldsTheDragInTheAir() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragComponent", "at": [120, 80] } ] }
+        """)
+        guard case .dragComponent(let at) = script.steps[0] else {
+            Issue.record("dragComponent"); return
+        }
+        #expect(at.point == CGPoint(x: 120, y: 80))
+        #expect(script.steps[0].name == "dragComponent")
+    }
+
     @Test func aScriptIsAnOutputFolderAndAListOfSteps() throws {
         let script = try decode("""
         {

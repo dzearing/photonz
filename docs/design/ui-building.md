@@ -1296,3 +1296,52 @@ promoting keeps drawing inside the component, because by then it is a shadow
 they chose.
 
 Walked by `Scripts/playtest/component-text-halo-walk.json`.
+
+## Landed: dragging one out of the Library (Next, `next-components`, 2026-09-03)
+
+Every Library tile carried an `.onDrag` and the canvas had a drag destination
+ready for it, and yet dragging a component onto the canvas did nothing at all.
+People fell back to double clicking a tile, which places one in the middle
+rather than where they wanted it.
+
+**The cause was a type identifier the system had never heard of.** A component
+travels under its own pasteboard type, `com.photonz.component-id`, so a dropped
+file and a dropped component can never be mistaken for each other. That type was
+never DECLARED in the app's `Info.plist`. An undeclared identifier is not
+rejected: the drag pasteboard accepts the type name and then carries ZERO BYTES
+behind it, so the canvas saw a component arrive, read nothing out of it, and
+refused the drop. Everything else about the plumbing was correct. The layers
+list drags fine because it travels as plain text, which every Mac already knows.
+
+- **`Scripts/build-app.sh` declares the type, in every variant including the
+  probe**, conforming to `public.item` rather than `public.data` so a component
+  claims no files and offers the Finder no file promise. The build FAILS if the
+  finished `Info.plist` does not carry it, because the only symptom of losing it
+  again is a feature that quietly stops working.
+- **A picture of the component follows the pointer.** `onDrag(preview:)` on both
+  the component tiles and the media tiles, so picking a tile up looks like
+  picking anything up on a Mac.
+- **The canvas says where it will land, before the button comes up.** A filled
+  accent box the exact size of the copy, centred where the pointer is; over a
+  screen, a dashed accent box around that whole screen as well, drawn just
+  outside it so a component the size of the screen cannot hide the very cue that
+  says it is joining one. A drop that would be refused (a copy landing inside
+  its own original) answers with the ordinary no-entry pointer instead of
+  accepting the drag and scolding afterwards.
+- **One answer decides both the picture and the drop.**
+  `PhotonzDocument.componentDropTarget(of:at:)` and `componentDropSize(of:)` in
+  `PhotonzCore` (tested) are read by the canvas mid-drag and by the placing
+  itself, so what was promised and what happens can never disagree.
+- **Nothing in an `onDrag` closure touches app state any more.** A change made
+  while the drag is being handed over redraws the tile and SwiftUI asks for the
+  item all over again, which was producing two drags for one press.
+
+**Where it lives.** `ComponentInstances.swift` in `PhotonzCore` (the two
+answers); `ComponentPanel.swift` and `LibraryPanel.swift` (the tiles and their
+previews); `CanvasView.swift` (`trackComponentDrag`, `refreshComponentLanding`);
+`Scripts/build-app.sh` (the declaration and the guard). Walked by
+`Scripts/playtest/library-drag-walk.json`, which uses the `dragComponent` step
+to hold a component in the air and photograph what the canvas draws.
+
+Not in this slice: style tiles, which do not drag at all — a named color has
+nothing to land on, it paints what is already selected.

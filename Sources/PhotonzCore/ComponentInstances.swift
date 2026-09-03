@@ -92,6 +92,20 @@ enum ComponentIdentity {
 
 // MARK: - Placing and keeping copies
 
+/// What letting go of a component over a point on the canvas would do.
+///
+/// One answer with three shapes, so the outline the canvas draws mid-drag, the
+/// frame it lights up, and the no-entry pointer all come from the same place as
+/// the drop itself.
+public enum ComponentDropTarget: Equatable, Sendable {
+    /// Nothing would happen: the copy would end up inside itself.
+    case refused
+    /// It would join this frame.
+    case frame(UUID)
+    /// It would land loose on the canvas.
+    case canvas
+}
+
 extension PhotonzDocument {
 
     /// How deep copies inside copies are followed. A component that held itself
@@ -152,6 +166,50 @@ extension PhotonzDocument {
         }
         for child in layer.children { used.formUnion(componentsUsed(by: child, depth: depth + 1)) }
         return used
+    }
+
+    /// What letting go of a component over a canvas point would do.
+    ///
+    /// Asked while the drag is still in the air, so the canvas can draw the
+    /// answer before the button comes up, and asked again by the drop itself,
+    /// so the picture and what happens can never disagree.
+    public func componentDropTarget(of componentID: UUID, at point: CGPoint) -> ComponentDropTarget {
+        // A starter is still the app's rather than the document's until it is
+        // dropped, so there is no main to reason about: it arrives whole and
+        // joins whatever frame it lands on, the way a drawn shape does.
+        let isArrivingStarter = mainComponent(componentID: componentID) == nil
+            && StarterComponent(componentID: componentID) != nil
+        guard isArrivingStarter || mainComponent(componentID: componentID) != nil else { return .refused }
+        guard let host = frameID(under: point) else { return .canvas }
+        if isArrivingStarter { return .frame(host) }
+        // A copy landing inside its own original would draw forever, so that
+        // one drop is refused rather than quietly landed somewhere else.
+        if encloses(componentID: componentID, at: host) { return .refused }
+        return canInsertInstance(of: componentID, intoGroup: host) ? .frame(host) : .canvas
+    }
+
+    /// The box a dropped copy would fill, so the canvas can outline where it
+    /// is going at the size it will actually be. Nil for an id that is not a
+    /// component at all.
+    public func componentDropSize(
+        of componentID: UUID,
+        measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize
+    ) -> CGSize? {
+        if let main = mainComponent(componentID: componentID) { return main.localBounds.size }
+        guard let starter = StarterComponent(componentID: componentID) else { return nil }
+        return StarterComponents.layer(starter, scale: max(pixelScale, 1),
+                                       measure: measure).localBounds.size
+    }
+
+    /// Whether the drop target sits inside the component being placed, walking
+    /// out from the target to the canvas.
+    func encloses(componentID: UUID, at host: UUID) -> Bool {
+        var current: UUID? = host
+        while let id = current {
+            if layer(id: id)?.componentID == componentID { return true }
+            current = parentID(of: id)
+        }
+        return false
     }
 
     /// Whether a copy of `componentID` may go inside `group` (nil for the

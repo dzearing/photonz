@@ -3386,7 +3386,9 @@ final class EditorState {
         guard document.mainComponent(componentID: componentID) != nil else { return nil }
         // Dropping a component onto its own original would make a thing that
         // draws forever, so it is refused out loud rather than quietly ignored.
-        if let host = document.frameID(under: point), enclosesComponent(componentID, at: host) {
+        // The same answer is what the canvas draws mid-drag, so a drag that is
+        // going to be refused says so before the button comes up.
+        if document.componentDropTarget(of: componentID, at: point) == .refused {
             raiseComponentCycleNotice()
             return nil
         }
@@ -3397,18 +3399,6 @@ final class EditorState {
         selectedLibraryItemID = nil
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))
         return placed
-    }
-
-    /// Whether the drop target sits inside the component being placed, which is
-    /// the one case a copy is refused rather than placed loose on the canvas.
-    private func enclosesComponent(_ componentID: UUID, at host: UUID) -> Bool {
-        guard let document else { return false }
-        var current: UUID? = host
-        while let id = current {
-            if document.layer(id: id)?.componentID == componentID { return true }
-            current = document.parentID(of: id)
-        }
-        return false
     }
 
     private func raiseComponentCycleNotice() {
