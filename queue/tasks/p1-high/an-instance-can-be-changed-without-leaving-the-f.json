@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.268Z",
-  "updated": "2026-09-03T04:22:39.107Z",
+  "updated": "2026-09-03T04:52:51.214Z",
   "deps": [
     "an-instance-dropped-from-the-library-follows-its"
   ],
@@ -60,7 +60,12 @@
     {
       "t": "2026-09-03T04:52:28.557Z",
       "note": "Verified live in the probe app, Screen Recording granted: Scripts/playtest/component-override-walk.json and component-choice-walk.json. Real captures under queue/audits/2026-09-03-component-overrides-*.png show one copy set apart, an edit to the original reaching both copies while the override held, a choice swapped on one copy, and detach with its pill."
+    },
+    {
+      "t": "2026-09-03T04:52:51.213Z",
+      "note": "Step C6 shipped in Next behind next-components. An original exposes knobs of three kinds (wording, show or hide, a choice among shapes it holds) from an Add menu on its own section; a copy sets them in its section with a revert arrow per row and stays linked; Layer > Detach Instance (Option Command B) turns a copy into ordinary layers and says so in a pill. Model is PhotonzCore/ComponentProperties.swift with 26 tests written first; full suite 1795 green. Verified live in the probe app with Screen Recording granted: Scripts/playtest/component-override-walk.json and component-choice-walk.json. Audit at queue/audits/2026-09-03-component-overrides.json with four real captures. Follow up filed: turn-two-shapes-into-a-choice-in-one-step."
     }
   ],
-  "started": "2026-09-03T04:22:39.106Z"
+  "started": "2026-09-03T04:22:39.106Z",
+  "completed": "2026-09-03T04:52:51.214Z"
 }
