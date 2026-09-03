@@ -49,6 +49,11 @@ public struct History: Sendable {
         // untouched.
         next.reflowLayouts()
         let sync = next.syncComponentInstances()
+        // ...and once more afterwards, but only when a copy actually changed,
+        // because refilling a copy is the moment its own answers land: a copy
+        // told to say something longer has a label that just grew, and the
+        // stack around it has to close up in this same step.
+        if sync.updatedInstances > 0 { next.reflowLayouts() }
         guard next != current else { return EditReport() }
         let breaks = LinkBreakReport.between(current, next)
         undoStack.append(current)

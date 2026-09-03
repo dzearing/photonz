@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:30:00.027Z",
-  "updated": "2026-09-03T17:32:32.282Z",
+  "updated": "2026-09-03T18:10:32.925519Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The measuring already exists: TextRasterizer.naturalSize(_:maxWidth:minWidth:) wraps and returns the frame the words need, and EditorState.commitTextEdit and restyleSelectedText both use it. What is missing is a re-measure on the two paths that change a text layer without going through those: a width change (canvas resize handles in CanvasView, typed W in the geometry fields, and a container stretching a child through GroupFlow) and a wording override (Document.setInstanceOverride, ComponentProperties.swift:498, stores the string and never touches the frame). PhotonzCore is pure and cannot call CoreText, so the measurement is injected the way StarterComponents.layer(kind, measure:) already does. Re-measure has to land inside the same History.perform as the edit so it stays one undo step, and before reflowLayouts so a stack closes up in the same step. Evidence: ui-building.md What the first version deliberately does not do (first bullet and A text override does not resize its instance), plus the rough lines in queue/audits/2026-09-03-ui-components-placement.json (Nothing re-wraps) and 2026-09-03-auto-layout.json. Related: the open p3 task a-text-block-is-the-same-size-while-you-type-it is a different bug in the same code (the draft font metrics while typing versus the committed frame); whoever gets there first should read the other.",
@@ -31,6 +31,43 @@
     {
       "t": "2026-09-03T17:32:32.281Z",
       "note": "seq 170 -> 20"
+    },
+    {
+      "t": "2026-09-03T17:50:39.264Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T18:10:32.925519Z",
+      "note": "review before building: the three broken paths were reproduced first, as failing tests. The canvas handle drag ALREADY re-wrapped (CanvasView.resizedFrame), so acceptance 1 was half true; typed W, a stack stretching a child, and a wording override were the three that were not."
+    },
+    {
+      "t": "2026-09-03T18:10:32.925519Z",
+      "note": "review before building: rejected a diff-based re-measure pass in History (compare the doc before and after and re-fit whatever changed) because a copy is rebuilt from its original every sync, so the copy's re-measured height would be thrown away and re-derived on every edit. Did it at the source instead: Layer.resized(to:) is the ONE place a layer is handed a new box, so the typed W field, GroupFlow's stretch and LayerScaling all get it from one change."
+    },
+    {
+      "t": "2026-09-03T18:10:32.925519Z",
+      "note": "built: TextMeasurement (new, PhotonzCore) is the injected measurer, installed in PhotonzApp.init from TextRasterizer.naturalSize; a whole-word estimate stands in everywhere else so tests are deterministic. Layer.textHugsItsWords / textRefitted carry the hug-vs-wrap rule."
+    },
+    {
+      "t": "2026-09-03T18:10:32.925519Z",
+      "note": "built: Layer.resized(to:) re-measures height when the WIDTH changed and leaves the box alone otherwise, so moving does not resize. ComponentProperties.apply re-fits on a wording override, anchored by the container's contentPlacement (threaded through mutate) so a centred label stays centred. reflowLayouts now runs to a fixed point (cap 3) because a stack places rows from the sizes they had going in; History.perform reflows again after syncComponentInstances when a copy actually changed."
+    },
+    {
+      "t": "2026-09-03T18:10:32.925519Z",
+      "note": "found by playtesting, not in the task: a copy of a component did not carry its original's layout or contentPlacement, so a copy of a stack was a heap and did not close up around its grown label. Fixed in ComponentInstances (both insert and sync) with a test."
+    },
+    {
+      "t": "2026-09-03T18:10:32.925519Z",
+      "note": "review before ready: playtested on the probe (Scripts/playtest/label-grows-walk.json, Screen Recording granted). All six acceptance scenarios verified on the real window. Three rough edges left and filed: typed W has no floor, the H field is blank rather than dimmed, vertical Stretch on text now does nothing."
+    },
+    {
+      "t": "2026-09-03T18:10:32.925519Z",
+      "note": "behaviour change to know about: a text child inside a scaled group no longer has its height multiplied, it takes the height its words need. Four LayerScalingTests asserted the old lie and were rewritten. Documented in docs/design/ui-building.md under 'A label grows to fit what it says'."
+    },
+    {
+      "t": "2026-09-03T18:10:32.925519Z",
+      "note": "Scripts/test.sh green: 2308 tests."
     }
-  ]
+  ],
+  "started": "2026-09-03T17:50:39.263Z"
 }

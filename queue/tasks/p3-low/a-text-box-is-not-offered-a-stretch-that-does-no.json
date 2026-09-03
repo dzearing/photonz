@@ -1,0 +1,27 @@
+{
+  "id": "a-text-box-is-not-offered-a-stretch-that-does-no",
+  "title": "A text box is not offered a stretch that does nothing",
+  "goal": "A piece of text can be told to stretch up and down inside the group holding it. Nothing happens when you pick it, because a text box is now exactly as tall as its words. A menu that offers a choice which does nothing reads as broken; either the choice should go, or it should mean something.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 620,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T18:09:56.734Z",
+  "updated": "2026-09-03T18:09:56.735Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "LayerPlacement offers the same five choices for every content kind. GroupFlow.span with .stretch sets the box height, which Layer.resized(to:) now overrides for text. The horizontal case became meaningful in a-label-grows-to-fit-what-it-says; the vertical one did not.",
+  "acceptance": [
+    "The vertical placement menu on a text layer no longer offers a choice that changes nothing, or the choice does something visible",
+    "Stretching across (horizontal) still re-wraps the words, as it does now",
+    "A document saved with that choice already set opens without moving anything"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T18:09:56.735Z",
+      "note": "created (manual)"
+    }
+  ]
+}

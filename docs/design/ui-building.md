@@ -109,9 +109,13 @@ and stretches it across — so dragging one wider needs no manual fixing.
 **What holds its size, always.** Anything measured in points: text point size,
 stroke width, corner radius, shadow and blur, a caliper's ticks and its label.
 14 pt type is 14 pt type on a real screen, and a card that got wider did not
-change what its label should read at. The cost is honest: shrink a card a long
-way and its label will overhang, because nothing re-wraps yet. Reflow is auto
-layout's job, and auto layout is sequenced after this.
+change what its label should read at.
+
+**Text is the one box that is not simply multiplied.** Its width is — that is
+its wrap width — but its height is however tall the words are once they have
+re-wrapped to it, because the type never changed size. Stretching a label to
+twice the height with the same 14 pt glyphs in it would just be a box with a
+hole under the words. See "A label grows to fit what it says" below.
 
 **A screen is a container too, with one substitution.** Dragging a frame's edge
 moves where it clips rather than magnifying what is on it, so on a screen
@@ -410,15 +414,49 @@ Three rules that go with them:
 - **They retire together.** When the whole ladder is the way Next works, all six
   come out of the catalog in one change rather than lingering as dead switches.
 
+## A label grows to fit what it says
+
+A box around words has to be the size the words are, or the last line is cut
+off and the label hangs over the shape behind it. So a text box re-measures
+itself whenever the two things that decide its shape change:
+
+- **Its width.** Width IS the wrap width. Drag the right edge in, type a number
+  into W, or let a stack stretch it across a fixed-width container, and the
+  words re-wrap and the box becomes as tall as they now need. The top edge stays
+  put and it grows downward. Dragging the bottom edge does nothing, which is
+  what the inspector's Height field already says.
+- **Its words.** A copy of a component answering a wording knob re-measures too.
+  A box nobody has narrowed hugs its words, so it stays on one line and simply
+  gets wider, growing from whichever edge its group lines contents up on; a box
+  somebody HAS dragged narrower is a paragraph, so it keeps that wrap width and
+  grows downward.
+
+Nothing else re-measures. Moving a layer, restyling it, or changing anything
+that is not its width or its words leaves the box exactly as it was, so a
+document that was laid out by hand is never quietly re-flowed under its author.
+
+Two rules make it hold together:
+
+- **It happens inside the same undo step as the edit.** The measurement is
+  injected into the pure model (`TextMeasurement.use`, wired to
+  `TextRasterizer.naturalSize` at launch, an estimate everywhere else), so
+  `Layer.resized(to:)` can re-measure without `PhotonzCore` importing CoreText.
+- **The flow runs until nothing moves.** A stack works out where its rows go
+  from the sizes they had going in, so a label that re-wrapped while being
+  placed is taller than the row under it was told about. `reflowLayouts` repeats
+  until a pass changes nothing, capped, and it runs again after copies are
+  refilled because that is the moment a copy's own wording lands.
+
+A copy of a component arranges itself the way its original does: the stack or
+grid on the original travels to every copy, along with how it lines its contents
+up. Without that, a copy of a stack is a heap that happens to look right until
+something inside it changes size.
+
 ## What the first version deliberately does not do
 
 So later work is not measured against a promise nobody made. Each of these is a
 real limit of the slices above, not an oversight.
 
-- **Resizing a container does not re-wrap or re-flow anything.** A piece is
-  placed by its rule; text keeps its point size and does not re-wrap into its
-  new box, so shrinking a container a long way can leave a label hanging over
-  the edge. That is auto layout's job, and it is sequenced after this.
 - **Nothing rotates.** No layer, group or frame has a rotation, which is what
   keeps the coordinate rule pure addition.
 - **No auto layout and no constraints.** A child does not move or stretch when
@@ -433,8 +471,6 @@ real limit of the slices above, not an oversight.
 - **Only three kinds of exposed property**: wording, whether a part shows, and a
   choice among shapes the main already contains. No numbers, no colors, no
   images as properties.
-- **A text override does not resize its instance.** Without auto layout, a long
-  label can overflow the button it sits in.
 - **Detach is one way.** There is no re-attach; undo is the way back.
 - **A main cannot be made from a group that already contains a main.** An
   instance inside a main is fine and updates correctly; promoting a group that

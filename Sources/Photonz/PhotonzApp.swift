@@ -1,5 +1,6 @@
 import AppKit
 import PhotonzCore
+import PhotonzRender
 import SwiftUI
 
 @main
@@ -10,6 +11,12 @@ struct PhotonzApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
+        // The document model measures text — a box around words has to know how
+        // tall the words are — and it is pure, so CoreText's answer is handed
+        // in here, once, before any document exists.
+        TextMeasurement.use { text, maxWidth in
+            TextRasterizer.naturalSize(text, maxWidth: maxWidth)
+        }
         let coordinator = AppCoordinator()
         _coordinator = State(initialValue: coordinator)
         // Hand the coordinator to the delegate so its launch hook can start the

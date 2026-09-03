@@ -1,0 +1,27 @@
+{
+  "id": "a-width-you-type-into-a-text-box-has-a-floor-lik",
+  "title": "A width you type into a text box has a floor, like the one you drag",
+  "goal": "Typing a very small number into a text box's W field, say 1 or 12, leaves an unreadable sliver of a column many lines tall. Dragging the same edge on the canvas will not go below about 80 points. The typed field should stop at the same place the drag does, so both ways of setting a width agree.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 600,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T18:09:56.672Z",
+  "updated": "2026-09-03T18:09:56.672Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "LayerGeometry.clampedSide floors at minimumSide = 1 for every layer; CanvasView.resizedFrame floors a text drag at TextRasterizer.minimumTextWidth (80). Either LayerGeometry needs a per-layer floor or LayerGeometrySelection.applying needs to ask the layer. Found while building a-label-grows-to-fit-what-it-says.",
+  "acceptance": [
+    "Typing a width below the canvas minimum into W lands on the minimum instead",
+    "The number the field shows afterwards is the number the box actually took",
+    "Dragging the same edge and typing the same number end at the same width"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T18:09:56.672Z",
+      "note": "created (manual)"
+    }
+  ]
+}

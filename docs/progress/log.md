@@ -6751,3 +6751,41 @@ with two window captures: `queue/audits/2026-09-03-stack-size.json`.
 be longer than its contents, per-side padding, and a minimum/maximum size. Open
 question for the user in the audit: whether typing a width should widen the rows
 by itself, rather than leaving that to the Horizontal row.
+
+## 2026-09-03 — A label grows to fit what it says
+
+**Shipped.** A text box re-measures itself. Its width IS its wrap width, so
+`Layer.resized(to:)` re-wraps and re-heights whenever the width changes and
+leaves the box alone when it does not — which covers the typed W field, a stack
+stretching a row across a fixed-width container, and a group being scaled, all
+from one place. A copy of a component answering a wording knob re-fits too: a
+box nobody has narrowed keeps hugging its words (one line, wider, growing from
+whichever edge its group lines contents up on), and a box somebody has narrowed
+keeps that wrap width and grows down. The measuring is injected
+(`TextMeasurement.use`, wired to `TextRasterizer.naturalSize` in
+`PhotonzApp.init`), so `PhotonzCore` stays pure and every test runs on a
+deterministic whole-word estimate. `reflowLayouts` now repeats until nothing
+moves (capped), because a stack places its rows from the sizes they had going
+in, and `History.perform` reflows once more after copies are refilled when one
+actually changed.
+
+**Found by playtesting.** A copy of a component never carried its original's
+layout or content placement, so a copy of a stack was a heap that only looked
+right until something inside it changed size. Fixed in `ComponentInstances`,
+both on insert and on every sync.
+
+**Behaviour change.** A text child inside a scaled group no longer has its
+height multiplied; it takes the height its words need. Four `LayerScalingTests`
+asserted the old behaviour and were rewritten to say so. `docs/design/ui-building.md`
+gained a section and lost the two "does not do" bullets this retires.
+
+**Verified.** 11 new tests (2308 overall, green) and a real walk on the probe
+with Screen Recording granted (`Scripts/playtest/label-grows-walk.json`): drag,
+typed width, stack stretch and a copy given a much longer sentence, all
+photographed. Audit with four window captures:
+`queue/audits/2026-09-03-label-grows.json`.
+
+**Next.** Three rough edges are filed as p3 tasks: the typed W field has no
+floor where the canvas drag has one, the H field is blank rather than showing
+the number it came out at, and vertical Stretch on a text box now does nothing
+while still being offered.

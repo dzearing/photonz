@@ -1,0 +1,27 @@
+{
+  "id": "a-text-box-says-how-tall-it-turned-out",
+  "title": "A text box says how tall it turned out",
+  "goal": "The height field for a piece of text is blank. It cannot be typed into, because height follows the words, but it also does not say what the height came out as, so the one number you might want to read off a wrapped paragraph is the one number the app hides. Show it, dimmed, the way a number you cannot change should read.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 610,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T18:09:56.702Z",
+  "updated": "2026-09-03T18:09:56.703Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "GeometryInspector renders nothing for a field LayerGeometryEditing says is not allowed; LayerGeometryEditing.textHeightReason already carries the sentence. Found while building a-label-grows-to-fit-what-it-says.",
+  "acceptance": [
+    "Selecting a text layer shows its height as a dimmed number rather than an empty field",
+    "Hovering it still explains that height follows the words",
+    "Typing into it is still refused"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T18:09:56.703Z",
+      "note": "created (manual)"
+    }
+  ]
+}

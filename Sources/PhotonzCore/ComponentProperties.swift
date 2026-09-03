@@ -552,7 +552,8 @@ extension PhotonzDocument {
     /// something else: the copy takes the original's picture whole, and then
     /// the few facts it owns are written over the top.
     func applyOverrides(_ overrides: [ComponentOverride], of componentID: UUID,
-                        to children: inout [Layer], instance: UUID) {
+                        to children: inout [Layer], instance: UUID,
+                        contents: LayerPlacement? = nil) {
         let properties = componentProperties(of: componentID)
         guard !properties.isEmpty, !overrides.isEmpty else { return }
         let answers = Dictionary(overrides.map { ($0.property, $0.value) },
@@ -560,19 +561,32 @@ extension PhotonzDocument {
         for property in properties {
             guard let value = answers[property.id], value.kind == property.kind else { continue }
             let derived = ComponentIdentity.derived(instance: instance, source: property.target)
-            Self.mutate(id: derived, in: &children) { layer in
-                Self.apply(value, to: &layer, instance: instance)
+            Self.mutate(id: derived, in: &children, contents: contents) { layer, holder in
+                Self.apply(value, to: &layer, instance: instance, contents: holder)
             }
         }
     }
 
-    /// One answer written onto one layer inside a copy.
-    private static func apply(_ value: ComponentPropertyValue, to layer: inout Layer, instance: UUID) {
+    /// One answer written onto one layer inside a copy. `contents` is how the
+    /// group around this layer lines its contents up, which is what decides
+    /// which edge a label grows from when its wording gets longer.
+    private static func apply(_ value: ComponentPropertyValue, to layer: inout Layer,
+                              instance: UUID, contents: LayerPlacement?) {
         switch value {
         case .text(let string):
             guard case .text(var content) = layer.content else { return }
+            // A copy told to say something longer says all of it: the box
+            // re-measures around the new words. A label that hugged its words
+            // keeps hugging (one line, wider, growing from whichever edge its
+            // group lines contents up on); a box somebody had already narrowed
+            // is a paragraph and keeps that wrap width, growing downward.
+            let hugging = layer.textHugsItsWords
             content.string = string
             layer.content = .text(content)
+            layer = layer.textRefitted(
+                hugging: hugging,
+                anchor: LayerPlacement.resolving(child: layer.placement,
+                                                 container: contents).horizontal)
         case .visible(let flag):
             layer.isVisible = flag
         case .variant(let option):
@@ -590,16 +604,21 @@ extension PhotonzDocument {
     /// Reaches a layer by id anywhere in a list of subtrees. The copy being
     /// built is not in the document yet, so the document's own helpers cannot
     /// be used.
+    ///
+    /// `contents` is how the group holding this list lines its contents up; it
+    /// travels down with the walk so the change knows what the layer it lands
+    /// on is following.
     @discardableResult
     private static func mutate(id: UUID, in layers: inout [Layer],
-                               _ change: (inout Layer) -> Void) -> Bool {
+                               contents: LayerPlacement?,
+                               _ change: (inout Layer, LayerPlacement?) -> Void) -> Bool {
         for index in layers.indices {
             if layers[index].id == id {
-                change(&layers[index])
+                change(&layers[index], contents)
                 return true
             }
             if var group = layers[index].group {
-                if mutate(id: id, in: &group.children, change) {
+                if mutate(id: id, in: &group.children, contents: group.contentPlacement, change) {
                     layers[index].content = .group(group)
                     return true
                 }

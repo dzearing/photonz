@@ -255,12 +255,18 @@ extension PhotonzDocument {
         // so its box is centred on the drop.
         let anchor = CGPoint(x: point.x - box.midX + main.frame.origin.x,
                              y: point.y - box.midY + main.frame.origin.y)
-        var copy = Layer(name: main.name,
-                         content: .group(GroupContent(children: [], isFrame: main.isFrame,
-                                                      clipsContents: main.group?.clipsContents ?? true,
-                                                      backgroundHex: main.group?.backgroundHex,
-                                                      instanceOf: componentID,
-                                                      followedStyle: main.style)),
+        var content = GroupContent(children: [], isFrame: main.isFrame,
+                                   clipsContents: main.group?.clipsContents ?? true,
+                                   backgroundHex: main.group?.backgroundHex,
+                                   instanceOf: componentID,
+                                   followedStyle: main.style)
+        // A copy arranges itself the way its original does. Without this a copy
+        // of a stack is a loose heap that happens to look right until something
+        // inside it changes size — which is exactly what a copy answering a
+        // wording knob does.
+        content.layout = main.group?.layout
+        content.contentPlacement = main.group?.contentPlacement
+        var copy = Layer(name: main.name, content: .group(content),
                          frame: CGRect(origin: anchor, size: main.frame.size))
         // A copy takes the original's look at the moment it is placed and keeps
         // following it part by part after that; where it sits, whether it is
@@ -299,7 +305,8 @@ extension PhotonzDocument {
         // The original's picture first, then the few facts this copy owns
         // written over the top. That order is what lets an edit to the original
         // still reach a copy that has overridden something else.
-        applyOverrides(overrides, of: componentID, to: &children, instance: instance)
+        applyOverrides(overrides, of: componentID, to: &children, instance: instance,
+                       contents: main.group?.contentPlacement)
         return children
     }
 
@@ -394,6 +401,11 @@ extension PhotonzDocument {
                     group.isFrame = main.isFrame
                     group.clipsContents = main.group?.clipsContents ?? true
                     group.backgroundHex = main.group?.backgroundHex
+                    // How the original arranges its contents follows too, so a
+                    // copy of a stack closes up around a row that changed size
+                    // rather than leaving a hole where the row used to end.
+                    group.layout = main.group?.layout
+                    group.contentPlacement = main.group?.contentPlacement
                     group.children = snapshot.resolvedChildren(of: componentID, instance: layer.id,
                                                                overrides: group.overrides,
                                                                stack: stack)

@@ -109,6 +109,23 @@ extension Layer {
         }
         var layer = self
         layer.frame = frame
+        // A text box's width IS its wrap width, so a new one re-wraps the words
+        // and the box becomes as tall as they now need — dragged narrower it
+        // gains lines, dragged wider it gives them back, and the top edge stays
+        // put either way. A move, or a drag of the bottom edge, changes no wrap
+        // and re-measures nothing (`docs/design/ui-building.md`, "A label grows
+        // to fit what it says").
+        if case .text(let content) = content, resizeWidthOnly {
+            let width = frame.standardized.width
+            if abs(width - self.frame.standardized.width) > 0.01 {
+                layer.frame = CGRect(x: frame.standardized.minX, y: frame.standardized.minY,
+                                     width: width,
+                                     height: TextMeasurement.size(of: content,
+                                                                  wrappingAt: width).height)
+            } else {
+                layer.frame.size.height = self.frame.standardized.height
+            }
+        }
         return layer
     }
 }

@@ -1,0 +1,31 @@
+{
+  "feature": "A label grows to fit what it says",
+  "epic": "ui-layout",
+  "summary": "A text box now re-measures itself. Make it narrower and the words re-wrap and the box grows down to hold them; give a copy of a component longer wording and it shows all of it; a stack closes up around a label that gained a line, in the same undo step.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing new to switch on: this is how text boxes behave now. \"Groups that arrange their own contents\" and \"Make a component\" need to be on for the last three steps.",
+  "try": [
+    { "do": "On a blank canvas press T, click, type \"Photonz measures what it says\", then press Escape to select it." },
+    { "do": "Drag its right middle handle left until the words wrap onto three lines.", "shot": "2026-09-03-label-grows-1-dragged-sc.png" },
+    { "do": "Press Command Z once, then type 180 into W in Position & Size and press Return.", "shot": "2026-09-03-label-grows-2-typed-sc.png" },
+    { "do": "Draw two rectangles under it, rubber-band all three and press Control Command G to stack them." },
+    { "do": "Type 12 into Gap, then 150 into W, then set Horizontal to Stretch.", "shot": "2026-09-03-label-grows-3-stack-sc.png" },
+    { "do": "Press Option Command K to make it a component, expose its wording knob, and drag a copy out of the Library." },
+    { "do": "Type a much longer sentence into the copy's Wording field and press Return.", "shot": "2026-09-03-label-grows-4-copy-sc.png" }
+  ],
+  "evaluate": [
+    "When you drag the right edge in, does the box growing downward feel like the box following you, or like it moving on its own?",
+    "Is keeping the top edge put the right anchor, or would you rather a paragraph grew about its middle?",
+    "A copy given longer wording keeps the wrap width it had and gains lines. For a button label you would probably want it to get WIDER instead. Does the rule \"a box you narrowed keeps its width, a box you never narrowed stays on one line\" match what you expect without being told it?",
+    "Rows below a label that gained a line move down in the same step as the edit. Did anything look like it moved twice?",
+    "The H field stays blank for text. Is that clear, or does it read as broken?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot above is the real window, not an offscreen render.",
+    "Typing a tiny number into W is still allowed: type 12 and you get a one-word-per-line sliver. Dragging the same edge stops at about 80. Filed as \"A width you type into a text box has a floor, like the one you drag\".",
+    "The height field shows nothing at all for text rather than showing the number it came out at, dimmed. Filed as \"A text box says how tall it turned out\".",
+    "Stretching a text box up and down now does nothing, because its height is its words. The menu still offers it. Filed as \"A text box is not offered a stretch that does nothing\".",
+    "A box whose height was already wrong stays wrong until you change its width or its words. That is deliberate, so a hand-laid-out document is never quietly re-flowed, but it does mean there is no way to say \"just fit this\".",
+    "Changed away from what was written down: the design doc said resizing a container never re-wraps anything. It does now, for text only, because that was the whole complaint. Text point size still never changes.",
+    "A copy of a component now arranges itself the way its original does. It did not before, which was invisible until something inside a copy changed size and left a hole where the row used to end. This was not in the task; it was found by playtesting it."
+  ]
+}

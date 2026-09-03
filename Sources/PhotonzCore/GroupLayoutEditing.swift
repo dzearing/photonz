@@ -84,11 +84,25 @@ extension PhotonzDocument {
     /// Every stack and grid in the document, arranged. Runs after each edit;
     /// a document with none in it is untouched, and so is a stack whose
     /// contents are already where they belong.
+    ///
+    /// It runs until nothing moves, because one pass is not always enough: a
+    /// stack works out where its rows go from the sizes they had going in, and
+    /// a label stretched across the stack RE-WRAPS to the width it was given,
+    /// so it is taller than it was when the row under it was placed. The second
+    /// pass closes that gap. Passes are capped, so a pair of rules that
+    /// disagreed could never spin here.
     public mutating func reflowLayouts() {
-        let flowed = layers.map(GroupFlow.flowing)
-        guard flowed != layers else { return }
-        layers = flowed
+        for _ in 0..<Self.reflowPasses {
+            let flowed = layers.map(GroupFlow.flowing)
+            guard flowed != layers else { return }
+            layers = flowed
+        }
     }
+
+    /// How many times the flow may run before it gives up and leaves the
+    /// contents where the last pass put them. Two settles everything the app
+    /// can build today; the third is headroom.
+    static let reflowPasses = 3
 
     /// Whether anything in this document arranges itself, which is the only
     /// question the reflow pass needs to ask before doing nothing.
