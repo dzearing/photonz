@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 150,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.357Z",
-  "updated": "2026-09-03T05:43:02.167Z",
+  "updated": "2026-09-03T05:57:02.561Z",
   "deps": [
     "an-instance-can-be-changed-without-leaving-the-f",
     "the-library-has-components-in-it-the-first-time"
@@ -46,7 +46,7 @@
     },
     {
       "t": "2026-09-03T05:56:34.559067Z",
-      "note": "component-end-to-end-walk.json green first run, 70 steps, 19.4s, real -sc.png captures (Screen Recording granted). Pill reads 'Updated \u00b7 3 copies of Save button'; one undo reverts all four."
+      "note": "component-end-to-end-walk.json green first run, 70 steps, 19.4s, real -sc.png captures (Screen Recording granted). Pill reads 'Updated · 3 copies of Save button'; one undo reverts all four."
     },
     {
       "t": "2026-09-03T05:56:34.559067Z",
@@ -71,7 +71,12 @@
     {
       "t": "2026-09-03T05:56:34.559067Z",
       "note": "Scripts/test.sh green: 1852 tests, 189 suites. Audit at queue/audits/2026-09-03-component-end-to-end.json with six real captures."
+    },
+    {
+      "t": "2026-09-03T05:57:02.560Z",
+      "note": "Two scripted walks and an audit. component-end-to-end-walk.json drives draw, group, make component, expose wording, three copies, override one, edit the original (pill: Updated, 3 copies of Save button; one undo reverts all four), green in 19s with real screen captures. redline-with-components-walk.json plus the pre-existing redline-walk.json prove measure and spec export are unchanged, with and without a component in the document. Audit at queue/audits/2026-09-03-component-end-to-end.json with six real captures. Four rough edges filed as tasks. Scripts/test.sh green (1852 tests). Pushed as 423ad74."
     }
   ],
-  "started": "2026-09-03T05:43:02.167Z"
+  "started": "2026-09-03T05:43:02.167Z",
+  "completed": "2026-09-03T05:57:02.561Z"
 }
