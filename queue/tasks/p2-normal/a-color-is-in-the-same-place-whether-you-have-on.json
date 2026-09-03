@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:06:50.887Z",
-  "updated": "2026-09-03T16:24:49.438Z",
+  "updated": "2026-09-03T16:25:43.625Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review finding, 2026-09-03. Evidence: queue/audits/2026-09-03-multi-style.json, \"The Color section exists only while more than one layer is picked. With one picked its colors stay in the Annotation, Text or Frame section, so the color you were just editing moves to a different section when you shift-click a second layer.\" UX-PATTERNS section 4 says multi-select shows shared properties only, which the app obeys, but the rules never say a property keeps its home, which is why this got built as a separate section without anyone breaking a rule. Fixing the app and scrubbing the rule are two tasks: the scrub is scrub-the-panel-rules-against-what-the-dock-actu. The reading code is already whole-selection: EditorState.colorStyleSelection(slot:) and ColorStyleSelection in PhotonzCore. This is about where the row lives, not about what it can do.",
@@ -52,7 +52,12 @@
     {
       "t": "2026-09-03T16:24:49.438Z",
       "note": "Acceptance, each checked rather than assumed. (1) One section name: Color, in every screenshot, one layer and two. (2) One layer picked shows the same rows under it: colorRows = [Fill, Outline] for a box, [Text] for a caption. (3) Several picked: same rows, Mixed where they differ, and paintSelectionColor landing fill #B0184A x2 in one step that one undo puts back. (4) The scroll position does not jump, and the row keeps its section and its label, but the section itself moves about 175pt, which is written up in rough and asked about in evaluate. (5) Pictures: queue/audits/2026-09-03-color-one-home-1-one-layer.png and -2-two-layers.png, real window captures with Screen Recording granted."
+    },
+    {
+      "t": "2026-09-03T16:25:43.625Z",
+      "note": "One Color section, always present, holding every colour the picked layers have. Colour rows left AnnotationInspector, TextInspector and FrameInspector; a box's Fill toggle and a frame's No background became one whole-selection checkbox. Rows named by slot (Outline, Fill, Text) so no label moves either. Verified: Scripts/test.sh green (2222 tests) and color-one-home-walk on the probe with Screen Recording granted, colorRows identical at one and two layers. Audit: queue/audits/2026-09-03-color-one-home.json"
     }
   ],
-  "started": "2026-09-03T16:04:32.326Z"
+  "started": "2026-09-03T16:04:32.326Z",
+  "completed": "2026-09-03T16:25:43.625Z"
 }
