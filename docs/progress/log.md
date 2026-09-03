@@ -7074,3 +7074,28 @@ Next: pasting a layer a person named still repeats the exact name, and a
 duplicated component copy gets "Button copy" while a second one dragged off the
 shelf is another plain "Button". Both are in the audit as questions rather than
 fixed here.
+
+## 2026-09-03 — A text label is the same shape while you type it as after you place it
+
+The inline text editor and the renderer measured the same label two
+different ways, so the box you typed in drifted from the box that landed
+(13 document points narrower at 200% zoom, 65 wider at 50%) and a long
+label broke at a different word on commit. `TextBlockMetrics` is now the
+one measurer for a text block's box, the companion to `CaptionMetrics`:
+the editor's frame and wrap width come straight from it and so does the
+committed layer's, so AppKit breaks the draft's lines exactly where
+CoreText breaks the placed label's.
+
+Two smaller drifts fell out of the same measurement and are fixed with it:
+a bold label typed in regular (AppKit answers to no name for the resolved
+system face, so the draft fell back to the plain system font), and
+restyling mid-edit dropped a centred label to the left edge until Return.
+
+Verified on the probe with `Scripts/playtest/text-draft-parity.json`, and
+the same walk run against a stashed pre-fix build for the before picture.
+Audit and both picture pairs are in `queue/audits/`.
+
+**Next:** a placed label is rasterized at document resolution, so above
+100% zoom the committed words are visibly softer than the draft that was
+just on screen. Pre-existing, filed as
+`a-placed-label-stays-crisp-when-you-zoom-in`.

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T23:44:29.466Z",
-  "updated": "2026-09-03T23:58:41.685094Z",
+  "updated": "2026-09-03T23:59:04.295Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Same class of drift the arrow caption had (fixed 2026-09-02): the inline editor lays the draft out at (fontSize x zoom) with NSLayoutManager while TextRasterizer measures at document size, and SF spaces letters by point size. The caption fix is the pattern to copy: CanvasNSView.captionDraftFont sets the draft in the document-size face with a scale transform, and layoutCaptionEditor takes its frame from CaptionMetrics. A text block also wraps, so its wrap cap has to be the same on both sides.\n\nObjective: measure-redline (staged now). Typing a label onto a capture is the annotation half of redlining, and this drift is the same family as the arrow caption fix that landed 2026-09-02.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-03T23:58:41.685094Z",
       "note": "Filed a follow-up found while measuring: a placed label is rasterized at document resolution, so above 100 percent zoom the committed words are softer than the draft. Pre-existing and out of scope here - task a-placed-label-stays-crisp-when-you-zoom-in."
+    },
+    {
+      "t": "2026-09-03T23:59:04.295Z",
+      "note": "TextBlockMetrics is now the one measurer for a text block's box: the inline editor takes its frame and wrap width from it and so does the commit, so the draft breaks lines where the placed label does. Draft face now comes from the document-size descriptor scaled by the zoom, which also fixed a bold label typing in regular. Verified on the probe with Scripts/playtest/text-draft-parity.json against a stashed pre-fix build; glyph boxes match within one device pixel. 2564 tests green. Audit: queue/audits/2026-09-03-text-draft-parity.json"
     }
   ],
-  "started": "2026-09-03T23:39:11.951Z"
+  "started": "2026-09-03T23:39:11.951Z",
+  "completed": "2026-09-03T23:59:04.295Z"
 }
