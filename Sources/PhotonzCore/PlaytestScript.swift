@@ -190,6 +190,20 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Layer ▸ Duplicate Layer. ⌘J is a menu chord, so a walk that checks what
     /// a duplicate keeps asks for it here.
     case duplicateLayer
+    /// Expose the first piece of the selected original that could take a
+    /// wording knob (Next, `next-components`, step C6). The Add menu is in the
+    /// dock, which a walk cannot reach with the pointer, so this is how a knob
+    /// gets made before a copy is photographed setting it.
+    case exposeWording
+    /// The same for a choice: expose the first group inside the selected
+    /// original that holds alternatives.
+    case exposeChoice
+    /// Move the selected copy's first choice knob on to its next option, which
+    /// is what picking the next row in that knob's menu does. A walk cannot
+    /// open a menu in the dock, so this is how a swapped shape is photographed.
+    case cycleChoice
+    /// Layer ▸ Detach Instance, so a walk can show a copy stop following.
+    case detachInstance
     /// Put every sheet away. Escape reaches the window, not the sheet in front
     /// of it, so a walk that photographs a sheet needs a way back out.
     case closeSheets

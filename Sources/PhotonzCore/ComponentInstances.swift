@@ -113,6 +113,22 @@ extension PhotonzDocument {
         return search(layers)
     }
 
+    /// Whether any original in the document exposes a knob, or any copy
+    /// answers one. Checked before pruning, which runs after every edit, so it
+    /// stops at the first one it finds: a document that has never seen a
+    /// component pays one walk of the tree and no allocation.
+    var holdsComponentKnob: Bool {
+        func search(_ list: [Layer]) -> Bool {
+            for layer in list {
+                guard let group = layer.group else { continue }
+                if !group.properties.isEmpty || !group.overrides.isEmpty { return true }
+                if search(group.children) { return true }
+            }
+            return false
+        }
+        return search(layers)
+    }
+
     /// Every copy of a component, wherever in the tree it sits.
     public func instances(of componentID: UUID) -> [Layer] {
         allLayers.filter { $0.instanceOf == componentID }
@@ -190,7 +206,10 @@ extension PhotonzDocument {
         // A copy takes the original's look at the moment it is placed; where it
         // sits, whether it is hidden and what it is called are its own.
         copy.style = main.style
-        copy.children = resolvedChildren(of: componentID, instance: copy.id, stack: [])
+        // A copy arrives answering nothing: it shows exactly what the original
+        // shows, and the knobs are there to be turned afterwards.
+        copy.children = resolvedChildren(of: componentID, instance: copy.id,
+                                         overrides: [], stack: [])
 
         if let group {
             let origin = canvasBounds(of: group)?.origin ?? .zero
@@ -213,10 +232,15 @@ extension PhotonzDocument {
     /// derived from this copy so two layers never share one, and with any copy
     /// found inside filled in the same way.
     private func resolvedChildren(of componentID: UUID, instance: UUID,
-                                  stack: [UUID]) -> [Layer] {
+                                  overrides: [ComponentOverride], stack: [UUID]) -> [Layer] {
         guard stack.count < Self.componentNestingLimit, !stack.contains(componentID),
               let main = mainComponent(componentID: componentID) else { return [] }
-        return main.children.map { rebound($0, instance: instance, stack: stack + [componentID]) }
+        var children = main.children.map { rebound($0, instance: instance, stack: stack + [componentID]) }
+        // The original's picture first, then the few facts this copy owns
+        // written over the top. That order is what lets an edit to the original
+        // still reach a copy that has overridden something else.
+        applyOverrides(overrides, of: componentID, to: &children, instance: instance)
+        return children
     }
 
     /// Whether two subtrees differ in anything a person could see.
@@ -237,7 +261,8 @@ extension PhotonzDocument {
         guard let ga = a.group else { return b.group == nil && a.content == b.content }
         guard let gb = b.group, ga.isFrame == gb.isFrame, ga.clipsContents == gb.clipsContents,
               ga.backgroundHex == gb.backgroundHex, ga.componentID == gb.componentID,
-              ga.instanceOf == gb.instanceOf else { return false }
+              ga.instanceOf == gb.instanceOf, ga.properties == gb.properties,
+              ga.overrides == gb.overrides else { return false }
         return !differsBeyondIdentity(ga.children, gb.children)
     }
 
@@ -248,7 +273,8 @@ extension PhotonzDocument {
                          crop: layer.crop, transform: layer.transform, style: layer.style,
                          isVisible: layer.isVisible, isLocked: layer.isLocked)
         if let nested = layer.instanceOf {
-            copy.children = resolvedChildren(of: nested, instance: id, stack: stack)
+            copy.children = resolvedChildren(of: nested, instance: id,
+                                             overrides: layer.componentOverrides, stack: stack)
         } else if layer.isGroup {
             copy.children = layer.children.map { rebound($0, instance: instance, stack: stack) }
         }
@@ -264,6 +290,9 @@ extension PhotonzDocument {
     /// never delete the work built out of it.
     @discardableResult
     public mutating func syncComponentInstances() -> ComponentSyncReport {
+        // A knob whose layer was deleted out of the original is a knob nothing
+        // will ever read, so it goes in the same step the layer did.
+        if holdsComponentKnob { pruneComponentProperties() }
         guard holdsComponentInstance else { return ComponentSyncReport() }
         var report = ComponentSyncReport()
         let snapshot = self
@@ -278,6 +307,7 @@ extension PhotonzDocument {
                         // link and keep the picture.
                         var group = copy.group ?? GroupContent()
                         group.instanceOf = nil
+                        group.overrides = []
                         group.children = copy.children
                         copy.content = .group(group)
                         return copy
@@ -287,6 +317,7 @@ extension PhotonzDocument {
                     group.clipsContents = main.group?.clipsContents ?? true
                     group.backgroundHex = main.group?.backgroundHex
                     group.children = snapshot.resolvedChildren(of: componentID, instance: layer.id,
+                                                               overrides: group.overrides,
                                                                stack: stack)
                     copy.content = .group(group)
                     if main.isFrame { copy.frame.size = main.frame.size }

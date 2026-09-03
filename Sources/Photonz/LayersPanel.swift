@@ -842,6 +842,11 @@ struct LayersListView: View {
                 Button("Make Component") { editorState.makeComponent() }
                     .keyboardShortcut("k", modifiers: [.command, .option])
             }
+            if Experiments.shared.componentsEnabled, editorState.canDetachInstance,
+               editorState.isLayerSelected(layer.id) {
+                Button("Detach Instance") { editorState.detachInstance() }
+                    .keyboardShortcut("b", modifiers: [.command, .option])
+            }
             Button(layer.isVisible ? "Hide" : "Show") { editorState.toggleLayerVisibility(id: layer.id) }
             Button(layer.isLocked ? "Unlock" : "Lock") { editorState.toggleLayerLock(id: layer.id) }
             Divider()

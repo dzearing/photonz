@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.268Z",
-  "updated": "2026-09-03T00:08:21.572Z",
+  "updated": "2026-09-03T04:22:39.107Z",
   "deps": [
     "an-instance-dropped-from-the-library-follows-its"
   ],
@@ -36,6 +36,31 @@
     {
       "t": "2026-09-03T00:08:21.572Z",
       "note": "seq 140 -> 120"
+    },
+    {
+      "t": "2026-09-03T04:22:39.106Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T04:25:53.765Z",
+      "note": "Adversarial review of component-configure-wt before building. (1) The mock puts Add property behind a picker listing every layer inside with the knob each would make. On a real component of eight layers times three kinds that is a 24 row menu, so the picker only offers the kinds that MEAN something per layer: wording for a text layer, show or hide for anything, a choice for a group with two or more children, and a layer already exposed drops out. (2) The mock rows Custom property and the stepper shape have nothing behind them; cut. (3) The mock never states the rule a variant needs: toggle/segmented/stepper implies alternatives, but nothing says only one shows. Decided: a choice group shows exactly one child at a time, and exposing one normalises the original to that. Without it, picking an option would stack a second shape on the first. (4) Property is a word a first time user does not have; the interface says Wording, Show or hide, and Choice, and the chips say text/show/choice. (5) The mock has no way back from an override. Every set row gets a revert control, else a copy that drifted can only be fixed by undo. (6) Detach is absent from the mock; it is in the spec table (Layer > Detach Instance, Option Command B) and also gets a button in the copy section, because a menu only command is invisible. (7) Shortest version: three kinds, add/rename/remove, override plus revert, detach. No reordering, no custom kinds, no editing an original default from the copy panel."
+    },
+    {
+      "t": "2026-09-03T04:25:53.766Z",
+      "note": "Design: a property is a name plus a kind plus the id of a layer inside the original. text overrides that layer wording, show overrides its visibility, choice overrides which single child of that group is visible. All three are one thing about one layer, so resolution is uniform. Overrides live on the copy keyed by property id, and are applied AFTER the copy is refilled from the original inside syncComponentInstances, which is what makes an edit to the original still reach a copy that has overridden something else."
+    },
+    {
+      "t": "2026-09-03T04:52:28.557Z",
+      "note": "Built. PhotonzCore/ComponentProperties.swift holds the model (three kinds, overrides applied after the refill, prune, detach); 26 tests in ComponentPropertyTests written before it. App: Adjustable list plus Add menu on the original section, knobs with a per row revert on the copy section, Layer > Detach Instance (Option Command B) and Layer > Select Original. Full suite 1795 tests green."
+    },
+    {
+      "t": "2026-09-03T04:52:28.557Z",
+      "note": "Adversarial review of the BUILT thing, on the probe app. Three things were wrong and are fixed: (a) a wording knob was auto named Text and a choice knob Group, which says nothing on a copy panel, so a wording knob now takes the words and a knob on an unnamed group takes what it does (Shape, Show); (b) a choice between two rectangles listed two rows both called Rectangle, so repeats are numbered for display only; (c) setting a knob raised the copies followed pill on every keystroke, so that pill is now suppressed for edits whose whole effect is in front of the person making them. Left rough and in the audit: building a group of alternatives is unguided (follow up filed), and a long wording override still overflows without auto layout."
+    },
+    {
+      "t": "2026-09-03T04:52:28.557Z",
+      "note": "Verified live in the probe app, Screen Recording granted: Scripts/playtest/component-override-walk.json and component-choice-walk.json. Real captures under queue/audits/2026-09-03-component-overrides-*.png show one copy set apart, an edit to the original reaching both copies while the override held, a choice swapped on one copy, and detach with its pill."
     }
-  ]
+  ],
+  "started": "2026-09-03T04:22:39.106Z"
 }

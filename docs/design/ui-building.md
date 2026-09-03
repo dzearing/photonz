@@ -689,3 +689,72 @@ which is worse than the gap); renaming an original does not rename copies
 already placed; the shelf tile shows a name and keeps the count of copies in its
 tooltip and in the picked component's section; and Ungroup on a copy still
 dissolves it, which is a detach by another name until Detach Instance arrives.
+
+## Landed: a copy can be changed without leaving the family (Next, `next-components`, 2026-09-03)
+
+Step C6, the last rung before the Library is worth shipping. A copy stopped
+being a picture you can only move.
+
+- **The original chooses what is adjustable.** Its section grew an
+  **Adjustable** list and an **Add** menu: pick a piece of the component and the
+  kind of knob it should be. A copy gets exactly those knobs and nothing else,
+  which is the whole of "override safely". The decision lives on the original
+  because it applies to every copy at once.
+- **Three kinds, and they are the same shape as each other**: **wording** (what
+  a text layer says), **show or hide** (whether a layer is drawn), and a
+  **choice** (which ONE of a group's children is drawn). Every knob is one fact
+  about one layer inside the original, so resolution is one code path rather
+  than three.
+- **A choice can only land on a shape the original holds**, so a copy can never
+  show something the component does not define. Exposing one also settles the
+  original on a single option: a group whose alternatives all draw at once is
+  not a choice, and picking one on a copy would stack a second shape on the
+  first rather than swapping it.
+- **The Add menu is grouped by KIND, not by layer.** The mock lists every layer
+  with every knob it could make; on a component of eight layers that is
+  twenty-four rows, most of them meaningless. Here the three kinds are the
+  headings and only the layers each knob makes sense for sit under them, with a
+  layer already exposed that way dropping out.
+- **A knob is named after the layer it exposes**, except where that name says
+  nothing: every text layer in the app is called "Text", so a wording knob takes
+  the WORDS ("Auto-enhance"), and every group the Group command makes is called
+  "Group", so a knob on one takes what it does ("Shape", "Show"). Both are
+  starting points; the name is a field in the list.
+- **The answers live on the copy and are applied AFTER it is refilled from the
+  original.** That order is the whole trick: an edit to the original reaches
+  every copy, including one that has overridden something else, because each
+  copy takes the original's picture whole and then the few facts it owns are
+  written back over the top.
+- **Every set knob has a way back.** A revert arrow appears on a row the moment
+  it is overridden and puts it back to following the original. Without it a copy
+  set ten edits ago could only be fixed by undoing ten edits.
+- **A choice menu numbers repeated names for display** ("Rectangle",
+  "Rectangle 2"), because two rectangles drawn in a row are both called
+  "Rectangle" and a menu of identical rows is a menu nobody can choose from.
+  Nothing is renamed in the document.
+- **Detach** (Layer ▸ Detach Instance, ⌥⌘B, and a button on the copy's section)
+  turns a copy into ordinary layers that no longer follow the original. It keeps
+  exactly the picture it was drawing, and it says so in the pill, because
+  nothing on screen changes when it runs and a command that looks like it did
+  nothing is a command people press twice.
+- **Layer ▸ Select Original** takes no key: it is a way to get somewhere, not an
+  edit, and the copy's section has had a button for it since C5.
+- **A knob whose layer is deleted out of the original goes with it**, and every
+  copy's answer to it goes too, so nothing is left keyed to something no longer
+  there.
+- **Setting a knob does not raise the "copies followed" pill.** That pill
+  reports what moved OUT OF SIGHT; this edit reached the one copy whose panel
+  the person is typing into.
+- On disk a group that exposes nothing and answers nothing writes neither key,
+  so a document saved before this step is byte for byte what it was.
+
+Cut from the mock deliberately: the "Custom property…" row (nothing behind it),
+the stepper as a third built-in control shape, and the separate "Instance props"
+section — a copy's knobs sit in the copy's own Component section, so there is
+one place a component layer answers about itself.
+
+Deliberately left: a knob cannot reach into a copy nested inside the original
+(those contents belong to ITS original); there is no way to edit an original's
+default from a copy's panel; knobs cannot be reordered; a long wording override
+still overflows the copy, because there is no auto layout; and detach is still
+one way, with undo as the way back.

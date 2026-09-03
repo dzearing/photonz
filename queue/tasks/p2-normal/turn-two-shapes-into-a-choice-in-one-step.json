@@ -1,0 +1,28 @@
+{
+  "id": "turn-two-shapes-into-a-choice-in-one-step",
+  "title": "Turn two shapes into a choice in one step",
+  "goal": "A component can offer a choice between shapes, but building one is unguided: you have to know to group the alternatives by hand first, and then expose that group. Make it one command, so somebody who has never done it can offer a choice between the two buttons they just drew.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 730,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T04:51:59.280Z",
+  "updated": "2026-09-03T04:51:59.280Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the C6 audit (queue/audits/2026-09-03-component-overrides.json). Today: PhotonzDocument.addComponentProperty(kind: .variant) requires a group with 2+ children as its target and settles it on one visible child. The missing rung is a Layer menu command that groups the selection and exposes it in one undo step. See docs/design/ui-building.md, the C6 Landed section.",
+  "acceptance": [
+    "With two or more layers selected inside a component, one command turns them into a set of alternatives",
+    "After the command exactly one alternative is showing and the component has a choice knob for them",
+    "The knob is named something a person would recognise rather than the placeholder group name",
+    "The command is absent, not greyed, when the selection cannot become a choice"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T04:51:59.280Z",
+      "note": "created (manual)"
+    }
+  ]
+}

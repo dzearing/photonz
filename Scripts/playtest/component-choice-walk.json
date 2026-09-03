@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/component-choice-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [240, 240], "to": [420, 300] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [240, 330], "to": [560, 390] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [200, 200], "to": [620, 420] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [240, 460] },
+    { "do": "type", "text": "Quality" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [180, 180], "to": [700, 540] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "makeComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Row" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "action", "action": "exposeChoice" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-choice-exposed",
+      "note": "exposing a choice settled the original on one shape: the second alternative is now hidden" },
+    { "do": "snapshot", "name": "component-choice-1-exposed" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "insertPickedComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-copy",
+      "note": "the copy's section shows the choice as a menu of the shapes the original holds, and nothing else" },
+    { "do": "snapshot", "name": "component-choice-2-copy" },
+
+    { "do": "action", "action": "cycleChoice" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-swapped",
+      "note": "this copy now draws the other shape; the original still draws the first one" },
+    { "do": "snapshot", "name": "component-choice-3-swapped" },
+    { "do": "render", "name": "component-choice-3-swapped-doc" }
+  ]
+}

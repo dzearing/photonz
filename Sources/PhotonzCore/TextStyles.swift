@@ -60,6 +60,10 @@ public struct TextStyles: Equatable, Codable, Sendable {
 /// just the (tested) frame math.
 public enum TextBuilder {
 
+    /// What a text layer is called before anybody renames it. Named here so
+    /// the places that treat it as "unnamed" agree with the place that sets it.
+    public static let defaultLayerName = "Text"
+
     /// A text layer whose frame's top-left sits at the click point and whose
     /// size hugs the measured text. Degenerate measurements are clamped so the
     /// rasterizer always has at least a pixel to draw into. Every text layer
@@ -70,7 +74,7 @@ public enum TextBuilder {
                            height: max(naturalSize.height, 1))
         var style = LayerStyle()
         style.shadow = autoContrastShadow(forColorHex: content.colorHex)
-        return Layer(name: "Text", content: .text(content), frame: frame, style: style)
+        return Layer(name: defaultLayerName, content: .text(content), frame: frame, style: style)
     }
 
     /// Props-panel restyle of an existing text layer (13.1): applies only the

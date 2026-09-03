@@ -3178,6 +3178,154 @@ final class EditorState {
         selectLayer(main.id, inGroup: document?.parentID(of: main.id))
     }
 
+    // MARK: - Component knobs and overrides (Next flag `next-components`)
+
+    /// The knobs an original exposes, in the order it lists them.
+    func componentProperties(of componentID: UUID) -> [ComponentProperty] {
+        guard componentsEnabled else { return [] }
+        return document?.componentProperties(of: componentID) ?? []
+    }
+
+    /// What the Add Property menu lists: the layers inside the original and the
+    /// knob each one could become.
+    func componentPropertyCandidates(componentID: UUID) -> [ComponentPropertyCandidate] {
+        guard componentsEnabled else { return [] }
+        return document?.componentPropertyCandidates(componentID: componentID) ?? []
+    }
+
+    /// Exposes one layer inside an original as a knob.
+    func addComponentProperty(componentID: UUID, target: UUID, kind: ComponentPropertyKind) {
+        guard componentsEnabled else { return }
+        perform { $0.addComponentProperty(componentID: componentID, target: target, kind: kind) }
+    }
+
+    func removeComponentProperty(componentID: UUID, propertyID: UUID) {
+        guard componentsEnabled else { return }
+        perform { $0.removeComponentProperty(componentID: componentID, propertyID: propertyID) }
+    }
+
+    func renameComponentProperty(componentID: UUID, propertyID: UUID, to name: String) {
+        guard componentsEnabled else { return }
+        perform { $0.renameComponentProperty(componentID: componentID, propertyID: propertyID, to: name) }
+    }
+
+    /// The shapes a choice can land on: exactly what the original holds.
+    func componentVariantOptions(componentID: UUID, propertyID: UUID) -> [Layer] {
+        guard componentsEnabled else { return [] }
+        return document?.componentVariantOptions(componentID: componentID, propertyID: propertyID) ?? []
+    }
+
+    /// The same shapes with labels a person can tell apart, which is what the
+    /// choice menu lists.
+    func componentVariantOptionLabels(componentID: UUID,
+                                      propertyID: UUID) -> [(id: UUID, label: String)] {
+        guard componentsEnabled else { return [] }
+        return document?.componentVariantOptionLabels(componentID: componentID,
+                                                      propertyID: propertyID) ?? []
+    }
+
+    /// What a copy shows for a knob: its own answer, or the original's.
+    func instanceValue(instance: UUID, property: UUID) -> ComponentPropertyValue? {
+        document?.instanceValue(instance: instance, property: property)
+    }
+
+    /// Which knobs this copy has answered for itself, which is what puts the
+    /// revert control on a row.
+    func instanceOverrides(instance: UUID) -> Set<UUID> {
+        document?.instanceOverrides(instance: instance) ?? []
+    }
+
+    /// Sets one knob on one copy.
+    ///
+    /// It is performed WITHOUT the "copies followed" pill: that pill exists to
+    /// say how far an edit to an original reached, and this edit reached one
+    /// copy, the one whose panel the person is typing into and looking at.
+    func setInstanceOverride(instance: UUID, property: UUID, value: ComponentPropertyValue) {
+        guard componentsEnabled else { return }
+        perform(announcing: false) {
+            $0.setInstanceOverride(instance: instance, property: property, value: value)
+        }
+    }
+
+    /// Puts one knob back to following the original.
+    func clearInstanceOverride(instance: UUID, property: UUID) {
+        guard componentsEnabled else { return }
+        perform(announcing: false) { $0.clearInstanceOverride(instance: instance, property: property) }
+    }
+
+    /// Whether Layer ▸ Detach Instance would do anything: one unlocked copy is
+    /// selected.
+    var canDetachInstance: Bool {
+        guard componentsEnabled, let document else { return false }
+        return document.canDetachInstance(ids: actionableLayerIDs)
+    }
+
+    /// Layer ▸ Detach Instance (⌥⌘B): turns the selected copy into ordinary
+    /// layers that no longer follow the original.
+    ///
+    /// It says so out loud, because nothing on screen changes when it runs: the
+    /// picture the instant after is the picture the instant before, and a
+    /// command that looks like it did nothing is a command people press twice.
+    func detachInstance() {
+        guard canDetachInstance, let id = actionableLayerIDs.first else { return }
+        let name = document?.layer(id: id)?.instanceOf
+            .flatMap { document?.mainComponent(componentID: $0)?.name }
+        discardDragPreview()
+        var detached = false
+        perform(announcing: false) { detached = $0.detachInstance(id: id) }
+        guard detached else { return }
+        selectLayer(id, inGroup: document?.parentID(of: id))
+        raiseCanvasNotice(.componentDetached(component: name))
+    }
+
+    /// Whether Layer ▸ Select Original would do anything: the selection is a
+    /// copy whose original is still in the document.
+    var canSelectComponentOriginal: Bool { selectedInstanceOriginal != nil }
+
+    /// The component the selected copy follows, when there is exactly one copy
+    /// selected and its original is still here.
+    private var selectedInstanceOriginal: UUID? {
+        guard componentsEnabled, let document, actionableLayerIDs.count == 1,
+              let id = actionableLayerIDs.first,
+              let componentID = document.layer(id: id)?.instanceOf,
+              document.mainComponent(componentID: componentID) != nil else { return nil }
+        return componentID
+    }
+
+    /// Exposes the first piece of the selected original that can take this
+    /// kind of knob. The Add menu lives in the dock, which a scripted playtest
+    /// cannot reach with the pointer, so a walk asks for it here.
+    func exposeFirstProperty(kind: ComponentPropertyKind) {
+        guard componentsEnabled, let id = actionableLayerIDs.first,
+              let componentID = document?.layer(id: id)?.componentID,
+              let candidate = componentPropertyCandidates(componentID: componentID)
+                  .first(where: { $0.kinds.contains(kind) }) else { return }
+        addComponentProperty(componentID: componentID, target: candidate.layerID, kind: kind)
+    }
+
+    /// Moves the selected copy's first choice knob on to its next option, the
+    /// same edit picking the next row of that knob's menu makes. Scripted
+    /// playtests only: a walk cannot open a menu inside the dock.
+    func cycleInstanceChoice() {
+        guard componentsEnabled, let id = actionableLayerIDs.first,
+              let componentID = document?.layer(id: id)?.instanceOf,
+              let property = componentProperties(of: componentID).first(where: { $0.kind == .variant })
+        else { return }
+        let options = componentVariantOptions(componentID: componentID, propertyID: property.id)
+        guard !options.isEmpty else { return }
+        let current = instanceValue(instance: id, property: property.id)?.optionValue
+        let index = options.firstIndex { $0.id == current } ?? 0
+        let next = options[(index + 1) % options.count]
+        setInstanceOverride(instance: id, property: property.id, value: .variant(next.id))
+    }
+
+    /// Layer ▸ Select Original: jumps from a copy to the thing every copy
+    /// follows, which is where a change to all of them is made.
+    func selectComponentOriginal() {
+        guard let componentID = selectedInstanceOriginal else { return }
+        selectComponentOnCanvas(componentID: componentID)
+    }
+
     // MARK: - Frames (Next flag `next-frames`)
 
     /// The size the next frame gets when it is dropped with a plain click, and
@@ -4227,10 +4375,14 @@ final class EditorState {
         self.viewport = viewport.zoomed(to: newZoom, anchorInView: center)
     }
 
-    func perform(_ mutate: (inout PhotonzDocument) -> Void) {
+    /// One undoable edit. `announcing` is off for edits whose whole effect is
+    /// in front of the person making them — setting a knob on the copy they
+    /// have selected — because the pill exists to report what moved OUT OF
+    /// SIGHT, and one that fires on every keystroke in a field is noise.
+    func perform(announcing: Bool = true, _ mutate: (inout PhotonzDocument) -> Void) {
         let report = history?.perform(mutate) ?? ComponentSyncReport()
         rerender()
-        announceComponentSync(report)
+        if announcing { announceComponentSync(report) }
     }
 
     /// Says how many copies followed the edit that just landed

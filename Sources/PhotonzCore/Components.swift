@@ -136,6 +136,18 @@ public enum ComponentNaming {
         return trimmed
     }
 
+    /// The same names, with repeats numbered so a list of them can be read.
+    /// "Rectangle, Rectangle, Label" becomes "Rectangle, Rectangle 2, Label".
+    /// Display only: no layer is renamed.
+    public static func distinctLabels(_ names: [String]) -> [String] {
+        var seen: [String: Int] = [:]
+        return names.map { name in
+            let count = (seen[name] ?? 0) + 1
+            seen[name] = count
+            return count == 1 ? name : "\(name) \(count)"
+        }
+    }
+
     /// True for the name the grouping command minted ("Group", "Group 2"),
     /// which is a placeholder rather than a name anyone chose.
     public static func isAutoGroupName(_ name: String) -> Bool {

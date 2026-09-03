@@ -357,20 +357,32 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// the document keeps them equal to the main's, so editing the main is the
     /// only way anything inside a copy changes.
     public var instanceOf: UUID?
+    /// Set on a **main component**: the knobs it exposes, which are the only
+    /// things a copy of it may set (`docs/design/ui-building.md`, step C6).
+    /// Each one reaches one layer inside this group.
+    public var properties: [ComponentProperty]
+    /// Set on an **instance**: this copy's answers to the knobs its original
+    /// exposes. They are the only things a copy owns; everything else inside it
+    /// is refilled from the original after every edit.
+    public var overrides: [ComponentOverride]
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool = true, backgroundHex: String? = nil,
-                componentID: UUID? = nil, instanceOf: UUID? = nil) {
+                componentID: UUID? = nil, instanceOf: UUID? = nil,
+                properties: [ComponentProperty] = [], overrides: [ComponentOverride] = []) {
         self.children = children
         self.isFrame = isFrame
         self.clipsContents = clipsContents
         self.backgroundHex = backgroundHex
         self.componentID = componentID
         self.instanceOf = instanceOf
+        self.properties = properties
+        self.overrides = overrides
     }
 
     private enum CodingKeys: String, CodingKey {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
+        case properties, overrides
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -381,6 +393,10 @@ public struct GroupContent: Hashable, Codable, Sendable {
         try c.encode(children, forKey: .children)
         try c.encodeIfPresent(componentID, forKey: .componentID)
         try c.encodeIfPresent(instanceOf, forKey: .instanceOf)
+        // A group that exposes nothing and answers nothing writes neither key,
+        // so a document saved before knobs existed is byte for byte what it was.
+        if !properties.isEmpty { try c.encode(properties, forKey: .properties) }
+        if !overrides.isEmpty { try c.encode(overrides, forKey: .overrides) }
         guard isFrame else { return }
         try c.encode(true, forKey: .isFrame)
         try c.encode(clipsContents, forKey: .clipsContents)
@@ -395,6 +411,8 @@ public struct GroupContent: Hashable, Codable, Sendable {
         backgroundHex = try c.decodeIfPresent(String.self, forKey: .backgroundHex)
         componentID = try c.decodeIfPresent(UUID.self, forKey: .componentID)
         instanceOf = try c.decodeIfPresent(UUID.self, forKey: .instanceOf)
+        properties = try c.decodeIfPresent([ComponentProperty].self, forKey: .properties) ?? []
+        overrides = try c.decodeIfPresent([ComponentOverride].self, forKey: .overrides) ?? []
     }
 }
 
@@ -425,15 +443,17 @@ public enum LayerContent: Hashable, Codable, Sendable {
     /// no identity of their own so they come back unchanged; a group's children
     /// are copied all the way down, so duplicating a group never leaves two
     /// layers in the document sharing one id.
-    func reidentified() -> LayerContent {
+    func reidentified(map: inout [UUID: UUID]) -> LayerContent {
         guard case .group(var group) = self else { return self }
-        group.children = group.children.map { $0.reidentified() }
+        group.children = group.children.map { $0.reidentified(map: &map) }
         // A copy of a main is a component of its own, not a second layer
         // claiming to be the same one: editing either must never move the
         // other, and the shelf must be able to tell them apart.
         if group.componentID != nil { group.componentID = UUID() }
         // `instanceOf` is deliberately kept: a copy of a copy is another copy
-        // of the same component, which is what ⌘J on an instance has to mean.
+        // of the same component, which is what ⌘J on an instance has to mean,
+        // and its answers come with it or a configured copy would silently
+        // reset when duplicated.
         return .group(group)
     }
 }
@@ -569,10 +589,13 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// A copy with a fresh identity, for duplicate/paste. The frame offset
     /// keeps the copy from landing invisibly on top of the original.
     public func duplicated(offsetBy offset: CGPoint = .zero) -> Layer {
-        Layer(name: name + " copy", content: content.reidentified(),
-              frame: frame.offsetBy(dx: offset.x, dy: offset.y),
-              crop: crop, transform: transform, style: style,
-              isVisible: isVisible, isLocked: false)
+        var map: [UUID: UUID] = [:]
+        var copy = Layer(name: name + " copy", content: content.reidentified(map: &map),
+                         frame: frame.offsetBy(dx: offset.x, dy: offset.y),
+                         crop: crop, transform: transform, style: style,
+                         isVisible: isVisible, isLocked: false)
+        copy.repointComponentProperties(map)
+        return copy
     }
 
     /// A copy of this layer and everything inside it with fresh ids, keeping
@@ -581,9 +604,43 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// and, because children are stored against their parent, not one number
     /// inside them has to change.
     public func reidentified() -> Layer {
-        Layer(name: name, content: content.reidentified(), frame: frame,
-              crop: crop, transform: transform, style: style,
-              isVisible: isVisible, isLocked: isLocked)
+        var map: [UUID: UUID] = [:]
+        var copy = reidentified(map: &map)
+        copy.repointComponentProperties(map)
+        return copy
+    }
+
+    /// The same layer with fresh ids, recording what became what so anything
+    /// that pointed at an old id can be pointed at the new one.
+    func reidentified(map: inout [UUID: UUID]) -> Layer {
+        let copy = Layer(name: name, content: content.reidentified(map: &map), frame: frame,
+                         crop: crop, transform: transform, style: style,
+                         isVisible: isVisible, isLocked: isLocked)
+        map[id] = copy.id
+        return copy
+    }
+
+    /// Points a duplicated original's knobs at its OWN layers.
+    ///
+    /// Duplicating a main mints a second component, and every knob on it names
+    /// a layer inside by id. Without this the second component's knobs would
+    /// still reach into the first one, so setting a copy of the new component
+    /// would quietly edit the old one's insides. A copy's ANSWERS are left
+    /// alone on purpose: they name knobs and shapes belonging to the original
+    /// it follows, which is not being duplicated here.
+    mutating func repointComponentProperties(_ map: [UUID: UUID]) {
+        guard var group else { return }
+        if !group.properties.isEmpty {
+            for index in group.properties.indices {
+                if let moved = map[group.properties[index].target] {
+                    group.properties[index].target = moved
+                }
+            }
+        }
+        for index in group.children.indices {
+            group.children[index].repointComponentProperties(map)
+        }
+        content = .group(group)
     }
 
     /// This layer's own content, if it is a group.

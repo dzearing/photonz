@@ -328,6 +328,15 @@ struct EditorCommands: Commands {
                 // be open with a component picked for it to mean anything.
                 Button("Insert Component") { editor?.insertPickedComponent() }
                     .disabled(!(editor?.canInsertPickedComponent ?? false))
+                // Option Command B is the design-tool key for detaching, and
+                // Photoshop binds neither the command nor the key. Select
+                // Original takes none: it is a way to get somewhere, not an
+                // edit, and the copy's own section has a button for it.
+                Button("Detach Instance") { editor?.detachInstance() }
+                    .keyboardShortcut("b", modifiers: [.command, .option])
+                    .disabled(!(editor?.canDetachInstance ?? false))
+                Button("Select Original") { editor?.selectComponentOriginal() }
+                    .disabled(!(editor?.canSelectComponentOriginal ?? false))
             }
             Divider()
             // The arrange commands, Duplicate and Delete act on the whole

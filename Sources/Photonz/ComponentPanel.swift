@@ -161,6 +161,7 @@ struct ComponentInspector: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            if let componentID { ComponentPropertyList(componentID: componentID) }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 4)
@@ -372,11 +373,22 @@ struct ComponentInstanceInspector: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Button("Edit Original") {
-                    editorState.selectComponentOnCanvas(componentID: componentID)
+                ComponentInstanceProperties(instance: layer.id, componentID: componentID)
+                HStack(spacing: 6) {
+                    Button("Edit Original") {
+                        editorState.selectComponentOnCanvas(componentID: componentID)
+                    }
+                    .controlSize(.small)
+                    .help("Selects the original, which is where a change to every copy is made")
+                    // Detach is here as well as in the Layer menu, because a
+                    // command that lives only in a menu is a command nobody
+                    // finds. It is not destructive styling: nothing is deleted,
+                    // the copy simply stops following, and undo is the way back.
+                    Button("Detach") { editorState.detachInstance() }
+                        .controlSize(.small)
+                        .disabled(!editorState.canDetachInstance)
+                        .help("Turns this copy into ordinary layers that no longer follow the original")
                 }
-                .controlSize(.small)
-                .help("Selects the original, which is where a change to every copy is made")
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 4)
@@ -390,5 +402,261 @@ extension NSResponder {
     /// name you have to select by hand is a placeholder you retype by hand.
     func trySelectAllText() {
         (self as? NSText)?.selectAll(nil)
+    }
+}
+
+// MARK: - What the original makes adjustable (Next, `next-components`)
+
+/// The knobs an original exposes, on the original's own section
+/// (`docs/design/ui-building.md`, step C6).
+///
+/// This is the half of "override safely" that belongs to the author: they
+/// decide, once, which parts of the thing they drew are adjustable, and every
+/// copy gets exactly those and nothing else. The list is deliberately on the
+/// ORIGINAL and not on a copy, because that is where the decision is made and
+/// where it applies to every copy at once.
+struct ComponentPropertyList: View {
+    @Environment(EditorState.self) private var editorState
+    let componentID: UUID
+
+    private var properties: [ComponentProperty] {
+        editorState.componentProperties(of: componentID)
+    }
+
+    private var candidates: [ComponentPropertyCandidate] {
+        editorState.componentPropertyCandidates(componentID: componentID)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Divider().padding(.vertical, 2)
+            HStack(spacing: 6) {
+                Text("Adjustable")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                addMenu
+            }
+            if properties.isEmpty {
+                Text("Nothing yet. Anything you add here is a knob every copy can set on its own.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                ForEach(properties) { property in
+                    ComponentPropertyRow(componentID: componentID, property: property)
+                }
+            }
+        }
+    }
+
+    /// The Add menu, grouped by KIND rather than by layer.
+    ///
+    /// The mock lists every layer with every knob it could make; on a component
+    /// of eight layers that is a menu of twenty-four rows, most of them
+    /// meaningless. Here the three kinds are the headings, and under each one
+    /// sit only the layers that knob makes sense for: wording under a text
+    /// layer, a choice under a group with alternatives in it. A layer already
+    /// exposed one way does not appear that way twice.
+    @ViewBuilder private var addMenu: some View {
+        Menu {
+            if candidates.isEmpty {
+                Text("Nothing left to expose")
+            }
+            ForEach(ComponentPropertyKind.allCases, id: \.self) { kind in
+                let rows = candidates.filter { $0.kinds.contains(kind) }
+                if !rows.isEmpty {
+                    Section(kind.label) {
+                        ForEach(rows, id: \.layerID) { candidate in
+                            Button(candidate.pathLabel) {
+                                editorState.addComponentProperty(componentID: componentID,
+                                                                 target: candidate.layerID,
+                                                                 kind: kind)
+                            }
+                        }
+                    }
+                }
+            }
+        } label: {
+            Label("Add", systemImage: "plus")
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .disabled(candidates.isEmpty)
+        .help("Choose a piece of this component and how copies may change it")
+    }
+}
+
+/// One knob on the original: what it is called, what kind it is, and a way to
+/// take it away again.
+private struct ComponentPropertyRow: View {
+    @Environment(EditorState.self) private var editorState
+    let componentID: UUID
+    let property: ComponentProperty
+
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            TextField("Knob name", text: $draft)
+                .textFieldStyle(.roundedBorder)
+                .font(.caption)
+                .focused($focused)
+                .onSubmit(commit)
+                .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+            Text(property.kind.chip)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(Capsule().fill(.quaternary))
+            Button {
+                editorState.removeComponentProperty(componentID: componentID, propertyID: property.id)
+            } label: {
+                Image(systemName: "minus.circle")
+            }
+            .buttonStyle(.borderless)
+            .help("Stop letting copies change this. Copies go back to showing what the original shows")
+        }
+        .onAppear { draft = property.name }
+        .onChange(of: property.name) { _, name in if !focused { draft = name } }
+    }
+
+    private func commit() {
+        guard let name = ComponentNaming.normalized(draft) else {
+            draft = property.name   // ...a blank name is refused, so put it back
+            return
+        }
+        guard name != property.name else { return }
+        editorState.renameComponentProperty(componentID: componentID, propertyID: property.id, to: name)
+    }
+}
+
+// MARK: - Setting a knob on one copy
+
+/// The knobs a copy can set, on the copy's own section.
+///
+/// Only what the original exposed appears here, so a copy can be adjusted
+/// without any way to drift: there is no control for anything else inside it,
+/// and a choice offers only the shapes the original holds.
+struct ComponentInstanceProperties: View {
+    @Environment(EditorState.self) private var editorState
+    let instance: UUID
+    let componentID: UUID
+
+    private var properties: [ComponentProperty] {
+        editorState.componentProperties(of: componentID)
+    }
+
+    private var overridden: Set<UUID> { editorState.instanceOverrides(instance: instance) }
+
+    var body: some View {
+        if properties.isEmpty {
+            Text("The original has not made anything adjustable yet. Select it and add a knob there.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        } else {
+            VStack(alignment: .leading, spacing: 6) {
+                Divider().padding(.vertical, 2)
+                ForEach(properties) { property in
+                    HStack(spacing: 6) {
+                        Text(property.name)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .frame(width: 74, alignment: .leading)
+                        control(for: property)
+                        revert(property)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func control(for property: ComponentProperty) -> some View {
+        switch property.kind {
+        case .text:
+            InstanceTextKnob(instance: instance, property: property)
+        case .visible:
+            Toggle("", isOn: Binding(
+                get: { editorState.instanceValue(instance: instance, property: property.id)?.boolValue ?? true },
+                set: { editorState.setInstanceOverride(instance: instance, property: property.id,
+                                                       value: .visible($0)) }))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+            Spacer(minLength: 0)
+        case .variant:
+            // Labels rather than raw names: two rectangles drawn in a row are
+            // both called "Rectangle", and a menu of identical rows is a menu
+            // nobody can choose from.
+            let options = editorState.componentVariantOptionLabels(componentID: componentID,
+                                                                   propertyID: property.id)
+            Picker("", selection: Binding(
+                get: { editorState.instanceValue(instance: instance, property: property.id)?.optionValue
+                        ?? options.first?.id ?? UUID() },
+                set: { editorState.setInstanceOverride(instance: instance, property: property.id,
+                                                       value: .variant($0)) })) {
+                ForEach(options, id: \.id) { option in
+                    Text(option.label).tag(option.id)
+                }
+            }
+            .labelsHidden()
+            .controlSize(.small)
+            .help("Only the shapes the original holds. A copy can never show something it does not define")
+        }
+    }
+
+    /// The way back. Without it a copy that was set once can only be put right
+    /// by undoing, and an override made ten edits ago is out of undo's reach.
+    @ViewBuilder private func revert(_ property: ComponentProperty) -> some View {
+        Button {
+            editorState.clearInstanceOverride(instance: instance, property: property.id)
+        } label: {
+            Image(systemName: "arrow.uturn.backward")
+        }
+        .buttonStyle(.borderless)
+        .controlSize(.small)
+        .opacity(overridden.contains(property.id) ? 1 : 0)
+        .disabled(!overridden.contains(property.id))
+        .help("Follow the original again for this one")
+    }
+}
+
+/// A wording knob on a copy: a field that lands its text the way every other
+/// field in the dock does, on Return and on clicking away, so typing a label
+/// is not one undo step per keystroke.
+private struct InstanceTextKnob: View {
+    @Environment(EditorState.self) private var editorState
+    let instance: UUID
+    let property: ComponentProperty
+
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    private var live: String {
+        editorState.instanceValue(instance: instance, property: property.id)?.textValue ?? ""
+    }
+
+    var body: some View {
+        // The knob's own name is the placeholder, so an emptied field still
+        // says what it is, and a scripted playtest can reach the field by name.
+        TextField(property.name, text: $draft)
+            .textFieldStyle(.roundedBorder)
+            .font(.caption)
+            .focused($focused)
+            .onSubmit(commit)
+            .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+            .onAppear { draft = live }
+            .onChange(of: live) { _, value in if !focused { draft = value } }
+            .onChange(of: instance) { _, _ in draft = live }
+    }
+
+    private func commit() {
+        guard draft != live else { return }
+        editorState.setInstanceOverride(instance: instance, property: property.id, value: .text(draft))
     }
 }

@@ -5704,3 +5704,45 @@ is the honest place to fix.
 
 Open question for the user, in the audit: whether a copy being one object you
 cannot open feels protective or feels like a refusal.
+
+## 2026-09-03 — A copy can be changed without leaving the family (step C6)
+
+The last rung before the Library is worth shipping. An original chooses which of
+its parts are adjustable; every copy sets those and nothing else; detach is the
+way out.
+
+- `PhotonzCore/ComponentProperties.swift` is the model: `ComponentProperty`
+  (name, kind, the id of a layer inside the original), `ComponentPropertyValue`,
+  `ComponentOverride`, and the three kinds — wording, show or hide, and a choice
+  among a group's children. Every knob is one fact about one layer, so
+  resolution is one path rather than three.
+- Overrides are applied AFTER a copy is refilled from the original inside
+  `syncComponentInstances`. That order is why an edit to the original still
+  reaches a copy that has overridden something else, and it needed no new
+  machinery: the copy takes the original's picture whole, then its own few facts
+  are written back over the top.
+- A choice may only land on a shape the original holds (`canSetInstanceOverride`),
+  and exposing one settles the original on a single visible option, so a copy
+  can never draw something the component does not define.
+- `pruneComponentProperties` runs in the same sync: a knob whose layer was
+  deleted out of the original goes, and every copy's answer to it goes too.
+- `Layer.reidentified` now threads an id map so a DUPLICATED original repoints
+  its knobs at its own layers; a copy's answers are deliberately not remapped,
+  since they name knobs belonging to the original it still follows.
+- App side: the original's section grew an **Adjustable** list and an **Add**
+  menu grouped by kind; the copy's section grew its knobs with a revert arrow
+  per row; Layer ▸ Detach Instance (⌥⌘B) and Layer ▸ Select Original joined the
+  component group, and the pill says "Detached" because nothing on screen
+  changes when it runs.
+- 26 new tests in `ComponentPropertyTests`. Two probe walks drive it end to end:
+  `Scripts/playtest/component-override-walk.json` (expose, place two copies,
+  override one, edit the original, detach) and `component-choice-walk.json`
+  (expose a choice, swap a copy onto the other shape). Both carry real
+  screenshots; Screen Recording was granted.
+
+Next: step D8, styles, before D7's starter components (a starter set has to be
+drawn from styles, not raw values). A follow-up is filed for making a set of
+alternatives in one command, which is the unguided part of a choice knob today.
+
+Open question for the user, in the audit: whether Add belongs on the original,
+or whether people expect to select the part itself and expose it from there.

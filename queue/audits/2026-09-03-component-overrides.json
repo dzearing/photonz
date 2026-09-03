@@ -1,0 +1,32 @@
+{
+  "feature": "A copy can be changed without leaving the family",
+  "epic": "ui-components",
+  "summary": "An original now chooses which of its parts are adjustable, and every copy can set those without breaking the link back. Detach turns a copy into ordinary layers when you want out.",
+  "setup": "Photonz Dev, release Next, on a blank canvas. Flags are on by default; View ▸ Show Library if the shelf is not up.",
+  "try": [
+    { "do": "Draw a filled box and type a text label over it, select both, press ⌘G." },
+    { "do": "Press ⌥⌘K and type a name for the component." },
+    { "do": "In the Component section, click Add and pick your label under Wording." },
+    { "do": "Drag the component's tile off the Library onto the canvas twice, to place two copies." },
+    { "do": "Select one copy and type different words into its knob.", "shot": "2026-09-03-component-overrides-1-set.png" },
+    { "do": "Select the original, double click into its label and nudge it down with the arrow keys.", "shot": "2026-09-03-component-overrides-2-followed.png" },
+    { "do": "Select the copy you changed and click the revert arrow beside its knob." },
+    { "do": "Press ⌥⌘B on a copy to detach it.", "shot": "2026-09-03-component-overrides-4-detached.png" }
+  ],
+  "evaluate": [
+    "Is Add on the ORIGINAL the place you would look for making a part adjustable, or did you expect to select the part itself and expose it from there?",
+    "Does the Add menu, grouped by Wording / Show or hide / Choice, tell you what each knob will do before you pick one?",
+    "When you nudged the original, was it obvious that the copy you had changed kept its own wording and still followed everything else?",
+    "Is the revert arrow findable, and does it read as 'go back to the original' rather than 'undo'?",
+    "Detach says so in a pill because nothing on screen changes. Is that enough, or should the layers row look different too?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the real window, taken by Scripts/playtest/component-override-walk.json and component-choice-walk.json.",
+    "A choice knob (screenshot 3, 2026-09-03-component-overrides-3-choice.png) needs a group of alternatives inside the component, which nothing in the app helps you build yet: you group two shapes by hand and then expose the group. The knob works, the path to it is unguided.",
+    "A wording knob is named after the words it exposes, so right after you add it the row reads 'Auto-enhance | Auto-enhance' until you either rename the knob or change the copy. Renaming is one field away in the original's list, but the duplication looks odd on first sight.",
+    "Changed from the mock: the Add menu is grouped by KIND with only the layers each knob suits, not every layer times every kind. Cut: the mock's 'Custom property…' row and its separate 'Instance props' section, since a copy's knobs belong in the copy's own Component section.",
+    "A long wording override still overflows the box it sits in. There is no auto layout, so this is a known limit rather than a bug.",
+    "A knob cannot reach into a copy nested inside the original, and knobs cannot be reordered.",
+    "Detach is one way: undo is the only path back, and there is no re-attach."
+  ]
+}

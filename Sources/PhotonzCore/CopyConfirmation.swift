@@ -32,6 +32,12 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// A copy of a component was NOT placed, because it would have put a
         /// component inside itself.
         case componentCycle
+        /// A copy stopped following its original (`docs/design/ui-building.md`,
+        /// step C6). Detaching changes nothing you can see — the picture is
+        /// identical the instant after — so without a word on screen the
+        /// command looks like it did nothing at all. `component` names the
+        /// original it used to follow.
+        case componentDetached(component: String?)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -65,6 +71,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .specList, .measurements, .image: return "Copied"
         case .componentInstances: return "Updated"
         case .componentCycle: return "Not placed"
+        case .componentDetached: return "Detached"
         }
     }
 
@@ -83,6 +90,9 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(copies) of \(component)"
         case .componentCycle:
             return "A component cannot hold a copy of itself"
+        case .componentDetached(let component):
+            guard let component, !component.isEmpty else { return "It no longer follows its original" }
+            return "It no longer follows \(component)"
         }
     }
 

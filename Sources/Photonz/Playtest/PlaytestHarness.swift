@@ -420,6 +420,10 @@ private final class Run {
             case .newFrameDialog: editor.isNewFrameDialogPresented = true
             case .frameSelection: editor.frameSelection()
             case .makeComponent: editor.makeComponent()
+            case .exposeWording: editor.exposeFirstProperty(kind: .text)
+            case .exposeChoice: editor.exposeFirstProperty(kind: .variant)
+            case .cycleChoice: editor.cycleInstanceChoice()
+            case .detachInstance: editor.detachInstance()
             case .pickFirstComponent:
                 if let first = editor.componentEntries.first {
                     editor.selectLibraryItem(first.id)
