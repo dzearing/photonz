@@ -1,0 +1,29 @@
+{
+  "id": "a-new-window-can-start-as-a-blank-canvas-you-can",
+  "title": "A new window can start as a blank canvas you can build on",
+  "goal": "A new window today only offers to open a file, paste, or capture, so there is no way to start something from nothing. Add a blank canvas: pick a size, get an empty picture, and start drawing on it straight away.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:00:37.150Z",
+  "updated": "2026-09-03T00:00:37.151Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Flag: next-blank-canvas, Next only, on by default (FeatureCatalog.swift). Today: EditorView.swift:402 emptyState offers three rows through onboardingRow (Open a file, Capture a rectangle, Paste an image); EditorState.swift:288 leaves `document` nil for a .fresh window, so there is nothing to draw on. CanvasSizeDialog.swift already asks for a canvas size and PhotonzDocument(canvasSize:) already exists, so most of the parts are there. Pick one background for the new picture (white is the simple answer), say which you picked in the audit, and file a follow-up if a transparent canvas turns out to matter for building UI. This is the front door for the ui-building focus: components, groups and screens all need somewhere to be drawn that is not a screenshot.",
+  "acceptance": [
+    "In Next with the blank canvas flag on, the card in an empty window offers Blank canvas next to Open a file, Paste an image and Capture a rectangle",
+    "Choosing it asks for a size with a few sensible presets, then leaves an empty picture that every tool draws on right away",
+    "Try it: open Photonz Dev, Experiments window, release Next, flag next-blank-canvas on, File > New Window, click Blank canvas, take the default size, draw a rectangle, press Command Z, then export the result",
+    "With the flag off the empty window is exactly what it is today",
+    "Audit written under queue/audits/, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:00:37.151Z",
+      "note": "created (manager)"
+    }
+  ]
+}

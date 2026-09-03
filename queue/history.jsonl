@@ -926,3 +926,18 @@
 {"t":"2026-09-02T23:48:09.132Z","ev":"task_created","id":"retriage-queue-against-objectives-2","priority":"p0-critical","title":"Retriage queue against objectives"}
 {"t":"2026-09-02T23:51:31.917Z","ev":"task_created","id":"the-screen-dim-shows-up-in-other-recording-tools","priority":"p2-normal","title":"The screen dim shows up in other recording tools half a second late"}
 {"t":"2026-09-02T23:52:34.758Z","ev":"task_done","id":"photograph-the-region-capture-overlay-for-its-au","from":"in_progress","note":"Real screen capture of the region capture overlay taken on an unlocked screen and committed as queue/audits/2026-09-02-capture-dim-drag.png, referenced from the drag step of 2026-09-02-capture-dim-no-loupe.json. Verified by measurement, not eye: outside the box reads 0.75 of inside on every channel (the 25% dim), menu bar and dock included; pill reads 580 x 360; no loupe. Filed a follow-up for the dim arriving in other recording tools half a second late."}
+{"t":"2026-09-02T23:53:17.905Z","ev":"task_started","id":"retriage-queue-against-objectives-2","title":"Retriage queue against objectives","priority":"p0-critical"}
+{"t":"2026-09-02T23:53:27.082Z","ev":"loop_started","pid":35128}
+{"t":"2026-09-02T23:53:36.117Z","ev":"task_reset","id":"retriage-queue-against-objectives-2","attempt":1}
+{"t":"2026-09-03T00:00:37.151Z","ev":"task_created","id":"a-new-window-can-start-as-a-blank-canvas-you-can","priority":"p1-high","title":"A new window can start as a blank canvas you can build on"}
+{"t":"2026-09-03T00:00:37.156Z","ev":"task_created","id":"the-position-and-size-of-a-layer-can-be-typed-no","priority":"p1-high","title":"The position and size of a layer can be typed, not only dragged"}
+{"t":"2026-09-03T00:00:37.159Z","ev":"task_created","id":"the-component-model-is-written-down-before-it-is","priority":"p1-high","title":"The component model is written down before it is built"}
+{"t":"2026-09-03T00:00:37.162Z","ev":"task_created","id":"layers-can-hold-layers","priority":"p1-high","title":"Layers can hold layers"}
+{"t":"2026-09-03T00:00:37.165Z","ev":"task_created","id":"a-group-draws-as-one-thing","priority":"p1-high","title":"A group draws as one thing"}
+{"t":"2026-09-03T00:00:37.168Z","ev":"task_created","id":"group-and-ungroup-what-you-selected","priority":"p1-high","title":"Group and ungroup what you selected"}
+{"t":"2026-09-03T00:00:37.171Z","ev":"task_created","id":"the-layers-list-shows-what-is-inside-a-group","priority":"p1-high","title":"The layers list shows what is inside a group"}
+{"t":"2026-09-03T00:00:37.173Z","ev":"task_created","id":"make-a-component-out-of-what-you-drew-and-find-i","priority":"p1-high","title":"Make a component out of what you drew, and find it in the Library"}
+{"t":"2026-09-03T00:00:37.176Z","ev":"task_created","id":"layers-line-up-with-each-other-while-you-build","priority":"p2-normal","title":"Layers line up with each other while you build"}
+{"t":"2026-09-03T00:00:53.731Z","ev":"decision_opened","id":"layers-line-up-with-each-other-while-you-build-when-you-are-arranging-layers-to","taskId":"layers-line-up-with-each-other-while-you-build","question":"When you are arranging layers to build UI, what should help you line them up?"}
+{"t":"2026-09-03T00:01:09.259Z","ev":"task_blocked","id":"layers-line-up-with-each-other-while-you-build","from":"pending","note":"Waiting on the decision card: which kind of help arranging layers should get, given guides were turned down once before."}
+{"t":"2026-09-03T00:02:11.232Z","ev":"manager","filed":9,"readyBefore":2,"readyAfter":10,"report":"queue/manager/2026-09-02-1701.md"}

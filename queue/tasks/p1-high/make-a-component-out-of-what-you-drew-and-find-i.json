@@ -1,0 +1,32 @@
+{
+  "id": "make-a-component-out-of-what-you-drew-and-find-i",
+  "title": "Make a component out of what you drew, and find it in the Library",
+  "goal": "Turn a group you drew into a reusable component: it takes a name, wears a badge on the canvas so you can tell it apart, and shows up in a Library panel you can browse. Placing copies of it comes next.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:00:37.173Z",
+  "updated": "2026-09-03T00:00:37.187Z",
+  "deps": [
+    "the-layers-list-shows-what-is-inside-a-group",
+    "the-component-model-is-written-down-before-it-is"
+  ],
+  "blockedBy": [],
+  "notes": "Flag: next-components, Next only. Follow docs/design/next-components.md, which this task depends on, for where components are stored and what the Library panel is. The mock is docs/design/mocks/pages/component-configure-wt.html steps one and two, and components.html for the Library panel with its scopes. Placing an instance, overrides and variants are later tasks. This slice stops at making one and seeing it listed. Depends on the layers list showing groups, and on the spec page.",
+  "acceptance": [
+    "The Layer menu gains Make Component with Option Command K, enabled when a group is selected",
+    "The new component is listed in a Library panel with its name and a small picture of itself, and renaming it in one place renames it in both",
+    "The main component is marked on the canvas and in the layers list so it is never mistaken for an ordinary group",
+    "Try it: open Photonz Dev, Experiments window, release Next, flags next-layer-groups and next-components on, draw a box and a label, group them, press Option Command K, name it Setting, and find Setting in the Library",
+    "Audit written under queue/audits/, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:00:37.173Z",
+      "note": "created (manager)"
+    }
+  ]
+}

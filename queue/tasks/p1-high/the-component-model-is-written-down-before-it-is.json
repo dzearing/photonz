@@ -1,0 +1,29 @@
+{
+  "id": "the-component-model-is-written-down-before-it-is",
+  "title": "The component model is written down before it is built",
+  "goal": "Component support is about to be built across several sittings. Write one page that says what a component is in Photonz, how you make one, how a copy of it stays linked to the original, what can be changed on a copy, and what the first version deliberately leaves out.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "docs",
+  "created": "2026-09-03T00:00:37.159Z",
+  "updated": "2026-09-03T00:00:37.159Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Source material: docs/design/mocks/pages/component-configure-wt.html (the eleven step walkthrough is the whole flow: select the layers you drew, Make component, Add property, expose a toggle as a boolean, expose a control as a variant, bind a fill to a Style, drop an instance, configure it, reset it), components.html (the Library with scopes, drag to place), ui-variants.html (the variant by size matrix and instance props). The mock’s one line definition to build on: a component is a reusable layer tree with configurable properties, and nothing about it is a special editor. Where the app is today: PhotonzDocument holds one flat array of layers (Document.swift), LayerContent has image, text, annotation, zoomCallout, measure and collage cases (Layer.swift:324), there is no group, no library and no component anywhere in Sources. Copy the shape of docs/design/next-measure.md, which has served the measure epic well: numbered sections, a Done when list, and flags named next to the behavior they gate. Styles and tokens belong to the ui-design-systems epic, staged later, so the spec should name the seam and stop there.",
+  "acceptance": [
+    "docs/design/next-components.md exists and covers, in plain language: a group, a main component, an instance, an override, a variant, where the Library lives, every menu item and key, and the flag each slice ships behind",
+    "It has a Done when section listing the slices in build order, each small enough for one working session",
+    "It states whether a child layer’s position is stored against its parent or against the whole picture, and why",
+    "It says what the first version does not do, so later work is not judged against a promise nobody made",
+    "It records where it disagrees with the mock pages and the reason"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:00:37.159Z",
+      "note": "created (manager)"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "layers-line-up-with-each-other-while-you-build",
+  "title": "Layers line up with each other while you build",
+  "goal": "When you are arranging boxes and labels, nothing helps you line them up with each other: dragging only pulls to the edges and middle of the whole picture, and there is no way to align a few layers or space them evenly. Give the arranging job real help.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:00:37.176Z",
+  "updated": "2026-09-03T00:01:09.259Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Today Snapping.swift only attracts a dragged frame to the canvas edges and the canvas centre; there is nothing between one layer and another, and no align or distribute command anywhere in EditorCommands.swift. Blocked on its decision card. Guides while dragging were built once before, on 2026-07-02, and turned down, so this must not be built without an answer. Whatever the answer, the maths belongs in PhotonzCore with tests, next to Snapping.swift.",
+  "acceptance": [
+    "Build whichever answer the decision card returns, and nothing else",
+    "Try it: open Photonz Dev, Experiments window, release Next, flag on, draw three rectangles at rough positions, and line them up the way the answer describes",
+    "Every move undoes in one step",
+    "Audit written under queue/audits/, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:00:37.176Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T00:01:09.258Z",
+      "note": "Waiting on the decision card: which kind of help arranging layers should get, given guides were turned down once before."
+    }
+  ]
+}

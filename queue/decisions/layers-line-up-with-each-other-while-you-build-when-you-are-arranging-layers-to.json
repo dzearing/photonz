@@ -1,0 +1,66 @@
+{
+  "id": "layers-line-up-with-each-other-while-you-build-when-you-are-arranging-layers-to",
+  "taskId": "layers-line-up-with-each-other-while-you-build",
+  "question": "When you are arranging layers to build UI, what should help you line them up?",
+  "context": "Photonz is now aiming at building UI, which means arranging boxes and labels against each other rather than annotating a screenshot. Today a dragged layer only snaps to the edges and the middle of the whole picture, and there are no align or distribute commands at all. Guides while dragging were built once and turned down, so this asks before building anything.",
+  "options": [
+    {
+      "id": "commands",
+      "label": "Align and space commands",
+      "summary": "You select a few layers and press a button: line up their left edges, their centres, their tops, or space them evenly. Nothing appears while you drag.",
+      "pros": [
+        "Nothing new happens while you drag, so the canvas stays quiet",
+        "One press lines up ten layers at once, which dragging never does",
+        "Every design tool has these and they read the same everywhere"
+      ],
+      "cons": [
+        "You have to select and press instead of just dragging into place"
+      ],
+      "mitigation": "The commands sit in the Layer menu with keys, and as a row of buttons in the inspector when more than one layer is selected, so they are one press away."
+    },
+    {
+      "id": "guides",
+      "label": "Guides while you drag",
+      "summary": "Dragging a layer pulls it into line with the edges and centres of the other layers, and a thin line shows what it lined up with.",
+      "pros": [
+        "Lining up happens in the drag you were already doing",
+        "Shows you relationships you had not noticed"
+      ],
+      "cons": [
+        "This was built once before, on 2026-07-02, and turned down as not useful",
+        "Lines flickering during every drag can feel busy"
+      ],
+      "mitigation": "Holding Command drags free, and the lines only appear for the layer being moved."
+    },
+    {
+      "id": "both",
+      "label": "Both",
+      "summary": "Guides while you drag for rough placement, and align and space commands for exact work.",
+      "pros": [
+        "Covers both the quick drag and the ten layer cleanup"
+      ],
+      "cons": [
+        "Twice the work and twice the surface to get wrong",
+        "Repeats the guides idea that was turned down before"
+      ],
+      "mitigation": "Build the commands first and add guides after, so the turned down half can be dropped if it still feels wrong."
+    },
+    {
+      "id": "none",
+      "label": "Skip this for now",
+      "summary": "Leave arranging as it is: drag by eye, and pull to the edges and middle of the picture only.",
+      "pros": [
+        "No new controls to learn",
+        "Typed position and size numbers may be enough on their own"
+      ],
+      "cons": [
+        "Building a row of evenly spaced buttons stays fiddly"
+      ],
+      "mitigation": "Typed position and size fields, already queued, make exact placement possible without any of this.",
+      "declines": true
+    }
+  ],
+  "recommended": "commands",
+  "status": "pending",
+  "created": "2026-09-03T00:00:53.730Z"
+}

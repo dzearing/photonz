@@ -1,0 +1,31 @@
+{
+  "id": "the-layers-list-shows-what-is-inside-a-group",
+  "title": "The layers list shows what is inside a group",
+  "goal": "A group shows in the layers list as one row you can open, with the pieces inside indented under it, so a picture you are building stays readable. You can drag a layer into a group or out of it.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:00:37.171Z",
+  "updated": "2026-09-03T00:00:37.184Z",
+  "deps": [
+    "group-and-ungroup-what-you-selected"
+  ],
+  "blockedBy": [],
+  "notes": "LayersPanel.swift builds a flat row list and reorders through Document.moveLayers(visualSources:visualDestination:); both need a tree aware version. Keep the row height, icon weight and hover treatment identical to the rows that exist, so the tree reads as the same panel. Depends on Group and ungroup landing first.",
+  "acceptance": [
+    "A group row has a twist open control, remembers whether it was open, and shows the count of what is inside when closed",
+    "Dragging a row onto a group puts it inside, dragging it out takes it out, and the drop line says which of the two will happen before the mouse is released",
+    "Selecting on the canvas and selecting in the list agree, including for a piece inside a group",
+    "Try it: open Photonz Dev, Experiments window, release Next, flag next-layer-groups on, group two layers, open the group row, drag a third layer into it, then drag it back out",
+    "Audit written under queue/audits/, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:00:37.171Z",
+      "note": "created (manager)"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "group-and-ungroup-what-you-selected",
+  "title": "Group and ungroup what you selected",
+  "goal": "Select a box and its label, press Command G, and they become one thing you can move, hide, lock and delete together. Shift Command G takes it apart again and leaves the pieces exactly where they were.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:00:37.168Z",
+  "updated": "2026-09-03T00:00:37.182Z",
+  "deps": [
+    "a-group-draws-as-one-thing"
+  ],
+  "blockedBy": [],
+  "notes": "Flag: next-layer-groups, Next only, on by default. Photoshop parity on the keys: Command G groups, Shift Command G ungroups. EditorCommands.swift holds the menu command groups; EditorState.swift owns the selection set and every mutation goes through History.perform. Canvas selection, marquee and drag live in CanvasView.swift, which is already large, so put the group specific canvas logic in its own file the way the measure work did with CanvasMeasure.swift. Depends on the group model and the group renderer.",
+  "acceptance": [
+    "The Layer menu gains Group with Command G and Ungroup with Shift Command G, each enabled only when the selection allows it",
+    "Clicking a group on the canvas selects the whole group and dragging it moves everything inside; double clicking goes inside so one piece can be picked",
+    "Grouping, ungrouping, moving and deleting a group each undo in one step",
+    "Try it: open Photonz Dev, Experiments window, release Next, flag next-layer-groups on, draw a rectangle and a text layer, select both, press Command G, drag the group, press Shift Command G, press Command Z twice",
+    "Resizing a group is out of this slice and is filed as a follow-up task, with what should happen to the pieces inside written down",
+    "Audit written under queue/audits/, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:00:37.168Z",
+      "note": "created (manager)"
+    }
+  ]
+}

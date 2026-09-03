@@ -1,0 +1,29 @@
+{
+  "id": "layers-can-hold-layers",
+  "title": "Layers can hold layers",
+  "goal": "Photonz keeps one flat stack of layers, so a button made of a box and a label is two separate things forever. Teach the picture that a layer can contain other layers. Nothing changes on screen yet: this is the groundwork for grouping, and after that for components.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "core",
+  "created": "2026-09-03T00:00:37.162Z",
+  "updated": "2026-09-03T00:00:37.162Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Model: add a group case to LayerContent (Layer.swift:324) carrying its children, or children on Layer, whichever keeps Codable simplest; Document.swift holds the flat array and every helper on it (layer(id:), index(of:), hitTest at :53, layerIDs(fullyInside:), addLayer, removeLayers, moveLayers, restackLayers, duplicateLayers) needs a version that reaches inside. Coordinate rule for this task: a child’s frame is relative to its parent. That is the rule an instance needs, because a component is placed at many spots and its children cannot each carry canvas coordinates. Confirm it against docs/design/next-components.md if that page has landed first. Every existing caller (renderer, measure, canvas hit testing, layers panel) assumes canvas coordinates, so ship a flattening helper that hands back canvas space layers and leave those callers on it until the renderer task lands. This is the first rung of the component ladder: groups, then the renderer, then Command G, then Make component.",
+  "acceptance": [
+    "Tests come first, and they cover finding, adding, removing, reordering, duplicating, deleting and hit testing a layer that lives inside a group",
+    "A child’s position is kept against its parent, so moving the parent moves everything inside it and the same tree can sit in two places",
+    "A picture saved before this change still opens, and one containing groups survives save and open unchanged",
+    "Nothing new appears on screen: the app builds, Scripts/test.sh passes, and no group can be made from the interface yet",
+    "PhotonzCore stays pure, value typed and free of force unwraps"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:00:37.162Z",
+      "note": "created (manager)"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "the-position-and-size-of-a-layer-can-be-typed-no",
+  "title": "The position and size of a layer can be typed, not only dragged",
+  "goal": "You can only place and size a layer by dragging it, so two buttons cannot be made the same width and a row cannot be made exactly 296 by 118. Put the selected layer’s position and size in the inspector as numbers you can type.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:00:37.155Z",
+  "updated": "2026-09-03T00:00:37.155Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Flag: next-geometry-fields, Next only, on by default. The inspector lives in LayersPanel.swift; LayerStyleSlider around line 1017 is the pattern for a live control that commits through the document, and the annotation restyle rows around 1328 show the draft-then-commit shape for a typed value. Numbers are the same document points the measure readouts call px, so use the same formatter and unit word the measure work settled on. Every write goes through History.perform so undo stays correct; Document.updateLayer is the mutation. This is table stakes for building UI: without typed geometry a component sheet cannot be built to a spec.",
+  "acceptance": [
+    "The inspector shows X, Y, width and height for one selected layer, and they keep up while it is dragged or resized on the canvas",
+    "Typing a number moves or resizes the layer, and one undo puts it back",
+    "Arrow keys step the field by 1 and shift and arrow by 10",
+    "Try it: open Photonz Dev, Experiments window, release Next, flag next-geometry-fields on, draw a rectangle, type 296 in the width field, press Tab, then press Command Z",
+    "A locked layer’s fields are not editable, and what happens with several layers selected is either handled or filed as a follow-up task",
+    "Audit written under queue/audits/, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:00:37.155Z",
+      "note": "created (manager)"
+    }
+  ]
+}

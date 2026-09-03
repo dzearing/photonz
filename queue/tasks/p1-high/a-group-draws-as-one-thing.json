@@ -1,0 +1,30 @@
+{
+  "id": "a-group-draws-as-one-thing",
+  "title": "A group draws as one thing",
+  "goal": "A group of layers should paint as one object: the pieces inside composite together first, then the group’s own opacity, blur, shadow and rounded corners apply to the result. A card with a shadow then looks like a card, not like three overlapping shadows.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "render",
+  "created": "2026-09-03T00:00:37.165Z",
+  "updated": "2026-09-03T00:00:37.179Z",
+  "deps": [
+    "layers-can-hold-layers"
+  ],
+  "blockedBy": [],
+  "notes": "DocumentRenderer.swift: the layer loop is around line 238 and the per layer image switch around 347; the flip to Core Image’s bottom left origin stays owned here. A group renders into its own buffer sized to the union of its children plus LayerStyle.previewPadding, then that buffer is styled and composited like any other layer. Depends on the group model landing first.",
+  "acceptance": [
+    "Tests first: a group with no styling of its own draws exactly what the same layers draw loose, and a group with opacity, blur, shadow or corner radius applies each one once to the whole group",
+    "A group inside a group draws correctly",
+    "A 12 megapixel picture with ten layers, one of them a group of five, still composites in under 16 ms, and the number goes in the commit message",
+    "Nothing new appears on screen: groups still cannot be made from the interface"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:00:37.165Z",
+      "note": "created (manager)"
+    }
+  ]
+}

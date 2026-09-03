@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T22:57:40.652Z",
-  "updated": "2026-09-02T23:52:34.758Z",
+  "updated": "2026-09-02T23:53:12.200Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Scripts/probe-app.sh --no-build, then: open -a \"dist/Photonz Probe.app\" --args --capture-diag. It writes /tmp/photonz-capture-diag.txt (dim latency, double-dim ratio) and /tmp/photonz-capture-diag-drag.png, then quits itself. The first line of the report says whether the screen was locked; if it was, the whole run is of the lock screen and must be thrown away. Downscale the PNG before committing it, the raw one is 10 MB. See docs/design/playtest-harness.md.",
@@ -66,6 +66,6 @@
     }
   ],
   "started": "2026-09-02T23:46:38.573Z",
-  "failures": 1,
+  "failures": 0,
   "completed": "2026-09-02T23:52:34.758Z"
 }
