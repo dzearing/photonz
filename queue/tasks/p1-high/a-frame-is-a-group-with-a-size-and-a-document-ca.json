@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.177Z",
-  "updated": "2026-09-03T03:07:40.841Z",
+  "updated": "2026-09-03T03:08:50.369Z",
   "deps": [
     "layers-can-hold-layers",
     "group-and-ungroup-what-you-selected"
@@ -64,7 +64,12 @@
     {
       "t": "2026-09-03T03:07:40.841Z",
       "note": "Tests: 1698 pass (Scripts/test.sh). New: FrameTests (box, clipping, hit testing, several frames, presets, typed size, Frame Selection, drawing onto a frame, placement, export document, coding) and FrameRenderingTests (surface, clipping, frame-only export, frames side by side, rounded corner). Follow-ups filed: paste and drop should land on a frame too; rename a screen by clicking its name on the canvas."
+    },
+    {
+      "t": "2026-09-03T03:08:50.368Z",
+      "note": "Frames shipped in Next behind next-frames: a frame is a group with a size, drawn with the F tool (drag for a custom size, click to drop the last one), made from a selection with Layer > Frame Selection, or picked from a size list with Layer > New Frame. It paints a surface, clips what hangs off its edge, carries its name above its top left corner, and several sit side by side on one canvas. What you draw on a frame belongs to it; measurements deliberately stay out so redlining is unchanged. Export offers one frame as its scope and writes that frame's contents only. Verified on the probe app with real screenshots (Scripts/playtest/frames-walk.json) and a clean redline-walk regression; 1698 tests pass. Audit: queue/audits/2026-09-03-frames.json. Two follow-ups filed (paste and drop should land on a frame; rename a screen by clicking its name)."
     }
   ],
-  "started": "2026-09-03T02:33:08.643Z"
+  "started": "2026-09-03T02:33:08.643Z",
+  "completed": "2026-09-03T03:08:50.369Z"
 }

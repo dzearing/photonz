@@ -5566,3 +5566,22 @@ first, because persisting it means putting interface state in a shared file).
 No keyboard way to open a group, no open-all.
 
 Next: step 1 is done — model, renderer, keys and the list. Step 2 is frames.
+
+## 2026-09-03 — Frames: a screen you can build on (Next, `next-frames`)
+
+Step A2 of `docs/design/ui-building.md`. A frame is a group whose stored size is
+finally used, so there is no artboard list on the document and every operation a
+group already had works on a frame. Shipped: the F tool (drag for a size you
+draw, click to drop the last one), Layer ▸ New Frame… with a short size list,
+Layer ▸ Frame Selection, a Frame inspector section (size menu, Clip contents,
+Background), the name and edge chrome the canvas draws, and an Export scope that
+writes one frame's contents only.
+
+Two things the adversarial pass on the running app changed: a layer drawn inside
+a frame now belongs to that frame (otherwise nothing was ever clipped and the
+only way in was the Layers list), and the name and edge use a neutral grey
+rather than theme colours, which vanished over a white surface. Measurements
+deliberately never join a frame, so redlining is untouched.
+
+Next: the shelf (step B3, the Library panel group). Follow-ups filed for paste
+and drop landing on a frame, and for renaming a screen by clicking its name.
