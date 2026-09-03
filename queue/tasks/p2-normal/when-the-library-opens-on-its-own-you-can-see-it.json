@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 770,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:55:20.242Z",
-  "updated": "2026-09-03T05:55:20.242Z",
+  "updated": "2026-09-03T11:15:05.452965Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the step E9 sitting on 2026-09-03, see queue/audits/2026-09-03-component-e2e-1-component.png and -2-adjustable.png: at a 1240x900 window the Library header is at the very bottom edge and the tiles are cut off. Panels above it are Layers, Position and Size, Component, Effects, Shadow. The dock is a scroll view in the right dock; scrolling a section into view is the change, not reordering the sections.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-03T05:55:20.242Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T11:00:54.116Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T11:15:05.452965Z",
+      "note": "Adversarial review before building: the mock has no answer here, so the questions were about the shell. (1) Reordering the dock to put the Library on top was rejected in the task itself and is worse: the shelf is where you FETCH from, not what you have selected. (2) The real conflict is that making a component also puts the Component section's Name field ready to type in, and scrolling to the shelf could push the field you are typing into off the top. Answer: scroll the SHORTEST distance that puts the shelf on screen, which keeps as much of what was above it as it can. Verified in the capture: the Name field is still on screen with the shelf. (3) Shortest version that delivers the value: one reveal, no new chrome, no new preference."
+    },
+    {
+      "t": "2026-09-03T11:15:05.452965Z",
+      "note": "Built: DockReveal (PhotonzCore, pure, 14 tests) decides none/top/bottom from the section's measured frame and the dock's height, so 'nothing moves when it is already in view' is a tested rule rather than trust in SwiftUI's anchor. EditorState.setLibraryVisible(true) raises pendingLibraryReveal; InspectorPanel (LayersPanel.swift) watches it, expands a collapsed Library section, and scrolls with an animated proxy.scrollTo. A flag rather than a call because showing the Library also opens the dock, so the panel that must scroll is often drawn a beat later, and it consumes the flag on appear."
+    },
+    {
+      "t": "2026-09-03T11:15:05.452965Z",
+      "note": "Measurements are written to a reference-typed scratch object rather than @State: the section frame changes on every scroll tick and re-drawing the whole dock to store a number nothing draws is exactly the jank the panel's existing comment is about."
+    },
+    {
+      "t": "2026-09-03T11:15:05.452965Z",
+      "note": "Verified with Scripts/playtest/library-reveal-walk.json at 1240x900 (Screen Recording granted, real window captures): after Make Component the shelf and the new Save button tile are on screen; asking for the Library again with the shelf in view changes 0 pixels above a luma delta of 4 (max channel delta 1/255); View then Show Library reveals it the same way, including when the dock was closed at the time. Scripts/test.sh green (2059 tests). library-walk and component-end-to-end-walk still pass (a first library-walk failure was leftover library.scope state in the probe's defaults, not this change)."
+    },
+    {
+      "t": "2026-09-03T11:15:05.452965Z",
+      "note": "Adversarial review after building: the one thing that overrules the user is that a shelf collapsed on purpose is re-opened by a reveal. Scrolling to a bare collapsed header is not 'you can see it', so it ships that way and the audit asks the question. Left undone: this scrolls the dock to the shelf, not INSIDE the shelf, so with more than about two rows of components a new tile can still be below the shelf's own fold. Filed as the-component-you-just-made-is-the-one-you-can-s."
+    },
+    {
+      "t": "2026-09-03T11:15:05.452965Z",
+      "note": "Audit: queue/audits/2026-09-03-library-reveal.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-03T11:00:54.116Z"
 }

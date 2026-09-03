@@ -1,0 +1,27 @@
+{
+  "feature": "The Library comes into view when the app opens it",
+  "epic": "ui-components",
+  "summary": "Making a component now scrolls the right dock down to the Library shelf, so the tile you just made is on screen instead of below the fold. Choosing Show Library does the same, and a shelf that is already in view does not move.",
+  "setup": "Photonz Dev, Experiments window, release Next. Library and Components flags are on by default. Use a window about 900 points tall, so the dock is shorter than its own contents.",
+  "try": [
+    { "do": "Draw a rectangle, type a word on it, and select both." },
+    { "do": "Press Command G to group them." },
+    { "do": "Choose Layer then Make Component, type a name, press Return.", "shot": "2026-09-03-library-reveal-1-shelf-sc.png" },
+    { "do": "Look at the right dock without scrolling it: the Library shelf and your new tile are on screen." },
+    { "do": "Choose View then Show Library again and watch the dock: nothing should move." },
+    { "do": "Choose View then Hide Library, then close the whole dock, then choose View then Show Library.", "shot": "2026-09-03-library-reveal-2-dock-was-closed-sc.png" },
+    { "do": "Scroll the dock up to the Layers list, then choose View then Show Library once more." }
+  ],
+  "evaluate": [
+    "After making a component, is the shelf where your eye goes next, or does the dock jump further than you expected?",
+    "Does the scroll read as the app showing you something, or as the panel losing its place?",
+    "The dock scrolls the shortest distance it can, which keeps the Component section and its Name field on screen. Is that the right thing to keep, or would you rather land with the shelf at the top?",
+    "When the shelf was already on screen and you asked for it again, did you notice any twitch at all?",
+    "Should the shelf you had deliberately collapsed be re-opened when the app reveals it, or should it stay collapsed?"
+  ],
+  "rough": [
+    "A shelf collapsed by its chevron is re-opened when the app reveals it. Scrolling to a collapsed header would be showing you a title and nothing else, so this seemed the honest reading of the change, but it does overrule a collapse you chose on purpose.",
+    "This scrolls the dock to the shelf. It does not scroll INSIDE the shelf: with enough components to fill more than about two rows, a new tile can still be below the shelf's own fold. That is a separate change and is now a queue task.",
+    "Screen Recording was granted for this run, so both pictures are real window captures from a scripted playtest at 1240 by 900, not offscreen renders."
+  ]
+}

@@ -47,42 +47,104 @@ struct InspectorPanel: View {
     /// The Library's scope, so the picked item's section can be titled after
     /// what it is ("Media", "Component") rather than "Library Item".
     @AppStorage(LibraryPanel.scopeKey) private var libraryScopeRaw = LibraryScope.media.rawValue
+    /// Scratch measurements for the Library reveal. A reference on purpose:
+    /// see the note at the geometry reader.
+    @State private var reveal = DockRevealScratch()
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(orderedAvailableSections, id: \.self) { id in
-                    CollapsibleSection(
-                        title: sectionTitle(id),
-                        isCollapsed: isCollapsed(id),
-                        onToggle: { toggleCollapsed(id) },
-                        dragItem: {
-                            dragging = id
-                            return NSItemProvider(object: id.rawValue as NSString)
-                        },
-                        accessory: sectionAccessory(id)
-                    ) {
-                        sectionContent(id)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(orderedAvailableSections, id: \.self) { id in
+                        CollapsibleSection(
+                            title: sectionTitle(id),
+                            isCollapsed: isCollapsed(id),
+                            onToggle: { toggleCollapsed(id) },
+                            dragItem: {
+                                dragging = id
+                                return NSItemProvider(object: id.rawValue as NSString)
+                            },
+                            accessory: sectionAccessory(id)
+                        ) {
+                            sectionContent(id)
+                        }
+                        .onDrop(of: [.text],
+                                delegate: SectionDropDelegate(item: id, order: $order, dragging: $dragging))
+                        // Where this section sits inside the dock, for the
+                        // reveal below. Only the Library's is kept, and it is
+                        // kept OUTSIDE @State on purpose: this fires on every
+                        // scroll tick, and re-drawing the whole dock to
+                        // remember a number nothing draws is the jank the
+                        // comment further down is about.
+                        .onGeometryChange(for: CGRect.self) {
+                            $0.frame(in: .named(inspectorDockSpace))
+                        } action: { frame in
+                            guard id == .library else { return }
+                            reveal.libraryFrame = frame
+                            if reveal.isPending { applyLibraryReveal(proxy) }
+                        }
+                        Divider().opacity(0.4)
                     }
-                    .onDrop(of: [.text],
-                            delegate: SectionDropDelegate(item: id, order: $order, dragging: $dragging))
-                    Divider().opacity(0.4)
                 }
+                .padding(.vertical, 6)
+                // NO implicit animation on the section SET (10.7). Animating
+                // section insert/remove forces the whole .regularMaterial panel to
+                // re-blur and an NSColorWell to animate in/out every frame for the
+                // spring's duration — ~350ms of pegged CPU per selection that
+                // crosses between an annotation and a non-annotation layer (the
+                // Annotation section toggles). Showing/hiding sections instantly
+                // drops that to ~20ms. Collapse (chevron) and drag-reorder keep
+                // their own explicit `withAnimation`, so they still animate.
             }
-            .padding(.vertical, 6)
-            // NO implicit animation on the section SET (10.7). Animating
-            // section insert/remove forces the whole .regularMaterial panel to
-            // re-blur and an NSColorWell to animate in/out every frame for the
-            // spring's duration — ~350ms of pegged CPU per selection that
-            // crosses between an annotation and a non-annotation layer (the
-            // Annotation section toggles). Showing/hiding sections instantly
-            // drops that to ~20ms. Collapse (chevron) and drag-reorder keep
-            // their own explicit `withAnimation`, so they still animate.
+            .coordinateSpace(.named(inspectorDockSpace))
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                reveal.viewportHeight = $0
+            }
+            // The app opened the Library for you: put it where you can see it.
+            // On appear too, because showing the shelf opens the dock as well,
+            // and then this panel is born with the request already waiting.
+            .onChange(of: editorState.pendingLibraryReveal) { requestLibraryReveal(proxy) }
+            .onAppear { requestLibraryReveal(proxy) }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.regularMaterial)
         .onAppear(perform: loadOrder)
         .onChange(of: order) { persistOrder() }
+    }
+
+    // MARK: Bringing the Library into view
+
+    /// The app has opened the Library shelf (View ▸ Show Library, or a command
+    /// that fills it, like making a component). Bring it into view.
+    ///
+    /// A shelf already on screen must not move: pressing the same menu item
+    /// twice should not make the dock jump. `DockReveal` makes that call, from
+    /// the measured frame, once layout has one.
+    private func requestLibraryReveal(_ proxy: ScrollViewProxy) {
+        guard editorState.pendingLibraryReveal,
+              Experiments.shared.libraryEnabled, editorState.isLibraryVisible else { return }
+        // A collapsed shelf scrolled into view is a header and nothing else,
+        // which is not "you can see it". Instantly, without the collapse
+        // spring, so the reveal scrolls to a height that has stopped moving.
+        expand(.library)
+        reveal.isPending = true
+        // The section may have appeared with this very state change, in which
+        // case the measurement above lands first and this finds nothing left to
+        // do. When it was already there and stationary, this is the only path.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { applyLibraryReveal(proxy) }
+    }
+
+    private func applyLibraryReveal(_ proxy: ScrollViewProxy) {
+        guard reveal.isPending, let frame = reveal.libraryFrame else { return }
+        let action = DockReveal.action(sectionTop: frame.minY,
+                                       sectionHeight: frame.height,
+                                       viewportHeight: reveal.viewportHeight)
+        reveal.isPending = false
+        editorState.libraryRevealHandled()
+        guard action != .none else { return }
+        withAnimation(.easeInOut(duration: 0.28)) {
+            proxy.scrollTo(InspectorSectionID.library, anchor: action == .top ? .top : .bottom)
+        }
     }
 
     private var selectedLayer: Layer? {
@@ -315,7 +377,29 @@ struct InspectorPanel: View {
             collapsedRaw = set.sorted().joined(separator: ",")
         }
     }
+
+    /// Opens a section that was left collapsed, and does nothing to one that is
+    /// already open. No animation: the reveal that calls this needs a height
+    /// that has finished changing.
+    private func expand(_ id: InspectorSectionID) {
+        var set = Set(collapsedRaw.split(separator: ",").map(String.init))
+        guard set.remove(id.rawValue) != nil else { return }
+        collapsedRaw = set.sorted().joined(separator: ",")
+    }
 }
+
+/// The dock's live measurements for the Library reveal: where the shelf sits,
+/// how tall the dock is, and whether a reveal is waiting on layout. Held by
+/// reference so writing it during a scroll does not redraw the dock.
+@MainActor private final class DockRevealScratch {
+    var libraryFrame: CGRect?
+    var viewportHeight: CGFloat = 0
+    var isPending = false
+}
+
+/// The dock's scrolling area as a coordinate space, so a section can say where
+/// it sits relative to what is on screen rather than to the window.
+private let inspectorDockSpace = "inspector.dock"
 
 /// The sections of the inspector, in their default order. `rawValue` persists.
 enum InspectorSectionID: String, CaseIterable {

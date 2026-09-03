@@ -91,10 +91,30 @@ final class EditorState {
         isLibraryVisible = visible
         if visible {
             setInspectorVisible(true)
+            // ...and ask the dock to scroll it into view. The dock is one tall
+            // column and the shelf sits at the bottom of it, so on a normal
+            // window opening the Library without this is a menu item that
+            // changes nothing you can see.
+            pendingLibraryReveal = true
         } else {
             selectedLibraryItemID = nil
+            pendingLibraryReveal = false
         }
     }
+
+    /// True from the moment the app opens the Library shelf until the dock has
+    /// put it on screen, whether you asked through the View menu or a command
+    /// opened it for you. A flag rather than a call so it survives the dock
+    /// being closed at the time: showing the Library opens the dock too, and
+    /// the panel that has to do the scrolling is drawn a beat later.
+    ///
+    /// The dock clears it with `libraryRevealHandled()`, and it clears itself
+    /// if the shelf is put away first. Scrolling is the dock's own business,
+    /// so what happens next lives there (`DockReveal` decides whether anything
+    /// needs to move at all).
+    private(set) var pendingLibraryReveal = false
+
+    func libraryRevealHandled() { pendingLibraryReveal = false }
 
     func setInspectorVisible(_ visible: Bool) {
         isLayersPanelVisible = visible
