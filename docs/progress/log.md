@@ -6390,3 +6390,31 @@ Next: the audit asks whether the Library search box changing (Return now lets go
 Escape now empties) is wanted — that is the line most likely to be wrong.
 `library-walk` needs to say which shelf tab it wants before it looks for the
 search box; filed as its own task.
+
+## 2026-09-03 — A shift-click that misses on the canvas keeps the selection
+
+Ran queue task `shift-clicking-a-second-layer-on-the-picture-add` (epic
+`ui-building`). Most of it was already shipped by 8a2e23d under a duplicate
+task, so the run started by verifying the shipped behaviour on the probe
+rather than assuming it: a plain click then a shift-click picks two
+rectangles, the Layers list says "2 layers selected" with both rows lit, and
+the Arrange row appears.
+
+The one item that failed was a shift-click that lands on bare canvas: it fell
+into the deselect-and-rubber-band branch and wiped the selection, which is the
+worst kind of miss for a gesture aimed at a layer. Fixed with a new
+`BareCanvasPress` in PhotonzCore (test-first), latched by `CanvasView` at
+mouse-down and honoured at mouse-up. The rubber band still starts either way,
+so a shift-DRAG sweeps as before; only the press that never moves is spared.
+The multi-select outlines read the same latch, so they no longer blink off
+while the button is held. The playtest `describe` payload now reports
+`canAlign`.
+
+Next: `Shift-dragging a marquee adds what it sweeps to the selection` is
+queued and will have to settle the collision with shift-constrains-the-band-to-
+a-square. `Drag a multi-selection on the canvas and everything picked moves` is
+also queued and is what makes a shift-click-then-drag work in one motion.
+
+Verified: `Scripts/test.sh` green (2088 tests), `shift-click-miss-walk.json`
+and `shift-click-select-walk.json` on the probe. Audit:
+`queue/audits/2026-09-03-canvas-multi-pick.json`.

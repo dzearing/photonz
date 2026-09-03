@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 800,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:32:42.349Z",
-  "updated": "2026-09-03T11:52:54.222Z",
+  "updated": "2026-09-03T12:00:57.556Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building next-align-layers on 2026-09-03: the Arrange row needs two or more layers and the canvas has no way to build that selection except a marquee. CanvasView mouseDown reaches groupAwarePick and starts a MoveDrag; shift and command are both unused there for the Select tool. EditorState.clickRow already implements Finder-style plain/extend/toggle over an order, so the canvas wants a toggle path onto multiSelectedLayerIDs rather than new selection state. Watch the drag: a shift-click that also drags should still move what it just added.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-03T12:00:40.920966Z",
       "note": "Left alone deliberately: shift-DRAG on bare canvas still replaces the selection and still constrains to a square. Both belong to the queued task 'Shift-dragging a marquee adds what it sweeps to the selection', which will have to settle the square-vs-add collision. Noted in the audit's rough."
+    },
+    {
+      "t": "2026-09-03T12:00:57.555Z",
+      "note": "Shift-click on the picture adds and drops layers (already shipped by 8a2e23d; re-verified on the probe: two rectangles picked, both rows lit, Arrange row present). Closed the one gap: a shift-click that lands on bare canvas now changes nothing instead of wiping the selection. New PhotonzCore BareCanvasPress written test-first, CanvasView latches it at mouse-down and honours it at mouse-up. Scripts/test.sh green (2088), Scripts/playtest/shift-click-miss-walk.json proves all four acceptance items, audit at queue/audits/2026-09-03-canvas-multi-pick.json. Pushed as 3d46af2."
     }
   ],
-  "started": "2026-09-03T11:52:54.222Z"
+  "started": "2026-09-03T11:52:54.222Z",
+  "completed": "2026-09-03T12:00:57.556Z"
 }
