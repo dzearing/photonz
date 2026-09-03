@@ -401,7 +401,7 @@ struct EditorCommands: Commands {
                     ForEach(LayerAlignment.allCases, id: \.self) { alignment in
                         Button(alignment.menuTitle) { editor?.alignSelection(alignment) }
                             .keyboardShortcut(alignKey(alignment), modifiers: .option)
-                            .disabled(!(editor?.canAlignSelection ?? false))
+                            .disabled(!(editor?.canAlignSelection(alignment) ?? false))
                     }
                 }
                 .disabled(!(editor?.canAlignSelection ?? false))

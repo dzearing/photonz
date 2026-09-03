@@ -3161,45 +3161,43 @@ final class EditorState {
         }
     }
 
-    /// The frame ONE selected layer lines up against, when it has one.
+    /// What ONE selected layer lines up inside, when something holds it.
     ///
     /// A layer picked on its own has nothing to line up with, unless something
-    /// holds it: a frame carries a size of its own, so a label sitting on a
-    /// card can answer to the card.
+    /// holds it. Two kinds of thing do, and the rule is `ArrangeContainer`'s:
+    /// a screen hands over its own box, and a plain group hands over the box of
+    /// everything ELSE inside it, which is what makes centring a word on a
+    /// button mean the button's background.
     ///
-    /// It is the layer's OWN parent or nothing. Two things fall out of that,
-    /// both on purpose:
-    ///
-    /// - A plain group is not a reference. Its box is the union of what is
-    ///   inside it, so a group of one would hand back the layer's own box and
-    ///   leave six buttons that do nothing.
-    /// - The search does not climb past a group. A word inside a button inside
-    ///   a screen answers to nobody, rather than flying to the middle of the
-    ///   screen and out of the button it belongs to. Pick the button and it
-    ///   lines up on the screen; how the word sits inside the button is what
-    ///   the Layout section is for.
+    /// It is the layer's OWN parent or nothing: the search never climbs. A word
+    /// inside a button inside a screen answers to the button, rather than flying
+    /// to the middle of the screen and out of the button it belongs to.
     ///
     /// Nil for everything else, which keeps a multi-selection lining up with
     /// itself exactly as it did.
-    private var arrangeReference: (frame: Layer, bounds: CGRect)? {
-        guard Experiments.shared.framesEnabled, let document else { return nil }
+    private var arrangeReference: (holder: Layer, container: ArrangeContainer)? {
+        guard let document else { return nil }
         let boxes = arrangeBoxes
         guard boxes.count == 1, let id = boxes.first?.id,
-              let parent = document.parentID(of: id),
-              let frame = document.layer(id: parent), frame.isFrame,
-              let bounds = document.canvasBounds(of: parent) else { return nil }
-        return (frame, bounds)
+              let container = document.arrangeContainer(of: id),
+              let holder = document.layer(id: container.id) else { return nil }
+        // Each kind of holder rides its own flag: screens are `next-frames`,
+        // groups are `next-layer-groups`.
+        guard holder.isFrame ? Experiments.shared.framesEnabled
+                             : Experiments.shared.layerGroupsEnabled else { return nil }
+        return (holder, container)
     }
 
     /// What the Arrange row is lining things up against, in the words it shows:
-    /// the frame's name when there is one, nil when the selection is its own
-    /// reference. The row has to say this out loud, because six live buttons
-    /// with only one layer on screen otherwise leave you guessing what moves
-    /// where.
+    /// the screen's or the group's name when there is one, nil when the
+    /// selection is its own reference. The row has to say this out loud,
+    /// because six live buttons with only one layer on screen otherwise leave
+    /// you guessing what moves where.
     var arrangeReferenceName: String? {
-        guard let frame = arrangeReference?.frame else { return nil }
-        let name = frame.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return name.isEmpty ? "the frame around it" : name
+        guard let holder = arrangeReference?.holder else { return nil }
+        let name = holder.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard name.isEmpty else { return name }
+        return holder.isFrame ? "the screen around it" : "the group around it"
     }
 
     /// How many layers the Arrange row is speaking for, so it can say so.
@@ -3210,16 +3208,48 @@ final class EditorState {
                                   hasContainer: arrangeReference != nil)
     }
 
+    /// Whether ONE of the six align commands has anywhere to move what is
+    /// picked. Inside a plain group an axis can be dead: a word as wide as the
+    /// button it sits on cannot go left, centre or right, so those three dim
+    /// and say why rather than pretending.
+    func canAlignSelection(_ alignment: LayerAlignment) -> Bool {
+        guard canAlignSelection else { return false }
+        guard let container = arrangeReference?.container else { return true }
+        return container.allows(alignment)
+    }
+
+    /// Why half the row is dim, in plain words, or nil when none of it is. The
+    /// caption says this out loud as well as the hover tips: three grey buttons
+    /// with no reason beside them are a puzzle, and the answer is one clause.
+    var arrangeDeadAxisNote: String? {
+        arrangeDeadAxisReason(.left) ?? arrangeDeadAxisReason(.top)
+    }
+
+    /// Why three of the buttons are dim, in plain words, or nil when they are
+    /// not. Only a plain group can say this: it has no box of its own, so a
+    /// piece that already spans everything else in it has nowhere to go.
+    func arrangeDeadAxisReason(_ alignment: LayerAlignment) -> String? {
+        guard let reference = arrangeReference,
+              !reference.container.allows(alignment) else { return nil }
+        // Never the holder's name: only a plain group can have a dead axis, and
+        // the sentence beside it has just said which group this is.
+        return alignment.isHorizontal
+            ? "It is already as wide as the group, so only up and down can move it."
+            : "It is already as tall as the group, so only sideways can move it."
+    }
+
     var canDistributeSelection: Bool { LayerArrangement.canDistribute(count: arrangeBoxes.count) }
 
     /// Layer ▸ Align: every selected layer moves onto the selection's own
     /// edge or middle, in ONE undo step. The layer already on that edge does
     /// not move, so pressing it twice is a no-op rather than a slow drift.
-    /// One layer inside a frame moves onto the FRAME'S edge or middle instead,
-    /// so a single press centres a label inside a card.
+    /// One layer inside a screen or a group moves onto ITS HOLDER'S edge or
+    /// middle instead, so a single press centres a label inside a card or a
+    /// word on a button.
     func alignSelection(_ alignment: LayerAlignment) {
+        guard canAlignSelection(alignment) else { return }
         moveLayers(LayerArrangement.aligned(arrangeBoxes, to: alignment,
-                                            within: arrangeReference?.bounds))
+                                            within: arrangeReference?.container.bounds))
     }
 
     /// Layer ▸ Space Evenly: the outermost two hold still and everything

@@ -1322,10 +1322,52 @@ is one, both tested; `EditorState.arrangeReference` finds the parent screen,
 and `ArrangeInspector` carries the wording. Walked by
 `Scripts/playtest/align-in-frame-walk.json`.
 
-Not in this slice: lining a piece up inside the plain group it sits in (the
-label-in-a-button case, which wants the group's box and a rule for the
-group-of-one), spacing evenly against a screen's inner edges, and making an
-align press also write a lasting Layout rule.
+Not in this slice: spacing evenly against a screen's inner edges, and making an
+align press also write a lasting Layout rule. Lining a piece up inside the plain
+group it sits in landed next, below.
+
+## Landed: a piece lines up inside the group that holds it (Next, `next-align-layers`, 2026-09-03)
+
+Align answered to a screen, which is the size it was given. It said nothing
+about the case people hit most while building UI: a word sitting on a button.
+Pick the word now and the Arrange row is there, with the button as the thing it
+lines up inside, so one press centres it.
+
+- **The box a piece lines up inside a group is everything ELSE in the group.**
+  For a word on a button that is the button's background, which is the answer
+  anyone would expect. Taking the group's own box instead would mean lining a
+  piece up against a box that piece helps define: a word hanging over the
+  button's edge would centre itself, shrink the group under its own feet and be
+  off centre again. Leaving the piece out keeps the reference still, so one
+  press lands it and a second press does nothing.
+- **A group of one offers nothing**, because there is nothing else in it to line
+  its only child up inside. The row is absent rather than six dead buttons.
+- **An axis with no room dims**, and says why. A word already as wide as the rest
+  of its group cannot go left, centre or right, so those three grey out and the
+  caption reads "It is already as wide as the group, so only up and down can
+  move it." The other three stay live.
+- **The group never resizes under the piece.** A piece already inside its group
+  stays inside it after any of the six presses, so the group's box is exactly
+  what it was. The one exception is honest: a piece that was hanging OUTSIDE the
+  group comes inside, and the group tightens to the rest of its contents, which
+  is the point of pressing the button.
+- **A stack or a grid offers nothing.** A container that arranges its own
+  contents puts them back after every edit, so an align press inside one would
+  be undone before you saw it. Where those pieces sit is what the Layout section
+  is for. That now holds for a screen that arranges itself too, which used to
+  offer six buttons that did nothing.
+- **The search still never climbs.** A word inside a button inside a screen
+  answers to the button. Pick the button and it answers to the screen.
+
+**Where it lives.** `ArrangeContainer` and `PhotonzDocument.arrangeContainer(of:)`
+in PhotonzCore carry the whole rule, tested in `ArrangeContainerTests`;
+`EditorState.arrangeReference` reads it and gates each kind of holder on its own
+flag (`next-frames` for screens, `next-layer-groups` for groups);
+`ArrangeInspector` and the Layer ▸ Align menu dim per axis. Walked by
+`Scripts/playtest/align-in-group-walk.json`.
+
+Not in this slice: making an align press write a lasting Layout rule, and
+spacing several pieces evenly inside the group that holds them.
 
 ## Landed: a screen is renamed by clicking its name (Next, `next-frames`, 2026-09-03)
 

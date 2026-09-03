@@ -1310,6 +1310,11 @@ private final class Run {
             // answer to each other. The caption and every hover tip read this
             // same value.
             "alignsTo": editor.arrangeReferenceName ?? "selection",
+            // Which of the six align buttons are live. Inside a plain group an
+            // axis can be dead: a piece already as wide as everything else in
+            // the group has nowhere to go sideways, so those three dim.
+            "alignAxes": LayerAlignment.allCases
+                .filter { editor.canAlignSelection($0) }.map(\.rawValue),
             // Whether Layer ▸ Make Alternatives is there at all. That row is
             // absent rather than dimmed, and a walk cannot photograph an absent
             // row: the probe never comes to the front, so its menu bar reads

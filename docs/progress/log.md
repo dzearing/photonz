@@ -6927,3 +6927,33 @@ Verified in the probe with `Scripts/playtest/corner-names-walk.json`, audit at
 Next: nothing outstanding here. Found on the way and filed: dragging an existing
 component onto a screen leaves it a sibling of the screen, while dropping a copy
 from the Library joins it.
+
+## 2026-09-03 — A piece lines up inside the group that holds it
+
+Align answered to a screen, which has a size of its own, and said nothing about
+the case people hit most while building UI: a word sitting on a button. Picking
+the word now brings the Arrange row with the button as its reference, so one
+press centres it.
+
+The box a piece answers to inside a plain group is everything ELSE in the group,
+not the group's own box. The group's box is the union of its children, so the
+piece helps define it: centring a word that hangs over the button's edge would
+shrink the group under the word's own feet and leave it off centre, and pressing
+twice would drift. The siblings' box cannot move when the piece does, so one
+press lands it and a second press does nothing. It also settles the group-of-one
+case with no special rule (nothing else in the group, no reference, no row) and,
+for a word on a button, IS the button's background, which is the answer anyone
+would expect.
+
+`ArrangeContainer` and `PhotonzDocument.arrangeContainer(of:)` (PhotonzCore, 12
+new tests) carry the whole rule; `EditorState` reads it and gates screens on
+`next-frames` and groups on `next-layer-groups`. An axis with no room dims and
+the caption says why. A stack or a grid now offers no align for its children at
+all, including a screen that arranges itself, which used to show six buttons the
+reflow undid on the next edit.
+
+Verified in the probe with `Scripts/playtest/align-in-group-walk.json` and real
+window captures, audit at `queue/audits/2026-09-03-align-in-group.json`.
+
+Next: nothing outstanding here. Not built and worth deciding later — whether an
+align press should also write a lasting Layout rule rather than a one-off move.

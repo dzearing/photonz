@@ -52,7 +52,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "stepIntoSelection" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "7b-inside-a-group", "note": "the two wrapped in a group, then stepped into one of them: a piece inside a group answers to nobody on purpose, so canAlign should be false. Centring it on the screen would fly it out of the group it belongs to" },
+    { "do": "describe", "stage": "7b-inside-a-group", "note": "the two wrapped in a group, then stepped into one of them: the piece answers to the GROUP now, not to the screen, so alignsTo should name the group. Centring it on the screen would fly it out of the group it belongs to" },
     { "do": "snapshot", "name": "align-frame-7b-inside-group" },
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.5 },

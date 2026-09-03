@@ -1,0 +1,28 @@
+{
+  "feature": "A piece lines up inside the group that holds it",
+  "epic": "ui-components",
+  "summary": "Pick a word sitting on a button and the Arrange row now lines it up inside that button, so one press centres it. Before this, only a piece sitting on a screen had anything to line up against.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Groups and Align Layers on, both default.",
+  "try": [
+    { "do": "Draw a wide rectangle, then draw a small one on top of it near its top left corner." },
+    { "do": "Pick both (click one, shift click the other) and press Command G to group them." },
+    { "do": "Double click the small one to step into the group and pick it alone.", "shot": "2026-09-03-align-in-group-1.png" },
+    { "do": "Press Align Center in the Arrange row, then Align Middle.", "shot": "2026-09-03-align-in-group-2.png" },
+    { "do": "Press Align Middle a second time and watch nothing happen." },
+    { "do": "Press Command Z twice to put the piece back where you drew it." },
+    { "do": "Now draw a rectangle exactly as wide as another one, group them, and pick the second one.", "shot": "2026-09-03-align-in-group-3.png" }
+  ],
+  "evaluate": [
+    "Reading only the caption, is it obvious what the piece is about to line up inside?",
+    "Does one press of Align Center land the word where your eye says the middle of the button is?",
+    "When three buttons are dim, does the caption tell you why fast enough that you do not go hunting?",
+    "Is double clicking into a group the way you would expect to pick the word in the first place, or would you reach for something else?",
+    "Is a group named Group 2 in the caption readable, or should it say the group rather than a name nobody chose?"
+  ],
+  "rough": [
+    "The reference is everything ELSE in the group, not the group's own box. For a word on a button that is exactly the button's background. It differs only when the piece hangs outside the group: the piece then comes inside and the group tightens around the rest, which is the point of pressing the button but is technically a change of the group's size.",
+    "A stack or a grid now offers no align at all, for its children and for a screen that arranges itself. It used to offer six buttons that were silently undone by the layout on the next edit. Where those pieces sit belongs to the Layout section.",
+    "The Arrange section is collapsed by default if you have ever collapsed it, so the row can be present and invisible. That is true of every inspector section and was not changed here.",
+    "Screen Recording was granted, so every shot here is a real window capture, not an offscreen render."
+  ]
+}

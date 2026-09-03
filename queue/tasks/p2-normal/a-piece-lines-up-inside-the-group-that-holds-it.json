@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 850,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T14:19:40.887Z",
-  "updated": "2026-09-03T14:19:40.888Z",
+  "updated": "2026-09-03T20:15:28.150Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Follow-up from one-layer-lines-up-inside-the-frame-it-sits-in (2026-09-03), which deliberately stopped at frames. Today EditorState.arrangeReference takes the immediate parent and only when it isFrame, so a piece inside a group gets no row. The hard part is not the maths (LayerArrangement.aligned already takes a container box) but the group-of-one case: a group box is the union of its children, so with one child the reference IS the child and all six buttons are no-ops. Options: hide the row when the parent box equals the layer box on both axes; or dim per axis. Also decide whether aligning a child that currently defines the group edge should be allowed to shrink the group box, which it would today since the box is derived. See docs/design/ui-building.md, One layer lines up inside its screen.",
+  "notes": "Follow-up from one-layer-lines-up-inside-the-frame-it-sits-in (2026-09-03), which deliberately stopped at frames. Today EditorState.arrangeReference takes the immediate parent and only when it isFrame, so a piece inside a group gets no row. The hard part is not the maths (LayerArrangement.aligned already takes a container box) but the group-of-one case: a group box is the union of its children, so with one child the reference IS the child and all six buttons are no-ops. Options: hide the row when the parent box equals the layer box on both axes; or dim per axis. Also decide whether aligning a child that currently defines the group edge should be allowed to shrink the group box, which it would today since the box is derived. See docs/design/ui-building.md, One layer lines up inside its screen.\n\nLanded 2026-09-03. The reference for a plain group is the union of the piece's SIBLINGS, not the group's own box, so it cannot move when the piece does. See docs/design/ui-building.md, 'A piece lines up inside the group that holds it'.",
   "acceptance": [
     "With one piece inside a group selected, the Arrange row is there and says it is lining up inside that group",
     "Pressing Align Center puts the piece in the middle of the group, and one undo puts it back",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-03T14:19:40.888Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T20:15:28.150Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T20:33:21.053388Z",
+      "note": "Adversarial review before building. The mock-free question was what box a piece answers to inside a plain group. Taking the GROUP'S OWN box (union of its children) is wrong: the piece helps define that box, so a word hanging over the button's edge centres itself, the group shrinks under its own feet, and the word is off centre again. Pressing twice drifts. The box that stays still is everything ELSE in the group, which for a word on a button IS the button's background, so it is also the answer a person expects. That rule also kills the group-of-one case for free (no siblings, no reference, no row) and makes the whole thing idempotent."
+    },
+    {
+      "t": "2026-09-03T20:33:21.053388Z",
+      "note": "Second finding: a container that ARRANGES its own contents (stack or grid) reflows after every edit via History.perform, so an align press inside one is undone before you see it. That was already true of a screen with a layout in the shipped frame path: six live buttons that did nothing. Both now offer no align at all; Layout owns those positions."
+    },
+    {
+      "t": "2026-09-03T20:33:21.053388Z",
+      "note": "Built: ArrangeContainer + PhotonzDocument.arrangeContainer(of:) in PhotonzCore (12 tests, written against the rules above), EditorState.arrangeReference reading it and gating screens on next-frames and groups on next-layer-groups, per axis dimming in ArrangeInspector and in Layer > Align, alignAxes exposed to the playtest state."
+    },
+    {
+      "t": "2026-09-03T20:33:21.053388Z",
+      "note": "Review of the built thing on the probe found three dim buttons with no visible reason, only a hover tip. The caption now swaps its least useful sentence for the reason: 'This layer lines up inside Group 2. It is already as wide as the group, so only up and down can move it.'"
+    },
+    {
+      "t": "2026-09-03T20:33:21.053388Z",
+      "note": "Verified on the probe with Scripts/playtest/align-in-group-walk.json, real window captures (Screen Recording granted). Word picked inside a group: canAlign true, alignsTo 'Group', all six axes. Align Center moved it 320 to 370 (group spans 300 to 500), Align Middle 214 to 220, second press of the same button changed nothing, one undo per press, Align Right landed 440. The group's box stayed 300,200 200x61 through every press. A piece exactly as wide as its sibling offered only the three up and down buttons; a group of one offered no row. Scripts/test.sh green, 2395 tests."
+    },
+    {
+      "t": "2026-09-03T20:33:21.053388Z",
+      "note": "Acceptance 4 as written says lining up NEVER changes the group's size. True whenever the piece already sits inside the group. A piece that was hanging OUTSIDE it comes inside and the group tightens around the rest, which is the point of the press and is called out in the audit's rough list."
     }
-  ]
+  ],
+  "started": "2026-09-03T20:15:28.149Z"
 }
