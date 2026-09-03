@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T10:22:38.204Z",
-  "updated": "2026-09-03T16:03:46.800404Z",
+  "updated": "2026-09-03T16:03:57.379Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-03-multi-style.json. The whole-selection reading is already there: EditorState.colorStyleSelection(slot:) and ColorStyleSelection in PhotonzCore. What is missing is the write: a one-off color has to go through the right builder per slot (AnnotationBuilder.restyled for a shape stroke or fill, TextBuilder.restyled for text ink, GroupContent.backgroundHex for a frame), which is why this was cut from the style slice. Layer.setColorHex(_:for:) already routes all three and is what bindColorStyle uses, so a document-level setColorHex(layerIDs:slot:hex:) plus one EditorState perform is probably the whole job. The row is ColorStyleRow in Sources/Photonz/ColorStylePanel.swift; its no-well init is the one the SelectionColorInspector uses.",
@@ -38,7 +38,12 @@
     {
       "t": "2026-09-03T16:03:46.800404Z",
       "note": "Built and verified. Core: PhotonzDocument.setColorHex(layerIDs:slot:hex:) paints exactly the layers the row speaks for (locked layers and switched-off fills sit out, so the row's promise and the pick can never drift), and takes any of them off a style in that slot, because a color chosen by hand is the layer's own. ColorStyleSelection.unlinkNote is the sentence the row says before the click when that would happen. App: SelectionColorWell in ColorStylePanel.swift is the readout AND the control (a 264pt dock has no room for both) - a swatch when they agree, the word Mixed as a chip when they do not, both opening the app's own picker so a color lands on a deliberate action rather than every drag tick; EditorState.setSelectionColor does it in one perform. Nine new core tests; the full suite is green at 2207. Live in the probe app via Scripts/playtest/selection-color-walk.json (new action paintSelectionColor): three boxes -> one color -> fill #B0184A x3, ONE undo puts all three back, a selection holding one styled layer reads mixed x3, and painting it drops Accent to 0 uses. Real captures in queue/audits/2026-09-03-selection-color.json. Not verified by automation: the click that opens the picker, because the loop has no Accessibility grant and a walk can only reach the picture, not the dock - said plainly in the audit's rough."
+    },
+    {
+      "t": "2026-09-03T16:03:57.379Z",
+      "note": "The whole-selection Color row now has a well: pick several layers, click the Fill or Outline swatch (or the word Mixed), choose a color, and every picked layer that has that kind of color takes it in one undo step, letting go of any style in that slot with the row saying so first. Core PhotonzDocument.setColorHex(layerIDs:slot:hex:) + ColorStyleSelection.unlinkNote, app SelectionColorWell + EditorState.setSelectionColor, Next only. 9 new core tests, full suite green at 2207, driven live in the probe app by Scripts/playtest/selection-color-walk.json. Audit: queue/audits/2026-09-03-selection-color.json with real captures."
     }
   ],
-  "started": "2026-09-03T15:49:07.065Z"
+  "started": "2026-09-03T15:49:07.065Z",
+  "completed": "2026-09-03T16:03:57.379Z"
 }
