@@ -5974,3 +5974,53 @@ rubber band or the layers list can build a multi-selection, which is the
 weakest part of reaching this feature), lining one layer up inside the frame it
 sits in, and the user's ask from the decision card for grid and stack pieces
 inside a component (auto layout, so it waits on the `ui-layout` epic).
+
+## 2026-09-03 — The capture dim reaches other recording tools
+
+- **The overlay stopped hiding from screen captures.** A region capture darkens
+  the screen the moment you press the shortcut, but the overlay used to carry
+  `sharingType = .none` until its own freeze had landed, and a window marked
+  that way is invisible to EVERY capture, not just ours. A screen recording
+  running beside Photonz, or a shared screen, showed no dim at all for as long
+  as the freeze took, so a recorded demo of a capture looked like nothing
+  happened and then a screenshot appeared.
+- The fix is that the overlay hides from nobody. `SelectionWindow` no longer
+  sets `sharingType`, and the freeze leaves our own panels out of its own shot
+  by naming them in a filter instead: new
+  `ScreenCapturer.capture(screen:excludingWindowNumbers:)`, built on
+  `SCContentFilter(display:excludingWindows:)` and
+  `SCScreenshotManager.captureScreenshot` with `ignoreShadows = false`. Our dim
+  stays out of our picture; everyone else sees the dim from the first frame.
+- It never falls back to an unfiltered shot. A freeze that cannot exclude every
+  one of our panels returns nothing and the dim stays over the live screen,
+  because the alternative is freezing our own dim into the picture and showing
+  the world twice as dark. It retries the shareable-window query for up to
+  300 ms first, since panels that went up a moment ago take a beat to appear
+  there.
+- The crop now reads its scale off the frozen picture instead of assuming the
+  display's backing scale, so a picture that ever came back at another size
+  lands the crop in the right place anyway.
+- **The task's own diagnosis was wrong and measuring is what caught it.** It
+  blamed multi-display ordering; this machine has one display, so that ordering
+  was already in place. The freeze finishes in 30-50 ms and the window server
+  does record the flip. The cost was simply that nothing another tool sees
+  changed until the freeze finished, whatever that took.
+- `--capture-diag` was rewritten to stop lying. It used to sleep a fixed 600 ms
+  and take one reading, which cannot tell "the dim never arrives" from "it
+  arrives later" — that single reading is what filed this task with the wrong
+  cause. It now polls, and interleaves two readings that fail independently:
+  the window server's own sharing state for the overlay (works on a locked
+  screen) and the pixels another tool would get (does not). It also prints what
+  one capture costs, whether the freeze produced a picture on every display,
+  and whether the new filtered capture matches the plain one.
+- Measured on the probe: the overlay becomes visible to other capture tools at
+  13-18 ms, which is the first poll, down from 58 ms; the freeze still lands
+  with a picture on 1 of 1 displays; the filtered capture comes back
+  3456x2234 against the plain capture's 3456x2234 with mean luma 0.4911 against
+  0.4912. `Scripts/test.sh` green: 1890 tests, 193 suites.
+
+Next: the pixel half of this needs an unlocked screen. Every capture on a
+locked Mac comes back as the lock screen, so "another tool now sees the dim"
+and "the frozen picture has no dim baked into it" are measured but not yet
+witnessed. Re-run `open -a "dist/Photonz Probe.app" --args --capture-diag` once
+somebody is logged in and read the two dim lines.

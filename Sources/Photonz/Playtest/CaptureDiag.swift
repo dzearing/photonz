@@ -41,6 +41,31 @@ enum CaptureDiag {
         let clean = await luma(of: screen)
         say(String(format: "clean screen: mean luma %.4f", clean))
 
+        // How long one screenshot of this display takes, measured on a warm
+        // client. Every reading below is quantised by this number, so it is
+        // printed rather than assumed.
+        let tShot = Date()
+        _ = try? await ScreenCapturer.capture(screen: screen)
+        let shotMS = Date().timeIntervalSince(tShot) * 1000
+        say(String(format: "one screen capture costs: %.0f ms (the resolution of every "
+                   + "reading below)", shotMS))
+
+        // The freeze changed capture APIs to leave our own panels out, so check
+        // the new one returns the same picture as the old: same pixel size (the
+        // crop maths rides on it) and the same content when nothing of ours is
+        // on screen to exclude.
+        if let plain = try? await ScreenCapturer.capture(screen: screen),
+           let filtered = try? await ScreenCapturer.capture(screen: screen,
+                                                            excludingWindowNumbers: []) {
+            say("freeze capture vs plain capture: \(filtered.width)x\(filtered.height) against "
+                + "\(plain.width)x\(plain.height), "
+                + (filtered.width == plain.width && filtered.height == plain.height
+                   ? "same size" : "SIZE MISMATCH, crops would land in the wrong place"))
+            say(String(format: "  mean luma %.4f against %.4f", luma(of: filtered), luma(of: plain)))
+        } else {
+            say("freeze capture vs plain capture: could not take both shots")
+        }
+
         var selection: RectSelectionController?
         selection = RectSelectionController(
             windowPicking: true,
@@ -52,12 +77,56 @@ enum CaptureDiag {
         say(String(format: "shortcut to dim (overlay on every display): %.1f ms",
                    Date().timeIntervalSince(t0) * 1000))
 
-        // Wait for the freeze to land and the overlay to stop hiding from
-        // captures, then read the screen back.
-        try? await Task.sleep(for: .milliseconds(600))
-        let dimmed = await luma(of: screen)
-        say(String(format: "overlay up: mean luma %.4f, %.3f of clean (0.75 = one dim, 0.56 = the "
-                   + "freeze photographed our own dim)", dimmed, dimmed / max(clean, 0.0001)))
+        // Poll rather than sleep a fixed span: the question is WHEN another
+        // capture tool starts seeing the dim, and a single reading at an
+        // arbitrary moment cannot tell "it never does" from "it does, later" —
+        // which is how a 600 ms sleep once reported a working dim as broken.
+        //
+        // Two readings, interleaved, because they fail independently. The
+        // window server's own sharing state for the overlay says whether
+        // another tool is ALLOWED to see it; the pixels say whether one
+        // actually would. On a locked screen only the first means anything.
+        let overlays = Set(selection?.overlayWindowNumbers ?? [])
+        var dimmed = -1.0
+        var ratio = 1.0
+        var polls = 0
+        var sawDimAfter: Double?
+        var sharedAfter: Double?
+        while Date().timeIntervalSince(t0) < 3.0 {
+            if sharedAfter == nil, sharingState(of: overlays).allSatisfy({ $0 != 0 }) {
+                sharedAfter = Date().timeIntervalSince(t0) * 1000
+            }
+            dimmed = await luma(of: screen)
+            polls += 1
+            ratio = dimmed / max(clean, 0.0001)
+            if ratio < 0.9 {
+                sawDimAfter = Date().timeIntervalSince(t0) * 1000
+                break
+            }
+            if sharedAfter != nil && sawDimAfter != nil { break }
+        }
+        if let sharedAfter {
+            say(String(format: "overlay becomes visible to other capture tools after %.0f ms "
+                       + "(window server sharing state)", sharedAfter))
+        } else {
+            say("overlay STAYS hidden from other capture tools: the window server still has it "
+                + "at sharing state 0 after 3 s")
+        }
+        if let sawDimAfter {
+            say(String(format: "dim shows up in another tool's screenshot after %.0f ms (%d "
+                       + "polls): mean luma %.4f, %.3f of clean (0.75 = one dim, 0.56 = the "
+                       + "freeze photographed our own dim)", sawDimAfter, polls, dimmed, ratio))
+        } else {
+            say(String(format: "dim NEVER shows up in another tool's screenshot: still %.3f of "
+                       + "clean after 3 s and %d polls", ratio, polls))
+        }
+        if let landed = selection?.freezeFinished {
+            let frozen = selection?.frozenCount ?? (landed: 0, displays: 0)
+            say(String(format: "freeze landed at %.0f ms: %d of %d displays got a picture",
+                       landed.timeIntervalSince(t0) * 1000, frozen.landed, frozen.displays))
+        } else {
+            say("freeze had not landed within 3 s")
+        }
 
         // A drag, photographed for real: the box, its size pill, and nothing
         // else beside the pointer.
@@ -82,10 +151,31 @@ enum CaptureDiag {
         NSApp.terminate(nil)
     }
 
+    /// What the window server itself thinks each of these windows is worth to a
+    /// capture: 0 none (invisible), 1 read only, 2 read write. A window that has
+    /// gone missing reads 0, which is the honest answer for "can another tool
+    /// see it".
+    private static func sharingState(of windowNumbers: Set<Int>) -> [Int] {
+        guard !windowNumbers.isEmpty,
+              let info = CGWindowListCopyWindowInfo([.optionAll], kCGNullWindowID)
+                as? [[String: Any]] else { return [0] }
+        let byNumber = Dictionary(
+            info.compactMap { w -> (Int, Int)? in
+                guard let n = w[kCGWindowNumber as String] as? Int else { return nil }
+                return (n, w[kCGWindowSharingState as String] as? Int ?? 0)
+            }, uniquingKeysWith: { a, _ in a })
+        return windowNumbers.sorted().map { byNumber[$0] ?? 0 }
+    }
+
     /// Mean luminance of a screen, freshly captured.
     private static func luma(of screen: NSScreen) async -> Double {
-        guard let image = try? await ScreenCapturer.capture(screen: screen),
-              let data = image.dataProvider?.data as Data? else { return -1 }
+        guard let image = try? await ScreenCapturer.capture(screen: screen) else { return -1 }
+        return luma(of: image)
+    }
+
+    /// Mean luminance of one picture.
+    private static func luma(of image: CGImage) -> Double {
+        guard let data = image.dataProvider?.data as Data? else { return -1 }
         let bpr = image.bytesPerRow
         let bpp = image.bitsPerPixel / 8
         var total = 0.0

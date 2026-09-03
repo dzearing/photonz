@@ -51,6 +51,56 @@ enum ScreenCapturer {
         return try await SCScreenshotManager.captureImage(in: cgGlobalRect(for: local, on: screen))
     }
 
+    /// Captures one screen with `excluded` (our own overlay panels) left out of
+    /// the shot, and NOTHING else changed about the screen.
+    ///
+    /// This exists so the capture overlay never has to hide itself. The other
+    /// way to keep our own dim out of the freeze is `sharingType = .none` on the
+    /// overlay, but a window marked that way is invisible to EVERY capture, not
+    /// just ours: a screen recording running beside us, or a shared screen, sees
+    /// no dim at all for as long as the overlay stays hidden. Naming the windows
+    /// in a filter keeps them out of our shot only.
+    ///
+    /// Falls back to nothing: a caller that cannot get this image keeps the dim
+    /// over the live screen rather than freezing a picture with its own dim
+    /// baked in, which is why this throws instead of degrading to `capture(screen:)`.
+    static func capture(screen: NSScreen, excludingWindowNumbers excluded: Set<Int>) async throws -> CGImage {
+        guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
+        else { throw CocoaError(.fileNoSuchFile) }
+
+        // The caller's windows went on screen a moment ago and the shareable
+        // window list catches up a beat later, so ask again rather than shoot
+        // early: every one of them has to be findable, or the shot would
+        // photograph the one we missed and the frozen picture would come back
+        // with our own dim in it.
+        var display: SCDisplay?
+        var excludedWindows: [SCWindow] = []
+        let deadline = Date().addingTimeInterval(0.3)
+        repeat {
+            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            display = content.displays.first { $0.displayID == screenNumber.uint32Value }
+            excludedWindows = content.windows.filter { excluded.contains(Int($0.windowID)) }
+            if display != nil && excludedWindows.count == excluded.count { break }
+            try? await Task.sleep(for: .milliseconds(10))
+        } while Date() < deadline
+        guard let display, excludedWindows.count == excluded.count else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+
+        let filter = SCContentFilter(display: display, excludingWindows: excludedWindows)
+        let config = SCScreenshotConfiguration()
+        config.showsCursor = false
+        // Window shadows are part of what a screenshot of a screen looks like.
+        config.ignoreShadows = false
+        config.dynamicRange = .sdr
+        config.width = Int((filter.contentRect.width * CGFloat(filter.pointPixelScale)).rounded())
+        config.height = Int((filter.contentRect.height * CGFloat(filter.pointPixelScale)).rounded())
+        let output = try await SCScreenshotManager.captureScreenshot(contentFilter: filter,
+                                                                     configuration: config)
+        guard let image = output.sdrImage else { throw CocoaError(.fileReadCorruptFile) }
+        return image
+    }
+
     /// Converts a screen-local, top-left-origin points rect to the CG global
     /// (primary-display top-left origin, y-down) space `captureImage(in:)` expects.
     private static func cgGlobalRect(for local: CGRect, on screen: NSScreen) -> CGRect {

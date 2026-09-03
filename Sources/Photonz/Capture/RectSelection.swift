@@ -6,11 +6,12 @@ import PhotonzCore
 /// or can float above the drag box) and the selection is dragged on top.
 ///
 /// The panels go up FIRST, in the same turn of the run loop as the shortcut, so
-/// the screen dims the instant the capture starts. The freeze follows a frame
-/// or two later: each display is screenshotted and its picture slides in under
-/// the dim, and because the panels are marked `sharingType = .none` they are
-/// invisible to that screenshot, so the frozen picture is the true screen and
-/// not a picture of our own dim. Releasing crops the region out of the frozen
+/// the screen dims the instant the capture starts — for the person at the
+/// keyboard and, just as importantly, for anyone recording or watching the
+/// screen, since the panels hide from nobody. The freeze follows a frame or two
+/// later: each display is screenshotted with our own panels named in the shot's
+/// exclusion list, so the frozen picture is the true screen and not a picture of
+/// our own dim. Releasing crops the region out of the frozen
 /// bitmap — atomically WYSIWYG, no re-capture race. A release that somehow beats
 /// the freeze falls back to a live capture of the same rect. Esc cancels.
 ///
@@ -108,24 +109,27 @@ final class RectSelectionController {
         }) { escMonitors.append(global) }
     }
 
-    /// Screenshots each display and slides its picture in under the dim. The
-    /// overlay is already on screen and excluded from the shot, so what comes
-    /// back is the world as it was, not the world plus our dim. A display whose
+    /// Screenshots each display and slides its picture in under the dim. Every
+    /// overlay panel is named in the shot's exclusion list, so what comes back
+    /// is the world as it was, not the world plus our dim — while staying
+    /// perfectly visible to any OTHER capture, so a recording or a shared screen
+    /// shows the dim from the same instant the person sees it. A display whose
     /// freeze fails (rare) keeps the dim over the live screen and still selects,
-    /// via the live-capture path.
+    /// via the live-capture path; it never falls back to an unfiltered shot,
+    /// which would freeze our own dim into the picture.
     private func freeze() async {
+        let ours = Set(windows.map(\.windowNumber))
         for window in windows {
-            let image = try? await ScreenCapturer.capture(screen: window.targetScreen)
+            let image = try? await ScreenCapturer.capture(screen: window.targetScreen,
+                                                          excludingWindowNumbers: ours)
             // Esc, or a finished selection, while the shot was in flight.
             guard windows.contains(where: { $0 === window }) else { return }
             guard let image else { continue }
             window.showFrozen(image)
         }
-        // Every shot is in, so the overlay has nothing left to hide from and
-        // goes back to being an ordinary window: a screen recording running
-        // beside us, or a person shooting Photonz with another tool, sees the
-        // dim and the box the way they see everything else.
-        for window in windows { window.sharingType = .readOnly }
+        #if PHOTONZ_PLAYTEST
+        freezeFinished = Date()
+        #endif
     }
 
     /// Tears down the overlay windows.
@@ -147,7 +151,7 @@ final class RectSelectionController {
             return
         }
         let scale = screen.backingScaleFactor
-        let cropped = { frozen.flatMap { Self.crop($0, to: rect, scale: scale) } }
+        let cropped = { frozen.flatMap { Self.crop($0, to: rect, of: screen) } }
         guard let picked else {
             onComplete(screen, rect, cropped())
             return
@@ -187,14 +191,34 @@ final class RectSelectionController {
     }
 
     /// Crops a screen-local, top-left-origin points rect out of the frozen
-    /// bitmap (which is at the screen's backing scale).
-    private static func crop(_ image: CGImage, to rect: CGRect, scale: CGFloat) -> CGImage? {
+    /// bitmap. The scale is read off the picture rather than assumed from the
+    /// display: the two agree today, and a crop landing in the wrong place is
+    /// not a failure worth risking on that.
+    private static func crop(_ image: CGImage, to rect: CGRect, of screen: NSScreen) -> CGImage? {
+        guard screen.frame.width > 0 else { return nil }
+        let scale = CGFloat(image.width) / screen.frame.width
         let pixelRect = CGRect(x: rect.minX * scale, y: rect.minY * scale,
                                width: rect.width * scale, height: rect.height * scale).integral
         return image.cropping(to: pixelRect)
     }
 
     #if PHOTONZ_PLAYTEST
+    /// Probe only: when the last display's shot landed. Nil until then.
+    /// `--capture-diag` reads it to tell a dim that never reaches a recorder
+    /// apart from one that reaches it late.
+    private(set) var freezeFinished: Date?
+
+    /// Probe only: the window numbers of the overlay panels, so a diagnostic
+    /// can ask the window server whether they are shareable yet.
+    var overlayWindowNumbers: [Int] { windows.map(\.windowNumber) }
+
+    /// Probe only: how many displays actually got a frozen picture, out of how
+    /// many were covered. A freeze that quietly returned nothing looks exactly
+    /// like a fast one from the outside, so `--capture-diag` counts it.
+    var frozenCount: (landed: Int, displays: Int) {
+        (windows.filter { $0.frozenImage != nil }.count, windows.count)
+    }
+
     /// Probe only: drags a box on the first display's overlay without a mouse,
     /// so an unmanned run can photograph what a drag looks like. The overlay
     /// covers the screen and owns the pointer, which is why a walk cannot get
@@ -263,11 +287,14 @@ private final class SelectionWindow: NSPanel {
         // The freeze must be imperceptible: macOS animates panels in by default
         // (fade/pop), which reads as a visible "flash" to the screenshot.
         animationBehavior = .none
-        // Invisible to any screen capture, including the one this overlay is
-        // about to take of the screen it is covering. Without this the freeze
-        // would photograph our own dim and the picture would slide in darker
-        // than the world it replaces.
-        sharingType = .none
+        // Deliberately NOT `sharingType = .none`. Hiding the overlay from
+        // captures keeps our own dim out of the freeze, but it hides the dim
+        // from everyone else too: a screen recording running beside us, or a
+        // shared screen, shows no dim at all until the overlay stops hiding, so
+        // a recorded demo of a capture looks like nothing happened. The freeze
+        // leaves these panels out by naming them in its filter instead
+        // (`ScreenCapturer.capture(screen:excludingWindowNumbers:)`), which
+        // keeps them out of OUR shot only.
 
         // The frozen screenshot sits beneath the selection chrome, so the world
         // appears unchanged but is actually a still image we own. It arrives a

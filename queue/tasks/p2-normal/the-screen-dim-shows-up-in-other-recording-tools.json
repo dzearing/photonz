@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T23:51:31.917Z",
-  "updated": "2026-09-03T00:06:01.278Z",
+  "updated": "2026-09-03T06:53:43.636744Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while photographing the overlay for 2026-09-02-capture-dim-no-loupe. Two --capture-diag runs both report overlay-up mean luma at 0.997 and 0.999 of clean, i.e. a capture taken 600 ms after begin() sees no overlay at all, while the drag screenshot taken ~250 ms later measures the dim exactly (background 41,44,51 inside the box vs 31,33,38 outside, ratio 0.75). SelectionWindow sets sharingType = .none in its initializer and RectSelectionController.freeze() only flips every window to .readOnly after every screen has been shot, so the overlay stays invisible to captures for as long as the whole freeze takes, which measures longer than 600 ms here. Fix the ordering (flip each window as its own shot lands, or flip up front and exclude our own windows from the freeze another way) and make CaptureDiag poll instead of sleeping a fixed 600 ms, so its overlay-up line stops claiming the dim is broken when it is not. Sources/Photonz/Capture/RectSelection.swift, Sources/Photonz/Playtest/CaptureDiag.swift.\n\nObjective: measure-redline (staged now). A recorded or shared screen is how a redline gets handed off, so a dim that is missing from the recording is a defect in the primary use, not cosmetics. Sits below the focus at p2.",
@@ -26,6 +26,39 @@
     {
       "t": "2026-09-03T00:06:01.277Z",
       "note": "seq 630 -> 20"
+    },
+    {
+      "t": "2026-09-03T06:34:18.025Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T06:53:43.636744Z",
+      "note": "Adversarial pass on the idea before building: the value is real and small. Nobody watches a capture overlay for its own sake, but a redline is handed off as a recording or a shared screen, and a recording where the dim is missing shows a screenshot appearing out of nowhere. The shortest version that delivers it is 'stop hiding the overlay', not 'make the freeze faster'. Rejected making the freeze faster as the fix: it treats a symptom, and any freeze at all leaves a window where the dim is missing."
+    },
+    {
+      "t": "2026-09-03T06:53:43.636744Z",
+      "note": "Reproduce first, and the task's own theory did not survive it. The notes blame multi-display ordering (flip each window as its own shot lands). This machine has ONE display, so that ordering is already what the code does and could not be the cause. Measured instead with a rewritten --capture-diag: the freeze finishes in 30-50 ms, and CGWindowListCopyWindowInfo reports the overlay at sharingState 1 (read only) right after, so the flip does reach the window server. The real cost is that nothing another tool sees changes until the freeze finishes, whatever that takes."
+    },
+    {
+      "t": "2026-09-03T06:53:43.636744Z",
+      "note": "Caught an artifact in my own instrument before trusting it: a first cut polled the shareable window list in a loop whose deadline had already expired, so it reported 'never listed' without running once. The shipped diag interleaves the two readings in one loop so neither can starve the other."
+    },
+    {
+      "t": "2026-09-03T06:53:43.636744Z",
+      "note": "Fix: the overlay never hides from captures at all. Dropped sharingType = .none from SelectionWindow, and the freeze now names our own panels in an exclusion filter (ScreenCapturer.capture(screen:excludingWindowNumbers:), SCContentFilter(display:excludingWindows:) + SCScreenshotManager.captureScreenshot with ignoreShadows = false). Our dim stays out of our own shot; everyone else sees the dim from the first frame. The freeze retries the shareable-window query for up to 300 ms so it can never shoot before our panels are findable, and it never falls back to an unfiltered shot, which would bake our dim into the frozen picture."
+    },
+    {
+      "t": "2026-09-03T06:53:43.636744Z",
+      "note": "Measured against the fix on the probe: 'overlay becomes visible to other capture tools' went from 58 ms to 13-18 ms, and that is the first poll rather than a real delay, i.e. immediately. Freeze still lands, 1 of 1 displays got a picture, at 68-75 ms. Scripts/test.sh green, 1890 tests in 193 suites."
+    },
+    {
+      "t": "2026-09-03T06:53:43.636744Z",
+      "note": "Note for future runs: PHOTONZ_PLAYTEST code (CaptureDiag) is NOT compiled by plain `swift build`. Typecheck it with Scripts/build-app.sh --probe, and do not pipe that through `tail -1`, which hides compile errors."
+    },
+    {
+      "t": "2026-09-03T06:53:43.636744Z",
+      "note": "Blocked on the machine, not on a decision: the screen has been locked all session (ioreg -n Root -d1 -a | plutil -extract IOConsoleLocked raw -). A locked screen makes every capture come back as the lock screen, so the three acceptance items, which are all pixel readings, cannot be checked. Waiting for an unlocked screen before calling this done."
     }
-  ]
+  ],
+  "started": "2026-09-03T06:34:18.024Z"
 }
