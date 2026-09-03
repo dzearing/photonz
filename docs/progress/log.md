@@ -5518,3 +5518,51 @@ canvas path to a multi-selection is a marquee sweep
 (`shift-click-on-the-canvas-adds-a-layer-to-the-se`).
 
 Next: the layers list shows what is inside a group.
+
+## 2026-09-03 — The layers list shows what is inside a group (Next)
+
+Step 1's fourth task, and the first one anybody can see: a group stops being a
+row with something hidden behind it.
+
+A chevron before the thumbnail twists a group row open and its contents draw
+indented 14 pt under it, one level per group. The chevron column appears only
+once the document HOLDS a group, so Current and a plain redlined screenshot are
+the list they always were. A shut group carries a quiet count of what it holds,
+in the weight the Canvas row uses for its dimensions.
+
+Open or shut is interface state on the window, not document state: opening a
+group is not an edit, so it costs no undo step and never touches the file. Any
+change of selection opens the groups above the newly selected layer, which is
+what makes the canvas and the list agree — double click into a group on the
+canvas and the list opens that group with the piece inside it highlighted.
+
+The drag is the part that took the thinking. Each row has three zones: the top
+strip puts what you are carrying in front of that row, the bottom strip behind
+it, and the middle of a group row puts it inside. Above and below always mean
+*become that row's sibling*, and the line is drawn at that row's indent, so the
+line itself names the list you are joining — which is the whole of taking a
+layer out of a group. An open group row has no "below": that slot already
+belongs to its own topmost child, so aiming there would land the layer
+somewhere the eye never pointed, and its bottom strip means inside instead.
+Dropping into a group opens it and selects what moved, a drag carries the whole
+selection when the row you grabbed is part of it, and locked layers stay put so
+the panel finally agrees with Bring Forward and ⌘G. Nothing jumps: a dropped
+layer's position is rewritten into its new parent's space, and a drop that would
+change nothing is refused rather than costing an undo step.
+
+The decision lives in `PhotonzCore/LayerPanelTree.swift` — `panelRows`,
+`ancestorIDs`, `LayerDropZone.forPointer`, `dropProposal`, `dropLayers` — so
+what a pointer over a row means is tested rather than buried in a view. 31 new
+tests, `Scripts/test.sh` green at 1661. Verified on the probe with a new walk,
+`Scripts/playtest/layers-tree-walk.json`, with Screen Recording granted so the
+pictures are real. Audit: `queue/audits/2026-09-03-layers-tree.json`.
+
+Rough, and said so in the audit: the harness drives the canvas, not the
+inspector, and cannot synthesise a panel drag, so the drop indicators were
+photographed from a one-off build that forced all three on at once. Open state
+does not survive a relaunch (filed:
+`opening-and-closing-a-group-in-the-layers-list-s`, which wants a decision card
+first, because persisting it means putting interface state in a shared file).
+No keyboard way to open a group, no open-all.
+
+Next: step 1 is done — model, renderer, keys and the list. Step 2 is frames.

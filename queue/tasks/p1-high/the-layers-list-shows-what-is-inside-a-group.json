@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.171Z",
-  "updated": "2026-09-03T02:31:51.919Z",
+  "updated": "2026-09-03T02:32:21.490Z",
   "deps": [
     "group-and-ungroup-what-you-selected"
   ],
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-03T02:31:51.919Z",
       "note": "Review of the built thing. Changed away from the plan: a drop now selects what it moved, because dragging a row that was not selected used to leave the inspector talking about something else. Left rough and filed: open state does not survive a relaunch (opening-and-closing-a-group-in-the-layers-list-s, p3, wants a decision card first). Left deliberately: no keyboard way to open a group, no open all, no horizontal aiming in a drop line. Scripts/test.sh green at 1661."
+    },
+    {
+      "t": "2026-09-03T02:32:21.490Z",
+      "note": "A group is a row you can twist open, with its contents indented under it and a count when shut; drag a layer into a group or back out with a line at the target row's indent saying which. Decision is pure and tested in PhotonzCore/LayerPanelTree.swift (31 new tests, Scripts/test.sh green at 1661); verified on the probe with Scripts/playtest/layers-tree-walk.json. Audit: queue/audits/2026-09-03-layers-tree.json"
     }
   ],
-  "started": "2026-09-03T02:10:51.961Z"
+  "started": "2026-09-03T02:10:51.961Z",
+  "completed": "2026-09-03T02:32:21.490Z"
 }
