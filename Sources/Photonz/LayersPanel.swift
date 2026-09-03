@@ -1499,17 +1499,53 @@ struct EffectsInspector: View {
             // other, so it lives in the Color section with the rest rather than
             // in a swatch of its own down here — and the moment this slider
             // leaves zero, the Border row is up there waiting.
-            LayerStyleSlider(layerIDs: ids, label: "Border",
-                             reading: selection.number { $0.borderWidth }, range: 0...20,
-                             format: points, field: .border) { style, v in
-                style.borderWidth = CGFloat(v)
+            //
+            // Offered only to layers with no line of their own. A shape strokes
+            // its own outline, and at the same width the two rings are the same
+            // pixels, so a rectangle used to carry two sliders for one ring with
+            // the border quietly covering the stroke. A shape's width is the
+            // Thickness row in its own section now; see `OutlineWidth.swift`.
+            let borders = selection.borders
+            if !borders.isEmpty {
+                LayerStyleSlider(layerIDs: borders.layerIDs, label: "Border",
+                                 reading: borders.number { $0.borderWidth }, range: 0...20,
+                                 format: points, field: .border) { style, v in
+                    style.borderWidth = CGFloat(v)
+                }
+                .help("The color of the border is in the Color section above")
+                // Said under the row it is about, the way the Color rows say
+                // it, so it cannot be read as speaking for the whole section:
+                // Opacity and Blur still reach every picked layer.
+                if let reach = borderReachNote(selection, borders) {
+                    Text(reach)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .help("The color of the border is in the Color section above")
+            // "A slider here changes every one of them" is a promise Border
+            // cannot keep when a shape is picked with something that can take
+            // one, so in that case the caption claims only the rest.
             SelectionStyleNotes(notes: [selection.note],
-                                caption: selectionCaption(selection.count))
+                                caption: selectionCaption(
+                                    selection.count,
+                                    borders.count == selection.count || borders.isEmpty
+                                        ? "A slider here" : "Every other slider here"))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
+    }
+
+    /// What the Border row says out loud when a shape is picked alongside
+    /// something that can take one. Nothing when the row is not there at all:
+    /// a lone rectangle is not missing a Border, it has its Thickness.
+    private func borderReachNote(_ selection: LayerStyleSelection,
+                                 _ borders: LayerStyleSelection) -> String? {
+        guard !borders.isEmpty, borders.count < selection.count else { return nil }
+        let shapes = selection.count - borders.count
+        let verb = shapes == 1 ? "draws its own outline" : "draw their own outline"
+        return "Border applies to \(borders.count) of the \(selection.count) selected layers. "
+            + "The other \(shapes == 1 ? "one" : "\(shapes)") \(verb): use Thickness."
     }
 }
 
@@ -1793,12 +1829,17 @@ struct AnnotationInspector: View {
     private func row(_ row: ShapeSettingRow, selection: ShapeSelection, ids: [UUID]) -> some View {
         switch row {
         case .thickness:
+            // The ONE width of the line round a shape. It reads whichever ring
+            // is actually on screen, so a box drawn before the Effects Border
+            // slider stopped reaching shapes still shows its width here, and a
+            // pull moves that ring onto the stroke where it belongs.
             ShapeSlider(layerIDs: ids, label: "Thickness",
-                        reading: selection.number { $0.strokeWidth },
+                        reading: selection.outlineWidth,
                         range: AnnotationStyles.strokeWidthRange,
                         format: { "\(Int($0.rounded())) pt" },
-                        preview: { editorState.previewAnnotationRestyle(ids: $0, strokeWidth: $1) },
-                        commit: { editorState.commitAnnotationRestyle(ids: $0, strokeWidth: $1) })
+                        preview: { editorState.previewOutlineWidth(ids: $0, $1) },
+                        commit: { editorState.commitOutlineWidth(ids: $0, $1) })
+                .help("How thick the line round the shape is. Its color is Outline, in the Color section above")
         case .caption:
             // ONE arrow only. A single field over three arrows could only give
             // all three the same words, and a caption is what the arrow says,

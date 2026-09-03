@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/outline-width",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1400, "height": 1080 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [150, 160], "to": [430, 330], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "toggleFillSwitch" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "dragThicknessThin" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-one-width", "note": "a rectangle picked: the Rectangle section offers Thickness, and the Effects section below it has Opacity, Blur and Corner Radius and no Border row. One control for the line round the box, not two." },
+    { "do": "snapshot", "name": "outline-1-one-width" },
+
+    { "do": "action", "action": "dragThickness" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-thicker", "note": "one pull on Thickness and the line round the box is 9pt" },
+    { "do": "snapshot", "name": "outline-2-thicker" },
+    { "do": "render", "name": "box-at-nine" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2b-undone", "note": "one undo puts the whole pull back: the line is 3pt again" },
+    { "do": "render", "name": "box-back-at-three" },
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [520, 160], "to": [800, 330], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-ellipse", "note": "an ellipse is the same story: Thickness in its own section, no Border row that would have drawn a rectangle round it" },
+    { "do": "snapshot", "name": "outline-3-ellipse" },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [150, 420], "to": [430, 600], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-frame-keeps-border", "note": "a frame has no line of its own, so it still gets Border under Effects" },
+    { "do": "snapshot", "name": "outline-4-frame-keeps-border" },
+
+    { "do": "action", "action": "borderSelection" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "5-frame-bordered", "note": "the frame takes a 4pt border, and the Border color row appears in the Color section" },
+    { "do": "snapshot", "name": "outline-5-frame-bordered" },
+    { "do": "render", "name": "frame-bordered" },
+
+    { "do": "click", "at": [280, 240], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "6-mixed", "note": "a box and a frame picked together: Thickness speaks for the box, Border speaks for the frame, and each row says how far it reaches" },
+    { "do": "snapshot", "name": "outline-6-mixed" }
+  ]
+}

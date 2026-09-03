@@ -55,11 +55,18 @@ public struct LayerStyleSelection: Hashable, Sendable {
         /// Half this layer's short edge. Rounding past it does nothing you can
         /// see, so it is where this layer's corners are already fully round.
         public let cornerRadiusLimit: Double
+        /// True when a line round this layer is part of what it IS: a shape
+        /// strokes its own outline, so its width belongs on the shape's own
+        /// Thickness row and the Border row leaves it alone. See
+        /// `OutlineWidth.swift`.
+        public let drawsItsOwnOutline: Bool
 
-        public init(id: UUID, style: LayerStyle, cornerRadiusLimit: Double) {
+        public init(id: UUID, style: LayerStyle, cornerRadiusLimit: Double,
+                    drawsItsOwnOutline: Bool = false) {
             self.id = id
             self.style = style
             self.cornerRadiusLimit = cornerRadiusLimit
+            self.drawsItsOwnOutline = drawsItsOwnOutline
         }
     }
 
@@ -188,7 +195,8 @@ extension PhotonzDocument {
             let bounds = layer.localBounds
             members.append(LayerStyleSelection.Member(
                 id: id, style: resolved,
-                cornerRadiusLimit: max(1, Double(min(bounds.width, bounds.height) / 2))))
+                cornerRadiusLimit: max(1, Double(min(bounds.width, bounds.height) / 2)),
+                drawsItsOwnOutline: layer.drawsItsOwnOutline))
         }
         return LayerStyleSelection(members: members, selectionCount: layerIDs.count)
     }

@@ -1,0 +1,28 @@
+{
+  "feature": "One width for the line round a shape",
+  "epic": "ui-building",
+  "summary": "A picked box used to carry two sliders for the same ring: Thickness in its own section and Border under Effects, in different colors, with the border quietly painted over the stroke. Now a shape has one control for its outline, and a picture, a label or a frame keeps its Border.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Press R and drag out a rectangle.", "shot": "2026-09-03-outline-width-1.png" },
+    { "do": "Look at the panel: the Rectangle section has Thickness, and Effects has Opacity, Blur and Corner Radius and no Border." },
+    { "do": "Pull Thickness and watch the line round the box get thicker." },
+    { "do": "Press Cmd-Z once and check the whole pull came back in one step." },
+    { "do": "Press F and drag out a frame, then pull its Border slider under Effects.", "shot": "2026-09-03-outline-width-2.png" },
+    { "do": "Shift-click the rectangle so the frame and the box are both picked.", "shot": "2026-09-03-outline-width-3.png" },
+    { "do": "Read the line under Border: it says it reaches one of the two and points the other at Thickness." }
+  ],
+  "evaluate": [
+    "With one box picked, is it obvious that Thickness is the width of the line round it?",
+    "The Color section calls that line Outline and this row calls its width Thickness. Do those two read as the same thing?",
+    "Thickness sits in the Rectangle section below Effects. Is that where you look for it, or would you reach for Effects first?",
+    "With a box and a frame picked together, does the sentence under Border tell you what to do next, or does it just tell you off?",
+    "Is anything lost by a shape no longer being able to carry a second ring outside its own outline?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the real window, not an offscreen render.",
+    "A shape saved before this change can still carry an old Border. It is not converted by opening the document, and the Thickness row reads whichever ring is visible; the first pull moves it onto the stroke, carrying its color so the box does not change color. That path is covered by tests but there is no longer any way to create one in the app, so it could not be photographed.",
+    "An ellipse, a line and an arrow lost their Border row too, not just the rectangle. A border on those drew a rectangle round the bounding box, which reads as a bug rather than a feature, but it is a capability that is now gone.",
+    "The width row is still called Thickness while the color row is called Outline. One ring, two words. Renaming it felt like churn on top of this change, so it was left alone and is the first question above."
+  ]
+}

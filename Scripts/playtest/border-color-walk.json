@@ -4,23 +4,23 @@
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1400, "height": 900 },
     { "do": "wait", "seconds": 1 },
 
-    { "do": "tool", "tool": "rectangle" },
+    { "do": "tool", "tool": "frame" },
     { "do": "drag", "from": [120, 140], "to": [320, 260], "steps": 8 },
-    { "do": "tool", "tool": "rectangle" },
+    { "do": "tool", "tool": "frame" },
     { "do": "drag", "from": [380, 140], "to": [580, 260], "steps": 8 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.5 },
 
     { "do": "click", "at": [220, 200] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "1-no-border", "note": "one box, no border: the Color section holds Fill and Outline and nothing else, and the Effects section's Border row is the slider alone" },
+    { "do": "describe", "stage": "1-no-border", "note": "one frame, no border: the Color section holds Fill and nothing else, and the Effects section's Border row is the slider alone" },
     { "do": "snapshot", "name": "border-color-1-no-border" },
 
     { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
     { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "borderSelection" },
     { "do": "wait", "seconds": 0.7 },
-    { "do": "describe", "stage": "2-bordered", "note": "both boxes given a border: a Border row has appeared in the Color section, under Fill and Outline" },
+    { "do": "describe", "stage": "2-bordered", "note": "both frames given a border: a Border row has appeared in the Color section, under Fill" },
     { "do": "snapshot", "name": "border-color-2-row-appears" },
 
     { "do": "action", "action": "paintSelectionBorderColor" },

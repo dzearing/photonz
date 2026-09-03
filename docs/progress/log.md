@@ -7023,3 +7023,26 @@ captures. Audit at `queue/audits/2026-09-03-one-corner-radius.json`.
 Next: the same duplication survives one row down. On a rectangle, Thickness (the
 Rectangle section) and Border (Effects) are both the width of a line round the
 box. Filed as `thickness-and-border-say-the-same-thing-on-a-rec`.
+
+## 2026-09-03 — One width for the line round a shape
+
+A picked rectangle offered two sliders for the same ring: Thickness in its own
+section and Border under Effects. Reproduced first: the shape's stroke and the
+layer's border land on identical pixels at the same width, and with both set the
+border painted over the stroke, so the second slider silently won in a different
+color. Not two features, one feature offered twice.
+
+A layer that draws its own outline (any annotation but a highlight) now has only
+its Thickness row; the Effects Border row is offered to everything else, since
+those have no line of their own. The rule is not about rectangles: on an ellipse
+or an arrow the border drew a rectangle round the bounding box. Shapes saved with
+the old border are not converted on open; the Thickness row reads whichever ring
+is visible and the first pull folds it onto the stroke, color and all.
+
+New: `Sources/PhotonzCore/OutlineWidth.swift`, 17 core tests, 2 render tests
+pinning the pixels. Playtest walk `Scripts/playtest/outline-width-walk.json`; the
+border-color walk now uses frames. Audit:
+`queue/audits/2026-09-03-outline-width.json`.
+
+Next: the width row is still called Thickness while its color row is called
+Outline. Left alone deliberately; it is the first question in the audit.

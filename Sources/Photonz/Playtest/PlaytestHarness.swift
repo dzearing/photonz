@@ -557,17 +557,19 @@ private final class Run {
             case .setTextWeightRegular:
                 let ids = editor.textSelection.layerIDs
                 if !ids.isEmpty { editor.setTextStyle(ids: ids, weight: .regular) }
+            // The line round a shape is ONE row now, so a walk that thickens a
+            // box pulls the same slider a walk that thickens an arrow does.
             case .dragThickness:
                 let ids = editor.shapeSelection.layerIDs
                 if !ids.isEmpty {
                     for width in [5.0, 7.0, 9.0] as [CGFloat] {
-                        editor.previewAnnotationRestyle(ids: ids, strokeWidth: width)
+                        editor.previewOutlineWidth(ids: ids, width)
                     }
-                    editor.commitAnnotationRestyle(ids: ids, strokeWidth: 9)
+                    editor.commitOutlineWidth(ids: ids, 9)
                 }
             case .dragThicknessThin:
                 let ids = editor.shapeSelection.layerIDs
-                if !ids.isEmpty { editor.commitAnnotationRestyle(ids: ids, strokeWidth: 3) }
+                if !ids.isEmpty { editor.commitOutlineWidth(ids: ids, 3) }
             // Rounding is ONE row now, so a walk that rounds a shape and a walk
             // that rounds a picture pull the same slider.
             case .dragShapeCornersSquare:
@@ -615,8 +617,10 @@ private final class Run {
                 if fill.isOffered { editor.setColorEnabled(slot: .fill, on: !fill.isOn) }
             case .borderSelection:
                 // The Effects Border slider over everything picked: this is
-                // what makes the Border row appear in the Color section.
-                let ids = editor.layerStyleSelection.layerIDs
+                // what makes the Border row appear in the Color section. It
+                // reaches only layers with no line of their own, exactly as the
+                // row does — a shape's width is its own Thickness row.
+                let ids = editor.layerStyleSelection.borders.layerIDs
                 if !ids.isEmpty { editor.setLayerStyle(ids: ids) { $0.borderWidth = 4 } }
             case .paintSelectionBorderColor:
                 editor.setSelectionColor(slot: .border, hex: "#B0184A")

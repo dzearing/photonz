@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 960,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T21:29:20.778Z",
-  "updated": "2026-09-03T21:29:20.779Z",
+  "updated": "2026-09-03T22:37:28.640236Z",
   "deps": [],
   "blockedBy": [],
   "notes": "AnnotationContent.strokeWidth (the shape stroke, drawn by AnnotationRasterizer) vs LayerStyle.borderWidth (the ring DocumentRenderer.bordered draws round the layer box). Sibling of one-corner-radius-not-two, which folded the two Corner Radius rows into CornerRadiusSelection + CornerRadiusRow; the same shape of fix may or may not apply, since a rectangle can legitimately want a stroke AND an outer ring. Spotted while auditing that fix.",
@@ -22,6 +22,47 @@
     {
       "t": "2026-09-03T21:29:20.779Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T22:18:27.321Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T22:23:32.118844Z",
+      "note": "Reproduced before deciding anything: rendered a rectangle with Thickness 6, one with Border 6, and one with both. The first two are pixel-identical rings. With both set the border covers the stroke completely, so the second control silently wins. These are not two features, they are one feature offered twice."
+    },
+    {
+      "t": "2026-09-03T22:23:32.118844Z",
+      "note": "The Color section doubles the confusion: the same rectangle offers a Stroke color AND a Border color, both painting the same ring."
+    },
+    {
+      "t": "2026-09-03T22:23:32.118844Z",
+      "note": "Adversarial: the rule is not 'rectangle'. On an ellipse, a line or an arrow the Border draws a RECTANGLE round the bounding box, which nobody asks for. So the honest rule is: a shape that draws a line round itself has one width control, its own."
+    },
+    {
+      "t": "2026-09-03T22:23:32.118844Z",
+      "note": "Shortest version that delivers the value: invent nothing. The shape's Thickness stays and is the one outline control; the Effects Border row is offered only to layers with no outline of their own (picture, text, frame, group, zoom callout, highlight). One row disappears, no new row appears."
+    },
+    {
+      "t": "2026-09-03T22:23:32.118844Z",
+      "note": "Trap to avoid: a rectangle drawn before this change can carry a style border. Simply hiding the row would leave that ring on screen and unreachable, so the Thickness row reads whichever ring is actually visible and the first pull moves it onto the stroke, carrying the border's color so the box does not change color under the hand."
+    },
+    {
+      "t": "2026-09-03T22:37:28.640236Z",
+      "note": "Built: Layer.drawsItsOwnOutline + ShapeSelection.outlineWidth + LayerStyleSelection.borders + PhotonzDocument.setOutlineWidth in Sources/PhotonzCore/OutlineWidth.swift, wired through EditorState.previewOutlineWidth/commitOutlineWidth and the two panel rows in LayersPanel.swift. 17 core tests plus 2 render tests, written first; the render pair pins that a stroke and a border of the same width are the same pixels and that folding one onto the other changes nothing on screen. Whole suite green (2512)."
+    },
+    {
+      "t": "2026-09-03T22:37:28.640236Z",
+      "note": "Review of the built thing, in the app: the mixed case first read as a contradiction. The Border row said it reached one of two layers and the section caption right underneath still promised a slider here changes every one of them. Moved the reach note under the row it is about (the way the Color rows say it) and made the caption claim only Every other slider here when Border falls short."
+    },
+    {
+      "t": "2026-09-03T22:37:28.640236Z",
+      "note": "Also updated: the border-color playtest walk demonstrated the Border color row on two RECTANGLES, which is no longer reachable, so it draws two frames now; the borderSelection harness action goes through layerStyleSelection.borders so a walk cannot invent state the panel cannot; dragThickness/dragThicknessThin drive the new path. New walk Scripts/playtest/outline-width-walk.json. component-look-walk still borders a GROUP, which keeps its Border row, so it is unaffected."
+    },
+    {
+      "t": "2026-09-03T22:37:28.640236Z",
+      "note": "Verified in the probe with Screen Recording granted: a picked rectangle shows Thickness and no Border row; a frame shows Border and takes 4pt; a box and a frame together show both rows each saying its reach; one pull to 9pt and one undo back to 3pt. Audit at queue/audits/2026-09-03-outline-width.json with three real captures."
     }
-  ]
+  ],
+  "started": "2026-09-03T22:18:27.321Z"
 }

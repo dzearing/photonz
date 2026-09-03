@@ -2304,6 +2304,40 @@ final class EditorState {
         saveAnnotationStyles()
     }
 
+    /// Live drag on the ONE Thickness row: sets the line round every picked
+    /// shape without recording an undo step.
+    ///
+    /// A ring the old Effects Border slider left on a shape is folded onto its
+    /// stroke here, color and all, so the box keeps the look it had and ends up
+    /// with one ring instead of two. See `OutlineWidth.swift`.
+    func previewOutlineWidth(ids: [UUID], _ width: CGFloat) {
+        guard var doc = document else { return }
+        let targets = annotationRestyleTargets(ids, in: doc)
+        guard !targets.isEmpty else { return }
+        rememberAnnotationDefaults(targets, in: doc, strokeWidth: width,
+                                   arrowheadScale: nil, cornerRadius: nil)
+        // This row writes the layer's LOOK as well as its shape, so anything a
+        // previous style drag left in the preview would be read back over it.
+        stylePreview = nil
+        discardDragPreview()
+        doc.setOutlineWidth(layerIDs: targets, to: width)
+        submit(doc)
+    }
+
+    /// Letting go of it: ONE undo step, however many shapes it reached, plus
+    /// the thickness the next shape of each kind starts at.
+    func commitOutlineWidth(ids: [UUID], _ width: CGFloat) {
+        guard let doc = document else { return }
+        let targets = annotationRestyleTargets(ids, in: doc)
+        guard !targets.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { $0.setOutlineWidth(layerIDs: targets, to: width) }
+        rememberAnnotationDefaults(targets, in: doc, strokeWidth: width,
+                                   arrowheadScale: nil, cornerRadius: nil)
+        saveAnnotationStyles()
+    }
+
     /// The picked layers a shape slider may touch: shapes, unlocked.
     private func annotationRestyleTargets(_ ids: [UUID], in doc: PhotonzDocument) -> [UUID] {
         ids.filter { doc.layer(id: $0).map { $0.annotation != nil && !$0.isLocked } == true }

@@ -118,10 +118,16 @@ public struct ShapeSelection: Hashable, Sendable {
     public struct Member: Hashable, Sendable {
         public let id: UUID
         public let content: AnnotationContent
+        /// A ring the old Effects Border slider left on this shape's LOOK.
+        /// Shapes drawn since have none: the Thickness row is the only way to
+        /// a line round a shape now, and it writes the shape's own stroke.
+        /// Carried here so that row can read the ring actually on screen.
+        public let styleBorderWidth: CGFloat
 
-        public init(id: UUID, content: AnnotationContent) {
+        public init(id: UUID, content: AnnotationContent, styleBorderWidth: CGFloat = 0) {
             self.id = id
             self.content = content
+            self.styleBorderWidth = styleBorderWidth
         }
     }
 
@@ -217,7 +223,8 @@ extension PhotonzDocument {
             guard let layer = layer(id: id), !layer.isLocked,
                   let annotation = layer.annotation,
                   annotation.shape.hasSettingsBesidesColor else { continue }
-            members.append(ShapeSelection.Member(id: id, content: annotation))
+            members.append(ShapeSelection.Member(id: id, content: annotation,
+                                                 styleBorderWidth: layer.style.borderWidth))
         }
         return ShapeSelection(members: members, selectionCount: layerIDs.count)
     }
