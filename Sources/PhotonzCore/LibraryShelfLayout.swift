@@ -34,6 +34,9 @@ public enum LibraryShelfLayout {
     /// The grid's own top and bottom margin, so the first and last rows are
     /// not flush against the scroll edge.
     public static let gridVerticalPadding: CGFloat = 2
+    /// The air around a picture that is drawn whole inside its well. A picture
+    /// that has to be cut off gives this up and goes edge to edge.
+    public static let picturePadding: CGFloat = 3
 
     /// One tile, top to bottom.
     public static let tileHeight: CGFloat =
@@ -75,5 +78,97 @@ public enum LibraryShelfLayout {
     public static func shelfHeight(tileCount: Int, width: CGFloat, cap: CGFloat) -> CGFloat {
         guard width > 0 else { return cap }
         return min(contentHeight(tileCount: tileCount, width: width), cap)
+    }
+
+    // MARK: The picture in a tile
+
+    /// Which edge of a tile's picture the well cuts off.
+    public enum TileCrop: Equatable, Sendable {
+        /// Nothing is cut: the whole component is in view.
+        case none
+        /// A wide component, blown up and cut off at its far edge.
+        case trailing
+        /// A tall component, blown up and cut off at its bottom.
+        case bottom
+    }
+
+    /// Where a component's picture ends up inside its tile well.
+    public struct TilePicture: Equatable, Sendable {
+        /// How big to draw the picture, in points. Bigger than the well when
+        /// the picture is cropped, which is the whole point of cropping.
+        public var size: CGSize
+        /// Which edge, if any, the well cuts off.
+        public var crop: TileCrop
+
+        public init(size: CGSize, crop: TileCrop) {
+            self.size = size
+            self.crop = crop
+        }
+    }
+
+    /// The share of the well a picture has to cover before it counts as
+    /// readable. Below this it is a hairline: a nav bar fitted whole into a
+    /// 61 point tile is nine points tall, which is the same grey smear as a
+    /// text field fitted whole beside it.
+    public static let readablePictureFraction: CGFloat = 1.0 / 3.0
+
+    /// How far past a plain fit a picture may be blown up before the cut costs
+    /// more than the size buys. Filling the well outright turns a nav bar into
+    /// the word "Back" and a text field into the word "Placeho", which says no
+    /// more than the hairline did; stopping here keeps roughly the first half
+    /// of a long component in view, so it still reads as a strip with a start,
+    /// a top and a bottom.
+    public static let maxPictureZoom: CGFloat = 2.5
+
+    /// How a component's picture sits in a `well`-sized picture area.
+    ///
+    /// A shape that reads at its natural fit is drawn whole, which is every
+    /// square-ish thing and every button. A shape so long that fitting it
+    /// leaves a hairline is blown up until it reads and cut off at its far
+    /// edge instead, the way a long file name is cut rather than shrunk to
+    /// nothing: the start of a nav bar at a size you can read beats the whole
+    /// of it as a grey line.
+    public static func picture(_ pictureSize: CGSize, in well: CGSize) -> TilePicture {
+        guard pictureSize.width > 0, pictureSize.height > 0,
+              well.width > 0, well.height > 0 else {
+            return TilePicture(size: .zero, crop: .none)
+        }
+        let aspect = pictureSize.width / pictureSize.height
+        let fitted = fit(aspect: aspect, in: well)
+        if fitted.height < well.height * readablePictureFraction {
+            let width = min(well.height * aspect, well.width * maxPictureZoom)
+            return TilePicture(size: CGSize(width: width, height: width / aspect),
+                               crop: .trailing)
+        }
+        if fitted.width < well.width * readablePictureFraction {
+            let height = min(well.width / aspect, well.height * maxPictureZoom)
+            return TilePicture(size: CGSize(width: height * aspect, height: height),
+                               crop: .bottom)
+        }
+        return TilePicture(size: fitted, crop: .none)
+    }
+
+    /// The biggest `aspect`-shaped box that fits inside `well`.
+    private static func fit(aspect: CGFloat, in well: CGSize) -> CGSize {
+        let width = min(well.width, well.height * aspect)
+        return CGSize(width: width, height: width / aspect)
+    }
+
+    // MARK: How sharp the picture behind it has to be
+
+    /// Picture sizes are rounded up to this many pixels before an image is
+    /// asked for, so nudging the dock a point wider does not throw away every
+    /// picture the shelf has already drawn.
+    public static let pictureSourceStep: CGFloat = 128
+    /// The most pixels a tile picture is ever worth. A tile is small; past
+    /// this the extra pixels are memory nobody can see.
+    public static let maxPictureSource: CGFloat = 512
+
+    /// How many pixels the image behind a tile picture needs along its long
+    /// side to look sharp at `size` on a Retina screen.
+    public static func pictureSourceDimension(for size: CGSize) -> CGFloat {
+        let wanted = max(size.width, size.height) * 2
+        let stepped = (wanted / pictureSourceStep).rounded(.up) * pictureSourceStep
+        return min(max(stepped, pictureSourceStep), maxPictureSource)
     }
 }

@@ -494,6 +494,7 @@ final class EditorState {
         editingCaptionLayerID = nil
         stylePreview = nil
         thumbnailCache = [:]
+        shelfThumbnails = [:]
         dragPreviewGeneration += 1
         rerender()
         // Size the window to the image (100% when it fits, reduced only when a
@@ -2786,7 +2787,13 @@ final class EditorState {
     /// change, so both are built once, on the first look at the Components
     /// shelf, and nothing about them is per document.
     private var starterPreviewLayers: [StarterComponent: Layer] = [:]
-    private var starterThumbnails: [StarterComponent: CGImage] = [:]
+    private var starterThumbnails: [ShelfPictureKey: CGImage] = [:]
+    /// Shelf pictures for the document's own components. Kept apart from the
+    /// layers panel's thumbnails because a shelf tile asks for a much sharper
+    /// picture than a 24 point row does, and the same component is often in
+    /// both lists at once.
+    private var shelfThumbnails: [ShelfPictureKey: (hash: Int, image: CGImage)] = [:]
+    private var shelfThumbnailsInFlight: Set<ShelfPictureKey> = []
 
     /// Layers in panel order (visual index 0 = topmost).
     var panelLayers: [Layer] {
@@ -3214,21 +3221,30 @@ final class EditorState {
         return layer
     }
 
-    /// The picture on a starter's tile. Rendered off a one-layer document, on
-    /// the same path every other thumbnail takes, and kept: the five never
-    /// change, so this happens once per launch and only once the Components
-    /// shelf has actually been looked at.
-    func starterThumbnail(_ kind: StarterComponent) -> CGImage? {
-        if let cached = starterThumbnails[kind] { return cached }
-        let layer = starterPreviewLayer(kind)
-        let box = layer.localBounds
+    /// The picture on a starter's tile, at least `dimension` pixels along its
+    /// long side. Rendered off a one-layer document, on the same path every
+    /// other thumbnail takes, and kept: the five never change, so this happens
+    /// once per size per launch and only once the Components shelf has
+    /// actually been looked at.
+    ///
+    /// The subtree is BUILT at the size it will be drawn rather than built
+    /// small and blown up, so a badge on a tile is as crisp as a card is.
+    func starterThumbnail(_ kind: StarterComponent, dimension: CGFloat) -> CGImage? {
+        let key = ShelfPictureKey(id: kind.componentID, dimension: Int(dimension))
+        if let cached = starterThumbnails[key] { return cached }
+        let box = starterPreviewLayer(kind).localBounds
         guard box.width > 0, box.height > 0 else { return nil }
-        var preview = layer
+        let scale = max(dimension / max(box.width, box.height), 1)
+        var preview = StarterComponents.layer(kind, scale: scale,
+                                              measure: { TextRasterizer.naturalSize($0) })
+        let scaledBox = preview.localBounds
+        guard scaledBox.width > 0, scaledBox.height > 0 else { return nil }
         preview.frame.origin = .zero
-        let document = PhotonzDocument(canvasSize: box.size, layers: [preview])
+        let document = PhotonzDocument(canvasSize: scaledBox.size, layers: [preview])
         guard let image = previewRenderer.thumbnail(for: preview.id, in: document,
-                                                    store: store, maxDimension: 80) else { return nil }
-        starterThumbnails[kind] = image
+                                                    store: store,
+                                                    maxDimension: dimension) else { return nil }
+        starterThumbnails[key] = image
         return image
     }
 
@@ -4273,6 +4289,31 @@ final class EditorState {
         return thumbnailCache[layer.id]?.image
     }
 
+    /// The Library shelf's picture of a component, sharp enough to be blown up
+    /// and cropped in a tile. Same render path as the panel row thumbnail,
+    /// asked for at a bigger size and cached on its own.
+    func shelfThumbnail(for layer: Layer, dimension: CGFloat) -> CGImage? {
+        let key = ShelfPictureKey(id: layer.id, dimension: Int(dimension))
+        let hash = layer.hashValue
+        if let cached = shelfThumbnails[key], cached.hash == hash { return cached.image }
+        guard let doc = document else { return shelfThumbnails[key]?.image }
+        if !shelfThumbnailsInFlight.contains(key) {
+            let renderer = previewRenderer
+            let store = store
+            let id = layer.id
+            Task { @MainActor [weak self] in
+                guard let self, !self.shelfThumbnailsInFlight.contains(key) else { return }
+                self.shelfThumbnailsInFlight.insert(key)
+                let image = await Task.detached(priority: .utility) {
+                    renderer.thumbnail(for: id, in: doc, store: store, maxDimension: dimension)
+                }.value
+                self.shelfThumbnailsInFlight.remove(key)
+                if let image { self.shelfThumbnails[key] = (hash, image) }
+            }
+        }
+        return shelfThumbnails[key]?.image
+    }
+
     // MARK: - Promote selection
 
     /// ⌘J: rasterizes the marquee selection from the current composite and
@@ -4922,12 +4963,15 @@ final class EditorState {
             editingCaptionLayerID = nil
             stylePreview = nil
             thumbnailCache = [:]
+            shelfThumbnails = [:]
             return
         }
         // Thumbnails for layers that no longer exist are dead weight.
         if thumbnailCache.count != document.layers.count {
             let ids = Set(document.layers.map(\.id))
             thumbnailCache = thumbnailCache.filter { ids.contains($0.key) }
+            let living = Set(document.layers.flatMap { $0.selfAndDescendants.map(\.id) })
+            shelfThumbnails = shelfThumbnails.filter { living.contains($0.key.id) }
         }
         // Crop/resize/undo can change the canvas size; keep the camera in sync.
         if var vp = viewport, vp.documentSize != document.canvasSize {

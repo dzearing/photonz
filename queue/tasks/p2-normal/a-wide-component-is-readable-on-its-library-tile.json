@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 750,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:41:49.320Z",
-  "updated": "2026-09-03T05:41:49.320Z",
+  "updated": "2026-09-03T10:48:19.608245Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while auditing the starter set on 2026-09-03. A tile picture is 80 points wide (LibraryPanel.maxTiles grid, LibraryComponentTile.thumbnail, DocumentRenderer.thumbnail maxDimension: 80) and scaledToFit, so a 320x48 nav bar renders about 80x12. Options worth weighing: crop to a square of the interesting part rather than fitting the whole thing, give a wide component a two-column tile, or draw the picture larger and let the grid reflow.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-03T05:41:49.320Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T10:23:44.679Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T10:48:19.608245Z",
+      "note": "Adversarial pass before building. Captured the real shelf on the probe first rather than trusting the note: Button, Card and Badge already read fine; Text Field and Nav Bar both draw as a 9pt white hairline in a 44pt well, near identical. Their aspects are 6.9 and 6.7, so a two column tile would have made them BOTH wide bars and still not told them apart: the only thing that separates them is detail (a bordered field with grey placeholder vs a flat surface with a blue Back), so the tile has to zoom, not just widen. Cropping to a square, the other suggestion in the notes, throws away the shape and makes them look MORE alike. Built the third thing: fit whole when the fit reads, otherwise blow up and cut off at the far edge."
+    },
+    {
+      "t": "2026-09-03T10:48:19.608245Z",
+      "note": "First try filled the well outright. Looked at it: a nav bar became the word Back and a text field became the word Placeho, which says no more than the hairline did. Capped the zoom at 2.5x so roughly the first half stays in view and the strip keeps a top and a bottom. That is the version that shipped."
+    },
+    {
+      "t": "2026-09-03T10:48:19.608245Z",
+      "note": "Second find: the pictures were also being drawn from an 80px image, so the badge (26pt wide) was a blurry 3.8x enlargement. Starter pictures are now BUILT at the size they are drawn rather than built small and blown up, and document components get their own sharper cache."
+    },
+    {
+      "t": "2026-09-03T10:48:19.608245Z",
+      "note": "Verified on the probe with Screen Recording granted: before and after captures in queue/audits. Also verified the document component path by placing a starter and checking its tile is unchanged. Full suite green (2044 tests)."
+    },
+    {
+      "t": "2026-09-03T10:48:19.608245Z",
+      "note": "Harness gap found, not fixed and not filed (it serves a later epic): a playtest walk that focuses the Library search field hangs the app. Worked around it."
     }
-  ]
+  ],
+  "started": "2026-09-03T10:23:44.678Z"
 }

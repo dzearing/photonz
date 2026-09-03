@@ -1,0 +1,30 @@
+{
+  "feature": "A wide component is readable on its Library tile",
+  "epic": "ui-components",
+  "summary": "A long component like a nav bar or a text field used to draw on its Library tile as a nine point grey hairline, indistinguishable from the one beside it. Now it is blown up until you can see what it is and cut off at its right edge, and small components like the badge are drawn sharp instead of enlarged from a blurry picture.",
+  "setup": "Photonz Dev, Experiments window, release Next. Keep reusable pieces in a Library is on by default, and so is the starter set that fills the Components shelf.",
+  "try": [
+    { "do": "Start a blank canvas from the welcome card." },
+    { "do": "Open the Library section in the right dock and switch its scope to Comps. Five starters are on the shelf.", "shot": "2026-09-03-readable-tiles-1-shelf.png" },
+    { "do": "Look at Text Field and Nav Bar side by side without hovering either of them. Say which is which." },
+    { "do": "Look at Badge and check the 3 is crisp rather than fuzzy." },
+    { "do": "Drag the right dock's edge to make it wider until the shelf shows four tiles across, then two." },
+    { "do": "Drag Nav Bar onto the canvas, then look at its tile again: it draws the same whether it comes from the app or from your picture." }
+  ],
+  "evaluate": [
+    "Can you tell Text Field from Nav Bar at a glance now, with the pictures alone and the names covered?",
+    "A cut off nav bar shows its left end and stops mid bar. Does that read as a bar continuing past the tile, or as a component that is genuinely that short?",
+    "The cut ones bleed to both edges of their tile while the whole ones sit inset with air around them. Does the shelf read as one set of tiles, or as two kinds?",
+    "Widening the dock stops the cutting, because a wide tile can hold a whole nav bar. Is that a pleasant surprise or a distracting change of appearance?",
+    "Roughly the first half of a long component is what a tile shows. Is that the right amount, or would you rather see less of it bigger, or more of it smaller?"
+  ],
+  "rough": [
+    "The screenshot is a real capture of the running app, taken by the probe build with Screen Recording granted.",
+    "2026-09-03-readable-tiles-0-before.png beside it is the same real capture taken before the change, for comparison: Text Field and Nav Bar are the two grey hairlines.",
+    "A cut off tile shows the START of a component, never its middle. A nav bar's centred title falls outside the cut, so what identifies it on the shelf is its Back label and its bottom hairline rather than its title.",
+    "Two long components that differ only past the cut look identical on the shelf. The name under the tile is what separates them, as it always was.",
+    "Something extremely tall, like a 64 by 900 side rail, still draws narrow. The tile well is wider than it is tall, so there is no crop of it that is both big and representative; nothing in the starter set is that shape, so this is untested against a real one.",
+    "A starter's tile does not say how big the component actually is, and the cut makes that slightly less obvious than it was. Its own section in the dock could print 320 x 48 and does not.",
+    "Unrelated, found while testing: the playtest harness hangs the app when a walk focuses the Library search field, so a walk cannot type into the shelf search. Everything here was verified without it."
+  ]
+}

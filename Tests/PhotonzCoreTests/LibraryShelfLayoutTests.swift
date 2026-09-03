@@ -97,4 +97,100 @@ struct LibraryShelfLayoutTests {
         #expect(tile == LibraryShelfLayout.tileHeight)
         #expect(LibraryShelfLayout.tileHeight == 68)
     }
+
+    // MARK: What the picture in a tile well does
+
+    /// The starter set's real sizes, which are what this math was tuned
+    /// against. The well is the picture area of one tile in a dock at its
+    /// usual width: three tiles across, so 61 points of picture inside the
+    /// 44 point well.
+    private let well = CGSize(width: 61, height: LibraryShelfLayout.thumbnailHeight - 6)
+    private let button = CGSize(width: 128, height: 36)
+    private let textField = CGSize(width: 220, height: 32)
+    private let card = CGSize(width: 260, height: 180)
+    private let navBar = CGSize(width: 320, height: 48)
+    private let badge = CGSize(width: 26, height: 20)
+
+    @Test func aShapeThatFitsTheWellIsDrawnWhole() {
+        for size in [button, card, badge] {
+            let picture = LibraryShelfLayout.picture(size, in: well)
+            #expect(picture.crop == .none, "\(size)")
+            #expect(picture.size.width <= well.width + 0.01, "\(size)")
+            #expect(picture.size.height <= well.height + 0.01, "\(size)")
+        }
+    }
+
+    @Test func aWholePictureKeepsItsShape() {
+        let picture = LibraryShelfLayout.picture(card, in: well)
+        #expect(abs(picture.size.width / picture.size.height - card.width / card.height) < 0.001)
+    }
+
+    @Test func aShapeTooWideToReadIsBlownUpAndCutOffAtItsTrailingEdge() {
+        for size in [textField, navBar] {
+            let picture = LibraryShelfLayout.picture(size, in: well)
+            #expect(picture.crop == .trailing, "\(size)")
+            #expect(picture.size.width > well.width, "\(size)")
+            // The point of the exercise: what used to be a 9 point hairline is
+            // now most of the well.
+            #expect(picture.size.height > well.height / 2, "\(size)")
+        }
+    }
+
+    @Test func aShapeTooTallToReadIsBlownUpAndCutOffAtItsBottom() {
+        let rail = CGSize(width: 64, height: 900)
+        let picture = LibraryShelfLayout.picture(rail, in: well)
+        #expect(picture.crop == .bottom)
+        #expect(picture.size.height > well.height)
+        #expect(picture.size.width > 0)
+    }
+
+    @Test func aBlownUpPictureKeepsItsShape() {
+        // It is magnified, never squashed: the crop is what makes it fit.
+        let picture = LibraryShelfLayout.picture(navBar, in: well)
+        #expect(abs(picture.size.width / picture.size.height - navBar.width / navBar.height) < 0.001)
+        #expect(picture.size.width > well.width)
+    }
+
+    @Test func aBlownUpPictureStopsShortOfSwallowingTheWholeWell() {
+        // Filling the well outright leaves a quarter of a nav bar in view,
+        // which reads as the word "Back" rather than as a bar. Roughly the
+        // first half is the trade this makes instead.
+        for size in [textField, navBar] {
+            let picture = LibraryShelfLayout.picture(size, in: well)
+            #expect(picture.size.width <= well.width * LibraryShelfLayout.maxPictureZoom + 0.01, "\(size)")
+            #expect(picture.size.height < well.height, "\(size)")
+            #expect(well.width / picture.size.width >= 0.39, "\(size)")
+        }
+    }
+
+    @Test func aWiderTileStopsCroppingBecauseTheWholeThingIsReadableAgain() {
+        // Pull the dock wide and a nav bar fits honestly, so nothing is cut.
+        let wide = CGSize(width: 200, height: well.height)
+        #expect(LibraryShelfLayout.picture(navBar, in: wide).crop == .none)
+    }
+
+    @Test func aPictureWithNoSizeAsksForNothing() {
+        #expect(LibraryShelfLayout.picture(.zero, in: well).size == .zero)
+        #expect(LibraryShelfLayout.picture(navBar, in: .zero).size == .zero)
+    }
+
+    // MARK: How sharp the picture behind it has to be
+
+    @Test func asksForEnoughPixelsToDrawThePictureOnARetinaScreen() {
+        let picture = LibraryShelfLayout.picture(navBar, in: well)
+        let pixels = LibraryShelfLayout.pictureSourceDimension(for: picture.size)
+        #expect(pixels >= picture.size.width * 2)
+    }
+
+    @Test func asksInStepsSoNudgingTheDockDoesNotRebuildEveryPicture() {
+        let a = LibraryShelfLayout.pictureSourceDimension(for: CGSize(width: 60, height: 38))
+        let b = LibraryShelfLayout.pictureSourceDimension(for: CGSize(width: 61, height: 38))
+        #expect(a == b)
+        #expect(a.truncatingRemainder(dividingBy: LibraryShelfLayout.pictureSourceStep) == 0)
+    }
+
+    @Test func neverAsksForMorePixelsThanATileCouldUse() {
+        let huge = LibraryShelfLayout.pictureSourceDimension(for: CGSize(width: 5000, height: 40))
+        #expect(huge == LibraryShelfLayout.maxPictureSource)
+    }
 }

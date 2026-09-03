@@ -319,6 +319,8 @@ struct LibraryComponentTile: View {
     /// the same picture, the same drag and the same double click, because the
     /// moment it lands it is an ordinary component.
     var starter: StarterComponent?
+    /// How wide the grid made this tile, measured rather than assumed.
+    @State private var wellWidth: CGFloat = 0
 
     private var isSelected: Bool { editorState.selectedLibraryItemID == entry.id }
 
@@ -355,19 +357,22 @@ struct LibraryComponentTile: View {
         .help(helpText)
     }
 
-    /// The same picture the layers list draws for this layer, at the same size
-    /// and out of the same cache, so a component looks like itself wherever it
-    /// is listed.
+    /// The picture of the component itself.
+    ///
+    /// A shape that reads whole is drawn whole, inset a little so the tile has
+    /// air in it. A shape too long to read that way, which is every nav bar
+    /// and every text field, is blown up until it reads and cut off at its far
+    /// edge instead: the first half of a nav bar at a size you can see tells
+    /// you far more than the whole of one drawn as a nine point grey line.
     private var thumbnail: some View {
         RoundedRectangle(cornerRadius: 5)
             .fill(.quaternary)
             .frame(height: LibraryShelfLayout.thumbnailHeight)
-            .overlay {
-                if let image {
+            .overlay(alignment: alignment) {
+                if let image, placement.size.width > 0 {
                     Image(decorative: image, scale: 1)
                         .resizable()
-                        .scaledToFit()
-                        .padding(3)
+                        .frame(width: placement.size.width, height: placement.size.height)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 5))
@@ -375,11 +380,52 @@ struct LibraryComponentTile: View {
             .overlay(alignment: .topLeading) {
                 ComponentMark(size: 9).padding(3)
             }
+            // The tile's own width, which is whatever the adaptive grid handed
+            // it. How much of a long component fits depends on it, so the tile
+            // has to know rather than assume.
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { wellWidth = $0 }
+    }
+
+    /// How big the component itself is, which is all that is needed to place
+    /// its picture — and is known before the picture has been drawn, so the
+    /// tile asks for the right one the first time.
+    private var componentSize: CGSize { layer.localBounds.size }
+
+    /// The width of the picture well. Falls back to the narrowest a tile can
+    /// be until the grid has said, so the first frame draws something sensible
+    /// rather than nothing.
+    private var measuredWellWidth: CGFloat {
+        wellWidth > 0 ? wellWidth : LibraryShelfLayout.tileMinimumWidth - LibraryShelfLayout.tilePadding * 2
+    }
+
+    /// Where the picture sits. Decided against the inset well, because a
+    /// picture drawn whole keeps its breathing room; one that has to be cut
+    /// off gives that up and goes edge to edge, the way a Media tile does.
+    private var placement: LibraryShelfLayout.TilePicture {
+        let air = LibraryShelfLayout.picturePadding
+        let inset = CGSize(width: measuredWellWidth - air * 2,
+                           height: LibraryShelfLayout.thumbnailHeight - air * 2)
+        let fitted = LibraryShelfLayout.picture(componentSize, in: inset)
+        guard fitted.crop != .none else { return fitted }
+        return LibraryShelfLayout.picture(componentSize,
+                                          in: CGSize(width: measuredWellWidth,
+                                                     height: LibraryShelfLayout.thumbnailHeight))
+    }
+
+    /// A cut picture is anchored at the edge it is NOT cut on, so what you see
+    /// is the start of the component and reading order does the rest.
+    private var alignment: Alignment {
+        switch placement.crop {
+        case .none: return .center
+        case .trailing: return .leading
+        case .bottom: return .top
+        }
     }
 
     private var image: CGImage? {
-        if let starter { return editorState.starterThumbnail(starter) }
-        return editorState.thumbnail(for: layer)
+        let pixels = LibraryShelfLayout.pictureSourceDimension(for: placement.size)
+        if let starter { return editorState.starterThumbnail(starter, dimension: pixels) }
+        return editorState.shelfThumbnail(for: layer, dimension: pixels)
     }
 
     private var helpText: String {
@@ -773,4 +819,14 @@ private struct InstanceTextKnob: View {
         guard draft != live else { return }
         editorState.setInstanceOverride(instance: instance, property: property.id, value: .text(draft))
     }
+}
+
+// MARK: - Which picture a shelf tile is asking for
+
+/// A shelf picture is cached per component AND per size: the same component
+/// can be wanted small in a narrow dock and sharp in a wide one, and a tile
+/// that has been blown up needs far more pixels than one drawn whole.
+struct ShelfPictureKey: Hashable {
+    let id: UUID
+    let dimension: Int
 }
