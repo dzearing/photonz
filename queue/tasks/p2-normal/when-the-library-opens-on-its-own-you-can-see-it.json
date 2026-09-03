@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 770,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:55:20.242Z",
-  "updated": "2026-09-03T11:15:05.452965Z",
+  "updated": "2026-09-03T11:15:11.080Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the step E9 sitting on 2026-09-03, see queue/audits/2026-09-03-component-e2e-1-component.png and -2-adjustable.png: at a 1240x900 window the Library header is at the very bottom edge and the tiles are cut off. Panels above it are Layers, Position and Size, Component, Effects, Shadow. The dock is a scroll view in the right dock; scrolling a section into view is the change, not reordering the sections.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-03T11:15:05.452965Z",
       "note": "Audit: queue/audits/2026-09-03-library-reveal.json with two real captures."
+    },
+    {
+      "t": "2026-09-03T11:15:11.079Z",
+      "note": "The right dock scrolls the Library shelf into view when the app opens it (Make Component, View > Show Library), by the shortest move, and does not move when it is already in view. DockReveal in PhotonzCore with 14 tests; Scripts/test.sh green; verified with real 1240x900 window captures in Scripts/playtest/library-reveal-walk.json. Audit: queue/audits/2026-09-03-library-reveal.json"
     }
   ],
-  "started": "2026-09-03T11:00:54.116Z"
+  "started": "2026-09-03T11:00:54.116Z",
+  "completed": "2026-09-03T11:15:11.080Z"
 }
