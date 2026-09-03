@@ -199,6 +199,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// does. A walk cannot reach the dock with the pointer, so this is how the
     /// Canvas section's own numbers get typed into.
     case selectCanvas
+    /// Rename the selected layer to "Renamed Layer". Renaming happens in the
+    /// layers dock, which a walk cannot reach with the pointer, so this is how
+    /// a walk proves a name can be changed after the fact and that undo puts
+    /// the old one back.
+    case renameSelectedLayer
     /// Layer ▸ Duplicate Layer. ⌘J is a menu chord, so a walk that checks what
     /// a duplicate keeps asks for it here.
     case duplicateLayer

@@ -309,7 +309,8 @@ final class EditorState {
     /// `point` is where the drop landed, in canvas coordinates, when the drop
     /// came down on the canvas itself. A file dropped on a frame joins that
     /// frame; everywhere else the image lands centred on the canvas as it
-    /// always has.
+    /// always has. Either way the new layer is named after the file, so a
+    /// stack of placed pictures reads in the Layers list.
     func addImageLayerOrOpen(at url: URL, droppedAt point: CGPoint? = nil) {
         if url.pathExtension.lowercased() == "photonz" || document == nil {
             openImage(at: url)
@@ -317,7 +318,7 @@ final class EditorState {
         }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
-        pasteImage(image, at: point)
+        pasteImage(image, at: point, fileName: url.lastPathComponent)
     }
 
     /// Opens a CGImage (from a file or a screen capture) as a fresh document.
@@ -4363,7 +4364,12 @@ final class EditorState {
 
     /// `point` is where a drag let go, in canvas coordinates; nil for ⌘V,
     /// which has no pointer and falls back to the middle of the canvas.
-    private func pasteImage(_ image: CGImage, at point: CGPoint? = nil) {
+    ///
+    /// `fileName` is the file the picture came out of, so the layer can carry
+    /// its name instead of a generic one. nil for the clipboard, which has no
+    /// file behind it (`PlacedImageNaming`).
+    private func pasteImage(_ image: CGImage, at point: CGPoint? = nil,
+                            fileName: String? = nil) {
         guard let document else {
             openCapture(image)
             return
@@ -4371,7 +4377,8 @@ final class EditorState {
         let ref = store.register(image)
         let frame = document.placementForIncomingImage(size: ref.pixelSize, at: point)
         guard !frame.isEmpty else { return }
-        let layer = Layer(name: "Pasted Image", content: .image(ref), frame: frame)
+        let layer = Layer(name: PlacedImageNaming.layerName(fileName: fileName),
+                          content: .image(ref), frame: frame)
         discardDragPreview()
         perform { $0.addLayerDrawnOnFrame(layer) }
         selectedLayerID = layer.id

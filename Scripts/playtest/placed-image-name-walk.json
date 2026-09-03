@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/placed-image-name",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1340, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "0-opened",
+      "note": "one picture open, nothing placed yet: the Layers list holds only Background" },
+
+    { "do": "dropImage", "file": "/tmp/photonz-placed-names/Hero banner.png", "at": [320, 300] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-dropped-from-finder",
+      "note": "a file dragged in from the Finder: the layer is called Hero banner, the file without its extension, not Pasted Image" },
+    { "do": "snapshot", "name": "1-dropped-from-finder" },
+
+    { "do": "action", "action": "showLibrary" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "focus", "field": "Search media" },
+    { "do": "type", "text": "screenshot" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "placeLibraryPick" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "2-placed-from-library",
+      "note": "a capture placed from the Library: the layer carries the time it was taken (Screenshot 16.22.12), not the whole file name, which would truncate to the same characters for every capture" },
+    { "do": "snapshot", "name": "2-placed-from-library" },
+
+    { "do": "action", "action": "copyImage" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "pasteLayer" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-pasted-from-clipboard",
+      "note": "an image on the clipboard has no file behind it, so it still reads Pasted Image" },
+    { "do": "snapshot", "name": "3-pasted-from-clipboard" },
+
+    { "do": "action", "action": "renameSelectedLayer" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-renamed",
+      "note": "renaming a placed layer still works: the last layer now reads Renamed Layer" },
+    { "do": "snapshot", "name": "4-renamed" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-undone",
+      "note": "undo puts the name it arrived with back" },
+    { "do": "snapshot", "name": "5-undone" }
+  ]
+}

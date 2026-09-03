@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 700,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T03:36:26.228Z",
-  "updated": "2026-09-03T03:36:26.229Z",
+  "updated": "2026-09-03T09:09:37.578249Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Came out of the Library panel task (2026-09-03). EditorState.placeLibraryPick -> addImageLayerOrOpen -> pasteImage, which hardcodes the Pasted Image name. Give the image-landing path an optional name and pass the URLs last path component from both the Library and the Finder drop.",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-03T03:36:26.229Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T09:00:23.847Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T09:09:37.578249Z",
+      "note": "Adversarial review before building: the literal ask (full file name) FAILS its own stated goal. A capture is named 'Screenshot 2026-09-02 at 16.22.12', which measures ~220pt of text; the Layers panel is 220pt wide including thumbnail, indent and eye button, so every placed capture would truncate to the identical 'Screenshot 2026-09-02 a...' - less readable than Pasted Image, not more. Measured with NSFont before deciding. The Library tiles already hit this and answer it with a relative time (LibraryNaming.caption), which reads well on a tile but goes stale on a layer."
+    },
+    {
+      "t": "2026-09-03T09:09:37.578249Z",
+      "note": "Built the better thing: a file a person named keeps its whole name minus extension; a capture the app named itself keeps the part that tells two apart, the clock time ('Screenshot 16.22.12'). Recorded as a deviation in the audit's rough so the user can push back on it."
+    },
+    {
+      "t": "2026-09-03T09:09:37.578249Z",
+      "note": "PhotonzCore/PlacedImageNaming.swift (new, 10 tests written first, all green). Strict date check so 'Screenshot of the cat at night' is not mistaken for a capture. EditorState.pasteImage gained a fileName argument; addImageLayerOrOpen passes url.lastPathComponent, so the Library place and the Finder drop both get it, and the clipboard path passes nothing and still reads Pasted Image."
+    },
+    {
+      "t": "2026-09-03T09:09:37.578249Z",
+      "note": "Added a renameSelectedLayer playtest action: the layers dock cannot be reached with the pointer from a walk, so this is the only way to prove acceptance 4."
+    },
+    {
+      "t": "2026-09-03T09:09:37.578249Z",
+      "note": "Verified in the probe app with Scripts/playtest/placed-image-name-walk.json (Screen Recording granted, real captures). Layer tree per stage: Finder drop -> 'Hero banner'; Library place -> 'Screenshot 16.22.12'; clipboard paste -> 'Pasted Image'; rename -> 'Renamed Layer'; undo -> 'Pasted Image'. All four acceptance items met."
+    },
+    {
+      "t": "2026-09-03T09:09:37.578249Z",
+      "note": "Review of the built thing: names fit the panel with room to spare (see 2026-09-03-placed-image-names-2-three-names.png). Left alone: two copies of the same file get identical rows, and the Library tile says '9 hours ago' where the layer says 'Screenshot 16.22.12'. Both are in the audit as questions."
+    },
+    {
+      "t": "2026-09-03T09:09:37.578249Z",
+      "note": "Scripts/test.sh green: 1970 tests in 198 suites. EditorState is shared, not forked into Next, so both releases have it."
     }
-  ]
+  ],
+  "started": "2026-09-03T09:00:23.846Z"
 }

@@ -529,6 +529,10 @@ private final class Run {
             case .insertPickedComponent: editor.insertPickedComponent()
             case .selectCanvas: editor.selectCanvas()
             case .duplicateLayer: editor.duplicateSelectedLayers()
+            case .renameSelectedLayer:
+                if let id = editor.selectedLayerID {
+                    editor.renameLayer(id: id, to: "Renamed Layer")
+                }
             case .alignLeft: editor.alignSelection(.left)
             case .alignHorizontalCenter: editor.alignSelection(.horizontalCenter)
             case .alignRight: editor.alignSelection(.right)

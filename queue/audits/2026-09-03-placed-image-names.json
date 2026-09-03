@@ -1,0 +1,29 @@
+{
+  "feature": "A placed picture keeps its own name",
+  "epic": "ui-building",
+  "summary": "Dropping a file in from the Finder or placing a capture from the Library now names the layer after the file instead of calling everything Pasted Image, so a stack of placed pictures reads at a glance in the Layers list.",
+  "setup": "Photonz Dev with a document open. Steps 1, 2, 6 and 7 work in either release. Steps 3 to 5 need the Library, which is release Next with next-library on in the Experiments window.",
+  "try": [
+    { "do": "Open any picture, then drag an image file in from the Finder and drop it on the canvas." },
+    { "do": "Look at the top row of the Layers list: it should read the file's name without its extension, not Pasted Image." },
+    { "do": "Choose View > Show Library, type screenshot in the search box and press Return to pick the top tile." },
+    { "do": "Click Place in Picture, or double click the tile.", "shot": "2026-09-03-placed-image-names-1-library.png" },
+    { "do": "Read the new row: a capture the app named itself arrives as its clock time, like Screenshot 16.22.12, not its whole file name.", "shot": "2026-09-03-placed-image-names-2-three-names.png" },
+    { "do": "Copy an image in another app, come back and press ⌘V: with no file behind it, that one still reads Pasted Image." },
+    { "do": "Double click any of those rows, rename it, then press ⌘Z: the name it arrived with comes back." }
+  ],
+  "evaluate": [
+    "Reading three or four placed pictures in the list, can you tell which is which without clicking any of them?",
+    "A capture arrives as Screenshot 16.22.12. Is the clock time the part you would recognise it by, or would you rather see the date?",
+    "The Library tile calls that same capture 9 hours ago while the layer calls it Screenshot 16.22.12. Does the mismatch bother you?",
+    "Pasted Image is still the name for a clipboard picture. Is that the right word for it, or would something like Image read better?",
+    "Placing the same capture twice gives you two rows with the identical name. Does that need a 2 on the end, or is it fine?"
+  ],
+  "rough": [
+    "Naming a placed capture after its full file name, which is literally what the task asked for, does not work: Screenshot 2026-09-02 at 16.22.12 measures about 220pt of text and the Layers panel is 220pt wide including thumbnails and buttons, so every capture would truncate to the identical Screenshot 2026-09-02 a... The layer keeps only the part that tells two captures apart, the clock time. A file a person named is untouched and keeps its whole name.",
+    "Nothing dedupes names: two copies of the same file give two identical rows. Renaming one is the only way to tell them apart.",
+    "The shortening only recognises the app's own two prefixes, Screenshot and Recording, followed by a real date. A capture from some other tool with its own timestamp format keeps its full name and will truncate.",
+    "Pasting a file copied in the Finder still reads Pasted Image, because the clipboard hands over pixels rather than the file.",
+    "Screenshots are real captures of the probe app, taken by Scripts/playtest/placed-image-name-walk.json (Screen Recording was granted)."
+  ]
+}
