@@ -1,0 +1,28 @@
+{
+  "id": "grid-and-stack-pieces-you-can-put-inside-a-compo",
+  "title": "Grid and stack pieces you can put inside a component",
+  "goal": "Asked for by the user while answering the alignment decision on 2026-09-03: as well as lining layers up by hand, a component should be able to hold a grid or a stack, so the things inside it space and re-flow themselves instead of being nudged into place one at a time.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 820,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T06:32:55.878Z",
+  "updated": "2026-09-03T06:32:55.878Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User note on decision layers-line-up-with-each-other-while-you-build: \"We should probably also have grid components that can be placed within a component, grid and stack\". This is auto layout, so it belongs to the ui-layout sub epic, which is staged LATER: it is filed so the ask is not lost, and the manager decides when it opens. Sits on top of next-align-layers (the align and space maths in LayerArrangement is the same maths a stack applies continuously).",
+  "acceptance": [
+    "A grid or a stack can be put inside a component and holds real layers",
+    "Adding or removing a layer re-flows the rest without any dragging",
+    "The gap and the number of columns are typed numbers, not drag-only",
+    "Turning a hand-arranged group into a stack leaves everything where it already is"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T06:32:55.878Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -468,6 +468,14 @@ private final class Run {
             case .insertPickedComponent: editor.insertPickedComponent()
             case .selectCanvas: editor.selectCanvas()
             case .duplicateLayer: editor.duplicateSelectedLayers()
+            case .alignLeft: editor.alignSelection(.left)
+            case .alignHorizontalCenter: editor.alignSelection(.horizontalCenter)
+            case .alignRight: editor.alignSelection(.right)
+            case .alignTop: editor.alignSelection(.top)
+            case .alignVerticalCenter: editor.alignSelection(.verticalCenter)
+            case .alignBottom: editor.alignSelection(.bottom)
+            case .spaceEvenlyAcross: editor.distributeSelection(.horizontal)
+            case .spaceEvenlyDown: editor.distributeSelection(.vertical)
             case .closeSheets:
                 editor.isExportDialogPresented = false
                 editor.isNewFrameDialogPresented = false

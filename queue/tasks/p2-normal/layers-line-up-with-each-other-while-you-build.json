@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.176Z",
-  "updated": "2026-09-03T00:45:54.727Z",
+  "updated": "2026-09-03T06:33:26.006119Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today Snapping.swift only attracts a dragged frame to the canvas edges and the canvas centre; there is nothing between one layer and another, and no align or distribute command anywhere in EditorCommands.swift. Blocked on its decision card. Guides while dragging were built once before, on 2026-07-02, and turned down, so this must not be built without an answer. Whatever the answer, the maths belongs in PhotonzCore with tests, next to Snapping.swift.\n\nObjective: ui-building (the current focus). Deliberately kept at ui-building rather than moved down to the later ui-layout sub epic: this is help for arranging by hand, not auto layout, so it is legal work now. Nothing here gets built before the card is answered.",
@@ -35,6 +35,23 @@
     {
       "t": "2026-09-03T00:45:54.727Z",
       "note": "decision \"When you are arranging layers to build UI, what should help you line them up?\" resolved: Both (We should probably also have grid components that can be placed within a component, grid and stack)"
+    },
+    {
+      "t": "2026-09-03T06:14:36.271Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T06:17:46.445Z",
+      "note": "Adversarial review before building. (1) Align needs a reference and the selection bounding box is the only one that needs no explaining; one layer selected has nothing to line up with, so the commands grey out rather than quietly aligning to the canvas. Aligning a lone layer inside a frame is the obvious next ask and is filed as a follow-up instead of guessed at. (2) Space evenly means equal GAPS, not equal centres: when buttons differ in width, Photoshop-style centre distribution leaves visibly uneven gaps, and the gap is the thing you can see. (3) What got guides turned down before was noise with no payoff, so this build keeps them to the minimum that pays: at most one line per axis, only for the layer under the pointer, drawn only across the boxes actually involved rather than across the whole picture, and Command drags free the way it already does for measure and region drags. (4) Cut as decorative: live gap badges while dragging, spacing repeat, persistent user guides and rulers. (5) Peers are gathered once at mouse-down, since nothing but the dragged layer moves during a drag, so a crowded document does not cost frame rate. (6) Hidden layers must not attract, because you cannot see what you snapped to; locked layers still do, since the background is locked and its edges are real."
+    },
+    {
+      "t": "2026-09-03T06:33:26.006119Z",
+      "note": "Built both halves the card asked for. Align and Space Evenly over a selection (LayerArrangement in PhotonzCore, TDD): six align buttons and two spacing buttons in a new Arrange section at the top of the inspector, mirrored in the Layer menu under Align and Space Evenly on the design-tool keys. Align lines the selection up with itself, spacing means equal gaps and holds the outer two still, results land on whole points and the whole selection is one undo step. Guides while dragging (Snapping extended with peers, guide spans and snapPeers, TDD): a dragged layer catches the other layers' edges and centres, sits flush against them, draws a line only across the boxes it joins, and Command drags free. Behind next-align-layers, on by default in Next."
+    },
+    {
+      "t": "2026-09-03T06:33:26.006119Z",
+      "note": "Review of the built thing, on the probe. Walked it with Scripts/playtest/align-layers-walk.json: three rough rectangles align to 120, ONE undo puts all three back, spacing holds the ends and evens the gaps to 100 each, a fourth rectangle dragged in catches the column's left edge at 120, and the same drag with Command held lands at 126 with no line. Real window captures, Screen Recording was granted. What is still clumsy: reaching a multi-selection on the picture needs a rubber band, since shift clicking a layer does not add it to the selection, and that is the weakest part of the whole flow. Filed as its own task, along with lining one layer up inside its frame and the user's grid and stack ask from the card."
     }
-  ]
+  ],
+  "started": "2026-09-03T06:14:36.270Z"
 }

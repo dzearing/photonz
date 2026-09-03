@@ -67,6 +67,8 @@ public enum FeatureCatalog {
 
     public static let layerGroupsFlag = "next-layer-groups"
 
+    public static let alignLayersFlag = "next-align-layers"
+
     public static let framesFlag = "next-frames"
 
     public static let libraryFlag = "next-library"
@@ -237,6 +239,15 @@ public enum FeatureCatalog {
                     name: geometryFieldsFlag,
                     title: "Type a layer's position and size",
                     description: "The inspector gains a Position and Size section: X, Y, W and H for the selected layer, as numbers you can type. Two buttons can be made the same width, and a row can be made exactly 296 by 118, without nudging a drag until it looks right. Up and down arrow steps a field by 1, Shift and an arrow by 10, and each change is one undo. Off means position and size are drag only.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: alignLayersFlag,
+                    title: "Line layers up with each other",
+                    description: "Two jobs at once. Select two or more layers and an Arrange row appears at the top of the inspector, mirrored in the Layer menu: line their left edges, centres, right edges, tops, middles or bottoms up in one press, and with three or more, space them out evenly across or down so every gap matches. And while you drag a layer, it now sticks to the edges and centres of the other layers as well as the picture\u{2019}s, with a short line showing what it just lined up with; holding Command drags free. Off means dragging pulls to the edges and middle of the picture only, and there is no Arrange row.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

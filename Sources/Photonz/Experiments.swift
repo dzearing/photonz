@@ -308,6 +308,14 @@ extension Experiments {
     /// release's catalog, so Current always reads false and stays drag only.
     var geometryFieldsEnabled: Bool { isEnabled(FeatureCatalog.geometryFieldsFlag) }
 
+    /// `next-align-layers`: whether the Arrange row and the Layer menu's align
+    /// and space commands exist, and whether a dragged layer sticks to the
+    /// other layers as well as to the picture. Exists only in the Next
+    /// release's catalog, so Current keeps canvas-only snapping and no Arrange
+    /// row. Nothing about it is stored in a document, so a document arranged
+    /// with it on is an ordinary document.
+    var alignLayersEnabled: Bool { isEnabled(FeatureCatalog.alignLayersFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

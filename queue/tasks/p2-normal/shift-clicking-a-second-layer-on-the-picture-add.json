@@ -1,0 +1,28 @@
+{
+  "id": "shift-clicking-a-second-layer-on-the-picture-add",
+  "title": "Shift-clicking a second layer on the picture adds it to the selection",
+  "goal": "Picking several layers on the picture is only possible by dragging a rubber band around them, which fails as soon as the ones you want are mixed in with ones you do not. Make shift-clicking a layer add it to what is already picked, and shift-clicking a picked one drop it, the way it works in the layers list and in every other design tool.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 800,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T06:32:42.349Z",
+  "updated": "2026-09-03T06:32:42.350Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building next-align-layers on 2026-09-03: the Arrange row needs two or more layers and the canvas has no way to build that selection except a marquee. CanvasView mouseDown reaches groupAwarePick and starts a MoveDrag; shift and command are both unused there for the Select tool. EditorState.clickRow already implements Finder-style plain/extend/toggle over an order, so the canvas wants a toggle path onto multiSelectedLayerIDs rather than new selection state. Watch the drag: a shift-click that also drags should still move what it just added.",
+  "acceptance": [
+    "Shift-clicking an unpicked layer on the picture adds it to the selection and the layers list highlights both",
+    "Shift-clicking an already picked layer takes it back out",
+    "A plain click still replaces the selection, and a shift-click that hits nothing leaves the selection alone",
+    "The Arrange row appears as soon as the second layer joins"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T06:32:42.350Z",
+      "note": "created (manual)"
+    }
+  ]
+}

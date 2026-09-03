@@ -906,3 +906,63 @@ What the sitting found, each filed as its own task rather than fixed here:
   component, and on a 900 pt window the shelf is off the bottom of the dock.
 - Text typed by hand keeps the screenshot contrast halo inside a component, so
   a button label reads smudged. `StarterComponents` already strips it.
+
+## Landed: layers line up with each other (Next, `next-align-layers`, 2026-09-03)
+
+Arranging by hand got the two halves of real help it was missing. Asked and
+answered as a decision card first ("both", 2026-09-03), because guides while
+dragging had been built once before and turned down; the card's own advice was
+to build the commands first and the guides after, and that is the order this
+landed in.
+
+**Align and space, on a selection.** Two or more layers picked and an
+**Arrange** section appears at the top of the inspector, above Position & Size:
+six buttons that line the selection's left edges, centres, right edges, tops,
+middles or bottoms up, and two that space it out evenly across or down. The
+same rows are in the Layer menu under **Align** and **Space Evenly**.
+
+- **Align lines the selection up with itself**, never with the picture: the
+  reference is the box the whole selection occupies, so the layer already on
+  that edge does not move. One layer has nothing to line up with, so the
+  section is absent and the menu rows are dim.
+- **Space evenly means equal gaps, not equal centres.** The outermost two hold
+  still and everything between them slides, so pressing it tidies the inside of
+  a row without moving the row. It needs three layers; with two the buttons are
+  dimmed and say why on hover.
+- Positions land on whole points, and every command is **one undo step** for
+  the whole selection. A command that would change nothing costs no step.
+- A layer inside a selected group takes no part of its own: the group carries
+  it.
+- Locked layers never move, which is what keeps a screenshot underneath still
+  while the boxes on top of it are tidied.
+
+**Guides while you drag.** A dragged layer now sticks to the edges and centres
+of the other layers as well as the picture's, sits flush against them, and
+shows a thin line saying what it just lined up with. Holding **⌘** drags free,
+the same key that already frees a measure foot or a region corner.
+
+- The line reaches only across the boxes it joins, with a little overhang, so a
+  crowded canvas does not fill with full-height rules. A line to the picture's
+  own edge or middle still spans the whole picture, because that is what it
+  lines up with.
+- Deliberately not offered: a box whose middle happens to sit on another box's
+  edge. That is a coincidence, not a relationship anyone was aiming for.
+- Hidden layers never attract (you cannot see what you stuck to), and neither
+  does the group you are inside, whose box would chase you as you move.
+- The peers are gathered once at mouse-down, since nothing but the dragged
+  layer moves during a drag.
+
+**Keys.** Photoshop binds none of these commands, so they take the design-tool
+set: ⌥A ⌥H ⌥D for left, centre, right; ⌥W ⌥V ⌥S for top, middle, bottom; ⌃⌥H
+and ⌃⌥V for spacing.
+
+**Where it lives.** `LayerArrangement` (align and space maths) and `Snapping`
+(peer candidates, guide spans, `snapPeers`) in `PhotonzCore`, both tested;
+`ArrangeInspector.swift` and `EditorState.alignSelection` /
+`distributeSelection` in the app; the drag itself in `CanvasView`. Walked by
+`Scripts/playtest/align-layers-walk.json`.
+
+Not in this slice: shift-clicking a second layer on the canvas to add it to the
+selection (a rubber band around them, or shift-clicking rows in the layers
+list, is the way in today), aligning one layer to the frame it sits in, and
+equal-gap badges while dragging.

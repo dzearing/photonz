@@ -1,0 +1,29 @@
+{
+  "feature": "Layers line up with each other",
+  "epic": "ui-building",
+  "summary": "Pick two or more layers and a new Arrange row lines their edges, centres or tops up in one press, or spaces three of them out so every gap matches. Dragging a layer now also sticks it to the other layers, not just to the edges and middle of the picture, with a short line saying what it caught on.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is Line layers up with each other, on by default.",
+  "try": [
+    { "do": "Open a blank canvas and draw three rectangles at rough positions, one under another." },
+    { "do": "Press V, then drag a rubber band around all three.", "shot": "2026-09-03-align-layers-1.png" },
+    { "do": "Press the first button in the new Arrange row, or Option A. Their left edges should meet, and the leftmost one should not move." },
+    { "do": "Press Command Z once. All three should go back at the same time." },
+    { "do": "Press the first button in Arrange's second row, or Control Option V, to even out the gaps down the column." },
+    { "do": "Draw a fourth rectangle off to the side, press V, and drag it slowly toward the column's left edge.", "shot": "2026-09-03-align-layers-2.png" },
+    { "do": "Do that same drag again holding Command, and watch it ignore the line." }
+  ],
+  "evaluate": [
+    "When you press Align Left, does the selection go where you expected, or did you expect it to line up with the picture instead of with itself?",
+    "Is the Arrange row where you would look for it, above Position & Size?",
+    "Do the eight buttons say what they do without a hover, or do you have to try one to find out?",
+    "While dragging, does the short line help, or is it the same noise as the guides you turned down in July?",
+    "Does spacing evenly give you the row of buttons you wanted, or do you want to type the gap instead?"
+  ],
+  "rough": [
+    "You cannot shift-click a second layer on the canvas to add it to the selection. The only ways to pick several are a rubber band around them or shift-clicking rows in the layers list, which is the weakest part of reaching this feature. Filed as its own task rather than built here.",
+    "One layer selected shows no Arrange row at all. Aligning a lone layer to the frame it sits inside is the obvious next ask and is filed separately.",
+    "Spacing evenly holds the two outer layers still and moves everything between them. That is Figma's behaviour, not Photoshop's centre distribution, and it was chosen because uneven gaps are what your eye actually catches.",
+    "The guide line is the same thin yellow the measure snapping already draws. It reads clearly against white but has not been tried over a busy screenshot.",
+    "Screen Recording was granted, so both pictures here are real captures of the window, not offscreen renders."
+  ]
+}

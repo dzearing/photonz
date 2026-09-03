@@ -232,6 +232,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// a walk cannot reach with the pointer, so this is how the shelf the app
     /// arrives stocked with gets photographed.
     case showComponentShelf
+    /// Layer ▸ Align and Layer ▸ Space Evenly (Next, `next-align-layers`).
+    /// The buttons are in the dock, which a walk cannot reach with the
+    /// pointer, and the menu chords do nothing while the probe is not the
+    /// active app, so this is how a walk lines a selection up.
+    case alignLeft, alignHorizontalCenter, alignRight
+    case alignTop, alignVerticalCenter, alignBottom
+    case spaceEvenlyAcross, spaceEvenlyDown
     /// Put every sheet away. Escape reaches the window, not the sheet in front
     /// of it, so a walk that photographs a sheet needs a way back out.
     case closeSheets

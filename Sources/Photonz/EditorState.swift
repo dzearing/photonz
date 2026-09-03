@@ -2971,6 +2971,63 @@ final class EditorState {
         perform { $0.restackLayers(ids: ids, step) }
     }
 
+    // MARK: - Lining layers up (Next flag `next-align-layers`)
+
+    /// The boxes the Arrange commands act on: every selected layer that is
+    /// free to move, as the box it occupies on canvas. Canvas space, so a
+    /// layer inside a group lines up with one outside it — what you see is
+    /// what gets lined up, whatever the layers list says about parentage.
+    /// Locked layers stay out: the picture underneath must not slide when you
+    /// tidy the buttons on top of it.
+    private var arrangeBoxes: [LayerArrangement.Box] {
+        guard Experiments.shared.alignLayersEnabled, let document else { return [] }
+        let selected = actionableLayerIDs
+        return selected.compactMap { id in
+            guard let layer = document.layer(id: id), !layer.isLocked,
+                  let bounds = document.canvasBounds(of: id) else { return nil }
+            // A layer inside a selected group is already carried by that
+            // group, so it takes no place of its own here: moving both would
+            // be lining a thing up against something it is part of.
+            var parent = document.parentID(of: id)
+            while let up = parent {
+                if selected.contains(up) { return nil }
+                parent = document.parentID(of: up)
+            }
+            return LayerArrangement.Box(id: id, frame: bounds)
+        }
+    }
+
+    /// How many layers the Arrange row is speaking for, so it can say so.
+    var arrangeableLayerCount: Int { arrangeBoxes.count }
+
+    var canAlignSelection: Bool { LayerArrangement.canAlign(count: arrangeBoxes.count) }
+
+    var canDistributeSelection: Bool { LayerArrangement.canDistribute(count: arrangeBoxes.count) }
+
+    /// Layer ▸ Align: every selected layer moves onto the selection's own
+    /// edge or middle, in ONE undo step. The layer already on that edge does
+    /// not move, so pressing it twice is a no-op rather than a slow drift.
+    func alignSelection(_ alignment: LayerAlignment) {
+        moveLayers(LayerArrangement.aligned(arrangeBoxes, to: alignment))
+    }
+
+    /// Layer ▸ Space Evenly: the outermost two hold still and everything
+    /// between them slides so the gaps match, in ONE undo step.
+    func distributeSelection(_ axis: LayerDistribution) {
+        moveLayers(LayerArrangement.distributed(arrangeBoxes, along: axis))
+    }
+
+    /// One undo step for a whole set of moves. Each layer is placed at an
+    /// origin worked out from where everything was BEFORE the command, so the
+    /// order they are applied in cannot change the result.
+    private func moveLayers(_ moves: [UUID: CGPoint]) {
+        guard !moves.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            for (id, origin) in moves { document.moveLayer(id: id, toCanvasOrigin: origin) }
+        }
+    }
+
     // MARK: - Groups (Next flag `next-layer-groups`)
 
     /// The group the pointer is currently INSIDE, or nil for the canvas.

@@ -45,6 +45,20 @@ struct EditorCommands: Commands {
         NSApp.keyWindow?.firstResponder as? NSTextView
     }
 
+    /// The design-tool key for each align command: the letters sit where the
+    /// edge does, W and S for top and bottom, A and D for left and right, and
+    /// H and V for the two middles.
+    private func alignKey(_ alignment: LayerAlignment) -> KeyEquivalent {
+        switch alignment {
+        case .left: "a"
+        case .horizontalCenter: "h"
+        case .right: "d"
+        case .top: "w"
+        case .verticalCenter: "v"
+        case .bottom: "s"
+        }
+    }
+
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.name)") { coordinator.showAbout() }
@@ -337,6 +351,34 @@ struct EditorCommands: Commands {
                     .disabled(!(editor?.canDetachInstance ?? false))
                 Button("Select Original") { editor?.selectComponentOriginal() }
                     .disabled(!(editor?.canSelectComponentOriginal ?? false))
+            }
+            // Lining the selection up with itself (`next-align-layers`). Two
+            // submenus rather than eight more rows, because these only ever
+            // mean anything with several layers picked and the flat menu is
+            // already long. The keys are the design-tool set (Option and a
+            // letter, Control Option for spacing): Photoshop binds neither
+            // these commands nor these keys, so there is nothing to break.
+            if Experiments.shared.alignLayersEnabled {
+                Divider()
+                Menu("Align") {
+                    ForEach(LayerAlignment.allCases, id: \.self) { alignment in
+                        Button(alignment.menuTitle) { editor?.alignSelection(alignment) }
+                            .keyboardShortcut(alignKey(alignment), modifiers: .option)
+                            .disabled(!(editor?.canAlignSelection ?? false))
+                    }
+                }
+                .disabled(!(editor?.canAlignSelection ?? false))
+                Menu("Space Evenly") {
+                    ForEach(LayerDistribution.allCases, id: \.self) { axis in
+                        Button(axis == .horizontal ? "Across" : "Down") {
+                            editor?.distributeSelection(axis)
+                        }
+                        .keyboardShortcut(axis == .horizontal ? "h" : "v",
+                                          modifiers: [.control, .option])
+                        .disabled(!(editor?.canDistributeSelection ?? false))
+                    }
+                }
+                .disabled(!(editor?.canDistributeSelection ?? false))
             }
             Divider()
             // The arrange commands, Duplicate and Delete act on the whole

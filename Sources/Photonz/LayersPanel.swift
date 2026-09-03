@@ -94,6 +94,13 @@ struct InspectorPanel: View {
     /// is selected; Annotation only for annotation layers.
     private var availableSections: Set<InspectorSectionID> {
         var set: Set<InspectorSectionID> = [.layers]
+        // Lining several layers up with each other (`next-align-layers`).
+        // Present only with something to line up: with one layer picked there
+        // is nothing to line it up with, so the section is absent rather than
+        // a row of dead buttons.
+        if Experiments.shared.alignLayersEnabled, editorState.canAlignSelection {
+            set.insert(.arrange)
+        }
         if let layer = selectedLayer {
             set.insert(.effects)
             set.insert(.shadow)
@@ -195,6 +202,8 @@ struct InspectorPanel: View {
             LayersListView()
         case .measurements:
             MeasurementsListView()
+        case .arrange:
+            ArrangeInspector()
         case .geometry:
             if let layer = selectedLayer {
                 GeometryInspector(layer: layer)
@@ -303,6 +312,9 @@ enum InspectorSectionID: String, CaseIterable {
     case wandTool
     case cropTool
     case measurements
+    // Above Position & Size, because the two answer the same question at
+    // different scales: where do these sit, and where does this one sit.
+    case arrange
     case geometry
     case frame
     // A main component's own properties, right beside the Frame section: both
@@ -328,6 +340,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .wandTool: "Magic Wand"
         case .cropTool: "Crop Tool"
         case .measurements: "Measurements"
+        case .arrange: "Arrange"
         case .geometry: "Position & Size"
         case .frame: "Frame"
         case .component: "Component"

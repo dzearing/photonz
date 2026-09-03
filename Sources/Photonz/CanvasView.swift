@@ -657,6 +657,10 @@ final class CanvasNSView: NSView {
         let grabOffset: CGPoint
         let size: CGSize
         let startOrigin: CGPoint
+        /// The boxes this drag can line itself up with, in canvas coordinates.
+        /// Gathered ONCE at grab time: nothing but the dragged layer moves
+        /// during a drag, so a crowded document costs nothing per frame.
+        var peers: [CGRect] = []
         var snapped: Snapping.Result
         /// Becomes true once the pointer travels past the click tolerance;
         /// a click that never moves selects without committing a move.
@@ -1400,6 +1404,8 @@ final class CanvasNSView: NSView {
                                                     y: p.y - hit.frame.origin.y),
                                 size: hit.frame.size,
                                 startOrigin: hit.frame.origin,
+                                peers: Experiments.shared.alignLayersEnabled
+                                    ? (document?.snapPeers(excluding: hit.id) ?? []) : [],
                                 snapped: Snapping.Result(origin: hit.frame.origin))
         } else {
             onClickedNothing()
@@ -1521,9 +1527,17 @@ final class CanvasNSView: NSView {
                 drag.moved = travel * viewport.zoom >= 4
             }
             if drag.moved {
-                drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.size,
-                                                        canvas: viewport.documentSize,
-                                                        zoom: viewport.zoom)
+                // ⌘ drags free, the way it already does for a measure foot or a
+                // region corner: one key that means "ignore the magnets"
+                // everywhere on the canvas.
+                if event.modifierFlags.contains(.command) {
+                    drag.snapped = Snapping.Result(origin: proposed)
+                } else {
+                    drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.size,
+                                                            canvas: viewport.documentSize,
+                                                            peers: drag.peers,
+                                                            zoom: viewport.zoom)
+                }
                 onFramePreview(drag.layerID, CGRect(origin: drag.snapped.origin, size: drag.size))
             }
             // A dragged photo layer offers itself to collage slots under the
@@ -2654,20 +2668,45 @@ final class CanvasNSView: NSView {
         // UI edge — both magnetize to a document x/y and want the same full-span line.
         let guides = CGMutablePath()
         let docFrame = viewport.documentFrameInView
-        let guideX = moveDrag?.snapped.guideX ?? snapGuide?.x
-        let guideY = moveDrag?.snapped.guideY ?? snapGuide?.y
+        let move = moveDrag?.snapped
+        let guideX = move?.guideX ?? snapGuide?.x
+        let guideY = move?.guideY ?? snapGuide?.y
+        // A line to the picture's own edge or middle spans the whole picture,
+        // because that is what it lines up with. A line to another LAYER
+        // reaches only across the boxes it joins, with a little overhang, so a
+        // canvas full of boxes does not fill with full-height rules every time
+        // something is dragged.
         if let x = guideX {
             let vx = viewport.viewPoint(fromDocument: CGPoint(x: x, y: 0)).x
-            guides.move(to: CGPoint(x: vx, y: docFrame.minY))
-            guides.addLine(to: CGPoint(x: vx, y: docFrame.maxY))
+            let ends = viewSpan(move?.guideXSpan, vertical: true, in: viewport)
+                ?? (docFrame.minY, docFrame.maxY)
+            guides.move(to: CGPoint(x: vx, y: ends.0))
+            guides.addLine(to: CGPoint(x: vx, y: ends.1))
         }
         if let y = guideY {
             let vy = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: y)).y
-            guides.move(to: CGPoint(x: docFrame.minX, y: vy))
-            guides.addLine(to: CGPoint(x: docFrame.maxX, y: vy))
+            let ends = viewSpan(move?.guideYSpan, vertical: false, in: viewport)
+                ?? (docFrame.minX, docFrame.maxX)
+            guides.move(to: CGPoint(x: ends.0, y: vy))
+            guides.addLine(to: CGPoint(x: ends.1, y: vy))
         }
         snapGuideLayer.path = guides
         snapGuideLayer.isHidden = guides.isEmpty
+    }
+
+    /// A guide's reach, from canvas points into view points, with a few points
+    /// of overhang at each end so the line visibly passes THROUGH the boxes it
+    /// joins rather than stopping exactly at their corners.
+    private func viewSpan(_ span: Snapping.Span?, vertical: Bool,
+                          in viewport: Viewport) -> (CGFloat, CGFloat)? {
+        guard let span else { return nil }
+        let a = vertical
+            ? viewport.viewPoint(fromDocument: CGPoint(x: 0, y: span.start)).y
+            : viewport.viewPoint(fromDocument: CGPoint(x: span.start, y: 0)).x
+        let b = vertical
+            ? viewport.viewPoint(fromDocument: CGPoint(x: 0, y: span.end)).y
+            : viewport.viewPoint(fromDocument: CGPoint(x: span.end, y: 0)).x
+        return (min(a, b) - 6, max(a, b) + 6)
     }
 
     // MARK: Annotation drag preview

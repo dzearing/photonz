@@ -1,0 +1,74 @@
+{
+  "out": "/tmp/photonz-playtest/align-layers",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-blank", "note": "empty canvas, nothing drawn" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 80], "to": [320, 140], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [160, 220], "to": [300, 280], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 400], "to": [340, 460], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "describe", "stage": "2-drew", "note": "three rectangles at rough positions, the case the whole feature exists for" },
+    { "do": "snapshot", "name": "align-1-rough" },
+    { "do": "render", "name": "align-1-rough-doc" },
+
+    { "do": "drag", "from": [60, 40], "to": [500, 520], "steps": 10 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-selected", "note": "a rubber band around all three: the Arrange row should now be at the top of the inspector, with the two spacing buttons live because there are three layers" },
+    { "do": "snapshot", "name": "align-2-arrange-row" },
+
+    { "do": "action", "action": "alignLeft" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-aligned", "note": "one press: every left edge should read 120, the leftmost rectangle should not have moved" },
+    { "do": "snapshot", "name": "align-3-left" },
+    { "do": "render", "name": "align-3-left-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-undone", "note": "ONE undo should put all three back where they were drawn" },
+    { "do": "render", "name": "align-4-undone-doc" },
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "spaceEvenlyDown" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-spaced", "note": "the top and bottom rectangles should be exactly where they were, and the gaps above and below the middle one should now match" },
+    { "do": "snapshot", "name": "align-5-spaced" },
+    { "do": "render", "name": "align-5-spaced-doc" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [560, 540], "to": [700, 600], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-fourth", "note": "a fourth rectangle away from the column, to drag into line with the others" },
+
+    {
+      "do": "drag",
+      "from": [630, 570],
+      "to": [186, 570],
+      "steps": 14,
+      "hold": "align-6-guide"
+    },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-snapped", "note": "dragged so its left edge is a few points off the column's: it should have stuck to 120 and the held snapshot should show a short line down the boxes it lined up with, not a full-height rule" },
+    { "do": "snapshot", "name": "align-7-snapped" },
+    { "do": "render", "name": "align-7-snapped-doc" },
+
+    {
+      "do": "drag",
+      "from": [190, 570],
+      "to": [196, 570],
+      "steps": 8,
+      "modifiers": ["command"],
+      "hold": "align-8-free"
+    },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "9-free", "note": "Command held: the same drag should land off the line, with no guide showing" },
+    { "do": "menus", "stage": "layer-menu", "menu": "Layer" }
+  ]
+}

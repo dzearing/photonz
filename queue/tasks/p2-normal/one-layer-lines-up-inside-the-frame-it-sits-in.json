@@ -1,0 +1,28 @@
+{
+  "id": "one-layer-lines-up-inside-the-frame-it-sits-in",
+  "title": "One layer lines up inside the frame it sits in",
+  "goal": "Aligning needs two or more layers today, because a layer on its own has nothing to line up with. When a layer sits inside a frame, it does have something: the frame. Make the Arrange buttons line one layer up against its frame, so a single button centres a label inside a card.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 810,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T06:32:55.847Z",
+  "updated": "2026-09-03T06:32:55.848Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from next-align-layers (2026-09-03). Today EditorState.arrangeBoxes needs two boxes and LayerArrangement.canAlign(count:) enforces it. The frame case wants the reference box passed in rather than derived from the selection: LayerArrangement.aligned(_:to:) would take an optional container rect. Frames are next-frames; with that flag off the behaviour is unchanged.",
+  "acceptance": [
+    "With one layer inside a frame selected, the Arrange row is there and its six align buttons are live",
+    "Pressing Align Center puts the layer exactly in the middle of the frame, and one undo puts it back",
+    "A layer with no frame around it still shows no Arrange row",
+    "The row says which thing it is lining up against, so nobody has to guess"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T06:32:55.848Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -5928,3 +5928,49 @@ are working in the field, and Tab still walks from W to H without letting go.
 Next: the queue's own ranking under `ui-building`. Open question on the audit:
 after Return, Up and Down nudge the layer rather than stepping the number just
 typed, and only the focus ring going out says so.
+
+## 2026-09-03 — Layers line up with each other (Next, `next-align-layers`)
+
+The arranging job got both halves of the help its decision card asked for
+("both", answered 2026-09-03). Guides while dragging had been built once before
+and turned down, so the card's own advice was to build the commands first and
+add the guides after, and that is the order this landed in.
+
+- **Align and space, on a selection.** An **Arrange** section appears at the
+  top of the inspector as soon as two or more movable layers are picked: six
+  buttons for left, centre, right, top, middle and bottom, and two for spacing
+  evenly across or down. The same rows are in the Layer menu under **Align**
+  and **Space Evenly**, on the design-tool keys (⌥A ⌥H ⌥D, ⌥W ⌥V ⌥S, ⌃⌥H
+  ⌃⌥V — Photoshop binds none of these commands, so there was nothing to be
+  compatible with).
+- **Align lines the selection up with itself**, never with the picture. Space
+  evenly means equal **gaps**, not equal centres, and holds the outer two
+  still, so pressing it tidies the inside of a row without moving the row.
+  Whole-point results, one undo step for the whole selection, and a command
+  that changes nothing costs no step at all.
+- **Guides while you drag.** A dragged layer now sticks to the other layers'
+  edges and centres as well as the picture's, and sits flush against them. The
+  line drawn reaches only across the boxes it joins, with a little overhang,
+  rather than down the whole picture — that, and ⌘ to drag free, are the answer
+  to what made the first version feel like noise.
+- Hidden layers never attract, and neither does the group you are dragging
+  inside (its box would chase you). Peers are gathered once at mouse-down.
+- `LayerArrangement` and the extended `Snapping` (peer candidates, guide spans,
+  `snapPeers`) are in `PhotonzCore`, TDD, 18 new tests. `Scripts/test.sh` green:
+  1890 tests, 193 suites.
+- Verified on the probe with `Scripts/playtest/align-layers-walk.json` (nine
+  stages, real window captures — Screen Recording was granted). The walk proves
+  the three rough rectangles land on 120, that ONE undo puts all three back,
+  that spacing holds the ends and evens the gaps, that a fourth rectangle
+  dragged near the column catches its left edge, and that the same drag with ⌘
+  held lands six points off it with no line.
+- The harness gained eight `action` steps (the align and space commands), since
+  the buttons are in the dock a walk cannot click and menu chords do nothing
+  while the probe is not the active app.
+
+Next: the queue's own ranking under `ui-building`. Filed off this work: shift
+clicking a second layer on the picture to add it to the selection (today only a
+rubber band or the layers list can build a multi-selection, which is the
+weakest part of reaching this feature), lining one layer up inside the frame it
+sits in, and the user's ask from the decision card for grid and stack pieces
+inside a component (auto layout, so it waits on the `ui-layout` epic).
