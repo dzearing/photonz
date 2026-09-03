@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.173Z",
-  "updated": "2026-09-03T03:37:51.347Z",
+  "updated": "2026-09-03T03:56:22.083Z",
   "deps": [
     "the-layers-list-shows-what-is-inside-a-group",
     "the-component-model-is-written-down-before-it-is"
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-03T05:10:00.000Z",
       "note": "Adversarial review AFTER building, on the probe with Screen Recording granted. The first build put the layers row into inline rename after the command; the capture showed a row that had silently become editable and looked identical to one that had not, so naming moved to the Component section's Name field, which visibly IS a field, and that section moved up beside Frame so it is not below the fold. The playtest menus dump reports every Layer row disabled, including rows that are plainly live, so menu enablement could not be read from it; canMakeComponent is covered by core tests and the command itself ran, which is what proves the row was live. Left rough and recorded in the audit: nothing places a copy yet; Ungroup on a main quietly ends the component; the shelf keeps its full height for one tile (filed as the-library-shelf-takes-only-the-room-its-tiles); a component at the very top of the canvas has its mark clipped, the same limit a frame's name has."
+    },
+    {
+      "t": "2026-09-03T03:56:22.082Z",
+      "note": "Layer > Make Component (Option Command K) promotes a group to a main: GroupContent gained a componentID, the command opens the Library on Components and hands you the Name field New-Folder style, and the violet four-diamond mark reads on the canvas, in the layers list and on the shelf tile. One name in one place, so all four agree. Core Components.swift with 23 tests, full suite green (1738). Verified on the probe with Screen Recording granted via Scripts/playtest/component-walk.json: promote, type Setting, all four surfaces read Setting; picking the tile opens the component's section with Select on Canvas. Audit queue/audits/2026-09-03-components.json with three real window captures. Follow-up filed: the-library-shelf-takes-only-the-room-its-tiles."
     }
   ],
-  "started": "2026-09-03T03:37:51.346Z"
+  "started": "2026-09-03T03:37:51.346Z",
+  "completed": "2026-09-03T03:56:22.083Z"
 }
