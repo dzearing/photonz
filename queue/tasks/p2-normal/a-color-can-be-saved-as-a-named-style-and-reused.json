@@ -1,0 +1,36 @@
+{
+  "id": "a-color-can-be-saved-as-a-named-style-and-reused",
+  "title": "A color can be saved as a named style and reused",
+  "goal": "Components should share their colors rather than each carrying its own. Saving a fill as a named style lets any layer point at it, and editing the style repaints everything pointing at it in one step.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 160,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:04:07.329Z",
+  "updated": "2026-09-03T00:04:07.533Z",
+  "deps": [
+    "the-library-panel-arrives-in-the-dock-alongside"
+  ],
+  "blockedBy": [],
+  "notes": "Step D8 of docs/design/ui-building.md. Tokens (where a name resolves differently per light and dark mode) are deliberately deferred; styles gain token backing when modes arrive. From dsys.html and ds-build-wt.html: save as style, then components bind to the name.",
+  "acceptance": [
+    "A selected fill can be saved as a named style, and it appears in the Library styles section",
+    "A layer can be set to use a style instead of a raw color, and the inspector says which style it is using",
+    "Editing a style repaints every layer using it in one undo step",
+    "A layer using no style behaves exactly as today",
+    "Core logic is covered by tests in PhotonzCore written before the implementation",
+    "Audit written under queue/audits/, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:04:07.329Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-03T00:04:07.532Z",
+      "note": "seq 640 -> 160"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "the-library-has-components-in-it-the-first-time",
+  "title": "The Library has components in it the first time you open it",
+  "goal": "An empty library is a chore. The app should ship with a small set of ready components, so the first thing a person does is drag one out and use it rather than build one. A handful is enough: a button, a text field, a card, a nav bar and a badge.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 150,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:04:07.298Z",
+  "updated": "2026-09-03T00:04:07.504Z",
+  "deps": [
+    "an-instance-can-be-changed-without-leaving-the-f"
+  ],
+  "blockedBy": [],
+  "notes": "Step D7 of docs/design/ui-building.md. Asked for directly by the user on 2026-09-02: maybe having some baked in components. Decision card to open when claimed: do these look like real macOS controls, or like a neutral kit that is obviously a starting point. A convincing macOS button invites people to expect real macOS behavior. Ship them as data the app reads, not as Swift views, so they are the same kind of thing a person authors.",
+  "acceptance": [
+    "A new document shows five or so components in the Library with no setup",
+    "Each one is an ordinary component: it can be dropped, adjusted through its knobs, and taken apart, with nothing special-cased about it",
+    "They are built from named styles rather than raw colors, so re-coloring one style repaints them all",
+    "They add no measurable time to launch and nothing to a document that does not use them",
+    "Audit written under queue/audits/ with a picture of the Library on first launch, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:04:07.299Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-03T00:04:07.504Z",
+      "note": "seq 180 -> 150"
+    }
+  ]
+}

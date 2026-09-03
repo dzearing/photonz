@@ -1,0 +1,37 @@
+{
+  "id": "an-instance-dropped-from-the-library-follows-its",
+  "title": "An instance dropped from the Library follows its original",
+  "goal": "Once something is a component, you should be able to drop copies of it and have them stay connected. Dragging a component out of the Library places a linked copy. Editing the original updates every copy at once, including copies inside other things, and the app says how many it changed.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 130,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:04:07.238Z",
+  "updated": "2026-09-03T00:04:07.445Z",
+  "deps": [
+    "make-a-component-out-of-what-you-drew-and-find-i",
+    "the-library-panel-arrives-in-the-dock-alongside"
+  ],
+  "blockedBy": [],
+  "notes": "Step C5 of docs/design/ui-building.md, after make-component. Decision card to open when claimed: does a dropped instance start from the original configuration or the last one that person used (components.html leaves this open). The insert gestures come from components.html: drag, double-click, duplicate, and later the agent.",
+  "acceptance": [
+    "Dragging a component tile onto the canvas places a linked instance, marked as an instance on the canvas and in the layers list",
+    "Double-clicking a tile inserts one at the center, and duplicating an instance keeps it linked",
+    "Editing the original updates every instance in one undo step, with a brief confirmation naming how many changed",
+    "An instance nested inside another component also updates",
+    "Core logic is covered by tests in PhotonzCore written before the implementation",
+    "Audit written under queue/audits/, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:04:07.238Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-03T00:04:07.445Z",
+      "note": "seq 160 -> 130"
+    }
+  ]
+}

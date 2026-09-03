@@ -1,0 +1,37 @@
+{
+  "id": "a-frame-is-a-group-with-a-size-and-a-document-ca",
+  "title": "A frame is a group with a size, and a document can hold several",
+  "goal": "To build a screen you need something to build it on: a rectangle with a fixed size that clips what is inside it, with a name you can see. A frame is an ordinary group that has a size, so several screens can sit side by side on one canvas without the app growing a separate pages concept. Export can target one frame.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:04:07.177Z",
+  "updated": "2026-09-03T00:04:07.387Z",
+  "deps": [
+    "layers-can-hold-layers",
+    "group-and-ungroup-what-you-selected"
+  ],
+  "blockedBy": [],
+  "notes": "Step A2 of docs/design/ui-building.md. Depends on nesting landing first. A frame is a group layer plus a size and a clip flag, not a new document-level concept; read the IA reasoning in that doc before proposing artboards as a list on PhotonzDocument. Decision card to open when claimed: does a frame clip by default or only when asked. Frame naming and the label chrome come from the ui-build-screen and ui-grid mocks.",
+  "acceptance": [
+    "A frame can be drawn at a chosen size, shows its name above its top left corner, and clips the layers inside it",
+    "Several frames coexist on one canvas; selecting, moving and restacking them behaves like any other layer",
+    "A size preset menu offers a few common screen sizes and a custom size",
+    "Export offers the selected frame as its scope, and the exported picture is the frame contents only",
+    "A screenshot document with no frames looks and behaves exactly as it does today, and capture, measure and redline are unchanged",
+    "Audit written under queue/audits/, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:04:07.177Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-03T00:04:07.387Z",
+      "note": "seq 140 -> 110"
+    }
+  ]
+}

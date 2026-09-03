@@ -1,0 +1,36 @@
+{
+  "id": "author-a-component-and-reuse-it-start-to-finish",
+  "title": "Author a component and reuse it, start to finish",
+  "goal": "The whole point of this line of work, tried as one sitting: draw a control, turn it into a component, drop three copies, make its label adjustable, change one copy, then edit the original and watch them all follow. And prove that taking a screenshot, measuring it and redlining it is exactly as it was.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 170,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:04:07.357Z",
+  "updated": "2026-09-03T00:04:07.562Z",
+  "deps": [
+    "an-instance-can-be-changed-without-leaving-the-f",
+    "the-library-has-components-in-it-the-first-time"
+  ],
+  "blockedBy": [],
+  "notes": "Step E9 of docs/design/ui-building.md, the acceptance bar for the whole epic; the user named this scenario on 2026-09-02. Use Scripts/playtest.sh with a new walk under Scripts/playtest/. This task is claimed only after the instance, override and built-in library tasks are done; set its deps to them when they exist.",
+  "acceptance": [
+    "A scripted walk drives the whole scenario on the probe app and every step is captured as a picture",
+    "The audit reads as a sitting a person can repeat in under five minutes, with the pictures in order",
+    "A second walk captures a screenshot, measures it and copies a spec list, and the audit states that nothing about that flow changed",
+    "Every rough edge found is filed as a follow-up task, named in the audit",
+    "Anything that cannot be done at all is stated plainly rather than worked around"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:04:07.358Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-03T00:04:07.562Z",
+      "note": "seq 190 -> 170"
+    }
+  ]
+}
