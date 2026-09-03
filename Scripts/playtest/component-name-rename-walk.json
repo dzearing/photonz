@@ -1,0 +1,296 @@
+{
+  "out": "/tmp/photonz-playtest/component-name-rename",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 620,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        160
+      ],
+      "to": [
+        560,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        780,
+        570
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        186,
+        149
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "1-screen-picked-by-name",
+      "note": "a screen called Frame, picked by clicking its name at x 186"
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-promoted",
+      "note": "the screen is now a component. It keeps the name Frame, and the name has shifted right of the four diamond mark: the mark sits at x 180 to 190, the letters start at x 194"
+    },
+    {
+      "do": "click",
+      "at": [
+        780,
+        570
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        200,
+        149
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "3-hover-name",
+      "note": "the pointer resting on the component name: it should tint from violet to the accent, exactly as a screen name does"
+    },
+    {
+      "do": "snapshot",
+      "name": "comp-name-1-hover"
+    },
+    {
+      "do": "click",
+      "at": [
+        184,
+        149
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "4-click-the-mark",
+      "note": "the mark and the name are one chip: a click on the diamond picks the component too"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        149
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "5-click-the-name",
+      "note": "a click on the component name picks the component"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        149
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-field-open",
+      "note": "a double click opens the component name for typing, with the whole name selected"
+    },
+    {
+      "do": "snapshot",
+      "name": "comp-name-2-field"
+    },
+    {
+      "do": "key",
+      "key": "c"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "key",
+      "key": "d"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "7-typed",
+      "note": "the letters type instead of picking tools: the tool is still select"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "8-landed",
+      "note": "Return lands the name: the layer tree should say Card"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "9-undone",
+      "note": "one undo puts Frame back and leaves the component where it is"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "10-redone",
+      "note": "redo brings Card back"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        149
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "z"
+    },
+    {
+      "do": "key",
+      "key": "z"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "11-escaped",
+      "note": "Escape abandons the draft: the component is still called Card and nothing reached history"
+    },
+    {
+      "do": "snapshot",
+      "name": "comp-name-3-escaped"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        149
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "12-one-name-everywhere",
+      "note": "the canvas, the Layers list, the Library tile and the Component section all read the same name"
+    },
+    {
+      "do": "snapshot",
+      "name": "comp-name-4-everywhere"
+    }
+  ]
+}

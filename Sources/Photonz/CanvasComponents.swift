@@ -12,11 +12,13 @@ import PhotonzCore
 /// It is chrome, not pixels: drawn by the canvas above the picture, the same
 /// size at every zoom, and never in an export. A frame that has been promoted
 /// shows this INSTEAD of its frame label, so a box never wears two names.
+///
+/// The name is a handle, exactly like a screen's name: click it to pick the
+/// component, double click it to rename it where it sits. That behaviour is
+/// shared with screens and lives in `CanvasNames.swift`.
 extension CanvasNSView {
 
-    private static let componentLabelGap: CGFloat = 4
-    private static let componentLabelHeight: CGFloat = 14
-    private static let componentGlyphSize: CGFloat = 10
+    static let componentGlyphSize: CGFloat = 10
 
     /// Whether component chrome is drawn at all. A document with no components
     /// in it never sees any of this, which is every screenshot anybody has
@@ -54,32 +56,40 @@ extension CanvasNSView {
             guard let bounds = document.canvasBounds(of: main.id),
                   bounds.width > 0, bounds.height > 0 else { continue }
             let rect = viewRect(forDocRect: bounds, in: viewport)
-            let top = rect.minY - Self.componentLabelHeight - Self.componentLabelGap
+            let strip = CanvasNameLabels.box(forFrameRect: rect)
 
+            // The mark stays put through a rename: it says what kind of thing
+            // this is, and that does not change while you are typing.
             let glyph = CAShapeLayer()
-            let box = CGRect(x: rect.minX,
-                             y: top + (Self.componentLabelHeight - Self.componentGlyphSize) / 2,
+            let box = CGRect(x: strip.minX,
+                             y: strip.minY + (strip.height - Self.componentGlyphSize) / 2,
                              width: Self.componentGlyphSize, height: Self.componentGlyphSize)
             glyph.path = ComponentGlyph.path(in: box)
             glyph.fillColor = ComponentGlyph.cgColor
             glyph.frame = layer?.bounds ?? rect
             componentChromeLayer.addSublayer(glyph)
 
+            // The component being renamed has a field standing where its name
+            // was, so the name itself is not drawn twice.
+            if main.id == canvasRenameID { continue }
+
             let label = CATextLayer()
             label.string = main.name
-            label.font = NSFont.systemFont(ofSize: 10, weight: .medium)
-            label.fontSize = 10
-            // The component violet, not a theme label color and not the
-            // selection accent: this text sits on top of whatever picture is
-            // open, and the accent already means "selected".
-            label.foregroundColor = ComponentGlyph.cgColor
+            label.font = Self.nameLabelFont
+            label.fontSize = Self.nameLabelFont.pointSize
+            // The component violet at rest, the selection accent when the name
+            // is live: the mark in front of it goes on saying "component", so
+            // the name is free to say "selected, or under your pointer" the
+            // same way a screen's name does. Neither is a theme label color:
+            // this text sits on top of whatever picture is open.
+            label.foregroundColor = isNameLabelLive(main.id)
+                ? NSColor.controlAccentColor.cgColor
+                : ComponentGlyph.cgColor
             label.contentsScale = window?.backingScaleFactor ?? 2
             label.alignmentMode = .left
             label.truncationMode = .end
-            let x = rect.minX + Self.componentGlyphSize + 4
-            label.frame = CGRect(x: x, y: top,
-                                 width: max(min(rect.width, 240), 40),
-                                 height: Self.componentLabelHeight)
+            label.frame = CanvasNameLabels.box(forFrameRect: rect,
+                                               leadingInset: Self.componentMarkInset)
             componentChromeLayer.addSublayer(label)
         }
 
@@ -89,7 +99,7 @@ extension CanvasNSView {
             let rect = viewRect(forDocRect: bounds, in: viewport)
             let glyph = CAShapeLayer()
             let box = CGRect(x: rect.minX,
-                             y: rect.minY - Self.componentGlyphSize - Self.componentLabelGap,
+                             y: rect.minY - Self.componentGlyphSize - CanvasNameLabels.gap,
                              width: Self.componentGlyphSize, height: Self.componentGlyphSize)
             // One diamond, not the original's four: a different shape rather
             // than a different weight, so it still reads at ten points.

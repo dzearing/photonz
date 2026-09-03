@@ -1236,7 +1236,7 @@ there. It is now the frame's handle.
   240 points wide whatever the name is, and a click on the empty part of that
   box still means what it always meant on bare canvas — including the double
   click that zooms the window. Only the letters plus a few points of slop
-  answer, which is `FrameNameLabels` in `PhotonzCore` (tested): it owns where
+  answer, which is `CanvasNameLabels` in `PhotonzCore` (tested): it owns where
   the name draws, what answers a click, and which name wins where two overlap
   at a zoomed-out size.
 - **Hovering a name tints it to the accent.** Nothing else says a caption can
@@ -1251,18 +1251,57 @@ there. It is now the frame's handle.
 - **One name in one place.** The canvas name and the Layers row are the same
   layer name through `renameLayer`, so they cannot disagree.
 
-**Where it lives.** `FrameNameLabels` and `FrameNameLabel` in `PhotonzCore`
-(geometry and hit testing, tested); `CanvasFrames.swift` in the app (the
-chrome, the hover tint, the field); the press itself in `CanvasView.mouseDown`.
+**Where it lives.** `CanvasNameLabels` and `CanvasNameLabel` in `PhotonzCore`
+(geometry and hit testing, tested); `CanvasFrames.swift` in the app (the frame
+chrome) and `CanvasNames.swift` (the hover tint, the field, the rename); the
+press itself in `CanvasView.mouseDown`.
 The field is an `NSTextView` rather than an `NSTextField` on purpose: a text
 field borrows the window's field editor and AppKit takes it back the moment the
 window is not key, which is every moment of an unmanned playtest, so the rename
 could be neither driven nor photographed. Walked by
 `Scripts/playtest/frame-name-rename-walk.json`.
 
-Not in this slice: a component's name in that same spot (a promoted frame shows
-the component mark and is renamed in the Component section), and renaming any
-other layer by clicking it on the canvas — only frames wear a name there.
+Not in this slice: renaming any other layer by clicking it on the canvas — only
+screens and components wear a name there. A component's name in that same spot
+landed next, below.
+
+## Landed: a component is renamed by clicking its name (Next, `next-components`, 2026-09-03)
+
+A screen promoted to a component swaps its grey name for the component's name
+in violet, behind the four-diamond mark. That name used to be a caption and
+nothing else: clicking it did nothing, and the only way to change it was the
+Component section in the dock. **A screen's name and a component's name are now
+the same handle.**
+
+- **Click the chip, pick the component. Double click it, type a new one.** The
+  field opens exactly where the name is drawn, with the whole name selected.
+  Return lands it as one undo step, Escape leaves it as it was, an empty name
+  keeps the old one. Identical to a screen in every way a person can feel.
+- **The mark is part of the chip, not a hole in it.** "◆ Card" reads as one
+  small label, so the whole thing answers a click. A click that lands on the
+  diamond and quietly does nothing is the kind of miss nobody forgives.
+- **Violet at rest, the accent when live.** The name tints to the accent on
+  hover and while the component is selected, exactly as a screen's does. It can
+  afford to: the diamond in front of it goes on saying "component", so the name
+  is free to say "live". The field that opens over it is outlined in the violet
+  rather than the accent, so you can still see what kind of thing you are
+  naming while you type it.
+- **The rename is a COMPONENT rename**, not a layer rename, so the canvas, the
+  Layers row, the Library tile and the Component section all move together.
+  They read one name from one place, so they cannot disagree.
+- Copies still wear the single diamond and no name. A screen built from twelve
+  buttons would otherwise carry twelve labels, and a copy's name is already in
+  the Layers list and the dock.
+
+**Where it lives.** The behaviour is shared with screens and lives in
+`CanvasNames.swift`; `CanvasComponents.swift` draws the mark and the violet
+name; `CanvasNameLabels.leadingInset` (PhotonzCore, tested) is the few points
+the mark takes at the left. The commit routes through `renameComponent` rather
+than `renameLayer`. Walked by
+`Scripts/playtest/component-name-rename-walk.json`.
+
+Not in this slice: renaming a COPY by clicking it on the canvas (a copy has no
+name there to click), and renaming a component from the Library tile itself.
 
 ## Landed: a copy follows the original's look (Next, `next-components`, 2026-09-03)
 

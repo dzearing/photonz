@@ -6542,3 +6542,45 @@ Verified: `Scripts/test.sh` green (2179 tests, 11 new across `TextHaloTests` and
 against both the new code and a scratch build with the rule switched off, for
 real before and after pictures. Audit:
 `queue/audits/2026-09-03-screen-text-halo.json`.
+
+## 2026-09-03 — a component keeps its name where a screen keeps its name
+
+A screen promoted to a component swapped its grey name for the component's name
+in violet behind the four-diamond mark, and that name was a caption: clicking it
+did nothing, and renaming meant going to the Component section in the dock. A
+screen's name in the same spot has been a handle since this morning. Now both
+are, and they are the SAME handle.
+
+Adversarial review first, and it disagreed with the mock twice. The mock paints
+a component's name violet and says nothing about clicking it, but a hover tint
+is the only invitation a canvas name has, so a name that never reacts reads as
+decoration: the name now tints to the accent on hover and while selected, and
+the diamond in front of it goes on carrying "component". And a second rename
+field for components would have doubled a delicate piece of AppKit for nothing
+visible, so instead one name system serves both, with the mark as a few points
+of leading inset.
+
+`FrameNameLabel`/`FrameNameLabels` became `CanvasNameLabel`/`CanvasNameLabels`
+(PhotonzCore, 19 tests) and gained `leadingInset`. The shared behaviour — hit
+testing, the hover tint, the field, commit and cancel — moved out of
+`CanvasFrames.swift` into a new `CanvasNames.swift`; `CanvasFrames` keeps the
+frame chrome and `CanvasComponents` draws the mark and the violet name from that
+same geometry. A main's commit routes through a new `onRenameComponent` to
+`EditorState.renameComponent`, so the canvas, the Layers row, the Library tile
+and the Component section move together.
+
+The second review, on the probe, caught the build's own mistake: the mark was
+inert, so a click on the diamond selected nothing and dropped whatever was
+picked. On screen "◆ Card" is one small chip and nobody would guess half of it
+is dead, so the hit box now includes the mark and the whole chip is the handle.
+
+Next: nothing here is blocked. Named rough in the audit — a COPY still wears a
+diamond and no name, so there is nothing to click there; and promoting a screen
+still moves the keyboard into the dock's Name field, which predates this work
+but means the fastest rename right after promoting is still the dock.
+
+Verified: `Scripts/test.sh` green (2187 tests);
+`Scripts/playtest/component-name-rename-walk.json` on the probe with Screen
+Recording granted, twelve stages with real captures, plus
+`frame-name-rename-walk.json` re-run unchanged as a regression. Audit:
+`queue/audits/2026-09-03-component-name-rename.json`.

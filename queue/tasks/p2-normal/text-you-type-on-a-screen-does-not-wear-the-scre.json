@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T11:27:35.947Z",
-  "updated": "2026-09-03T14:54:58.313Z",
+  "updated": "2026-09-03T14:58:16.486Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-on from the component halo task (2026-09-03). The rule is already built: Layer.drawnShadow(insideComponent:) plus an insideComponent flag threaded through DocumentRenderer.compositeLayers/groupImage. Widening it means deciding whether a frame counts the same way a component does, and whether a plain group nested inside a frame counts. A frame is group.isFrame with a backgroundHex, so the predicate is one clause; the question is a UX one, because a caption deliberately laid over a screenshot placed inside a frame would lose its halo too. Consider whether the trigger should be the frame having a painted surface rather than being a frame at all.",
@@ -70,7 +70,7 @@
     }
   ],
   "started": "2026-09-03T14:25:04.175Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-03T14:24:33.480Z",
     "exit": 1,

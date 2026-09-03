@@ -1,0 +1,29 @@
+{
+  "feature": "A component is renamed by clicking its name",
+  "epic": "ui-components",
+  "summary": "The violet name above a component now behaves exactly like a screen's name: click it to pick the component, double click it to rename it right there. Renaming used to mean going to the Component section in the dock.",
+  "setup": "Photonz Dev, Experiments window, release Next. Screens and Components are on by default.",
+  "try": [
+    { "do": "Press F, then drag out a screen on an empty canvas." },
+    { "do": "Click the grey name above its top left corner to pick the screen." },
+    { "do": "Press ⌥⌘K to make it a component. The name turns violet and grows a four diamond mark." },
+    { "do": "Rest the pointer on that violet name and watch it tint." },
+    { "do": "Double click the name, type Card, press Return.", "shot": "2026-09-03-component-name-field.png" },
+    { "do": "Look at the canvas, the Layers row, the Library tile and the Component section at once.", "shot": "2026-09-03-component-name-everywhere.png" },
+    { "do": "Press ⌘Z once, then ⇧⌘Z once." },
+    { "do": "Double click the name again, type anything, press Escape." }
+  ],
+  "evaluate": [
+    "Did you reach for the name on the canvas before you thought of the dock?",
+    "Is the tint on hover enough to tell you the name can be clicked, or does it need more?",
+    "The name goes from violet to the selection blue while it is live, with the diamond staying violet. Does it still read as a component, or does the blue take that away?",
+    "Is the whole chip, diamond included, the right thing to answer a click, or should the diamond mean something of its own?",
+    "One undo puts the old name back. Is that the step size you expected?"
+  ],
+  "rough": [
+    "The name turns the selection blue on hover and while selected, which is a change from the mock: the mock paints a component's name violet full stop. The diamond in front of it stays violet and carries the identity, so the name is free to say live, and a component name that never reacted was the whole complaint.",
+    "The diamond is part of the click target rather than a badge beside it. The first build left it inert and a click on it deselected the component, which felt like a bug more than a rule.",
+    "A COPY still shows a diamond and no name, so there is nothing to click there. Renaming a copy is still a Layers list job.",
+    "Promoting a screen to a component moves the keyboard into the Component section's Name field in the dock. That predates this work and is untouched here, but it means the fastest rename right after promoting is still the dock, not the canvas."
+  ]
+}

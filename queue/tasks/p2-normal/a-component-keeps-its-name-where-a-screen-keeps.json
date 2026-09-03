@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T08:59:50.517Z",
-  "updated": "2026-09-03T12:08:27.002Z",
+  "updated": "2026-09-03T15:18:17.631783Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Frame names landed 2026-09-03 (FrameNameLabels in PhotonzCore, CanvasFrames.swift). The component mark is drawn by CanvasComponents.refreshComponentChrome as a glyph plus a CATextLayer, offset right of the glyph, so its hit box starts at rect.minX + glyph + 4 rather than rect.minX. Rename goes through EditorState.renameComponent (not renameLayer), which is what keeps instances and the tile in step.",
+  "notes": "Frame names landed 2026-09-03 (FrameNameLabels in PhotonzCore, CanvasFrames.swift). The component mark is drawn by CanvasComponents.refreshComponentChrome as a glyph plus a CATextLayer, offset right of the glyph, so its hit box starts at rect.minX + glyph + 4 rather than rect.minX. Rename goes through EditorState.renameComponent (not renameLayer), which is what keeps instances and the tile in step. DONE 2026-09-03: geometry is CanvasNameLabels in PhotonzCore (leadingInset covers the mark); shared behaviour in Sources/Photonz/CanvasNames.swift; CanvasComponents draws mark + violet name; commit routes through onRenameComponent -> EditorState.renameComponent. Walk: Scripts/playtest/component-name-rename-walk.json. Audit: queue/audits/2026-09-03-component-name-rename.json.",
   "acceptance": [
     "Clicking a component name on the canvas selects that component",
     "Double clicking it opens it for typing in place, with the whole name selected",
@@ -27,6 +27,27 @@
     {
       "t": "2026-09-03T12:08:27.001Z",
       "note": "seq 860 -> 40"
+    },
+    {
+      "t": "2026-09-03T14:59:02.362Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T15:18:17.631783Z",
+      "note": "adversarial review before building: the mock treats the component name as a caption in violet and says nothing about clicking it. Two things it got wrong. (1) A hover tint is the ONLY invitation a canvas name has, and a violet name that never reacts reads as decoration, so the name has to change on hover the way a screen's does; the diamond in front of it keeps saying component, so the name is free to say live. (2) Building a second rename field for components would have doubled a delicate piece of AppKit for no visible gain: the shortest version that delivers the same value is to make one name system serve both, with the component's mark as a few points of leading inset."
+    },
+    {
+      "t": "2026-09-03T15:18:17.631783Z",
+      "note": "built: FrameNameLabel/FrameNameLabels renamed to CanvasNameLabel/CanvasNameLabels (PhotonzCore) and given a leadingInset, so one piece of tested geometry covers a screen's name and a component's. The shared behaviour (hit, hover, the field, commit, cancel) moved out of CanvasFrames.swift into a new CanvasNames.swift; CanvasFrames keeps the frame chrome, CanvasComponents draws the mark and the violet name from the same geometry. Commit routes through a new onRenameComponent -> EditorState.renameComponent for mains, onRenameLayer for everything else. 19 core tests, full suite 2187 green."
+    },
+    {
+      "t": "2026-09-03T15:18:17.631783Z",
+      "note": "adversarial review of the built thing, on the probe: the first build left the four diamond mark inert, so a click on it selected nothing and deselected whatever was picked. On screen the mark and the name are one small chip and nobody would guess half of it is dead. Changed the hit box to include the leading inset, so the whole chip is the handle; test flipped to match."
+    },
+    {
+      "t": "2026-09-03T15:18:17.631783Z",
+      "note": "verified live on Photonz Probe with Scripts/playtest/component-name-rename-walk.json (Screen Recording granted, real -sc.png captures). Click the mark -> component picked; click the name -> component picked; double click -> CanvasNameFieldView holds the keyboard with the whole name selected; typing 'card' replaces it; Return lands one undo step (undo restores Frame, redo restores card); Escape after typing leaves card untouched. Final capture shows canvas, Layers row, Library tile and Component section all reading card. Regression: frame-name-rename-walk still passes all 15 stages unchanged."
     }
-  ]
+  ],
+  "started": "2026-09-03T14:59:02.362Z"
 }
