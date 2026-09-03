@@ -515,9 +515,8 @@ private final class Run {
             case .makeChoice: editor.makeChoice()
             case .detachInstance: editor.detachInstance()
             case .roundCorners:
-                if let id = editor.selectedLayerID {
-                    editor.setLayerStyle(id: id) { $0.cornerRadius = 24 }
-                }
+                let ids = editor.cornerRadiusSelection.layerIDs
+                if !ids.isEmpty { editor.commitCornerRadius(ids: ids, 24) }
             case .addShadow:
                 if let id = editor.selectedLayerID {
                     editor.setLayerStyle(id: id) {
@@ -541,9 +540,7 @@ private final class Run {
                     }
                 }
             case .dragCornerRadius:
-                dragStyleSlider(editor, through: [4, 10, 16, 22]) { style, v in
-                    style.cornerRadius = CGFloat(v)
-                }
+                dragCornerRadius(editor, through: [4, 10, 16, 22])
             case .dragOpacity:
                 dragStyleSlider(editor, through: [0.9, 0.7, 0.55, 0.45]) { style, v in
                     style.opacity = v
@@ -571,17 +568,13 @@ private final class Run {
             case .dragThicknessThin:
                 let ids = editor.shapeSelection.layerIDs
                 if !ids.isEmpty { editor.commitAnnotationRestyle(ids: ids, strokeWidth: 3) }
+            // Rounding is ONE row now, so a walk that rounds a shape and a walk
+            // that rounds a picture pull the same slider.
             case .dragShapeCornersSquare:
-                let ids = editor.shapeSelection.layerIDs
-                if !ids.isEmpty { editor.commitAnnotationRestyle(ids: ids, cornerRadius: 0) }
+                let ids = editor.cornerRadiusSelection.layerIDs
+                if !ids.isEmpty { editor.commitCornerRadius(ids: ids, 0) }
             case .dragShapeCorners:
-                let ids = editor.shapeSelection.layerIDs
-                if !ids.isEmpty {
-                    for radius in [8.0, 14.0, 18.0] as [CGFloat] {
-                        editor.previewAnnotationRestyle(ids: ids, cornerRadius: radius)
-                    }
-                    editor.commitAnnotationRestyle(ids: ids, cornerRadius: 18)
-                }
+                dragCornerRadius(editor, through: [8, 14, 18])
             case .toggleShadow:
                 editor.setSelectionShadowEnabled(!editor.layerStyleSelection.hasShadowEverywhere)
             case .followOriginalLook:
@@ -1022,6 +1015,15 @@ private final class Run {
     /// A style slider dragged over the whole selection, the way a person drags
     /// it: several live frames and then a release, so one undo step lands for
     /// the whole gesture however many layers it reached.
+    /// The one Corner Radius row, dragged and let go: the same path the panel
+    /// takes, so a walk proves the row a person pulls rather than a field.
+    private func dragCornerRadius(_ editor: EditorState, through values: [CGFloat]) {
+        let ids = editor.cornerRadiusSelection.layerIDs
+        guard !ids.isEmpty, let last = values.last else { return }
+        for radius in values { editor.previewCornerRadius(ids: ids, radius) }
+        editor.commitCornerRadius(ids: ids, last)
+    }
+
     private func dragStyleSlider(_ editor: EditorState, through values: [Double],
                                  apply: (inout LayerStyle, Double) -> Void) {
         let ids = editor.layerStyleSelection.layerIDs
@@ -1302,7 +1304,6 @@ private final class Run {
             }
             var rows = ["offers " + selection.rows.map(\.rawValue).joined(separator: ", ")]
             rows.append(number("thickness", selection.number { $0.strokeWidth }))
-            rows.append(number("cornerRadius", selection.number { $0.cornerRadius }))
             rows.append(number("labelSize", selection.number { $0.captionFontSize }))
             return rows
         }()
@@ -1362,6 +1363,18 @@ private final class Run {
             "arrows": arrows,
             "textRows": textRows,
             "shapeRows": shapeRows,
+            // The ONE Corner Radius row, in the words it shows. A rectangle
+            // curving its own outline and a screenshot with its corners masked
+            // off both land here, which is the point of the row.
+            "cornerRadius": {
+                let selection = editor.cornerRadiusSelection
+                guard !selection.isEmpty else { return "none" }
+                let reading = selection.reading
+                let body = reading.isMixed
+                    ? "mixed"
+                    : (reading.value.map { "\(Int($0.rounded()))" } ?? "none")
+                return "\(body) ×\(selection.count)"
+            }(),
             "shapeSection": editor.shapeSelection.title,
             "selected": editor.selectedLayerID?.uuidString ?? "nil",
             // Everything the Layers menu would act on, by name and in draw

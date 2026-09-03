@@ -410,7 +410,7 @@
     {
       "do": "describe",
       "stage": "11-two-boxes",
-      "note": "both boxes picked: the section is headed Rectangles, Thickness reads mixed and Corner Radius is offered"
+      "note": "both boxes picked: the section is headed Rectangles and Thickness reads mixed. Rounding is not here, it is the one Corner Radius row under Effects"
     },
     {
       "do": "snapshot",

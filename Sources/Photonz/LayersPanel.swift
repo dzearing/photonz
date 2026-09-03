@@ -1460,12 +1460,11 @@ struct EffectsInspector: View {
                              format: points, field: .blur) { style, v in
                 style.blurRadius = CGFloat(v)
             }
-            LayerStyleSlider(layerIDs: ids, label: "Corner Radius",
-                             reading: selection.number { $0.cornerRadius },
-                             range: 0...selection.cornerRadiusLimit,
-                             format: points, field: .cornerRadius) { style, v in
-                style.cornerRadius = CGFloat(v)
-            }
+            // ONE Corner Radius, for every way of rounding. A rectangle curves
+            // the outline it draws; a screenshot or a frame has its corners
+            // masked off. Both used to have a slider of their own, both called
+            // Corner Radius, sitting in different sections of the same panel.
+            CornerRadiusRow(selection: editorState.cornerRadiusSelection)
             // The width only. The color a border is painted is a color like any
             // other, so it lives in the Color section with the rest rather than
             // in a swatch of its own down here — and the moment this slider
@@ -1706,15 +1705,19 @@ struct LayerStyleSlider: View {
 
 // MARK: - Annotation inspector
 
-/// The picked shapes' own settings: thickness, an arrow's caption and head, a
-/// rectangle's corners — over the WHOLE selection.
+/// The picked shapes' own settings: thickness, an arrow's caption and its
+/// head — over the WHOLE selection.
 ///
 /// Colors are not here: they live in the Color section, which is where they
 /// live whatever is picked, so shift-clicking a second layer widens what a row
 /// speaks for instead of moving it. These rows now work the same way. Pick two
 /// arrows and Thickness is still there, speaking for both; pick an arrow and a
-/// box and only the setting they share is offered, because a Corner Radius
-/// slider over an arrow is a control that does nothing.
+/// box and only the setting they share is offered, because a Head Size slider
+/// over a rectangle is a control that does nothing.
+///
+/// Corners are not here either, for the same reason colors are not: rounding
+/// is one row under Effects that speaks for everything picked, shapes and
+/// screenshots alike.
 ///
 /// Sliders preview live and commit one undo step on release, however many
 /// shapes they reached.
@@ -1788,13 +1791,68 @@ struct AnnotationInspector: View {
                         round: { $0 },
                         preview: { editorState.previewAnnotationRestyle(ids: $0, arrowheadScale: $1) },
                         commit: { editorState.commitAnnotationRestyle(ids: $0, arrowheadScale: $1) })
-        case .cornerRadius:
-            ShapeSlider(layerIDs: ids, label: "Corner Radius",
-                        reading: selection.number { $0.cornerRadius },
-                        range: 0...max(1, selection.cornerRadiusLimit),
-                        format: { "\(Int($0.rounded())) pt" },
-                        preview: { editorState.previewAnnotationRestyle(ids: $0, cornerRadius: $1) },
-                        commit: { editorState.commitAnnotationRestyle(ids: $0, cornerRadius: $1) })
+        }
+    }
+}
+
+/// The ONE Corner Radius row, under Effects, speaking for everything picked.
+///
+/// Rounding means two different things underneath: a rectangle curves the
+/// outline it draws, so the curve follows its border, while a screenshot, a
+/// frame or a group has its corners masked off. The panel used to carry a
+/// slider for each, one in the shape's own section and one here, both labelled
+/// Corner Radius, with nothing to say which was which. They also disagreed in
+/// the worst way: the mask chopped the corners clean off a rectangle's
+/// outline. So there is one row, it reads whichever number is rounding each
+/// picked layer, and a pull writes back to whichever one rounds it properly.
+///
+/// Dragging previews without recording undo; release commits ONE step,
+/// however many layers it reached.
+private struct CornerRadiusRow: View {
+    @Environment(EditorState.self) private var editorState
+    let selection: CornerRadiusSelection
+
+    /// Where the knob is while the hand is on it, so it moves smoothly even
+    /// though what it sends is whole points.
+    @State private var draft: Double?
+
+    private var range: ClosedRange<Double> { 0...selection.limit }
+
+    private var knob: Double {
+        min(max(draft ?? selection.reading.value ?? 0, range.lowerBound), range.upperBound)
+    }
+
+    /// Mixed only until the drag starts: once it has, they all wear the number
+    /// under the knob.
+    private var showsMixed: Bool { draft == nil && selection.reading.isMixed }
+
+    var body: some View {
+        let ids = selection.layerIDs
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text("Corner Radius").font(.caption).foregroundStyle(.secondary)
+                if let only = selection.soleStyleRoundedID {
+                    InstanceStyleRevert(layerID: only, field: .cornerRadius)
+                }
+                Spacer()
+                Text(showsMixed ? LayerStyleSelection.mixedText : points(knob))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(showsMixed ? AnyShapeStyle(.tertiary)
+                                                : AnyShapeStyle(.secondary))
+            }
+            Slider(value: Binding(
+                get: { knob },
+                set: { v in
+                    draft = v
+                    editorState.previewCornerRadius(ids: ids, CGFloat(v.rounded()))
+                }), in: range) { editing in
+                if !editing {
+                    editorState.commitCornerRadius(ids: ids, CGFloat((draft ?? knob).rounded()))
+                    draft = nil
+                }
+            }
+            .controlSize(.small)
+            .disabled(ids.isEmpty)
         }
     }
 }

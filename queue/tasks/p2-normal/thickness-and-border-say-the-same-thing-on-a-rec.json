@@ -1,0 +1,27 @@
+{
+  "id": "thickness-and-border-say-the-same-thing-on-a-rec",
+  "title": "Thickness and Border say the same thing on a rectangle",
+  "goal": "Pick a rectangle and the panel offers Thickness in the Rectangle section and Border under Effects. Both are the width of a line around the box, in different colors, with nothing to say which is which. Same confusion the Corner Radius sliders had.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 960,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T21:29:20.778Z",
+  "updated": "2026-09-03T21:29:20.779Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "AnnotationContent.strokeWidth (the shape stroke, drawn by AnnotationRasterizer) vs LayerStyle.borderWidth (the ring DocumentRenderer.bordered draws round the layer box). Sibling of one-corner-radius-not-two, which folded the two Corner Radius rows into CornerRadiusSelection + CornerRadiusRow; the same shape of fix may or may not apply, since a rectangle can legitimately want a stroke AND an outer ring. Spotted while auditing that fix.",
+  "acceptance": [
+    "A picked rectangle offers one clear control for the width of its outline",
+    "Rectangles drawn before the change still look the same",
+    "A picture or a frame still gets its Border, since it has no outline of its own"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T21:29:20.779Z",
+      "note": "created (manual)"
+    }
+  ]
+}

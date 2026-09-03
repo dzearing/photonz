@@ -6989,3 +6989,37 @@ Next: a zoom callout's ring is a border, so a picked callout now has two places
 that set its ring color — the toolbar swatch and the new Border row. They agree
 on the value and each lands one undo step, but nothing says they are the same
 control. Filed as `a-callout-ring-has-one-color-not-two`.
+
+## 2026-09-03 — One Corner Radius, not two
+
+Pick a rectangle and the properties panel used to offer two sliders both called
+Corner Radius, one in the Rectangle section and one under Effects, with nothing
+to say which was which. They were two different fields: `AnnotationContent`
+curves the outline the rectangle draws, `LayerStyle` masks the corners off the
+picture of a layer.
+
+The task suggested keeping the Effects one, since it already speaks for a whole
+selection. Rendering all three cases offscreen first said otherwise: the mask
+chops a rectangle's stroke into four disconnected segments, which
+`docs/design/tools.md` already knew as the "rectangle borders disappear when
+rounded" bug. So neither slider could simply be dropped, and hiding one would
+still leave two rows in a selection that mixes a rectangle with a screenshot.
+
+They are folded instead. `CornerRadiusSelection` (PhotonzCore) reads whichever
+number is actually rounding each picked layer, and
+`PhotonzDocument.setCornerRadius` writes back to whichever field rounds it
+properly — the outline for a rectangle, the mask for everything else — clearing
+the old mask off any rectangle it touches so the two can never fight again.
+`ShapeSettingRow.cornerRadius` is gone. `CornerRadiusRow` under Effects is the
+one control, previewing and committing through
+`EditorState.previewCornerRadius` / `commitCornerRadius` in one undo step
+however many layers and kinds it reached, and it still hands the next rectangle
+you draw the radius you just set.
+
+14 new PhotonzCore tests; the probe walk is
+`Scripts/playtest/one-corner-radius-walk.json`, verified with real window
+captures. Audit at `queue/audits/2026-09-03-one-corner-radius.json`.
+
+Next: the same duplication survives one row down. On a rectangle, Thickness (the
+Rectangle section) and Border (Effects) are both the width of a line round the
+box. Filed as `thickness-and-border-say-the-same-thing-on-a-rec`.

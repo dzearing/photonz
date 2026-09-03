@@ -3937,6 +3937,42 @@ final class EditorState {
         return document.shapeSelection(layerIDs: colorStyleTargetIDs)
     }
 
+    /// What the ONE Corner Radius row shows: how round each picked layer is
+    /// right now, whichever way it rounds. A rectangle curves the outline it
+    /// draws and everything else has its corners masked off, and this row
+    /// speaks for both, so one pull can round a screenshot and the box drawn on
+    /// top of it together.
+    var cornerRadiusSelection: CornerRadiusSelection {
+        guard let document else { return CornerRadiusSelection(members: [], selectionCount: 0) }
+        return document.cornerRadiusSelection(layerIDs: colorStyleTargetIDs)
+    }
+
+    /// Live drag on that row: rounds every picked layer without recording an
+    /// undo step, each of them the way it rounds.
+    func previewCornerRadius(ids: [UUID], _ radius: CGFloat) {
+        guard !ids.isEmpty, var doc = document else { return }
+        // This row does not go through the layer-style preview, so anything a
+        // previous drag left there would be read back as the current look.
+        stylePreview = nil
+        discardDragPreview()
+        doc.setCornerRadius(layerIDs: ids, to: radius)
+        submit(doc)
+    }
+
+    /// Letting go of it: ONE undo step, however many layers the pull reached,
+    /// plus the corners the next rectangle you draw starts with.
+    func commitCornerRadius(ids: [UUID], _ radius: CGFloat) {
+        guard !ids.isEmpty, let doc = document else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { $0.setCornerRadius(layerIDs: ids, to: radius) }
+        if ids.contains(where: { doc.layer(id: $0)?.annotation?.shape == .rectangle }) {
+            annotationStyles.setCornerRadius(radius, forShape: .rectangle)
+            saveAnnotationStyles()
+        }
+        rememberStyleDefault(of: ids)
+    }
+
     /// Whether anything picked can be restyled at all, which is what decides
     /// whether the Effects and Shadow sections are in the panel. A locked layer
     /// is not restylable, so a selection of nothing but locked layers brings no

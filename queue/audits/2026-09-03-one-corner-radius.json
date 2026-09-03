@@ -1,0 +1,27 @@
+{
+  "feature": "One Corner Radius, not two",
+  "epic": "ui-building",
+  "summary": "Rounding is one slider now. Pick a rectangle and the panel offers a single Corner Radius under Effects instead of two that disagreed, and a rectangle rounded from there curves properly instead of having its corners chopped off.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Draw a rectangle with the rectangle tool.", "shot": "2026-09-03-one-corner-radius-1.png" },
+    { "do": "Look down the panel and count the sliders called Corner Radius." },
+    { "do": "Pull the Corner Radius slider under Effects to about 18.", "shot": "2026-09-03-one-corner-radius-2.png" },
+    { "do": "Press Command-Z once." },
+    { "do": "Draw a second rectangle, then drag a band around both.", "shot": "2026-09-03-one-corner-radius-3.png" },
+    { "do": "Pull Corner Radius once and press Command-Z once." },
+    { "do": "Drop a screenshot in, pick it together with a rectangle, and pull Corner Radius." }
+  ],
+  "evaluate": [
+    "Is Effects where your hand goes for corners on a rectangle, or did you look in the Rectangle section first?",
+    "With a rectangle and a screenshot picked together, does one pull rounding both feel right, or do you want them separate?",
+    "Does the rectangle's outline follow the curve the way you expected?",
+    "The Rectangle section is down to a single Thickness slider now. Does it still earn its own heading?"
+  ],
+  "rough": [
+    "The Rectangle section still says Thickness while Effects says Border, and on a rectangle both are outline widths. That is the same confusion this task fixed for corners, one layer over, and it is filed as its own task rather than fixed here.",
+    "A component copy no longer gets the follow-the-original arrow beside Corner Radius when the copy is a rectangle, because a rectangle's curve is part of the shape rather than part of the look. Copies that are pictures, frames or groups still get it.",
+    "A rectangle rounded by the old Effects slider before this change reads that number in the new row, and the first pull moves the rounding onto the outline where it belongs, so the chopped corners heal. It does not heal on its own until something touches the slider.",
+    "Screenshots here are real window captures from a scripted run in the probe build, not offscreen renders."
+  ]
+}

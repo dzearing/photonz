@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 910,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T19:00:27.858Z",
-  "updated": "2026-09-03T19:00:27.858Z",
+  "updated": "2026-09-03T21:15:26.475Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "AnnotationContent.cornerRadius (the shape) and LayerStyle.cornerRadius (the non-destructive layer style) are separate fields, both surfaced: AnnotationInspector's radius row and EffectsInspector's Corner Radius slider in Sources/Photonz/LayersPanel.swift. Decide which is the one the panel offers (the style one already speaks for a whole selection) and either fold the other in or stop showing it. Spotted while auditing 2026-09-03-selection-effects.json.",
+  "notes": "AnnotationContent.cornerRadius (the shape) and LayerStyle.cornerRadius (the non-destructive layer style) are separate fields, both surfaced: AnnotationInspector's radius row and EffectsInspector's Corner Radius slider in Sources/Photonz/LayersPanel.swift. Decide which is the one the panel offers (the style one already speaks for a whole selection) and either fold the other in or stop showing it. Spotted while auditing 2026-09-03-selection-effects.json. RESOLVED by folding, not by dropping either: PhotonzCore/CornerRadiusSelection.swift (selection + setCornerRadius), CornerRadiusRow in Sources/Photonz/LayersPanel.swift, previewCornerRadius/commitCornerRadius in EditorState.swift. Walk: Scripts/playtest/one-corner-radius-walk.json. Audit: queue/audits/2026-09-03-one-corner-radius.json.",
   "acceptance": [
     "A picked rectangle shows exactly one control called Corner Radius",
     "Rounding a rectangle drawn before this change still looks the same",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-03T19:00:27.858Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T21:15:26.475Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T21:29:39.230951Z",
+      "note": "Adversarial review before building: the task note suggested keeping the Effects (LayerStyle) slider, but I reproduced what it actually does to a rectangle first. Rendered a rect annotation three ways offscreen: the shape radius curves the outline properly, the style radius masks the raster and CHOPS the corners clean off the stroke, leaving four disconnected segments. docs/design/tools.md already knew this as the 'rectangle borders disappear when rounded' bug. So neither slider could simply be deleted: the shape one renders right but only exists for rectangles, the style one reaches everything but breaks rectangles."
+    },
+    {
+      "t": "2026-09-03T21:29:39.230951Z",
+      "note": "Decision (mine, not the user's, because it has no visible consequence to weigh): fold them into ONE row rather than hide one. Hiding either leaves two rows in a mixed selection (a rectangle plus a screenshot), which fails the first acceptance item. Folding is the only rule that gives exactly one control for every selection. It sits under Effects, where it already spoke for a whole selection."
+    },
+    {
+      "t": "2026-09-03T21:29:39.230951Z",
+      "note": "Built: PhotonzCore gains CornerRadiusSelection + PhotonzDocument.cornerRadiusSelection/setCornerRadius (14 new tests, TDD). setCornerRadius writes AnnotationContent.cornerRadius for a rectangle and LayerStyle.cornerRadius for everything else, in one pass, and clears the old mask off a rectangle it touches so the two radii can never fight again. ShapeSettingRow.cornerRadius is gone; AnnotationInspector no longer carries a Corner Radius row. EffectsInspector's LayerStyleSlider is replaced by CornerRadiusRow, which previews and commits through EditorState.previewCornerRadius/commitCornerRadius (one undo step, whatever mix it reached) and keeps the next-rectangle default."
+    },
+    {
+      "t": "2026-09-03T21:29:39.230951Z",
+      "note": "Verified on the real app, not assumed. Scripts/playtest/one-corner-radius-walk.json in the probe build (Screen Recording granted, so these are real window captures): one rectangle picked shows exactly ONE Corner Radius row, under Effects, reading 0 pt, with the Rectangle section down to Thickness; one pull rounds it with the outline following the curve; one undo squares it; two rectangles picked still show ONE row, reading Mixed, and one pull rounds both in one step. Re-ran selection-effects-walk and component-look-walk green. Scripts/test.sh green (2449 tests)."
+    },
+    {
+      "t": "2026-09-03T21:29:39.230951Z",
+      "note": "Adversarial review of the built thing: the same duplication survives one row down. On a rectangle, Thickness (Rectangle section) and Border (Effects) are both the width of a line round the box. Filed as thickness-and-border-say-the-same-thing-on-a-rec rather than fixed here. Also noted in the audit: a rectangle component copy loses the follow-the-original arrow beside Corner Radius, because its curve is part of the shape rather than part of the look."
     }
-  ]
+  ],
+  "started": "2026-09-03T21:15:26.475Z"
 }

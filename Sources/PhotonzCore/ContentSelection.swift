@@ -95,8 +95,6 @@ public enum ShapeSettingRow: String, CaseIterable, Hashable, Sendable {
     case labelSize
     /// An arrowhead's size.
     case headSize
-    /// A rectangle's corners.
-    case cornerRadius
 }
 
 extension AnnotationContent {
@@ -109,7 +107,6 @@ extension AnnotationContent {
             if hasCaption { rows.append(.labelSize) }
             rows.append(.headSize)
         }
-        if shape == .rectangle { rows.append(.cornerRadius) }
         return rows
     }
 }
@@ -121,14 +118,10 @@ public struct ShapeSelection: Hashable, Sendable {
     public struct Member: Hashable, Sendable {
         public let id: UUID
         public let content: AnnotationContent
-        /// Half this shape's short edge: where its corners are already fully
-        /// round.
-        public let cornerRadiusLimit: CGFloat
 
-        public init(id: UUID, content: AnnotationContent, cornerRadiusLimit: CGFloat) {
+        public init(id: UUID, content: AnnotationContent) {
             self.id = id
             self.content = content
-            self.cornerRadiusLimit = cornerRadiusLimit
         }
     }
 
@@ -144,9 +137,9 @@ public struct ShapeSelection: Hashable, Sendable {
     public var isEmpty: Bool { members.isEmpty }
     public var layerIDs: [UUID] { members.map(\.id) }
 
-    /// The rows every picked shape has. A Corner Radius slider over an arrow
-    /// would be a control that does nothing, so an arrow picked with a
-    /// rectangle takes the corners away and leaves the thickness they share.
+    /// The rows every picked shape has. A Head Size slider over a rectangle
+    /// would be a control that does nothing, so a rectangle picked with an
+    /// arrow takes the head away and leaves the thickness they share.
     public var rows: [ShapeSettingRow] {
         guard let first = members.first else { return [] }
         var shared = Set(first.content.settingRows)
@@ -170,12 +163,6 @@ public struct ShapeSelection: Hashable, Sendable {
 
     public func number(_ read: (AnnotationContent) -> CGFloat) -> StyleReading<CGFloat> {
         reading { read($0) }
-    }
-
-    /// Where the Corner Radius slider stops: the largest picked shape's fully
-    /// round, so a small box cannot stop a big one going round.
-    public var cornerRadiusLimit: CGFloat {
-        max(1, members.map(\.cornerRadiusLimit).max() ?? 1)
     }
 
     /// The picked arrows whose label pill was dragged by hand, and so have a
@@ -230,10 +217,7 @@ extension PhotonzDocument {
             guard let layer = layer(id: id), !layer.isLocked,
                   let annotation = layer.annotation,
                   annotation.shape.hasSettingsBesidesColor else { continue }
-            let bounds = layer.localBounds
-            members.append(ShapeSelection.Member(
-                id: id, content: annotation,
-                cornerRadiusLimit: max(1, min(bounds.width, bounds.height) / 2)))
+            members.append(ShapeSelection.Member(id: id, content: annotation))
         }
         return ShapeSelection(members: members, selectionCount: layerIDs.count)
     }

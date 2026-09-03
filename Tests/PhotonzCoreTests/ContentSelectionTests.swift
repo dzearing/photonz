@@ -9,7 +9,7 @@ import Testing
 ///
 /// The hard part is honesty. Three labels that are all 14pt say 14; three that
 /// differ say Mixed. And a selection holding an arrow and a rectangle offers
-/// only what BOTH of them have, because a Corner Radius row over an arrow is a
+/// only what BOTH of them have, because a Head Size row over a rectangle is a
 /// row that does nothing.
 struct ContentSelectionTests {
 
@@ -122,10 +122,12 @@ struct ContentSelectionTests {
 
     // MARK: - Which shape rows a selection offers
 
-    @Test func oneRectangleOffersThicknessAndCorners() {
+    /// Corners are not here: rounding lives in the one Corner Radius row that
+    /// speaks for everything picked (see `CornerRadiusSelectionTests`).
+    @Test func oneRectangleOffersItsThickness() {
         let doc = document([shape(.rectangle)])
         let rows = doc.shapeSelection(layerIDs: doc.layers.map(\.id)).rows
-        #expect(rows == [.thickness, .cornerRadius])
+        #expect(rows == [.thickness])
     }
 
     @Test func oneArrowOffersThicknessCaptionAndHead() {
@@ -170,7 +172,7 @@ struct ContentSelectionTests {
         // shadow rows out.
         let doc = document([shape(.rectangle), shape(.highlight)])
         let selection = doc.shapeSelection(layerIDs: doc.layers.map(\.id))
-        #expect(selection.rows == [.thickness, .cornerRadius])
+        #expect(selection.rows == [.thickness])
         #expect(selection.count == 1)
         #expect(selection.note == "Applies to 1 of the 2 selected layers.")
     }
@@ -194,15 +196,6 @@ struct ContentSelectionTests {
         let selection = doc.shapeSelection(layerIDs: doc.layers.map(\.id))
         #expect(selection.count == 1)
         #expect(selection.number { $0.strokeWidth }.value == 2)
-    }
-
-    @Test func theCornerLimitIsTheBiggestPickedShapesHalfEdge() {
-        var small = shape(.rectangle)
-        small.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-        var big = shape(.rectangle)
-        big.frame = CGRect(x: 0, y: 0, width: 300, height: 200)
-        let doc = document([small, big])
-        #expect(doc.shapeSelection(layerIDs: doc.layers.map(\.id)).cornerRadiusLimit == 100)
     }
 
     // MARK: - What the section is called
