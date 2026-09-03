@@ -1,0 +1,222 @@
+{
+  "out": "/tmp/photonz-playtest/screen-adoption",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 620,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        200
+      ],
+      "to": [
+        560,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        680,
+        260
+      ],
+      "to": [
+        800,
+        320
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "describe",
+      "stage": "before",
+      "note": "the rectangle sits beside the screen, not in it"
+    },
+    {
+      "do": "drag",
+      "from": [
+        740,
+        290
+      ],
+      "to": [
+        370,
+        380
+      ],
+      "steps": 14,
+      "hold": "midair"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "joined"
+    },
+    {
+      "do": "describe",
+      "stage": "joined",
+      "note": "dropped on the screen: it should be nested under it"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "undone",
+      "note": "one undo puts it back beside the screen"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "redone",
+      "note": "back inside the screen"
+    },
+    {
+      "do": "click",
+      "at": [
+        370,
+        380
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "steppedIn",
+      "note": "double click picks the rectangle inside the screen"
+    },
+    {
+      "do": "drag",
+      "from": [
+        370,
+        380
+      ],
+      "to": [
+        740,
+        290
+      ],
+      "steps": 14
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "left"
+    },
+    {
+      "do": "describe",
+      "stage": "left",
+      "note": "dragged back onto bare canvas: out of the screen again"
+    },
+    {
+      "do": "drag",
+      "from": [
+        740,
+        290
+      ],
+      "to": [
+        561,
+        380
+      ],
+      "steps": 14,
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "onTheEdge",
+      "note": "parked with its centre one point past the screen's right edge: still beside it"
+    },
+    {
+      "do": "key",
+      "key": "left"
+    },
+    {
+      "do": "key",
+      "key": "left"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "nudged",
+      "note": "nudged until its centre is INSIDE the screen: an arrow key never changes what holds a layer"
+    },
+    {
+      "do": "drag",
+      "from": [
+        559,
+        380
+      ],
+      "to": [
+        370,
+        300
+      ],
+      "steps": 14,
+      "modifiers": [
+        "option"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "copied",
+      "note": "option-dragged onto the screen: the copy joins it, the original stays where it was"
+    }
+  ]
+}

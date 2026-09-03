@@ -1,0 +1,31 @@
+{
+  "feature": "Dragging onto a screen puts it in the screen",
+  "epic": "ui-components",
+  "summary": "Dragging something onto a screen now makes it part of that screen, and dragging it back off takes it out again. Until now only drawing on a screen or dropping a copy from the Library did that, so anything you dragged across just floated beside the screen and got left behind when the screen moved.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs the Groups, Frames and Library flags, which are on by default.",
+  "try": [
+    { "do": "Press F and drag out a screen on an empty canvas." },
+    { "do": "Press R and draw a rectangle on the bare canvas beside it." },
+    { "do": "Press V, then press on the rectangle and drag it over the middle of the screen. Do not let go yet.", "shot": "2026-09-03-screen-adoption-1.png" },
+    { "do": "Let go, and look at the layers list: the rectangle is now under the screen.", "shot": "2026-09-03-screen-adoption-2.png" },
+    { "do": "Press Cmd Z once, and confirm it is back beside the screen where it started." },
+    { "do": "Press Cmd Shift Z, then double click the rectangle and drag it back out onto bare canvas." },
+    { "do": "Park it with half of it hanging over the screen's edge and let go, to see which way the halfway case falls." },
+    { "do": "Select it and hold Option while dragging a copy onto the screen." }
+  ],
+  "evaluate": [
+    "When the dashed box lights up around the screen mid drag, is it obvious that letting go will put the layer IN that screen?",
+    "The layer joins the screen its CENTRE lands on, the same rule a shape drawn there follows. Dropping something half on and half off: does it fall the way you expected?",
+    "A layer that joins a screen and still hangs over its edge gets clipped at the edge. Is that the right answer, or should the screen have grown, or the layer stayed out?",
+    "Arrow keys deliberately never change which screen holds a layer, only a drag does. Nudge a layer across a screen's edge: does it staying put feel right or feel broken?",
+    "After the drop, does the layers list opening the screen to show where the layer went help, or is it just one more row in the way?"
+  ],
+  "rough": [
+    "Getting the layer back out takes a double click first: a single click anywhere on a screen picks the whole screen, so you cannot just grab the thing you dropped and drag it away. That is the existing rule for every group, not something this change introduced, and it is filed as its own task (Clicking something on a screen picks that thing, not the whole screen). It is the clumsiest part of using this today.",
+    "The dashed box around the screen mid drag is the same one a component dragged off the Library shelf draws, on purpose. It is also the same blue dashes the selection outline uses, so on a small screen the two can read as one shape for a moment.",
+    "Dragging a whole selection whose layers land on two different screens draws no dashed box, because there is no one box to draw. Each layer still joins the screen it landed on, so the drop does slightly more than the picture promised.",
+    "Screens are never swallowed by other screens: dragging one screen over another leaves both as screens side by side, the same rule pasting a copied screen already follows. That was a decision, not an oversight.",
+    "The clipping only appears when you let go. While the drag is in the air the layer is still drawn whole over the screen, so a layer hanging over the edge visibly snips at the moment of the drop.",
+    "Verified in the probe app with Screen Recording granted, so both pictures here are real window captures rather than offscreen renders."
+  ]
+}

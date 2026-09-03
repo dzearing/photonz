@@ -1844,3 +1844,48 @@ resize that sizes rather than scales. `ArrangementInspector` holds the two rows.
 Not in this slice: a minimum or maximum size, per-side padding, and a stack
 that spreads its contents along the axis it flows on (distribution) when it is
 longer than they are.
+
+## Landed: dragging onto a screen puts it in the screen (Next, `next-frames`, 2026-09-03)
+
+Drawing a shape on a screen already put the shape on that screen, and dropping
+a copy from the Library already put the copy on it. Dragging something that was
+already on the canvas did not: it landed on top of the screen and stayed a
+sibling, so moving the screen left it behind, and the layers list read as two
+things side by side when the picture read as one thing on top of the other.
+
+**One rule, whichever way it got there.** A layer joins the screen that holds
+its **centre**, the same rule `addLayerOnFrame` has always used, so a shape
+dropped mostly on a screen joins it and one dropped mostly off it does not.
+Nothing moves on screen: the position is rewritten into the screen's space.
+
+**Leaving matters as much as joining.** A layer dragged off a screen comes out
+onto bare canvas. Without that, dragging something out of a clipping screen left
+it a child and simply clipped it away, which looks exactly like the layer
+vanishing.
+
+**Only a drag.** A resize and an arrow-key nudge never change what holds a
+layer, even though they share a commit path with the drag today. A layer
+quietly changing hands one point at a time is a surprise nobody can see coming,
+and there is no pointer over a screen to say it is about to happen. An ⌥-drag
+does adopt: the copy joins the screen it was dropped on.
+
+**The promise is on screen before you let go.** While the pointer is down the
+screen a drop would join wears the same dashed box a component dragged off the
+Library shelf draws, because it is the same promise. A drop that changed hands
+opens that screen in the layers list, so the layer is not lost in a shut row.
+
+**What never happens.** A screen is never swallowed by another screen (the rule
+pasting a screen already follows); nothing goes inside a COPY of a component,
+whose contents belong to its original; and nothing goes anywhere that would put
+a component inside itself.
+
+**Where it lives.** `FrameAdoption.swift` holds the rule (`frameAdoption`,
+`frameAdoptionHost`, `adoptMovedLayers`) and `canMoveSubtree` in
+`ComponentInstances.swift` holds the component half of it.
+`EditorState.commitCanvasDrop` and `commitCanvasOrigins(_:joiningScreens:)` are
+the drag-only commit paths; `CanvasNSView.adoptionHost` draws the promise.
+Walked end to end in `Scripts/playtest/screen-adoption-walk.json`.
+
+Not in this slice: a screen growing to fit something dropped half over its
+edge, and a single click reaching a layer that sits directly on a screen (it
+still picks the screen, which is the rule for every group).

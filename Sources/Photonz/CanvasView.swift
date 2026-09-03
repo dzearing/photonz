@@ -120,10 +120,15 @@ struct CanvasView: NSViewRepresentable {
     let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
+    /// A layer let go of at the end of a DRAG, as opposed to resized or nudged:
+    /// the only move that can also change which screen holds it.
+    var onDropCommit: (UUID, CGRect) -> Void = { _, _ in }
     /// A multi-selection dragged on the picture: where every layer it carries
-    /// sits right now, and where they all land. Canvas coordinates.
+    /// sits right now, and where they all land. Canvas coordinates. `dropped`
+    /// is true for a real drag and false for an arrow-key nudge or an Esc, so
+    /// only a drag can change which screen holds what it carried.
     var onMoveSelectionPreview: ([UUID: CGPoint]) -> Void = { _ in }
-    var onMoveSelectionCommit: ([UUID: CGPoint]) -> Void = { _ in }
+    var onMoveSelectionCommit: ([UUID: CGPoint], Bool) -> Void = { _, _ in }
     /// ⌥-drag: the originals stay and copies travel to these canvas origins.
     var onCopyDragPreview: ([UUID: CGPoint]) -> Void = { _ in }
     var onCopyDragCommit: ([UUID: CGPoint]) -> Void = { _ in }
@@ -222,6 +227,7 @@ struct CanvasView: NSViewRepresentable {
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
+        view.onDropCommit = onDropCommit
         view.onMoveSelectionPreview = onMoveSelectionPreview
         view.onMoveSelectionCommit = onMoveSelectionCommit
         view.onCopyDragPreview = onCopyDragPreview
@@ -292,8 +298,9 @@ final class CanvasNSView: NSView {
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
+    var onDropCommit: ((UUID, CGRect) -> Void) = { _, _ in }
     var onMoveSelectionPreview: (([UUID: CGPoint]) -> Void) = { _ in }
-    var onMoveSelectionCommit: (([UUID: CGPoint]) -> Void) = { _ in }
+    var onMoveSelectionCommit: (([UUID: CGPoint], Bool) -> Void) = { _, _ in }
     var onCopyDragPreview: (([UUID: CGPoint]) -> Void) = { _ in }
     var onCopyDragCommit: (([UUID: CGPoint]) -> Void) = { _ in }
     var onCopyDragCancel: (() -> Void) = { }
@@ -414,6 +421,19 @@ final class CanvasNSView: NSView {
     /// The collage slot a drag (file drop / photo layer / slot swap) is
     /// currently over — filled accent highlight.
     private let slotHighlightLayer = CAShapeLayer()
+    /// The screen a drag holding these boxes would join, nil when it would
+    /// change nothing. Asked once per mouse move, so it is skipped outright in
+    /// a document that has no screens in it — which is every screenshot
+    /// anybody has taken.
+    private func adoptionHost(moving boxes: [UUID: CGRect]) -> UUID? {
+        guard framesEnabled, !boxes.isEmpty, let document, document.hasFrames else { return nil }
+        return document.frameAdoptionHost(moving: boxes)
+    }
+
+    /// What the canvas is currently promising a move drag, for a playtest to
+    /// read back.
+    var adoptionHostDescription: UUID? { adoptionHost }
+
     /// Where a component being dragged off the Library shelf would land: an
     /// outline the size of the copy, centred where the pointer is.
     private let componentLandingLayer = CAShapeLayer()
@@ -423,6 +443,13 @@ final class CanvasNSView: NSView {
     /// The component under the pointer mid-drag, and where it would land.
     /// Nil whenever no component drag is over this canvas.
     private var componentLanding: (rect: CGRect, host: UUID?)?
+
+    /// The screen a move drag in flight would drop what it carries INTO,
+    /// outlined while the pointer is still down. Without it the drop changes
+    /// what holds a layer with nothing on screen having said so. It is the same
+    /// dashed box a component dragged off the Library shelf draws, because it
+    /// is the same promise. See `FrameAdoption.swift`.
+    private var adoptionHost: UUID?
     /// Crop mode chrome: dimmed surround (even-odd fill), thirds grid,
     /// border, and handles.
     private let cropDimLayer = CAShapeLayer()
@@ -1827,6 +1854,10 @@ final class CanvasNSView: NSView {
                 hoverSlot = nil
             }
             applyGrabCursor(drag.copying ? .dragCopy : nil)
+            adoptionHost = drag.moved
+                ? adoptionHost(moving: [drag.layerID: CGRect(origin: drag.snapped.origin,
+                                                             size: drag.size)])
+                : nil
             moveDrag = drag
             refreshOverlays()
         } else if var drag = multiMove {
@@ -1858,6 +1889,10 @@ final class CanvasNSView: NSView {
             // multi-drag never offers itself to one.
             hoverSlot = nil
             applyGrabCursor(drag.copying ? .dragCopy : nil)
+            adoptionHost = adoptionHost(moving: drag.plan.members.reduce(into: [:]) { boxes, member in
+                guard let origins = drag.liveOrigins, let origin = origins[member.id] else { return }
+                boxes[member.id] = CGRect(origin: origin, size: member.bounds.size)
+            })
             multiMove = drag
             refreshOverlays()
         } else if let drag = slotDrag {
@@ -2080,9 +2115,10 @@ final class CanvasNSView: NSView {
                 let frame = CGRect(origin: drag.snapped.origin, size: drag.size)
                 selectedLayerFrame = frame
                 holdSpriteUntilRender = true
-                onFrameCommit(drag.layerID, frame)
+                onDropCommit(drag.layerID, frame)
             }
             hoverSlot = nil
+            adoptionHost = nil
             refreshOverlays()
         } else if let drag = multiMove {
             multiMove = nil
@@ -2091,8 +2127,9 @@ final class CanvasNSView: NSView {
                 if let origins = drag.liveOrigins { onCopyDragCommit(origins) }
                 else { onCopyDragCancel() }
             } else if let origins = drag.liveOrigins {
-                onMoveSelectionCommit(origins)
+                onMoveSelectionCommit(origins, true)
             }
+            adoptionHost = nil
             refreshOverlays()
         } else if let drag = slotDrag {
             slotDrag = nil
@@ -2264,7 +2301,7 @@ final class CanvasNSView: NSView {
            moveDrag == nil, resizeDrag == nil, transformDrag == nil,
            pickedLayerIDs.count > 1,
            let plan = document?.multiLayerDrag(moving: pickedLayerIDs) {
-            onMoveSelectionCommit(plan.origins(offsetBy: delta))
+            onMoveSelectionCommit(plan.origins(offsetBy: delta), false)
             refreshOverlays()
             return
         }
@@ -2347,6 +2384,7 @@ final class CanvasNSView: NSView {
                 // A copy drag never wrote anything down, so Esc is simply
                 // "put the real picture back" — no copy is left behind.
                 if drag.copying { onCopyDragCancel() } else { onFrameCommit(drag.layerID, frame) }
+                adoptionHost = nil
                 refreshOverlays()
                 return
             }
@@ -2358,8 +2396,9 @@ final class CanvasNSView: NSView {
                 } else {
                     // Putting everything back where it started is a History
                     // no-op, and it resets the preview render.
-                    onMoveSelectionCommit(drag.plan.origins(movingBoundsTo: drag.plan.bounds.origin))
+                    onMoveSelectionCommit(drag.plan.origins(movingBoundsTo: drag.plan.bounds.origin), false)
                 }
+                adoptionHost = nil
                 refreshOverlays()
                 return
             }
@@ -2707,9 +2746,17 @@ final class CanvasNSView: NSView {
     /// filled outline the exact size of the copy, plus a dashed box around the
     /// frame it would join. Both are gone the moment the drag leaves or lands.
     private func refreshComponentLanding() {
-        guard let viewport, let landing = componentLanding else {
+        guard let viewport else {
             componentLandingLayer.isHidden = true
             componentHostFrameLayer.isHidden = true
+            return
+        }
+        guard let landing = componentLanding else {
+            componentLandingLayer.isHidden = true
+            // A move drag draws no landing box — the layer itself is already
+            // under the pointer, so a second outline of the same size would
+            // just double the edge — but it draws the same dashed screen.
+            outlineHostFrame(adoptionHost, in: viewport)
             return
         }
         let rect = viewRect(forDocRect: landing.rect, in: viewport)
@@ -2718,15 +2765,20 @@ final class CanvasNSView: NSView {
                                             cornerHeight: radius, transform: nil)
         componentLandingLayer.isHidden = false
 
-        // Drawn just OUTSIDE the frame: a component the same size as the screen
-        // it is joining would otherwise hide the very cue that says so.
-        if let host = landing.host, let bounds = document?.canvasBounds(of: host) {
-            let box = viewRect(forDocRect: bounds, in: viewport).insetBy(dx: -3, dy: -3)
-            componentHostFrameLayer.path = CGPath(rect: box, transform: nil)
-            componentHostFrameLayer.isHidden = false
-        } else {
+        outlineHostFrame(landing.host, in: viewport)
+    }
+
+    /// The dashed box around the screen a drop would join. Drawn just OUTSIDE
+    /// the frame: something the same size as the screen it is joining would
+    /// otherwise hide the very cue that says so.
+    private func outlineHostFrame(_ host: UUID?, in viewport: Viewport) {
+        guard let host, let bounds = document?.canvasBounds(of: host) else {
             componentHostFrameLayer.isHidden = true
+            return
         }
+        let box = viewRect(forDocRect: bounds, in: viewport).insetBy(dx: -3, dy: -3)
+        componentHostFrameLayer.path = CGPath(rect: box, transform: nil)
+        componentHostFrameLayer.isHidden = false
     }
 
     /// The topmost visible, unlocked collage layer whose slot contains the

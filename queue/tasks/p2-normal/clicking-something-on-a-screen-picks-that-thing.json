@@ -1,0 +1,28 @@
+{
+  "id": "clicking-something-on-a-screen-picks-that-thing",
+  "title": "Clicking something on a screen picks that thing, not the whole screen",
+  "goal": "Once you drop a button onto a screen, clicking it selects the whole screen instead of the button, so moving it again or dragging it back off takes a double click first. Clicking a thing on a screen should pick that thing.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 980,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T22:15:40.654Z",
+  "updated": "2026-09-03T22:15:40.654Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building screen adoption on 2026-09-03. The canvas rule today is EditorState.groupContextID: a click picks the outermost thing you are not already inside, so a frame swallows clicks aimed at its direct children. Figma treats top-level frames as click-through for their DIRECT children while ordinary groups still need a double click. See Scripts/playtest/screen-adoption-walk.json, stage steppedIn, which needs a double click to reach the rectangle it just dropped.",
+  "acceptance": [
+    "A single click on a layer sitting directly on a screen selects that layer",
+    "A single click on the screen's empty surface still selects the screen",
+    "Dragging a layer straight off a screen needs no double click first",
+    "Layers inside an ordinary group still need a double click to reach, as they do today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T22:15:40.654Z",
+      "note": "created (manual)"
+    }
+  ]
+}

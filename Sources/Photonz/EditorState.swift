@@ -5480,6 +5480,20 @@ final class EditorState {
         commitLayerFrame(id: id, frame: parent)
     }
 
+    /// Mouse-up on a DRAG, in canvas coordinates: the same one undo step, plus
+    /// the layer joining the screen it was dropped on or leaving the one it was
+    /// dragged out of.
+    ///
+    /// Only a drag takes this path. A resize and an arrow-key nudge come
+    /// through `commitCanvasFrame` and never change what holds a layer: a nudge
+    /// quietly changing hands one point at a time is a surprise nobody can see
+    /// coming, and there is no pointer over a screen to say it is about to
+    /// happen. See `FrameAdoption.swift`.
+    func commitCanvasDrop(id: UUID, frame: CGRect) {
+        guard let document, let parent = document.parentSpaceFrame(frame, of: id) else { return }
+        commitLayerFrame(id: id, frame: parent, joiningScreens: true)
+    }
+
     /// Live drag update for a whole multi-selection, in canvas coordinates:
     /// every layer the drag carries goes to its own new origin, and a group
     /// takes what is inside it along in one number changing.
@@ -5507,7 +5521,7 @@ final class EditorState {
 
     /// Mouse-up on a multi-selection drag: the whole selection lands in ONE
     /// undo step, so one ⌘Z puts all of it back where it was.
-    func commitCanvasOrigins(_ moves: [UUID: CGPoint]) {
+    func commitCanvasOrigins(_ moves: [UUID: CGPoint], joiningScreens: Bool = false) {
         previewMoves = [:]
         guard !moves.isEmpty else { return }
         // The rubber band that picked these layers described where they WERE,
@@ -5516,9 +5530,15 @@ final class EditorState {
         // and without this the band sits there outlining empty canvas.
         if selection != nil, !selectionTargetsPixels { setSelection(nil, captureLayers: false) }
         discardDragPreview()
+        // Draw order, so a selection dropped on a screen keeps its stacking
+        // inside it rather than landing in whatever order a dictionary iterated.
+        let ordered = document?.allLayers.map(\.id).filter { moves[$0] != nil } ?? Array(moves.keys)
+        var joined: [UUID] = []
         perform { document in
             for (id, origin) in moves { document.moveLayer(id: id, toCanvasOrigin: origin) }
+            if joiningScreens { joined = document.adoptMovedLayers(ids: ordered) }
         }
+        revealJoinedScreens(joined)
     }
 
     // MARK: ⌥-drag: leave the original, carry a copy
@@ -5565,8 +5585,15 @@ final class EditorState {
         guard !origins.isEmpty else { return cancelCopyDrag() }
         discardDragPreview()
         var made: [UUID] = []
-        perform { made = $0.duplicateLayers(movingCopiesTo: origins) }
+        var joined: [UUID] = []
+        perform { document in
+            made = document.duplicateLayers(movingCopiesTo: origins)
+            // A copy dragged onto a screen joins it, exactly as the original
+            // would have if it had been the thing that travelled.
+            joined = document.adoptMovedLayers(ids: made)
+        }
         guard !made.isEmpty else { return }
+        revealJoinedScreens(joined)
         selectLayers(Set(made))
     }
 
@@ -5611,16 +5638,30 @@ final class EditorState {
     /// nudge that parks the tail at the picture's edge would otherwise carry
     /// the label off the picture, and one dragged back into the open gets its
     /// default spot behind the tail again. Captionless layers pass through.
-    func commitLayerFrame(id: UUID, frame: CGRect) {
+    func commitLayerFrame(id: UUID, frame: CGRect, joiningScreens: Bool = false) {
         previewMoves = [:]
         dragPreviewGeneration += 1 // cancels an in-flight preview session
         clearPreviewAfterNextFrame = dragPreview != nil
+        var joined: [UUID] = []
         perform { document in
             let canvas = document.canvasSize
             document.updateLayer(id: id) {
                 $0 = AnnotationBuilder.planningCaption($0.resized(to: frame), canvas: canvas)
             }
+            // In the SAME mutation as the move, so one undo puts the layer back
+            // where it was and back in what held it.
+            if joiningScreens { joined = document.adoptMovedLayers(ids: [id]) }
         }
+        revealJoinedScreens(joined)
+    }
+
+    /// After a drop changed what holds a layer, open the screen it went into,
+    /// so the layers list shows where it landed instead of losing it in a shut
+    /// row. A layer that came OUT is already at the top level and needs
+    /// nothing opened.
+    private func revealJoinedScreens(_ ids: [UUID]) {
+        guard !ids.isEmpty, let document else { return }
+        for id in ids { expandedGroupIDs.formUnion(document.ancestorIDs(of: id)) }
     }
 
     /// Live rotate/skew update. With a CA preview active the canvas applies

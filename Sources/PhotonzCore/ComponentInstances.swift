@@ -237,6 +237,38 @@ extension PhotonzDocument {
         return enclosing.isDisjoint(with: componentsUsed(by: main))
     }
 
+    /// Whether a whole subtree may be moved inside `group` (nil for the
+    /// canvas) without a component ending up holding itself.
+    ///
+    /// `canInsertInstance` asks this about a copy that does not exist yet;
+    /// this asks it about a layer already on the canvas, which is what dragging
+    /// one onto a screen needs. Same two refusals: nothing goes inside a COPY
+    /// of a component, because a copy shows its original's pieces and an edit
+    /// made there could not be kept, and nothing goes anywhere that would put a
+    /// component inside itself, directly or through anything it already holds —
+    /// such a thing has no size and no picture, it just draws forever.
+    public func canMoveSubtree(_ id: UUID, intoGroup group: UUID?) -> Bool {
+        guard let moved = layer(id: id) else { return false }
+        guard let group else { return true }
+        guard let target = layer(id: group), target.isOpenableGroup, !target.isLocked else { return false }
+        // Every component this move would land inside, including the target.
+        var enclosing: Set<UUID> = []
+        var current: UUID? = group
+        while let this = current {
+            guard let here = layer(id: this) else { break }
+            if here.isComponentInstance { return false }
+            if let component = here.componentID { enclosing.insert(component) }
+            current = parentID(of: this)
+        }
+        guard !enclosing.isEmpty else { return true }
+        // ...against every component the moved subtree IS or RELIES ON.
+        var carried = componentsUsed(by: moved)
+        for layer in moved.selfAndDescendants {
+            if let component = layer.componentID { carried.insert(component) }
+        }
+        return enclosing.isDisjoint(with: carried)
+    }
+
     /// Places a copy of a component with its centre on `point` in canvas
     /// coordinates, and returns the new layer's id.
     ///
