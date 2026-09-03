@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 750,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:41:49.320Z",
-  "updated": "2026-09-03T10:48:19.608245Z",
+  "updated": "2026-09-03T10:48:25.144Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while auditing the starter set on 2026-09-03. A tile picture is 80 points wide (LibraryPanel.maxTiles grid, LibraryComponentTile.thumbnail, DocumentRenderer.thumbnail maxDimension: 80) and scaledToFit, so a 320x48 nav bar renders about 80x12. Options worth weighing: crop to a square of the interesting part rather than fitting the whole thing, give a wide component a two-column tile, or draw the picture larger and let the grid reflow.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-03T10:48:19.608245Z",
       "note": "Harness gap found, not fixed and not filed (it serves a later epic): a playtest walk that focuses the Library search field hangs the app. Worked around it."
+    },
+    {
+      "t": "2026-09-03T10:48:25.143Z",
+      "note": "A tile picture now fits whole only while the fit reads; below a third of the well it is blown up (capped at 2.5x) and cut off at its far edge, anchored at the start, so a nav bar shows its left end and a text field its border and placeholder. Starter pictures are built at the size they are drawn, so the badge is crisp, and the shelf keeps its own sharper cache for document components. Math in PhotonzCore.LibraryShelfLayout.picture, pinned by tests; tile in LibraryComponentTile. Verified on the probe with real captures (before and after in queue/audits) and the full 2044 test suite."
     }
   ],
-  "started": "2026-09-03T10:23:44.678Z"
+  "started": "2026-09-03T10:23:44.678Z",
+  "completed": "2026-09-03T10:48:25.144Z"
 }
