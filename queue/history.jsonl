@@ -1189,3 +1189,4 @@
 {"t":"2026-09-03T17:33:44.116Z","ev":"manager","filed":6,"readyBefore":16,"readyAfter":20,"report":"queue/manager/2026-09-03-1032.md"}
 {"t":"2026-09-03T17:34:08.837Z","ev":"manager_pass","exit":0,"ready":20}
 {"t":"2026-09-03T17:34:08.868Z","ev":"task_started","id":"a-stack-can-be-a-fixed-size-and-its-rows-fill-it","title":"A stack can be a fixed size and its rows fill it","priority":"p1-high"}
+{"t":"2026-09-03T17:49:58.617Z","ev":"task_done","id":"a-stack-can-be-a-fixed-size-and-its-rows-fill-it","from":"in_progress","note":"A stack can be given a width and a height (Layout section Width/Height rows, Hug or Fixed; the number is typed in W and H or dragged with a handle), rows set to Stretch fill it, and padding now works on any arranged group. Verified by 13 new core tests (2297 green) and a real probe walk with window captures; audit at queue/audits/2026-09-03-stack-size.json. Pushed to main as 64bbf9d."}

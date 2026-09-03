@@ -6723,3 +6723,31 @@ granted, real window captures — conversion moved nothing (gap read as 55 from
 the third, dragging a row past its neighbour reordered rather than snapping
 back, and adding a row to a component's original grew the copy in the same place
 in one undoable step. Audit: `queue/audits/2026-09-03-auto-layout.json`.
+
+## 2026-09-03 — a stack can be a size of its own (Next, `next-auto-layout`)
+
+**Changed.** A group that arranges itself is no longer stuck at the size of its
+contents. `GroupLayout` gained `width` and `height` (nil means hug and writes no
+key, so older documents are byte for byte what they were); `Layer.localBounds`
+gives such a group a real box; `GroupFlow.Bounds` shares out the room one axis
+at a time, so a screen, a sized stack and a hugging stack are one path. Resizing
+an arranged group now SIZES it instead of magnifying its contents
+(`LayerScaling.rearranging`), pinning only the axis that actually changed, and
+that carries down: a stack set to Stretch inside a screen takes the width and
+passes it to its own rows. Padding works on any arranged group now, not only a
+screen. The Layout section gained Width and Height as Hug/Fixed rows, above the
+gaps, and its caption says where "make the rows fill it" lives. Fixed on the way
+through: switching a padded stack between stack and grid walked it across the
+canvas, because the contents were being pulled back to the corner every time.
+
+**Verified.** 13 new tests in the group-layout suite (47 there, 2297 overall,
+green) and a real walk on the probe with Screen Recording granted
+(`Scripts/playtest/stack-size-walk.json`): 320 typed into W sizes the stack
+without magnifying its rows, Horizontal ▸ Stretch fills it, padding of 16 insets
+the rows on a plain group, and one undo takes a fixed height back to hug. Audit
+with two window captures: `queue/audits/2026-09-03-stack-size.json`.
+
+**Next.** The `ui-layout` epic's remaining asks: distribution once a stack can
+be longer than its contents, per-side padding, and a minimum/maximum size. Open
+question for the user in the audit: whether typing a width should widen the rows
+by itself, rather than leaving that to the Horizontal row.

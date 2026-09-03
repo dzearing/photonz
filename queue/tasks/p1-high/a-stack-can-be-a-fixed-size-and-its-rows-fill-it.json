@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:21:12.898Z",
-  "updated": "2026-09-03T17:49:40.862859Z",
+  "updated": "2026-09-03T17:49:58.617Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows 2026-09-03 groups-arrange-their-own-contents. Today GroupFlow uses a container box only when group.isFrame; the shortest version is a hug/fixed flag on GroupLayout that gives a plain group a box too, feeding the same contentBox path. Watch idempotence: the cross extent currently comes from the widest child, and a fixed box replaces it.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-03T17:49:40.862859Z",
       "note": "Audit: queue/audits/2026-09-03-stack-size.json with two window captures."
+    },
+    {
+      "t": "2026-09-03T17:49:58.616Z",
+      "note": "A stack can be given a width and a height (Layout section Width/Height rows, Hug or Fixed; the number is typed in W and H or dragged with a handle), rows set to Stretch fill it, and padding now works on any arranged group. Verified by 13 new core tests (2297 green) and a real probe walk with window captures; audit at queue/audits/2026-09-03-stack-size.json. Pushed to main as 64bbf9d."
     }
   ],
-  "started": "2026-09-03T17:34:08.867Z"
+  "started": "2026-09-03T17:34:08.867Z",
+  "completed": "2026-09-03T17:49:58.617Z"
 }
