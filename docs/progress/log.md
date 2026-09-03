@@ -6584,3 +6584,43 @@ Verified: `Scripts/test.sh` green (2187 tests);
 Recording granted, twelve stages with real captures, plus
 `frame-name-rename-walk.json` re-run unchanged as a regression. Audit:
 `queue/audits/2026-09-03-component-name-rename.json`.
+
+## 2026-09-03 — a shift-sweep adds what it takes in
+
+A rubber band always started the selection over, so a selection of three things
+had to be right in one sweep or be swept again from scratch. Shift already means
+"and this too" everywhere else you pick something — a row in the Layers list, a
+layer on the picture — so it means it for a band now: shift-sweep and the catch
+joins what you already had.
+
+The rule went into `PhotonzCore` first, as tests: `BareCanvasPress` gains
+`sweepAddsToSelection` and `selection(afterSweeping:startingFrom:)`, which says
+that adding is adding and never toggling, and that a sweep catching nothing new
+changes nothing. `CanvasView` routes a shift-sweep to a new `onAddSweptLayers`
+and runs its mid-sweep outlines through the same call, so what you let go on is
+what you saw; `EditorState.addSweptLayersToSelection` unions the catch with the
+set the Layers menu acts on. Nothing touches the document, so nothing lands in
+undo.
+
+The collision the previous half left open is closed by removing it: shift over
+an empty press also constrained the band to a square, and shift cannot mean both
+add and square in one gesture. A square band creates nothing and picks nothing a
+free band cannot, so the square went rather than moving to another modifier. The
+rect and ellipse region tools never had it and are untouched.
+
+The review on the probe caught one glitch of its own: after a plain sweep, a
+shift-sweep that caught nothing new took the band down on the canvas but left it
+in the editor's state, so it flashed back a moment later. The band now comes down
+before the nothing-changed exit.
+
+Next: nothing here is blocked. Named rough in the audit — a sweep still ignores
+which group you are inside and picks top-level layers, which was already true of
+a plain sweep; and dropping a layer out of a selection is still shift-click, one
+at a time.
+
+Verified: `Scripts/test.sh` green (2199 tests);
+`Scripts/playtest/shift-sweep-add-walk.json` on the probe with Screen Recording
+granted, all 41 steps, real window captures, 1 → 2 → 3 layers over three sweeps
+and one undo still landing on the last rectangle drawn; `shift-click-select`,
+`multi-drag` and `multi-geometry` re-run as regressions. Audit:
+`queue/audits/2026-09-03-shift-sweep-add.json`.

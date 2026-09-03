@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T08:21:50.865Z",
-  "updated": "2026-09-03T15:48:02.586020Z",
+  "updated": "2026-09-03T15:48:09.524Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Half of the original task shipped on 2026-09-03 (commit 3d46af2): a shift-click that lands on bare canvas now spares the selection, through BareCanvasPress in PhotonzCore, latched at mouse-down in CanvasView. What is left is the DRAG: CanvasView still starts a MarqueeDrag that replaces the selection whether or not shift is down. Note the collision the earlier task left alone: shift over an empty press currently also means constrain-the-band-to-a-square (read in CanvasView.mouseUp), so the square constraint needs a new modifier or has to go. BareCanvasPress is the place to put the new rule so it is tested first. DONE 2026-09-03: the rule lives in PhotonzCore (BareCanvasPress.sweepAddsToSelection, selection(afterSweeping:startingFrom:)); CanvasView.mouseUp routes \u21e7-sweeps to onAddSweptLayers -> EditorState.addSweptLayersToSelection, which unions with actionableLayerIDs, takes the stale band down and leaves a pixel region alone. Mid-sweep outlines call the same core rule with pickedLayerIDs (multi + primary). The \u21e7-square constraint on the arrow band is REMOVED (MarqueeDrag.selectionRect(constrainSquare:) still exists and is tested, but nothing in the app passes it now).",
+  "notes": "Half of the original task shipped on 2026-09-03 (commit 3d46af2): a shift-click that lands on bare canvas now spares the selection, through BareCanvasPress in PhotonzCore, latched at mouse-down in CanvasView. What is left is the DRAG: CanvasView still starts a MarqueeDrag that replaces the selection whether or not shift is down. Note the collision the earlier task left alone: shift over an empty press currently also means constrain-the-band-to-a-square (read in CanvasView.mouseUp), so the square constraint needs a new modifier or has to go. BareCanvasPress is the place to put the new rule so it is tested first. DONE 2026-09-03: the rule lives in PhotonzCore (BareCanvasPress.sweepAddsToSelection, selection(afterSweeping:startingFrom:)); CanvasView.mouseUp routes ⇧-sweeps to onAddSweptLayers -> EditorState.addSweptLayersToSelection, which unions with actionableLayerIDs, takes the stale band down and leaves a pixel region alone. Mid-sweep outlines call the same core rule with pickedLayerIDs (multi + primary). The ⇧-square constraint on the arrow band is REMOVED (MarqueeDrag.selectionRect(constrainSquare:) still exists and is tested, but nothing in the app passes it now).",
   "acceptance": [
     "Shift-dragging a band on the canvas adds every layer it fully contains to the existing selection",
     "A plain sweep still replaces the selection the way it does today",
@@ -38,20 +38,25 @@
     },
     {
       "t": "2026-09-03T15:48:02.586020Z",
-      "note": "adversarial pass before building: (1) the \u21e7 collision is real \u2014 \u21e7 on an empty press also constrained the band to a square, and \u21e7 cannot mean both. A square band CREATES nothing, it only picks, so the square is decorative here and was cut rather than moved to another modifier (the rect/ellipse region tools never had it and are untouched). (2) Adding, not toggling: a band that toggled what it swept would be unreadable, and the task asks for add. Dropping stays \u21e7-click. (3) Shortest version: the band lifts on release instead of lingering, because it describes one sweep and not the selection \u2014 the same rule extendSelection already followed for a \u21e7-click."
+      "note": "adversarial pass before building: (1) the ⇧ collision is real — ⇧ on an empty press also constrained the band to a square, and ⇧ cannot mean both. A square band CREATES nothing, it only picks, so the square is decorative here and was cut rather than moved to another modifier (the rect/ellipse region tools never had it and are untouched). (2) Adding, not toggling: a band that toggled what it swept would be unreadable, and the task asks for add. Dropping stays ⇧-click. (3) Shortest version: the band lifts on release instead of lingering, because it describes one sweep and not the selection — the same rule extendSelection already followed for a ⇧-click."
     },
     {
       "t": "2026-09-03T15:48:02.586020Z",
-      "note": "built: PhotonzCore gains BareCanvasPress.sweepAddsToSelection + selection(afterSweeping:startingFrom:) (6 new tests, written first). CanvasView routes a \u21e7-sweep to a new onAddSweptLayers callback and its mid-sweep outlines run through the same rule, so the band shows what you will get. EditorState.addSweptLayersToSelection unions the catch with actionableLayerIDs. The square constraint is gone from the arrow band (constrainSquare no longer threaded through refreshOverlays)."
+      "note": "built: PhotonzCore gains BareCanvasPress.sweepAddsToSelection + selection(afterSweeping:startingFrom:) (6 new tests, written first). CanvasView routes a ⇧-sweep to a new onAddSweptLayers callback and its mid-sweep outlines run through the same rule, so the band shows what you will get. EditorState.addSweptLayersToSelection unions the catch with actionableLayerIDs. The square constraint is gone from the arrow band (constrainSquare no longer threaded through refreshOverlays)."
     },
     {
       "t": "2026-09-03T15:48:02.586020Z",
-      "note": "adversarial pass on the built app found one glitch: after a plain sweep (ants on screen) a \u21e7-sweep that caught nothing new took the band down in the view but left it in EditorState, so it flashed back on the next echo. Fixed by taking the band down first, before the nothing-changed early return. Re-verified."
+      "note": "adversarial pass on the built app found one glitch: after a plain sweep (ants on screen) a ⇧-sweep that caught nothing new took the band down in the view but left it in EditorState, so it flashed back on the next echo. Fixed by taking the band down first, before the nothing-changed early return. Re-verified."
     },
     {
       "t": "2026-09-03T15:48:02.586020Z",
-      "note": "verified on the probe: Scripts/playtest/shift-sweep-add-walk.json, all 41 steps ok. selection by stage \u2014 plain sweep 1, \u21e7-sweep 2, \u21e7-sweep 3, \u21e7-sweep over blank 3 (unchanged), \u21e7-resweep of a picked one 3, plain sweep 1, then ONE undo drops layers 4\u21923 (the last rectangle drawn), so no sweep pushed an undo step. Regression walks shift-click-select, multi-drag, multi-geometry all ok. Scripts/test.sh green (2199 tests). Audit: queue/audits/2026-09-03-shift-sweep-add.json with two real window captures."
+      "note": "verified on the probe: Scripts/playtest/shift-sweep-add-walk.json, all 41 steps ok. selection by stage — plain sweep 1, ⇧-sweep 2, ⇧-sweep 3, ⇧-sweep over blank 3 (unchanged), ⇧-resweep of a picked one 3, plain sweep 1, then ONE undo drops layers 4→3 (the last rectangle drawn), so no sweep pushed an undo step. Regression walks shift-click-select, multi-drag, multi-geometry all ok. Scripts/test.sh green (2199 tests). Audit: queue/audits/2026-09-03-shift-sweep-add.json with two real window captures."
+    },
+    {
+      "t": "2026-09-03T15:48:09.524Z",
+      "note": "A ⇧-sweep now adds what the band takes in to the selection: rule test-first in PhotonzCore (BareCanvasPress.sweepAddsToSelection), routed through CanvasView + EditorState.addSweptLayersToSelection, with the mid-sweep outlines showing the whole result. ⇧ no longer squares the arrow band. Verified on the probe (Scripts/playtest/shift-sweep-add-walk.json, 41 steps, real captures) and Scripts/test.sh green. Audit: queue/audits/2026-09-03-shift-sweep-add.json"
     }
   ],
-  "started": "2026-09-03T15:33:13.000Z"
+  "started": "2026-09-03T15:33:13.000Z",
+  "completed": "2026-09-03T15:48:09.524Z"
 }
