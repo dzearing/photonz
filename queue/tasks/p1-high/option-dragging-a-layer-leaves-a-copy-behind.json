@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:30:11.655Z",
-  "updated": "2026-09-03T18:37:47.021818Z",
+  "updated": "2026-09-03T18:38:17.656Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Nothing in CanvasView mentions duplicate today: the word does not appear in the file, and the .option reads there are the corner-anchored resize (line 1540), the region move (1570) and the fill shortcut (2135). The layer drag begins in CanvasView and runs through EditorState drag preview plus the multi-drag path that landed 2026-09-03 (queue/audits/2026-09-03-multi-drag.json). Read the modifier at the moment the drag starts, not continuously, so letting go of Option mid-drag does not undo the copy. Duplicate already exists whole in EditorState.duplicateSelectedLayers (line 3030) including the naming rule and group placement, so the copy should go through the same code rather than a second one. Ships unflagged, the way shift-click to add and shift-sweep to add did; if the runner judges it needs a switch it goes in FeatureCatalog as a Next flag on by default.",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-03T18:37:47.021818Z",
       "note": "Scripts/test.sh green: 2321 tests, 217 suites."
+    },
+    {
+      "t": "2026-09-03T18:38:17.655Z",
+      "note": "Option-drag now leaves the original and carries a copy: new Document.duplicateLayers(movingCopiesTo:) in PhotonzCore plus previewCopyDrag/commitCopyDrag/cancelCopyDrag in EditorState and a copying flag on both canvas drag paths. One undo step, works over a multi-selection, keeps Option's skew and region meanings, and the pointer wears a copy badge. 13 new core tests, full suite green (2321), verified in the probe with Scripts/playtest/option-drag-copy-walk.json and real screenshots. Audit: queue/audits/2026-09-03-option-drag-copy.json"
     }
   ],
-  "started": "2026-09-03T18:11:57.369Z"
+  "started": "2026-09-03T18:11:57.369Z",
+  "completed": "2026-09-03T18:38:17.656Z"
 }
