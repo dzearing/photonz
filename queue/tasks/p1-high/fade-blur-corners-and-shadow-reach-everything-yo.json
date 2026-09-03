@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:30:30.210Z",
-  "updated": "2026-09-03T19:00:58.085606Z",
+  "updated": "2026-09-03T19:01:26.959Z",
   "deps": [],
   "blockedBy": [],
   "notes": "LayersPanel.swift availableSections (line 157) inserts .effects and .shadow only inside `if let layer = selectedLayer`, and selectedLayer reads editorState.selectedLayerID, which is empty over a multi-selection, so both sections vanish. The pattern to copy is the Color section right above it: colorRowSlots over editorState.actionableLayerIDs (EditorState.swift:3011) plus the mixed reading and the whole-selection writes in ColorStyleSelection.swift. EffectsInspector and ShadowInspector (LayersPanel.swift:1438 and 1500) take a single Layer and write through setLayerStyle(id:); they need a selection-wide equivalent with a mixed reading, and the maths belongs in PhotonzCore with tests, not in the view. Evidence: the rough line in queue/audits/2026-09-03-color-one-home.json, and queue/audits/2026-09-03-color-one-home-2-two-layers.png, where two picked rectangles show Layers, Arrange, Position and Size, Color and Library and nothing else. Same section family, so no flag: the Color fix shipped unflagged.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-03T19:00:58.085606Z",
       "note": "Note for a future run: the probe remembers a tool's last style, so a walk that relies on a rectangle starting square must clear it first (defaults delete com.dzearing.photonz.probe annotationStyles). A first run of this walk read 24 pt where it should have read Mixed for exactly that reason, and nothing was wrong with the app."
+    },
+    {
+      "t": "2026-09-03T19:01:26.958Z",
+      "note": "Effects and Shadow now speak for the whole selection: one pull on Opacity, Blur, Corner Radius, Border or any shadow row reaches every picked layer in one undo step, and a value that differs reads as Mixed. Reading and maths in PhotonzCore/LayerStyleSelection.swift with 20 tests written first; EditorState's slider preview holds a set of layers; EffectsInspector/ShadowInspector/LayerStyleSlider rewritten. Verified on the probe with Scripts/playtest/selection-effects-walk.json (real window captures, measured renders); 2342 tests green. Audit: queue/audits/2026-09-03-selection-effects.json. Two follow-ups filed."
     }
   ],
-  "started": "2026-09-03T18:38:54.161Z"
+  "started": "2026-09-03T18:38:54.161Z",
+  "completed": "2026-09-03T19:01:26.959Z"
 }

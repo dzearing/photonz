@@ -6810,3 +6810,46 @@ Next: two follow-ups filed — a rectangle showing two different sliders both
 called Corner Radius, and the Effects/Shadow sections sitting so far down the
 dock that they fall below the fold. Audit for the user:
 `queue/audits/2026-09-03-selection-effects.json`.
+
+## 2026-09-03 — Witnessing the capture dim: the diagnostic learned to answer the last two questions
+
+The screen was locked for this whole session (`ioreg -n Root -d1 -a | plutil
+-extract IOConsoleLocked raw -` said `true` at the start, in the middle and at
+the end), so the capture dim still has not been witnessed on a real screen. A
+locked Mac photographs as the lock screen, so every pixel reading is of the lock
+screen and means nothing. Nothing here works around that, and nothing should.
+
+What did move: `--capture-diag` could not have answered two of the four things
+the task asks for even on an unlocked screen, so it can now.
+
+- **The frozen picture is measured, not inferred.** Every reading in the report
+  used to come off the LIVE screen, which answers "what would another tool see"
+  and only implies whether the picture we froze is the true screen. The two fail
+  independently. `RectSelectionController.frozenImages` (probe-only) exposes what
+  each display actually froze, and the report now reads its mean luma straight,
+  against the clean screen: 1.00 is the true screen, about 0.75 means we
+  photographed our own dim and the world would look twice as dark.
+- **The window shadow is checked against a real window.** This was the one thing
+  the freeze put at risk and the one thing nothing could see. The freeze moved
+  from `SCScreenshotManager.captureImage(in:)` to
+  `SCContentFilter(display:excludingWindows:)` with `ignoreShadows = false`, and
+  the filter path was measured on 2026-07-03 to synthesize no window shadows at
+  all (see the comment in `ScreenCapturer.capture(screen:)`). `ignoreShadows =
+  false` is meant to have fixed that and nobody had checked. The earlier run
+  could not check, because it compared two shots of an empty screen, where "the
+  shadow is missing" and "there is nothing to cast one" look identical. So the
+  diag now puts a grey backdrop and a white card on screen itself and reads the
+  band of backdrop just under the card against a clean band 200 points lower,
+  through both paths. Our own two windows are the whole comparison, so the
+  wallpaper and the time of day cannot change the answer.
+
+The run on the locked screen proved the instrumentation runs end to end and
+refuses to invent an answer: the shadow line came back `INCONCLUSIVE: the old
+path found no shadow either`, which is exactly right when nothing is visible
+past the lock. The dim line likewise read 1.002 of clean, the lock-screen
+artifact, not a regression.
+
+**Next**: run `open -a "$PWD/dist/Photonz Probe.app" --args --capture-diag` once
+somebody is logged in and read `/tmp/photonz-capture-diag.txt`. One command now
+answers all four acceptance items. Check the lock first; `open -a` needs the
+absolute path to the bundle, a bare `dist/...` fails to resolve.

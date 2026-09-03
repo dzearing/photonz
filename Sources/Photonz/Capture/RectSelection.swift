@@ -219,6 +219,12 @@ final class RectSelectionController {
         (windows.filter { $0.frozenImage != nil }.count, windows.count)
     }
 
+    /// Probe only: the picture each display actually froze. `--capture-diag`
+    /// measures this directly rather than inferring it from how bright the live
+    /// screen looks, which is the only way to tell a freeze that photographed
+    /// the true screen from one that photographed our own dim as well.
+    var frozenImages: [CGImage] { windows.compactMap(\.frozenImage) }
+
     /// Probe only: drags a box on the first display's overlay without a mouse,
     /// so an unmanned run can photograph what a drag looks like. The overlay
     /// covers the screen and owns the pointer, which is why a walk cannot get

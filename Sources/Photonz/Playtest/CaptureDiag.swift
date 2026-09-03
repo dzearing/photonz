@@ -3,13 +3,16 @@ import AppKit
 
 /// Probe-only check of the region capture overlay (`--capture-diag`). The
 /// overlay covers every display and owns the pointer, so a playtest walk cannot
-/// reach it; this drives it directly instead and answers the three things that
+/// reach it; this drives it directly instead and answers the four things that
 /// decide whether it behaves:
 ///
-/// 1. How long from "start a capture" to the screen being dim.
+/// 1. How long from "start a capture" to the screen being dim, both to another
+///    capture tool's pixels and to the window server's own sharing state.
 /// 2. When each display's frozen picture lands underneath.
-/// 3. Whether that picture is the true screen or a photograph of our own dim.
-///    A dim screen reads 0.75 of a clean one; a doubly dimmed one reads 0.56.
+/// 3. Whether that picture is the true screen or a photograph of our own dim,
+///    measured on the picture itself. A doubly dimmed one reads 0.75 of clean.
+/// 4. Whether a window's drop shadow survives the capture API the freeze uses,
+///    checked against a window this puts on screen for the purpose.
 ///
 /// It leaves a real screenshot of a drag in flight, which is the only way to
 /// photograph the overlay.
@@ -65,6 +68,8 @@ enum CaptureDiag {
         } else {
             say("freeze capture vs plain capture: could not take both shots")
         }
+
+        await shadowCheck(on: screen)
 
         var selection: RectSelectionController?
         selection = RectSelectionController(
@@ -128,6 +133,24 @@ enum CaptureDiag {
             say("freeze had not landed within 3 s")
         }
 
+        // The picture itself, measured rather than inferred. Everything above
+        // reads the LIVE screen, which answers "what does another tool see";
+        // this answers "is the picture we froze the true screen", and the two
+        // fail independently. A freeze that photographed our own dim reads
+        // about 0.75 of clean here and would show the world twice as dark the
+        // moment the dim is drawn over it.
+        if let frozen = selection?.frozenImages.first {
+            let frozenLuma = luma(of: frozen)
+            let frozenRatio = frozenLuma / max(clean, 0.0001)
+            say(String(format: "frozen picture under the overlay: mean luma %.4f, %.3f of clean "
+                       + "(%@)", frozenLuma, frozenRatio,
+                       frozenRatio > 0.9
+                       ? "the true screen, so the world is never dimmed twice"
+                       : "OUR OWN DIM IS IN THE PICTURE, the world would look twice as dark"))
+        } else {
+            say("frozen picture under the overlay: no display froze one, nothing to measure")
+        }
+
         // A drag, photographed for real: the box, its size pill, and nothing
         // else beside the pointer.
         selection?.simulateDrag(from: CGPoint(x: 320, y: 260), to: CGPoint(x: 900, y: 620))
@@ -149,6 +172,89 @@ enum CaptureDiag {
         try? out.joined(separator: "\n").write(toFile: "/tmp/photonz-capture-diag.txt",
                                                atomically: true, encoding: .utf8)
         NSApp.terminate(nil)
+    }
+
+    /// Whether a window's drop shadow survives the capture API the freeze now
+    /// uses. This is the one thing the switch put at risk and the one thing
+    /// nothing else here can see: the old path
+    /// (`SCScreenshotManager.captureImage(in:)`) photographs the display the way
+    /// the system screenshot does, shadows and all, while the filter path
+    /// re-composites windows from their own buffers and was measured on
+    /// 2026-07-03 to synthesize no shadows at all. `ignoreShadows = false` is
+    /// meant to have fixed that, and nobody has checked.
+    ///
+    /// A previous run could not check, because it compared two shots of a screen
+    /// with no windows on it, where "shadows are missing" and "there is nothing
+    /// to cast one" look identical. So put a window there: a plain grey backdrop
+    /// with a white card floating above it, and read the band of backdrop just
+    /// below the card's bottom edge, where the shadow falls, against a band far
+    /// enough below to be clean. Our own two windows are the only thing being
+    /// compared, so the wallpaper, the time of day and the menu bar cannot
+    /// change the answer.
+    private static func shadowCheck(on screen: NSScreen) async {
+        // Screen-local points, top-left origin. The card sits high in the
+        // backdrop so there is room below it for both bands.
+        let backdrop = CGRect(x: 160, y: 160, width: 700, height: 600)
+        let card = CGRect(x: backdrop.minX + 60, y: backdrop.minY + 60, width: 360, height: 240)
+        // A window shadow reaches tens of points below the sill; 200 points down
+        // is backdrop and nothing else.
+        let shadowBand = CGRect(x: card.minX + 40, y: card.maxY + 4,
+                                width: card.width - 80, height: 10)
+        let cleanBand = CGRect(x: card.minX + 40, y: card.maxY + 200,
+                               width: card.width - 80, height: 10)
+
+        let back = panel(at: backdrop, on: screen, color: .init(white: 0.45, alpha: 1),
+                         shadow: false)
+        let front = panel(at: card, on: screen, color: .init(white: 0.95, alpha: 1), shadow: true)
+        defer {
+            front.orderOut(nil)
+            back.orderOut(nil)
+        }
+        // Give the window server time to draw both and settle the shadow.
+        try? await Task.sleep(for: .milliseconds(400))
+
+        guard let plain = try? await ScreenCapturer.capture(screen: screen),
+              let filtered = try? await ScreenCapturer.capture(screen: screen,
+                                                               excludingWindowNumbers: []) else {
+            say("window shadow through the freeze's capture path: could not take both shots")
+            return
+        }
+
+        func depth(_ image: CGImage) -> Double {
+            luma(of: image, in: cleanBand, on: screen) - luma(of: image, in: shadowBand, on: screen)
+        }
+        let plainDepth = depth(plain)
+        let freezeDepth = depth(filtered)
+        // The shadow is a fraction of the backdrop's brightness, so judge the
+        // freeze against the old path rather than against an absolute number.
+        let kept = plainDepth > 0.01 ? freezeDepth / plainDepth : -1
+        say(String(format: "window shadow below a test window: old path darkens the band by "
+                   + "%.4f, freeze path by %.4f", plainDepth, freezeDepth))
+        if plainDepth <= 0.01 {
+            say("  INCONCLUSIVE: the old path found no shadow either, so there was nothing to "
+                + "compare (a locked screen does this)")
+        } else if kept > 0.75 {
+            say(String(format: "  shadow survives the freeze: %.0f%% as deep as before", kept * 100))
+        } else {
+            say(String(format: "  SHADOW LOST: only %.0f%% as deep as before, so frozen windows "
+                       + "look pasted on", kept * 100))
+        }
+    }
+
+    /// A plain coloured window at a screen-local, top-left-origin points rect.
+    private static func panel(at local: CGRect, on screen: NSScreen, color: NSColor,
+                              shadow: Bool) -> NSWindow {
+        let frame = CGRect(x: screen.frame.minX + local.minX,
+                           y: screen.frame.maxY - local.maxY,
+                           width: local.width, height: local.height)
+        let window = NSWindow(contentRect: frame, styleMask: [.borderless],
+                              backing: .buffered, defer: false)
+        window.backgroundColor = color
+        window.isOpaque = true
+        window.hasShadow = shadow
+        window.animationBehavior = .none
+        window.orderFrontRegardless()
+        return window
     }
 
     /// What the window server itself thinks each of these windows is worth to a
@@ -173,15 +279,27 @@ enum CaptureDiag {
         return luma(of: image)
     }
 
+    /// Mean luminance of one screen-local, top-left-origin points rect inside a
+    /// full-screen shot. The scale is read off the picture rather than the
+    /// display, the way the freeze's own crop does it.
+    private static func luma(of image: CGImage, in local: CGRect, on screen: NSScreen) -> Double {
+        guard screen.frame.width > 0 else { return -1 }
+        let scale = CGFloat(image.width) / screen.frame.width
+        let rect = CGRect(x: local.minX * scale, y: local.minY * scale,
+                          width: local.width * scale, height: local.height * scale).integral
+        guard let crop = image.cropping(to: rect) else { return -1 }
+        return luma(of: crop, step: 1)
+    }
+
     /// Mean luminance of one picture.
-    private static func luma(of image: CGImage) -> Double {
+    private static func luma(of image: CGImage, step: Int = 8) -> Double {
         guard let data = image.dataProvider?.data as Data? else { return -1 }
         let bpr = image.bytesPerRow
         let bpp = image.bitsPerPixel / 8
         var total = 0.0
         var count = 0.0
-        for y in stride(from: 0, to: image.height, by: 8) {
-            for x in stride(from: 0, to: image.width, by: 8) {
+        for y in stride(from: 0, to: image.height, by: step) {
+            for x in stride(from: 0, to: image.width, by: step) {
                 let i = y * bpr + x * bpp
                 guard i + 2 < data.count else { continue }
                 total += (Double(data[i]) + Double(data[i + 1]) + Double(data[i + 2])) / 765.0

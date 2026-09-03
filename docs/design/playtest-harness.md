@@ -172,11 +172,22 @@ read coordinates straight off the fixture.
   `Scripts/probe-app.sh --no-build` then
   `open -a "dist/Photonz Probe.app" --args --capture-diag` runs it once and
   writes `/tmp/photonz-capture-diag.txt`: how long from starting a capture to
-  the screen being dim, whether the frozen picture underneath is the true
-  screen or a photograph of our own dim, and a real screenshot of a drag in
-  flight at `/tmp/photonz-capture-diag-drag.png`. It quits the probe when it is
-  done. **A locked screen invalidates the whole run** — every capture comes back
-  as the desktop picture — and the first line of the report says so.
+  the screen being dim (in another tool's pixels and in the window server's own
+  sharing state), whether the frozen picture underneath is the true screen or a
+  photograph of our own dim, whether a window's drop shadow survives the capture
+  API the freeze uses, and a real screenshot of a drag in flight at
+  `/tmp/photonz-capture-diag-drag.png`. It quits the probe when it is done.
+  **A locked screen invalidates the whole run** — every capture comes back as
+  the desktop picture — and the first line of the report says so.
+
+  The shadow line puts two windows of its own on screen (a grey backdrop with a
+  white card floating over it) and reads the band of backdrop just under the
+  card against a band far enough below to be clean, through the old capture path
+  and the freeze's new one. It has to supply its own window because a shot of an
+  empty screen cannot tell "the shadow is missing" from "there is nothing to
+  cast one", which is how an earlier run left the question open. When the old
+  path finds no shadow either the line says INCONCLUSIVE rather than guessing,
+  which is what a locked screen produces.
 - **Glass and vibrancy do not render offscreen**: a snapshot shows the
   window's content, not the system's translucency. Toasts and the capture
   overlay are not covered; the walk starts at the editor.
