@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T08:21:42.624Z",
-  "updated": "2026-09-03T12:12:11.127Z",
+  "updated": "2026-09-03T12:29:01.223999Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CanvasView.mouseDown falls through to onSelectLayerInGroup + a single-layer MoveDrag whenever the pick hits a layer, so a press on a member of EditorState.multiSelectedLayerIDs collapses the selection. Needs a multi-layer move drag: one grab offset, every member offset by the same delta, committed through one History.perform (see EditorState.setLayerGeometry for the fold-into-one-perform pattern). Snapping peers should exclude every member. Noticed while building canvas shift-click (2026-09-03).",
@@ -31,6 +31,26 @@
     {
       "t": "2026-09-03T12:12:11.127Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T12:29:01.223999Z",
+      "note": "Adversarial review before building: (1) the mock-free question was WHAT snaps. Snapping the layer under the pointer would let the rest land wherever, so the object that moves is the BOX the selection makes; the outer edges line up and everything keeps its spacing. Identical to today for a one-layer selection. (2) A group and a piece inside it both picked must move once, not twice: the piece is dropped from the plan. (3) Locked layers stay out, so tidying buttons never slides the picture underneath; they cannot be hit-tested on canvas anyway. (4) Several layers dropped into one collage cell means nothing: a multi-drag never offers itself to a cell. (5) Shortest version: no new sprite machinery, reuse the existing full-submit preview path and the one-perform commit that typed geometry already uses."
+    },
+    {
+      "t": "2026-09-03T12:29:01.223999Z",
+      "note": "Built: PhotonzCore MultiLayerDrag (test-first, 11 tests) + PhotonzDocument.multiLayerDrag(moving:) and a set-taking snapPeers(excluding:). EditorState previewMove became previewMoves so a whole selection can preview at once, plus previewCanvasOrigins/commitCanvasOrigins (one History.perform). CanvasView gained MultiMoveDrag: press on a picked layer keeps the selection and drags the box, Command drags free of the magnets, Escape puts it back, the member outlines track the drag and the snap guide draws for a selection that has no primary layer."
+    },
+    {
+      "t": "2026-09-03T12:29:01.223999Z",
+      "note": "Review of the built thing on the probe found two real faults, both fixed: the snap guide never drew, because the outline pass bails out when there is no primary layer (guide drawing extracted into refreshSnapGuides and reached from both paths); and a rubber band left over from a sweep sat still while the swept layers slid out from under it, so it now comes down the moment they move, the same rule a shift-click already follows."
+    },
+    {
+      "t": "2026-09-03T12:29:01.223999Z",
+      "note": "Verified on Photonz Probe with Scripts/playtest/multi-drag-walk.json (Screen Recording granted, so the pictures are real captures): drag +120,+80 on the top of two picked rectangles moved both by exactly that and left the third alone, selection still naming both; one undo restored both; dragging the unpicked rectangle selected and moved only it; a press that barely moves changed nothing; a 14-point drag left snapped the SELECTION box onto the third rectangle's left edge at x 100; a swept selection of three moved all three by 50,50. Scripts/test.sh green, 2099 tests."
+    },
+    {
+      "t": "2026-09-03T12:29:01.223999Z",
+      "note": "Audit: queue/audits/2026-09-03-multi-drag.json with three mid-drag captures. Follow-up filed: arrow-keys-nudge-everything-you-picked (arrow keys still do nothing with several layers picked)."
     }
   ],
   "started": "2026-09-03T12:12:11.127Z"

@@ -1,0 +1,29 @@
+{
+  "feature": "Drag everything you picked",
+  "epic": "ui-components",
+  "summary": "Press on any one of several picked layers and drag, and all of them travel together in one move and one undo. Before this, that press threw the rest of the selection away and moved the one layer under the pointer.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Open a blank canvas and draw three rectangles with the Rectangle tool, well apart." },
+    { "do": "Press V for the Select tool, click the top rectangle, then shift-click the middle one." },
+    { "do": "Press inside the top rectangle and drag. Both picked rectangles should move together and stay picked.", "shot": "2026-09-03-multi-drag-1-together-sc.png" },
+    { "do": "Press Command Z once. Both should go back in a single step." },
+    { "do": "Drag the two picked rectangles slowly until their left edges reach the third rectangle's left edge. A line should appear where the whole selection lines up.", "shot": "2026-09-03-multi-drag-2-lineup-sc.png" },
+    { "do": "Hold Command while dragging. The magnets should let go." },
+    { "do": "Press Escape, sweep a rubber band around all three, then drag one of them.", "shot": "2026-09-03-multi-drag-3-swept-sc.png" },
+    { "do": "Drag a rectangle that is NOT picked. It alone should be selected, and it alone should move." }
+  ],
+  "evaluate": [
+    "Does dragging feel like moving one object, or can you tell it is several layers being pushed at once?",
+    "The whole selection's outer box is what lines up, not the rectangle under your pointer. Is that what you expected, or did you want the piece you grabbed to be the thing that snaps?",
+    "Is the moment the drag starts clean, or do you see a flicker on the first few points of movement?",
+    "Does the alignment line show up in a useful spot when a selection lines up, or is it hard to tell what it is pointing at?",
+    "The rubber band comes down the moment a swept selection starts moving. Does losing it feel right, or would you rather it followed?"
+  ],
+  "rough": [
+    "There is no floated preview for a multi-selection the way there is for a single layer: the picture is re-rendered on every point of the drag instead. On the 12 megapixel, 10 layer benchmark that render is about 5 milliseconds, so it should feel the same, but a very heavy document may feel less silky than dragging one layer does.",
+    "Grabbing a picked layer when everything else picked is locked falls back to the old behaviour: the selection collapses to the layer you grabbed and only it moves. Locked layers cannot be clicked on the picture at all, so this only shows up in a selection built from the Layers list.",
+    "Arrow keys still do nothing with several layers picked: nudging is wired to the single selection only. Filed as its own task.",
+    "Screen Recording was granted, so all three pictures here are real window captures taken mid-drag, not offscreen renders."
+  ]
+}

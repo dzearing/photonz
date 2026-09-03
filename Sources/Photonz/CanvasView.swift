@@ -115,6 +115,10 @@ struct CanvasView: NSViewRepresentable {
     let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
+    /// A multi-selection dragged on the picture: where every layer it carries
+    /// sits right now, and where they all land. Canvas coordinates.
+    var onMoveSelectionPreview: ([UUID: CGPoint]) -> Void = { _ in }
+    var onMoveSelectionCommit: ([UUID: CGPoint]) -> Void = { _ in }
     let onTransformPreview: (UUID, LayerTransform) -> Void
     let onTransformCommit: (UUID, LayerTransform) -> Void
     let onAnnotationCommit: (CGPoint, CGPoint) -> Layer?
@@ -207,6 +211,8 @@ struct CanvasView: NSViewRepresentable {
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
+        view.onMoveSelectionPreview = onMoveSelectionPreview
+        view.onMoveSelectionCommit = onMoveSelectionCommit
         view.onTransformPreview = onTransformPreview
         view.onTransformCommit = onTransformCommit
         view.onAnnotationCommit = onAnnotationCommit
@@ -270,6 +276,8 @@ final class CanvasNSView: NSView {
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
+    var onMoveSelectionPreview: (([UUID: CGPoint]) -> Void) = { _ in }
+    var onMoveSelectionCommit: (([UUID: CGPoint]) -> Void) = { _ in }
     var onTransformPreview: ((UUID, LayerTransform) -> Void) = { _, _ in }
     var onTransformCommit: ((UUID, LayerTransform) -> Void) = { _, _ in }
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Layer?) = { _, _ in nil }
@@ -691,6 +699,35 @@ final class CanvasNSView: NSView {
         var moved = false
     }
     private var moveDrag: MoveDrag?
+
+    /// In-progress move of a whole multi-selection. What is being dragged is
+    /// the BOX the selection makes: every member is offset by the same amount,
+    /// so the group of layers keeps its shape and lines up by its outer edges
+    /// rather than by whichever piece happens to be under the pointer.
+    private struct MultiMoveDrag {
+        let plan: MultiLayerDrag
+        /// Pointer offset from the selection box's origin at grab time.
+        let grabOffset: CGPoint
+        /// The boxes this drag can line itself up with, in canvas coordinates,
+        /// gathered ONCE at grab time. Every member is left out: they all
+        /// travel with the drag, so none of them is something to line up with.
+        var peers: [CGRect] = []
+        var snapped: Snapping.Result
+        /// Becomes true once the pointer travels past the click tolerance; a
+        /// press that never moves keeps the selection and does nothing else.
+        var moved = false
+
+        /// How far everything has travelled from where it started.
+        var delta: CGPoint {
+            CGPoint(x: snapped.origin.x - plan.bounds.origin.x,
+                    y: snapped.origin.y - plan.bounds.origin.y)
+        }
+        /// Where each member sits right now, or nil before the drag moved.
+        var liveOrigins: [UUID: CGPoint]? {
+            moved ? plan.origins(movingBoundsTo: snapped.origin) : nil
+        }
+    }
+    private var multiMove: MultiMoveDrag?
 
     /// In-progress handle resize.
     private struct ResizeDrag {
@@ -1468,6 +1505,25 @@ final class CanvasNSView: NSView {
                 refreshOverlays()
                 return
             }
+            // The press landed on something already picked: the whole
+            // selection travels with the pointer, and the press KEEPS that
+            // selection instead of replacing it with the one layer underneath.
+            // Selecting first and moving one piece is what a press on anything
+            // else does, and it is what a click that never moves still does.
+            if tool == .select, event.clickCount == 1,
+               multiSelectedLayerIDs.contains(pick.id),
+               let plan = document?.multiLayerDrag(moving: multiSelectedLayerIDs),
+               plan.members.count > 1, plan.members.contains(where: { $0.id == pick.id }) {
+                multiMove = MultiMoveDrag(
+                    plan: plan,
+                    grabOffset: CGPoint(x: p.x - plan.bounds.origin.x,
+                                        y: p.y - plan.bounds.origin.y),
+                    peers: Experiments.shared.alignLayersEnabled
+                        ? (document?.snapPeers(excluding: multiSelectedLayerIDs) ?? []) : [],
+                    snapped: Snapping.Result(origin: plan.bounds.origin))
+                refreshOverlays()
+                return
+            }
             onSelectLayerInGroup(pick.id, pick.context)
             onDragBegin(hit.id)
             selectedLayerFrame = hit.frame
@@ -1630,6 +1686,30 @@ final class CanvasNSView: NSView {
                 hoverSlot = nil
             }
             moveDrag = drag
+            refreshOverlays()
+        } else if var drag = multiMove {
+            let proposed = CGPoint(x: p.x - drag.grabOffset.x, y: p.y - drag.grabOffset.y)
+            if !drag.moved {
+                let travel = hypot(proposed.x - drag.plan.bounds.origin.x,
+                                   proposed.y - drag.plan.bounds.origin.y)
+                drag.moved = travel * viewport.zoom >= 4
+            }
+            if drag.moved {
+                // ⌘ drags free of the magnets, exactly as it does for one layer.
+                if event.modifierFlags.contains(.command) {
+                    drag.snapped = Snapping.Result(origin: proposed)
+                } else {
+                    drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.plan.bounds.size,
+                                                            canvas: viewport.documentSize,
+                                                            peers: drag.peers,
+                                                            zoom: viewport.zoom)
+                }
+                onMoveSelectionPreview(drag.plan.origins(movingBoundsTo: drag.snapped.origin))
+            }
+            // Several layers dropped into one collage cell means nothing, so a
+            // multi-drag never offers itself to one.
+            hoverSlot = nil
+            multiMove = drag
             refreshOverlays()
         } else if let drag = slotDrag {
             // Swap drag: highlight the destination cell (same collage only).
@@ -1837,6 +1917,10 @@ final class CanvasNSView: NSView {
                 onFrameCommit(drag.layerID, frame)
             }
             hoverSlot = nil
+            refreshOverlays()
+        } else if let drag = multiMove {
+            multiMove = nil
+            if let origins = drag.liveOrigins { onMoveSelectionCommit(origins) }
             refreshOverlays()
         } else if let drag = slotDrag {
             slotDrag = nil
@@ -2060,6 +2144,14 @@ final class CanvasNSView: NSView {
                 let frame = CGRect(origin: drag.startOrigin, size: drag.size)
                 selectedLayerFrame = frame
                 onFrameCommit(drag.layerID, frame)
+                refreshOverlays()
+                return
+            }
+            if let drag = multiMove {
+                multiMove = nil
+                // Putting everything back where it started is a History no-op,
+                // and it resets the preview render.
+                onMoveSelectionCommit(drag.plan.origins(movingBoundsTo: drag.plan.bounds.origin))
                 refreshOverlays()
                 return
             }
@@ -2620,11 +2712,21 @@ final class CanvasNSView: NSView {
             captured = multiSelectedLayerIDs
         }
         let outlines = CGMutablePath()
+        // A drag in flight moves the picture per mouse move, but the document
+        // still holds the pre-drag positions, so the outlines carry the same
+        // offset or they would come away from the layers they belong to. Only
+        // what the drag actually carries moves: a locked member holds still.
+        let travelling = multiMove?.moved == true
+            ? Set(multiMove?.plan.members.map(\.id) ?? []) : []
+        let delta = multiMove?.delta ?? .zero
         // Canvas coordinates, so a member that lives inside a group is outlined
         // where it draws rather than where it is stored.
         for id in captured.sorted(by: { $0.uuidString < $1.uuidString }) {
             guard let layer = document.canvasLayer(id: id) else { continue }
-            let corners = layer.transformedCorners.map { viewport.viewPoint(fromDocument: $0) }
+            let shift = travelling.contains(id) ? delta : .zero
+            let corners = layer.transformedCorners.map {
+                viewport.viewPoint(fromDocument: CGPoint(x: $0.x + shift.x, y: $0.y + shift.y))
+            }
             outlines.addLines(between: corners)
             outlines.closeSubpath()
         }
@@ -2663,6 +2765,17 @@ final class CanvasNSView: NSView {
             snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
             rotateKnobLayer.isHidden = true
+            return
+        }
+        // A multi-selection has no primary layer, so no outline, handles or
+        // knob of its own — each member carries its own outline. Its drag still
+        // lines up with the picture and with the layers that stayed behind, so
+        // the guide is drawn here rather than being lost with the rest.
+        if multiMove != nil, let viewport {
+            layerOutlineLayer.isHidden = true
+            handlesLayer.isHidden = true
+            rotateKnobLayer.isHidden = true
+            refreshSnapGuides(in: viewport)
             return
         }
         let frame: CGRect?
@@ -2776,12 +2889,19 @@ final class CanvasNSView: NSView {
             }
         }
 
-        // Guides span the whole document so the alignment target is obvious.
-        // Driven by layer-move snapping OR a measure corner snapping to a detected
-        // UI edge — both magnetize to a document x/y and want the same full-span line.
+        refreshSnapGuides(in: viewport)
+    }
+
+    /// The lines that say what a drag just lined itself up with. Guides span
+    /// the whole document so the alignment target is obvious. Driven by
+    /// layer-move snapping OR a measure corner snapping to a detected UI edge —
+    /// both magnetize to a document x/y and want the same full-span line.
+    private func refreshSnapGuides(in viewport: Viewport) {
         let guides = CGMutablePath()
         let docFrame = viewport.documentFrameInView
-        let move = moveDrag?.snapped
+        // A multi-selection snaps by the box it makes, and draws the same
+        // guide a one-layer drag does.
+        let move = moveDrag?.snapped ?? multiMove.flatMap { $0.moved ? $0.snapped : nil }
         let guideX = move?.guideX ?? snapGuide?.x
         let guideY = move?.guideY ?? snapGuide?.y
         // A line to the picture's own edge or middle spans the whole picture,

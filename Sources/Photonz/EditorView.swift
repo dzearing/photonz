@@ -256,6 +256,8 @@ struct EditorView: View {
                        onDragBegin: { editorState.beginLayerDrag(id: $0) },
                        onFramePreview: { editorState.previewCanvasFrame(id: $0, frame: $1) },
                        onFrameCommit: { editorState.commitCanvasFrame(id: $0, frame: $1) },
+                       onMoveSelectionPreview: { editorState.previewCanvasOrigins($0) },
+                       onMoveSelectionCommit: { editorState.commitCanvasOrigins($0) },
                        onTransformPreview: { editorState.previewLayerTransform(id: $0, transform: $1) },
                        onTransformCommit: { editorState.commitLayerTransform(id: $0, transform: $1) },
                        onAnnotationCommit: { editorState.addAnnotation(from: $0, to: $1) },

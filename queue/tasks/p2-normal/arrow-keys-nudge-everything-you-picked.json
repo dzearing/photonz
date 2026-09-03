@@ -1,0 +1,28 @@
+{
+  "id": "arrow-keys-nudge-everything-you-picked",
+  "title": "Arrow keys nudge everything you picked",
+  "goal": "With several layers picked, the arrow keys do nothing at all. They should nudge every picked layer by one point (ten with Shift held), together, in one undo step, the same way dragging them on the picture now moves them together.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 810,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T12:28:44.298Z",
+  "updated": "2026-09-03T12:28:44.299Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CanvasView keyDown arrow branch requires selectedLayerID, which is nil whenever multiSelectedLayerIDs is non-empty, so the press falls through to nothing. Reuse PhotonzDocument.multiLayerDrag(moving:) + EditorState.commitCanvasOrigins, the pair the canvas multi-drag added on 2026-09-03: build the plan, offset its bounds by the nudge, commit the origins. Noticed while building the canvas multi-drag.",
+  "acceptance": [
+    "An arrow key with two or more layers picked moves every one of them by one point",
+    "Shift and an arrow moves every picked layer by ten points",
+    "One undo puts all of them back in one step",
+    "A locked picked layer stays where it is"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T12:28:44.299Z",
+      "note": "created (manual)"
+    }
+  ]
+}

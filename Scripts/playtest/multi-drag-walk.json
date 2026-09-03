@@ -1,0 +1,61 @@
+{
+  "out": "/tmp/photonz-playtest/multi-drag",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 100], "to": [280, 160], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [150, 220], "to": [370, 280], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [100, 340], "to": [200, 400], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-drew", "note": "three rectangles: top, middle, bottom" },
+
+    { "do": "click", "at": [200, 130] },
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-picked", "note": "top and middle rectangles picked; note their boxes in the tree" },
+    { "do": "snapshot", "name": "multi-drag-2-picked" },
+
+    { "do": "drag", "from": [200, 130], "to": [320, 210], "steps": 10, "modifiers": ["command"], "hold": "multi-drag-3-mid" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-dragged", "note": "pressed on the TOP rectangle and dragged: both picked rectangles should have moved by the same amount, the bottom one should not have moved, and the selection should still name both" },
+    { "do": "snapshot", "name": "multi-drag-3-dragged" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-undone", "note": "ONE undo should put both rectangles back exactly where stage 2 had them" },
+    { "do": "snapshot", "name": "multi-drag-4-undone" },
+
+    { "do": "drag", "from": [150, 370], "to": [250, 470], "steps": 10, "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-unpicked", "note": "dragging the bottom rectangle, which was NOT picked: it alone should be selected and it alone should have moved" },
+    { "do": "snapshot", "name": "multi-drag-5-unpicked" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "click", "at": [200, 130] },
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [260, 250], "to": [262, 252], "steps": 4 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-tiny-press", "note": "a press on a picked layer that barely moves: the selection should still name both rectangles and nothing should have moved" },
+
+    { "do": "drag", "from": [200, 130], "to": [186, 300], "steps": 10, "hold": "multi-drag-7-mid" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-snapped", "note": "the same drag WITHOUT command and 14 points to the left: the SELECTION box, not the rectangle under the pointer, should line its left edge up with the bottom rectangle at x 100, so the top rectangle lands at 100 and the middle one at 130" },
+    { "do": "snapshot", "name": "multi-drag-7-snapped" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "key", "key": "escape" },
+    { "do": "drag", "from": [60, 60], "to": [700, 560], "steps": 12 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-swept", "note": "a rubber band around all three rectangles picks the lot" },
+    { "do": "drag", "from": [150, 370], "to": [200, 420], "steps": 10, "modifiers": ["command"], "hold": "multi-drag-8-mid" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "9-swept-dragged", "note": "pressing on one swept rectangle and dragging should move all three by 50, 50 and keep all three picked" },
+    { "do": "snapshot", "name": "multi-drag-9-swept-dragged" }
+  ]
+}

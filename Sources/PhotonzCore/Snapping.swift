@@ -153,12 +153,22 @@ public extension PhotonzDocument {
     /// Groups themselves stay in: a card's outer box is a real edge on screen
     /// and lining a caption up with it is exactly what someone is trying to do.
     func snapPeers(excluding id: UUID) -> [CGRect] {
-        let dragged = Set(layer(id: id)?.selfAndDescendants.map(\.id) ?? [id])
+        snapPeers(excluding: [id])
+    }
+
+    /// The same list for a whole multi-selection being dragged at once: every
+    /// member travels with the drag, so not one of them is something the drag
+    /// can line itself up with.
+    func snapPeers(excluding ids: Set<UUID>) -> [CGRect] {
+        var dragged: Set<UUID> = ids
         var ancestors: Set<UUID> = []
-        var walk = parentID(of: id)
-        while let up = walk {
-            ancestors.insert(up)
-            walk = parentID(of: up)
+        for id in ids {
+            dragged.formUnion(layer(id: id)?.selfAndDescendants.map(\.id) ?? [id])
+            var walk = parentID(of: id)
+            while let up = walk {
+                ancestors.insert(up)
+                walk = parentID(of: up)
+            }
         }
 
         var boxes: [CGRect] = []

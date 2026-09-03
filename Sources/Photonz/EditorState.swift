@@ -238,12 +238,14 @@ final class EditorState {
     /// `multiSelectedLayerIDs`; this only remembers how the list got there,
     /// and is re-seeded from those stores before every click.
     private var rowSelection = ListSelection()
-    /// Frame override while a move drag is in flight — rendered as a preview,
+    /// Frame overrides while a move drag is in flight — rendered as a preview,
     /// committed to history only on mouse-up. In CANVAS coordinates, which is
     /// the space the canvas drags in; for a layer sitting loose on the canvas
     /// that is the frame it stores, which is why nothing about a document
-    /// without groups changes.
-    private var previewMove: (id: UUID, frame: CGRect)?
+    /// without groups changes. Usually one layer; a multi-selection dragged on
+    /// the canvas puts every layer it carries in here at once, so the numbers
+    /// in the inspector track all of them rather than just one.
+    private var previewMoves: [UUID: CGRect] = [:]
     /// Cheap drag preview: underlay + sprite the canvas composites in Core
     /// Animation, so mouse moves cost zero Core Image work. Nil until the
     /// session's two renders finish (the full-submit path covers the gap).
@@ -508,7 +510,7 @@ final class EditorState {
         selection = nil
         selectedLayerID = nil
         activeTool = .select
-        previewMove = nil
+        previewMoves = [:]
         dragPreview = nil
         editingTextLayerID = nil
         editingCaptionLayerID = nil
@@ -1151,7 +1153,7 @@ final class EditorState {
         discardDragPreview()
         let canvas = doc.canvasSize
         doc.updateLayer(id: id) { $0 = AnnotationBuilder.placingCaption($0, at: center, canvas: canvas) }
-        if let frame = doc.canvasLayer(id: id)?.frame { previewMove = (id, frame) }
+        if let frame = doc.canvasLayer(id: id)?.frame { previewMoves = [id: frame] }
         submit(doc)
     }
 
@@ -1160,7 +1162,7 @@ final class EditorState {
     /// inspector (`resetCaptionPlacement`).
     func commitCaptionPlacement(id: UUID, center: CGPoint) {
         let center = parentPoint(center, of: id)
-        previewMove = nil
+        previewMoves = [:]
         guard document?.layer(id: id)?.annotation?.hasCaption == true else {
             rerender()
             return
@@ -1174,7 +1176,7 @@ final class EditorState {
     /// Esc mid-drag, or a press on the pill that never moved: nothing was
     /// committed, so the last committed document just renders again.
     func cancelCaptionPlacement() {
-        previewMove = nil
+        previewMoves = [:]
         rerender()
     }
 
@@ -1902,14 +1904,14 @@ final class EditorState {
         guard let layer = selectedMeasureLayer, var doc = document else { return }
         measureLabelPreview = (layer.id, scale)
         doc.updateLayer(id: layer.id) { $0 = MeasureBuilder.restyled($0, labelScale: scale) }
-        if let frame = doc.canvasLayer(id: layer.id)?.frame { previewMove = (layer.id, frame) }
+        if let frame = doc.canvasLayer(id: layer.id)?.frame { previewMoves = [layer.id: frame] }
         submit(doc)
     }
 
     /// Slider release: commit the label size in one undo step.
     func commitMeasureLabelScale(_ scale: CGFloat) {
         measureLabelPreview = nil
-        previewMove = nil
+        previewMoves = [:]
         updateMeasureStyles { $0.labelSizePx = scale * MeasureContent.labelFontSize }
         // A much bigger readout can no longer fit where the small one did, so
         // it gets to pick again (UX-PATTERNS D14).
@@ -1990,7 +1992,7 @@ final class EditorState {
             $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset,
                                          readout: readout)
         }
-        if let frame = doc.canvasLayer(id: id)?.frame { previewMove = (id, frame) }
+        if let frame = doc.canvasLayer(id: id)?.frame { previewMoves = [id: frame] }
         submit(doc)
     }
 
@@ -2000,7 +2002,7 @@ final class EditorState {
                                 readout: MeasureReadoutPlacement? = nil) {
         let start = parentPoint(start, of: id)
         let end = parentPoint(end, of: id)
-        previewMove = nil
+        previewMoves = [:]
         let others = placedReadoutRects(excluding: id)
         let canvas = document?.canvasSize
         // The feet may have moved onto different elements, so they are read
@@ -4592,13 +4594,13 @@ final class EditorState {
     /// itself for anything sitting loose on the canvas.
     func canvasLayer(id: UUID) -> Layer? {
         guard var layer = document?.canvasLayer(id: id) else { return nil }
-        if let previewMove, previewMove.id == id { layer.frame = previewMove.frame }
+        if let frame = previewMoves[id] { layer.frame = frame }
         return layer
     }
 
     /// A layer's canvas-space frame, preview-aware.
     func canvasFrame(of id: UUID) -> CGRect? {
-        if let previewMove, previewMove.id == id { return previewMove.frame }
+        if let frame = previewMoves[id] { return frame }
         return document?.canvasLayer(id: id)?.frame
     }
 
@@ -4612,8 +4614,8 @@ final class EditorState {
     /// still holds the pre-drag frame, so anything that reads a number off a
     /// layer has to read the preview or it would sit still until mouse-up.
     func previewedFrame(of id: UUID) -> CGRect? {
-        if let previewMove, previewMove.id == id, let document {
-            return document.parentSpaceFrame(previewMove.frame, of: id)
+        if let frame = previewMoves[id], let document {
+            return document.parentSpaceFrame(frame, of: id)
         }
         // A group's stored frame is an anchor, not a box: the number to show
         // is the box it occupies, in the same parent space.
@@ -4669,7 +4671,7 @@ final class EditorState {
     /// One undo step for a whole selection's worth of typed frames.
     private func commitGeometry(_ moves: [UUID: CGRect]) {
         guard !moves.isEmpty, let document else { return }
-        previewMove = nil
+        previewMoves = [:]
         dragPreviewGeneration += 1 // cancels an in-flight preview session
         clearPreviewAfterNextFrame = dragPreview != nil
         // Resolved here, in draw order, so the one undo step lands the same way
@@ -4841,13 +4843,49 @@ final class EditorState {
         commitLayerFrame(id: id, frame: parent)
     }
 
+    /// Live drag update for a whole multi-selection, in canvas coordinates:
+    /// every layer the drag carries goes to its own new origin, and a group
+    /// takes what is inside it along in one number changing.
+    ///
+    /// There is no floated sprite for a selection — a sprite carries one layer
+    /// — so this re-renders the picture per mouse move, the path a text layer's
+    /// drag has always taken.
+    func previewCanvasOrigins(_ moves: [UUID: CGPoint]) {
+        guard !moves.isEmpty, var doc = document else { return }
+        // The rubber band that picked these layers described where they WERE.
+        // The moment they move it stops being true, so it comes down rather
+        // than lying, exactly as it does when a ⇧-click changes the selection.
+        // A pixel region belongs to the region tools: that one stays.
+        if selection != nil, !selectionTargetsPixels { setSelection(nil, captureLayers: false) }
+        // A sprite left over from an earlier one-layer drag would float that
+        // layer over a picture that has already moved it. Dropped once, not
+        // once per mouse move: this runs on every point of the drag.
+        if dragPreview != nil { discardDragPreview() }
+        for (id, origin) in moves { doc.moveLayer(id: id, toCanvasOrigin: origin) }
+        previewMoves = moves.reduce(into: [:]) { frames, move in
+            frames[move.key] = doc.canvasBounds(of: move.key)
+        }
+        submit(doc)
+    }
+
+    /// Mouse-up on a multi-selection drag: the whole selection lands in ONE
+    /// undo step, so one ⌘Z puts all of it back where it was.
+    func commitCanvasOrigins(_ moves: [UUID: CGPoint]) {
+        previewMoves = [:]
+        guard !moves.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            for (id, origin) in moves { document.moveLayer(id: id, toCanvasOrigin: origin) }
+        }
+    }
+
     /// Live drag update (move or resize) in the layer's own parent space. With
     /// a CA preview active the canvas already shows the move, so this only
     /// records state; otherwise it renders the new frame without touching
     /// history.
     func previewLayerFrame(id: UUID, frame: CGRect) {
         let origin = document?.parentOrigin(of: id) ?? .zero
-        previewMove = (id, frame.offsetBy(dx: origin.x, dy: origin.y))
+        previewMoves = [id: frame.offsetBy(dx: origin.x, dy: origin.y)]
         // A RESIZE (size change) of a layer whose look is sized in fixed points —
         // border/corner-radius/blur/shadow, or annotation strokes, text, callouts,
         // measures — can't be shown by scaling the drag sprite: the stroke would
@@ -4875,7 +4913,7 @@ final class EditorState {
     /// the label off the picture, and one dragged back into the open gets its
     /// default spot behind the tail again. Captionless layers pass through.
     func commitLayerFrame(id: UUID, frame: CGRect) {
-        previewMove = nil
+        previewMoves = [:]
         dragPreviewGeneration += 1 // cancels an in-flight preview session
         clearPreviewAfterNextFrame = dragPreview != nil
         perform { document in
@@ -4911,7 +4949,7 @@ final class EditorState {
     func commitAnnotationEndpoints(id: UUID, start: CGPoint, end: CGPoint) {
         let start = parentPoint(start, of: id)
         let end = parentPoint(end, of: id)
-        previewMove = nil
+        previewMoves = [:]
         dragPreviewGeneration += 1
         clearPreviewAfterNextFrame = dragPreview != nil
         perform { document in
@@ -4999,7 +5037,7 @@ final class EditorState {
             cropRect = nil
             selectedLayerID = nil
             groupContextID = nil
-            previewMove = nil
+            previewMoves = [:]
             dragPreview = nil
             editingTextLayerID = nil
             editingCaptionLayerID = nil
