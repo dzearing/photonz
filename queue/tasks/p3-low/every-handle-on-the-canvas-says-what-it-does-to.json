@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T21:12:05.528Z",
-  "updated": "2026-09-03T23:02:41.540Z",
+  "updated": "2026-09-03T23:38:38.136Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The cue lives in Sources/PhotonzCore/CanvasGrab.swift (hit test, pure) and Sources/Photonz/CanvasView.swift (refreshGrabCursor / applyGrabCursor). Handles hit-testing is Handles.hit and AnnotationEndpoints.hit. Verification: Scripts/playtest/grab-cue.json reads the live pointer through PlaytestHarness.cursorName(); extend it. A hand is likely wrong for resize handles: NSCursor has no public diagonal resize cursor, so a drawn one (like SelectionCursor) may be needed, which is why this is worth its own pass.\n\nObjective: measure-redline (staged now), and it also lands on the layer resize handles the ui-building work leans on. Polish, so it stays below the focus at p3.",
@@ -87,7 +87,12 @@
     {
       "t": "2026-09-03T23:38:15.057385Z",
       "note": "Adversarial review of the built thing. Ran it turned, zoomed, locked and unselected. The drawn rotate arrow was black-on-white while the system resize pointers are white-on-dark, so side by side they read as two families; flipped it to match. Left alone and recorded in the audit: Option over a corner skews but still shows resize arrows (there is no conventional skew pointer), and Crop keeps its crosshair over its own handles (filed as its own task, with the locked-layer hole)."
+    },
+    {
+      "t": "2026-09-03T23:38:38.135Z",
+      "note": "Every handle on the canvas now names its press before you make it: the platform's resize arrows on the eight handles round a layer and round the picture, a drawn turn arrow on the rotate knob, and the open hand on either end of a line or arrow. Decided in one pure core function (CanvasPointer.cue, 22 tests) that mirrors mouseDown's precedence, applied through CanvasCursor. Verified on the real app: Scripts/playtest/grab-cue.json walks 34 pointer stages green, including all eight handles of a turned box; Scripts/test.sh green at 2552. Audit at queue/audits/2026-09-03-handle-cursors.json with two real screen captures and a strip of the five pointers. Two follow-ups filed: the Crop tool's handles, and a locked layer still resizing."
     }
   ],
-  "started": "2026-09-03T23:02:41.539Z"
+  "started": "2026-09-03T23:02:41.539Z",
+  "completed": "2026-09-03T23:38:38.136Z"
 }
