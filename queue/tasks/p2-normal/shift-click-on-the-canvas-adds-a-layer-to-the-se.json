@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 670,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T02:06:28.199Z",
-  "updated": "2026-09-03T08:22:22.919055Z",
+  "updated": "2026-09-03T08:23:45.663Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed out of group-and-ungroup-what-you-selected (2026-09-03): the marquee is currently the only canvas path to a multi-selection, which makes reaching Command G clumsier than it should be. CanvasView.mouseDown resolves a plain click through CanvasGroups.groupAwarePick and calls onSelectLayerInGroup; the modifier flags are already on the event and are ignored there. EditorState.multiSelectedLayerIDs is the store, and ListSelection already has the toggle behaviour the Layers list uses. Keep the group walk: a shift-click resolves through the same selectionTarget so it picks whole groups at the top level and siblings inside one.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-03T08:22:22.919055Z",
       "note": "review of the built thing: two gaps I could not close in scope, both filed - a multi-selection still cannot be dragged on the canvas, and a shift-click that lands on empty canvas still clears everything. Scripts/test.sh green, 1938 tests."
+    },
+    {
+      "t": "2026-09-03T08:23:45.663Z",
+      "note": "Shift-click on the canvas adds a layer to the selection and drops one that is already in, resolving at the level you are on (whole groups at the top, a group's own pieces inside it, nothing out on the canvas while you are inside one). Fixed on the way: a multi-selection made anywhere but a marquee drew no outlines at all. PhotonzDocument.extendTarget test-first, CanvasView/EditorState wiring, harness reports selection/insideGroup/canGroup. Verified on the probe with Scripts/playtest/shift-click-select-walk.json (real window captures) and Scripts/test.sh green, 1938 tests. Audit queue/audits/2026-09-03-canvas-shift-click.json. Two gaps filed: canvas drag of a multi-selection, and shift on empty canvas."
     }
   ],
-  "started": "2026-09-03T08:12:26.876Z"
+  "started": "2026-09-03T08:12:26.876Z",
+  "completed": "2026-09-03T08:23:45.663Z"
 }
