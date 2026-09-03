@@ -1,0 +1,36 @@
+{
+  "id": "a-border-colour-sits-with-the-other-colours",
+  "title": "A border colour sits with the other colours",
+  "goal": "Colours have one home in the panel now, with one exception: the colour of a layer border is still a small swatch buried in the effects, and clicking it opens the system colour window instead of the app own picker. It should be a row in the Colour section like the rest, so it can be set on everything you picked and can wear a colour you saved.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 880,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T17:30:51.447Z",
+  "updated": "2026-09-03T17:31:06.545Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "ColorSlot (PhotonzCore/ColorStyles.swift:24) has fill, stroke and text; the layer style border colour is not one of them, so it stayed behind as a raw SwiftUI ColorPicker in EffectsInspector.borderColorPicker (LayersPanel.swift, around line 1490) and opens the system panel, which is the one-undo-step-per-drag-tick problem the Color section already solved. Adding a slot means a case in ColorSlot with styleRole .ink, and Layer.colorSlots / colorHex(for:) / startingColorHex answering for it. Decide what a border colour row means on a layer whose border width is zero: the honest reading is that the row appears with the rest and setting it is harmless, but the alternative of only offering it above zero width is worth a line in the audit either way. Evidence: the Color one-home work (queue/audits/2026-09-03-color-one-home.json) moved every other colour and left this one, visible in queue/audits/2026-09-03-auto-layout-2.png where Effects still carries a colour control.",
+  "acceptance": [
+    "The border colour is a row in the Color section, using the same picker the other colour rows use",
+    "It can be set on several picked layers at once and reads as mixed where they differ",
+    "A saved colour can be put on it, and editing that saved colour repaints every border wearing it in one step",
+    "The swatch in the effects is gone and nothing else in that section moved",
+    "An old document opens with its border colours unchanged",
+    "Try it: draw two boxes, give them a border, pick both and set the border colour once, then save it under a name",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T17:30:51.448Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T17:31:06.545Z",
+      "note": "Filed with British spelling by mistake; refiled the same task as a-border-color-sits-with-the-other-colors"
+    }
+  ]
+}

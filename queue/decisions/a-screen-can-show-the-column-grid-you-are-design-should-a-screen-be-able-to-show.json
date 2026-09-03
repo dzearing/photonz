@@ -1,0 +1,53 @@
+{
+  "id": "a-screen-can-show-the-column-grid-you-are-design-should-a-screen-be-able-to-show",
+  "taskId": "a-screen-can-show-the-column-grid-you-are-design",
+  "question": "Should a screen be able to show a column grid you design against, and should things snap to it?",
+  "context": "The auto layout work on 3 September built grid and stack containers, which position what they hold. The mock also draws a different thing with the same name: a column overlay behind a whole screen that positions nothing and is only there to design against. Nobody has asked for it, and the last thing that pulled at a drag was turned down, so it is a question rather than a task.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Columns you can see",
+      "summary": "A screen can be given a column grid: how many columns, the gap between them and the margin at the edges. It draws faintly behind everything on that screen so you can see whether your pieces land on the columns. It never moves anything and never shows up in an export.",
+      "pros": [
+        "Matches how column grids work in the design tools people come from: they are something to look at, not something that grabs you",
+        "Nothing on the canvas ever moves by itself, so it cannot surprise you the way automatic guides did",
+        "Small and quick, and it can gain snapping later if you miss it"
+      ],
+      "cons": [
+        "Lining a box up with a column is still done by eye or by typing an X"
+      ],
+      "mitigation": "The position fields and the align buttons are already there for the exact placement, so the overlay only has to make the target visible."
+    },
+    {
+      "id": "b",
+      "label": "Columns you can see and stick to",
+      "summary": "The same overlay, and while you drag a layer on that screen it pulls to the column edges, with a short line showing which column it caught, the way dragging already pulls to other layers. Holding Command drags free.",
+      "pros": [
+        "Laying a row of cards on a twelve column grid becomes a drag rather than arithmetic",
+        "It behaves like the layer to layer snapping the app already has, so it is one idea, not two"
+      ],
+      "cons": [
+        "It is a second thing tugging at your drag on top of the layer snapping that is already there",
+        "You turned down guides that pulled at a drag once before"
+      ],
+      "mitigation": "It only ever pulls on a screen that has an overlay switched on, so a screenshot or a plain canvas feels exactly as it does today."
+    },
+    {
+      "id": "c",
+      "label": "Skip it",
+      "summary": "No column overlay. Stacks and grids already put things in even columns, and a grid that only draws is one more thing on screen that does not do anything.",
+      "pros": [
+        "Nothing new to learn or switch off",
+        "Keeps the focus on containers that actually place your pieces"
+      ],
+      "cons": [
+        "Designing to a twelve column system means keeping the columns in your head or drawing them by hand"
+      ],
+      "mitigation": "A grid container with twelve equal cells gets close for a layout built inside one container.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-03T17:31:54.683Z"
+}

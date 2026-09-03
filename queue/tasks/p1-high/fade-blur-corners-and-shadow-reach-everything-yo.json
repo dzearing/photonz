@@ -1,0 +1,36 @@
+{
+  "id": "fade-blur-corners-and-shadow-reach-everything-yo",
+  "title": "Fade, blur, corners and shadow reach everything you picked",
+  "goal": "Pick two boxes and the Effects and Shadow settings disappear from the panel, so rounding the corners of four buttons is four separate trips. Colors were fixed the same way on 3 September and now speak for the whole selection. These should too: one slider paints everything picked, and where the picked layers differ the panel says so instead of showing one of them.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T17:30:30.210Z",
+  "updated": "2026-09-03T17:32:32.343Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "LayersPanel.swift availableSections (line 157) inserts .effects and .shadow only inside `if let layer = selectedLayer`, and selectedLayer reads editorState.selectedLayerID, which is empty over a multi-selection, so both sections vanish. The pattern to copy is the Color section right above it: colorRowSlots over editorState.actionableLayerIDs (EditorState.swift:3011) plus the mixed reading and the whole-selection writes in ColorStyleSelection.swift. EffectsInspector and ShadowInspector (LayersPanel.swift:1438 and 1500) take a single Layer and write through setLayerStyle(id:); they need a selection-wide equivalent with a mixed reading, and the maths belongs in PhotonzCore with tests, not in the view. Evidence: the rough line in queue/audits/2026-09-03-color-one-home.json, and queue/audits/2026-09-03-color-one-home-2-two-layers.png, where two picked rectangles show Layers, Arrange, Position and Size, Color and Library and nothing else. Same section family, so no flag: the Color fix shipped unflagged.",
+  "acceptance": [
+    "With two or more layers picked, Effects and Shadow are in the panel rather than gone",
+    "Moving a slider changes every picked layer, in one undo step",
+    "A value that differs across the selection reads as mixed rather than as one layer number, and moving it sets them all",
+    "Switching the shadow on with several picked switches it on for all of them, and its rows then work over the whole selection too",
+    "A locked layer in the selection is left alone, the way the colors leave it alone",
+    "Try it: draw three boxes, drag a band around all three, then drag Corner Radius and Opacity",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T17:30:30.211Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T17:32:32.343Z",
+      "note": "seq 190 -> 40"
+    }
+  ]
+}

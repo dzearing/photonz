@@ -1,0 +1,41 @@
+{
+  "id": "the-shape-and-text-settings-reach-everything-you",
+  "title": "The shape and text settings reach everything you picked",
+  "goal": "The same gap one section further down. Pick three labels and the text settings vanish, so making them all 14 point is three trips; pick two arrows and the shape settings vanish. Both sections should speak for the whole selection the way the colors do, and say where the picked layers disagree.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 880,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T17:30:39.737Z",
+  "updated": "2026-09-03T17:32:32.405Z",
+  "deps": [
+    "fade-blur-corners-and-shadow-reach-everything-yo"
+  ],
+  "blockedBy": [],
+  "notes": "Follows the Effects and Shadow task and should reuse whatever mixed-value plumbing that one lands. Same cause: LayersPanel.swift availableSections inserts .annotation and .text only inside `if let layer = selectedLayer`. TextInspector (line 1828) and AnnotationInspector (line 1638) both take one Layer. Note the text restyle path already re-measures the frame (EditorState.restyleSelectedText), so doing it for several layers means several re-measures inside one History.perform. AnnotationContent settings differ per shape, so the section should offer the intersection of what the picked shapes have rather than everything.",
+  "acceptance": [
+    "With several text layers picked, the text settings are in the panel and a font, size or weight set there reaches all of them in one undo step",
+    "With several shapes picked, their settings are in the panel and thickness or corner settings reach all of them in one undo step",
+    "A setting the picked layers disagree on reads as mixed, and setting it makes them agree",
+    "A selection holding a mix of kinds shows only the settings the picked layers actually share",
+    "Try it: type three labels, band-select them, and set the size once",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T17:30:39.737Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T17:32:32.404Z",
+      "note": "seq 870 -> 880"
+    },
+    {
+      "t": "2026-09-03T17:32:32.427Z",
+      "note": "deps set to the Effects and Shadow task by the manager pass"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "a-label-grows-to-fit-what-it-says",
+  "title": "A label grows to fit what it says",
+  "goal": "Make a piece of text narrower, or give a copy of a component different wording, and the words re-wrap but the box around them stays the size it was, so the last line is cut off or the label hangs over the shape behind it. A text box should re-measure itself: change its width or its words and its height follows, and anything arranging it re-flows around the new height.",
+  "epic": "ui-layout",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T17:30:00.027Z",
+  "updated": "2026-09-03T17:32:32.282Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The measuring already exists: TextRasterizer.naturalSize(_:maxWidth:minWidth:) wraps and returns the frame the words need, and EditorState.commitTextEdit and restyleSelectedText both use it. What is missing is a re-measure on the two paths that change a text layer without going through those: a width change (canvas resize handles in CanvasView, typed W in the geometry fields, and a container stretching a child through GroupFlow) and a wording override (Document.setInstanceOverride, ComponentProperties.swift:498, stores the string and never touches the frame). PhotonzCore is pure and cannot call CoreText, so the measurement is injected the way StarterComponents.layer(kind, measure:) already does. Re-measure has to land inside the same History.perform as the edit so it stays one undo step, and before reflowLayouts so a stack closes up in the same step. Evidence: ui-building.md What the first version deliberately does not do (first bullet and A text override does not resize its instance), plus the rough lines in queue/audits/2026-09-03-ui-components-placement.json (Nothing re-wraps) and 2026-09-03-auto-layout.json. Related: the open p3 task a-text-block-is-the-same-size-while-you-type-it is a different bug in the same code (the draft font metrics while typing versus the committed frame); whoever gets there first should read the other.",
+  "acceptance": [
+    "Dragging a text layer narrower re-wraps its words and grows its height, so no line is cut off",
+    "Typing a new width in the position and size fields does the same, in one undo step",
+    "A label inside a stack that gains a line pushes the rows below it down on its own",
+    "A copy of a component given longer wording shows all of it rather than cutting it off",
+    "Moving a text layer, or changing anything that is not its width or its words, does not resize it",
+    "Try it with Groups that arrange their own contents and Make a component turned on in Experiments: draw a label on a screen, drag its right edge left until it wraps, then stack it with two boxes and retype it longer",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T17:30:00.028Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T17:32:32.281Z",
+      "note": "seq 170 -> 20"
+    }
+  ]
+}

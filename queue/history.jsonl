@@ -1169,3 +1169,21 @@
 {"t":"2026-09-03T16:48:53.498Z","ev":"task_started","id":"grid-and-stack-pieces-you-can-put-inside-a-compo","title":"Grid and stack pieces you can put inside a component","priority":"p2-normal"}
 {"t":"2026-09-03T17:21:02.117Z","ev":"task_done","id":"grid-and-stack-pieces-you-can-put-inside-a-compo","from":"in_progress","note":"A group can be a stack or a grid: Layout section gains Arrangement (Free/Stack/Grid) with typed Gap, Columns, Row gap and Padding, plus Layer > Stack Selection (Ctrl Cmd G) and Grid Selection. Turning a hand-arranged group into a stack reads its direction and gap so nothing moves. Every edit re-flows inside one undo step via History.perform, components included. Core in GroupLayout/GroupFlow/GroupLayoutEditing (33 new tests), app in ArrangementInspector. Verified: Scripts/test.sh green (2283), Scripts/playtest/stack-and-grid-walk.json on the probe with real captures. Audit: queue/audits/2026-09-03-auto-layout.json"}
 {"t":"2026-09-03T17:21:12.899Z","ev":"task_created","id":"a-stack-can-be-a-fixed-size-and-its-rows-fill-it","priority":"p2-normal","title":"A stack can be a fixed size and its rows fill it"}
+{"t":"2026-09-03T17:30:00.028Z","ev":"task_created","id":"a-label-grows-to-fit-what-it-says","priority":"p1-high","title":"A label grows to fit what it says"}
+{"t":"2026-09-03T17:30:11.656Z","ev":"task_created","id":"option-dragging-a-layer-leaves-a-copy-behind","priority":"p1-high","title":"Option-dragging a layer leaves a copy behind"}
+{"t":"2026-09-03T17:30:30.211Z","ev":"task_created","id":"fade-blur-corners-and-shadow-reach-everything-yo","priority":"p1-high","title":"Fade, blur, corners and shadow reach everything you picked"}
+{"t":"2026-09-03T17:30:39.737Z","ev":"task_created","id":"the-shape-and-text-settings-reach-everything-you","priority":"p2-normal","title":"The shape and text settings reach everything you picked"}
+{"t":"2026-09-03T17:30:51.448Z","ev":"task_created","id":"a-border-colour-sits-with-the-other-colours","priority":"p2-normal","title":"A border colour sits with the other colours"}
+{"t":"2026-09-03T17:31:06.546Z","ev":"task_dropped","id":"a-border-colour-sits-with-the-other-colours","from":"pending","note":"Filed with British spelling by mistake; refiled the same task as a-border-color-sits-with-the-other-colors"}
+{"t":"2026-09-03T17:31:06.577Z","ev":"task_created","id":"a-border-color-sits-with-the-other-colors","priority":"p2-normal","title":"A border color sits with the other colors"}
+{"t":"2026-09-03T17:31:39.167Z","ev":"task_created","id":"a-screen-can-show-the-column-grid-you-are-design","priority":"p2-normal","title":"A screen can show the column grid you are designing to"}
+{"t":"2026-09-03T17:31:54.683Z","ev":"decision_opened","id":"a-screen-can-show-the-column-grid-you-are-design-should-a-screen-be-able-to-show","taskId":"a-screen-can-show-the-column-grid-you-are-design","question":"Should a screen be able to show a column grid you design against, and should things snap to it?"}
+{"t":"2026-09-03T17:32:19.454Z","ev":"task_blocked","id":"a-screen-can-show-the-column-grid-you-are-design","from":"pending","note":"Waiting on the column grid decision card: whether to build a column overlay on a screen at all, and whether it should pull at a drag"}
+{"t":"2026-09-03T17:32:32.220Z","ev":"task_reprioritized","id":"a-stack-can-be-a-fixed-size-and-its-rows-fill-it","from":"p2-normal","to":"p1-high"}
+{"t":"2026-09-03T17:32:32.251Z","ev":"task_resequenced","id":"a-stack-can-be-a-fixed-size-and-its-rows-fill-it","from":860,"to":10}
+{"t":"2026-09-03T17:32:32.282Z","ev":"task_resequenced","id":"a-label-grows-to-fit-what-it-says","from":170,"to":20}
+{"t":"2026-09-03T17:32:32.313Z","ev":"task_resequenced","id":"option-dragging-a-layer-leaves-a-copy-behind","from":180,"to":30}
+{"t":"2026-09-03T17:32:32.344Z","ev":"task_resequenced","id":"fade-blur-corners-and-shadow-reach-everything-yo","from":190,"to":40}
+{"t":"2026-09-03T17:32:32.375Z","ev":"task_resequenced","id":"a-border-color-sits-with-the-other-colors","from":890,"to":870}
+{"t":"2026-09-03T17:32:32.405Z","ev":"task_resequenced","id":"the-shape-and-text-settings-reach-everything-you","from":870,"to":880}
+{"t":"2026-09-03T17:33:44.116Z","ev":"manager","filed":6,"readyBefore":16,"readyAfter":20,"report":"queue/manager/2026-09-03-1032.md"}
