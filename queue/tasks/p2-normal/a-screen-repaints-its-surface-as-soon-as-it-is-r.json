@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 930,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T19:43:03.824Z",
-  "updated": "2026-09-03T19:43:03.825Z",
+  "updated": "2026-09-03T21:51:09.478828Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-03 during the stretched-words walk (Scripts/playtest/stretched-words-walk.json, stage 3-wider). The live snapshot words-3-wider-sc.png shows the frame background still 620x340 while the inspector reads 880x500 and the child text has already moved; the offscreen render words-3-wider-doc.png taken at the same step is correct, so the model and the renderer are right and the canvas view is serving something stale. Suspect the frame surface raster or the incremental RenderDiff path in DocumentRenderer/CanvasView rather than the frame model. Reproduce first: it may be a snapshot-timing artefact rather than a bug.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-03T19:43:03.825Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T21:44:46.171Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T21:51:09.478828Z",
+      "note": "Reproduced, not a snapshot artefact. RenderDiff.markChanges had a fast path that recursed into a group's children whenever the group's ORIGIN was unchanged. A frame is the one group whose stored size is drawn (its surface, and its clip), so dragging the bottom-right handle kept the origin and skipped the frame itself: only the child that moved repainted, leaving the old surface on screen. The offscreen render was right because render() never goes through the dirty-region path."
+    },
+    {
+      "t": "2026-09-03T21:51:09.478828Z",
+      "note": "Adversarial pass on the fix: dragging the TOP-LEFT handle was always correct (origin changes), which is why this only ever showed up on the bottom-right; nested frames are covered because the check runs at every level of the recursion; a frame with a border, rounded corner or shadow was already repainting whole because its style is not plain. Changing a screen's fill colour used to fall through to a full-canvas render, which was correct but wasteful, and is now a targeted repaint of the screen's box."
+    },
+    {
+      "t": "2026-09-03T21:51:09.478828Z",
+      "note": "Fix: RenderDiff.containerDrawsTheSame \u2014 the group fast path now also requires, for a frame, the same box size, the same surface colour and the same clip setting. Tests: 4 in RenderDiffTests, 3 in IncrementalRenderTests (cold-render oracle). Both resize tests fail with delta 161 when the fix is reverted, so they hold the line."
+    },
+    {
+      "t": "2026-09-03T21:51:09.478828Z",
+      "note": "Verified live: Scripts/playtest.sh on a resize walk, real screen captures (Screen Recording granted). Widened to 880x500 and shrunk to 500x240, colour fills the outline exactly in both. Full suite 2464 tests green; interactive edit inside a plain group still 6.4ms median, so the fast path is intact. Audit at queue/audits/2026-09-03-screen-resize-repaint.json."
     }
-  ]
+  ],
+  "started": "2026-09-03T21:44:46.170Z"
 }

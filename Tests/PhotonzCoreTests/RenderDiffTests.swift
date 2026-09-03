@@ -184,4 +184,82 @@ struct RenderDiffTests {
         }
         #expect(!dirty.intersects(CGRect(x: 700, y: 100, width: 200, height: 160)))
     }
+
+    // MARK: frames that paint a surface
+
+    private func screen(_ frame: CGRect, children: [Layer] = []) -> Layer {
+        Layer(name: "Screen",
+              content: .group(GroupContent(children: children, isFrame: true,
+                                           clipsContents: true, backgroundHex: "#4A80F0")),
+              frame: frame)
+    }
+
+    @Test func widenedScreenRepaintsTheBandItGained() throws {
+        let child = patchLayer(at: CGRect(x: 20, y: 20, width: 80, height: 40))
+        var old = baseDocument()
+        old.addLayer(screen(CGRect(x: 100, y: 100, width: 300, height: 200), children: [child]))
+        var new = old
+        // Dragged by the bottom-right corner: same origin, bigger box, and the
+        // child inside moved the way a layout rule moves it.
+        new.updateLayer(id: new.layers[1].id) { layer in
+            layer.frame = CGRect(x: 100, y: 100, width: 500, height: 340)
+            layer.children[0].frame = CGRect(x: 30, y: 25, width: 90, height: 40)
+        }
+
+        guard case .rect(let dirty) = RenderDiff.dirtyRegion(from: old, to: new) else {
+            Issue.record("expected .rect"); return
+        }
+        // The surface now fills the whole new box, so every part of it repaints.
+        #expect(dirty.contains(CGRect(x: 100, y: 100, width: 500, height: 340)))
+    }
+
+    @Test func shrunkScreenRepaintsTheBandItGaveUp() throws {
+        let child = patchLayer(at: CGRect(x: 20, y: 20, width: 80, height: 40))
+        var old = baseDocument()
+        old.addLayer(screen(CGRect(x: 100, y: 100, width: 500, height: 340), children: [child]))
+        var new = old
+        new.updateLayer(id: new.layers[1].id) { layer in
+            layer.frame = CGRect(x: 100, y: 100, width: 300, height: 200)
+            layer.children[0].frame = CGRect(x: 15, y: 18, width: 70, height: 40)
+        }
+
+        guard case .rect(let dirty) = RenderDiff.dirtyRegion(from: old, to: new) else {
+            Issue.record("expected .rect"); return
+        }
+        // What the screen used to cover has to go back to being canvas.
+        #expect(dirty.contains(CGRect(x: 100, y: 100, width: 500, height: 340)))
+    }
+
+    @Test func repaintingTheScreenSurfaceRepaintsTheWholeBox() throws {
+        var old = baseDocument()
+        old.addLayer(screen(CGRect(x: 100, y: 100, width: 300, height: 200)))
+        var new = old
+        new.updateLayer(id: new.layers[1].id) { layer in
+            guard case .group(var g) = layer.content else { return }
+            g.backgroundHex = "#FF0000"
+            layer.content = .group(g)
+        }
+
+        guard case .rect(let dirty) = RenderDiff.dirtyRegion(from: old, to: new) else {
+            Issue.record("expected .rect"); return
+        }
+        #expect(dirty.contains(CGRect(x: 100, y: 100, width: 300, height: 200)))
+    }
+
+    @Test func draggingOneLayerInsideAPlainGroupRepaintsOnlyThatLayer() throws {
+        let a = patchLayer(at: CGRect(x: 10, y: 10, width: 40, height: 40))
+        let b = patchLayer(at: CGRect(x: 300, y: 300, width: 40, height: 40))
+        var old = baseDocument()
+        old.addLayer(Layer(name: "Group", content: .group(GroupContent(children: [a, b])),
+                           frame: CGRect(x: 100, y: 100, width: 0, height: 0)))
+        var new = old
+        new.updateLayer(id: new.layers[1].id) { $0.children[0].frame.origin.x += 5 }
+
+        guard case .rect(let dirty) = RenderDiff.dirtyRegion(from: old, to: new) else {
+            Issue.record("expected .rect"); return
+        }
+        // The far corner of the group is untouched: this is the optimization
+        // the frame fix must not cost us.
+        #expect(!dirty.intersects(CGRect(x: 400, y: 400, width: 40, height: 40)))
+    }
 }

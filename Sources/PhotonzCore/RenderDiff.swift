@@ -46,6 +46,23 @@ public enum RenderDiff {
         return bounds.insetBy(dx: -padding, dy: -padding)
     }
 
+    /// Whether a group's own drawing is untouched between two snapshots, so
+    /// the only thing that can have changed is what it holds. An ordinary
+    /// group paints nothing and has no box of its own, so where it sits is the
+    /// whole of it. A frame is different: it paints a surface at the size it
+    /// was given, so growing a screen by its corner repaints the band it
+    /// gained even when nothing inside it moved.
+    private static func containerDrawsTheSame(_ old: Layer, _ new: Layer) -> Bool {
+        guard old.style.isPlain, new.style.isPlain,
+              old.isVisible, new.isVisible,
+              old.frame.origin == new.frame.origin,
+              old.isFrame == new.isFrame else { return false }
+        guard old.isFrame else { return true }
+        return old.frame.standardized.size == new.frame.standardized.size
+            && old.group?.backgroundHex == new.group?.backgroundHex
+            && old.group?.clipsContents == new.group?.clipsContents
+    }
+
     /// Marks what changed between two versions of one stack of layers, which
     /// sits at `origin` on the canvas (`.zero` for the document's own stack,
     /// the group's canvas origin for a group's children). Layers are matched by
@@ -73,9 +90,7 @@ public enum RenderDiff {
             // dragging one layer inside a group must not repaint the group.
             // A styled group is one object, so it repaints whole.
             if layer.isGroup, counterpart.isGroup,
-               layer.style.isPlain, counterpart.style.isPlain,
-               layer.isVisible, counterpart.isVisible,
-               layer.frame.origin == counterpart.frame.origin,
+               containerDrawsTheSame(layer, counterpart),
                oldIndex[layer.id] == newIndex[layer.id] {
                 markChanges(from: layer.children, to: counterpart.children,
                             origin: CGPoint(x: origin.x + layer.frame.origin.x,

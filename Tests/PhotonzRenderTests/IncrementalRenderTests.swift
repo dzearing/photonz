@@ -199,4 +199,70 @@ struct IncrementalRenderTests {
             }
         }
     }
+
+    // MARK: screens that get resized
+
+    /// A screen painted a colour, holding one layer, sitting on the base.
+    private func makeStoreAndScreenDocument() -> (ImageStore, PhotonzDocument) {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 400, height: 300, r: 220, g: 220, b: 220))
+        let patch = store.register(solidImage(width: 40, height: 30, r: 200, g: 40, b: 40))
+        var doc = PhotonzDocument.withBaseImage(base)
+        let child = Layer(name: "Patch", content: .image(patch),
+                          frame: CGRect(x: 10, y: 10, width: 40, height: 30))
+        doc.addLayer(Layer(name: "Screen",
+                           content: .group(GroupContent(children: [child], isFrame: true,
+                                                        clipsContents: true,
+                                                        backgroundHex: "#3B78E7")),
+                           frame: CGRect(x: 40, y: 40, width: 140, height: 100)))
+        return (store, doc)
+    }
+
+    @Test func widenedScreenMatchesColdRender() {
+        let (store, doc) = makeStoreAndScreenDocument()
+        let renderer = DocumentRenderer()
+        _ = renderer.renderInteractive(doc, store: store)
+
+        // Dragged by the bottom-right corner, the way a person resizes a screen:
+        // the origin holds still and the box grows.
+        var wider = doc
+        wider.updateLayer(id: doc.layers[1].id) { layer in
+            layer.frame = CGRect(x: 40, y: 40, width: 260, height: 190)
+            layer.children[0].frame = CGRect(x: 14, y: 12, width: 44, height: 32)
+        }
+        let image = renderer.renderInteractive(wider, store: store)
+        expectMatchesColdRender(image, wider, store,
+                                "widened screen left an unpainted band inside its outline")
+    }
+
+    @Test func shrunkScreenMatchesColdRender() {
+        let (store, doc) = makeStoreAndScreenDocument()
+        let renderer = DocumentRenderer()
+        _ = renderer.renderInteractive(doc, store: store)
+
+        var smaller = doc
+        smaller.updateLayer(id: doc.layers[1].id) { layer in
+            layer.frame = CGRect(x: 40, y: 40, width: 70, height: 55)
+            layer.children[0].frame = CGRect(x: 5, y: 6, width: 20, height: 16)
+        }
+        let image = renderer.renderInteractive(smaller, store: store)
+        expectMatchesColdRender(image, smaller, store,
+                                "shrunk screen left its old surface painted on the canvas")
+    }
+
+    @Test func repaintedScreenSurfaceMatchesColdRender() {
+        let (store, doc) = makeStoreAndScreenDocument()
+        let renderer = DocumentRenderer()
+        _ = renderer.renderInteractive(doc, store: store)
+
+        var repainted = doc
+        repainted.updateLayer(id: doc.layers[1].id) { layer in
+            guard case .group(var group) = layer.content else { return }
+            group.backgroundHex = "#E7783B"
+            layer.content = .group(group)
+        }
+        let image = renderer.renderInteractive(repainted, store: store)
+        expectMatchesColdRender(image, repainted, store,
+                                "repainting a screen's surface left the old colour behind")
+    }
 }

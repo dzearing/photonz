@@ -1,0 +1,26 @@
+{
+  "feature": "A resized screen repaints its surface",
+  "epic": "ui-components",
+  "summary": "Drag a screen bigger or smaller by a corner and the colour you painted it now fills exactly the new shape. Before this, growing a screen from its bottom-right left the colour at the old size while the outline and everything inside had already moved, so the window disagreed with what got exported.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this is how screens draw now.",
+  "try": [
+    { "do": "Press F and drag out a screen." },
+    { "do": "Give it a colour with the Fill checkbox in the Color section." },
+    { "do": "Press V, then drag the screen's bottom-right handle out to make it bigger.", "shot": "2026-09-03-screen-resize-repaint-1-wider.png" },
+    { "do": "Look along the right edge and the bottom edge of the outline: the colour should reach both." },
+    { "do": "Drag the same handle back in to make the screen smaller.", "shot": "2026-09-03-screen-resize-repaint-2-smaller.png" },
+    { "do": "Check nothing is left painted outside the outline." },
+    { "do": "Drag the top-left handle instead, both ways, and check the same two edges." }
+  ],
+  "evaluate": [
+    "Does the colour keep up with the outline the whole time you are dragging, or only once you let go?",
+    "Does resizing a screen still feel as smooth as it did, with no new stutter on a big screen?",
+    "If you put something inside the screen and drag it around, does the screen behind it stay steady?",
+    "Does a screen with a rounded corner or a border resize just as cleanly?"
+  ],
+  "rough": [
+    "The screenshots here are real captures of the app, not offscreen renders.",
+    "The cost of this is one extra repaint of the screen's own box while you drag its corner. On the 12 megapixel measurement the loop tracks, an edit inside a plain group is still 6.4ms, unchanged.",
+    "Only resizing was broken. Moving a screen, or moving something inside it, was always painting correctly, and still takes the cheap path."
+  ]
+}
