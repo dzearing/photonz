@@ -1,0 +1,35 @@
+{
+  "id": "dragging-a-component-out-of-the-library-actually",
+  "title": "Dragging a component out of the Library actually works, and looks like it is working",
+  "goal": "Dragging a component tile from the Library onto the canvas does not work. Picking a tile up should feel like picking anything up on a Mac: a ghost of the component follows the pointer, the canvas shows where it will land, and letting go puts it there. Right now nothing appears to happen, so people fall back to double clicking a tile.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T12:31:47.909Z",
+  "updated": "2026-09-03T12:31:47.941Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-03: when I drag a component from the library to the canvas, there is no drag and drop support. The plumbing exists, so this is about why it does not fire, not about building it from nothing: LibraryPanel.swift line 301 and ComponentPanel.swift line 357 attach .onDrag, ComponentPanel.ComponentDrag builds an NSItemProvider with type com.photonz.component-id, and CanvasView registers that type (CanvasView.swift line 992) and routes drops through onDropComponent (EditorView.swift line 290). Two suspects, verify both rather than guessing: (1) each tile puts .onTapGesture(count: 2) and .onTapGesture ahead of .onDrag, and a tap gesture can win over the drag so the drag never begins; if so the fix is a gesture order or a simultaneous gesture, not removing double click to place. (2) .onDrag is used without a preview, so even a drag that does start shows nothing following the pointer and reads as broken; SwiftUI has onDrag(preview:) for exactly this. Also check that the canvas gives drag feedback at all: draggingEntered and draggingUpdated exist at CanvasView.swift line 1000, but nothing draws a landing indicator. Per the users standing rule, reproduce before claiming a cause.",
+  "acceptance": [
+    "Reproduce the failure on the probe app first and record in the log what actually happens: whether the drag never starts, starts with no picture, or starts but the canvas refuses the drop",
+    "Pressing and dragging a component tile starts a drag with a picture of that component following the pointer",
+    "While the pointer is over the canvas it shows where the component will land, and over a frame it shows that it will join that frame",
+    "Letting go places one copy there, linked to its original, in one undo step; letting go outside the canvas cancels with no change",
+    "A single click still only selects the tile and a double click still places one at the centre",
+    "Media tiles and style tiles drag with the same feel, or the audit says plainly which ones do not and why",
+    "Audit written under queue/audits/ with pictures mid drag and after the drop, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T12:31:47.909Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-03T12:31:47.940Z",
+      "note": "seq 170 -> 6"
+    }
+  ]
+}

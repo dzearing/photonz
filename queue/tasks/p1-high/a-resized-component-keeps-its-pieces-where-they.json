@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:20:11.356Z",
-  "updated": "2026-09-03T12:20:11.389Z",
+  "updated": "2026-09-03T12:29:57.801Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-03 after dragging a built-in button onto the canvas and resizing it: the text does not stay centred; the parent should have child alignment settings that provide defaults, and children should have their own alignment settings. Root cause of what they saw: resize-a-group-and-the-pieces-inside-follow (done 2026-09-03) scales the layout proportionally but deliberately does not scale type, so a label that was centred lands off centre at any new width. Proportional scaling is the wrong rule for a container; alignment is the right one. This is the constraints model the design study describes in ui-grid.html (Horizontal: Left, Centre, Right, Stretch; Vertical: Top, Centre, Bottom, Stretch), expressed as the user asks for it: the container carries the default and a child may override. Write the decision into docs/design/ui-building.md as the resize rule, replacing the scale-the-layout rule that task recorded, and say what happens to a piece that is both stretched and rotated. Related open task one-layer-lines-up-inside-the-frame-it-sits-in is a one-shot Arrange action against a frame; this task is the persistent version, so fold that one in or make it depend on this. Auto-layout (a container that stacks and spaces its children) stays deferred per the spec; this is placement only.",
@@ -30,6 +30,11 @@
     {
       "t": "2026-09-03T12:20:11.388Z",
       "note": "seq 170 -> 5"
+    },
+    {
+      "t": "2026-09-03T12:29:57.801Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-03T12:29:57.801Z"
 }
