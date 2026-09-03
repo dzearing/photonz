@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:32:55.878Z",
-  "updated": "2026-09-03T17:20:49.982Z",
+  "updated": "2026-09-03T17:21:02.117Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User note on decision layers-line-up-with-each-other-while-you-build: \"We should probably also have grid components that can be placed within a component, grid and stack\". This is auto layout, so it belongs to the ui-layout sub epic, which is staged LATER: it is filed so the ask is not lost, and the manager decides when it opens. Sits on top of next-align-layers (the align and space maths in LayerArrangement is the same maths a stack applies continuously).",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-03T17:20:49.982Z",
       "note": "Left rough, in the audit: a stack is always exactly as big as its contents (no hug/fill/fixed on the container), padding is one number and only on a screen, a locked layer inside a stack is still moved by the stack, and the only way to move one row by hand is to drag it."
+    },
+    {
+      "t": "2026-09-03T17:21:02.117Z",
+      "note": "A group can be a stack or a grid: Layout section gains Arrangement (Free/Stack/Grid) with typed Gap, Columns, Row gap and Padding, plus Layer > Stack Selection (Ctrl Cmd G) and Grid Selection. Turning a hand-arranged group into a stack reads its direction and gap so nothing moves. Every edit re-flows inside one undo step via History.perform, components included. Core in GroupLayout/GroupFlow/GroupLayoutEditing (33 new tests), app in ArrangementInspector. Verified: Scripts/test.sh green (2283), Scripts/playtest/stack-and-grid-walk.json on the probe with real captures. Audit: queue/audits/2026-09-03-auto-layout.json"
     }
   ],
-  "started": "2026-09-03T16:48:53.497Z"
+  "started": "2026-09-03T16:48:53.497Z",
+  "completed": "2026-09-03T17:21:02.117Z"
 }

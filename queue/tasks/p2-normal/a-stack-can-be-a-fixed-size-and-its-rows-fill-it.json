@@ -1,0 +1,28 @@
+{
+  "id": "a-stack-can-be-a-fixed-size-and-its-rows-fill-it",
+  "title": "A stack can be a fixed size and its rows fill it",
+  "goal": "Right now a stack is always exactly as big as whatever is inside it, so you cannot say a menu is 320 points wide and have every row stretch to that width unless you build it on a screen. This adds a size of its own to a group that arranges itself, so a stack can be told how wide it is and its contents fill it.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 860,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T17:21:12.898Z",
+  "updated": "2026-09-03T17:21:12.899Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follows 2026-09-03 groups-arrange-their-own-contents. Today GroupFlow uses a container box only when group.isFrame; the shortest version is a hug/fixed flag on GroupLayout that gives a plain group a box too, feeding the same contentBox path. Watch idempotence: the cross extent currently comes from the widest child, and a fixed box replaces it.",
+  "acceptance": [
+    "A stack can be given a width and a height, typed, and holds them when its contents change",
+    "A row set to stretch fills the stack width rather than the widest row",
+    "Setting a stack back to sizing itself leaves its contents exactly where they are",
+    "Padding works on a stack that has a size of its own, not only on a screen"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T17:21:12.899Z",
+      "note": "created (manual)"
+    }
+  ]
+}
