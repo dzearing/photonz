@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:30:00.027Z",
-  "updated": "2026-09-03T18:10:32.925519Z",
+  "updated": "2026-09-03T18:11:10.938Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The measuring already exists: TextRasterizer.naturalSize(_:maxWidth:minWidth:) wraps and returns the frame the words need, and EditorState.commitTextEdit and restyleSelectedText both use it. What is missing is a re-measure on the two paths that change a text layer without going through those: a width change (canvas resize handles in CanvasView, typed W in the geometry fields, and a container stretching a child through GroupFlow) and a wording override (Document.setInstanceOverride, ComponentProperties.swift:498, stores the string and never touches the frame). PhotonzCore is pure and cannot call CoreText, so the measurement is injected the way StarterComponents.layer(kind, measure:) already does. Re-measure has to land inside the same History.perform as the edit so it stays one undo step, and before reflowLayouts so a stack closes up in the same step. Evidence: ui-building.md What the first version deliberately does not do (first bullet and A text override does not resize its instance), plus the rough lines in queue/audits/2026-09-03-ui-components-placement.json (Nothing re-wraps) and 2026-09-03-auto-layout.json. Related: the open p3 task a-text-block-is-the-same-size-while-you-type-it is a different bug in the same code (the draft font metrics while typing versus the committed frame); whoever gets there first should read the other.",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-03T18:10:32.925519Z",
       "note": "Scripts/test.sh green: 2308 tests."
+    },
+    {
+      "t": "2026-09-03T18:11:10.938Z",
+      "note": "Text boxes re-measure: width change re-wraps and re-heights (Layer.resized), a wording override re-fits a copy's label (hug vs wrap), reflowLayouts runs to a fixed point and again after copies refill, and a copy now carries its original's layout. Measurement injected via TextMeasurement so PhotonzCore stays pure. Verified by 11 new tests (2308 green) and a real probe walk with Screen Recording granted; audit at queue/audits/2026-09-03-label-grows.json; three rough edges filed as p3."
     }
   ],
-  "started": "2026-09-03T17:50:39.263Z"
+  "started": "2026-09-03T17:50:39.263Z",
+  "completed": "2026-09-03T18:11:10.938Z"
 }
