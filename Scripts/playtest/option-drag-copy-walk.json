@@ -1,0 +1,345 @@
+{
+  "out": "/tmp/photonz-playtest/option-drag-copy",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        100
+      ],
+      "to": [
+        280,
+        180
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-drew",
+      "note": "one rectangle at 120,100 160x80. layers should be 1"
+    },
+    {
+      "do": "snapshot",
+      "name": "option-drag-copy-1-drew"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        140
+      ],
+      "to": [
+        400,
+        140
+      ],
+      "steps": 10,
+      "modifiers": [
+        "option",
+        "command"
+      ],
+      "hold": "option-drag-copy-2-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-copied",
+      "note": "option-drag right by 200: layers should now be 2, the original still at 120,100 and the copy at 320,100, and the COPY should be what is selected"
+    },
+    {
+      "do": "snapshot",
+      "name": "option-drag-copy-2-copied"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-undone",
+      "note": "ONE undo should take the copy away entirely and leave the single rectangle at 120,100"
+    },
+    {
+      "do": "snapshot",
+      "name": "option-drag-copy-3-undone"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-redone",
+      "note": "redo puts the copy back at 320,100"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        140
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        140
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-picked-both",
+      "note": "both rectangles picked"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        140
+      ],
+      "to": [
+        200,
+        340
+      ],
+      "steps": 10,
+      "modifiers": [
+        "option",
+        "command"
+      ],
+      "hold": "option-drag-copy-6-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-copied-both",
+      "note": "option-drag the pair down by 200: layers should be 4, the two originals still on the top row, two copies on a row 200 lower, and the two COPIES selected"
+    },
+    {
+      "do": "snapshot",
+      "name": "option-drag-copy-6-copied-both"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone-both",
+      "note": "ONE undo should take both copies away and leave 2 layers on the top row"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        140
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        140
+      ],
+      "modifiers": [
+        "option"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "8-option-click",
+      "note": "an option CLICK that never travelled: still 2 layers, nothing made"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        140
+      ],
+      "to": [
+        420,
+        300
+      ],
+      "steps": 10,
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "9-plain-drag",
+      "note": "a plain drag with no option: still 2 layers, the rectangle simply moved"
+    },
+    {
+      "do": "snapshot",
+      "name": "option-drag-copy-9-plain-drag"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        140
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "10-picked-for-skew",
+      "note": "the right rectangle picked, so its corner handles are on screen at 320,100 and 480,180"
+    },
+    {
+      "do": "drag",
+      "from": [
+        480,
+        180
+      ],
+      "to": [
+        540,
+        180
+      ],
+      "steps": 8,
+      "modifiers": [
+        "option"
+      ],
+      "hold": "option-drag-copy-10-skew-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "11-skewed",
+      "note": "option on a CORNER HANDLE still skews: layers must stay 2 (no copy made) and the rectangle should carry a transform"
+    },
+    {
+      "do": "snapshot",
+      "name": "option-drag-copy-11-skewed"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        100
+      ],
+      "to": [
+        280,
+        180
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        120
+      ],
+      "to": [
+        380,
+        170
+      ],
+      "steps": 8,
+      "modifiers": [
+        "option"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "12-region-subtract",
+      "note": "option with a region tool still SUBTRACTS from the selection region: no layer should have been copied, layers stays 2"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    }
+  ]
+}

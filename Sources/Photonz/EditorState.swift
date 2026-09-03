@@ -5141,6 +5141,63 @@ final class EditorState {
         }
     }
 
+    // MARK: ⌥-drag: leave the original, carry a copy
+
+    /// Live ⌥-drag from the canvas: every original stays exactly where it is
+    /// and a copy of each travels with the pointer.
+    ///
+    /// Nothing is recorded here. The whole gesture lands as ONE undo step on
+    /// mouse-up (`commitCopyDrag`), which is what makes a cancelled drag, or a
+    /// press that never left the click tolerance, cost nothing at all — there
+    /// is no half-made copy to take back.
+    ///
+    /// There is no floated sprite on purpose. A sprite is one layer lifted off
+    /// a picture that HIDES it, and a copy drag needs the picture whole with
+    /// the original still in it, so the composite re-renders per move the way a
+    /// multi-selection drag already does.
+    func previewCopyDrag(_ origins: [UUID: CGPoint]) {
+        guard !origins.isEmpty, var doc = document else { return }
+        // The rubber band that picked these described where they WERE, and it
+        // is about to stop being the truth — same rule as a multi-drag.
+        if selection != nil, !selectionTargetsPixels { setSelection(nil, captureLayers: false) }
+        if dragPreview != nil { discardDragPreview() }
+        // The numbers, the outline and the handles follow the COPY, even though
+        // the copy has no id yet and the selection is still the original. The
+        // copy is the thing under the pointer and the thing that will be
+        // selected the moment you let go, so X and Y reading the original's
+        // resting place would be the inspector describing something nobody is
+        // touching. The copy is the same size in the same parent, so the
+        // original's own box is all that is needed to say where it is.
+        previewMoves = origins.reduce(into: [:]) { frames, move in
+            guard let size = doc.canvasBounds(of: move.key)?.size else { return }
+            frames[move.key] = CGRect(origin: move.value, size: size)
+        }
+        doc.duplicateLayers(movingCopiesTo: origins)
+        submit(doc)
+    }
+
+    /// Mouse-up on an ⌥-drag: the copies and where they landed go in as ONE
+    /// undo step, so one ⌘Z leaves the document exactly as it was. The copies
+    /// become the selection, so a follow-up nudge, restyle or arrange moves
+    /// what you just made rather than what you made it from.
+    func commitCopyDrag(_ origins: [UUID: CGPoint]) {
+        previewMoves = [:]
+        guard !origins.isEmpty else { return cancelCopyDrag() }
+        discardDragPreview()
+        var made: [UUID] = []
+        perform { made = $0.duplicateLayers(movingCopiesTo: origins) }
+        guard !made.isEmpty else { return }
+        selectLayers(Set(made))
+    }
+
+    /// Esc, or a press that never travelled far enough to be a drag: nothing
+    /// was ever recorded, so the only work is putting the real picture back.
+    func cancelCopyDrag() {
+        previewMoves = [:]
+        discardDragPreview()
+        rerender()
+    }
+
     /// Live drag update (move or resize) in the layer's own parent space. With
     /// a CA preview active the canvas already shows the move, so this only
     /// records state; otherwise it renders the new frame without touching

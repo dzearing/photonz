@@ -1,0 +1,32 @@
+{
+  "feature": "Option-drag to leave a copy behind",
+  "epic": "ui-building",
+  "summary": "Holding Option while you drag a layer now leaves the original exactly where it was and carries a copy away, so laying out three cards or a row of buttons is one gesture repeated instead of Duplicate then drag the copy off the original. It works over a whole selection, and the copy plus its landing place are one undo step.",
+  "setup": "Photonz Dev, any document. Nothing to switch on: this is not behind a flag, and it is the same in both releases.",
+  "try": [
+    { "do": "Draw a rectangle with R, then press V for the Select tool." },
+    { "do": "Hold Option and drag the rectangle to the right. Watch the picture WHILE the button is down: the original should stay put and a copy should travel under the pointer.", "shot": "2026-09-03-option-drag-copy-mid.png" },
+    { "do": "Let go, then press Command Z once. The copy should vanish completely, in one step." },
+    { "do": "Press Command Shift Z to bring it back, then Shift-click the other rectangle so both are picked." },
+    { "do": "Hold Option and drag the pair straight down. Both originals stay on the top row and two copies travel down together.", "shot": "2026-09-03-option-drag-copy-pair.png" },
+    { "do": "Press Command Z once. Both copies should go away together." },
+    { "do": "Rest the pointer over a layer and tap Option without pressing the mouse. The cursor should pick up the small green plus that says a drag would copy." },
+    { "do": "Pick a layer, then hold Option and drag one of its CORNER handles. That must still skew the layer, not copy it." }
+  ],
+  "evaluate": [
+    "While the button is down, is it obvious that what you are dragging is a copy rather than the original?",
+    "The X and Y in the inspector follow the copy while it travels, not the original standing still. Is that the number you expect to be watching?",
+    "The Layers list does not grow until you let go. Does that feel honest, or does it feel like the copy is not real yet?",
+    "Does one Command Z after a copy-drag land where you expect, or did you expect two presses?",
+    "Is the cursor's plus badge enough of a hint that this gesture exists, or does it need to be said somewhere else too?"
+  ],
+  "rough": [
+    "Option is read at mouse-down AND latches on at any point during the drag, but it never latches off. So you can decide to copy after the drag started, and letting go of Option early does not take the copy away. Photoshop only reads it at the start; this is more forgiving in both directions.",
+    "A one-layer copy-drag re-composites the picture on every mouse move, because the fast floated-sprite path lifts a layer off a picture that hides it and a copy-drag needs the original left in. A plain drag of the same layer is smoother. On a big capture with heavy effects that difference may be visible, and it is not something a test catches.",
+    "The Layers list does not show the copies until you let go. Nothing has been recorded yet, so showing rows would be claiming an undo step exists that does not, but it does mean the canvas and the list disagree mid-drag.",
+    "A copy dropped into a stack or grid only reflows on release, not while it travels. Same as an ordinary drag into a stack.",
+    "A photo layer being copy-dragged does not offer itself to collage cells the way a plain drag does, since being swallowed by a cell is not what leaving a copy behind asked for.",
+    "The cursor's plus badge could not be photographed: a scripted walk cannot hold a modifier while hovering, so that one step is the only thing here checked by reading the code rather than by watching it.",
+    "Verified in the probe app with a scripted walk; the Screen Recording grant was in place, so both pictures above are real screenshots of the window, not offscreen renders."
+  ]
+}

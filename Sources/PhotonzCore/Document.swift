@@ -475,6 +475,41 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         return copies
     }
 
+    /// ⌥-drag: every layer in `origins` gets a copy directly above it, and it
+    /// is the COPY that travels to the given canvas origin while the original
+    /// stays exactly where it was. One mutation, so the copy and its move are
+    /// one undo step and one ⌘Z puts the picture back as it was.
+    ///
+    /// A copy is a sibling of what it came from, so one made inside a group or
+    /// a screen lands in that same group. A group carries its contents, and an
+    /// id inside a group that is itself being copied is ignored: the group
+    /// already took it, and copying it again would leave a stray inside the
+    /// original. Returns the copies' ids, bottom-up; unknown ids are ignored.
+    @discardableResult
+    public mutating func duplicateLayers(movingCopiesTo origins: [UUID: CGPoint]) -> [UUID] {
+        guard !origins.isEmpty else { return [] }
+        var made: [(id: UUID, origin: CGPoint)] = []
+        func walk(_ list: inout [Layer]) {
+            var result: [Layer] = []
+            result.reserveCapacity(list.count)
+            for var layer in list {
+                if layer.isGroup, origins[layer.id] == nil { walk(&layer.children) }
+                result.append(layer)
+                if let origin = origins[layer.id] {
+                    let copy = layer.duplicated()
+                    made.append((copy.id, origin))
+                    result.append(copy)
+                }
+            }
+            list = result
+        }
+        walk(&layers)
+        // Placed after the whole tree is built, because a canvas origin is only
+        // knowable once the copy is sitting in its parent.
+        for entry in made { moveLayer(id: entry.id, toCanvasOrigin: entry.origin) }
+        return made.map(\.id)
+    }
+
     /// Duplicates a layer directly above the original (panel context menu, ⌘V
     /// of a copied layer reuses `Layer.duplicated`). Returns the copy.
     @discardableResult

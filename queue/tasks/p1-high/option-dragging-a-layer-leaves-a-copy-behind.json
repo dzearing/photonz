@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:30:11.655Z",
-  "updated": "2026-09-03T17:32:32.313Z",
+  "updated": "2026-09-03T18:37:47.021818Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Nothing in CanvasView mentions duplicate today: the word does not appear in the file, and the .option reads there are the corner-anchored resize (line 1540), the region move (1570) and the fill shortcut (2135). The layer drag begins in CanvasView and runs through EditorState drag preview plus the multi-drag path that landed 2026-09-03 (queue/audits/2026-09-03-multi-drag.json). Read the modifier at the moment the drag starts, not continuously, so letting go of Option mid-drag does not undo the copy. Duplicate already exists whole in EditorState.duplicateSelectedLayers (line 3030) including the naming rule and group placement, so the copy should go through the same code rather than a second one. Ships unflagged, the way shift-click to add and shift-sweep to add did; if the runner judges it needs a switch it goes in FeatureCatalog as a Next flag on by default.",
@@ -31,6 +31,43 @@
     {
       "t": "2026-09-03T17:32:32.312Z",
       "note": "seq 180 -> 30"
+    },
+    {
+      "t": "2026-09-03T18:11:57.369Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T18:37:47.021818Z",
+      "note": "adversarial review BEFORE building: (1) an Option-click that never travels must not leave a stray copy, so the copy is decided by the 4pt move threshold, not by the press. (2) Option already means skew on a corner handle and subtract for the region tools; both are read earlier in mouseDown and return, so a copy drag can only start on a layer body. (3) the task said read the modifier at drag start so releasing Option mid-drag does not undo the copy: kept that promise but made it latch ON at any point during the drag and never off, so deciding to copy after you started also works. (4) nothing on the canvas says this gesture exists, so the pointer picks up the system copy badge while Option is held over a draggable layer, which is the whole invitation. (5) shortest version that delivers the value: no new history API, no id retargeting in the canvas, no second duplicate path."
+    },
+    {
+      "t": "2026-09-03T18:37:47.021818Z",
+      "note": "design: the copy is NEVER made until mouse-up. Every mouse move renders a scratch document (originals in place, copies at the pointer) through submit, which does not touch history; mouse-up runs ONE perform. That is what makes the copy and its move one undo step, and it makes Esc and a press that never travelled cost nothing because there is no half-made copy to take back."
+    },
+    {
+      "t": "2026-09-03T18:37:47.021818Z",
+      "note": "PhotonzCore: new Document.duplicateLayers(movingCopiesTo:) in Document.swift, one mutation that copies each id above its own original and lands the COPY on a canvas origin. Reuses Layer.duplicated so the naming rule, the group placement and the component link are the ones Duplicate already had. Tests: Tests/PhotonzCoreTests/CopyDragTests.swift (13), including one-undo-step through History, inside a group, a whole group carrying its children, a group and its own child copying once not twice, and a copy of a component instance still following the same original."
+    },
+    {
+      "t": "2026-09-03T18:37:47.021818Z",
+      "note": "app: EditorState.previewCopyDrag / commitCopyDrag / cancelCopyDrag; CanvasView MoveDrag and MultiMoveDrag carry a `copying` flag with onCopyDragPreview/Commit/Cancel; EditorView wires them. No drag sprite for a copy drag on purpose (the sprite's underlay hides the layer it lifts, and the original must stay visible), so it re-renders per move like the multi-drag path."
+    },
+    {
+      "t": "2026-09-03T18:37:47.021818Z",
+      "note": "previewMoves points at the COPY's destination keyed by the original's id, so the inspector's X/Y, the outline and the handles follow the thing under the pointer rather than the original standing still. Confirmed in the pair screenshot: Y reads 300 mid-drag while the originals sit at 100."
+    },
+    {
+      "t": "2026-09-03T18:37:47.021818Z",
+      "note": "verified in the probe app: Scripts/playtest/option-drag-copy-walk.json, 57 steps, status ok, Screen Recording granted so the shots are real screenshots. One layer: original stays at 120,100, copy lands at 320,100, the COPY is selected, one undo removes it, redo puts it back. Pair: 4 layers, originals on the top row, copies 200 lower, both copies selected, ONE undo removes both. Option-click that never travelled: nothing made. Plain drag: still a move. Option on a corner handle: still skews, no copy. Option with the region tool: still subtracts, no copy."
+    },
+    {
+      "t": "2026-09-03T18:37:47.021818Z",
+      "note": "ships unflagged in shared code, as the task asked. Next has not forked CanvasView/EditorState, so both releases get it and the porting rule is satisfied by construction."
+    },
+    {
+      "t": "2026-09-03T18:37:47.021818Z",
+      "note": "Scripts/test.sh green: 2321 tests, 217 suites."
     }
-  ]
+  ],
+  "started": "2026-09-03T18:11:57.369Z"
 }

@@ -124,6 +124,10 @@ struct CanvasView: NSViewRepresentable {
     /// sits right now, and where they all land. Canvas coordinates.
     var onMoveSelectionPreview: ([UUID: CGPoint]) -> Void = { _ in }
     var onMoveSelectionCommit: ([UUID: CGPoint]) -> Void = { _ in }
+    /// ⌥-drag: the originals stay and copies travel to these canvas origins.
+    var onCopyDragPreview: ([UUID: CGPoint]) -> Void = { _ in }
+    var onCopyDragCommit: ([UUID: CGPoint]) -> Void = { _ in }
+    var onCopyDragCancel: () -> Void = { }
     let onTransformPreview: (UUID, LayerTransform) -> Void
     let onTransformCommit: (UUID, LayerTransform) -> Void
     let onAnnotationCommit: (CGPoint, CGPoint) -> Layer?
@@ -220,6 +224,9 @@ struct CanvasView: NSViewRepresentable {
         view.onFrameCommit = onFrameCommit
         view.onMoveSelectionPreview = onMoveSelectionPreview
         view.onMoveSelectionCommit = onMoveSelectionCommit
+        view.onCopyDragPreview = onCopyDragPreview
+        view.onCopyDragCommit = onCopyDragCommit
+        view.onCopyDragCancel = onCopyDragCancel
         view.onTransformPreview = onTransformPreview
         view.onTransformCommit = onTransformCommit
         view.onAnnotationCommit = onAnnotationCommit
@@ -287,6 +294,9 @@ final class CanvasNSView: NSView {
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
     var onMoveSelectionPreview: (([UUID: CGPoint]) -> Void) = { _ in }
     var onMoveSelectionCommit: (([UUID: CGPoint]) -> Void) = { _ in }
+    var onCopyDragPreview: (([UUID: CGPoint]) -> Void) = { _ in }
+    var onCopyDragCommit: (([UUID: CGPoint]) -> Void) = { _ in }
+    var onCopyDragCancel: (() -> Void) = { }
     var onTransformPreview: ((UUID, LayerTransform) -> Void) = { _, _ in }
     var onTransformCommit: ((UUID, LayerTransform) -> Void) = { _, _ in }
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Layer?) = { _, _ in nil }
@@ -720,6 +730,11 @@ final class CanvasNSView: NSView {
         /// Becomes true once the pointer travels past the click tolerance;
         /// a click that never moves selects without committing a move.
         var moved = false
+        /// ⌥ was held: the original stays put and a copy is what travels.
+        /// It latches ON and never off, so pressing ⌥ after the drag started
+        /// still copies and letting go before the mouse does not take the copy
+        /// away — a modifier released a moment early is not a change of mind.
+        var copying = false
     }
     private var moveDrag: MoveDrag?
 
@@ -739,6 +754,9 @@ final class CanvasNSView: NSView {
         /// Becomes true once the pointer travels past the click tolerance; a
         /// press that never moves keeps the selection and does nothing else.
         var moved = false
+        /// ⌥ was held: the originals stay put and copies are what travel.
+        /// Latches on and never off, exactly as it does for one layer.
+        var copying = false
 
         /// How far everything has travelled from where it started.
         var delta: CGPoint {
@@ -1207,6 +1225,28 @@ final class CanvasNSView: NSView {
                                captionsEnabled: Experiments.shared.arrowCaptionsEnabled)
     }
 
+    /// Whether this event asks for the drag to leave the original behind and
+    /// carry a copy (⌥, the Photoshop and Figma gesture). Select only: every
+    /// other tool has its own meaning for ⌥, and the ones on the canvas that
+    /// do — skewing from a corner handle, the region tools — are read before
+    /// a layer drag can ever start.
+    private func copyDragModifier(_ event: NSEvent) -> Bool {
+        tool == .select && event.modifierFlags.contains(.option)
+    }
+
+    /// Whether a press at `p` (document coords) would start a layer drag that
+    /// ⌥ could copy: something pickable, and not one of the selected layer's
+    /// own handles, where ⌥ already means skew.
+    private func copyDragCue(at p: CGPoint) -> Bool {
+        guard tool == .select, let viewport,
+              groupAwarePick(at: p, zoom: viewport.zoom) != nil else { return false }
+        let selected = selectedLayerID.flatMap { id in document?.canvasLayer(id: id) }
+        guard let frame = selectedLayerFrame, selected?.allowsFrameResize ?? true,
+              Handles.hit(at: handleSpacePoint(p, layer: selected),
+                          frame: frame, zoom: viewport.zoom) != nil else { return true }
+        return false
+    }
+
     /// Open hand while the pointer rests on something that drags on its own —
     /// a pill, or one of a caliper's dots. Nothing else on the canvas said
     /// those could be moved, so this is the whole invitation. A drag in flight
@@ -1215,8 +1255,12 @@ final class CanvasNSView: NSView {
         guard captionDrag == nil, measureHandleDrag == nil else { return }
         let point = viewPoint ?? window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) }
         guard let viewport, let point, bounds.contains(point) else { return applyGrabCursor(nil) }
-        let hit = grabCue(at: viewport.documentPoint(fromView: point))
-        applyGrabCursor(hit == nil ? nil : .openHand)
+        let doc = viewport.documentPoint(fromView: point)
+        if grabCue(at: doc) != nil { return applyGrabCursor(.openHand) }
+        // Nothing on the canvas says a drag can leave a copy behind, so the
+        // badged pointer is the whole invitation: hold ⌥ over a layer and the
+        // cursor answers before you have pressed anything.
+        applyGrabCursor(pointerModifiers.contains(.option) && copyDragCue(at: doc) ? .dragCopy : nil)
     }
 
     /// Forces `cursor` onto the pointer, or gives it back. Only a CHANGE
@@ -1604,12 +1648,17 @@ final class CanvasNSView: NSView {
                                         y: p.y - plan.bounds.origin.y),
                     peers: Experiments.shared.alignLayersEnabled
                         ? (document?.snapPeers(excluding: multiSelectedLayerIDs) ?? []) : [],
-                    snapped: Snapping.Result(origin: plan.bounds.origin))
+                    snapped: Snapping.Result(origin: plan.bounds.origin),
+                    copying: copyDragModifier(event))
                 refreshOverlays()
                 return
             }
+            let copying = copyDragModifier(event)
             onSelectLayerInGroup(pick.id, pick.context)
-            onDragBegin(hit.id)
+            // A copy drag never floats a sprite: the sprite's underlay hides
+            // the layer it lifts, and the whole point here is that the original
+            // stays visible where it is.
+            if !copying { onDragBegin(hit.id) }
             selectedLayerFrame = hit.frame
             moveDrag = MoveDrag(layerID: hit.id,
                                 grabOffset: CGPoint(x: p.x - hit.frame.origin.x,
@@ -1618,7 +1667,8 @@ final class CanvasNSView: NSView {
                                 startOrigin: hit.frame.origin,
                                 peers: Experiments.shared.alignLayersEnabled
                                     ? (document?.snapPeers(excluding: hit.id) ?? []) : [],
-                                snapped: Snapping.Result(origin: hit.frame.origin))
+                                snapped: Snapping.Result(origin: hit.frame.origin),
+                                copying: copying)
         } else {
             // A ⇧-click is aimed at a layer, so one that lands on bare canvas
             // is a miss, not a deselect: it must not throw away the selection
@@ -1748,6 +1798,7 @@ final class CanvasNSView: NSView {
                 let travel = hypot(proposed.x - drag.startOrigin.x, proposed.y - drag.startOrigin.y)
                 drag.moved = travel * viewport.zoom >= 4
             }
+            if copyDragModifier(event) { drag.copying = true }
             if drag.moved {
                 // ⌘ drags free, the way it already does for a measure foot or a
                 // region corner: one key that means "ignore the magnets"
@@ -1760,15 +1811,22 @@ final class CanvasNSView: NSView {
                                                             peers: drag.peers,
                                                             zoom: viewport.zoom)
                 }
-                onFramePreview(drag.layerID, CGRect(origin: drag.snapped.origin, size: drag.size))
+                if drag.copying {
+                    onCopyDragPreview([drag.layerID: drag.snapped.origin])
+                } else {
+                    onFramePreview(drag.layerID, CGRect(origin: drag.snapped.origin, size: drag.size))
+                }
             }
             // A dragged photo layer offers itself to collage slots under the
-            // pointer — releasing over the highlighted cell absorbs it.
-            if drag.moved, document?.canvasLayer(id: drag.layerID)?.imageRef != nil {
+            // pointer — releasing over the highlighted cell absorbs it. A copy
+            // drag never does: being swallowed by a cell is not what "leave the
+            // original and take a copy" asked for.
+            if drag.moved, !drag.copying, document?.canvasLayer(id: drag.layerID)?.imageRef != nil {
                 hoverSlot = collageSlotTarget(at: p, excluding: drag.layerID)
             } else {
                 hoverSlot = nil
             }
+            applyGrabCursor(drag.copying ? .dragCopy : nil)
             moveDrag = drag
             refreshOverlays()
         } else if var drag = multiMove {
@@ -1778,6 +1836,7 @@ final class CanvasNSView: NSView {
                                    proposed.y - drag.plan.bounds.origin.y)
                 drag.moved = travel * viewport.zoom >= 4
             }
+            if copyDragModifier(event) { drag.copying = true }
             if drag.moved {
                 // ⌘ drags free of the magnets, exactly as it does for one layer.
                 if event.modifierFlags.contains(.command) {
@@ -1788,11 +1847,17 @@ final class CanvasNSView: NSView {
                                                             peers: drag.peers,
                                                             zoom: viewport.zoom)
                 }
-                onMoveSelectionPreview(drag.plan.origins(movingBoundsTo: drag.snapped.origin))
+                let origins = drag.plan.origins(movingBoundsTo: drag.snapped.origin)
+                if drag.copying {
+                    onCopyDragPreview(origins)
+                } else {
+                    onMoveSelectionPreview(origins)
+                }
             }
             // Several layers dropped into one collage cell means nothing, so a
             // multi-drag never offers itself to one.
             hoverSlot = nil
+            applyGrabCursor(drag.copying ? .dragCopy : nil)
             multiMove = drag
             refreshOverlays()
         } else if let drag = slotDrag {
@@ -1988,6 +2053,23 @@ final class CanvasNSView: NSView {
             refreshOverlays()
         } else if let drag = moveDrag {
             moveDrag = nil
+            applyGrabCursor(nil)
+            if drag.copying {
+                hoverSlot = nil
+                if drag.moved {
+                    let frame = CGRect(origin: drag.snapped.origin, size: drag.size)
+                    // The copy is what ends up selected, and it is the same
+                    // size in the same place, so the handles stay put.
+                    selectedLayerFrame = frame
+                    onCopyDragCommit([drag.layerID: drag.snapped.origin])
+                } else {
+                    // ⌥ and a click that never travelled: a plain click, and
+                    // nothing was ever made.
+                    onCopyDragCancel()
+                }
+                refreshOverlays()
+                return
+            }
             if drag.moved, let target = hoverSlot,
                document?.canvasLayer(id: drag.layerID)?.imageRef != nil {
                 // Released over a collage cell: the photo layer becomes that
@@ -2004,7 +2086,13 @@ final class CanvasNSView: NSView {
             refreshOverlays()
         } else if let drag = multiMove {
             multiMove = nil
-            if let origins = drag.liveOrigins { onMoveSelectionCommit(origins) }
+            applyGrabCursor(nil)
+            if drag.copying {
+                if let origins = drag.liveOrigins { onCopyDragCommit(origins) }
+                else { onCopyDragCancel() }
+            } else if let origins = drag.liveOrigins {
+                onMoveSelectionCommit(origins)
+            }
             refreshOverlays()
         } else if let drag = slotDrag {
             slotDrag = nil
@@ -2238,17 +2326,25 @@ final class CanvasNSView: NSView {
             }
             if let drag = moveDrag {
                 moveDrag = nil
+                applyGrabCursor(nil)
                 let frame = CGRect(origin: drag.startOrigin, size: drag.size)
                 selectedLayerFrame = frame
-                onFrameCommit(drag.layerID, frame)
+                // A copy drag never wrote anything down, so Esc is simply
+                // "put the real picture back" — no copy is left behind.
+                if drag.copying { onCopyDragCancel() } else { onFrameCommit(drag.layerID, frame) }
                 refreshOverlays()
                 return
             }
             if let drag = multiMove {
                 multiMove = nil
-                // Putting everything back where it started is a History no-op,
-                // and it resets the preview render.
-                onMoveSelectionCommit(drag.plan.origins(movingBoundsTo: drag.plan.bounds.origin))
+                applyGrabCursor(nil)
+                if drag.copying {
+                    onCopyDragCancel()
+                } else {
+                    // Putting everything back where it started is a History
+                    // no-op, and it resets the preview render.
+                    onMoveSelectionCommit(drag.plan.origins(movingBoundsTo: drag.plan.bounds.origin))
+                }
                 refreshOverlays()
                 return
             }
@@ -3110,6 +3206,9 @@ final class CanvasNSView: NSView {
                 SelectionCursor.cursor(for: selectionMode).set()
             }
         }
+        // ⌥ pressed or let go over a layer flips the copy badge on the pointer
+        // while it rests there, rather than waiting for the next mouse move.
+        if tool == .select, moveDrag == nil, multiMove == nil { refreshGrabCursor() }
         // ⌘ toggles measure snapping — refresh the hover dot so it jumps on/off
         // the edge live while held.
         refreshMeasureCreation(modifierFlags: event.modifierFlags)
