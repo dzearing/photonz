@@ -315,6 +315,15 @@ struct EditorCommands: Commands {
                 Button("Frame Selection") { editor?.frameSelection() }
                     .disabled(!(editor?.canFrameSelection ?? false))
             }
+            // The component commands form their own group under the structure
+            // ones. Option Command K is the key a design tool user already has
+            // in their fingers, and Photoshop binds neither the command nor the
+            // key, so there is nothing to be compatible with.
+            if Experiments.shared.componentsEnabled {
+                Button("Make Component") { editor?.makeComponent() }
+                    .keyboardShortcut("k", modifiers: [.command, .option])
+                    .disabled(!(editor?.canMakeComponent ?? false))
+            }
             Divider()
             // The arrange commands, Duplicate and Delete act on the whole
             // selection: the multi-selection a shift-click, command-click or

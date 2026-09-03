@@ -337,6 +337,9 @@ final class CanvasNSView: NSView {
     /// The hairline at every frame's edge, so a screen has a visible boundary
     /// even where its surface matches the canvas behind it.
     let frameEdgeLayer = CAShapeLayer()
+    /// A main component's mark and name, above its top left corner: one glyph
+    /// and one text sublayer per component.
+    let componentChromeLayer = CALayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     private let snapGuideLayer = CAShapeLayer()
     /// Hover snap dot: while the measure tool is active and idle, a dot follows
@@ -877,6 +880,10 @@ final class CanvasNSView: NSView {
         layer?.addSublayer(frameEdgeLayer)
         frameChromeLayer.isHidden = true
         layer?.addSublayer(frameChromeLayer)
+        // Component chrome (Next, `next-components`) sits above the frame's,
+        // because a promoted frame shows this instead of its own label.
+        componentChromeLayer.isHidden = true
+        layer?.addSublayer(componentChromeLayer)
 
         // Hover snap dot: an accent-filled dot with a white ring, on top.
         snapDotLayer.fillColor = NSColor.controlAccentColor.cgColor
@@ -2473,6 +2480,7 @@ final class CanvasNSView: NSView {
     private func refreshLayerSelectionDisplay() {
         refreshGroupContextOutline()
         refreshFrameChrome()
+        refreshComponentChrome()
         // The Canvas pseudo-selection: outline + eight handles on the document
         // boundary (or the in-flight proposed boundary). No rotate knob — the
         // canvas doesn't rotate.

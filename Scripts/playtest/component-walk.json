@@ -1,0 +1,192 @@
+{
+  "out": "/tmp/photonz-playtest/component-walk",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-shelf",
+      "note": "the Library shelf, Components scope empty and saying so"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        260
+      ],
+      "to": [
+        760,
+        420
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        280,
+        500
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Auto-enhance"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-drawn",
+      "note": "a box and a label, loose on the canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-2-drawn"
+    },
+    {
+      "do": "drag",
+      "from": [
+        160,
+        180
+      ],
+      "to": [
+        900,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-grouped",
+      "note": "one group selected"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-3-grouped"
+    },
+    {
+      "do": "menus",
+      "stage": "3-layer-menu",
+      "menu": "Layer"
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-promoted",
+      "note": "the group is a component: violet mark and name above its top left, the Library opened on Components with a tile in it, and the layers list row is in rename ready to type"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-4-promoted"
+    },
+    {
+      "do": "render",
+      "name": "component-4-promoted-doc"
+    },
+    {
+      "do": "type",
+      "text": "Setting"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-named",
+      "note": "typing straight after the command named it Setting; the canvas mark, the layers row and the Library tile all say Setting"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-5-named"
+    },
+    {
+      "do": "render",
+      "name": "component-5-named-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        500,
+        340
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-selected",
+      "note": "the component selected on the canvas: the dock shows its Component section with the Name field"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-6-selected"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-picked",
+      "note": "picking the component off the shelf: the dock shows the picked component's own section, with how many layers are inside and a way back to the original"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-7-picked"
+    }
+  ]
+}

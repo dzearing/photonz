@@ -3013,6 +3013,85 @@ final class EditorState {
         selectLayers(Set(freed).union(kept))
     }
 
+    // MARK: - Components (Next flag `next-components`)
+
+    /// A component whose Name field should be waiting for typing, set by the
+    /// command that just made it. The Component section consumes it and puts it
+    /// back to nil, so it fires once rather than every redraw.
+    ///
+    /// This is the New Folder idiom: the thing appears already named, with the
+    /// name selected, so naming it is typing and ignoring it is fine. It is the
+    /// Component section's field rather than the layers row because that field
+    /// visibly IS a field, focus ring and all, and a row that silently became
+    /// editable is a row nobody knows they can type in.
+    var componentAwaitingName: UUID?
+
+    /// Whether Make Component, the canvas mark and the Components shelf exist
+    /// at all.
+    var componentsEnabled: Bool { Experiments.shared.componentsEnabled }
+
+    /// Whether Layer > Make Component would do anything.
+    var canMakeComponent: Bool {
+        guard componentsEnabled, let document else { return false }
+        return document.canMakeComponent(ids: actionableLayerIDs)
+    }
+
+    /// Layer > Make Component (Option Command K): promotes the selected group
+    /// to a main, in one undo step, and then does the two things that make the
+    /// command legible.
+    ///
+    /// It **shows the Library on the Components shelf**, because the whole
+    /// point of the command is that the thing you drew lands somewhere you can
+    /// fetch it from, and the shelf is off until asked for. Pressing a key and
+    /// seeing nothing change anywhere you are looking is the failure this
+    /// avoids.
+    ///
+    /// Then it **puts the Component section's Name field ready to type in**,
+    /// with the name selected, so naming it is typing rather than hunting for a
+    /// field. A component nobody named is a tile called "Component".
+    func makeComponent() {
+        guard canMakeComponent, let id = actionableLayerIDs.first else { return }
+        discardDragPreview()
+        var made: UUID?
+        perform { made = $0.makeComponent(id: id) }
+        guard let componentID = made else { return }
+        selectedLayerID = id
+        setLibraryVisible(true)
+        UserDefaults.standard.set(LibraryScope.components.rawValue, forKey: LibraryPanel.scopeKey)
+        // ...and setLibraryVisible cleared any picked tile, so the layer is
+        // still the one selected thing. Name it.
+        componentAwaitingName = componentID
+    }
+
+    /// Every main in the open document, as shelf items.
+    var componentEntries: [LibraryEntry] {
+        guard componentsEnabled else { return [] }
+        return document?.componentLibraryEntries ?? []
+    }
+
+    /// The main behind the picked Components tile, or nil when the pick is not
+    /// a component.
+    var selectedComponentLayer: Layer? {
+        guard componentsEnabled, let raw = selectedLibraryItemID,
+              let componentID = UUID(uuidString: raw) else { return nil }
+        return document?.mainComponent(componentID: componentID)
+    }
+
+    /// The Component section's Name field. One name in one place: renaming here
+    /// renames the layer, which is what the layers list, the canvas mark and
+    /// the tile are all reading.
+    func renameComponent(componentID: UUID, to name: String) {
+        guard componentsEnabled else { return }
+        perform { $0.renameComponent(componentID: componentID, to: name) }
+    }
+
+    /// "Select on Canvas" on a Components tile: answers "where is this thing?"
+    /// by selecting the main itself, which hands the dock back to the layer.
+    func selectComponentOnCanvas(componentID: UUID) {
+        guard let main = document?.mainComponent(componentID: componentID) else { return }
+        selectLayer(main.id, inGroup: document?.parentID(of: main.id))
+    }
+
     // MARK: - Frames (Next flag `next-frames`)
 
     /// The size the next frame gets when it is dropped with a plain click, and

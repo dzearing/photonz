@@ -549,6 +549,58 @@ yet, only drawn ones; the name is renamed in the Layers list rather than on the
 canvas; and the frame's box has no rounded-corner preset of its own beyond the
 Effects section every layer has.
 
+## Landed: make a component, find it in the Library (Next, `next-components`, 2026-09-03)
+
+Step C4. The payoff rung: something you drew becomes something you can fetch.
+
+- **A main is a group with an id on it.** Promoting sets
+  `GroupContent.componentID` and nothing else: the layer is not moved, not
+  rewrapped, not re-parented, so nothing on the canvas shifts by a pixel when
+  you press the key, and select, move, restack, hide, undo and save are all the
+  code that already existed. The id is a fresh UUID rather than the layer's own,
+  because a copy of a main is its own component and needs an identity that did
+  not exist before: duplicating a main mints a new one rather than leaving two
+  layers claiming to be the same thing.
+- **Layer ▸ Make Component (⌥⌘K)** is live for one unlocked group that is not
+  already a main, holds no main, and sits inside none. Components inside
+  components are a nesting question this version has no answer for, so the row
+  is dead rather than making one that later work would have to unpick.
+- **It shows the Library on the Components shelf.** The Library is off until
+  asked for, so without this you press a key and nothing changes anywhere you
+  are looking. This is a departure from the mock, which draws the shelf already
+  open. The tile carries a picture of the component, drawn from the same
+  thumbnail cache the layers list uses, so a component looks like itself
+  wherever it is listed.
+- **Then it hands you the name.** The Component section's Name field takes focus
+  with the name selected, so naming it is typing and ignoring it leaves a
+  component called "Component". This is the New Folder idiom. It is the
+  section's field rather than the layers row because that field visibly IS a
+  field, and a row that silently became editable is a row nobody knows they can
+  type in. The Component section sits directly under Position & Size, beside
+  Frame, because both say what KIND of group you have selected.
+- **One name, one place.** A component's name IS its layer's name, so the canvas
+  mark, the layers row, the Name field and the Library tile cannot disagree.
+  There is no second string to keep in step.
+- **The mark is the design system's component glyph**, four diamonds, in violet
+  rather than the selection accent. It sits above the main's top left corner on
+  the canvas (chrome, so never in an export), next to the name in the layers
+  list, and on the corner of the Library tile. A frame that has been promoted
+  shows this INSTEAD of its frame label, so a box never wears two names.
+- **Picking a tile opens the component's own section**, the way picking a layer
+  opens its sections: the name, how many layers are inside, and Select on
+  Canvas, which answers "where is this thing?".
+- On disk an ordinary group writes no component key, so a document saved before
+  components existed is byte for byte what it was.
+
+Cut from the mock as later work, not oversight: exposed properties, the
+control/variant pickers, the instance count and the override list all belong to
+steps C5 and C6, and are absent rather than shown as controls that do nothing.
+Deliberately left: nothing places a copy yet, so the shelf is browse only;
+Ungroup on a main still works and quietly ends the component (undoable, and
+there are no instances to break yet); and a main whose top edge is at the very
+top of the canvas has its mark clipped, the same limit a frame's name already
+has.
+
 ## Questions the user decides, not the loop
 
 Each of these becomes a decision card when the step that needs it is claimed.

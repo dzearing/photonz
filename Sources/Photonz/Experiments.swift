@@ -258,6 +258,17 @@ extension Experiments {
         layerGroupsEnabled && isEnabled(FeatureCatalog.libraryFlag)
     }
 
+    /// `next-components`: whether Layer > Make Component exists, whether a
+    /// main wears its mark on the canvas and in the layers list, and whether
+    /// the Library's Components scope has anything in it. A component is
+    /// something you fetch off the shelf, so this needs the Library: with it
+    /// off there is no way in and the switch reads as off. Components already
+    /// in a document draw either way. Turning a flag off takes away a way in,
+    /// never a document's contents.
+    var componentsEnabled: Bool {
+        libraryEnabled && isEnabled(FeatureCatalog.componentsFlag)
+    }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its

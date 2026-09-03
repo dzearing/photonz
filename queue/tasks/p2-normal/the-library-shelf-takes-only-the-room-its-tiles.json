@@ -1,0 +1,27 @@
+{
+  "id": "the-library-shelf-takes-only-the-room-its-tiles",
+  "title": "The Library shelf takes only the room its tiles need",
+  "goal": "Right now the Library keeps a tall fixed area even when it holds one thing, so a shelf with a single component sits above a large patch of empty dock. Make the shelf hug what is in it, and only start scrolling once there is more than fits.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 710,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T03:55:23.639Z",
+  "updated": "2026-09-03T03:55:23.640Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "LibraryPanel.tiles applies .frame(height: maxHeight) unconditionally once anything is showing. The layers area next door already solves this: it measures its natural content height and takes min(contentHeight, maxHeight). A LazyVGrid reports its told height rather than its natural one, so the measurement has to come from the row count and the adaptive column width, or the grid has to be swapped for a measured VStack of rows. Noticed while auditing next-components on 2026-09-03: one component tile sat above roughly 150pt of empty dock.",
+  "acceptance": [
+    "A Library scope holding one tile is no taller than that tile plus its padding",
+    "A scope with more tiles than fit still scrolls internally and never pushes the sections below it off the bottom",
+    "The drag handle under the shelf still sets the height a full shelf caps at"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T03:55:23.640Z",
+      "note": "created (manual)"
+    }
+  ]
+}

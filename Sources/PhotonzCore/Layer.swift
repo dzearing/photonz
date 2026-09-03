@@ -347,25 +347,33 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// screen), or nil for a frame you can see straight through. Ordinary
     /// groups never paint one.
     public var backgroundHex: String?
+    /// Set on a **main component**: the identity every future instance points
+    /// at, and what the Library lists (`docs/design/ui-building.md`, step C4).
+    /// It is not the layer's own id, because a copy of a main is its own
+    /// component and needs an identity that did not exist before.
+    public var componentID: UUID?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
-                clipsContents: Bool = true, backgroundHex: String? = nil) {
+                clipsContents: Bool = true, backgroundHex: String? = nil,
+                componentID: UUID? = nil) {
         self.children = children
         self.isFrame = isFrame
         self.clipsContents = clipsContents
         self.backgroundHex = backgroundHex
+        self.componentID = componentID
     }
 
     private enum CodingKeys: String, CodingKey {
-        case children, isFrame, clipsContents, backgroundHex
+        case children, isFrame, clipsContents, backgroundHex, componentID
     }
 
-    /// Only a frame writes the frame keys, so an ordinary group encodes exactly
-    /// as it did before frames existed and a document saved then decodes
-    /// unchanged.
+    /// Only a frame writes the frame keys and only a main writes the component
+    /// key, so an ordinary group encodes exactly as it did before either
+    /// existed and a document saved then decodes unchanged.
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(children, forKey: .children)
+        try c.encodeIfPresent(componentID, forKey: .componentID)
         guard isFrame else { return }
         try c.encode(true, forKey: .isFrame)
         try c.encode(clipsContents, forKey: .clipsContents)
@@ -378,6 +386,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         isFrame = try c.decodeIfPresent(Bool.self, forKey: .isFrame) ?? false
         clipsContents = try c.decodeIfPresent(Bool.self, forKey: .clipsContents) ?? true
         backgroundHex = try c.decodeIfPresent(String.self, forKey: .backgroundHex)
+        componentID = try c.decodeIfPresent(UUID.self, forKey: .componentID)
     }
 }
 
@@ -411,6 +420,10 @@ public enum LayerContent: Hashable, Codable, Sendable {
     func reidentified() -> LayerContent {
         guard case .group(var group) = self else { return self }
         group.children = group.children.map { $0.reidentified() }
+        // A copy of a main is a component of its own, not a second layer
+        // claiming to be the same one: editing either must never move the
+        // other, and the shelf must be able to tell them apart.
+        if group.componentID != nil { group.componentID = UUID() }
         return .group(group)
     }
 }

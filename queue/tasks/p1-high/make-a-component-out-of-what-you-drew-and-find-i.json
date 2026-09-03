@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.173Z",
-  "updated": "2026-09-03T00:08:21.515Z",
+  "updated": "2026-09-03T03:37:51.347Z",
   "deps": [
     "the-layers-list-shows-what-is-inside-a-group",
     "the-component-model-is-written-down-before-it-is"
@@ -31,6 +31,19 @@
     {
       "t": "2026-09-03T00:08:21.514Z",
       "note": "seq 80 -> 100"
+    },
+    {
+      "t": "2026-09-03T03:37:51.347Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T04:05:00.000Z",
+      "note": "Adversarial review BEFORE building. (1) The mock's Component section is mostly later work: property rows, 'Instances: main only', control/variant pickers, 'Add property'. All cut for this slice, which stops at make one and find it. (2) The mock never says how the thing gets named. A modal name dialog is ceremony; the app already renames a layer inline in the layers list, so Make Component promotes and drops straight into that inline rename with the text selected. Type Setting, press Return. (3) The Library is off by default (View > Show Library), so a first-time user could press Make Component and see nothing happen anywhere they are looking. Make Component therefore reveals the Library and switches it to Components, because the whole point of the command is that the thing lands on a shelf. Departure from the mock, which assumes the shelf is already open. (4) A component's name IS its layer's name, one string, so 'renaming in one place renames in both' falls out rather than needing a sync. (5) Duplicating a main must not produce two layers claiming to be the same component, so reidentify mints a fresh component id and a fresh name. (6) A frame that is promoted would carry two labels above its top left (frame name plus component badge); the component badge replaces the frame label for that layer, so there is always exactly one. (7) Ungroup on a main is left working: it is undoable and there are no instances yet to break. Recorded in rough."
+    },
+    {
+      "t": "2026-09-03T05:10:00.000Z",
+      "note": "Adversarial review AFTER building, on the probe with Screen Recording granted. The first build put the layers row into inline rename after the command; the capture showed a row that had silently become editable and looked identical to one that had not, so naming moved to the Component section's Name field, which visibly IS a field, and that section moved up beside Frame so it is not below the fold. The playtest menus dump reports every Layer row disabled, including rows that are plainly live, so menu enablement could not be read from it; canMakeComponent is covered by core tests and the command itself ran, which is what proves the row was live. Left rough and recorded in the audit: nothing places a copy yet; Ungroup on a main quietly ends the component; the shelf keeps its full height for one tile (filed as the-library-shelf-takes-only-the-room-its-tiles); a component at the very top of the canvas has its mark clipped, the same limit a frame's name has."
     }
-  ]
+  ],
+  "started": "2026-09-03T03:37:51.346Z"
 }

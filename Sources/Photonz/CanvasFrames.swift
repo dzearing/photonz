@@ -37,6 +37,11 @@ extension CanvasNSView {
             let rect = viewRect(forDocRect: bounds, in: viewport)
             edges.addRect(rect.insetBy(dx: 0.5, dy: 0.5))
 
+            // A frame that has been promoted to a component wears the component
+            // mark and name in that same spot, so it keeps its edge but drops
+            // this label: one box, one name.
+            if frame.isMainComponent, componentsEnabled { continue }
+
             let label = CATextLayer()
             label.string = frame.name
             label.font = NSFont.systemFont(ofSize: 10, weight: .medium)

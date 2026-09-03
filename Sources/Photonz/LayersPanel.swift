@@ -105,6 +105,12 @@ struct InspectorPanel: View {
             // A frame's own properties: its size, its clipping, its surface
             // (Next, `next-frames`). Only a frame has any of them.
             if Experiments.shared.framesEnabled, layer.isFrame { set.insert(.frame) }
+            // A main component's own section (Next, `next-components`): its
+            // name, which is the one name the layers list and the shelf both
+            // print. Only a main has one.
+            if Experiments.shared.componentsEnabled, layer.isMainComponent {
+                set.insert(.component)
+            }
             if layer.annotation != nil { set.insert(.annotation) }
             if case .text = layer.content { set.insert(.text) }
             if layer.measure != nil { set.insert(.measure) }
@@ -200,6 +206,10 @@ struct InspectorPanel: View {
             if let layer = selectedLayer, layer.isFrame {
                 FrameInspector(layer: layer)
             }
+        case .component:
+            if let layer = selectedLayer, layer.isMainComponent {
+                ComponentInspector(layer: layer)
+            }
         case .annotation:
             if let layer = selectedLayer, layer.annotation != nil {
                 AnnotationInspector(layer: layer)
@@ -231,7 +241,13 @@ struct InspectorPanel: View {
         case .library:
             LibraryPanel()
         case .libraryItem:
-            LibraryItemInspector()
+            // The picked tile's section, named and filled by the scope it came
+            // from: a capture's details, or a component's.
+            if editorState.selectedComponentLayer != nil {
+                LibraryComponentInspector()
+            } else {
+                LibraryItemInspector()
+            }
         }
     }
 
@@ -280,6 +296,10 @@ enum InspectorSectionID: String, CaseIterable {
     case measurements
     case geometry
     case frame
+    // A main component's own properties, right beside the Frame section: both
+    // say what KIND of group you have selected, and both belong near the top
+    // where the name is worth reaching.
+    case component
     case annotation
     case text
     case measure
@@ -301,6 +321,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .measurements: "Measurements"
         case .geometry: "Position & Size"
         case .frame: "Frame"
+        case .component: "Component"
         case .annotation: "Annotation"
         case .text: "Text"
         case .measure: "Measure"
@@ -725,6 +746,12 @@ struct LayersListView: View {
                     .foregroundStyle(layer.isVisible ? .primary : .tertiary)
                     .onTapGesture(count: 2) { beginRename(layer) }
             }
+            // The mark that says this group is a component. It sits with the
+            // name rather than out at the edge, because it is part of what the
+            // row IS, not one more thing you can do to it.
+            if Experiments.shared.componentsEnabled, layer.isMainComponent {
+                ComponentMark()
+            }
             Spacer(minLength: 4)
             // A shut group says how much it is hiding, so the row is not a
             // dead end you have to open to understand.
@@ -803,6 +830,11 @@ struct LayersListView: View {
                 .keyboardShortcut("[", modifiers: [.command, .shift])
             Divider()
             Button("Rename") { beginRename(layer) }
+            if Experiments.shared.componentsEnabled, editorState.canMakeComponent,
+               editorState.isLayerSelected(layer.id) {
+                Button("Make Component") { editorState.makeComponent() }
+                    .keyboardShortcut("k", modifiers: [.command, .option])
+            }
             Button(layer.isVisible ? "Hide" : "Show") { editorState.toggleLayerVisibility(id: layer.id) }
             Button(layer.isLocked ? "Unlock" : "Lock") { editorState.toggleLayerLock(id: layer.id) }
             Divider()

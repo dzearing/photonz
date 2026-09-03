@@ -71,6 +71,8 @@ public enum FeatureCatalog {
 
     public static let libraryFlag = "next-library"
 
+    public static let componentsFlag = "next-components"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -294,6 +296,15 @@ public enum FeatureCatalog {
                     name: libraryFlag,
                     title: "Keep reusable pieces in a Library",
                     description: "Adds a Library to the right dock, under View \u{25B8} Show Library. It is one shelf with four scopes you switch between, Media, Components, Styles and Systems, and a search field that narrows whichever one you are in. Media shows the captures you have taken: click one to see its details, double click or drag it onto the picture to place it. Components, Styles and Systems are empty until there is something to put in them, and each says so. Needs Group what you selected. Off means the right dock exactly as it is today and no Show Library row.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: componentsFlag,
+                    title: "Make a component out of what you drew",
+                    description: "Draw something, group it, and press Option Command K to turn it into a component: it takes a name, wears a small mark on the canvas and in the layers list so you never mistake it for an ordinary group, and lands on the Library's Components shelf where you can find it again. Renaming it anywhere renames it everywhere, because it only has one name. Placing copies of it, exposing properties and detaching come later. Needs Keep reusable pieces in a Library. Off means no Make Component row and no components on the shelf; components already in a document keep drawing either way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

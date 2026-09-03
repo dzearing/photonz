@@ -5623,3 +5623,55 @@ drag are hand paths the harness cannot drive.
 
 Next: step 4, promoting a group to a component so the Components scope has
 something in it.
+
+## 2026-09-03 — Make a component, find it in the Library (Next, `next-components`)
+
+Step C4 of `docs/design/ui-building.md`, and the first rung where the Library
+holds something you made. **Layer ▸ Make Component (⌥⌘K)** turns the selected
+group into a main: `GroupContent` gained a `componentID`, and that flag going on
+is the whole promotion. The layer is not moved, rewrapped or re-parented, so
+nothing on the canvas shifts by a pixel and every operation a group already
+answered to (select, move, restack, hide, undo, save) it still answers to. The
+id is a fresh UUID rather than the layer's own, so duplicating a main mints a
+second component instead of leaving two layers claiming to be one.
+
+Two things the mock does not say, decided here and argued in the doc:
+
+- **The command opens the Library on Components.** The shelf is off until asked
+  for, so without this you press a key and nothing changes anywhere you are
+  looking. The whole point of the command is that the thing lands somewhere you
+  can fetch it from, so it shows you the shelf.
+- **Then it hands you the name**, New Folder style: the Component section's Name
+  field takes focus with the name selected, so typing renames it and ignoring it
+  leaves a component called "Component". The first build put the layers row into
+  inline rename instead; the probe capture showed a row that had silently become
+  editable and looked exactly like a row that had not, so it moved to a field
+  that visibly is one. The Component section sits directly under Position & Size,
+  beside Frame, because both say what KIND of group you have selected.
+
+A component's name IS its layer's name, so the canvas mark, the layers row, the
+Name field and the Library tile cannot disagree: there is no second string to
+keep in step. The mark is the design system's component glyph (four diamonds,
+`ic-component`) in violet rather than the selection accent, drawn as canvas
+chrome above the main's top left corner, beside the name in the layers list, and
+on the corner of the shelf tile. A promoted frame shows this instead of its
+frame label, so a box never wears two names.
+
+Core got `Components.swift` (`canMakeComponent`, `makeComponent`,
+`renameComponent`, `mainComponents`, `componentLibraryEntries`,
+`ComponentNaming`) with 23 tests, including that an ordinary group still encodes
+without a component key. The harness gained `makeComponent` and
+`pickFirstComponent` actions, and `Scripts/playtest/component-walk.json` drives
+the whole flow. Verified on the probe with Screen Recording granted: promote,
+type Setting, and the canvas mark, the layers row, the Name field and the tile
+all read Setting; picking the tile opens the component's own section with
+"2 layers inside" and Select on Canvas.
+
+Rough: nothing places a copy yet, so the shelf is browse only; Ungroup on a main
+quietly ends the component (undoable, no instances to break); the shelf keeps
+its full height for one tile (filed as a follow-up); a component at the very top
+of the canvas has its mark clipped, the same limit a frame's name has.
+Audit: `queue/audits/2026-09-03-components.json`.
+
+Next: step 5, placing an instance from the Library and having a main edit reach
+every copy.

@@ -114,9 +114,7 @@ struct LibraryPanel: View {
                             detail: fileName)
     }
 
-    /// The tiles this scope draws for what is typed. Only Media has anything
-    /// to draw yet; the other three return nothing and their empty state
-    /// explains itself.
+    /// The tiles Media draws for what is typed.
     private var visibleEntries: [CaptureEntry] {
         guard scope == .media else { return [] }
         let entries = mediaEntries
@@ -125,28 +123,49 @@ struct LibraryPanel: View {
         return hits.prefix(Self.maxTiles).compactMap { byID[$0.id] }
     }
 
+    /// The tiles Components draws for what is typed: the mains in the open
+    /// document, each paired with the layer it stands for so the tile can draw
+    /// a picture of it (Next, `next-components`).
+    private var visibleComponents: [(entry: LibraryEntry, layer: Layer)] {
+        guard scope == .components, let document = editorState.document else { return [] }
+        let hits = LibrarySearch.filter(editorState.componentEntries, query: query)
+        return hits.prefix(Self.maxTiles).compactMap { entry in
+            guard let id = UUID(uuidString: entry.id),
+                  let layer = document.mainComponent(componentID: id) else { return nil }
+            return (entry, layer)
+        }
+    }
+
+    /// Whether this scope has anything to show at all, whatever the search
+    /// says. The empty state and the resize grabber both hang off this.
+    private var isEmpty: Bool {
+        visibleEntries.isEmpty && visibleComponents.isEmpty
+    }
+
     @ViewBuilder
     private var tiles: some View {
-        let entries = visibleEntries
-        if entries.isEmpty {
+        if isEmpty {
             // An empty shelf takes only the room its sentence needs. Measuring
             // a full one is not on: a lazy grid materialises the rows you can
             // see, so asking it how tall it is answers with how tall it was
             // told to be.
             emptyState
         } else {
-            ScrollView(.vertical) { grid(entries) }
+            ScrollView(.vertical) { grid }
                 .frame(height: maxHeight)
                 .scrollBounceBehavior(.basedOnSize)
         }
     }
 
-    private func grid(_ entries: [CaptureEntry]) -> some View {
+    private var grid: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 68), spacing: 8)],
                   alignment: .leading, spacing: 8) {
-            ForEach(entries) { entry in
+            ForEach(visibleEntries) { entry in
                 LibraryTile(item: item(for: entry), entry: entry,
                             store: coordinator.capture.store)
+            }
+            ForEach(visibleComponents, id: \.entry.id) { pair in
+                LibraryComponentTile(entry: pair.entry, layer: pair.layer)
             }
         }
         .padding(.vertical, 2)
@@ -166,14 +185,17 @@ struct LibraryPanel: View {
     /// Return in the search field picks the first tile showing, so the shelf
     /// can be worked without the pointer.
     private func selectFirstTile() {
-        guard let first = visibleEntries.first else { return }
-        editorState.selectLibraryItem(first.url.path)
+        if let first = visibleEntries.first {
+            editorState.selectLibraryItem(first.url.path)
+        } else if let first = visibleComponents.first {
+            editorState.selectLibraryItem(first.entry.id)
+        }
     }
 
     @ViewBuilder
     private var resizeHandle: some View {
         // Nothing to resize while the shelf is empty, so no grab bar either.
-        if !visibleEntries.isEmpty {
+        if !isEmpty {
             PanelAreaResizeHandle(maxHeight: $maxHeight,
                               currentHeight: maxHeight,
                               minHeight: Self.minHeight,

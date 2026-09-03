@@ -174,6 +174,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The View menu's Library rows (Next, `next-library`), so a walk can
     /// photograph the shelf.
     case showLibrary, hideLibrary
+    /// Layer > Make Component (Next, `next-components`), a menu chord too, so
+    /// a walk can promote a group and photograph what it becomes.
+    case makeComponent
+    /// Pick the first component on the Library shelf, which is what a click on
+    /// its tile does. A walk cannot reach the dock with the pointer, so this is
+    /// how the picked component's own section gets photographed.
+    case pickFirstComponent
     /// Place the picked Library tile in the picture, which is what the item
     /// section's button and a double click on the tile both do.
     case placeLibraryPick

@@ -398,6 +398,11 @@ private final class Run {
             case .ungroup: editor.ungroupSelection()
             case .newFrameDialog: editor.isNewFrameDialogPresented = true
             case .frameSelection: editor.frameSelection()
+            case .makeComponent: editor.makeComponent()
+            case .pickFirstComponent:
+                if let first = editor.componentEntries.first {
+                    editor.selectLibraryItem(first.id)
+                }
             case .exportDialog: editor.isExportDialogPresented = true
             case .showLibrary: editor.setLibraryVisible(true)
             case .hideLibrary: editor.setLibraryVisible(false)

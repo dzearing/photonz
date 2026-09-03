@@ -1,0 +1,30 @@
+{
+  "feature": "Make a component, find it in the Library",
+  "epic": "ui-components",
+  "summary": "A group you drew can now become a component: it takes a name, wears a violet mark on the canvas and in the layers list, and lands on the Library's Components shelf where you can find it again. Placing copies of it is the next step.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags next-layer-groups, next-library and next-components are on by default.",
+  "try": [
+    { "do": "Open a new blank canvas and draw a rectangle." },
+    { "do": "Pick the text tool, click under the rectangle and type a label." },
+    { "do": "Press V, sweep a marquee over both, and press Command G." },
+    { "do": "Press Option Command K.", "shot": "2026-09-03-components-1.png" },
+    { "do": "Type Setting and press Return.", "shot": "2026-09-03-components-2.png" },
+    { "do": "Click the Setting tile on the Library shelf.", "shot": "2026-09-03-components-3.png" },
+    { "do": "Press Select on Canvas, then rename it in the layers list by double clicking its name." }
+  ],
+  "evaluate": [
+    "Option Command K opens the Library and puts the cursor in the Name field. Is that helpful, or does the dock rearranging itself under you feel like too much happening at once?",
+    "The mark is four violet diamonds above the shape's top left corner. Can you tell a component from an ordinary group at a glance, without reading the panel?",
+    "Naming works like New Folder in the Finder: it arrives called Component with the name selected. Is typing straight away what your hands expected?",
+    "The Component section sits directly under Position & Size. Is that where you would look for a component's name?",
+    "The Library tile draws a small picture of the component. Is it recognisable at that size, or would a name-only list read better?"
+  ],
+  "rough": [
+    "Nothing places a copy yet, so the shelf is browse only: you can find a component and select the original, and that is all. Instances are the next task.",
+    "Ungroup on a component still works and quietly ends it. It is undoable and there are no copies to break yet, so it was left alone rather than guarded with a warning nobody asked for.",
+    "The mock draws the Library already open, with property rows, a control picker and an instance count in the Component section. All of that belongs to the steps that create instances, so it is absent rather than shown as controls that do nothing.",
+    "The shelf keeps its full height for a single tile, so there is a lot of empty space under one component. That is how the Library already behaves and is filed as a follow-up.",
+    "A component whose top edge is at the very top of the canvas has its mark clipped off the top, the same limit a frame's name already has.",
+    "Screenshots here are real window captures from the probe app, not offscreen renders."
+  ]
+}
