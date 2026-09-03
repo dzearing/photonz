@@ -32,6 +32,9 @@ struct LibraryPanel: View {
     /// How much room the shelf has across, which is all that has to be
     /// measured: the rest of the height is arithmetic.
     @State private var shelfWidth: CGFloat = 0
+    /// Where the shelf is scrolled to, and whether it owes someone a scroll.
+    /// A reference on purpose: see the note at the grid's geometry reader.
+    @State private var shelfReveal = ShelfRevealScratch()
 
     static let scopeKey = "library.scope"
     static let minHeight: CGFloat = 104
@@ -41,6 +44,9 @@ struct LibraryPanel: View {
     /// name — this is a cap on how many full-size images the grid loads, not
     /// on what the Library knows about.
     static let maxTiles = 60
+    /// The shelf's scrolling area as a coordinate space, so the grid can say
+    /// how far it has been scrolled rather than where it is in the window.
+    fileprivate static let shelfSpace = "library.shelf"
 
     private var scope: LibraryScope { LibraryScope(rawValue: scopeRaw) ?? .media }
 
@@ -188,8 +194,23 @@ struct LibraryPanel: View {
             // An empty shelf takes only the room its sentence needs.
             emptyState
         } else {
-            ScrollView(.vertical) { grid }
+            ScrollViewReader { proxy in
+                ScrollView(.vertical) {
+                    grid
+                        // How far the shelf is scrolled, which is the one thing
+                        // the reveal below cannot work out for itself. Kept
+                        // OUTSIDE @State on purpose: this fires on every scroll
+                        // tick, and re-drawing the shelf to remember a number
+                        // nothing draws is jank for nothing.
+                        .onGeometryChange(for: CGFloat.self) {
+                            $0.frame(in: .named(Self.shelfSpace)).minY
+                        } action: { top in
+                            shelfReveal.gridTop = top
+                            if shelfReveal.isPending { applyTileReveal(proxy) }
+                        }
+                }
                 .frame(height: shelfHeight)
+                .coordinateSpace(.named(Self.shelfSpace))
                 .scrollBounceBehavior(.basedOnSize)
                 // Only the WIDTH is measured. How tall the shelf wants to be
                 // is worked out from the tile count instead, because a lazy
@@ -204,6 +225,12 @@ struct LibraryPanel: View {
                 // the first pass, where the shelf learns how wide it is, must
                 // land silently instead of sliding down from the ceiling.
                 .animation(.spring(duration: 0.22), value: tileCount)
+                // The app just made something that lives on this shelf: put
+                // that tile on screen. On appear too, because making the first
+                // component builds this shelf with the request already waiting.
+                .onChange(of: editorState.pendingLibraryTileID) { requestTileReveal(proxy) }
+                .onAppear { requestTileReveal(proxy) }
+            }
         }
     }
 
@@ -236,6 +263,55 @@ struct LibraryPanel: View {
             .padding(.vertical, 18)
     }
 
+    // MARK: Bringing the new tile into view
+
+    /// The app has made something the shelf holds (a component, a saved color)
+    /// and wants its tile on screen. The shelf shows about two rows, and a new
+    /// component is listed after the ones already in the document, so with a
+    /// handful saved the tile lands below the shelf's own fold.
+    ///
+    /// A tile already showing must not move: the shelf twitching every time you
+    /// make something is worse than the scroll is worth.
+    /// `LibraryShelfLayout.tileReveal` makes that call.
+    private func requestTileReveal(_ proxy: ScrollViewProxy) {
+        guard let id = editorState.pendingLibraryTileID else { return }
+        // A search still running can be hiding the very thing the app just
+        // made, and a shelf that hides your work is the same failure one step
+        // earlier. So the search goes.
+        if !query.isEmpty, shelfIndex(of: id) == nil { query = "" }
+        shelfReveal.isPending = true
+        // The grid may have moved with this very change, in which case the
+        // measurement above lands first and this finds nothing left to do. When
+        // the shelf was already scrolled where it needed to be, or grew without
+        // moving, this is the only path.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { applyTileReveal(proxy) }
+    }
+
+    private func applyTileReveal(_ proxy: ScrollViewProxy) {
+        guard shelfReveal.isPending, let id = editorState.pendingLibraryTileID else { return }
+        shelfReveal.isPending = false
+        editorState.libraryTileRevealHandled()
+        // Not on this shelf: a scope was switched under it, or a search still
+        // has no room for it. Nothing to scroll to, so let the request go.
+        guard let index = shelfIndex(of: id), shelfWidth > 0 else { return }
+        let action = LibraryShelfLayout.tileReveal(index: index, width: shelfWidth,
+                                                   gridTop: shelfReveal.gridTop,
+                                                   viewportHeight: shelfHeight)
+        guard action != .none else { return }
+        withAnimation(.easeInOut(duration: 0.28)) {
+            proxy.scrollTo(id, anchor: action == .top ? .top : .bottom)
+        }
+    }
+
+    /// Where a tile sits in the shelf as it is drawn right now, counting from
+    /// zero, or nil when it is not on this shelf at all. One index, not one per
+    /// scope: the shelf only ever draws one scope at a time.
+    private func shelfIndex(of id: String) -> Int? {
+        if let index = visibleComponents.firstIndex(where: { $0.entry.id == id }) { return index }
+        if let index = visibleStyles.firstIndex(where: { $0.entry.id == id }) { return index }
+        return nil
+    }
+
     /// Return in the search field picks the first tile showing, so the shelf
     /// can be worked without the pointer.
     private func selectFirstTile() {
@@ -259,6 +335,14 @@ struct LibraryPanel: View {
                               help: "Drag to resize the Library")
         }
     }
+}
+
+/// The shelf's live measurements for the tile reveal: how far it is scrolled,
+/// and whether a reveal is waiting on layout. Held by reference so writing it
+/// during a scroll does not redraw the shelf.
+@MainActor private final class ShelfRevealScratch {
+    var gridTop: CGFloat = 0
+    var isPending = false
 }
 
 /// One thing on the shelf: a thumbnail with its name underneath. Click picks

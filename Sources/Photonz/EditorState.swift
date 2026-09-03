@@ -99,6 +99,7 @@ final class EditorState {
         } else {
             selectedLibraryItemID = nil
             pendingLibraryReveal = false
+            pendingLibraryTileID = nil
         }
     }
 
@@ -115,6 +116,20 @@ final class EditorState {
     private(set) var pendingLibraryReveal = false
 
     func libraryRevealHandled() { pendingLibraryReveal = false }
+
+    /// The tile the shelf itself has to scroll to, until it has.
+    ///
+    /// Bringing the Library into view puts the SHELF on screen; it says nothing
+    /// about where a tile sits inside the shelf's own scroll, and the shelf
+    /// shows about two rows. A component you just made is listed after the ones
+    /// already in the document, so with a handful saved it lands below that
+    /// inner fold: the shelf is on screen and your work is not. A command that
+    /// makes something the shelf holds names it here, and the shelf scrolls to
+    /// it if it has to (`LibraryShelfLayout.tileReveal` decides whether it has
+    /// to, so a tile already showing never moves).
+    private(set) var pendingLibraryTileID: String?
+
+    func libraryTileRevealHandled() { pendingLibraryTileID = nil }
 
     func setInspectorVisible(_ visible: Bool) {
         isLayersPanelVisible = visible
@@ -3256,6 +3271,10 @@ final class EditorState {
         selectedLayerID = id
         setLibraryVisible(true)
         UserDefaults.standard.set(LibraryScope.components.rawValue, forKey: LibraryPanel.scopeKey)
+        // ...and the shelf scrolls to the new tile, which is listed after the
+        // components already in the document and so is often below the shelf's
+        // own fold.
+        pendingLibraryTileID = componentID.uuidString
         // ...and setLibraryVisible cleared any picked tile, so the layer is
         // still the one selected thing. Name it.
         componentAwaitingName = componentID
@@ -3590,6 +3609,9 @@ final class EditorState {
         perform { saved = $0.saveColorStyle(from: targets, slot: slot, name: name) }
         guard let styleID = saved else { return nil }
         showColorStyleShelf()
+        // The saved color is one tile among the ones already kept, so the shelf
+        // scrolls to it for the same reason a new component's tile does.
+        pendingLibraryTileID = styleID.uuidString
         return styleID
     }
 

@@ -80,6 +80,41 @@ public enum LibraryShelfLayout {
         return min(contentHeight(tileCount: tileCount, width: width), cap)
     }
 
+    // MARK: Putting one tile on screen
+
+    /// Where the tile at `index` starts, measured down from the top of the
+    /// grid. Worked out rather than measured, for the same reason the shelf's
+    /// height is: a lazy grid has not built the row a tile is on until that row
+    /// is on screen, so a tile below the fold cannot be asked where it is —
+    /// which is exactly the tile that needs moving.
+    public static func tileTop(index: Int, width: CGFloat) -> CGFloat {
+        guard index > 0 else { return gridVerticalPadding }
+        let row = index / columnCount(width: width)
+        return gridVerticalPadding + CGFloat(row) * (tileHeight + tileSpacing)
+    }
+
+    /// What the shelf should do to put the tile at `index` on screen: the same
+    /// call the dock makes about a whole section, asked about one tile inside
+    /// the shelf's own little scroll.
+    ///
+    /// The app opens the shelf for you when it makes something (a component, a
+    /// saved color), and the tile it just made can be sitting below two rows of
+    /// older ones. Then the shelf is on screen and your work is not.
+    ///
+    /// - Parameters:
+    ///   - index: the tile's place in the shelf, counting from zero.
+    ///   - width: how much room the shelf has across.
+    ///   - gridTop: where the top of the grid sits relative to the top of the
+    ///     shelf's visible area. Zero when the shelf is scrolled to its start,
+    ///     negative once it has been scrolled down.
+    ///   - viewportHeight: how tall the shelf's visible area is.
+    public static func tileReveal(index: Int, width: CGFloat,
+                                  gridTop: CGFloat, viewportHeight: CGFloat) -> DockReveal.Action {
+        DockReveal.action(sectionTop: gridTop + tileTop(index: index, width: width),
+                          sectionHeight: tileHeight,
+                          viewportHeight: viewportHeight)
+    }
+
     // MARK: The picture in a tile
 
     /// Which edge of a tile's picture the well cuts off.

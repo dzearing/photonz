@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T08:59:50.517Z",
-  "updated": "2026-09-03T15:18:17.631783Z",
+  "updated": "2026-09-03T15:19:02.768Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Frame names landed 2026-09-03 (FrameNameLabels in PhotonzCore, CanvasFrames.swift). The component mark is drawn by CanvasComponents.refreshComponentChrome as a glyph plus a CATextLayer, offset right of the glyph, so its hit box starts at rect.minX + glyph + 4 rather than rect.minX. Rename goes through EditorState.renameComponent (not renameLayer), which is what keeps instances and the tile in step. DONE 2026-09-03: geometry is CanvasNameLabels in PhotonzCore (leadingInset covers the mark); shared behaviour in Sources/Photonz/CanvasNames.swift; CanvasComponents draws mark + violet name; commit routes through onRenameComponent -> EditorState.renameComponent. Walk: Scripts/playtest/component-name-rename-walk.json. Audit: queue/audits/2026-09-03-component-name-rename.json.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-03T15:18:17.631783Z",
       "note": "verified live on Photonz Probe with Scripts/playtest/component-name-rename-walk.json (Screen Recording granted, real -sc.png captures). Click the mark -> component picked; click the name -> component picked; double click -> CanvasNameFieldView holds the keyboard with the whole name selected; typing 'card' replaces it; Return lands one undo step (undo restores Frame, redo restores card); Escape after typing leaves card untouched. Final capture shows canvas, Layers row, Library tile and Component section all reading card. Regression: frame-name-rename-walk still passes all 15 stages unchanged."
+    },
+    {
+      "t": "2026-09-03T15:19:02.768Z",
+      "note": "Component names on the canvas are now the same handle as screen names: click the mark-plus-name chip to pick the component, double click to rename in place, Return is one undo step, Escape leaves it. Geometry unified in CanvasNameLabels (PhotonzCore, 19 tests) with a leadingInset for the mark; behaviour shared in Sources/Photonz/CanvasNames.swift; commit routes through EditorState.renameComponent so canvas, Layers row, Library tile and Component section move together. Verified live on the probe with Scripts/playtest/component-name-rename-walk.json (real captures), frame-name-rename-walk re-run as a regression, Scripts/test.sh green at 2187. Audit: queue/audits/2026-09-03-component-name-rename.json. Pushed as 3b8eafc."
     }
   ],
-  "started": "2026-09-03T14:59:02.362Z"
+  "started": "2026-09-03T14:59:02.362Z",
+  "completed": "2026-09-03T15:19:02.768Z"
 }

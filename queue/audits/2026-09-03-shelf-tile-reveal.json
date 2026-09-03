@@ -1,0 +1,44 @@
+{
+  "feature": "The shelf shows the component you just made",
+  "epic": "ui-components",
+  "summary": "Making a component now scrolls the Library shelf itself, so the tile it just made is on screen instead of sitting below the shelf's own little fold. A tile that was already showing does not move.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. The shelf's own fold only bites once there are more tiles than it can show, so step 2 shortens the shelf to get there faster.",
+  "try": [
+    {
+      "do": "Open a blank canvas and turn the shelf on with View then Show Library."
+    },
+    {
+      "do": "Drag the grab bar under the shelf up until only two rows of tiles show."
+    },
+    {
+      "do": "Draw two rectangles with R, marquee them with V, and press Command G."
+    },
+    {
+      "do": "Press Option Command K, type a name, press Return."
+    },
+    {
+      "do": "Repeat the last two steps until the shelf holds more tiles than its two rows."
+    },
+    {
+      "do": "Make one more component and watch the shelf: the new tile is on screen, on the bottom row.",
+      "shot": "2026-09-03-shelf-tile-reveal-new-tile-sc.png"
+    },
+    {
+      "do": "Make one more straight after it, without touching the scroll.",
+      "shot": "2026-09-03-shelf-tile-reveal-no-move-sc.png"
+    }
+  ],
+  "evaluate": [
+    "When the shelf scrolls, can you tell which tile is the one you just made?",
+    "Is scrolling to the bottom row the right landing spot, or would you rather the new tile came to the top?",
+    "Does the shelf moving under you feel helpful, or does it take away the row you were looking at?",
+    "The shelf and the dock can both scroll in the same beat. Does that read as one movement or two?",
+    "If you had a search typed in the shelf, the app clears it so your new component is not hidden. Is that right, or should the search win?"
+  ],
+  "rough": [
+    "The task assumed the shelf shows two rows at its default size; measured on the real app it shows three, so with a normal dock width the fold only bites at the tenth component. Shortening the shelf gets there in four.",
+    "Nothing marks the new tile as new. It is identified by its name, which only appears on the tile once you press Return on the Name field. A badge or a flash was deliberately not added: picking the tile would take the keyboard away from the Name field you are typing into.",
+    "The shelf lands the new tile flush with its bottom edge, which is the shortest move but leaves it right against the grab bar.",
+    "Verified with real window captures: the probe had Screen Recording granted, so both pictures here are the window as a person would see it."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T11:14:43.926Z",
-  "updated": "2026-09-03T12:08:27.032Z",
+  "updated": "2026-09-03T15:32:27.834446Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-on from when-the-library-opens-on-its-own-you-can-see-it, which scrolls the DOCK to the Library section. The shelf itself is a second ScrollView inside LibraryPanel.tiles (Sources/Photonz/LibraryPanel.swift), bounded by inspector.libraryHeight, so it needs its own ScrollViewReader keyed on the entry id. DockReveal (PhotonzCore) already has the pure math for deciding whether anything needs to move. Ordering note: componentEntries lists the document own mains first (layer-stack order) then untaken starters, so a new main is not necessarily first.",
@@ -26,6 +26,55 @@
     {
       "t": "2026-09-03T12:08:27.031Z",
       "note": "seq 880 -> 50"
+    },
+    {
+      "t": "2026-09-03T15:19:39.089Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T15:23:24.614947Z",
+      "note": "Adversarial review before building. (1) Reproduced on paper from the real metrics: a tile is 68pt tall, the shelf's default ceiling is 220pt, and a normal dock fits 3 tiles across, so the shelf shows two full rows. componentEntries lists the document's mains bottom-of-the-stack first and then the untaken starters, so a component you just drew on top lands LAST among the mains: with seven or more mains the newest one is on row three or lower, below the shelf's own fold. The bug is real and the ordering is why."
+    },
+    {
+      "t": "2026-09-03T15:23:24.614947Z",
+      "note": "(2) First-time user walk: after Make Component the shelf opens and the keyboard is in the Component section's Name field. Even scrolled into view, nothing MARKS which tile is new. Rejected adding a badge or a flash: the tile's caption is the name you are typing, so the confirmation is already there and the shortest version is just to put it on screen. Selecting the new tile would be worse still, because picking a tile clears the layer selection and would take the Name field away mid-type."
+    },
+    {
+      "t": "2026-09-03T15:23:24.614947Z",
+      "note": "(3) Collision check: this is a second scroll view inside the one the dock reveal already moves. They are independent (scrolling inside the shelf does not change the shelf's frame in the dock), so the two reveals cannot fight."
+    },
+    {
+      "t": "2026-09-03T15:23:24.614947Z",
+      "note": "(4) Hole found while reading: makeComponent switches the shelf to Components but does not clear a search already typed there, so the new tile can be filtered out entirely, not just scrolled past. A shelf that hides the thing the app just made is the same failure one step earlier, so the reveal clears a query that would hide it."
+    },
+    {
+      "t": "2026-09-03T15:23:24.614947Z",
+      "note": "(5) Shortest version: reuse DockReveal for the none/top/bottom decision, add only the pure arithmetic for where a tile sits from its index, no new chrome and no new preference."
+    },
+    {
+      "t": "2026-09-03T15:32:27.834446Z",
+      "note": "Built: LibraryShelfLayout.tileTop(index:width:) and .tileReveal(index:width:gridTop:viewportHeight:) in PhotonzCore (pure, 6 new tests), which hands the none/top/bottom call to the DockReveal rule the dock already uses. A tile's place is WORKED OUT from its index rather than measured, for the same reason the shelf's height is: a lazy grid has not built the row a tile is on until that row is on screen, and that is exactly the tile that needs moving."
+    },
+    {
+      "t": "2026-09-03T15:32:27.834446Z",
+      "note": "EditorState gained pendingLibraryTileID, raised by makeComponent (the new component id) and by saving a color style (the new style id), cleared when the shelf is put away. LibraryPanel wraps the shelf's own ScrollView in a ScrollViewReader, measures how far the grid has been scrolled into a reference-typed scratch object (not @State: it fires on every scroll tick), and scrolls with an animated proxy.scrollTo when the rule says to. It also clears a search that would hide the new tile."
+    },
+    {
+      "t": "2026-09-03T15:32:27.834446Z",
+      "note": "Correction to the task's premise, worth knowing: at the shelf's default 220pt ceiling and a normal dock width the shelf shows THREE rows, not two, so the fold only bites at the tenth component. The walk makes eleven."
+    },
+    {
+      "t": "2026-09-03T15:32:27.834446Z",
+      "note": "Verified with Scripts/playtest/shelf-tile-reveal-walk.json at 1240x900, real window captures (Screen Recording granted): with two components the shelf sits unscrolled at Card 1; with ten it has scrolled one row so Card 10 is on screen at the bottom; the eleventh lands beside Card 10 on the row already showing and the shelf does NOT move. Scripts/test.sh green (2193 tests). library-reveal-walk, component-end-to-end-walk, styles-walk and library-walk all pass (library-walk needed the probe's leftover library.scope default cleared first, the same stale-state trap the previous task recorded)."
+    },
+    {
+      "t": "2026-09-03T15:32:27.834446Z",
+      "note": "Adversarial review after building: (a) nothing marks the new tile as new, so it is identified only by the name you type, and the caption takes that name on commit rather than as you type. Left as is on purpose, because the alternative (selecting the tile) takes the keyboard away from the Name field. Raised as an audit question instead. (b) The tile lands flush with the shelf's bottom edge, which is the shortest move but sits right against the grab bar. (c) The shelf and the dock can both scroll in the same beat; in the captures that reads as one movement, but it is worth a human eye."
+    },
+    {
+      "t": "2026-09-03T15:32:27.834446Z",
+      "note": "Audit: queue/audits/2026-09-03-shelf-tile-reveal.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-03T15:19:39.088Z"
 }

@@ -1,0 +1,987 @@
+{
+  "out": "/tmp/photonz-playtest/shelf-tile-reveal",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        170
+      ],
+      "to": [
+        160,
+        215
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        170,
+        170
+      ],
+      "to": [
+        210,
+        215
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        108,
+        158
+      ],
+      "to": [
+        222,
+        227
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 1"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        250,
+        170
+      ],
+      "to": [
+        290,
+        215
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        170
+      ],
+      "to": [
+        340,
+        215
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        238,
+        158
+      ],
+      "to": [
+        352,
+        227
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 2"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "describe",
+      "stage": "1-two-fit",
+      "note": "two components: both tiles are on the shelf's first row, so nothing should have scrolled"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-1-two-fit"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        170
+      ],
+      "to": [
+        420,
+        215
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        430,
+        170
+      ],
+      "to": [
+        470,
+        215
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        368,
+        158
+      ],
+      "to": [
+        482,
+        227
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 3"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        510,
+        170
+      ],
+      "to": [
+        550,
+        215
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        170
+      ],
+      "to": [
+        600,
+        215
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        498,
+        158
+      ],
+      "to": [
+        612,
+        227
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 4"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        290
+      ],
+      "to": [
+        160,
+        335
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        170,
+        290
+      ],
+      "to": [
+        210,
+        335
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        108,
+        278
+      ],
+      "to": [
+        222,
+        347
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 5"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        250,
+        290
+      ],
+      "to": [
+        290,
+        335
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        290
+      ],
+      "to": [
+        340,
+        335
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        238,
+        278
+      ],
+      "to": [
+        352,
+        347
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 6"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        290
+      ],
+      "to": [
+        420,
+        335
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        430,
+        290
+      ],
+      "to": [
+        470,
+        335
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        368,
+        278
+      ],
+      "to": [
+        482,
+        347
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 7"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "describe",
+      "stage": "2-seven",
+      "note": "seven components: the newest is on the shelf's third row, past its own fold"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-2-seven"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        510,
+        290
+      ],
+      "to": [
+        550,
+        335
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        290
+      ],
+      "to": [
+        600,
+        335
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        498,
+        278
+      ],
+      "to": [
+        612,
+        347
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 8"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        410
+      ],
+      "to": [
+        160,
+        455
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        170,
+        410
+      ],
+      "to": [
+        210,
+        455
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        108,
+        398
+      ],
+      "to": [
+        222,
+        467
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 9"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        250,
+        410
+      ],
+      "to": [
+        290,
+        455
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        410
+      ],
+      "to": [
+        340,
+        455
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        238,
+        398
+      ],
+      "to": [
+        352,
+        467
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 10"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "describe",
+      "stage": "3-ten",
+      "note": "ten components: Card 10 sits alone on the fourth row and the shelf should be showing it"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-3-ten"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        410
+      ],
+      "to": [
+        420,
+        455
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        430,
+        410
+      ],
+      "to": [
+        470,
+        455
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        368,
+        398
+      ],
+      "to": [
+        482,
+        467
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.25
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.45
+    },
+    {
+      "do": "type",
+      "text": "Card 11"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "describe",
+      "stage": "4-eleven-no-move",
+      "note": "Card 11 lands beside Card 10 on the row already showing, so the shelf should not move"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-4-eleven-no-move"
+    }
+  ]
+}

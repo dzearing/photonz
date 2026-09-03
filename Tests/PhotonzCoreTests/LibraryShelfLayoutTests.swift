@@ -193,4 +193,57 @@ struct LibraryShelfLayoutTests {
         let huge = LibraryShelfLayout.pictureSourceDimension(for: CGSize(width: 5000, height: 40))
         #expect(huge == LibraryShelfLayout.maxPictureSource)
     }
+
+
+    // MARK: Putting a tile on screen
+
+    /// A shelf three tiles across, with the ceiling it ships with: two full
+    /// rows show and everything after them is behind the shelf's own scroll.
+    private let shelfWidth: CGFloat = 236
+    private let shelfHeight: CGFloat = 220
+
+    @Test func putsTheFirstRowRightUnderTheGridMargin() {
+        #expect(LibraryShelfLayout.tileTop(index: 0, width: shelfWidth)
+                == LibraryShelfLayout.gridVerticalPadding)
+        #expect(LibraryShelfLayout.tileTop(index: 2, width: shelfWidth)
+                == LibraryShelfLayout.gridVerticalPadding)
+    }
+
+    @Test func dropsAFullTileAndAGapForEveryRowBelowTheFirst() {
+        let row = LibraryShelfLayout.tileHeight + LibraryShelfLayout.tileSpacing
+        #expect(LibraryShelfLayout.tileTop(index: 3, width: shelfWidth)
+                == LibraryShelfLayout.gridVerticalPadding + row)
+        #expect(LibraryShelfLayout.tileTop(index: 6, width: shelfWidth)
+                == LibraryShelfLayout.gridVerticalPadding + row * 2)
+    }
+
+    @Test func doesNotMoveAShelfWhoseNewTileIsAlreadyShowing() {
+        // The second component someone makes: still on the first row.
+        #expect(LibraryShelfLayout.tileReveal(index: 1, width: shelfWidth,
+                                              gridTop: 0, viewportHeight: shelfHeight) == .none)
+        // The last tile of the second row, which is the last one that fits.
+        #expect(LibraryShelfLayout.tileReveal(index: 5, width: shelfWidth,
+                                              gridTop: 0, viewportHeight: shelfHeight) == .none)
+    }
+
+    @Test func liftsATileThatHasFallenPastTheBottomOfTheShelf() {
+        // The seventh component: row three, below the shelf's own fold.
+        #expect(LibraryShelfLayout.tileReveal(index: 6, width: shelfWidth,
+                                              gridTop: 0, viewportHeight: shelfHeight) == .bottom)
+        // Far below it.
+        #expect(LibraryShelfLayout.tileReveal(index: 15, width: shelfWidth,
+                                              gridTop: 0, viewportHeight: shelfHeight) == .bottom)
+    }
+
+    @Test func scrollsBackUpToATileAboveTheShelfsFold() {
+        // Someone has scrolled the shelf down two rows and the new tile is on
+        // the first one.
+        #expect(LibraryShelfLayout.tileReveal(index: 0, width: shelfWidth,
+                                              gridTop: -152, viewportHeight: shelfHeight) == .top)
+    }
+
+    @Test func doesNothingBeforeTheShelfHasBeenMeasured() {
+        #expect(LibraryShelfLayout.tileReveal(index: 6, width: 0,
+                                              gridTop: 0, viewportHeight: 0) == .none)
+    }
 }
