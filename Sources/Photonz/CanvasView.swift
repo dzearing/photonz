@@ -35,6 +35,9 @@ struct CanvasView: NSViewRepresentable {
     let cropBounds: CGRect?
     let selectedLayerID: UUID?
     let selectedLayerFrame: CGRect?
+    /// The group the pointer is inside, echoed from EditorState. Nil = the
+    /// canvas. See `CanvasGroups.swift`.
+    let groupContext: UUID?
     /// The marquee's multi-selection, echoed from EditorState.
     let multiSelectedLayerIDs: Set<UUID>
     let dragPreview: DragPreview?
@@ -94,6 +97,13 @@ struct CanvasView: NSViewRepresentable {
     let onCropRectChange: (CGRect) -> Void
     let onCropCommit: () -> Void
     let onSelectLayer: (UUID?) -> Void
+    /// A click that resolved through the group walk: the layer it picked and
+    /// the group it picked it inside.
+    let onSelectLayerInGroup: (UUID?, UUID?) -> Void
+    /// Escape while inside a group: step out one level, leaving that group
+    /// selected. Returns false at the top level, where Escape means what it
+    /// always meant.
+    let onExitGroup: () -> Bool
     let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
@@ -153,7 +163,7 @@ struct CanvasView: NSViewRepresentable {
                    selection: selection, selectionTargetsPixels: selectionTargetsPixels,
                    cropRect: cropRect, cropAspect: cropAspect,
                    cropBounds: cropBounds, selectedLayerID: selectedLayerID,
-                   selectedLayerFrame: selectedLayerFrame,
+                   selectedLayerFrame: selectedLayerFrame, groupContext: groupContext,
                    multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
                    tool: tool, captionCloseRequest: captionCloseRequest,
                    annotationContent: annotationContent,
@@ -177,6 +187,8 @@ struct CanvasView: NSViewRepresentable {
         view.onCropRectChange = onCropRectChange
         view.onCropCommit = onCropCommit
         view.onSelectLayer = onSelectLayer
+        view.onSelectLayerInGroup = onSelectLayerInGroup
+        view.onExitGroup = onExitGroup
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
@@ -233,6 +245,8 @@ final class CanvasNSView: NSView {
     var onCropRectChange: ((CGRect) -> Void) = { _ in }
     var onCropCommit: (() -> Void) = {}
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
+    var onSelectLayerInGroup: ((UUID?, UUID?) -> Void) = { _, _ in }
+    var onExitGroup: (() -> Bool) = { false }
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
@@ -303,6 +317,9 @@ final class CanvasNSView: NSView {
     private let handlesLayer = CAShapeLayer()
     /// Rotate knob: a circle floated off the layer's top edge plus its stem.
     private let rotateKnobLayer = CAShapeLayer()
+    /// The faint box around the group you are currently INSIDE, so descending
+    /// into one is visible rather than a mode you have to remember.
+    let groupContextLayer = CAShapeLayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     private let snapGuideLayer = CAShapeLayer()
     /// Hover snap dot: while the measure tool is active and idle, a dot follows
@@ -396,6 +413,8 @@ final class CanvasNSView: NSView {
     private var selectedLayerID: UUID?
     /// Selected layer's frame in document coordinates (committed state).
     private var selectedLayerFrame: CGRect?
+    /// The group the pointer is inside, echoed from EditorState (`CanvasGroups.swift`).
+    private(set) var groupContext: UUID?
     /// The marquee's multi-selection, echoed from EditorState (committed).
     private var multiSelectedLayerIDs: Set<UUID> = []
     /// Pre-rendered drag preview from EditorState; arrives async after drag start
@@ -808,6 +827,13 @@ final class CanvasNSView: NSView {
         layerOutlineLayer.lineWidth = 2
         layerOutlineLayer.lineCap = .round
         layerOutlineLayer.lineDashPattern = [2, 4]
+        // The group you are inside: the same blue, quieter and finer, so it
+        // reads as the room you are standing in rather than as a selection.
+        groupContextLayer.strokeColor = NSColor.systemBlue.withAlphaComponent(0.28).cgColor
+        groupContextLayer.fillColor = nil
+        groupContextLayer.lineWidth = 1
+        groupContextLayer.lineDashPattern = [1, 3]
+        groupContextLayer.isHidden = true
         // Marquee-captured layers share the selection-outline styling.
         multiSelectOutlineLayer.strokeColor = layerOutlineLayer.strokeColor
         multiSelectOutlineLayer.lineWidth = 2
@@ -821,6 +847,7 @@ final class CanvasNSView: NSView {
         rotateKnobLayer.lineWidth = 1
         rotateKnobLayer.isHidden = true
         layer?.addSublayer(rotateKnobLayer)
+        layer?.addSublayer(groupContextLayer)
 
         // Hover snap dot: an accent-filled dot with a white ring, on top.
         snapDotLayer.fillColor = NSColor.controlAccentColor.cgColor
@@ -957,7 +984,7 @@ final class CanvasNSView: NSView {
     /// the SELECTED layer. Nil for every other press.
     private func grabCue(at p: CGPoint) -> CanvasGrab? {
         guard Experiments.shared.grabCueEnabled, tool == .select, let viewport,
-              let layer = selectedLayerID.flatMap({ id in document?.layer(id: id) })
+              let layer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) })
         else { return nil }
         return CanvasGrab.hit(at: p, layer: layer, zoom: viewport.zoom,
                                captionsEnabled: Experiments.shared.arrowCaptionsEnabled)
@@ -1019,7 +1046,7 @@ final class CanvasNSView: NSView {
         // and on an image that fills the window the matte alone wasn't reachable,
         // so this makes "double-click the bg to maximize" work everywhere. Editable
         // layers (text/annotations) stay double-click-to-edit.
-        if event.clickCount == 2, document?.hitTest(p, zoom: viewport.zoom) == nil {
+        if event.clickCount == 2, document?.canvasHitTest(p, zoom: viewport.zoom) == nil {
             performWindowTitleBarAction()
             return
         }
@@ -1050,7 +1077,7 @@ final class CanvasNSView: NSView {
         // resolved app-side since hit-testing skips locked layers). ⌥ fills
         // with the background color.
         if tool == .fill {
-            onFillAt(p, document?.hitTest(p, zoom: viewport.zoom)?.id,
+            onFillAt(p, document?.canvasHitTest(p, zoom: viewport.zoom)?.id,
                      event.modifierFlags.contains(.option))
             return
         }
@@ -1140,17 +1167,28 @@ final class CanvasNSView: NSView {
             refreshOverlays()
             return
         }
+        // A double click always DESCENDS: on a group it picks the piece under
+        // the pointer, and only once there is nothing left to go into does it
+        // mean what it always meant — opening a text layer to type, or an
+        // arrow's caption. That is what makes double clicking a group holding
+        // a label select the label, and double clicking again start typing.
+        if event.clickCount == 2, let step = groupAwareDescent(at: p, zoom: viewport.zoom) {
+            selectedLayerFrame = document?.canvasLayer(id: step.id)?.frame
+            onSelectLayerInGroup(step.id, step.context)
+            refreshOverlays()
+            return
+        }
         // Double-click on a text layer re-opens it for inline editing. Checked
         // before handles: on a small text layer the handle hit zones cover the
         // whole frame and would eat the double-click.
-        if event.clickCount == 2, let hit = document?.hitTest(p, zoom: viewport.zoom),
+        if event.clickCount == 2, let hit = document?.canvasHitTest(p, zoom: viewport.zoom),
            case .text = hit.content {
             beginTextSession(layerID: hit.id, at: hit.frame.origin)
             return
         }
         // Double-click an arrow to add or edit its caption (Next flag).
         if event.clickCount == 2, Experiments.shared.arrowCaptionsEnabled,
-           let hit = document?.hitTest(p, zoom: viewport.zoom),
+           let hit = document?.canvasHitTest(p, zoom: viewport.zoom),
            hit.annotation?.shape == .arrow {
             beginCaptionSession(layer: hit)
             return
@@ -1158,7 +1196,7 @@ final class CanvasNSView: NSView {
         // Handles take priority over moves: they extend past the layer's frame.
         // Lines/arrows expose their endpoints; everything else (that resizes)
         // gets the eight frame handles.
-        let selectedLayer = selectedLayerID.flatMap { id in document?.layer(id: id) }
+        let selectedLayer = selectedLayerID.flatMap { id in document?.canvasLayer(id: id) }
         if let id = selectedLayerID, let layer = selectedLayer, let content = layer.annotation,
            let endpoint = AnnotationEndpoints.hit(at: p, layer: layer, zoom: viewport.zoom),
            let drag = AnnotationEndpointDrag(layer: layer, endpoint: endpoint),
@@ -1234,7 +1272,7 @@ final class CanvasNSView: NSView {
             }
         }
         // Rotate knob, floated off the selected layer's top edge.
-        if let id = selectedLayerID, let layer = selectedLayer, !layer.hasEndpointHandles,
+        if let id = selectedLayerID, let layer = selectedLayer, offersRotation(layer),
            let knob = rotateKnobPoint(for: layer, zoom: viewport.zoom),
            hypot(p.x - knob.x, p.y - knob.y) * viewport.zoom <= 8 {
             let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
@@ -1272,7 +1310,7 @@ final class CanvasNSView: NSView {
         // and anything drawn OVER the cell (hit-test winner) keeps the click.
         if tool == .select, let id = selectedLayerID, let layer = selectedLayer,
            !layer.isLocked, let content = layer.collage,
-           document?.hitTest(p, zoom: viewport.zoom)?.id == id,
+           document?.canvasHitTest(p, zoom: viewport.zoom)?.id == id,
            let slot = Collage.slotIndex(at: p, in: layer),
            content.slots[slot].imageRef != nil {
             slotDrag = (id, slot)
@@ -1288,8 +1326,9 @@ final class CanvasNSView: NSView {
             refreshOverlays()
             return
         }
-        if let hit = document?.hitTest(p, zoom: viewport.zoom) {
-            onSelectLayer(hit.id)
+        if let pick = groupAwarePick(at: p, zoom: viewport.zoom),
+           let hit = document?.canvasLayer(id: pick.id) {
+            onSelectLayerInGroup(pick.id, pick.context)
             onDragBegin(hit.id)
             selectedLayerFrame = hit.frame
             moveDrag = MoveDrag(layerID: hit.id,
@@ -1404,7 +1443,7 @@ final class CanvasNSView: NSView {
             onTransformPreview(session.layerID, session.transform)
             refreshOverlays()
         } else if var drag = resizeDrag {
-            let layer = document?.layer(id: drag.layerID)
+            let layer = document?.canvasLayer(id: drag.layerID)
             drag.frame = resizedFrame(for: layer, start: drag.startFrame, handle: drag.handle,
                                       pointer: p, preserveAspect: event.modifierFlags.contains(.shift))
             resizeDrag = drag
@@ -1424,7 +1463,7 @@ final class CanvasNSView: NSView {
             }
             // A dragged photo layer offers itself to collage slots under the
             // pointer — releasing over the highlighted cell absorbs it.
-            if drag.moved, document?.layer(id: drag.layerID)?.imageRef != nil {
+            if drag.moved, document?.canvasLayer(id: drag.layerID)?.imageRef != nil {
                 hoverSlot = collageSlotTarget(at: p, excluding: drag.layerID)
             } else {
                 hoverSlot = nil
@@ -1616,7 +1655,7 @@ final class CanvasNSView: NSView {
         } else if let drag = moveDrag {
             moveDrag = nil
             if drag.moved, let target = hoverSlot,
-               document?.layer(id: drag.layerID)?.imageRef != nil {
+               document?.canvasLayer(id: drag.layerID)?.imageRef != nil {
                 // Released over a collage cell: the photo layer becomes that
                 // slot's content instead of landing at the drop position.
                 hoverSlot = nil
@@ -1723,7 +1762,7 @@ final class CanvasNSView: NSView {
         // NSTextView owns Return (newline).
         if event.keyCode == 36 || event.keyCode == 76,
            moveDrag == nil, resizeDrag == nil, transformDrag == nil,
-           let id = selectedLayerID, let layer = document?.layer(id: id), !layer.isLocked,
+           let id = selectedLayerID, let layer = document?.canvasLayer(id: id), !layer.isLocked,
            case .text = layer.content {
             beginTextSession(layerID: id, at: layer.frame.origin)
             return
@@ -1753,14 +1792,14 @@ final class CanvasNSView: NSView {
         // ⌫ on the locked Background (which the delete path below skips):
         // reset it to the background fill color — "clear to default".
         if event.keyCode == 51 || event.keyCode == 117,
-           let id = selectedLayerID, let layer = document?.layer(id: id),
+           let id = selectedLayerID, let layer = document?.canvasLayer(id: id),
            layer.isLocked, layer.imageRef != nil {
             onClearBackground()
             return
         }
         // Delete / forward-delete removes the selected (unlocked) layer.
         if event.keyCode == 51 || event.keyCode == 117,
-           let id = selectedLayerID, let layer = document?.layer(id: id), !layer.isLocked {
+           let id = selectedLayerID, let layer = document?.canvasLayer(id: id), !layer.isLocked {
             onDeleteLayer(id)
             return
         }
@@ -1768,7 +1807,7 @@ final class CanvasNSView: NSView {
         if let delta = Nudge.delta(keyCode: event.keyCode,
                                    large: event.modifierFlags.contains(.shift)),
            moveDrag == nil, resizeDrag == nil, transformDrag == nil,
-           let id = selectedLayerID, let layer = document?.layer(id: id), !layer.isLocked {
+           let id = selectedLayerID, let layer = document?.canvasLayer(id: id), !layer.isLocked {
             let frame = layer.frame.offsetBy(dx: delta.dx, dy: delta.dy)
             selectedLayerFrame = frame
             onFrameCommit(id, frame)
@@ -1865,6 +1904,14 @@ final class CanvasNSView: NSView {
                 commitSelection(nil, capture: true)
                 return
             }
+            // Stepping out of a group comes ahead of clearing the selection:
+            // inside one, Escape leaves it with the group selected; only at the
+            // top does Escape deselect, the way it always has.
+            if onExitGroup() {
+                selectedLayerFrame = nil // re-read from the selection that lands
+                refreshOverlays()
+                return
+            }
             if selectedLayerFrame != nil {
                 selectedLayerFrame = nil
                 onSelectLayer(nil)
@@ -1941,6 +1988,7 @@ final class CanvasNSView: NSView {
                selection: SelectionRegion?, selectionTargetsPixels: Bool = false,
                cropRect: CGRect?, cropAspect: CropAspect,
                cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
+               groupContext: UUID? = nil,
                multiSelectedLayerIDs: Set<UUID>,
                dragPreview: DragPreview?, tool: Tool, captionCloseRequest: Int = 0,
                annotationContent: AnnotationContent?,
@@ -2029,7 +2077,7 @@ final class CanvasNSView: NSView {
         }
         // Undo while editing can delete the layer behind the editor.
         if let session = textSession, let layerID = session.layerID,
-           let document, document.layer(id: layerID) == nil {
+           let document, document.canvasLayer(id: layerID) == nil {
             DispatchQueue.main.async { [weak self] in self?.cancelTextSession() }
         }
         // The post-commit composite (a different image) now includes the new
@@ -2064,6 +2112,7 @@ final class CanvasNSView: NSView {
         if moveDrag == nil, resizeDrag == nil {
             self.selectedLayerFrame = selectedLayerFrame
         }
+        self.groupContext = groupContext
         // The document or the selection just changed under a resting pointer (a
         // drag landed, an undo moved a pill): the grab cue has to agree with
         // what is under the pointer NOW, not at the next mouse move.
@@ -2158,7 +2207,7 @@ final class CanvasNSView: NSView {
         collageWellsLayer.path = wells
         collageWellsLayer.isHidden = wells.isEmpty
 
-        if let hoverSlot, let layer = document.layer(id: hoverSlot.collageID),
+        if let hoverSlot, let layer = document.canvasLayer(id: hoverSlot.collageID),
            let content = layer.collage {
             let cells = Collage.slotFrames(for: content, in: layer.frame.size)
             if cells.indices.contains(hoverSlot.index) {
@@ -2383,6 +2432,7 @@ final class CanvasNSView: NSView {
     }
 
     private func refreshLayerSelectionDisplay() {
+        refreshGroupContextOutline()
         // The Canvas pseudo-selection: outline + eight handles on the document
         // boundary (or the in-flight proposed boundary). No rotate knob — the
         // canvas doesn't rotate.
@@ -2427,7 +2477,7 @@ final class CanvasNSView: NSView {
             rotateKnobLayer.isHidden = true
             return
         }
-        guard let selectedLayer = selectedLayerID.flatMap({ id in document?.layer(id: id) }) else {
+        guard let selectedLayer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) }) else {
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
@@ -2507,7 +2557,8 @@ final class CanvasNSView: NSView {
             }
 
             // Rotate knob with its stem, off the (transformed) top edge.
-            if !dragInFlight, let knob = rotateKnobPoint(for: selectedLayer, zoom: viewport.zoom) {
+            if !dragInFlight, offersRotation(selectedLayer),
+               let knob = rotateKnobPoint(for: selectedLayer, zoom: viewport.zoom) {
                 let knobInView = viewport.viewPoint(fromDocument: knob)
                 let topMid = chromePoint(CGPoint(x: frame.midX, y: frame.minY))
                 let path = CGMutablePath()
@@ -2627,7 +2678,7 @@ final class CanvasNSView: NSView {
         }
         let (docStart, docEnd) = session.drag.endpoints(constrained: constrained)
         displayAnnotationPreview(content: session.content, docStart: docStart, docEnd: docEnd,
-                                 style: document?.layer(id: session.layerID)?.style)
+                                 style: document?.canvasLayer(id: session.layerID)?.style)
     }
 
     /// Draws an annotation as vector shapes in view coordinates — faithful to
@@ -2866,7 +2917,7 @@ final class CanvasNSView: NSView {
         guard textSession == nil else { return }
         var style = textContent ?? TextContent(string: "")
         var string = ""
-        if let layerID, let layer = document?.layer(id: layerID),
+        if let layerID, let layer = document?.canvasLayer(id: layerID),
            case .text(let existing) = layer.content {
             string = existing.string
             style = existing

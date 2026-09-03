@@ -164,6 +164,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Open the New Canvas sheet, so a walk can photograph it. A snapshot
     /// taken while a sheet is up photographs the sheet.
     case newCanvasDialog
+    /// ⌘G and ⇧⌘G are menu chords too.
+    case group, ungroup
 }
 
 /// What a `hover` step rests the pointer on.

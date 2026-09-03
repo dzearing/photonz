@@ -202,12 +202,29 @@ struct LayerGeometryTests {
         #expect(editing.fixedReason(for: .height) == nil)
     }
 
+    @Test("A group says its size follows what is inside it, not that it has ends to drag")
+    func aGroupExplainsWhyItsSizeIsFixed() {
+        let child = Layer(name: "Box", content: .image(ImageRef(pixelSize: CGSize(width: 20, height: 10))),
+                          frame: CGRect(x: 0, y: 0, width: 20, height: 10))
+        let group = Layer(name: "Group", content: .group(GroupContent(children: [child])),
+                          frame: CGRect(x: 5, y: 5, width: 0, height: 0))
+        let editing = LayerGeometryEditing(layer: group)
+        // A group moves, so X and Y stay typeable; its size is derived.
+        #expect(editing.allows(.x))
+        #expect(editing.allows(.y))
+        #expect(!editing.allows(.width))
+        #expect(!editing.allows(.height))
+        #expect(editing.fixedReason(for: .width) == LayerGeometryEditing.groupSizeReason)
+        #expect(editing.fixedReason(for: .height) == LayerGeometryEditing.groupSizeReason)
+    }
+
     @Test("Every reason a field is fixed reads as a plain sentence, not a code word")
     func reasonsArePlainLanguage() {
         let arrow = AnnotationBuilder.layer(content: AnnotationContent(shape: .arrow),
                                             from: .zero, to: CGPoint(x: 10, y: 10))
         let reasons = [LayerGeometryEditing.lockedReason,
-                       LayerGeometryEditing(layer: arrow).fixedReason(for: .width) ?? ""]
+                       LayerGeometryEditing(layer: arrow).fixedReason(for: .width) ?? "",
+                       LayerGeometryEditing.groupSizeReason]
         for reason in reasons {
             #expect(!reason.isEmpty)
             #expect(reason.first!.isUppercase)

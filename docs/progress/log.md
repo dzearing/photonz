@@ -5469,3 +5469,52 @@ unchanged, so "nothing new appears on screen" still holds. Audit:
 before/after of three cards loose versus grouped.
 
 Next: Command G in the interface, then the layers list learning to show groups.
+
+## 2026-09-03 — ⌘G and ⇧⌘G, and what a click means once layers nest
+
+Step 1 of the containment ladder reaches the interface. Layer ▸ Group (⌘G) wraps
+the selection in a group and selects it; Layer ▸ Ungroup (⇧⌘G) takes the
+selected groups apart in one step and leaves the pieces exactly where they were,
+selected. Both rows sit directly above the arrange commands and are absent, not
+greyed, when `next-layer-groups` is off. Current never sees them.
+
+The rule the canvas now follows: **a click picks the outermost thing you are not
+already inside.** Click a grouped card and you get the card; drag it and
+everything inside travels. A double click goes one level deeper and picks the
+piece under the pointer, Escape comes back out one level with that group
+selected, and clicking anything outside drops you to the top. Where you are is
+never stored in the document — step out and the tree is what it was.
+
+Two design calls beyond the spec. **The group you are inside draws its own faint
+dotted box**: without it, descending is a mode with no sign of itself, since the
+handles move to one piece and nothing else changes. And **a group offers no
+resize handles and no rotate knob**, with W and H greyed behind a plain sentence
+saying a group is as big as what is inside it — a handle that silently did
+nothing while burning an undo step would be worse than no handle.
+
+The change that made the rest possible: the app now works in CANVAS coordinates
+and converts at one boundary. `PhotonzDocument.canvasLayer(id:)` hands back a
+layer with its frame on the canvas, `CanvasView` reads that everywhere it used to
+read `layer.frame`, and `EditorState.previewCanvasFrame` / `commitCanvasFrame`
+convert back into the space a layer is stored in (a group translating through
+`moveLayer(id:toCanvasOrigin:)`, since a group's stored frame is an anchor, not a
+box). Without it, the moment a double click reached a piece inside a group, its
+outline, handles, caption pill and measure dots would all have drawn one group
+offset away. The Position & Size fields deliberately keep showing PARENT space,
+which is what the spec asks for and what every other design tool does.
+
+31 new tests (`LayerGroupingTests` 27, plus the group size reason and the walk's
+new actions), `Scripts/test.sh` green at 1630. Verified on the probe with a new
+50-step walk, `Scripts/playtest/group-walk.json`: the Layer menu dump shows
+Group ⌘G and Ungroup ⇧⌘G, the group drags with its text along, the double click
+selects the rectangle alone, Escape re-selects the group, and three undos walk
+back through ungroup, drag and group one step at a time. Audit:
+`queue/audits/2026-09-03-group-and-ungroup.json`.
+
+Rough, and filed: the Layers list is still flat, so a group is one row and
+nothing highlights while you are inside one (that is the next task); a group
+cannot be resized (`resize-a-group-and-the-pieces-inside-follow`); and the only
+canvas path to a multi-selection is a marquee sweep
+(`shift-click-on-the-canvas-adds-a-layer-to-the-se`).
+
+Next: the layers list shows what is inside a group.

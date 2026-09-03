@@ -1,0 +1,31 @@
+{
+  "feature": "Group and ungroup what you selected",
+  "epic": "ui-components",
+  "summary": "Select a box and its label, press ⌘G, and they become one thing you can drag, hide, lock and delete together. ⇧⌘G takes it apart and leaves the pieces exactly where they were. A double click goes inside a group to pick one piece, and Escape comes back out.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag \"Group what you selected\" (next-layer-groups), on by default. Nothing appears in Current.",
+  "try": [
+    { "do": "Open a new window and pick Blank canvas, any size." },
+    { "do": "Press R and drag out a rectangle." },
+    { "do": "Press T, click below the rectangle, type Sign in, then press V." },
+    { "do": "Drag a marquee around both of them on empty canvas, then press ⌘G.", "shot": "2026-09-03-group-and-ungroup-1.png" },
+    { "do": "Drag the group anywhere on the canvas: both pieces should travel together.", "shot": "2026-09-03-group-and-ungroup-3.png" },
+    { "do": "Double click the rectangle to go inside the group, then press Escape to come back out.", "shot": "2026-09-03-group-and-ungroup-2.png" },
+    { "do": "Press ⇧⌘G to take it apart, then press ⌘Z twice." }
+  ],
+  "evaluate": [
+    "After ⌘G, does the single box around the whole group tell you what just happened, or did you expect the Layers list to show you the pieces are still in there?",
+    "When you double click into the group, does the faint dotted box around the group read as \"you are in here\", or does it just look like a second selection?",
+    "Is Escape the key your hand reaches for to get back out, or did you try clicking away first?",
+    "Selecting two things needs a marquee sweep today. Did that get in the way, and would shift-clicking the second layer be the thing you reached for?",
+    "With a piece selected inside the group, X and Y read from the group's top left, not the canvas. Is that what you expected, or did you want canvas numbers?"
+  ],
+  "rough": [
+    "The Layers list is still flat: a group shows as one row named Group with no way to twist it open, and while you are inside a group NO row is highlighted at all, because the list cannot show the piece you picked. That is the next task in this ladder (the layers list shows what is inside a group), and it is the biggest thing missing here.",
+    "A group cannot be resized. Its selection box has no handles and no rotate knob, and W and H are greyed with a note saying a group is as big as what is inside it. Deliberate: the model says groups translate and nothing else. Filed as \"Resize a group and the pieces inside follow\", which has to decide and write down what scaling does to text sizes, stroke widths and measured numbers before any code moves.",
+    "The only way to select two layers on the canvas is a marquee sweep, so anything else in the sweep comes along. Filed as \"Shift-click on the canvas adds a layer to the selection\".",
+    "There is no way to drag a layer into or out of a group yet, on the canvas or in the list. Moving one in the model already rewrites its position so it does not jump; nothing calls it.",
+    "Groups are named Group, Group 2, Group 3. Renaming one works through the Layers list as for any layer.",
+    "Away from the mock on purpose: the mock never says what tells you that you are standing inside a group. Handles moving to one piece with nothing else changing reads as a mode with no sign of itself, so a group you are inside draws a faint dotted box of its own. It is quieter and finer than a selection outline so the two do not compete.",
+    "Screenshots here are real window captures from the probe (Screen Recording granted), taken by Scripts/playtest/group-walk.json."
+  ]
+}

@@ -292,6 +292,19 @@ struct EditorCommands: Commands {
                 .disabled(!(editor?.canArrangeCollage ?? false))
             Button("New Collage Layer") { editor?.newEmptyCollageLayer() }
                 .disabled(editor?.document == nil)
+            // Group and ungroup, on Photoshop's keys, directly above the
+            // arrange commands so the structure commands sit together
+            // (`docs/design/ui-building.md`). Flagged rows are absent, not
+            // greyed, so nobody hunts for why a dead row is there.
+            if Experiments.shared.layerGroupsEnabled {
+                Divider()
+                Button("Group") { editor?.groupSelection() }
+                    .keyboardShortcut("g", modifiers: .command)
+                    .disabled(!(editor?.canGroupSelection ?? false))
+                Button("Ungroup") { editor?.ungroupSelection() }
+                    .keyboardShortcut("g", modifiers: [.command, .shift])
+                    .disabled(!(editor?.canUngroupSelection ?? false))
+            }
             Divider()
             // The arrange commands, Duplicate and Delete act on the whole
             // selection: the multi-selection a shift-click, command-click or

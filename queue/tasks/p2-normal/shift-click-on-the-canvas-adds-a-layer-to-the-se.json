@@ -1,0 +1,28 @@
+{
+  "id": "shift-click-on-the-canvas-adds-a-layer-to-the-se",
+  "title": "Shift-click on the canvas adds a layer to the selection",
+  "goal": "On the canvas the only way to select two things at once is to sweep a marquee around them, which means anything else nearby gets swept in too. Shift-clicking a second layer should add it to the selection (and shift-clicking a selected one drop it), the way the Layers list already works and the way every editor does, so picking exactly two pieces to group takes two clicks.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 670,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T02:06:28.199Z",
+  "updated": "2026-09-03T02:06:28.199Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed out of group-and-ungroup-what-you-selected (2026-09-03): the marquee is currently the only canvas path to a multi-selection, which makes reaching Command G clumsier than it should be. CanvasView.mouseDown resolves a plain click through CanvasGroups.groupAwarePick and calls onSelectLayerInGroup; the modifier flags are already on the event and are ignored there. EditorState.multiSelectedLayerIDs is the store, and ListSelection already has the toggle behaviour the Layers list uses. Keep the group walk: a shift-click resolves through the same selectionTarget so it picks whole groups at the top level and siblings inside one.",
+  "acceptance": [
+    "Shift-clicking an unselected layer on the canvas adds it to the selection and every selected layer shows its outline",
+    "Shift-clicking a layer that is already selected removes it, and removing the last one leaves nothing selected",
+    "With two or more layers selected this way, Group in the Layer menu is live and groups exactly those layers",
+    "Inside a group, shift-click adds pieces from that same group and never reaches back out to the canvas"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T02:06:28.199Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -394,6 +394,8 @@ private final class Run {
             case .undo: editor.undo()
             case .redo: editor.redo()
             case .newCanvasDialog: editor.isBlankCanvasDialogPresented = true
+            case .group: editor.groupSelection()
+            case .ungroup: editor.ungroupSelection()
             }
             await sleep(0.2)
             note(number, step.name, action.rawValue, state: describe())

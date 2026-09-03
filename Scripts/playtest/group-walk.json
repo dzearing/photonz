@@ -1,0 +1,65 @@
+{
+  "out": "/tmp/photonz-playtest/group-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1200, "height": 860 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [240, 240], "to": [900, 640] },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [300, 780] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "tool", "tool": "select" },
+    { "do": "describe", "stage": "1-drawn", "note": "a rectangle and a line of text, loose on the canvas" },
+    { "do": "snapshot", "name": "group-1-drawn" },
+    { "do": "render", "name": "group-1-drawn-doc" },
+
+    { "do": "drag", "from": [140, 140], "to": [1060, 900] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-selected", "note": "a marquee swept both of them into one selection" },
+    { "do": "snapshot", "name": "group-2-selected" },
+    { "do": "menus", "stage": "2-layer-menu", "menu": "Layer" },
+
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-grouped", "note": "one selection box around the whole group" },
+    { "do": "snapshot", "name": "group-3-grouped" },
+
+    { "do": "drag", "from": [500, 400], "to": [620, 300] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-moved", "note": "dragging the group carried the text with the rectangle" },
+    { "do": "snapshot", "name": "group-4-moved" },
+    { "do": "render", "name": "group-4-moved-doc" },
+
+    { "do": "click", "at": [620, 300], "count": 2 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-inside", "note": "double click went inside: the box should be around the rectangle alone" },
+    { "do": "snapshot", "name": "group-5-inside" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "6-out", "note": "escape came back out with the whole group selected" },
+    { "do": "snapshot", "name": "group-6-out" },
+
+    { "do": "action", "action": "ungroup" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "7-ungrouped", "note": "the pieces are loose again and have not moved" },
+    { "do": "snapshot", "name": "group-7-ungrouped" },
+    { "do": "render", "name": "group-7-ungrouped-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "8-undo-1", "note": "one undo puts the group back, still where it was dragged to" },
+    { "do": "render", "name": "group-8-undo-1-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "9-undo-2", "note": "a second undo takes the drag back" },
+    { "do": "render", "name": "group-9-undo-2-doc" },
+    { "do": "snapshot", "name": "group-9-undo-2" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "10-undo-3", "note": "a third undo takes the group apart again, back to two loose layers" },
+    { "do": "render", "name": "group-10-undo-3-doc" }
+  ]
+}

@@ -229,6 +229,14 @@ extension Experiments {
     /// unchanged.
     var blankCanvasEnabled: Bool { isEnabled(FeatureCatalog.blankCanvasFlag) }
 
+    /// `next-layer-groups`: whether ⌘G / ⇧⌘G exist, and whether a click on the
+    /// canvas picks a whole group (with double click going inside it and Escape
+    /// coming back out). Exists only in the Next release's catalog, so Current
+    /// always reads false and its clicks pick a single layer as they always
+    /// did. The model and the renderer are never flagged: a document that
+    /// already holds groups opens and draws correctly either way.
+    var layerGroupsEnabled: Bool { isEnabled(FeatureCatalog.layerGroupsFlag) }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its

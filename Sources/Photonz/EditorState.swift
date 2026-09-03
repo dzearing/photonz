@@ -164,7 +164,10 @@ final class EditorState {
     /// and is re-seeded from those stores before every click.
     private var rowSelection = ListSelection()
     /// Frame override while a move drag is in flight — rendered as a preview,
-    /// committed to history only on mouse-up.
+    /// committed to history only on mouse-up. In CANVAS coordinates, which is
+    /// the space the canvas drags in; for a layer sitting loose on the canvas
+    /// that is the frame it stores, which is why nothing about a document
+    /// without groups changes.
     private var previewMove: (id: UUID, frame: CGRect)?
     /// Cheap drag preview: underlay + sprite the canvas composites in Core
     /// Animation, so mouse moves cost zero Core Image work. Nil until the
@@ -1023,11 +1026,12 @@ final class EditorState {
     /// Live drag of a caption pill (no history): the pill follows the pointer,
     /// pulled back onto the picture at the edges, and the frame follows it.
     func previewCaptionPlacement(id: UUID, center: CGPoint) {
+        let center = parentPoint(center, of: id)
         guard var doc = document, doc.layer(id: id)?.annotation?.hasCaption == true else { return }
         discardDragPreview()
         let canvas = doc.canvasSize
         doc.updateLayer(id: id) { $0 = AnnotationBuilder.placingCaption($0, at: center, canvas: canvas) }
-        if let frame = doc.layer(id: id)?.frame { previewMove = (id, frame) }
+        if let frame = doc.canvasLayer(id: id)?.frame { previewMove = (id, frame) }
         submit(doc)
     }
 
@@ -1035,6 +1039,7 @@ final class EditorState {
     /// returns it to the spot the app picked; so does Reset position in the
     /// inspector (`resetCaptionPlacement`).
     func commitCaptionPlacement(id: UUID, center: CGPoint) {
+        let center = parentPoint(center, of: id)
         previewMove = nil
         guard document?.layer(id: id)?.annotation?.hasCaption == true else {
             rerender()
@@ -1766,7 +1771,7 @@ final class EditorState {
         guard let layer = selectedMeasureLayer, var doc = document else { return }
         measureLabelPreview = (layer.id, scale)
         doc.updateLayer(id: layer.id) { $0 = MeasureBuilder.restyled($0, labelScale: scale) }
-        if let frame = doc.layer(id: layer.id)?.frame { previewMove = (layer.id, frame) }
+        if let frame = doc.canvasLayer(id: layer.id)?.frame { previewMove = (layer.id, frame) }
         submit(doc)
     }
 
@@ -1847,12 +1852,14 @@ final class EditorState {
     /// measured value updates as a foot or the head moves.
     func previewMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat,
                                  readout: MeasureReadoutPlacement? = nil) {
+        let start = parentPoint(start, of: id)
+        let end = parentPoint(end, of: id)
         guard var doc = document, doc.layer(id: id)?.measure != nil else { return }
         doc.updateLayer(id: id) {
             $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset,
                                          readout: readout)
         }
-        if let frame = doc.layer(id: id)?.frame { previewMove = (id, frame) }
+        if let frame = doc.canvasLayer(id: id)?.frame { previewMove = (id, frame) }
         submit(doc)
     }
 
@@ -1860,6 +1867,8 @@ final class EditorState {
     /// values is a History no-op (the Esc-cancel path).
     func commitMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat,
                                 readout: MeasureReadoutPlacement? = nil) {
+        let start = parentPoint(start, of: id)
+        let end = parentPoint(end, of: id)
         previewMove = nil
         let others = placedReadoutRects(excluding: id)
         let canvas = document?.canvasSize
@@ -2823,9 +2832,93 @@ final class EditorState {
         perform { $0.restackLayers(ids: ids, step) }
     }
 
+    // MARK: - Groups (Next flag `next-layer-groups`)
+
+    /// The group the pointer is currently INSIDE, or nil for the canvas.
+    ///
+    /// A click picks the outermost thing you are not already inside, so this is
+    /// the whole of what "inside" means: a double click sets it (going one
+    /// level deeper), Escape clears one level of it, and clicking anywhere
+    /// outside drops it. Nothing about it is stored in the document — step out
+    /// and the tree is exactly what it was.
+    private(set) var groupContextID: UUID?
+
+    /// Whether Layer ▸ Group would do anything.
+    var canGroupSelection: Bool {
+        guard Experiments.shared.layerGroupsEnabled, let document else { return false }
+        return document.canGroup(ids: actionableLayerIDs)
+    }
+
+    /// Whether Layer ▸ Ungroup would do anything.
+    var canUngroupSelection: Bool {
+        guard Experiments.shared.layerGroupsEnabled, let document else { return false }
+        return document.canUngroup(ids: actionableLayerIDs)
+    }
+
+    /// Layer ▸ Group (⌘G): wraps the selection in a new group, in one undo
+    /// step, and selects the group — so the very next drag moves the whole
+    /// thing, which is the reason you pressed it.
+    func groupSelection() {
+        guard canGroupSelection else { return }
+        let ids = actionableLayerIDs
+        discardDragPreview()
+        var madeID: UUID?
+        perform { document in
+            madeID = document.groupLayers(ids: ids, name: document.freshGroupName())?.id
+        }
+        groupContextID = madeID.flatMap { document?.parentID(of: $0) }
+        selectedLayerID = madeID
+        // The rubber band that picked the members no longer describes anything.
+        setSelection(nil, captureLayers: false)
+    }
+
+    /// Layer ▸ Ungroup (⇧⌘G): takes the selected groups apart in one undo
+    /// step, leaving the pieces exactly where they were and selected, so you
+    /// can carry straight on with them.
+    func ungroupSelection() {
+        guard canUngroupSelection else { return }
+        let ids = actionableLayerIDs
+        discardDragPreview()
+        // Anything selected that was not a group stays selected alongside the
+        // pieces that just came out.
+        let kept = ids.filter { document?.layer(id: $0)?.isGroup != true }
+        var freed: [UUID] = []
+        perform { freed = $0.ungroupLayers(ids: ids) }
+        if groupContextID.map({ document?.layer(id: $0) == nil }) ?? false { groupContextID = nil }
+        setSelection(nil, captureLayers: false)
+        selectLayers(Set(freed).union(kept))
+    }
+
+    /// A canvas click that resolved through the group walk: the layer it
+    /// picked and the group it picked it inside.
+    func selectLayer(_ id: UUID?, inGroup context: UUID?) {
+        groupContextID = context
+        selectedLayerID = id
+        if id == nil { multiSelectedLayerIDs = [] }
+    }
+
+    /// Escape, one level: leaves the group you are in with that group selected.
+    /// Returns false when you are already at the top, which is when Escape
+    /// means what it always meant (clear the selection).
+    @discardableResult
+    func exitGroupContext() -> Bool {
+        guard Experiments.shared.layerGroupsEnabled, let context = groupContextID,
+              document?.layer(id: context) != nil else {
+            groupContextID = nil
+            return false
+        }
+        let parent = document?.parentID(of: context)
+        groupContextID = parent
+        selectedLayerID = context
+        return true
+    }
+
     /// Makes `ids` the selection the way a row click would: one becomes the
     /// primary selection, several the multi-selection, none clears.
     private func selectLayers(_ ids: Set<UUID>) {
+        // Whatever list the new selection lives in is where you now are, so a
+        // duplicate made inside a group leaves you inside that group.
+        groupContextID = ids.first.flatMap { document?.parentID(of: $0) }
         switch ids.count {
         case 0:
             selectLayer(nil)
@@ -3378,18 +3471,45 @@ final class EditorState {
     // MARK: - Layer selection & move
 
     /// The selected layer's frame (preview-aware), for the canvas outline.
+    /// Canvas coordinates: a group's outline goes around the box it actually
+    /// occupies, and a piece picked inside a group draws where it looks.
     var selectedLayerFrame: CGRect? {
         guard let id = selectedLayerID else { return nil }
-        return previewedFrame(of: id)
+        return canvasFrame(of: id)
     }
 
-    /// A layer's frame, preview-aware: while a move or resize drag is in
-    /// flight the document still holds the pre-drag frame, so anything that
-    /// reads a number off a layer (the inspector's typed X/Y/W/H) has to read
-    /// the preview or it would sit still until mouse-up.
-    func previewedFrame(of id: UUID) -> CGRect? {
+    /// A layer with its frame in CANVAS coordinates, which is the space the
+    /// canvas draws handles, knobs and outlines in. Identical to the layer
+    /// itself for anything sitting loose on the canvas.
+    func canvasLayer(id: UUID) -> Layer? {
+        guard var layer = document?.canvasLayer(id: id) else { return nil }
+        if let previewMove, previewMove.id == id { layer.frame = previewMove.frame }
+        return layer
+    }
+
+    /// A layer's canvas-space frame, preview-aware.
+    func canvasFrame(of id: UUID) -> CGRect? {
         if let previewMove, previewMove.id == id { return previewMove.frame }
-        return document?.layer(id: id)?.frame
+        return document?.canvasLayer(id: id)?.frame
+    }
+
+    /// A layer's frame in the space it is STORED in — its parent's, which is
+    /// the canvas for a layer sitting loose on it. This is what the Position &
+    /// Size fields show: typing Y = 0 on a piece inside a group puts it at the
+    /// top of its group, which is what the number on that layer says and what
+    /// every other design tool does (`docs/design/ui-building.md`).
+    ///
+    /// Preview-aware: while a move or resize drag is in flight the document
+    /// still holds the pre-drag frame, so anything that reads a number off a
+    /// layer has to read the preview or it would sit still until mouse-up.
+    func previewedFrame(of id: UUID) -> CGRect? {
+        if let previewMove, previewMove.id == id, let document {
+            return document.parentSpaceFrame(previewMove.frame, of: id)
+        }
+        // A group's stored frame is an anchor, not a box: the number to show
+        // is the box it occupies, in the same parent space.
+        guard let layer = document?.layer(id: id) else { return nil }
+        return layer.isGroup ? layer.localBounds : layer.frame
     }
 
     /// A typed geometry field landing (Return, Tab, or an arrow-key step):
@@ -3398,14 +3518,24 @@ final class EditorState {
     /// nothing are all no-ops, so tabbing through the fields without editing
     /// never puts anything in the undo stack.
     func setLayerGeometry(id: UUID, field: LayerGeometryField, to value: CGFloat) {
-        guard let layer = document?.layer(id: id),
+        guard let layer = document?.layer(id: id), let current = previewedFrame(of: id),
               LayerGeometryEditing(layer: layer).allows(field) else { return }
-        let frame = LayerGeometry.applying(value, to: field, of: layer.frame)
-        guard frame != layer.frame else { return }
+        let frame = LayerGeometry.applying(value, to: field, of: current)
+        guard frame != current else { return }
+        // A group has no frame to set — only an origin to move to, which
+        // carries everything inside it.
+        if layer.isGroup {
+            perform { $0.moveLayer(id: id, toParentOrigin: frame.origin) }
+            return
+        }
         commitLayerFrame(id: id, frame: frame)
     }
 
     func selectLayer(_ id: UUID?) {
+        // Selecting from anywhere but the canvas walk (a panel row, a fresh
+        // layer, a deselect) puts you back at the top level: the only thing
+        // that puts you inside a group is deliberately going into it.
+        groupContextID = document?.parentID(of: id ?? UUID())
         selectedLayerID = id
         // Explicit deselection dissolves the multi-selection even when the
         // primary was already nil (didSet only fires on change).
@@ -3424,6 +3554,9 @@ final class EditorState {
         next.selected = multiSelectedLayerIDs
         if let selectedLayerID { next.selected.insert(selectedLayerID) }
         next.click(id, click, in: order)
+        // A row click puts you wherever the row lives, so picking a top-level
+        // layer from the list steps you out of any group you were inside.
+        groupContextID = document?.parentID(of: id)
         switch next.selected.count {
         case 0:
             selectLayer(nil)
@@ -3461,7 +3594,17 @@ final class EditorState {
         // Both fall back to full re-renders per move, which keeps them right.
         guard layer.zoomCallout == nil else { return }
         if case .text = layer.content { return }
-        let padding = layer.style.previewPadding
+        // A group's own style is usually plain, but the shadows and blur of the
+        // pieces INSIDE it still reach past the box they make, so the sprite is
+        // padded by the furthest any of them reaches or they would be clipped
+        // the moment the drag started.
+        var padding = layer.style.previewPadding
+        if layer.isGroup {
+            let box = layer.localBounds
+            let reach = layer.renderBounds
+            padding = max(padding, box.minX - reach.minX, box.minY - reach.minY,
+                          reach.maxX - box.maxX, reach.maxY - box.maxY).rounded(.up)
+        }
         let blend = layer.effectiveBlendMode
         let renderer = previewRenderer
         let store = store
@@ -3478,11 +3621,59 @@ final class EditorState {
         }
     }
 
-    /// Live drag update (move or resize). With a CA preview active the canvas
-    /// already shows the move, so this only records state; otherwise it
-    /// renders the new frame without touching history.
+    // MARK: - Frames from the canvas
+    //
+    // The canvas drags in CANVAS coordinates; a layer stores its frame in its
+    // PARENT'S. The two are the same thing for a layer sitting loose on the
+    // canvas, which is every layer in a document with no groups, so these two
+    // entry points convert once and everything downstream keeps working in the
+    // space it always did.
+
+    /// A canvas-space point in the space the layer is stored in. Unchanged for
+    /// a layer sitting loose on the canvas.
+    private func parentPoint(_ point: CGPoint, of id: UUID) -> CGPoint {
+        let origin = document?.parentOrigin(of: id) ?? .zero
+        return CGPoint(x: point.x - origin.x, y: point.y - origin.y)
+    }
+
+    /// Live drag update from the canvas, in canvas coordinates.
+    func previewCanvasFrame(id: UUID, frame: CGRect) {
+        guard let document, let layer = document.layer(id: id) else { return }
+        // A group has no frame to set, only an origin to move to: dragging it
+        // carries everything inside it, and nothing about it resizes.
+        guard !layer.isGroup else {
+            previewMove = (id, frame)
+            var doc = document
+            doc.moveLayer(id: id, toCanvasOrigin: frame.origin)
+            guard dragPreview?.layerID != id else { return }
+            submit(doc)
+            return
+        }
+        guard let parent = document.parentSpaceFrame(frame, of: id) else { return }
+        previewLayerFrame(id: id, frame: parent)
+    }
+
+    /// Mouse-up from the canvas, in canvas coordinates: one undo step.
+    func commitCanvasFrame(id: UUID, frame: CGRect) {
+        guard let document, let layer = document.layer(id: id) else { return }
+        guard !layer.isGroup else {
+            previewMove = nil
+            dragPreviewGeneration += 1
+            clearPreviewAfterNextFrame = dragPreview != nil
+            perform { $0.moveLayer(id: id, toCanvasOrigin: frame.origin) }
+            return
+        }
+        guard let parent = document.parentSpaceFrame(frame, of: id) else { return }
+        commitLayerFrame(id: id, frame: parent)
+    }
+
+    /// Live drag update (move or resize) in the layer's own parent space. With
+    /// a CA preview active the canvas already shows the move, so this only
+    /// records state; otherwise it renders the new frame without touching
+    /// history.
     func previewLayerFrame(id: UUID, frame: CGRect) {
-        previewMove = (id, frame)
+        let origin = document?.parentOrigin(of: id) ?? .zero
+        previewMove = (id, frame.offsetBy(dx: origin.x, dy: origin.y))
         // A RESIZE (size change) of a layer whose look is sized in fixed points —
         // border/corner-radius/blur/shadow, or annotation strokes, text, callouts,
         // measures — can't be shown by scaling the drag sprite: the stroke would
@@ -3544,6 +3735,8 @@ final class EditorState {
     /// undo step; committing the original endpoints is a History no-op (how
     /// an Esc-cancelled endpoint drag restores the real render).
     func commitAnnotationEndpoints(id: UUID, start: CGPoint, end: CGPoint) {
+        let start = parentPoint(start, of: id)
+        let end = parentPoint(end, of: id)
         previewMove = nil
         dragPreviewGeneration += 1
         clearPreviewAfterNextFrame = dragPreview != nil
@@ -3612,6 +3805,7 @@ final class EditorState {
             selection = nil
             cropRect = nil
             selectedLayerID = nil
+            groupContextID = nil
             previewMove = nil
             dragPreview = nil
             editingTextLayerID = nil
@@ -3640,6 +3834,10 @@ final class EditorState {
         // Undo can remove the selected layer out from under us.
         if let id = selectedLayerID, document.layer(id: id) == nil {
             selectedLayerID = nil
+        }
+        // Undoing a ⌘G takes the group you were standing inside away with it.
+        if let id = groupContextID, document.layer(id: id) == nil {
+            groupContextID = nil
         }
         // Same for the multi-selection (undoing a batch duplicate takes the
         // copies it selected away), so the Layers menu never stays enabled

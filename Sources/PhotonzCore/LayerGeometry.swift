@@ -161,6 +161,9 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// Why a shape drawn end to end has no typeable size.
     public static let endpointReason = "Drag this shape's ends on the canvas to change its size."
 
+    /// Why a group has no typeable size: it is the box its contents make.
+    public static let groupSizeReason = "A group is as big as what is inside it. Move or resize the layers in the group to change it."
+
     /// Why a measurement has no typeable size.
     public static let measurementReason = "Drag this measurement's ends on the canvas to change what it measures."
 
@@ -192,7 +195,10 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         } else {
             canSetWidth = false
             canSetHeight = false
-            let reason = layer.measure != nil ? Self.measurementReason : Self.endpointReason
+            let reason: String
+            if layer.isGroup { reason = Self.groupSizeReason }
+            else if layer.measure != nil { reason = Self.measurementReason }
+            else { reason = Self.endpointReason }
             widthReason = reason
             heightReason = reason
         }

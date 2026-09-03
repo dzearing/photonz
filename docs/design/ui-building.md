@@ -260,6 +260,18 @@ Nesting needs a way in and a way out, and both keys are already busy.
   goes in ahead of clearing the layer selection: while you are inside a group,
   Escape leaves it with the group selected, and only once you are at the top
   does Escape clear the selection as it does today.
+- **The group you are inside draws a faint dotted box of its own** (added when
+  step 1's keys shipped, 2026-09-03). Without it, descending is a mode with no
+  sign of itself: the handles move to one piece and nothing else on the canvas
+  changes. The box is the selection blue at a quarter strength, one point wide
+  and finely dotted, so it reads as the room you are standing in rather than
+  competing with the selection outline inside it.
+- **A click picks the outermost thing you are not already inside**, and the
+  group you are inside is remembered only while you are in it: nothing about it
+  is stored in the document. Clicking anything outside that group drops you back
+  to the top level, so there is always a second way out besides Escape. Clicking
+  a sibling of the piece you have selected keeps you at that level rather than
+  throwing you to the top.
 
 ## The flag each step ships behind
 

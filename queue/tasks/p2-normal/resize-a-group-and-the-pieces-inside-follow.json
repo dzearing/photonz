@@ -1,0 +1,29 @@
+{
+  "id": "resize-a-group-and-the-pieces-inside-follow",
+  "title": "Resize a group and the pieces inside follow",
+  "goal": "Today a group can be moved but not resized: its selection box has no handles, and the width and height boxes are greyed with a note saying a group is as big as what is inside it. Dragging a corner of a group should scale everything in it, so a card made of a box and a label can be made bigger in one gesture instead of piece by piece.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 660,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T02:06:18.412Z",
+  "updated": "2026-09-03T02:06:18.412Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed out of group-and-ungroup-what-you-selected (2026-09-03), which deliberately left resize out. Where it stands today: Layer.allowsFrameResize returns false for .group, so CanvasView draws no frame handles and LayerGeometryEditing greys W and H with LayerGeometryEditing.groupSizeReason. CanvasGroups.offersRotation also keeps the rotate knob off a group. The model says groups translate and nothing else (docs/design/ui-building.md, \"Groups translate, they do not scale or rotate\"), so THIS TASK CHANGES THAT RULE and the design doc has to be updated in the same change, including what it means for a measured gap inside a group (12 px stays 12 px is the promise that scaling would break). Decide and write the scaling rule before touching code. EditorState.commitCanvasFrame currently routes a group through PhotonzDocument.moveLayer(id:toCanvasOrigin:), which is translation only; resize needs a new document mutation that walks the children.",
+  "acceptance": [
+    "Dragging a corner or edge handle of a selected group resizes it, and every layer inside moves and scales with it in one undo step",
+    "What happens to each kind of piece is written down first and matches: photos scale with the box, and text, strokes, corner radii and measurement numbers keep their point sizes unless the written rule says otherwise",
+    "Holding Shift keeps the group proportional, matching how every other layer resizes",
+    "A group inside a group resizes correctly, and nothing inside ever lands outside the box being dragged",
+    "The width and height boxes in Position and Size accept a typed number for a group, and the greyed note goes away"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T02:06:18.412Z",
+      "note": "created (manual)"
+    }
+  ]
+}

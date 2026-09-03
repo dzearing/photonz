@@ -314,6 +314,21 @@ struct PlaytestScriptTests {
         #expect(actions == expected)
     }
 
+    @Test func aWalkCanGroupAndUngroupTheSelection() throws {
+        // ⌘G and ⇧⌘G are menu chords, which a hidden probe window does not
+        // honour, so a walk that checks grouping asks for it directly.
+        let script = try decode("""
+        { "steps": [
+            { "do": "action", "action": "group" },
+            { "do": "action", "action": "ungroup" }
+        ] }
+        """)
+        let actions: [PlaytestAction] = script.steps.compactMap { step in
+            if case .action(let action) = step { return action } else { return nil }
+        }
+        #expect(actions == [.group, .ungroup])
+    }
+
     @Test func aDragCanNameAShotTakenWhileTheButtonIsStillDown() throws {
         // The yellow snap guide only exists mid-drag; an audit that has to show
         // it needs the picture taken before the mouse comes up.
