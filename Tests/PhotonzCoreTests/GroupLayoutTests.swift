@@ -76,6 +76,200 @@ struct GroupLayoutTests {
         #expect(back.layout == content.layout)
     }
 
+    // MARK: - A stack can be a size of its own
+
+    /// A stack told how wide it is.
+    private func sized(_ layout: GroupLayout, width: CGFloat? = nil,
+                       height: CGFloat? = nil) -> GroupLayout {
+        var out = layout
+        out.width = width
+        out.height = height
+        return out
+    }
+
+    @Test("A stack given a width is that wide, whatever is inside it")
+    func aFixedWidthHolds() {
+        let stack = GroupFlow.flowing(group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 60, height: 20)),
+        ], layout: sized(GroupLayout(kind: .stack, direction: .column, gap: 10), width: 320)))
+        #expect(stack.localBounds == CGRect(x: 0, y: 0, width: 320, height: 50))
+        // Nothing was stretched: the rows are still the sizes they were drawn.
+        #expect(frames(stack) == [CGRect(x: 0, y: 0, width: 40, height: 20),
+                                  CGRect(x: 0, y: 30, width: 60, height: 20)])
+    }
+
+    @Test("A row set to stretch fills the stack's width rather than the widest row")
+    func stretchFillsAFixedStack() {
+        let stack = GroupFlow.flowing(group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 60, height: 20)),
+        ], layout: sized(GroupLayout(kind: .stack, direction: .column, gap: 10), width: 320),
+           contents: LayerPlacement(horizontal: .stretch)))
+        #expect(frames(stack).map(\.width) == [320, 320])
+        #expect(stack.localBounds.width == 320)
+    }
+
+    @Test("A stack with a size of its own keeps its contents inside its padding")
+    func paddingWorksOnAStack() {
+        let stack = GroupFlow.flowing(group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 40, height: 20)),
+        ], layout: sized(GroupLayout(kind: .stack, direction: .column, gap: 10, padding: 16),
+                         width: 320),
+           contents: LayerPlacement(horizontal: .stretch)))
+        #expect(frames(stack) == [CGRect(x: 16, y: 16, width: 288, height: 20),
+                                  CGRect(x: 16, y: 46, width: 288, height: 20)])
+    }
+
+    @Test("A stack that sizes itself still keeps its padding clear, and grows by it")
+    func paddingGrowsAHuggingStack() {
+        let stack = GroupFlow.flowing(group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 40, height: 20)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 10, padding: 8)))
+        #expect(frames(stack) == [CGRect(x: 8, y: 8, width: 40, height: 20),
+                                  CGRect(x: 8, y: 38, width: 40, height: 20)])
+        #expect(stack.localBounds == CGRect(x: 0, y: 0, width: 56, height: 66))
+    }
+
+    @Test("A stack with a size of its own flows the same the second time")
+    func aFixedStackSettles() {
+        let once = GroupFlow.flowing(group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 9, y: 90, width: 70, height: 30)),
+        ], layout: sized(GroupLayout(kind: .stack, direction: .column, gap: 7, padding: 12),
+                         width: 300, height: 200),
+           contents: LayerPlacement(horizontal: .stretch)))
+        #expect(frames(GroupFlow.flowing(once)) == frames(once))
+        #expect(GroupFlow.flowing(once).localBounds == once.localBounds)
+    }
+
+    @Test("Setting a stack back to sizing itself leaves its contents exactly where they are")
+    func backToSizingItselfMovesNothing() {
+        let stack = GroupFlow.flowing(group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 60, height: 20)),
+        ], layout: sized(GroupLayout(kind: .stack, direction: .column, gap: 10), width: 320),
+           contents: LayerPlacement(horizontal: .stretch)))
+        var hugging = stack
+        hugging.setGroupLayout(sized(GroupLayout(kind: .stack, direction: .column, gap: 10)))
+        let flowed = GroupFlow.flowing(hugging)
+        #expect(frames(flowed) == frames(stack))
+        // The rows really are 320 wide now, so the box it makes for itself is too.
+        #expect(flowed.localBounds.width == 320)
+    }
+
+    @Test("An empty stack given a size is that size")
+    func anEmptyStackTakesItsSize() {
+        let empty = group([], layout: sized(GroupLayout(kind: .stack), width: 200, height: 80))
+        #expect(empty.localBounds == CGRect(x: 0, y: 0, width: 200, height: 80))
+    }
+
+    @Test("A stack that sizes itself writes no size, and one that was given a size keeps it")
+    func aSizeRoundTrips() throws {
+        var content = GroupContent(children: [])
+        content.layout = GroupLayout(kind: .stack)
+        let hugging = try JSONEncoder().encode(content)
+        #expect(!(try #require(String(data: hugging, encoding: .utf8))).contains("width"))
+        #expect(try JSONDecoder().decode(GroupContent.self, from: hugging).layout?.width == nil)
+
+        content.layout = sized(GroupLayout(kind: .stack), width: 320)
+        let fixed = try JSONEncoder().encode(content)
+        let back = try JSONDecoder().decode(GroupContent.self, from: fixed)
+        #expect(back.layout?.width == 320)
+        #expect(back.layout?.height == nil)
+    }
+
+    // MARK: - Typing a width sizes the stack instead of scaling it
+
+    @Test("Typing a width on a stack sizes the stack and leaves what is inside it alone")
+    func typingAWidthSizesTheStack() {
+        let stack = GroupFlow.flowing(group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 40, height: 20)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 10)))
+        let typed = stack.resized(to: CGRect(x: 0, y: 0, width: 320, height: 50))
+        #expect(typed.group?.layout?.width == 320)
+        #expect(typed.localBounds.width == 320)
+        #expect(frames(typed).map(\.width) == [40, 40])
+    }
+
+    @Test("Typing only a width leaves the height still sizing itself")
+    func onlyTheSideYouChangeIsPinned() {
+        let stack = GroupFlow.flowing(group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 40, height: 20)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 10)))
+        let typed = stack.resized(to: CGRect(x: 0, y: 0, width: 320, height: 50))
+        #expect(typed.group?.layout?.height == nil)
+        // ...and the box still follows the rows on the axis nobody typed into.
+        #expect(typed.localBounds.height == 50)
+    }
+
+    @Test("Dragging a stack's corner sizes it and its stretched rows fill the new width")
+    func draggingACornerSizesTheStack() {
+        var doc = document([group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 40, height: 20)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 10),
+           contents: LayerPlacement(horizontal: .stretch))])
+        let id = doc.layers[0].id
+        doc.updateLayer(id: id) { $0 = $0.resized(to: CGRect(x: 0, y: 0, width: 240, height: 90)) }
+        doc.reflowLayouts()
+        #expect(doc.layers[0].group?.layout?.width == 240)
+        #expect(doc.layers[0].group?.layout?.height == 90)
+        #expect(frames(doc.layers[0]).map(\.width) == [240, 240])
+        #expect(doc.layers[0].localBounds == CGRect(x: 0, y: 0, width: 240, height: 90))
+    }
+
+    @Test("A stack stretched across a screen takes the screen's width and its own rows fill it")
+    func aStackFillingAScreenPassesTheWidthOn() {
+        var inner = group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 40, height: 20)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 10),
+           contents: LayerPlacement(horizontal: .stretch))
+        inner.placement = LayerPlacement(horizontal: .stretch)
+        let screen = GroupFlow.flowing(frame([inner], size: CGSize(width: 200, height: 300),
+            layout: GroupLayout(kind: .stack, direction: .column, gap: 8, padding: 16)))
+        let stack = try? #require(screen.children.first)
+        #expect(stack?.localBounds.width == 168)
+        #expect(stack?.children.map(\.frame.width) == [168, 168])
+    }
+
+    @Test("Switching a padded stack to a grid and back does not walk it across the canvas")
+    func switchingKindKeepsAPaddedStackPut() {
+        var doc = document([group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 40, height: 20)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 10, padding: 8),
+           origin: CGPoint(x: 100, y: 50))])
+        doc.reflowLayouts()
+        let before = doc.layers[0].localBounds
+        let id = doc.layers[0].id
+        doc.setGroupLayout(id: id, kind: .grid)
+        doc.reflowLayouts()
+        doc.setGroupLayout(id: id, kind: .stack)
+        doc.reflowLayouts()
+        #expect(doc.layers[0].localBounds == before)
+        #expect(frames(doc.layers[0]) == [CGRect(x: 8, y: 8, width: 40, height: 20),
+                                          CGRect(x: 8, y: 38, width: 40, height: 20)])
+    }
+
+    @Test("A stack keeps the size it was given when it is turned into a grid and back")
+    func theSizeSurvivesSwitchingKind() {
+        var doc = document([group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 0, y: 30, width: 40, height: 20)),
+        ], layout: sized(GroupLayout(kind: .stack, direction: .column, gap: 10), width: 320))])
+        let id = doc.layers[0].id
+        doc.setGroupLayout(id: id, kind: .grid)
+        #expect(doc.layers[0].group?.layout?.width == 320)
+        doc.setGroupLayout(id: id, kind: .stack)
+        #expect(doc.layers[0].group?.layout?.width == 320)
+    }
+
     // MARK: - A stack lays its contents along one axis
 
     @Test("A column stack puts an even gap between every pair, top to bottom")

@@ -305,6 +305,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// cannot reach with the pointer, so this is how a walk proves a rule set
     /// by hand survives the next resize.
     case stretchSelectionAcross
+    /// Set the selected GROUP's rule for everything inside it to Stretch
+    /// across (Next, `next-placement`), which is what picking Stretch in the
+    /// Layout section's Horizontal menu under "Contents of" does. Same reason
+    /// as above: the menu is in the dock, which a walk cannot reach with the
+    /// pointer, and this is the switch that makes every row of a stack fill
+    /// the width the stack was given.
+    case stretchContentsAcross
     /// Paint the selected screen's surface a strong colour, which is what the
     /// Frame section's Background swatch does. The swatch is in the dock,
     /// which a walk cannot reach with the pointer, and a white screen is the

@@ -100,8 +100,12 @@ extension Layer {
         if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
         if let group {
-            return group.isFrame ? LayerScaling.refitting(self, to: frame)
-                                 : LayerScaling.resizing(self, to: frame)
+            if group.isFrame { return LayerScaling.refitting(self, to: frame) }
+            // A group that arranges itself takes the size it is given: its flow
+            // fills the new box, so typing a width on a stack makes the stack
+            // that wide rather than magnifying everything in it.
+            if group.layout != nil { return LayerScaling.rearranging(self, to: frame) }
+            return LayerScaling.resizing(self, to: frame)
         }
         var layer = self
         layer.frame = frame

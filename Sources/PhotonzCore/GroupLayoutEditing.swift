@@ -43,10 +43,16 @@ extension PhotonzDocument {
         if let existing = group.layout {
             inferred = GroupLayout(kind: kind, direction: existing.direction,
                                    columns: existing.columns, gap: existing.gap,
-                                   rowGap: existing.rowGap, padding: existing.padding)
+                                   rowGap: existing.rowGap, padding: existing.padding,
+                                   width: existing.width, height: existing.height)
         }
         updateLayer(id: id) { layer in
-            if !group.isFrame { layer.pullContentsToItsCorner() }
+            // Only a group being arranged for the FIRST time needs pulling
+            // back: one that already arranges itself starts its contents at
+            // its own corner already, inside whatever padding it keeps, and
+            // pulling that padding away would walk the group across the canvas
+            // every time somebody switched it between a stack and a grid.
+            if !group.isFrame, group.layout == nil { layer.pullContentsToItsCorner() }
             layer.setGroupLayout(inferred)
         }
     }

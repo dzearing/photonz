@@ -65,10 +65,18 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// The space between a grid's rows. Kept apart from `gap` because a card
     /// grid usually wants more air above than beside.
     public var rowGap: CGFloat
-    /// The space kept clear inside the edges. Only a container with a box of
-    /// its own can hold any, so it does nothing on a plain group, whose box is
-    /// whatever its contents add up to.
+    /// The space kept clear inside the edges. A group that arranges itself has
+    /// edges of its own — whether it was given a size or takes the one its
+    /// contents make — so the contents start this far in and the box carries
+    /// this much on every side.
     public var padding: CGFloat
+    /// How wide this group is, or nil for a group that is as wide as whatever
+    /// is inside it. A number here is what lets a menu be 320 points wide and
+    /// every row stretch to that width without building it on a screen.
+    /// Ignored on a screen, whose box is its own frame.
+    public var width: CGFloat?
+    /// How tall this group is, or nil for a group as tall as its contents.
+    public var height: CGFloat?
 
     /// The gap a layout starts with when nothing suggests another: the same 12
     /// points the starter components are built on.
@@ -80,13 +88,17 @@ public struct GroupLayout: Hashable, Codable, Sendable {
                 columns: Int = GroupLayout.defaultColumns,
                 gap: CGFloat = GroupLayout.defaultGap,
                 rowGap: CGFloat = GroupLayout.defaultGap,
-                padding: CGFloat = 0) {
+                padding: CGFloat = 0,
+                width: CGFloat? = nil,
+                height: CGFloat? = nil) {
         self.kind = kind
         self.direction = direction
         self.columns = columns
         self.gap = gap
         self.rowGap = rowGap
         self.padding = padding
+        self.width = width
+        self.height = height
     }
 
     /// The column count actually used. A grid of nought columns is not a thing
@@ -101,13 +113,30 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     public var usedRowGap: CGFloat { max(0, rowGap) }
     public var usedPadding: CGFloat { max(0, padding) }
 
+    /// The size actually used on each axis: the number given, never negative,
+    /// or nil where the group is the size of what is in it. A number that is
+    /// not a real number is read as no number at all rather than handing the
+    /// flow an infinity.
+    public var usedWidth: CGFloat? { Self.usedSide(width) }
+    public var usedHeight: CGFloat? { Self.usedSide(height) }
+
+    private static func usedSide(_ side: CGFloat?) -> CGFloat? {
+        guard let side, side.isFinite else { return nil }
+        return max(0, side)
+    }
+
+    /// Whether this group is the size of whatever is inside it, one axis at a
+    /// time. What the inspector's Width and Height rows say.
+    public var hugsWidth: Bool { usedWidth == nil }
+    public var hugsHeight: Bool { usedHeight == nil }
+
     /// Which axis the flow itself decides. The other one is the placement
     /// rules', and the inspector says so rather than leaving a live menu that
     /// changes nothing.
     public var flowsHorizontally: Bool { kind == .stack && direction.isHorizontal }
 
     private enum CodingKeys: String, CodingKey {
-        case kind, direction, columns, gap, rowGap, padding
+        case kind, direction, columns, gap, rowGap, padding, width, height
     }
 
     /// Read forgivingly: a layout saved by an older build that knew fewer
@@ -120,6 +149,10 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         gap = try c.decodeIfPresent(CGFloat.self, forKey: .gap) ?? GroupLayout.defaultGap
         rowGap = try c.decodeIfPresent(CGFloat.self, forKey: .rowGap) ?? GroupLayout.defaultGap
         padding = try c.decodeIfPresent(CGFloat.self, forKey: .padding) ?? 0
+        // A group saved before a stack could be given a size of its own opens
+        // as one that is the size of its contents, which is what it was.
+        width = try c.decodeIfPresent(CGFloat.self, forKey: .width)
+        height = try c.decodeIfPresent(CGFloat.self, forKey: .height)
     }
 }
 

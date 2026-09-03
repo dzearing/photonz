@@ -628,6 +628,10 @@ private final class Run {
                 if let id = editor.selectedLayerID {
                     editor.setPlacement(id: id, horizontal: .stretch)
                 }
+            case .stretchContentsAcross:
+                if let id = editor.selectedLayerID {
+                    editor.setContentPlacement(id: id, horizontal: .stretch)
+                }
             case .closeSheets:
                 editor.isExportDialogPresented = false
                 editor.isNewFrameDialogPresented = false

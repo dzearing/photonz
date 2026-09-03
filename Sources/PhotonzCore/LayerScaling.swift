@@ -39,6 +39,25 @@ enum LayerScaling {
         resizing(frame, to: box, unsetHoldsStill: true)
     }
 
+    /// A group that ARRANGES itself, resized. Nothing inside is scaled: the
+    /// group is simply told how big it is, and its own flow fills that box —
+    /// which is what makes a menu 320 points wide with every row stretching to
+    /// 320 rather than a menu whose type got 20% bigger.
+    ///
+    /// Only the side that actually changed is pinned, so typing one width into
+    /// a stack leaves its height still following its rows, and only the axis
+    /// the handle was dragged on stops sizing itself.
+    static func rearranging(_ layer: Layer, to box: CGRect) -> Layer {
+        guard var layout = layer.group?.layout else { return layer }
+        let current = layer.localBounds
+        if box.width != current.width { layout.width = max(0, box.width) }
+        if box.height != current.height { layout.height = max(0, box.height) }
+        var out = layer
+        out.frame.origin = box.origin
+        out.setGroupLayout(layout)
+        return GroupFlow.flowing(out)
+    }
+
     static func resizing(_ layer: Layer, to box: CGRect,
                          unsetHoldsStill: Bool = false) -> Layer {
         let current = layer.localBounds
@@ -60,6 +79,12 @@ enum LayerScaling {
                                  sx: sx, sy: sy, as: placement,
                                  canScaleX: current.width > 0, canScaleY: current.height > 0)
             guard child.isGroup else { return child.resized(to: target) }
+            // A child that arranges itself is told its new size rather than
+            // scaled, so a stack stretched across a screen dragged wider fills
+            // the width with its own rows instead of magnifying them.
+            if child.group?.layout != nil, !child.isFrame {
+                return rearranging(child, to: target)
+            }
             return resizing(child, to: target)
         }
         // A frame's stored size IS its box, so it takes the box exactly rather

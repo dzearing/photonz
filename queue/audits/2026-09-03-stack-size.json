@@ -1,0 +1,30 @@
+{
+  "feature": "A stack can be a fixed size and its rows fill it",
+  "epic": "ui-layout",
+  "summary": "A group that stacks itself can now be given a width and a height instead of only being as big as what is in it, so a menu can be 320 wide and every row can fill it without building it on a screen. Padding works on one of these groups too, not just on a screen.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags on by default (Groups that arrange their own contents).",
+  "try": [
+    { "do": "Draw three rectangles of different widths, one under the other." },
+    { "do": "Select all three and press Control-Command-G (Layer > Stack Selection)." },
+    { "do": "Type 320 into W in Position & Size and press Return.", "shot": "2026-09-03-stack-size-1.png" },
+    { "do": "In the Layout section, set Horizontal to Stretch." },
+    { "do": "Type 16 into Padding in the Layout section.", "shot": "2026-09-03-stack-size-2.png" },
+    { "do": "Type 300 into H, then press Command-Z." },
+    { "do": "In the Layout section, press Hug on the Width row." },
+    { "do": "Drag the stack's right handle wider and watch what happens to the rows." }
+  ],
+  "evaluate": [
+    "When you typed 320 into W, did you expect the rows to widen by themselves, or was the Horizontal Stretch step where you would have looked?",
+    "Is the Layout section's caption doing that job, or did you read past it?",
+    "Do Width and Height belong under Direction, or would you look for them beside the W and H boxes above?",
+    "Is Hug the right word for a group that is as big as what is inside it?",
+    "Dragging a handle now sizes the stack rather than magnifying its contents. Is that what your hand expected?"
+  ],
+  "rough": [
+    "Screenshots here are real window captures from the loop's own probe app, not offscreen renders.",
+    "A stack told it is 320 wide does not widen its rows on its own: the Horizontal row still owns that axis. Mocks usually draw a per-child hug/fill/fixed control instead. That control is still cut, because it would say the same thing twice, but it means the feature takes two steps rather than one.",
+    "There is no distribution yet, so a stack taller than its rows leaves the spare room at the bottom rather than spreading them out.",
+    "No minimum or maximum size, and padding is still one number for all four sides.",
+    "A stack set to Stretch inside another container quietly gets a fixed size of its own from that container. If you later stop stretching it, it keeps the size it was last given until you press Hug."
+  ]
+}

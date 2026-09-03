@@ -32,6 +32,28 @@ enum GroupFlow {
         var vertical: PlacementSpan
     }
 
+    /// The box the contents flow inside, one axis at a time: a number where the
+    /// group has a size of its own, and nil where it is as big as what is in
+    /// it. A screen's box is its frame; a stack's is whatever it was told, and
+    /// a stack told nothing hugs on both axes, which is every stack that
+    /// existed before a stack could be given a size.
+    struct Bounds {
+        var width: CGFloat?
+        var height: CGFloat?
+
+        static let hugging = Bounds(width: nil, height: nil)
+
+        /// The box this group flows inside. A screen's frame wins, because a
+        /// screen is a real box you build on and its size is the size it is.
+        static func of(_ layer: Layer, _ group: GroupContent, _ layout: GroupLayout) -> Bounds {
+            guard !group.isFrame else {
+                let box = layer.frame.standardized
+                return Bounds(width: box.width, height: box.height)
+            }
+            return Bounds(width: layout.usedWidth, height: layout.usedHeight)
+        }
+    }
+
     // MARK: - The whole tree
 
     /// This layer with every stack and grid inside it arranged, innermost
@@ -44,9 +66,7 @@ enum GroupFlow {
         guard let layout = group.layout else { return out }
         out.children = placed(out.children, layout: layout,
                               contentPlacement: group.contentPlacement,
-                              container: group.isFrame
-                                  ? CGRect(origin: .zero, size: layer.frame.standardized.size)
-                                  : nil,
+                              bounds: Bounds.of(layer, group, layout),
                               onAScreen: group.isFrame)
         return out
     }
@@ -58,7 +78,7 @@ enum GroupFlow {
     /// closes the space it held, and showing it again puts it back.
     private static func placed(_ children: [Layer], layout: GroupLayout,
                                contentPlacement: LayerPlacement?,
-                               container: CGRect?, onAScreen: Bool) -> [Layer] {
+                               bounds: Bounds, onAScreen: Bool) -> [Layer] {
         let taking = children.indices.filter { children[$0].isVisible }
         guard !taking.isEmpty else { return children }
         let items = taking.map { index -> Item in
@@ -71,7 +91,7 @@ enum GroupFlow {
                         vertical: effective.vertical.span)
         }
         let order = flowOrder(items.map(\.box), layout: layout)
-        let targets = laidOut(order.map { items[$0] }, layout: layout, container: container)
+        let targets = laidOut(order.map { items[$0] }, layout: layout, bounds: bounds)
         var out = children
         for (slot, position) in order.enumerated() {
             let child = children[taking[position]]
@@ -95,28 +115,37 @@ enum GroupFlow {
     // MARK: - The maths
 
     /// Where each box lands, in the order handed in.
-    static func laidOut(_ items: [Item], layout: GroupLayout, container: CGRect?) -> [CGRect] {
+    static func laidOut(_ items: [Item], layout: GroupLayout, bounds: Bounds) -> [CGRect] {
         guard !items.isEmpty else { return [] }
-        let padding = layout.usedPadding
-        let content = container?.insetBy(dx: padding, dy: padding)
         switch layout.kind {
         case .stack:
-            return stacked(items, layout: layout, content: content)
+            return stacked(items, layout: layout, bounds: bounds)
         case .grid:
-            return gridded(items, layout: layout, content: content)
+            return gridded(items, layout: layout, bounds: bounds)
         }
     }
 
+    /// The room across one axis, once the padding is taken off both edges, or
+    /// nil where the group is as big as what is in it and there is no room to
+    /// share out.
+    private static func room(_ side: CGFloat?, padding: CGFloat) -> CGFloat? {
+        side.map { max(0, $0 - padding * 2) }
+    }
+
     private static func stacked(_ items: [Item], layout: GroupLayout,
-                                content: CGRect?) -> [CGRect] {
+                                bounds: Bounds) -> [CGRect] {
         let horizontal = layout.direction.isHorizontal
-        // The cross axis runs from the container's inside edge across its
-        // width; with no container of its own, from the group's own corner
-        // across the widest thing in it, which is what a group's box IS.
-        let crossStart = content.map { horizontal ? $0.minY : $0.minX } ?? 0
-        let crossExtent = content.map { horizontal ? $0.height : $0.width }
+        let padding = layout.usedPadding
+        // Everything starts one padding in from the corner the group flows
+        // from, whether that corner belongs to a screen, to a stack with a size
+        // of its own, or to a stack that is exactly as big as its contents.
+        let crossStart = padding
+        // The cross axis runs across the room inside the group's own width;
+        // where it has none of its own, across the widest thing in it, which is
+        // what that group's box IS.
+        let crossExtent = room(horizontal ? bounds.height : bounds.width, padding: padding)
             ?? (items.map { horizontal ? $0.box.height : $0.box.width }.max() ?? 0)
-        var cursor = content.map { horizontal ? $0.minX : $0.minY } ?? 0
+        var cursor = padding
         var out: [CGRect] = []
         for item in items {
             let along = horizontal ? item.box.width : item.box.height
@@ -132,20 +161,21 @@ enum GroupFlow {
     }
 
     private static func gridded(_ items: [Item], layout: GroupLayout,
-                                content: CGRect?) -> [CGRect] {
+                                bounds: Bounds) -> [CGRect] {
         let columns = layout.usedColumns
         let gap = layout.usedGap
         let rowGap = layout.usedRowGap
+        let padding = layout.usedPadding
         // A cell is as big as the biggest thing going into it, so a grid of
-        // cards with one taller card keeps its rows straight. On a screen the
-        // columns share the width instead, which is what makes a grid on a
-        // screen a grid rather than a huddle in the corner.
-        let cellWidth = content.map { max(0, ($0.width - gap * CGFloat(columns - 1))
-                                              / CGFloat(columns)) }
+        // cards with one taller card keeps its rows straight. Where the grid
+        // has a width of its own the columns share it instead, which is what
+        // makes a grid on a screen a grid rather than a huddle in the corner.
+        let cellWidth = room(bounds.width, padding: padding)
+            .map { max(0, ($0 - gap * CGFloat(columns - 1)) / CGFloat(columns)) }
             ?? (items.map(\.box.width).max() ?? 0)
         let cellHeight = items.map(\.box.height).max() ?? 0
-        let originX = content?.minX ?? 0
-        let originY = content?.minY ?? 0
+        let originX = padding
+        let originY = padding
         return items.enumerated().map { index, item in
             let column = index % columns
             let row = index / columns

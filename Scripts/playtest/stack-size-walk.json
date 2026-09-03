@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/stack-size",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 90], "to": [300, 140], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 170], "to": [260, 220], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 250], "to": [340, 300], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "drag", "from": [80, 50], "to": [520, 360], "steps": 10 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "focus", "field": "Gap" },
+    { "do": "type", "text": "12" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-hugging", "note": "three rows of different widths as one stack, 12 apart. The Layout section should read Width Hug and Height Hug, and the box around it should be exactly as wide as the widest row." },
+    { "do": "snapshot", "name": "size-1-hugging" },
+    { "do": "render", "name": "size-1-hugging-doc" },
+
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "320" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-fixed-width", "note": "typed 320 into W: the stack is now 320 wide, the Width row should have flipped to Fixed, and the rows should NOT have been magnified — they are still the widths they were drawn." },
+    { "do": "snapshot", "name": "size-2-fixed-width" },
+    { "do": "render", "name": "size-2-fixed-width-doc" },
+
+    { "do": "action", "action": "stretchContentsAcross" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-rows-fill", "note": "Horizontal set to Stretch: every row should now be 320 wide, top to bottom, and the heights should be untouched." },
+    { "do": "snapshot", "name": "size-3-rows-fill" },
+    { "do": "render", "name": "size-3-rows-fill-doc" },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "16" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-padding", "note": "16 of padding on a stack that is not a screen: the rows should have come in 16 from every edge and be 288 wide, while the stack itself stays 320." },
+    { "do": "snapshot", "name": "size-4-padding" },
+    { "do": "render", "name": "size-4-padding-doc" },
+
+    { "do": "focus", "field": "H" },
+    { "do": "type", "text": "300" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-fixed-height", "note": "typed 300 into H: the stack should be 300 tall with room left under the last row, and nothing inside it should have stretched or moved." },
+    { "do": "snapshot", "name": "size-5-fixed-height" },
+    { "do": "render", "name": "size-5-fixed-height-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-undone", "note": "one undo takes the height back to Hug in a single step." },
+    { "do": "render", "name": "size-6-undone-doc" }
+  ]
+}

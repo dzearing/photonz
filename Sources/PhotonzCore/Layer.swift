@@ -745,6 +745,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // size it was given and holds still, so drawing something that hangs
         // off the edge never resizes the screen you are building.
         if group.isFrame { return frame.standardized }
+        // A group that arranges itself flows from its own corner, so its box
+        // starts there: as wide and as tall as it was told to be, and where it
+        // was told nothing, as big as what is inside it plus the space it keeps
+        // clear at the edges.
+        if let layout = group.layout { return arrangedBounds(group, layout) }
         var union: CGRect?
         for child in group.children {
             let box = child.localBounds
@@ -752,6 +757,29 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         }
         guard let union else { return CGRect(origin: frame.origin, size: .zero) }
         return union.offsetBy(dx: frame.origin.x, dy: frame.origin.y)
+    }
+
+    /// The box a group that arranges its own contents occupies: the size it was
+    /// given on each axis, and on an axis it was given none, its contents plus
+    /// its padding. Measured from the corner it flows from, never from the
+    /// leftmost thing in it, so hiding the first row cannot slide the box.
+    private func arrangedBounds(_ group: GroupContent, _ layout: GroupLayout) -> CGRect {
+        let padding = layout.usedPadding
+        var contentWidth: CGFloat = 0
+        var contentHeight: CGFloat = 0
+        for child in group.children {
+            let box = child.localBounds
+            contentWidth = max(contentWidth, box.maxX)
+            contentHeight = max(contentHeight, box.maxY)
+        }
+        // An empty stack still keeps its padding clear on both sides; a stack
+        // with something in it already carries one padding in that far edge.
+        let hugged = { (content: CGFloat) in
+            group.children.isEmpty ? padding * 2 : content + padding
+        }
+        return CGRect(origin: frame.origin,
+                      size: CGSize(width: layout.usedWidth ?? hugged(contentWidth),
+                                   height: layout.usedHeight ?? hugged(contentHeight)))
     }
 
     /// The box this layer's DRAWING can touch in its parent's space, which is

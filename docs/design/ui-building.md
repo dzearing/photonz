@@ -1586,9 +1586,9 @@ so the things inside it space and re-flow themselves.
   of Row or Column.
 - **Grid** fills rows of equal cells, with **Columns**, a **Column gap** and a
   **Row gap**.
-- On a **screen** there is also **Padding**, the space kept clear inside its
-  edges. A plain group has no edges of its own to keep clear of, so it has no
-  padding row.
+- **Padding** is the space kept clear inside the edges, on a screen and on a
+  group alike (see the sizing section below: a group that arranges itself has
+  edges of its own).
 
 Every number is typed, never dragged for, with the same keys as the other
 number fields (Return lands it, Escape puts it back, up and down step by 1 and
@@ -1651,6 +1651,49 @@ document saved before this decodes and draws unchanged.
 `updateArrangement` / `stackSelection` in the app. Walked by
 `Scripts/playtest/stack-and-grid-walk.json`.
 
-Not in this slice: a container that hugs or fills along the flow axis (a stack
-is always exactly as big as its contents), wrapping as a fourth direction,
-per-side padding, and binding gaps to spacing tokens.
+Not in this slice: wrapping as a fourth direction, per-side padding, and
+binding gaps to spacing tokens.
+
+## Landed: a stack can be a size of its own (Next, `next-auto-layout`, 2026-09-03)
+
+A stack used to be exactly as big as whatever was in it, so "this menu is 320
+wide and every row fills it" could only be built on a screen. Now a group that
+arranges itself can be told how big it is, one axis at a time.
+
+**Two rows, Hug or Fixed.** Under the gaps, a group that arranges itself gains
+**Width** and **Height**, each **Hug** or **Fixed**. Hug is what a stack has
+always been: as big as its contents plus its padding. Fixed holds a number of
+its own. Pressing Fixed starts from the size the group is at that moment, so
+nothing moves when you press it. A screen keeps no such rows: a screen's box is
+the box you made it.
+
+**The number is W and H, not a fourth field.** The size itself is typed in
+Position & Size, the same two boxes every other layer's size is typed in, and
+dragging the group's handles sets it too. Typing one of them pins only that
+side, so a menu can be 320 wide and still exactly as tall as its rows. Doing
+either flips the row below to Fixed, which is how the two rows teach what they
+mean.
+
+**Being wide is not the same as filling.** A stack told it is 320 wide does not
+widen its rows on its own: the Horizontal row still owns that axis, and setting
+it to **Stretch** is what makes every row fill the 320. The section's caption
+says so in words when a size is set, so nobody is left staring at a wide stack
+of narrow rows. This is deliberate — one axis, one owner — and it is why there
+is still no per-child hug/fill/fixed control.
+
+**A resize sizes it, it never magnifies it.** Dragging a handle on a stack used
+to scale everything inside it, and then the flow re-laid it out with the
+original gap, so the result matched nothing. Now the drag hands the stack a box
+and the flow fills it: the type stays the size it was. The same rule carries
+down, so a stack set to stretch inside a screen takes the screen's width and
+passes it on to its own rows.
+
+**Where it lives.** `GroupLayout.width` / `.height` (nil means hug, and writes
+no key, so every document saved before this is byte for byte what it was),
+`Layer.localBounds` for the box a group with a layout makes, `GroupFlow.Bounds`
+for the per-axis room the flow shares out, and `LayerScaling.rearranging` for a
+resize that sizes rather than scales. `ArrangementInspector` holds the two rows.
+
+Not in this slice: a minimum or maximum size, per-side padding, and a stack
+that spreads its contents along the axis it flows on (distribution) when it is
+longer than they are.

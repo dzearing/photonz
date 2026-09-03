@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:21:12.898Z",
-  "updated": "2026-09-03T17:32:32.251Z",
+  "updated": "2026-09-03T17:49:40.862859Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows 2026-09-03 groups-arrange-their-own-contents. Today GroupFlow uses a container box only when group.isFrame; the shortest version is a hug/fixed flag on GroupLayout that gives a plain group a box too, feeding the same contentBox path. Watch idempotence: the cross extent currently comes from the widest child, and a fixed box replaces it.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-09-03T17:32:32.250Z",
       "note": "seq 860 -> 10"
+    },
+    {
+      "t": "2026-09-03T17:34:08.868Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T17:49:40.862859Z",
+      "note": "Adversarial review before building: the mock's per-child hug/fill/fixed control stays cut (the Horizontal/Vertical rows already say it), and distribution stays cut (nothing to spread until a stack is longer than its contents). Two things the task did not ask for turned out to be required for the feature to make sense: (1) typing W or dragging a handle on a stack used to SCALE its contents and then re-flow them with the original gap, which matched nothing, so a resize of an arranged group now sizes it instead; (2) a stack given a size needs a way back, so the Layout section gained Width and Height as Hug/Fixed rows."
+    },
+    {
+      "t": "2026-09-03T17:49:40.862859Z",
+      "note": "Built: GroupLayout.width/.height (nil = hug, no key written when unset), Layer.localBounds gives an arranged group its own box, GroupFlow.Bounds shares out per-axis room (frames unchanged: their box still wins), LayerScaling.rearranging pins only the axis that actually changed and re-flows, and setGroupLayout stops pulling contents to the corner for a group that already arranges itself (that was walking a padded stack across the canvas on every kind switch)."
+    },
+    {
+      "t": "2026-09-03T17:49:40.862859Z",
+      "note": "Padding now works on any arranged group, not only a screen: contents start one padding in and the hug box grows by it on both sides."
+    },
+    {
+      "t": "2026-09-03T17:49:40.862859Z",
+      "note": "Verified: 47 tests in the group-layout suite (13 new), full suite 2297 green, and a real walk on the probe (Scripts/playtest/stack-size-walk.json, Screen Recording granted) showing 320 typed into W, rows filling after Horizontal Stretch, padding of 16 on a plain group, and one undo taking a fixed height back to hug."
+    },
+    {
+      "t": "2026-09-03T17:49:40.862859Z",
+      "note": "Audit: queue/audits/2026-09-03-stack-size.json with two window captures."
     }
-  ]
+  ],
+  "started": "2026-09-03T17:34:08.867Z"
 }

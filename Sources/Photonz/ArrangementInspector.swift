@@ -43,7 +43,7 @@ struct ArrangementInspector: View {
             }
             if let layout {
                 numbers(layout)
-                Text(caption(layout))
+                Text(caption(layout) + (sizeSentence(layout).map { " " + $0 } ?? ""))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -71,6 +71,17 @@ struct ArrangementInspector: View {
                 editorState.updateArrangement(id: layer.id) { $0.columns = Int(value.rounded()) }
             }
         }
+        // A screen is a box you were given; a group either takes the size its
+        // contents make or holds a size of its own, which is what lets a menu
+        // be 320 wide before there is a screen to build it on.
+        if !current.isFrame {
+            sizeRow("Width", hugs: layout.hugsWidth, measured: current.localBounds.width) { size in
+                editorState.updateArrangement(id: layer.id) { $0.width = size }
+            }
+            sizeRow("Height", hugs: layout.hugsHeight, measured: current.localBounds.height) { size in
+                editorState.updateArrangement(id: layer.id) { $0.height = size }
+            }
+        }
         number(layout.kind == .grid ? "Column gap" : "Gap", value: layout.usedGap,
                help: "The space between one thing and the next.") { value in
             editorState.updateArrangement(id: layer.id) { $0.gap = value }
@@ -81,13 +92,34 @@ struct ArrangementInspector: View {
                 editorState.updateArrangement(id: layer.id) { $0.rowGap = value }
             }
         }
-        // Padding needs edges to be kept clear of, and only a screen has any:
-        // a group's box IS whatever its contents add up to.
-        if current.isFrame {
-            number("Padding", value: layout.usedPadding,
-                   help: "The space kept clear inside the screen's edges.") { value in
-                editorState.updateArrangement(id: layer.id) { $0.padding = value }
+        // A group that arranges itself has edges of its own, whether it was
+        // given a size or takes the one its contents make, so it can keep
+        // space clear inside them the same way a screen does.
+        number("Padding", value: layout.usedPadding,
+               help: current.isFrame ? "The space kept clear inside the screen's edges."
+                                     : "The space kept clear inside the group's edges.") { value in
+            editorState.updateArrangement(id: layer.id) { $0.padding = value }
+        }
+    }
+
+    /// One axis' Hug-or-Fixed row. Choosing Fixed starts from the size the
+    /// group is at that moment, so nothing moves when you press it, and the
+    /// number itself is typed in W or H above rather than in a second field
+    /// here that would have to agree with it.
+    private func sizeRow(_ title: String, hugs: Bool, measured: CGFloat,
+                         commit: @escaping (CGFloat?) -> Void) -> some View {
+        row(title) {
+            Picker("", selection: Binding(get: { hugs },
+                                          set: { commit($0 ? nil : measured.rounded()) })) {
+                Text("Hug").tag(true)
+                Text("Fixed").tag(false)
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: 152)
+            .help(hugs
+                ? "This group is as \(title == "Width" ? "wide" : "tall") as what is inside it. Fixed holds the size it is now, and W and H above set it."
+                : "This group holds the \(title.lowercased()) it was given. Type it in \(title == "Width" ? "W" : "H") above, or drag a handle.")
         }
     }
 
@@ -109,6 +141,25 @@ struct ArrangementInspector: View {
                 + "\(layout.usedColumns == 1 ? "column" : "columns"), a row at a time. "
                 + "Horizontal and Vertical below say where each one sits inside its cell."
         }
+    }
+
+    /// What a size of its own means for what is inside it, in words. A stack
+    /// told how wide it is does NOT widen its rows on its own — the Horizontal
+    /// row below still owns that axis — so the caption says where that switch
+    /// is rather than leaving somebody staring at a 320-wide stack of 40-wide
+    /// rows wondering what they got wrong.
+    private func sizeSentence(_ layout: GroupLayout) -> String? {
+        guard !current.isFrame, layout.kind == .stack else { return nil }
+        let flowsAcross = layout.direction.isHorizontal
+        guard let across = flowsAcross ? layout.usedHeight : layout.usedWidth else { return nil }
+        let word = flowsAcross ? "tall" : "wide"
+        let axis = flowsAcross ? "Vertical" : "Horizontal"
+        let placement = current.contentPlacementDefault
+        let fills = flowsAcross ? placement.vertical == .stretch : placement.horizontal == .stretch
+        let size = Int(across.rounded())
+        return fills
+            ? "It is \(size) \(word), and everything in it fills that."
+            : "It is \(size) \(word). Set \(axis) below to Stretch and everything in it fills that."
     }
 
     /// One labelled row. The label never wraps: "Arrangement" broken over two
