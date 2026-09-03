@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T11:27:35.947Z",
-  "updated": "2026-09-03T14:54:26.536650Z",
+  "updated": "2026-09-03T14:54:58.313Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-on from the component halo task (2026-09-03). The rule is already built: Layer.drawnShadow(insideComponent:) plus an insideComponent flag threaded through DocumentRenderer.compositeLayers/groupImage. Widening it means deciding whether a frame counts the same way a component does, and whether a plain group nested inside a frame counts. A frame is group.isFrame with a backgroundHex, so the predicate is one clause; the question is a UX one, because a caption deliberately laid over a screenshot placed inside a frame would lose its halo too. Consider whether the trigger should be the frame having a painted surface rather than being a frame at all.",
@@ -34,7 +34,7 @@
     },
     {
       "t": "2026-09-03T14:24:33.480Z",
-      "note": "runner failed (exit 1, attempt 1): API Error: 529 Overloaded. This is a server-side issue, usually temporary \u2014 try again in a moment. If it persists, check https://status.claude.com."
+      "note": "runner failed (exit 1, attempt 1): API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com."
     },
     {
       "t": "2026-09-03T14:25:04.176Z",
@@ -63,6 +63,10 @@
     {
       "t": "2026-09-03T14:54:26.536650Z",
       "note": "the Shadow switch reading off for text on a screen follows from ShadowInspector using isOnDesignedSurface; that path is the one already shipped and photographed for components, and the dock section sits below the fold in the walk, so it is verified by code path here, not by picture."
+    },
+    {
+      "t": "2026-09-03T14:54:58.313Z",
+      "note": "Text on a screen with a painted surface draws with no halo; captions on the canvas and on a Frame Selection boundary keep theirs. Layer.paintsSurface + isOnDesignedSurface in PhotonzCore, flag renamed through DocumentRenderer, Shadow switch follows. Verified: Scripts/test.sh green (2179, 11 new in TextHaloTests/TextHaloRenderTests) and screen-text-halo-walk.json on the probe with Screen Recording granted, run twice for a real before and after. Audit: queue/audits/2026-09-03-screen-text-halo.json"
     }
   ],
   "started": "2026-09-03T14:25:04.175Z",
@@ -70,6 +74,7 @@
   "lastError": {
     "at": "2026-09-03T14:24:33.480Z",
     "exit": 1,
-    "message": "API Error: 529 Overloaded. This is a server-side issue, usually temporary \u2014 try again in a moment. If it persists, check https://status.claude.com."
-  }
+    "message": "API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com."
+  },
+  "completed": "2026-09-03T14:54:58.313Z"
 }
