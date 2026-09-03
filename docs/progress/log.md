@@ -6888,3 +6888,24 @@ real window captures. `Scripts/test.sh`: 2346 tests green. Audit:
 **Next**: still open from the previous session — run
 `open -a "$PWD/dist/Photonz Probe.app" --args --capture-diag` once somebody is
 logged in and read `/tmp/photonz-capture-diag.txt`.
+
+## 2026-09-03 — A group names the pieces that are not following it
+
+Placement overrides were invisible from the container: a group could say how
+its contents line up, any piece could disagree, and the only way to find the
+disagreements was to click through every piece in turn. A group or screen's
+Layout section now lists every piece directly inside it that carries a rule of
+its own, with what the rule says beside the name, and clicking a name goes to
+that piece. A container where everybody follows shows nothing extra.
+
+Core: `Layer.contentsWithTheirOwnPlacement` and `PlacementOverride`
+(`PhotonzCore/LayerPlacement.swift`), top-most first so it reads like the
+Layers list; seven tests. UI: `PlacementInspector.exceptions`. Next only
+(`next-placement`). New probe-only playtest action `pickFirstOwnRule` and a
+walk, `Scripts/playtest/placement-exceptions-walk.json`, which produced the
+audit's screenshots.
+
+Next: nothing here is blocked. Open question in the audit — whether the list
+should also offer a way to put a piece back to following without going to it
+first. Filed while working: new layers of the same kind all get the same name,
+which makes two entries in this list read identically.

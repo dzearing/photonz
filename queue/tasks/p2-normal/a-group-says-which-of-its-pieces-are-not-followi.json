@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 830,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T13:00:26.445Z",
-  "updated": "2026-09-03T19:57:17.000Z",
+  "updated": "2026-09-03T19:57:22.357Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the placement audit 2026-09-03. The data is already there: Layer.placement is non-nil exactly on the pieces that override. PlacementInspector.contentRows is where it goes.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-03T19:57:17.000Z",
       "note": "Review after building: two pieces both named Rectangle read identically, which is the app's layer naming, filed as its own task. Hover highlight is not photographable from a walk. Nothing here touches Current: the whole Layout section sits behind next-placement."
+    },
+    {
+      "t": "2026-09-03T19:57:22.356Z",
+      "note": "The Layout section of a group or screen lists every piece inside it with a placement rule of its own, says what the rule is, and selects the piece when you click its name; a group where nobody disagrees says nothing. Core list + 7 tests in PhotonzCore, UI in PlacementInspector, verified on the probe with real captures (Scripts/playtest/placement-exceptions-walk.json). Audit: queue/audits/2026-09-03-placement-exceptions.json"
     }
   ],
-  "started": "2026-09-03T19:45:54.544Z"
+  "started": "2026-09-03T19:45:54.544Z",
+  "completed": "2026-09-03T19:57:22.357Z"
 }
