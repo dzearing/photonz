@@ -1,0 +1,30 @@
+{
+  "feature": "Rename a screen by clicking its name on the canvas",
+  "epic": "ui-building",
+  "summary": "The name above a screen is now the screen's handle: click it to pick the screen, double click it to rename it right there. Renaming no longer means hunting for its row in the Layers list.",
+  "setup": "Photonz Dev, Experiments window, release Next, frames on (next-frames). A document with no screens in it is unaffected.",
+  "try": [
+    { "do": "Press F and drag out a screen on an empty canvas." },
+    { "do": "Click somewhere empty so nothing is selected, then rest the pointer on the word Frame above the screen: it should tint blue.", "shot": "2026-09-03-frame-name-rename-1-hover.png" },
+    { "do": "Click the word once: the screen gets picked." },
+    { "do": "Double click the word, type Home, press Return.", "shot": "2026-09-03-frame-name-rename-2-field.png" },
+    { "do": "Check the Layers list: the row says Home too." },
+    { "do": "Press ⌘Z once: the old name comes back and the screen stays where it is." },
+    { "do": "Double click the name again, type something, press Escape: the name is unchanged." },
+    { "do": "Press F, drag out a second screen, click the first screen's name, then ⇧-click the second screen's name: both are selected.", "shot": "2026-09-03-frame-name-rename-3-two-screens.png" }
+  ],
+  "evaluate": [
+    "Did you find the name clickable on your own, or did the hover tint have to tell you?",
+    "A hovered name and a selected name are both the accent blue. Is that one clear idea, or does hover read as if you had already selected the screen?",
+    "The field opens hugging the old name and grows as you type. Does it feel like editing the name in place, or like a box landing on top of it?",
+    "Clicking a name picks the screen rather than only aiming at the name. Is that what you wanted, or would you rather a click on the name did nothing but arm the rename?",
+    "Would you want any other layer's name on the canvas like this, or is a screen the only thing that should wear one?"
+  ],
+  "rough": [
+    "A screen promoted to a component shows the component's name in that same spot, and that one is still not clickable: it is renamed in the Component section. Two names in the same place behaving differently is a wrinkle worth fixing.",
+    "A locked screen's name answers nothing at all, matching the way its picture cannot be clicked. That may be too strict: renaming is not editing the picture.",
+    "The hover tint only updates when the pointer moves, so right after a rename lands the name under a resting pointer is drawn plain until you twitch the mouse.",
+    "The field is deliberately a text view rather than a standard text field: a text field borrows the window's field editor, which AppKit takes back whenever the window is not key, and that made the rename impossible to drive or photograph in an unmanned walk.",
+    "Screenshots are real captures of the probe app taken by Scripts/playtest/frame-name-rename-walk.json."
+  ]
+}

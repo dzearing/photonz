@@ -2,6 +2,43 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-03 — A screen is renamed by clicking its name on the canvas (go loop)
+
+Queue task `rename-a-screen-by-clicking-its-name-on-the-canv` (epic
+`ui-building`).
+
+**The name above a frame is now the frame's handle.** Click it to pick the
+screen, double click it to rename it in place with the whole name selected,
+Return to land it as one undo step, Escape to leave it alone. ⇧-click on a name
+adds that screen to the selection, matching ⇧-click on the picture. Hovering a
+name tints it to the accent, which is the only thing on screen saying a caption
+can be clicked.
+
+**The letters are the target, not the label box.** The box is up to 240 points
+wide whatever the name is, so hit testing the box would have stolen the double
+click that zooms the window from every patch of blank canvas beside a short
+name. `FrameNameLabels` (PhotonzCore, 11 tests) owns where the name draws, what
+answers a click, and which name wins where two overlap when zoomed out.
+
+**The field is an NSTextView, not an NSTextField, and that is load bearing.** A
+text field borrows the window's field editor, and AppKit takes it back the
+moment the window is not key — which is every moment of a playtest, since the
+probe never activates. The first build opened the field and AppKit closed it a
+millisecond later; the walk could neither drive nor photograph it. A text view
+is its own responder and stays open, exactly like the canvas's other inline
+editors.
+
+**Verified on the probe**, `Scripts/playtest/frame-name-rename-walk.json`, 15
+described stages: select on click, nothing on a click beside the name, field
+opens and takes the keyboard, letters type instead of picking tools, Return
+lands the name in the canvas AND the Layers row, one undo restores it, redo
+brings it back, Escape abandons a draft, Delete clears the text rather than the
+screen, an empty commit keeps the old name, and ⇧-click adds a second screen.
+
+**Next:** the same spot on a promoted frame shows the component's name and is
+still renamed in the Component section only; no other layer type wears a name
+on the canvas.
+
 ## 2026-09-02 — Region capture dims at once, and the loupe is gone (go loop)
 
 Queue task `region-capture-drops-the-magnifier-and-dims-the` (epic

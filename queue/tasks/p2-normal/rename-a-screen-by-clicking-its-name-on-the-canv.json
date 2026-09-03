@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 690,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T03:07:25.321Z",
-  "updated": "2026-09-03T03:07:25.322Z",
+  "updated": "2026-09-03T08:38:43.139Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Frames landed 2026-09-03. The label is chrome drawn by CanvasFrames.swift (refreshFrameChrome) as a CATextLayer per frame, not a document layer, so it takes no clicks today. Hit testing for it would live beside the canvas mouseDown path; the rename field could reuse the text editor overlay pattern in CanvasView.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-03T03:07:25.322Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T08:38:43.139Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T08:41:41.992742Z",
+      "note": "Adversarial review before building. (1) The name hangs in empty canvas ABOVE the frame, and today a double click on empty canvas maximizes the window. So the clickable area must be the WIDTH OF THE TEXT, not the 240pt label box, or double clicking blank space beside a short name would rename instead of zoom. (2) Nothing on screen says the name is clickable; a hover tint is the cheapest honest affordance, and costs no new chrome. (3) With a drawing tool in hand the strip must stay drawable, so the name only answers clicks for the Select tool. (4) The label is fixed size at every zoom, so at 25% several names crowd together: hit test topmost first, the same order they draw in. (5) A frame promoted to a component shows the COMPONENT name in that spot instead, renamed from the Component section: out of scope for this slice, noted for follow up. (6) Locked frames are skipped, matching canvas hit testing, which never picks a locked layer. (7) Shortest version that delivers the value: a hit test plus a one line field. No context menu, no popover, no rename mode."
+    },
+    {
+      "t": "2026-09-03T08:59:16.598600Z",
+      "note": "Built and verified. Geometry and hit testing live in PhotonzCore (FrameNameLabels, 11 tests, written first); the chrome, hover tint and field live in CanvasFrames.swift; the press in CanvasView.mouseDown. Acceptance checked on the probe with Scripts/playtest/frame-name-rename-walk.json, 15 described stages: (1) a click on the name selects the screen and a click on blank canvas beside a short name still selects nothing; (2) a double click opens the field with the whole name selected; (3) Return lands the name as ONE undo step (undo restored the name and left the screen in place) and Escape left it as it was; (4) the Layers row showed the new name in the same frame, since both go through renameLayer. Extras that came out of the review: shift-click on a name extends the selection like shift-click on the picture, a name in a multi-selection tints too, Delete clears the draft rather than the screen, and an empty commit keeps the old name. One real surprise: the field had to be an NSTextView, not an NSTextField, because a text field borrows the window's field editor and AppKit reclaims it whenever the window is not key, which is every moment of a playtest. Full suite green (1960 tests)."
+    },
+    {
+      "t": "2026-09-03T08:59:16.598600Z",
+      "note": "Second adversarial review, on the built thing. Left as is and recorded in the audit: a promoted frame's component name in the same spot is still not clickable; a locked frame's name answers nothing; the hover tint only updates on pointer movement, so it can be stale for a moment after a rename lands."
     }
-  ]
+  ],
+  "started": "2026-09-03T08:38:43.139Z"
 }

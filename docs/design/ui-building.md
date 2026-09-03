@@ -628,10 +628,9 @@ Step A2. The first thing in this ladder a person can build a screen on.
   before frames existed is byte for byte what it was.
 
 Deliberately left: a frame does not resize or lay out what is inside it (no
-auto layout, no constraints); pasted and dropped layers do not land on a frame
-yet, only drawn ones; the name is renamed in the Layers list rather than on the
-canvas; and the frame's box has no rounded-corner preset of its own beyond the
-Effects section every layer has.
+auto layout, no constraints); and the frame's box has no rounded-corner preset
+of its own beyond the Effects section every layer has. (Pasted and dropped
+layers, and renaming on the canvas, both landed later the same day; see below.)
 
 ## Landed: make a component, find it in the Library (Next, `next-components`, 2026-09-03)
 
@@ -1050,3 +1049,47 @@ Not in this slice: shift-clicking a second layer on the canvas to add it to the
 selection (a rubber band around them, or shift-clicking rows in the layers
 list, is the way in today), aligning one layer to the frame it sits in, and
 equal-gap badges while dragging.
+
+## Landed: a screen is renamed by clicking its name (Next, `next-frames`, 2026-09-03)
+
+The name above a frame's top left corner used to be a caption: the only way to
+change it was to find the frame's row in the Layers list and double click
+there. It is now the frame's handle.
+
+- **Click the name, pick the screen. Double click it, type a new one.** The
+  field opens exactly where the name is drawn, with the whole name selected, so
+  renaming a screen is a double click and a word. Return lands it as ONE undo
+  step, Escape leaves the frame as it was, and a click anywhere else lands it
+  the way a rename field does everywhere on the Mac. An empty name is no name:
+  the frame keeps the one it had.
+- **The letters are the target, not the box.** The name draws in a box up to
+  240 points wide whatever the name is, and a click on the empty part of that
+  box still means what it always meant on bare canvas — including the double
+  click that zooms the window. Only the letters plus a few points of slop
+  answer, which is `FrameNameLabels` in `PhotonzCore` (tested): it owns where
+  the name draws, what answers a click, and which name wins where two overlap
+  at a zoomed-out size.
+- **Hovering a name tints it to the accent.** Nothing else says a caption can
+  be clicked, and this is the whole invitation. A selected screen's name is
+  already tinted, so hover and selection read as one state: this name is live.
+- **⇧-click on a name adds that screen to the selection**, the same gesture
+  ⇧-click on the picture runs, so picking two screens to align is two clicks on
+  their names.
+- **Only the Select tool.** With a drawing tool in hand that strip is still
+  canvas you can draw on. A locked frame's name answers nothing, the same way
+  its picture does not.
+- **One name in one place.** The canvas name and the Layers row are the same
+  layer name through `renameLayer`, so they cannot disagree.
+
+**Where it lives.** `FrameNameLabels` and `FrameNameLabel` in `PhotonzCore`
+(geometry and hit testing, tested); `CanvasFrames.swift` in the app (the
+chrome, the hover tint, the field); the press itself in `CanvasView.mouseDown`.
+The field is an `NSTextView` rather than an `NSTextField` on purpose: a text
+field borrows the window's field editor and AppKit takes it back the moment the
+window is not key, which is every moment of an unmanned playtest, so the rename
+could be neither driven nor photographed. Walked by
+`Scripts/playtest/frame-name-rename-walk.json`.
+
+Not in this slice: a component's name in that same spot (a promoted frame shows
+the component mark and is renamed in the Component section), and renaming any
+other layer by clicking it on the canvas — only frames wear a name there.

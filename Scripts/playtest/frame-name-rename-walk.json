@@ -1,0 +1,368 @@
+{
+  "out": "/tmp/photonz-playtest/frame-name-rename",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 620,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        160
+      ],
+      "to": [
+        560,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        780,
+        570
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "1-frame-made",
+      "note": "a screen called Frame, nothing selected. Zoom is 1, so the name sits between y 142 and y 156"
+    },
+    {
+      "do": "move",
+      "at": [
+        186,
+        149
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "2-hover-name",
+      "note": "the pointer resting on the name: it should tint to the accent"
+    },
+    {
+      "do": "snapshot",
+      "name": "rename-1-hover"
+    },
+    {
+      "do": "click",
+      "at": [
+        330,
+        149
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "3-click-beside-name",
+      "note": "blank canvas beside a five letter name is still blank canvas: nothing gets selected"
+    },
+    {
+      "do": "click",
+      "at": [
+        186,
+        149
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "4-click-name",
+      "note": "a click on the name picks the screen"
+    },
+    {
+      "do": "click",
+      "at": [
+        186,
+        149
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-field-open",
+      "note": "a double click opens the name for typing: the field editor has the keyboard"
+    },
+    {
+      "do": "snapshot",
+      "name": "rename-2-field"
+    },
+    {
+      "do": "key",
+      "key": "h"
+    },
+    {
+      "do": "key",
+      "key": "o"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "key",
+      "key": "e"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "6-typed",
+      "note": "the letters type instead of picking tools: the tool is still select"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "7-landed",
+      "note": "Return lands the name and hands the keyboard back to the picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "rename-3-renamed"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "8-undone",
+      "note": "one undo puts the old name back and leaves the screen where it is"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "9-redone",
+      "note": "redo brings the new name back"
+    },
+    {
+      "do": "click",
+      "at": [
+        186,
+        149
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "z"
+    },
+    {
+      "do": "key",
+      "key": "z"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "10-escaped",
+      "note": "Escape abandons the draft: the name is unchanged and nothing reached history"
+    },
+    {
+      "do": "snapshot",
+      "name": "rename-4-escaped"
+    },
+    {
+      "do": "click",
+      "at": [
+        780,
+        570
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        186,
+        149
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "11-open-from-cold",
+      "note": "double clicking the name of a screen that was not selected opens the field AND picks the screen"
+    },
+    {
+      "do": "snapshot",
+      "name": "rename-5-field-hugged"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "12-closed"
+    },
+    {
+      "do": "click",
+      "at": [
+        186,
+        149
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "13-cleared",
+      "note": "Delete clears the name being typed rather than deleting the screen"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "14-empty-commit",
+      "note": "an empty name is no name: the screen keeps the one it had"
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        620,
+        160
+      ],
+      "to": [
+        860,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        186,
+        149
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        626,
+        149
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "15-shift-click-name",
+      "note": "shift clicking a second screen's name adds it to the selection, the way shift clicking the picture does"
+    },
+    {
+      "do": "snapshot",
+      "name": "rename-6-two-screens"
+    }
+  ]
+}

@@ -101,6 +101,8 @@ struct CanvasView: NSViewRepresentable {
     /// the group it picked it inside.
     let onSelectLayerInGroup: (UUID?, UUID?) -> Void
     let onExtendSelection: (UUID) -> Void
+    /// A name typed on the canvas: the layer and what it is now called.
+    let onRenameLayer: (UUID, String) -> Void
     /// Escape while inside a group: step out one level, leaving that group
     /// selected. Returns false at the top level, where Escape means what it
     /// always meant.
@@ -199,6 +201,7 @@ struct CanvasView: NSViewRepresentable {
         view.onSelectLayer = onSelectLayer
         view.onSelectLayerInGroup = onSelectLayerInGroup
         view.onExtendSelection = onExtendSelection
+        view.onRenameLayer = onRenameLayer
         view.onClickedNothing = onClickedNothing
         view.onExitGroup = onExitGroup
         view.onDragBegin = onDragBegin
@@ -261,6 +264,7 @@ final class CanvasNSView: NSView {
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
     var onSelectLayerInGroup: ((UUID?, UUID?) -> Void) = { _, _ in }
     var onExtendSelection: ((UUID) -> Void) = { _ in }
+    var onRenameLayer: ((UUID, String) -> Void) = { _, _ in }
     var onClickedNothing: (() -> Void) = {}
     var onExitGroup: (() -> Bool) = { false }
     var onDragBegin: ((UUID) -> Void) = { _ in }
@@ -446,7 +450,8 @@ final class CanvasNSView: NSView {
     /// The group the pointer is inside, echoed from EditorState (`CanvasGroups.swift`).
     private(set) var groupContext: UUID?
     /// The marquee's multi-selection, echoed from EditorState (committed).
-    private var multiSelectedLayerIDs: Set<UUID> = []
+    /// Read by the frame chrome too, so every picked screen's name tints.
+    private(set) var multiSelectedLayerIDs: Set<UUID> = []
     /// Pre-rendered drag preview from EditorState; arrives async after drag start
     /// and outlives the drag until the post-commit render lands.
     private var dragPreview: DragPreview?
@@ -654,6 +659,16 @@ final class CanvasNSView: NSView {
     /// The style `textEditor` was last configured with (string empty), so
     /// font-picker changes mid-edit restyle the draft exactly once.
     private var textEditorContent: TextContent?
+
+    /// The frame whose name is open for typing on the canvas, and the field
+    /// doing the typing. A frame's name is chrome rather than a text layer, so
+    /// it gets a plain one-line field of its own instead of the inline editor
+    /// above. See `CanvasFrames.swift`.
+    var frameRenameID: UUID?
+    var frameNameField: FrameNameFieldView?
+    /// The frame name under the pointer. It tints, which is the only thing
+    /// telling anyone the name can be clicked at all.
+    var hoveredFrameLabelID: UUID?
 
     /// In-progress layer move.
     private struct MoveDrag {
@@ -1038,11 +1053,13 @@ final class CanvasNSView: NSView {
 
     override func mouseMoved(with event: NSEvent) {
         handleMeasureHover(event)
+        refreshFrameLabelHover(at: convert(event.locationInWindow, from: nil))
         refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
     }
 
     override func mouseExited(with event: NSEvent) {
         hoverPoint = nil
+        refreshFrameLabelHover(at: nil)
         applyGrabCursor(nil)
         if tool == .measure { refreshMeasureCreation(modifierFlags: event.modifierFlags) }
     }
@@ -1103,6 +1120,13 @@ final class CanvasNSView: NSView {
         // The one exception is the fresh arrow's caption field: the Arrow tool
         // stayed in hand while it is open, so this press commits the draft AND
         // starts the next arrow (a plain click hands back to Select on mouse-up).
+        // A press anywhere else on the canvas lands the name being typed above a
+        // frame, and is swallowed: committing never doubles as starting
+        // something else. (A press INSIDE the field never reaches here.)
+        if frameNameField != nil {
+            commitFrameRename()
+            return
+        }
         if let session = textSession {
             if session.captionStyle != nil,
                ArrowCaptionEntry.pressOutsideField(tool: tool) == .commitAndDraw {
@@ -1114,7 +1138,29 @@ final class CanvasNSView: NSView {
             }
         }
         window?.makeFirstResponder(self)
-        let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
+        let viewPoint = convert(event.locationInWindow, from: nil)
+        let p = viewport.documentPoint(fromView: viewPoint)
+        // The name above a frame is a handle on that frame: click it to pick
+        // the frame, double click it to rename it where it sits. It is chrome,
+        // the same size at every zoom, so it is resolved in view space and
+        // before anything document-shaped runs — including the double click on
+        // bare canvas that zooms the window, which is what this strip does
+        // everywhere the letters are not.
+        if tool == .select, let named = frameLabelHit(at: viewPoint) {
+            if event.clickCount == 2 {
+                beginFrameRename(named)
+            } else if event.modifierFlags.contains(.shift) {
+                // ⇧-click on a name does what ⇧-click on the picture does: adds
+                // that screen to the selection, or drops it when it is in.
+                onExtendSelection(named)
+                refreshOverlays()
+            } else {
+                selectedLayerFrame = document?.canvasLayer(id: named)?.frame
+                onSelectLayerInGroup(named, document?.parentID(of: named))
+                refreshOverlays()
+            }
+            return
+        }
         // Double-click the window background — the matte OR the locked base image,
         // i.e. anywhere that isn't an editable layer — performs the standard
         // window zoom. `.hiddenTitleBar` leaves no real title bar to double-click,
@@ -3413,6 +3459,11 @@ final class CanvasNSView: NSView {
 
 extension CanvasNSView: NSTextViewDelegate {
     func textDidChange(_ notification: Notification) {
+        // A frame's name field grows with the name being typed.
+        if notification.object as AnyObject? === frameNameField {
+            layoutFrameNameField()
+            return
+        }
         layoutTextEditor()
     }
 
@@ -3424,11 +3475,20 @@ extension CanvasNSView: NSTextViewDelegate {
     /// `makeFirstResponder`. Text-tool sessions are exempt on purpose: the font
     /// picker takes focus mid-edit and the block must stay open through it.
     func textDidEndEditing(_ notification: Notification) {
+        // A frame's name field losing the keyboard any other way — a click into
+        // the Layers list, another window — lands the name rather than dropping
+        // it, which is what a rename field does everywhere else on the Mac.
+        if notification.object as AnyObject? === frameNameField {
+            DispatchQueue.main.async { [weak self] in self?.commitFrameRename() }
+            return
+        }
         guard textSession?.captionStyle != nil else { return }
         DispatchQueue.main.async { [weak self] in self?.commitTextSession() }
     }
 
     func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        // A frame's name field answers Return and Escape itself.
+        if textView === frameNameField { return false }
         // Esc abandons the draft (a re-edited layer reappears unchanged).
         // NSTextView routes Esc to completion in some states, so catch both.
         if commandSelector == #selector(NSResponder.cancelOperation(_:))

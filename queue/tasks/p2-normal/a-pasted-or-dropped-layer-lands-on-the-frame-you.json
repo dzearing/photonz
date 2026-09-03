@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 680,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T03:07:18.179Z",
-  "updated": "2026-09-03T08:37:46.336916Z",
+  "updated": "2026-09-03T08:38:11.018Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Frames landed 2026-09-03. PhotonzCore already has PhotonzDocument.addLayerDrawnOnFrame / addLayerOnFrame (Frames.swift), used by the annotation, text and zoom-callout creation paths in EditorState. The paste paths (pasteLayer, pasteImage) and the image-drop path still call addLayer directly. Paste has no pointer, so decide the anchor: the paste offset position is what addLayerOnFrame tests.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-03T08:37:46.336916Z",
       "note": "follow-up filed: a dropped file is still named Pasted Image rather than after the file."
+    },
+    {
+      "t": "2026-09-03T08:38:11.017Z",
+      "note": "Paste (⌘V) and Finder drops now join the frame under them: copy travels in canvas coordinates, both paths go through addLayerDrawnOnFrame, a dropped picture is fitted to the frame and nudged wholly inside, and a copied frame is never swallowed. Core is TDD (11 new tests in ClipboardTests, 1949 green); verified in the probe app with Scripts/playtest/paste-onto-frame-walk.json. Audit: queue/audits/2026-09-03-paste-onto-frame.json"
     }
   ],
-  "started": "2026-09-03T08:24:16.161Z"
+  "started": "2026-09-03T08:24:16.161Z",
+  "completed": "2026-09-03T08:38:11.018Z"
 }
