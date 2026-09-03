@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.171Z",
-  "updated": "2026-09-03T00:08:21.429Z",
+  "updated": "2026-09-03T02:31:51.919Z",
   "deps": [
     "group-and-ungroup-what-you-selected"
   ],
@@ -30,6 +30,31 @@
     {
       "t": "2026-09-03T00:08:21.428Z",
       "note": "seq 70 -> 70"
+    },
+    {
+      "t": "2026-09-03T02:10:51.961Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T02:14:05.711Z",
+      "note": "Adversarial review before building. (1) The mock/task says a drop line tells you which of the two will happen. Today the panel has NO drop indicator at all: you drag a row onto another row and it reorders on release with nothing shown first. So the indicator is the real work, not the tree. Three zones on a row: top strip inserts above, bottom strip inserts below, middle of a GROUP row drops inside. (2) An OPEN group row has a trap: the slot visually under it is already its topmost child, so a bottom strip that means sibling-after-the-group would put the layer somewhere the eye did not point. An open group therefore offers only above and inside; to land a sibling after it you drop above the row that follows its children. (3) Which list does a line join? Rule: a line above or below a row always means become that rows sibling, drawn at that rows indent. That is the whole of taking a layer out of a group: drop it against a top level row. No horizontal pointer aiming, no second gesture. (4) Cut from the mock reading: no separate out of group affordance, no context menu row, no drop into a collapsed groups children at a chosen index. (5) Locked layers: restackLayers and groupLayers already refuse to move a locked layer, but the panels drag path does not, so today you can drag the locked Background around. Dropping it into a group would be a nasty accident. Making the drop skip locked layers is the panel agreeing with the Layer menu. (6) Open state is UI state, so it lives in EditorState per window, not in the document; it survives selection, undo and redo but not relaunch, because persisting it means writing interface state into the file."
+    },
+    {
+      "t": "2026-09-03T02:14:05.712Z",
+      "note": "Plan: PhotonzCore gets LayerPanelTree.swift (pure, tested): panelRows(expanded:) flattening the tree top-down with depth and child counts, LayerDropZone geometry from the pointers y in a row, and dropLayers(ids:_:) doing the move as one mutation with each layers frame rewritten into its new parents space so nothing jumps. LayersPanel.swift renders rows from that, EditorState holds expandedGroupIDs and reveals a selections ancestors so the canvas and the list agree."
+    },
+    {
+      "t": "2026-09-03T02:31:51.919Z",
+      "note": "Built. PhotonzCore/LayerPanelTree.swift is the whole decision, pure and tested (31 new tests): panelRows(expanded:) flattens the tree top down with depth and child counts, ancestorIDs(of:) says what must open to reveal a layer, LayerDropZone.forPointer reads the pointer in a row, dropProposal turns that into a landing, and dropLayers moves a whole set in one mutation with each frame rewritten into its new parents space. App: a chevron on group rows (column only appears once a group exists, so Current and a plain screenshot are untouched), a count on shut ones, 14pt of indent per level, an accent line at the target rows indent for above/below and an outline around a group row for inside. EditorState holds expandedGroupIDs (interface state, not document state), reveals a selections ancestors on every selection change, opens a group a drop landed in, and selects what the drop moved."
+    },
+    {
+      "t": "2026-09-03T02:31:51.919Z",
+      "note": "Verified on the probe with the new Scripts/playtest/layers-tree-walk.json, Screen Recording granted so these are real screenshots. Command G makes a shut Group row carrying the count 2 next to a loose Rectangle and Background; a double click into the group on the canvas opens that group in the list and highlights the piece inside it, which is acceptance 3 on the real app. Drop indicators: the harness drives the canvas and cannot synthesise a panel drag, so all three were forced on at once in a one-off build and photographed, then the build reverted. The line under a child row starts at the child indent and the line under a top level row does not, which is the claim that a line names the list you are joining. Said plainly in the audits rough."
+    },
+    {
+      "t": "2026-09-03T02:31:51.919Z",
+      "note": "Review of the built thing. Changed away from the plan: a drop now selects what it moved, because dragging a row that was not selected used to leave the inspector talking about something else. Left rough and filed: open state does not survive a relaunch (opening-and-closing-a-group-in-the-layers-list-s, p3, wants a decision card first). Left deliberately: no keyboard way to open a group, no open all, no horizontal aiming in a drop line. Scripts/test.sh green at 1661."
     }
-  ]
+  ],
+  "started": "2026-09-03T02:10:51.961Z"
 }

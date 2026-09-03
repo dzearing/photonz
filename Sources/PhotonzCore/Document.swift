@@ -184,7 +184,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     }
 
     /// Edits the CHILDREN of the group at `path`.
-    private mutating func withChildren(atPath path: [Int], _ mutate: (inout [Layer]) -> Void) {
+    mutating func withChildren(atPath path: [Int], _ mutate: (inout [Layer]) -> Void) {
         func descend(_ list: inout [Layer], _ path: ArraySlice<Int>) {
             guard let index = path.first, list.indices.contains(index) else { return }
             let rest = path.dropFirst()

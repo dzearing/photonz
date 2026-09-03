@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/layers-tree-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [240, 240], "to": [900, 640] },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [300, 780] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "waitFor", "condition": "tool", "value": "rectangle" },
+    { "do": "drag", "from": [1080, 200], "to": [1340, 380] },
+    { "do": "tool", "tool": "select" },
+    { "do": "describe", "stage": "1-drawn", "note": "three loose layers: a card rectangle, its label, and a note off to the right" },
+    { "do": "snapshot", "name": "layers-1-flat" },
+
+    { "do": "drag", "from": [140, 140], "to": [1000, 900] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-grouped", "note": "the layers list should show one shut Group row carrying the count 2, plus the note" },
+    { "do": "snapshot", "name": "layers-2-group-shut" },
+
+    { "do": "click", "at": [500, 400], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-inside", "note": "double click went inside the group on the canvas: the list should have opened that group and highlighted the piece inside it" },
+    { "do": "snapshot", "name": "layers-3-open-and-selected" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-out", "note": "escape came back out with the group selected; the group stays open because opening it is not an edit" },
+    { "do": "snapshot", "name": "layers-4-out" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-undone", "note": "undo takes the group apart again and the list is flat" },
+    { "do": "snapshot", "name": "layers-5-undone" }
+  ]
+}

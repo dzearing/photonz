@@ -236,6 +236,10 @@ extension Experiments {
     /// did. The model and the renderer are never flagged: a document that
     /// already holds groups opens and draws correctly either way.
     var layerGroupsEnabled: Bool { isEnabled(FeatureCatalog.layerGroupsFlag) }
+    /// The same flag, read by the layers list: whether a group row offers a
+    /// twist-open control and can swallow what you drag onto it. Off, the list
+    /// is the flat one it always was.
+    var layersListShowsGroups: Bool { layerGroupsEnabled }
 
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in

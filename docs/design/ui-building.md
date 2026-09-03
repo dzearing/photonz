@@ -437,6 +437,54 @@ H, which no one can reach until the Layers list learns to show groups. A group
 never scales or rotates what it holds, so a transform or a crop on a group is
 ignored rather than applied.
 
+### The layers list shows what is inside a group (landed 2026-09-03)
+
+Step 1's fourth task, and the first one anybody can see. A group stopped being a
+row with something hidden behind it.
+
+- **A group row opens.** A chevron before the thumbnail twists the group open,
+  and its contents draw indented 14 pt under it, one level per group. The
+  column the chevron sits in appears only once the document HOLDS a group, so a
+  screenshot with three annotations on it is the list it always was.
+- **A shut group says how much it is hiding**, as a quiet count on the right of
+  its row, in the same weight the Canvas row uses for its dimensions.
+- **Open is interface state, not document state.** It lives on the window, so
+  opening a group is not an edit, costs no undo step, and never touches the
+  file. It survives selection, undo and redo, and it does not survive a
+  relaunch.
+- **The list follows the canvas.** Any change of selection opens the groups
+  above the newly selected layer, so double clicking into a group on the canvas
+  opens that group in the list with the piece inside it highlighted. The two
+  never disagree about what is selected.
+- **A drag says what it is about to do before you let go.** Each row has three
+  zones: the top strip puts what you are carrying in front of that row, the
+  bottom strip behind it, and the middle of a group row puts it inside. Above
+  and below always mean *become that row's sibling*, and the line is drawn at
+  that row's indent, so the line itself names the list you are joining. Dropping
+  against a row that sits loose on the canvas is the whole of taking a layer out
+  of a group.
+- **An open group row has no "below".** The slot under it already belongs to its
+  own topmost child, so aiming there would land the layer somewhere the eye
+  never pointed. Its bottom strip means inside. To place a sibling after an open
+  group, drop above the row that follows its contents.
+- **Dropping into a group opens it**, and what you dragged becomes the
+  selection, so the inspector talks about the layer you just acted on.
+- **A drag carries the whole selection** when the row you grabbed is part of it,
+  the way Delete and Duplicate already do, and the rows keep their relative
+  stacking.
+- **Locked layers stay put.** `restackLayers` and `groupLayers` already refuse to
+  move one; the panel's drag used not to, so the locked Background could be
+  shoved into a group. It now agrees with the Layer menu.
+- **Nothing jumps.** Every dropped layer's position is rewritten into its new
+  parent's space, and a drop that would change nothing is refused, so a wasted
+  drag costs no undo step.
+- The decision lives in `PhotonzCore` (`LayerPanelTree.swift`: `panelRows`,
+  `LayerDropZone.forPointer`, `dropProposal`, `dropLayers`), so what a pointer
+  over a row means is tested rather than buried in a view.
+
+Deliberately left: no keyboard way to open a group, no open-all, and no
+horizontal aiming inside a drop line to choose a level.
+
 ## Questions the user decides, not the loop
 
 Each of these becomes a decision card when the step that needs it is claimed.

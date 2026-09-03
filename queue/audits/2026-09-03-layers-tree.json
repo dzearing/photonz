@@ -1,0 +1,30 @@
+{
+  "feature": "The layers list shows what is inside a group",
+  "epic": "ui-components",
+  "summary": "A group in the layers list is now a row you can twist open, with its contents indented under it, and you can drag a layer into a group or back out with a line that tells you which is about to happen.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag \"Group what you selected\" (next-layer-groups), on by default. Nothing appears in Current.",
+  "try": [
+    { "do": "Draw a rectangle, then a line of text on top of it, then a second rectangle off to one side." },
+    { "do": "Marquee around the first rectangle and the text, then press Command G.", "shot": "2026-09-03-layers-tree-shut.png" },
+    { "do": "Look at the Group row: it has a chevron and the number 2 on its right." },
+    { "do": "Click the chevron. The two pieces appear indented under it." },
+    { "do": "Drag the second rectangle onto the middle of the Group row and hold still before releasing.", "shot": "2026-09-03-layers-tree-droplines.png" },
+    { "do": "Release. It lands inside the group and stays exactly where it was on the canvas." },
+    { "do": "Drag it back out: aim at the top edge of the Background row until a line appears there, then release." },
+    { "do": "Press Command Z. Then double click that rectangle on the canvas and watch the list.", "shot": "2026-09-03-layers-tree-open.png" }
+  ],
+  "evaluate": [
+    "When you hover over the middle of a group row, is it obvious that letting go puts the layer inside rather than next to it?",
+    "Is the outline around a group row the right way to say \"this one swallows it\", or would you rather see a line indented one step?",
+    "The count on a shut group row is a bare number. Does it read as a count, or does it need a word or an icon?",
+    "Taking a layer out of a group means dropping it against a row that sits loose on the canvas. Did you find that, or did you look for something else?",
+    "A group starts shut when you make it with Command G. Would you rather it opened straight away?"
+  ],
+  "rough": [
+    "The drop indicators could not be photographed by a normal walk: the playtest harness drives the canvas, not the inspector, and it cannot synthesise a panel drag. The drop line picture in step 5 is a real screenshot of the real indicators, but from a one-off build that forced all three on at once so they could be seen together, not from a live drag. Everything the pointer decides (which zone, whether the drop is allowed, where the layer lands) is covered by 31 tests in PhotonzCore; the drag gesture itself is the one link a person has to judge.",
+    "Open or shut is remembered for as long as the window is open, and forgotten when you quit. Remembering it across launches means writing interface state into the document, which is a bigger decision than this task.",
+    "There is no keyboard way to open a group, and no open-all or close-all.",
+    "The panel's drag used to move the locked Background around; it no longer does, so it agrees with Bring Forward and with Command G, both of which have always refused to move a locked layer.",
+    "Every row shifts right by 20 pt the moment the document holds its first group, because that is when the chevron column appears. It animates, but it is a visible jump."
+  ]
+}

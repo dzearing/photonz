@@ -142,6 +142,10 @@ final class EditorState {
                 // a new layer).
                 rowSelection = ListSelection(selected: selectedLayerID.map { [$0] } ?? [],
                                              anchor: selectedLayerID)
+                // The list agrees with the canvas: double clicking into a
+                // group on the canvas opens the groups above it in the panel,
+                // so the row that is selected is a row you can see.
+                if let selectedLayerID { revealInLayersList(selectedLayerID) }
             }
             // Selecting anything (or explicitly deselecting) drops the Canvas
             // pseudo-selection; selectCanvas() re-raises the flag afterwards.
@@ -156,7 +160,11 @@ final class EditorState {
     /// state, not derived from the selection rect — so panel operations like
     /// hiding a member (which would make it fail a rect containment check)
     /// don't silently drop it from the selection.
-    private(set) var multiSelectedLayerIDs: Set<UUID> = []
+    private(set) var multiSelectedLayerIDs: Set<UUID> = [] {
+        didSet {
+            for id in multiSelectedLayerIDs where !oldValue.contains(id) { revealInLayersList(id) }
+        }
+    }
     /// Row-click bookkeeping for the Layers and Measurements lists: the anchor
     /// a shift-click ranges from and the rows the last shift-click swept in.
     /// The selection itself lives in `selectedLayerID` /
@@ -2676,6 +2684,68 @@ final class EditorState {
     /// Layers in panel order (visual index 0 = topmost).
     var panelLayers: [Layer] {
         (document?.layers ?? []).reversed()
+    }
+
+    /// The groups whose contents are showing in the layers list. Interface
+    /// state, not document state: opening a group is not an edit, so it never
+    /// touches the file or the undo stack, and it survives selection changes,
+    /// undo and redo for as long as the window is open.
+    private(set) var expandedGroupIDs: Set<UUID> = []
+
+    /// The rows the layers list draws, top down, with an open group's contents
+    /// indented under it. With the groups flag off every group stays shut, so
+    /// the list is the flat one it has always been.
+    var panelRows: [LayerPanelRow] {
+        document?.panelRows(expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [])
+            ?? []
+    }
+
+    /// The twist-open control on a group row.
+    func toggleGroupExpanded(id: UUID) {
+        if expandedGroupIDs.contains(id) { expandedGroupIDs.remove(id) } else { expandedGroupIDs.insert(id) }
+    }
+
+    /// Opens every group above a layer, so its row is on screen. Called
+    /// whenever the selection changes, which is what keeps the canvas and the
+    /// list saying the same thing.
+    private func revealInLayersList(_ id: UUID) {
+        guard let document else { return }
+        let ancestors = document.ancestorIDs(of: id)
+        guard !ancestors.isEmpty else { return }
+        expandedGroupIDs.formUnion(ancestors)
+    }
+
+    /// Whether a drag carrying `ids` can land here — what decides between a
+    /// drop line and the no-entry cursor.
+    func canDropRows(ids: Set<UUID>, _ drop: LayerDrop) -> Bool {
+        guard let document else { return false }
+        if case .inside = drop, !Experiments.shared.layerGroupsEnabled { return false }
+        return document.canDrop(ids: ids, drop)
+    }
+
+    /// Where a drag hovering over a row would land, which is what the drop
+    /// line draws. Nil means nothing can land here.
+    func dropProposal(carrying ids: Set<UUID>, over row: LayerPanelRow,
+                      pointerY: CGFloat, rowHeight: CGFloat) -> LayerDrop? {
+        document?.dropProposal(carrying: ids, over: row, pointerY: pointerY, rowHeight: rowHeight,
+                               allowsInside: Experiments.shared.layerGroupsEnabled)
+    }
+
+    /// A finished drag in the layers list: one undo step, and the layers keep
+    /// their place on the canvas.
+    func dropRows(ids: Set<UUID>, _ drop: LayerDrop) {
+        guard canDropRows(ids: ids, drop) else { return }
+        discardDragPreview()
+        var landed = false
+        perform { landed = $0.dropLayers(ids: ids, drop) }
+        guard landed else { return }
+        // Dropping into a group opens it, so you can see where what you were
+        // carrying went.
+        if case .inside(let groupID) = drop { expandedGroupIDs.insert(groupID) }
+        // What you just dragged is what you are now holding, so the inspector
+        // and the canvas talk about the layer you acted on rather than
+        // whatever happened to be selected before the drag.
+        selectLayers(ids)
     }
 
     /// The selected layer's style, preview-aware so inspector sliders don't

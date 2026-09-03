@@ -295,24 +295,58 @@ private struct LayersContentHeightKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
-/// Reorders layers when a dragged row is dropped on another. The move is one
-/// document mutation (undo step) applied on drop, using the same visual-index
-/// convention as the old `List.onMove`.
+/// Measured height of a layers-panel row, so a drop can tell the top of a row
+/// from its middle. Every row is the same height, so one value serves them all.
+private struct LayerRowHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 38
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
+/// Where a dragged row would land, and what the drop line under the pointer is
+/// promising. Three zones per row: the top strip puts the layers in front of
+/// this one, the bottom strip behind it, and the middle of a group row puts
+/// them inside it. An OPEN group has no bottom strip, because the slot under
+/// its row already belongs to its own topmost child.
+///
+/// A drop is one document mutation, so a drag is one undo step, and every
+/// layer keeps its place on the canvas.
 private struct LayerRowDropDelegate: DropDelegate {
-    let target: UUID
+    let row: LayerPanelRow
     @Binding var dragging: UUID?
+    @Binding var target: LayerDrop?
+    let rowHeight: CGFloat
     let editorState: EditorState
 
-    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
+    /// What the drag is carrying: the whole selection when the row you picked
+    /// up is part of it (the way Delete and Duplicate already work), else just
+    /// that row.
+    private var carried: Set<UUID> {
+        guard let dragging else { return [] }
+        return PhotonzDocument.rowsCarried(byDragging: dragging,
+                                           selection: editorState.actionableLayerIDs)
+    }
+
+    private func proposal(_ info: DropInfo) -> LayerDrop? {
+        editorState.dropProposal(carrying: carried, over: row,
+                                 pointerY: info.location.y, rowHeight: rowHeight)
+    }
+
+    func dropEntered(info: DropInfo) { target = proposal(info) }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        let proposed = proposal(info)
+        if target != proposed { target = proposed }
+        return DropProposal(operation: proposed == nil ? .forbidden : .move)
+    }
+
+    func dropExited(info: DropInfo) {
+        if target?.targetID == row.id { target = nil }
+    }
 
     func performDrop(info: DropInfo) -> Bool {
-        defer { dragging = nil }
-        let layers = editorState.panelLayers
-        guard let dragging, dragging != target,
-              let from = layers.firstIndex(where: { $0.id == dragging }),
-              let to = layers.firstIndex(where: { $0.id == target }) else { return false }
-        editorState.moveLayers(visualSources: IndexSet(integer: from),
-                               visualDestination: to > from ? to + 1 : to)
+        defer { dragging = nil; target = nil }
+        guard let drop = proposal(info) else { return false }
+        editorState.dropRows(ids: carried, drop)
         return true
     }
 }
@@ -413,6 +447,10 @@ struct LayersListView: View {
     @State private var renamingLayerID: UUID?
     @State private var renameText = ""
     @State private var draggingLayerID: UUID?
+    /// Where the drag under the pointer would land, so the drop line can say
+    /// which of "inside this group" and "next to it" is about to happen.
+    @State private var dropTarget: LayerDrop?
+    @State private var rowHeight: CGFloat = 38
     @FocusState private var renameFieldFocused: Bool
 
     /// The layer area's max height (user-resizable, persisted). Beyond this the
@@ -468,15 +506,23 @@ struct LayersListView: View {
     }
 
     private var rows: some View {
-        VStack(spacing: 2) {
-            ForEach(editorState.panelLayers) { layer in
-                row(layer)
-                    .onDrag {
-                        draggingLayerID = layer.id
-                        return NSItemProvider(object: layer.id.uuidString as NSString)
-                    }
-                    .onDrop(of: [.text], delegate: LayerRowDropDelegate(
-                        target: layer.id, dragging: $draggingLayerID, editorState: editorState))
+        let panelRows = editorState.panelRows
+        // The twist column appears only once there is something to twist open,
+        // so a document with no groups is the list it always was.
+        let showsTwist = Experiments.shared.layersListShowsGroups && panelRows.contains(where: \.isGroup)
+        return VStack(spacing: 2) {
+            ForEach(panelRows) { panelRow in
+                if let layer = editorState.document?.layer(id: panelRow.id) {
+                    row(panelRow, layer, showsTwist: showsTwist)
+                        .onDrag {
+                            draggingLayerID = panelRow.id
+                            dropTarget = nil
+                            return NSItemProvider(object: panelRow.id.uuidString as NSString)
+                        }
+                        .onDrop(of: [.text], delegate: LayerRowDropDelegate(
+                            row: panelRow, dragging: $draggingLayerID, target: $dropTarget,
+                            rowHeight: rowHeight, editorState: editorState))
+                }
             }
             // The Canvas pseudo-layer: pinned at the very bottom (beneath the
             // Background it frames). Not a real layer — no eye/lock/delete/
@@ -485,8 +531,10 @@ struct LayersListView: View {
         }
         .padding(.horizontal, 8)
         .padding(.bottom, 2)
-        // Rows slide/fade on add, delete, duplicate, and reorder.
-        .animation(.spring(duration: 0.25), value: editorState.panelLayers.map(\.id))
+        .onPreferenceChange(LayerRowHeightKey.self) { rowHeight = max(1, $0) }
+        // Rows slide/fade on add, delete, duplicate, reorder, and on a group
+        // opening or closing.
+        .animation(.spring(duration: 0.25), value: panelRows)
     }
 
     /// A grabber under the list — drag to resize the layer area's max height.
@@ -555,9 +603,38 @@ struct LayersListView: View {
         .help("Select to resize the canvas by its edges")
     }
 
-    private func row(_ layer: Layer) -> some View {
+    /// The twist-open control, in a fixed slot so every row's thumbnail lines
+    /// up whether or not the row is a group. The column exists only once the
+    /// document HOLDS a group, so a screenshot with a few annotations on it
+    /// reads exactly as it always has.
+    @ViewBuilder
+    private func twistControl(_ row: LayerPanelRow) -> some View {
+        if row.isGroup {
+            Image(systemName: "chevron.right")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .rotationEffect(.degrees(row.isExpanded ? 90 : 0))
+                .frame(width: 12, height: 12)
+                .contentShape(Rectangle())
+                // High priority so the twist wins over the row's own tap: a
+                // click on the chevron opens the group, it does not also
+                // reselect the row under the pointer.
+                .highPriorityGesture(TapGesture().onEnded {
+                    withAnimation(.spring(duration: 0.2)) {
+                        editorState.toggleGroupExpanded(id: row.id)
+                    }
+                })
+                .help(row.isExpanded ? "Hide what is inside" : "Show what is inside")
+        } else {
+            Color.clear.frame(width: 12, height: 12)
+        }
+    }
+
+    private func row(_ panelRow: LayerPanelRow, _ layer: Layer, showsTwist: Bool) -> some View {
         let isSelected = editorState.isLayerSelected(layer.id)
+        let indent = CGFloat(panelRow.depth) * 14
         return HStack(spacing: 8) {
+            if showsTwist { twistControl(panelRow) }
             thumbnail(layer)
             if renamingLayerID == layer.id {
                 TextField("Layer name", text: $renameText)
@@ -576,6 +653,15 @@ struct LayersListView: View {
                     .onTapGesture(count: 2) { beginRename(layer) }
             }
             Spacer(minLength: 4)
+            // A shut group says how much it is hiding, so the row is not a
+            // dead end you have to open to understand.
+            if panelRow.isGroup, !panelRow.isExpanded, showsTwist {
+                Text("\(panelRow.childCount)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .monospacedDigit()
+                    .help(panelRow.childCount == 1 ? "1 layer inside" : "\(panelRow.childCount) layers inside")
+            }
             Button {
                 editorState.toggleLayerLock(id: layer.id)
             } label: {
@@ -596,9 +682,24 @@ struct LayersListView: View {
         .buttonStyle(.borderless)
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
+        .padding(.leading, indent)
         .background {
             if isSelected {
                 RoundedRectangle(cornerRadius: 8).fill(Color.accentColor.opacity(0.25))
+            }
+        }
+        .background(GeometryReader { proxy in
+            Color.clear.preference(key: LayerRowHeightKey.self, value: proxy.size.height)
+        })
+        .overlay(alignment: .top) { dropLine(.above(panelRow.id), indent: indent) }
+        .overlay(alignment: .bottom) { dropLine(.below(panelRow.id), indent: indent) }
+        .overlay {
+            // Dropping INSIDE outlines the group itself, so the promise is
+            // "this one swallows what you are carrying", never a line that
+            // could be read as "next to it".
+            if dropTarget == .inside(panelRow.id) {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.accentColor, lineWidth: 2)
             }
         }
         .contentShape(Rectangle())
@@ -607,7 +708,7 @@ struct LayersListView: View {
         // thumbnail's own command gesture (Select Pixels) sits above this.
         .onTapGesture {
             editorState.clickRow(layer.id, RowClick(modifiers: NSEvent.modifierFlags),
-                                 in: editorState.panelLayers.map(\.id))
+                                 in: editorState.panelRows.map(\.id))
         }
         .contextMenu {
             Button("Duplicate") { editorState.duplicateLayer(id: layer.id) }
@@ -658,6 +759,21 @@ struct LayersListView: View {
             TapGesture().modifiers(.command).onEnded { editorState.selectLayerPixels(id: layer.id) }
         )
         .help("Command-click to select the layer's pixels")
+    }
+
+    /// The line that says a drop will land beside a row rather than inside it.
+    /// It starts at that row's indent, which is how it names the list the
+    /// layers are about to join: a line at the far left means back out on the
+    /// canvas.
+    @ViewBuilder
+    private func dropLine(_ drop: LayerDrop, indent: CGFloat) -> some View {
+        if dropTarget == drop {
+            Capsule()
+                .fill(Color.accentColor)
+                .frame(height: 2)
+                .padding(.leading, indent + 6)
+                .padding(.trailing, 6)
+        }
     }
 
     private func beginRename(_ layer: Layer) {

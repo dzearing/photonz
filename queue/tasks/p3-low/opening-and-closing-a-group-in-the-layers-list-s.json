@@ -1,0 +1,27 @@
+{
+  "id": "opening-and-closing-a-group-in-the-layers-list-s",
+  "title": "Opening and closing a group in the layers list survives a relaunch",
+  "goal": "Whether a group in the layers list is open or shut is forgotten every time you quit. A picture you are building should look the same when you come back to it.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 570,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T02:31:38.302Z",
+  "updated": "2026-09-03T02:31:38.303Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Open state currently lives in EditorState.expandedGroupIDs, per window, in memory. Persisting it means either a per-document side file keyed by layer UUID, or a field on the document that is deliberately not part of what a document IS. The choice is a UX decision about whether interface state belongs in a shared file: worth a decision card before building.",
+  "acceptance": [
+    "Open a group, quit, reopen the same file: the group is still open",
+    "Nothing about opening a group appears in undo, and the file is unchanged by it",
+    "A group that no longer exists leaves nothing behind"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T02:31:38.303Z",
+      "note": "created (manual)"
+    }
+  ]
+}
