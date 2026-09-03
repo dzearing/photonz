@@ -1424,8 +1424,17 @@ struct ShadowInspector: View {
     @Environment(EditorState.self) private var editorState
     let layer: Layer
 
+    /// The style the panel describes, carrying the shadow the layer actually
+    /// DRAWS. Text inside a component leaves its contrast halo undrawn, so a
+    /// switch reading "on" there would be describing a shadow nobody can see;
+    /// off is the truth, and turning it on gives that label a real shadow.
     private var style: LayerStyle {
-        editorState.previewedStyle(of: layer.id) ?? layer.style
+        var style = editorState.previewedStyle(of: layer.id) ?? layer.style
+        guard editorState.document?.isInsideComponent(layer.id) == true else { return style }
+        var probe = layer
+        probe.style = style
+        style.shadow = probe.drawnShadow(insideComponent: true)
+        return style
     }
 
     var body: some View {

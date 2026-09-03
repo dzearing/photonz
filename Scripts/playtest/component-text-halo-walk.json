@@ -1,0 +1,232 @@
+{
+  "out": "/tmp/photonz-playtest/component-text-halo-walk",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 700,
+      "width": 1100,
+      "height": 700
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        200
+      ],
+      "to": [
+        520,
+        300
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        250,
+        230
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Save"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "0-loose",
+      "note": "a box with a word typed on it, still loose on the canvas: the word wears the contrast halo every caption gets"
+    },
+    {
+      "do": "snapshot",
+      "name": "halo-0-loose"
+    },
+    {
+      "do": "render",
+      "name": "halo-0-loose-doc"
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        150
+      ],
+      "to": [
+        640,
+        380
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-grouped",
+      "note": "grouped but not promoted: still a bundle, so the halo stays"
+    },
+    {
+      "do": "render",
+      "name": "halo-1-grouped-doc"
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "type",
+      "text": "Save button"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-component",
+      "note": "promoted to a component: the label is drawn clean"
+    },
+    {
+      "do": "snapshot",
+      "name": "halo-2-component"
+    },
+    {
+      "do": "render",
+      "name": "halo-2-component-doc"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        820,
+        250
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "3-copy",
+      "note": "a copy off the shelf: it is drawn clean too"
+    },
+    {
+      "do": "snapshot",
+      "name": "halo-3-copy"
+    },
+    {
+      "do": "render",
+      "name": "halo-3-copy-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        270,
+        240
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        270,
+        240
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-label-picked",
+      "note": "the label itself picked inside the component: the Shadow switch reads off, because off is what is drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "halo-4-label-picked"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        250
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "ungroup"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-ungrouped",
+      "note": "taking the original back apart: the halo the text always had is drawn again, so nothing was erased"
+    },
+    {
+      "do": "render",
+      "name": "halo-5-ungrouped-doc"
+    }
+  ]
+}

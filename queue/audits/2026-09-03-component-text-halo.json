@@ -1,0 +1,28 @@
+{
+  "feature": "Text inside a component is drawn clean",
+  "epic": "ui-components",
+  "summary": "A word you type on a screenshot still gets its soft glow so it stays readable. The moment that word is inside a component, the glow stops being drawn, so the label on a button you drew looks as crisp as the app's own five. Nothing is erased: take the text back out and the glow is there again.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Make a component out of what you drew, which is on by default.",
+  "try": [
+    { "do": "Press N for a blank canvas." },
+    { "do": "Draw a rectangle, then press T and type Save on top of it.", "shot": "2026-09-03-component-text-halo-before.png" },
+    { "do": "Look closely at the word: it sits in a pale glow." },
+    { "do": "Select both, press Command G, then Option Command K and name it Save button.", "shot": "2026-09-03-component-text-halo-after.png" },
+    { "do": "Drag a copy of it off the Library shelf and compare the two." },
+    { "do": "Double click into the component, pick the label, and look at the Shadow section.", "shot": "2026-09-03-component-text-halo-switch.png" },
+    { "do": "Select the component and press Shift Command G to take it apart again." }
+  ],
+  "evaluate": [
+    "Does the label on your button now read as crisply as the Button and Nav Bar tiles on the shelf?",
+    "Was the glow on the loose text obvious enough that its going feels like a fix rather than a change you did not ask for?",
+    "Is a component the right line to draw, or would you want the glow gone the moment text lands inside any group?",
+    "With the label picked, does Enable Shadow reading off match what you see on the canvas?",
+    "Taking the component apart brings the glow back. Is that what you expected, or would you rather it stayed gone once it went?"
+  ],
+  "rough": [
+    "The difference is real but quiet at window size: in the two captures it is easiest to see by zooming into the word Save.",
+    "Text typed straight onto a Frame, a screen rather than a component, still wears the glow. That is the same complaint one level up and is filed as its own task rather than widened into this one.",
+    "If you had already tuned the glow by hand before promoting, it keeps drawing inside the component, because by then it is a shadow you chose rather than the automatic one. Deliberate, but it means two labels can differ for a reason nothing on screen explains.",
+    "Screen Recording was granted for this run, so the three pictures are real captures of the probe window, not offscreen renders."
+  ]
+}

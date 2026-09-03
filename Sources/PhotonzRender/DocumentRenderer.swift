@@ -235,7 +235,8 @@ public final class DocumentRenderer: @unchecked Sendable {
 
         let output = compositeLayers(document.layers, origin: .zero,
                                      onto: CIImage(color: .clear).cropped(to: extent),
-                                     underlay: nil, in: document, store: store, clip: extent)
+                                     underlay: nil, in: document, store: store, clip: extent,
+                                     insideComponent: false)
 
         // The canvas defines the document's bounds: layers hanging outside it
         // (e.g. after a canvas-size change) must not grow the rendered frame.
@@ -250,12 +251,18 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// `underlay` is what sits beneath `base` on the canvas while `base` is a
     /// group's private buffer, so a zoom callout inside a group still magnifies
     /// the real canvas instead of the transparency around its group.
+    /// `insideComponent` says whether a component sits above these layers, which
+    /// is what tells a label on a button apart from a caption over a screenshot
+    /// (`Layer.drawnShadow`).
     private func compositeLayers(_ layers: [Layer], origin: CGPoint, onto base: CIImage,
                                  underlay: CIImage?, in document: PhotonzDocument,
-                                 store: ImageStore, clip: CGRect) -> CIImage {
+                                 store: ImageStore, clip: CGRect,
+                                 insideComponent: Bool) -> CIImage {
         var output = base
         for layer in layers where layer.isVisible {
             let frame = layer.frame.offsetBy(dx: origin.x, dy: origin.y)
+            // A component's own styling is its own; what it HOLDS is inside it.
+            let holdsInside = insideComponent || layer.isComponentRoot
 
             // A group with no styling of its own is a container, not an object:
             // its children draw straight onto whatever is already there, so
@@ -266,7 +273,8 @@ public final class DocumentRenderer: @unchecked Sendable {
             // edge to cut at, so it always draws as one object.
             if let group = layer.group, !group.isFrame, layer.style.isPlain {
                 output = compositeLayers(group.children, origin: frame.origin, onto: output,
-                                         underlay: underlay, in: document, store: store, clip: clip)
+                                         underlay: underlay, in: document, store: store, clip: clip,
+                                         insideComponent: holdsInside)
                 continue
             }
 
@@ -278,7 +286,8 @@ public final class DocumentRenderer: @unchecked Sendable {
                 backdrop = output.composited(over: underlay)
             }
             guard let layerImage = ciImage(for: layer, origin: origin, in: document, store: store,
-                                           backdrop: backdrop) else { continue }
+                                           backdrop: backdrop,
+                                           insideComponent: insideComponent) else { continue }
             // Zoom callouts carry canvas-space chrome (source outline + leader
             // lines) that lives outside the layer frame; composite it beneath
             // the magnified box.
@@ -314,7 +323,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// object, and it is why a group with no styling passes through instead.
     private func groupImage(_ layer: Layer, group: GroupContent, origin: CGPoint,
                             in document: PhotonzDocument, store: ImageStore,
-                            backdrop: CIImage) -> CIImage? {
+                            backdrop: CIImage, insideComponent: Bool) -> CIImage? {
         let height = document.canvasSize.height
         let box = flipped(layer.localBounds.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
         // A clipping frame's buffer IS its box: everything drawn into it that
@@ -338,13 +347,14 @@ public final class DocumentRenderer: @unchecked Sendable {
         }
         var image = compositeLayers(group.children, origin: childOrigin,
                                     onto: surface,
-                                    underlay: backdrop, in: document, store: store, clip: buffer)
+                                    underlay: backdrop, in: document, store: store, clip: buffer,
+                                    insideComponent: insideComponent || layer.isComponentRoot)
             .cropped(to: buffer)
 
         image = blurred(image, radius: layer.style.blurRadius)
         image = rounded(image, box: box, radius: layer.style.cornerRadius)
         image = bordered(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
-        image = shadowed(image, style: layer.style)
+        image = shadowed(image, shadow: layer.drawnShadow(insideComponent: insideComponent))
         return faded(image, opacity: layer.style.opacity)
     }
 
@@ -377,6 +387,13 @@ public final class DocumentRenderer: @unchecked Sendable {
                              padding: CGFloat) -> CGImage? {
         guard var layer = document.layer(id: id) else { return nil }
         layer.isVisible = true
+        // Drawn alone, the layer has lost the component that was above it, so
+        // the rule it draws under comes from the document it came out of: a
+        // label inside a button must not sprout a halo in a drag preview or a
+        // layers-list thumbnail that the canvas does not show.
+        if document.isInsideComponent(id) {
+            layer.style.shadow = layer.drawnShadow(insideComponent: true)
+        }
         // The box the layer occupies: its frame, or for a group the box its
         // contents make (a group's own frame is an anchor with no size). Slide
         // it so that box starts `padding` in from the top left.
@@ -413,10 +430,12 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// zoom callouts magnify a region of it, which is what keeps them live:
     /// they reference the canvas, never a baked copy.
     private func ciImage(for layer: Layer, origin: CGPoint, in document: PhotonzDocument,
-                         store: ImageStore, backdrop: CIImage) -> CIImage? {
+                         store: ImageStore, backdrop: CIImage,
+                         insideComponent: Bool) -> CIImage? {
         if let group = layer.group {
             return groupImage(layer, group: group, origin: origin, in: document,
-                              store: store, backdrop: backdrop)
+                              store: store, backdrop: backdrop,
+                              insideComponent: insideComponent)
         }
         // The layer's frame in canvas coordinates: identical to its own frame
         // at the top level, shifted by its parents' origins inside a group.
@@ -536,8 +555,9 @@ public final class DocumentRenderer: @unchecked Sendable {
                                                         y: frameCenterY - image.extent.midY))
 
         // Style: shadow, then opacity last so it fades content, border and
-        // shadow together.
-        image = shadowed(image, style: layer.style)
+        // shadow together. Text inside a component leaves its contrast halo
+        // undrawn — a label on a control is not a caption over a screenshot.
+        image = shadowed(image, shadow: layer.drawnShadow(insideComponent: insideComponent))
         return faded(image, opacity: layer.style.opacity)
     }
 
@@ -588,8 +608,8 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// The silhouette tinted, blurred, offset (model y-down → CI y-up), and
     /// composited underneath. For a group the silhouette is the whole group,
     /// which is what makes a card cast one shadow instead of three.
-    private func shadowed(_ image: CIImage, style: LayerStyle) -> CIImage {
-        guard let shadow = style.shadow, shadow.opacity > 0 else { return image }
+    private func shadowed(_ image: CIImage, shadow: ShadowStyle?) -> CIImage {
+        guard let shadow, shadow.opacity > 0 else { return image }
         let color = ciColor(hex: shadow.colorHex, alpha: shadow.opacity)
         var silhouette = image.applyingFilter("CIColorMatrix", parameters: [
             "inputRVector": CIVector(x: 0, y: 0, z: 0, w: color.red * color.alpha),

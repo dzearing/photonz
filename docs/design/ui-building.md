@@ -1224,3 +1224,39 @@ Deliberately left: a component with two unnamed text layers still gets "Wording"
 and "Wording 2" if the author skips both name fields, and nothing suggests a
 better name from where the layer sits. Naming the layers, or the knobs, is the
 answer, and both are one field away.
+
+## Landed: text inside a component is drawn clean (Next, `next-components`, 2026-09-03)
+
+The E9 sitting's third finding. Every text layer is born wearing a soft contrast
+halo so a caption stays readable over a screenshot. Inside a component that halo
+reads as a printing error: the word "Save" on a button you drew looked smudged,
+on the original and on every copy, while the app's own five starters looked
+crisp beside them.
+
+- **The rule is per component, not per group.** Bundling an arrow with its
+  caption is the everyday redline move, and that caption still needs its halo,
+  so grouping cannot be the trigger. Promoting to a component is a statement
+  that what is inside is a piece of UI, and a label on a control is not a
+  caption over a screenshot. Copies count too: a copy is a group carrying
+  `instanceOf`, so `Layer.isComponentRoot` covers the original and the copies.
+- **It is read at draw time and erases nothing.** `Layer.drawnShadow(insideComponent:)`
+  is the whole rule, and `DocumentRenderer` carries an `insideComponent` flag down
+  the tree. Make Component never edits your text, so taking it back out draws the
+  halo again with no undo history and no re-derived values. Nothing bakes into
+  pixels.
+- **A shadow somebody chose still draws.** Only the automatic halo steps aside,
+  matched by value against `TextBuilder.autoContrastShadow` for the text's own
+  color, so a title on a card can still cast a real shadow inside a component.
+- **The Shadow switch tells the truth.** With a label inside a component picked,
+  Enable Shadow reads off, because off is what is drawn; turning it on gives that
+  label a real shadow. Drag previews and layers-list thumbnails follow the same
+  rule, so a label never sprouts a halo in a thumbnail the canvas does not show.
+- Nothing in Current changes: components only exist in Next.
+
+Deliberately left: text typed straight onto a Frame — a screen rather than a
+component — still wears the halo, which is the same complaint one level up and
+is filed on its own. And a halo somebody had already tuned by hand before
+promoting keeps drawing inside the component, because by then it is a shadow
+they chose.
+
+Walked by `Scripts/playtest/component-text-halo-walk.json`.

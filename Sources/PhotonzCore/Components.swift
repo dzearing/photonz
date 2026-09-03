@@ -20,6 +20,32 @@ extension Layer {
     /// Whether this layer is a main component: the original a Library tile
     /// stands for, and the thing every future instance follows.
     public var isMainComponent: Bool { componentID != nil }
+
+    /// The outermost layer of a component: the original you promoted, or a copy
+    /// of one. What sits below one of these is a piece of UI you designed.
+    public var isComponentRoot: Bool { isMainComponent || isComponentInstance }
+
+    /// Whether this layer draws text.
+    public var isText: Bool { if case .text = content { return true } else { return false } }
+
+    /// The shadow this layer actually draws with (step E9).
+    ///
+    /// Every text layer is born wearing a soft contrast halo so a caption stays
+    /// readable over a screenshot. Inside a component that halo reads as a
+    /// printing error: the label on a button you drew looks smudged, and the
+    /// app's own components have never had one. So the automatic halo is not
+    /// drawn there. A shadow somebody chose is still drawn, because a title on
+    /// a card is allowed to cast one.
+    ///
+    /// This is read at draw time and erases nothing: the halo stays on the
+    /// layer, so taking the text back out of the component brings it back, and
+    /// no pixels are ever baked.
+    public func drawnShadow(insideComponent: Bool) -> ShadowStyle? {
+        guard insideComponent, case .text(let text) = content,
+              style.shadow == TextBuilder.autoContrastShadow(forColorHex: text.colorHex)
+        else { return style.shadow }
+        return nil
+    }
 }
 
 extension PhotonzDocument {
@@ -47,6 +73,18 @@ extension PhotonzDocument {
         var parent = parentID(of: id)
         while let current = parent {
             if layer(id: current)?.isMainComponent == true { return true }
+            parent = parentID(of: current)
+        }
+        return false
+    }
+
+    /// Whether a component sits anywhere between this layer and the canvas —
+    /// the original or a copy of one. A layer that IS the component is not
+    /// inside it; only its contents are.
+    public func isInsideComponent(_ id: UUID) -> Bool {
+        var parent = parentID(of: id)
+        while let current = parent {
+            if layer(id: current)?.isComponentRoot == true { return true }
             parent = parentID(of: current)
         }
         return false

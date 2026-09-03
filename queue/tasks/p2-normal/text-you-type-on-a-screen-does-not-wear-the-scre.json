@@ -1,0 +1,28 @@
+{
+  "id": "text-you-type-on-a-screen-does-not-wear-the-scre",
+  "title": "Text you type on a screen does not wear the screenshot halo",
+  "goal": "Words typed on a screenshot get a soft white glow behind them so they stay readable over a photo. A label typed straight onto a screen you are designing does not need it, and there it reads as a smudge. Text inside a screen should be drawn clean, the same way text inside a component now is.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 890,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T11:27:35.947Z",
+  "updated": "2026-09-03T11:27:35.948Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-on from the component halo task (2026-09-03). The rule is already built: Layer.drawnShadow(insideComponent:) plus an insideComponent flag threaded through DocumentRenderer.compositeLayers/groupImage. Widening it means deciding whether a frame counts the same way a component does, and whether a plain group nested inside a frame counts. A frame is group.isFrame with a backgroundHex, so the predicate is one clause; the question is a UX one, because a caption deliberately laid over a screenshot placed inside a frame would lose its halo too. Consider whether the trigger should be the frame having a painted surface rather than being a frame at all.",
+  "acceptance": [
+    "A text layer inside a frame draws with no halo",
+    "Text on the open canvas still keeps its halo over a screenshot",
+    "Putting existing text into a frame drops the halo, and taking it out puts it back",
+    "A before and after picture is in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T11:27:35.948Z",
+      "note": "created (manual)"
+    }
+  ]
+}

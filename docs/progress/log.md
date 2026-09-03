@@ -6318,3 +6318,34 @@ Next: the audit asks whether appearing exactly when it works is worth being
 unfindable beforehand, and whether the command should make you name the
 alternatives while you are there, since a copy's menu still reads "Rectangle"
 and "Rectangle 2" until somebody renames the layers.
+
+## 2026-09-03 — text inside a component is drawn clean
+
+The E9 sitting's third finding: the word "Save" on a hand-drawn button carried
+the contrast halo every text layer is born with, so it looked smudged on the
+original and on all three copies, right beside five starters that looked crisp.
+
+- Rule is per COMPONENT, not per group: bundling an arrow with its caption is the
+  everyday redline move and that caption still needs its halo. Copies count too
+  (`Layer.isComponentRoot` = a main or a copy).
+- Read at draw time, erases nothing: `Layer.drawnShadow(insideComponent:)` plus
+  an `insideComponent` flag carried down `DocumentRenderer.compositeLayers` /
+  `groupImage` / `ciImage`, and seeded from `document.isInsideComponent` in
+  `renderSprite` so thumbnails and drag previews agree. Undo, save and detach are
+  untouched; nothing bakes into pixels.
+- Only the AUTOMATIC halo steps aside, matched by value against
+  `TextBuilder.autoContrastShadow` for the text's own color, so a title on a card
+  can still cast a shadow somebody chose.
+- `ShadowInspector` now describes the drawn shadow, so with a label inside a
+  component picked the Enable Shadow switch reads off instead of claiming a halo
+  nobody can see.
+- 12 core tests + 4 render tests written first (`ComponentTextHaloTests`,
+  `ComponentTextHaloRenderTests`); the render tests count pixels inside a pure
+  red button that are lighter than its fill, which only a white halo can produce.
+  All 2076 green.
+- Walk: `Scripts/playtest/component-text-halo-walk.json`. Audit:
+  `queue/audits/2026-09-03-component-text-halo.json`, three real captures.
+
+Next: text typed straight onto a Frame still wears the halo — same complaint one
+level up, filed as its own task rather than widened into this one. The audit asks
+whether a component is the right line to draw, or whether any group should do it.
