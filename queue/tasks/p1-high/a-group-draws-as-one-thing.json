@@ -9,12 +9,12 @@
   "release": "next",
   "area": "render",
   "created": "2026-09-03T00:00:37.165Z",
-  "updated": "2026-09-03T00:08:21.374Z",
+  "updated": "2026-09-03T01:28:09.100001Z",
   "deps": [
     "layers-can-hold-layers"
   ],
   "blockedBy": [],
-  "notes": "DocumentRenderer.swift: the layer loop is around line 238 and the per layer image switch around 347; the flip to Core Image’s bottom left origin stays owned here. A group renders into its own buffer sized to the union of its children plus LayerStyle.previewPadding, then that buffer is styled and composited like any other layer. Depends on the group model landing first.\n\nObjective: ui-components (staged now, under the focus). Foundational, and it earns that: it is what makes Command G, the first visible rung, look right instead of looking like three overlapping shadows.",
+  "notes": "DocumentRenderer.swift: the layer loop is around line 238 and the per layer image switch around 347; the flip to Core Image’s bottom left origin stays owned here. A group renders into its own buffer sized to the union of its children plus LayerStyle.previewPadding, then that buffer is styled and composited like any other layer. Depends on the group model landing first.\n\nObjective: ui-components (staged now, under the focus). Foundational, and it earns that: it is what makes Command G, the first visible rung, look right instead of looking like three overlapping shadows.\n\nHandover from `layers-can-hold-layers` (model landed 2026-09-03): the model is `LayerContent.group(GroupContent)` with children stored against the group's origin; `Layer.localBounds` is the derived union box (a group's `frame.size` is unused and is NOT the box); `PhotonzDocument.canvasFrame(of:)`/`canvasBounds(of:)` give canvas space. The composite loop and PackageIO were pointed at the new `PhotonzDocument.flattenedLayers` (canvas-space leaves, carrying the groups' visibility/lock/opacity down), which is the temporary bridge this task replaces for the render path — leave PackageIO on it, it wants the leaves. `ciImage(for:)` already has a `.group` case that returns nil with a comment pointing here. Two known gaps to close: group opacity is currently multiplied per child rather than applied to one composited buffer (visibly wrong wherever children overlap), and `renderSprite(for:)` returns nil for a group because it sizes its canvas from `frame.size` — use `canvasBounds(of:)` instead.",
   "acceptance": [
     "Tests first: a group with no styling of its own draws exactly what the same layers draw loose, and a group with opacity, blur, shadow or corner radius applies each one once to the whole group",
     "A group inside a group draws correctly",

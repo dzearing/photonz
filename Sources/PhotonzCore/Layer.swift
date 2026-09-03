@@ -321,6 +321,23 @@ public struct ZoomCalloutContent: Hashable, Codable, Sendable {
     }
 }
 
+/// A layer whose content is other layers.
+///
+/// Children are held in the same bottom-up order as the document's top-level
+/// stack (index 0 draws first). Each child's `frame` is measured from the
+/// GROUP'S OWN ORIGIN, not from the canvas, which is what lets the same subtree
+/// sit in two places at once without rewriting a number inside it. Groups only
+/// translate — they never scale or rotate what they hold — so a layer's canvas
+/// position is the sum of the origins from it up to the canvas, plain addition.
+/// See `docs/design/ui-building.md`.
+public struct GroupContent: Hashable, Codable, Sendable {
+    public var children: [Layer]
+
+    public init(children: [Layer] = []) {
+        self.children = children
+    }
+}
+
 public enum LayerContent: Hashable, Codable, Sendable {
     case image(ImageRef)
     case text(TextContent)
@@ -328,6 +345,7 @@ public enum LayerContent: Hashable, Codable, Sendable {
     case zoomCallout(ZoomCalloutContent)
     case measure(MeasureContent)
     case collage(CollageContent)
+    case group(GroupContent)
 
     /// True when this content's rendered appearance scales uniformly with the
     /// frame. Photos and collages do — every pixel is frame-relative. Annotation
@@ -337,8 +355,20 @@ public enum LayerContent: Hashable, Codable, Sendable {
     var scalesUniformlyOnResize: Bool {
         switch self {
         case .image, .collage: true
-        case .annotation, .text, .zoomCallout, .measure: false
+        // A group holds strokes, glyphs and ticks whose sizes are fixed in
+        // points, so scaling a sprite of it stretches them.
+        case .annotation, .text, .zoomCallout, .measure, .group: false
         }
+    }
+
+    /// The same content with a fresh identity everywhere inside it. Leaves have
+    /// no identity of their own so they come back unchanged; a group's children
+    /// are copied all the way down, so duplicating a group never leaves two
+    /// layers in the document sharing one id.
+    func reidentified() -> LayerContent {
+        guard case .group(var group) = self else { return self }
+        group.children = group.children.map { $0.reidentified() }
+        return .group(group)
     }
 }
 
@@ -432,7 +462,12 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     public let id: UUID
     public var name: String
     public var content: LayerContent
-    /// Position and size on the canvas, in canvas coordinates.
+    /// Position and size in the coordinate space of whatever contains this
+    /// layer: the canvas for a top-level layer, the enclosing group's origin
+    /// for a child. For a GROUP the origin is the anchor its children are
+    /// measured from and the size is unused — a group's box follows its
+    /// contents and is read from `localBounds`, never stored, so drawing a
+    /// child that sticks out never silently rewrites its siblings' numbers.
     public var frame: CGRect
     /// Optional crop applied to the layer's own content, in layer-local coordinates.
     public var crop: CGRect?
@@ -459,10 +494,60 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// A copy with a fresh identity, for duplicate/paste. The frame offset
     /// keeps the copy from landing invisibly on top of the original.
     public func duplicated(offsetBy offset: CGPoint = .zero) -> Layer {
-        Layer(name: name + " copy", content: content,
+        Layer(name: name + " copy", content: content.reidentified(),
               frame: frame.offsetBy(dx: offset.x, dy: offset.y),
               crop: crop, transform: transform, style: style,
               isVisible: isVisible, isLocked: false)
+    }
+
+    /// A copy of this layer and everything inside it with fresh ids, keeping
+    /// the names, geometry and styling exactly as they are. This is what makes
+    /// the same subtree able to sit in two places: the insides are identical
+    /// and, because children are stored against their parent, not one number
+    /// inside them has to change.
+    public func reidentified() -> Layer {
+        Layer(name: name, content: content.reidentified(), frame: frame,
+              crop: crop, transform: transform, style: style,
+              isVisible: isVisible, isLocked: isLocked)
+    }
+
+    /// This layer's own content, if it is a group.
+    public var group: GroupContent? {
+        if case .group(let g) = content { return g }
+        return nil
+    }
+
+    /// Whether this layer holds other layers.
+    public var isGroup: Bool { group != nil }
+
+    /// The layers this one contains, empty for everything that is not a group.
+    public var children: [Layer] {
+        get { group?.children ?? [] }
+        set {
+            guard case .group(var g) = content else { return }
+            g.children = newValue
+            content = .group(g)
+        }
+    }
+
+    /// This layer and every layer inside it, outermost first.
+    public var selfAndDescendants: [Layer] {
+        [self] + children.flatMap(\.selfAndDescendants)
+    }
+
+    /// The box this layer occupies in its PARENT'S coordinate space. A leaf is
+    /// just its frame. A group is the union of its children's boxes shifted by
+    /// the group's origin, so the box is always derived and never stored; an
+    /// empty group is a zero-size box sitting on its own anchor.
+    public var localBounds: CGRect {
+        guard let group else { return frame }
+        var union: CGRect?
+        for child in group.children {
+            let box = child.localBounds
+            union = union.map { $0.union(box) } ?? box
+        }
+        guard let union else { return CGRect(origin: frame.origin, size: .zero) }
+        return union.offsetBy(dx: frame.origin.x, dy: frame.origin.y)
     }
 
     /// Whether "Rasterize Layer" applies: the layer is a vector shape/annotation
@@ -525,6 +610,14 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                 if chip.insetBy(dx: -tolerance, dy: -tolerance).contains(p) { return true }
             }
             return false
+        }
+        if let group {
+            // A group has no shape of its own: the point lands on it only when
+            // it lands on something it actually holds, so the empty space
+            // between two children never swallows a click. Children are stored
+            // against the group's origin, so the point moves into their space.
+            let local = CGPoint(x: p.x - frame.origin.x, y: p.y - frame.origin.y)
+            return group.children.contains { $0.contains(canvasPoint: local, zoom: zoom) }
         }
         if var m = measure {
             // Hit near the drawn strokes (the squared-U outline), not the padded

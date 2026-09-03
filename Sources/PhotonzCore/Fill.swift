@@ -43,6 +43,10 @@ public enum Fill {
             filled.content = .collage(collage)
         case .zoomCallout:
             return nil
+        // A group has no paint of its own; filling one would mean deciding for
+        // every layer inside it, which the bucket does not get to do.
+        case .group:
+            return nil
         }
         return filled
     }

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "core",
   "created": "2026-09-03T00:00:37.162Z",
-  "updated": "2026-09-03T00:08:21.345Z",
+  "updated": "2026-09-03T01:28:44.722137Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Model: add a group case to LayerContent (Layer.swift:324) carrying its children, or children on Layer, whichever keeps Codable simplest; Document.swift holds the flat array and every helper on it (layer(id:), index(of:), hitTest at :53, layerIDs(fullyInside:), addLayer, removeLayers, moveLayers, restackLayers, duplicateLayers) needs a version that reaches inside. Coordinate rule for this task: a child’s frame is relative to its parent. That is the rule an instance needs, because a component is placed at many spots and its children cannot each carry canvas coordinates. Confirm it against docs/design/ui-building.md if that page has landed first. Every existing caller (renderer, measure, canvas hit testing, layers panel) assumes canvas coordinates, so ship a flattening helper that hands back canvas space layers and leave those callers on it until the renderer task lands. This is the first rung of the component ladder: groups, then the renderer, then Command G, then Make component.\n\nObjective: ui-components (staged now, under the focus). Foundational, and it earns that: a component is a reusable layer tree, so the picture has to be able to hold a tree before grouping or components can exist at all.",
@@ -28,6 +28,23 @@
     {
       "t": "2026-09-03T00:08:21.344Z",
       "note": "seq 40 -> 40"
+    },
+    {
+      "t": "2026-09-03T01:12:32.594Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T01:15:52.348018Z",
+      "note": "Adversarial review of the idea (before building). (1) This slice is invisible by design, so the only thing that can go wrong is silently breaking today's flat documents; every deep helper must be provably identical on a depth-one tree, and that is what most of the tests check. (2) docs/design/ui-building.md landed and confirms the coordinate rule: a child's X/Y is measured from its parent's top left, groups translate and never scale or rotate, so a layer's canvas position is plain addition up the chain. Adopted as written. (3) Rejected storing a size on a group: the doc says a group's extent follows its contents and its origin is set once and then holds still, so two sources of truth would drift the moment a child is drawn sticking out to the left. A group's frame.origin is the anchor; its box is derived (Layer.localBounds). (4) Real bug the flat model would let through: duplicating a group must mint fresh ids all the way down, or two layers share an id and layer(id:) becomes ambiguous. Added reidentified() and a test. (5) Cut from scope as decorative for now: a LayerPath type (plain [Int] is enough), group-level blur/shadow (the renderer task's job), frames/clipping (step 2). (6) Kept in scope beyond the literal ask: groupLayers/ungroupLayer, because they are the only thing that actually proves the coordinate rewrite, and PackageIO's image collection, because a photo inside a group would otherwise not be written to disk and the picture would open blank."
+    },
+    {
+      "t": "2026-09-03T01:28:44.722137Z",
+      "note": "Built and verified. 47 tests in LayerGroupTests.swift written first; Scripts/test.sh green at 1580. Model: LayerContent.group(GroupContent) with children stored against the group's origin; Layer.localBounds is the derived box; Layer.reidentified() mints fresh ids down the subtree. Document reaches inside for find/path/parent/add/reparent/remove/reorder/restack/duplicate/hitTest/marquee/crop/resize, plus groupLayers and ungroupLayer. flattenedLayers is the bridge; the renderer composite loop and PackageIO's image collection run on it. Grouping rule settled during the build: when a selection spans two levels, the member nearest the canvas decides which sibling list takes part and ids elsewhere are left in their group rather than yanked out."
+    },
+    {
+      "t": "2026-09-03T01:28:44.722137Z",
+      "note": "Adversarial review of the built thing. Ran the 70-step redline-walk playtest on the probe (Screen Recording granted, real -sc captures): editor opens, five measurements land, arrow caption types, spec and image copy, zero errors, and the capture is pixel-for-pixel the app as it was. Perf: layer(id:) and updateLayer are on the drag path, and routing them through path+walk would have cost two passes, so both take a single-pass flat route first and only a document that actually has groups walks the tree; flattenedLayers hands back the existing array unchanged when there is no group. Three gaps I could not close in this slice, all unreachable today because no group can be made: group opacity flattens per child rather than as one composited pass (wrong wherever children overlap), renderSprite returns nil for a group because it sizes from frame.size, and the Position & Size fields would read 0 for a group's W and H. First two handed to a-group-draws-as-one-thing, third to the-layers-list-shows-what-is-inside-a-group. No audit report: the task's own acceptance is that nothing appears on screen, so there is nothing for a person to try yet."
     }
-  ]
+  ],
+  "started": "2026-09-03T01:12:32.593Z"
 }

@@ -235,7 +235,7 @@ public final class DocumentRenderer: @unchecked Sendable {
 
         var output = CIImage(color: .clear).cropped(to: extent)
 
-        for layer in document.layers where layer.isVisible {
+        for layer in document.flattenedLayers where layer.isVisible {
             guard let layerImage = ciImage(for: layer, in: document, store: store,
                                            backdrop: output) else { continue }
             // Zoom callouts carry canvas-space chrome (source outline + leader
@@ -367,6 +367,13 @@ public final class DocumentRenderer: @unchecked Sendable {
                                  width: source.width, height: source.height)
             image = backdrop.cropped(to: flipped)
                 .transformed(by: CGAffineTransform(translationX: -flipped.origin.x, y: -flipped.origin.y))
+        // A group has no pixels of its own. The composite loop runs on
+        // `flattenedLayers`, which dissolves groups into their canvas-space
+        // leaves, so one never reaches here — until the renderer learns to
+        // draw a group as its own isolated pass (group blur, group opacity as
+        // one), which is its own task.
+        case .group:
+            return nil
         }
 
         // Layer-local crop.

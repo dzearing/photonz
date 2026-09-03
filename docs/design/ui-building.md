@@ -355,6 +355,48 @@ for the selected layer, as numbers you can type.
 Not in this slice: several layers selected at once (the section shows the
 primary selection only), a proportional lock, and a rotation field.
 
+## Landed: layers can hold layers (Next, unflagged, 2026-09-03)
+
+Step 1's first task, the model half. Nothing appears on screen: no group can be
+made from the interface yet, and no document that exists today looks or behaves
+any different. What changed is that the picture can now hold a tree.
+
+- **A group is a layer whose content is other layers** (`LayerContent.group`,
+  carrying `GroupContent.children`). Not a second document kind, not a new
+  top-level list.
+- **A child's frame is measured from its parent's origin**, exactly as decided
+  above. `PhotonzDocument.canvasFrame(of:)` adds the origins up the chain when
+  something needs canvas space.
+- **A group's box is derived, never stored.** Its `frame.origin` is the anchor
+  its children hang from and its `frame.size` is unused: the box comes from
+  `Layer.localBounds`, the union of what it holds. So drawing a child that
+  sticks out to the left gives that child a negative X instead of silently
+  rewriting every sibling's numbers.
+- **Every document helper reaches inside**: find, add, move, remove, reorder,
+  restack, duplicate, hit test, marquee, canvas crop and canvas resize. A
+  selection that spans two levels restacks inside each list rather than pulling
+  a child out of its group, and a marquee grabs a group whole or not at all.
+- **Duplicating a group mints fresh ids all the way down**, so the same subtree
+  can sit in two places and `layer(id:)` stays unambiguous.
+- **Reparenting rewrites position**, so dragging a layer into or out of a group
+  does not move it on screen (`moveLayer(id:toGroup:)`).
+- **`groupLayers` / `ungroupLayer` exist in the model** and round-trip exactly.
+  The keys that call them are the third task in step 1.
+- **`flattenedLayers` is the bridge**: canvas-space leaves, bottom-up, carrying
+  the visibility, lock and opacity of the groups above them. The renderer and
+  the package writer run on it, so a document with groups draws and saves
+  correctly today. A document with no groups gets its own array back untouched,
+  so nothing about the existing path costs anything.
+- **On disk nothing changed.** A flat document encodes byte for byte as it did,
+  and a legacy payload decodes unchanged; groups are a new case, not a wrapper.
+
+Deliberately left to the next task (`A group draws as one thing`): the renderer
+still composites a group's children individually, so a blur, a shadow or an
+opacity on the GROUP is approximated per child rather than applied to the group
+as one pass, and a drag sprite of a group renders nothing. The Position & Size
+fields would show 0 for a group's W and H, which no one can reach until the
+Layers list learns to show groups.
+
 ## Questions the user decides, not the loop
 
 Each of these becomes a decision card when the step that needs it is claimed.

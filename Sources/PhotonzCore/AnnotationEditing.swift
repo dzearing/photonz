@@ -53,6 +53,9 @@ extension Layer {
         // Calipers edit via endpoint handles; alignment guides not at all
         // (move/delete only) — neither offers the eight frame handles.
         case .measure: false
+        // A group's size follows its contents: there is no handle that
+        // stretches five children at once.
+        case .group: false
         case .image, .zoomCallout, .collage: true
         }
     }

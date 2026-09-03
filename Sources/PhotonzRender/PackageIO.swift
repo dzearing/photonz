@@ -77,7 +77,9 @@ public enum PackageIO {
         func collect(_ ref: ImageRef) {
             if seen.insert(ref.id).inserted { refs.append(ref) }
         }
-        for layer in document.layers {
+        // Flattened, so a photo that lives inside a group is written to the
+        // package too instead of the picture opening blank.
+        for layer in document.flattenedLayers {
             switch layer.content {
             case .image(let ref): collect(ref)
             case .collage(let collage):

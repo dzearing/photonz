@@ -5374,3 +5374,53 @@ evaluate question in the audit.
 
 Audit: `queue/audits/2026-09-03-dashboard-field-ink.json`. Commit 0e86bda.
 Next: back to the queue.
+
+## 2026-09-03 — layers can hold layers
+
+Step 1 of the `ui-building` order of work, the model half. A layer can now
+contain other layers: `LayerContent.group(GroupContent)` carries the children,
+and a child's frame is measured from its parent's origin, which is the rule a
+component instance needs (one main placed in many spots, and no child able to
+carry canvas coordinates). Confirmed against `docs/design/ui-building.md`,
+which landed first and says exactly this.
+
+Design calls worth keeping. A group's box is DERIVED, never stored: its
+`frame.origin` is the anchor and its `frame.size` is unused, with
+`Layer.localBounds` giving the union of what it holds. That is what makes
+"the origin is set once and then holds still" true in code — drawing a child
+that sticks out to the left gives that child a negative X instead of quietly
+rewriting every sibling. Duplicating a group mints fresh ids all the way down
+(`Layer.reidentified()`), without which two layers would share an id and
+`layer(id:)` would become ambiguous.
+
+Every document helper reaches inside now — find, path, parent, add, reparent,
+remove, reorder, restack, duplicate, hit test, marquee, canvas crop, canvas
+resize — plus `groupLayers`/`ungroupLayer`, which round-trip exactly and are
+what the Command G task will call. A selection spanning two levels restacks
+inside each list rather than pulling a child out of its group; a marquee grabs
+a group whole or not at all. All of it goes through one `withSiblings(of:)`
+helper that keeps the single-pass flat route for a top-level layer, so a
+document with no groups pays nothing for the tree (this matters: `layer(id:)`
+and `updateLayer` are on the drag path).
+
+`flattenedLayers` is the bridge the task asked for: canvas-space leaves,
+bottom-up, carrying the groups' visibility, lock and opacity down. The
+renderer's composite loop and PackageIO's image collection now run on it — the
+second one is not cosmetic, without it a photo inside a group would never be
+written to the package and the picture would open blank. A document with no
+groups gets its own array back untouched.
+
+On disk nothing changed: a flat document encodes byte for byte as before (test
+asserts the payload contains neither "group" nor "children"), and a
+hand-written legacy payload still decodes.
+
+47 new tests, `Scripts/test.sh` green at 1580. Verified on the probe app: the
+70-step `redline-walk` playtest runs clean end to end and the capture shows the
+editor exactly as it was, so "nothing new appears on screen" holds. No audit
+report for this one — there is nothing a person can try yet, which is the
+task's own acceptance.
+
+Handover written into `a-group-draws-as-one-thing`: group opacity is currently
+multiplied per child instead of applied to one composited buffer, and
+`renderSprite` returns nil for a group because it sizes its canvas from
+`frame.size`. Next: the renderer, then Command G, then the layers list.
