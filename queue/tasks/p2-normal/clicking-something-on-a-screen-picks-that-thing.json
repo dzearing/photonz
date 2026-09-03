@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 980,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T22:15:40.654Z",
-  "updated": "2026-09-03T23:02:10.617462Z",
+  "updated": "2026-09-03T23:02:20.361Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building screen adoption on 2026-09-03. The canvas rule today is EditorState.groupContextID: a click picks the outermost thing you are not already inside, so a frame swallows clicks aimed at its direct children. Figma treats top-level frames as click-through for their DIRECT children while ordinary groups still need a double click. See Scripts/playtest/screen-adoption-walk.json, stage steppedIn, which needs a double click to reach the rectangle it just dropped.",
@@ -39,7 +39,12 @@
     {
       "t": "2026-09-03T23:02:10.617462Z",
       "note": "Second adversarial review, on the running app. The one thing I could not soften: a screen covered edge to edge has no empty surface left, so it is picked from its name or its Layers row rather than from the picture. Proved that path works and put it in the audit as a real cost rather than hiding it. Left alone: a shift click can now build a selection spanning two screens, which Command G still only half acts on (it groups the ones sharing a parent). That is the existing grouping rule, not something this change introduced, and it is in the audit for the user to judge."
+    },
+    {
+      "t": "2026-09-03T23:02:20.360Z",
+      "note": "A plain click now picks what sits directly on a screen (PhotonzCore selectionTarget/extendTarget), one level only so groups and nested screens still take a double click; the dotted context box no longer draws for a screen and the group context follows the selected layer out of a screen. Seven new FrameTests, full suite green (2530), verified live in the probe app with Scripts/playtest/screen-click-walk.json. Audit: queue/audits/2026-09-03-screen-click.json with three real window captures. Pushed as a57043e."
     }
   ],
-  "started": "2026-09-03T22:46:50.551Z"
+  "started": "2026-09-03T22:46:50.551Z",
+  "completed": "2026-09-03T23:02:20.361Z"
 }

@@ -1439,9 +1439,13 @@ private final class Run {
             "tooltip": HintTooltipController.shared.visibleDescription ?? "none",
             "edgeMap": !editor.snappingEdgeMap.isEmpty,
             "firstResponder": window?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil",
-            // The pointer's shape, so a walk can prove the grab cue appeared
-            // over a draggable pill and nowhere else.
+            // The pointer's shape, so a walk can prove the cue appeared over a
+            // handle and nowhere else.
             "cursor": Self.cursorName(),
+            // ...and what the canvas thinks is under the pointer, which is the
+            // other half: these two disagreeing means the cue was right and the
+            // pointer did not follow it.
+            "cue": canvas?.playtestPointerCue ?? "no canvas",
             // The named colors in the document, and what each one paints, so a
             // walk can prove an edit to a style reached everything wearing it.
             "styles": (editor.document?.colorStyles ?? []).map {
@@ -1458,14 +1462,17 @@ private final class Run {
     }
 
     /// A name for whatever the pointer currently looks like. The stock cursors
-    /// are shared singletons, so identity is the whole test.
+    /// are shared singletons, so identity is the whole test; the ones the
+    /// canvas builds itself (resize, rotate, the selection crosshairs) are
+    /// cached and registered by name when they are made.
     static func cursorName() -> String {
         let current = NSCursor.current
         let known: [(NSCursor, String)] = [
             (.openHand, "openHand"), (.closedHand, "closedHand"), (.arrow, "arrow"),
             (.crosshair, "crosshair"), (.iBeam, "iBeam"), (.pointingHand, "pointingHand"),
         ]
-        return known.first { $0.0 === current }?.1 ?? "other"
+        if let stock = known.first(where: { $0.0 === current })?.1 { return stock }
+        return CanvasCursor.name(of: current) ?? "other"
     }
 }
 #endif

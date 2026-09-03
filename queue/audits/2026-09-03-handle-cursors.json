@@ -1,0 +1,30 @@
+{
+  "feature": "Every handle says what it does",
+  "epic": "measure-redline",
+  "summary": "Rest the pointer on any handle around a selected object and it now says what a press would do before you press it: the matching resize arrows on the eight handles round a layer or the picture, a curved arrow on the knob that turns it, and an open hand on the ends of a line or arrow, which used to be the odd ones out beside a measurement's feet.",
+  "setup": "Photonz Dev, Experiments window, release Next. One flag, \"Every handle says what it does\", on by default.",
+  "try": [
+    { "do": "Open a screenshot, press R, and drag out a rectangle.", "shot": "2026-09-03-handle-cursors-1.png" },
+    { "do": "Press V, then move the pointer slowly over each of the eight small squares round it without pressing." },
+    { "do": "Move onto the round knob floating above its top edge." },
+    { "do": "Drag that knob to turn the box, then run the pointer round its eight handles again.", "shot": "2026-09-03-handle-cursors-2.png" },
+    { "do": "Press A, drag an arrow, press Escape to skip the caption, then rest the pointer on each end of it." },
+    { "do": "Click the picture's row named Canvas in the Layers list, then rest on a corner of the picture itself." },
+    { "do": "Click empty space to pick nothing, and go back over all of those spots." }
+  ],
+  "evaluate": [
+    "Over a resize handle, do the arrows point the way you expect to be able to drag it?",
+    "Does the turn arrow read as \"this rotates\" at a glance, and does it look like it belongs beside the resize arrows?",
+    "On a turned box, does the pointer match where the handle SITS rather than what it was called before the turn?",
+    "Is the open hand right for the two ends of an arrow, or would you rather they behaved like resize handles?",
+    "Does anything now flicker or feel busy while you move across a selection?"
+  ],
+  "rough": [
+    "The turn arrow is drawn by us, because the platform ships no rotate pointer. The four resize pointers are the system's own, so they will always match a Finder window. The third picture beside this audit is the five of them side by side, since a screen capture never contains the pointer itself.",
+    "Opposite handles wear the same picture: top and bottom both show up-and-down arrows, because the platform draws one pointer per axis, not one per handle. That is the native behaviour, not a shortcut.",
+    "Hold Option over a corner and the press SKEWS rather than resizes, but the pointer still shows resize arrows. Left alone: there is no conventional skew pointer to reach for, and inventing one felt worse than saying nothing.",
+    "A LOCKED layer still shows its handles and still resizes from them, so the pointer says so too rather than lying about the press. That is a real hole in what locking means, and it is now its own task rather than something quietly changed here.",
+    "The Crop tool keeps its plain crosshair over its own eight handles. Crop is its own mode with its own pointer, so whether the crosshair should give way is a judgement of its own, filed as a separate task.",
+    "Verified on the real app through Scripts/playtest/grab-cue.json, which now walks 34 pointer stages. The probe holds Screen Recording, so the two app pictures here are real screen captures. They show the handles, not the pointer: no screen capture contains the pointer, so the pointer itself is proved by the walk's log rather than by a picture."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "a-locked-layer-stops-offering-handles-that-resiz",
+  "title": "A locked layer stops offering handles that resize it",
+  "goal": "Lock a layer and it still draws its eight resize handles, and dragging one still resizes it. Locking is supposed to mean the thing holds still, so either the handles should go away or the drag should not happen. Right now the lock only stops some kinds of drag, which makes it untrustworthy.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 660,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T23:36:42.187Z",
+  "updated": "2026-09-03T23:36:42.188Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-03 while giving every handle a pointer cue. CanvasView.mouseDown guards the caption-pill press with !layer.isLocked but the frame-handle branch, the endpoint branch and the rotate-knob branch carry no lock check, while CanvasGrab.hit does. The chrome in refreshSelectionChrome also draws handles for a locked layer. The pointer cue deliberately mirrors the press today (CanvasPointer.cue), so fixing the press is what makes the pointer go quiet too, and CanvasPointerCueTests.aLockedLayerStillCuesTheHandlesItStillResizesFrom encodes the current behaviour and should be flipped with it.",
+  "acceptance": [
+    "A locked layer draws no resize handles and no rotate knob.",
+    "Dragging where a locked layer's handle used to be does not change its size or its angle.",
+    "The pointer over a locked layer stays a plain arrow.",
+    "Scripts/test.sh green."
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T23:36:42.188Z",
+      "note": "created (manual)"
+    }
+  ]
+}

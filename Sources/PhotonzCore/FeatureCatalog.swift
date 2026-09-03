@@ -175,8 +175,8 @@ public enum FeatureCatalog {
             Definition(
                 flag: FeatureFlag(
                     name: grabCueFlag,
-                    title: "Grab cue on what you can drag",
-                    description: "Parts of a selected object can be dragged on their own: an arrow's caption, a measurement's number, and a measurement's two feet. When the pointer rests on one of them, it becomes an open hand, and a closed hand while you drag, so the drag is findable without being told about it.",
+                    title: "Every handle says what it does",
+                    description: "Rest the pointer on any handle around a selected object and it says what a press would do before you press it. An open hand over the parts that drag on their own (an arrow\'s caption, either end of a line, a measurement\'s number and its two feet), and a closed hand while you drag one. The matching resize arrows over the eight handles round a layer or the canvas. A curved arrow over the knob that turns it.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

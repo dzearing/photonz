@@ -13,6 +13,9 @@ enum SelectionCursor {
         if let hit = cache[mode] { return hit }
         let built = build(mode)
         cache[mode] = built
+        // Drawn pointers are not shared singletons, so they have to say their
+        // own name for a playtest to be able to read them.
+        CanvasCursor.register(built, as: "select-" + String(describing: mode))
         return built
     }
 

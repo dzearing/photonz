@@ -89,7 +89,7 @@
     {
       "do": "describe",
       "stage": "1-number-unselected",
-      "note": "pointer on the number of a DESELECTED caliper; expect cursor arrow"
+      "note": "pointer on the number of a DESELECTED caliper; expect cue none"
     },
     {
       "do": "move",
@@ -101,7 +101,7 @@
     {
       "do": "describe",
       "stage": "1b-foot-unselected",
-      "note": "pointer on the left foot of a DESELECTED caliper; expect cursor arrow"
+      "note": "pointer on the left foot of a DESELECTED caliper; expect cue none"
     },
     {
       "do": "move",
@@ -131,7 +131,7 @@
     {
       "do": "describe",
       "stage": "2-number-selected",
-      "note": "same spot, caliper now selected; expect cursor openHand"
+      "note": "same spot, caliper now selected; expect cue grab"
     },
     {
       "do": "snapshot",
@@ -147,7 +147,7 @@
     {
       "do": "describe",
       "stage": "3-foot",
-      "note": "pointer on the selected caliper's left foot; expect cursor openHand"
+      "note": "pointer on the selected caliper's left foot; expect cue grab"
     },
     {
       "do": "move",
@@ -159,7 +159,7 @@
     {
       "do": "describe",
       "stage": "3b-foot-right",
-      "note": "pointer on the selected caliper's right foot; expect cursor openHand"
+      "note": "pointer on the selected caliper's right foot; expect cue grab"
     },
     {
       "do": "snapshot",
@@ -192,7 +192,7 @@
     {
       "do": "describe",
       "stage": "3d-foot-after-drop",
-      "note": "pointer still on the foot after the drop; expect cursor openHand"
+      "note": "pointer still on the foot after the drop; expect cue grab"
     },
     {
       "do": "action",
@@ -212,7 +212,7 @@
     {
       "do": "describe",
       "stage": "4-empty",
-      "note": "pointer on empty picture; expect cursor arrow"
+      "note": "pointer on empty picture; expect cue none"
     },
     {
       "do": "move",
@@ -248,7 +248,7 @@
     {
       "do": "describe",
       "stage": "5b-number-after-drop",
-      "note": "pointer still on the number after the drop; expect cursor openHand"
+      "note": "pointer still on the number after the drop; expect cue grab"
     },
     {
       "do": "action",
@@ -298,14 +298,14 @@
     {
       "do": "move",
       "at": [
-        762,
-        919
+        768,
+        880
       ]
     },
     {
       "do": "describe",
       "stage": "6-caption-selected",
-      "note": "pointer on the caption pill of the selected arrow; expect cursor openHand"
+      "note": "pointer on the caption pill of the selected arrow; expect cue grab"
     },
     {
       "do": "snapshot",
@@ -321,7 +321,7 @@
     {
       "do": "describe",
       "stage": "7-tail-handle",
-      "note": "pointer on the arrow's tail handle; expect cursor arrow"
+      "note": "pointer on the arrow's tail handle; expect cue grab (a plain arrow before every handle spoke)"
     },
     {
       "do": "click",
@@ -337,20 +337,20 @@
     {
       "do": "move",
       "at": [
-        762,
-        919
+        768,
+        880
       ]
     },
     {
       "do": "describe",
       "stage": "8-caption-unselected",
-      "note": "same pill with nothing selected; expect cursor arrow"
+      "note": "same pill with nothing selected; expect cue none"
     },
     {
       "do": "click",
       "at": [
-        762,
-        919
+        768,
+        880
       ]
     },
     {
@@ -360,20 +360,20 @@
     {
       "do": "move",
       "at": [
-        762,
-        919
+        768,
+        880
       ]
     },
     {
       "do": "describe",
       "stage": "9-caption-reselected",
-      "note": "arrow selected again by clicking its pill; expect cursor openHand"
+      "note": "arrow selected again by clicking its pill; expect cue grab"
     },
     {
       "do": "drag",
       "from": [
-        762,
-        919
+        768,
+        880
       ],
       "to": [
         980,
@@ -396,7 +396,7 @@
     {
       "do": "describe",
       "stage": "11-after-drag",
-      "note": "pointer still on the pill after the drop; expect cursor openHand"
+      "note": "pointer still on the pill after the drop; expect cue grab"
     },
     {
       "do": "key",
@@ -417,11 +417,342 @@
     {
       "do": "describe",
       "stage": "12-measure-tool",
-      "note": "same pill with the Measure tool in hand; expect cursor crosshair, the tool wins"
+      "note": "same pill with the Measure tool in hand; expect cue none, the tool wins"
     },
     {
       "do": "snapshot",
       "name": "12-measure-tool"
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        900,
+        150
+      ],
+      "to": [
+        1300,
+        450
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "move",
+      "at": [
+        1100,
+        300
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "13-inside-the-box",
+      "note": "pointer in the middle of the selected box; expect cue none"
+    },
+    {
+      "do": "move",
+      "at": [
+        900,
+        150
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "14-handle-top-left",
+      "note": "pointer on the box's top-left handle; expect cue resize-up-left-down-right"
+    },
+    {
+      "do": "snapshot",
+      "name": "14-handle-top-left"
+    },
+    {
+      "do": "move",
+      "at": [
+        1100,
+        150
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "15-handle-top",
+      "note": "pointer on the box's top handle; expect cue resize-up-down"
+    },
+    {
+      "do": "move",
+      "at": [
+        1300,
+        150
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "16-handle-top-right",
+      "note": "pointer on the box's top-right handle; expect cue resize-up-right-down-left"
+    },
+    {
+      "do": "move",
+      "at": [
+        900,
+        300
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "17-handle-left",
+      "note": "pointer on the box's left handle; expect cue resize-left-right"
+    },
+    {
+      "do": "move",
+      "at": [
+        1300,
+        300
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "18-handle-right",
+      "note": "pointer on the box's right handle; expect cue resize-left-right (the same picture as the left handle: the platform draws one pointer per axis, not one per handle)"
+    },
+    {
+      "do": "move",
+      "at": [
+        900,
+        450
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "19-handle-bottom-left",
+      "note": "pointer on the box's bottom-left handle; expect cue resize-up-right-down-left"
+    },
+    {
+      "do": "move",
+      "at": [
+        1100,
+        450
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "20-handle-bottom",
+      "note": "pointer on the box's bottom handle; expect cue resize-up-down"
+    },
+    {
+      "do": "move",
+      "at": [
+        1300,
+        450
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "21-handle-bottom-right",
+      "note": "pointer on the box's bottom-right handle; expect cue resize-up-left-down-right"
+    },
+    {
+      "do": "move",
+      "at": [
+        1100,
+        114
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "22-rotate-knob",
+      "note": "pointer on the knob floated off the box's top edge; expect cue rotate"
+    },
+    {
+      "do": "snapshot",
+      "name": "22-rotate-knob"
+    },
+    {
+      "do": "drag",
+      "from": [
+        900,
+        150
+      ],
+      "to": [
+        820,
+        90
+      ],
+      "steps": 8
+    },
+    {
+      "do": "describe",
+      "stage": "23-corner-dragged",
+      "note": "the top-left corner dragged out; the drag line above should read cursor while down resize-up-left-down-right (this state line reads the real pointer, not the synthesized one)"
+    },
+    {
+      "do": "move",
+      "at": [
+        820,
+        90
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "23b-corner-after-drop",
+      "note": "pointer still on the corner after the drop; expect cue resize-up-left-down-right"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        260
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        900,
+        150
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "24-handle-unselected",
+      "note": "the same corner with the box no longer picked; expect cue none"
+    },
+    {
+      "do": "click",
+      "at": [
+        980,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        646,
+        880
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "25-arrow-tail",
+      "note": "pointer on the tail end of the selected arrow; expect cue grab"
+    },
+    {
+      "do": "snapshot",
+      "name": "25-arrow-tail"
+    },
+    {
+      "do": "move",
+      "at": [
+        420,
+        810
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "26-arrow-head",
+      "note": "pointer on the pointed end of the selected arrow; expect cue grab"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        810
+      ],
+      "to": [
+        380,
+        760
+      ],
+      "steps": 8
+    },
+    {
+      "do": "describe",
+      "stage": "27-endpoint-dragged",
+      "note": "the pointed end dragged; the drag line above should read cursor while down closedHand (this state line reads the real pointer, not the synthesized one)"
+    },
+    {
+      "do": "move",
+      "at": [
+        380,
+        760
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "27b-endpoint-after-drop",
+      "note": "pointer still on the end after the drop; expect cue grab"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        1440,
+        0
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "28-canvas-corner",
+      "note": "pointer on the picture's own top-right boundary handle; expect cue resize-up-right-down-left"
+    },
+    {
+      "do": "snapshot",
+      "name": "28-canvas-corner"
     }
   ]
 }

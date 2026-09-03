@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T21:12:05.528Z",
-  "updated": "2026-09-03T12:08:27.238Z",
+  "updated": "2026-09-03T23:02:41.540Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The cue lives in Sources/PhotonzCore/CanvasGrab.swift (hit test, pure) and Sources/Photonz/CanvasView.swift (refreshGrabCursor / applyGrabCursor). Handles hit-testing is Handles.hit and AnnotationEndpoints.hit. Verification: Scripts/playtest/grab-cue.json reads the live pointer through PlaytestHarness.cursorName(); extend it. A hand is likely wrong for resize handles: NSCursor has no public diagonal resize cursor, so a drawn one (like SelectionCursor) may be needed, which is why this is worth its own pass.\n\nObjective: measure-redline (staged now), and it also lands on the layer resize handles the ui-building work leans on. Polish, so it stays below the focus at p3.",
@@ -31,6 +31,63 @@
     {
       "t": "2026-09-03T12:08:27.237Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-09-03T23:02:41.540Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T23:06:41.318Z",
+      "note": "Adversarial review, before building. (1) Is it useful or decoration? Useful: a frame handle is an 8pt square with 6pt slop, and today the pointer over it is identical to the pointer over the middle of the layer. The only way to find out whether you are on the handle or about to drag the whole layer is to press and see. The cue is a pre-press answer to a small-target question, which is the strongest case a pointer cue has. Same for an arrow endpoint at 8pt."
+    },
+    {
+      "t": "2026-09-03T23:06:41.318Z",
+      "note": "Adversarial review (2) The task note is out of date: it says NSCursor has no public diagonal resize cursor. macOS 15 added NSCursor.frameResize(position:directions:) covering all eight positions, and this app targets macOS 26. So no drawn resize cursor is needed and the pointer is the system one every native app shows. That is the shortest version and it also cannot drift from the platform."
+    },
+    {
+      "t": "2026-09-03T23:06:41.318Z",
+      "note": "Adversarial review (3) The cue must never promise a press the app would not perform. Precedence is copied from CanvasView.mouseDown exactly: canvas boundary handles, endpoint handles, caption pill, caliper grabs, rotate knob, then the eight frame handles. Notably the endpoint branch of the press requires layer.annotation, so a caliper foot stays a hand rather than becoming an endpoint cue."
+    },
+    {
+      "t": "2026-09-03T23:06:41.318Z",
+      "note": "Adversarial review (4) Decided without a card, both being conventions rather than open questions: an arrow endpoint gets the open hand, because a caliper foot beside it already does and they are the same gesture; a frame handle gets the system resize pointer, which is what the acceptance already asked for and what every native app does."
+    },
+    {
+      "t": "2026-09-03T23:06:41.318Z",
+      "note": "Adversarial review (5) Scope call. Included the rotate knob and the canvas boundary handles, because the whole complaint is that some handles speak and their neighbours do not, and leaving those two silent rebuilds the same complaint. Left the Crop tool handles for a follow-up: Crop is its own mode with its own crosshair, so it is a separate judgement."
+    },
+    {
+      "t": "2026-09-03T23:06:41.318Z",
+      "note": "Adversarial review (6) Found while reading: a LOCKED layer still shows its eight frame handles and still resizes, because the frame-handle press has no lock check while the caption-pill press does. Out of scope here; the cue mirrors the press so it stays honest, and a follow-up task is filed."
+    },
+    {
+      "t": "2026-09-03T23:38:15.057385Z",
+      "note": "Built. Core: CanvasPointerCue.swift adds CanvasPointerCue (grab / resize(handle) / rotate) and CanvasPointer.cue, one pure function that mirrors CanvasView.mouseDown's precedence exactly. Also moved the rotate-knob geometry into core as Layer.rotateKnobPoint(zoom:) and added Handles.screenHandle(for:transform:), which turns a handle's direction through the layer's transform and snaps to the nearest of eight, so a turned or mirrored layer gets the pointer matching where its handle SITS. 22 tests in CanvasPointerCueTests."
+    },
+    {
+      "t": "2026-09-03T23:38:15.057385Z",
+      "note": "App: CanvasCursor.swift maps a cue to a pointer. Resize uses the platform's own NSCursor.frameResize(position:directions:) rather than anything drawn, so the arrows match a Finder window; rotate is drawn, since the platform ships none. Names are registered by object identity so a playtest can read a drawn pointer, which also fixed the selection crosshairs reading as \"other\"."
+    },
+    {
+      "t": "2026-09-03T23:38:15.057385Z",
+      "note": "Opposite handles come back from frameResize as the SAME object: the platform draws four resize pointers, not eight. Named them by axis (ResizeAxis: up-down, left-right, up-left-down-right, up-right-down-left) so the two entries agree instead of overwriting each other, which is also the honest name for what is on screen."
+    },
+    {
+      "t": "2026-09-03T23:38:15.057385Z",
+      "note": "Two bugs found and fixed on the way. (1) applyGrabCursor(nil) could not clear a crosshair it had not set, so switching from a crosshair tool to Select left the crosshair on screen until something else moved it; it now forces the re-read on a tool change. (2) The playtest walk's arrow coordinates had gone stale, so stages 8 to 11 had been selecting nothing and passing vacuously."
+    },
+    {
+      "t": "2026-09-03T23:38:15.057385Z",
+      "note": "Verified on the real app: Scripts/playtest/grab-cue.json now walks 34 pointer stages, all green, including all eight handles of an UNturned box, all eight of a box turned by its knob (the axes rotate with it), the knob itself, both ends of an arrow, the picture's own boundary handles, and the plain arrow returning off every handle and on an unselected object. Scripts/test.sh green at 2552 tests."
+    },
+    {
+      "t": "2026-09-03T23:38:15.057385Z",
+      "note": "Playtest harness: describe() now reports `cue`, what the canvas decided was under the pointer, beside `cursor`, the real OS pointer. A walk's pointer is synthesized while the real one is elsewhere on screen, so any redraw that re-reads the real pointer position hands the cue back and one stage in thirty comes back `arrow`. Walks assert on `cue`; docs/design/playtest-harness.md now says so."
+    },
+    {
+      "t": "2026-09-03T23:38:15.057385Z",
+      "note": "Adversarial review of the built thing. Ran it turned, zoomed, locked and unselected. The drawn rotate arrow was black-on-white while the system resize pointers are white-on-dark, so side by side they read as two families; flipped it to match. Left alone and recorded in the audit: Option over a corner skews but still shows resize arrows (there is no conventional skew pointer), and Crop keeps its crosshair over its own handles (filed as its own task, with the locked-layer hole)."
     }
-  ]
+  ],
+  "started": "2026-09-03T23:02:41.539Z"
 }

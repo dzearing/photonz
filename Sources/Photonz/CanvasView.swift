@@ -838,9 +838,8 @@ final class CanvasNSView: NSView {
     /// space, so frame-handle hit-testing and resizing agree with where the
     /// (transformed) chrome draws.
     private func handleSpacePoint(_ p: CGPoint, layer: Layer?) -> CGPoint {
-        guard let layer, !layer.transform.isIdentity else { return p }
-        let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
-        return p.applying(layer.transform.affineTransform(around: center).inverted())
+        guard let layer else { return p }
+        return CanvasPointer.handleSpacePoint(p, layer: layer)
     }
 
     /// The resized frame for a handle drag: the standard opposite-anchor resize,
@@ -865,22 +864,6 @@ final class CanvasNSView: NSView {
                                           transform: layer.transform)
         }
         return frame
-    }
-
-    /// The rotate knob's position in document coordinates: floated off the
-    /// midpoint of the layer's (transformed) top edge, 18 screen points out.
-    private func rotateKnobPoint(for layer: Layer, zoom: CGFloat) -> CGPoint? {
-        let corners = layer.transformedCorners
-        guard corners.count == 4, zoom > 0 else { return nil }
-        let topMid = CGPoint(x: (corners[0].x + corners[1].x) / 2,
-                             y: (corners[0].y + corners[1].y) / 2)
-        let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
-        let dx = topMid.x - center.x
-        let dy = topMid.y - center.y
-        let length = hypot(dx, dy)
-        guard length > 0 else { return CGPoint(x: topMid.x, y: topMid.y - 18 / zoom) }
-        let offset = 18 / zoom
-        return CGPoint(x: topMid.x + dx / length * offset, y: topMid.y + dy / length * offset)
     }
 
     /// In-progress endpoint drag on a selected line/arrow. The geometry lives
@@ -1234,9 +1217,9 @@ final class CanvasNSView: NSView {
         if tool == .measure { refreshMeasureCreation(modifierFlags: event.modifierFlags) }
     }
 
-    // MARK: Grab cue (draggable readout pills)
+    // MARK: Pointer cue (what every handle says it does)
 
-    /// The hand currently forced onto the pointer by `applyGrabCursor`, so a
+    /// The cursor currently forced onto the pointer by `applyGrabCursor`, so a
     /// move that changes nothing leaves the cursor alone and clearing it can
     /// hand control back to the tool's cursor rects.
     private var grabCursor: NSCursor?
@@ -1250,6 +1233,31 @@ final class CanvasNSView: NSView {
         else { return nil }
         return CanvasGrab.hit(at: p, layer: layer, zoom: viewport.zoom,
                                captionsEnabled: Experiments.shared.arrowCaptionsEnabled)
+    }
+
+    /// What a press at `p` (document coords) would do, and the transform to
+    /// read it through — the whole answer the pointer gives, for every handle
+    /// on the canvas rather than just the ones you drag with a hand.
+    ///
+    /// The order MIRRORS `mouseDown`: the canvas's own boundary handles are
+    /// captured before anything else, then the selected layer's handles in
+    /// `CanvasPointer`'s order. A cue that ran ahead of the press would be
+    /// confidently wrong about the one thing it exists to answer.
+    private func pointerCue(at p: CGPoint) -> (cue: CanvasPointerCue, transform: LayerTransform)? {
+        guard Experiments.shared.grabCueEnabled, tool == .select, let viewport else { return nil }
+        if isCanvasSelected,
+           let handle = Handles.hit(at: p, frame: CGRect(origin: .zero, size: viewport.documentSize),
+                                    zoom: viewport.zoom, screenTolerance: 8) {
+            return (.resize(handle), .identity)
+        }
+        guard let layer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) })
+        else { return nil }
+        // No live frame means no frame handles were offered, so none is cued.
+        let cue = CanvasPointer.cue(at: p, layer: layer, frame: selectedLayerFrame,
+                                    zoom: viewport.zoom,
+                                    captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
+                                    offersRotation: offersRotation(layer))
+        return cue.map { ($0, layer.transform) }
     }
 
     /// Whether this event asks for the drag to leave the original behind and
@@ -1274,27 +1282,63 @@ final class CanvasNSView: NSView {
         return false
     }
 
-    /// Open hand while the pointer rests on something that drags on its own —
-    /// a pill, or one of a caliper's dots. Nothing else on the canvas said
-    /// those could be moved, so this is the whole invitation. A drag in flight
-    /// keeps its closed hand.
+    /// Every handle on the canvas says what it does before you press it: an
+    /// open hand over the parts that drag on their own (a pill, one of a
+    /// caliper's dots, either end of a line), the platform's resize arrows over
+    /// the eight handles round a frame, and a curved arrow over the rotate
+    /// knob. Nothing else on the canvas says a small square on top of a big
+    /// object is a different press, so this is the whole invitation.
+    ///
+    /// A drag in flight keeps the pointer it started with — the hand closes,
+    /// resize and rotate hold — so nothing switches under way. That is why
+    /// every drag session bails out here rather than re-reading the pointer.
     private func refreshGrabCursor(at viewPoint: CGPoint? = nil) {
-        guard captionDrag == nil, measureHandleDrag == nil else { return }
+        guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil,
+              endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil else { return }
         let point = viewPoint ?? window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) }
         guard let viewport, let point, bounds.contains(point) else { return applyGrabCursor(nil) }
         let doc = viewport.documentPoint(fromView: point)
-        if grabCue(at: doc) != nil { return applyGrabCursor(.openHand) }
+        let hit = pointerCue(at: doc)
+        #if PHOTONZ_PLAYTEST
+        recordPlaytestCue(hit)
+        #endif
+        if let hit {
+            return applyGrabCursor(CanvasCursor.cursor(for: hit.cue, transform: hit.transform))
+        }
         // Nothing on the canvas says a drag can leave a copy behind, so the
         // badged pointer is the whole invitation: hold ⌥ over a layer and the
         // cursor answers before you have pressed anything.
         applyGrabCursor(pointerModifiers.contains(.option) && copyDragCue(at: doc) ? .dragCopy : nil)
     }
 
+#if PHOTONZ_PLAYTEST
+    /// What the canvas last decided was under the pointer, in words, so a walk
+    /// can tell "the cue was wrong" apart from "the cue was right and the
+    /// pointer did not follow it". A walk's pointer is synthesized, so this is
+    /// recorded as the cue is read rather than re-derived from where the real
+    /// OS pointer happens to be.
+    private(set) var playtestPointerCue = "none"
+
+    private func recordPlaytestCue(_ hit: (cue: CanvasPointerCue, transform: LayerTransform)?) {
+        guard let hit else { return playtestPointerCue = "none" }
+        switch hit.cue {
+        case .grab: playtestPointerCue = "grab"
+        case .rotate: playtestPointerCue = "rotate"
+        case .resize(let handle):
+            playtestPointerCue = "resize-"
+                + Handles.screenHandle(for: handle, transform: hit.transform).axis.rawValue
+        }
+    }
+#endif
+
     /// Forces `cursor` onto the pointer, or gives it back. Only a CHANGE
     /// touches `NSCursor`: mouseMoved fires constantly and re-setting the same
-    /// cursor flickers it on some setups.
-    private func applyGrabCursor(_ cursor: NSCursor?) {
-        guard cursor !== grabCursor else { return }
+    /// cursor flickers it on some setups. `force` overrides that for the one
+    /// case where nothing here changed but the pointer still has to be re-read:
+    /// a TOOL switch, where the crosshair on screen belongs to the tool being
+    /// put down and no cue of ours is holding it.
+    private func applyGrabCursor(_ cursor: NSCursor?, force: Bool = false) {
+        guard force || cursor !== grabCursor else { return }
         grabCursor = cursor
         if let cursor {
             cursor.set()
@@ -1481,6 +1525,7 @@ final class CanvasNSView: NSView {
            let handle = Handles.hit(at: p, frame: CGRect(origin: .zero, size: viewport.documentSize),
                                     zoom: viewport.zoom, screenTolerance: 8) {
             canvasResizeDrag = (handle, CGRect(origin: .zero, size: viewport.documentSize), false)
+            applyGrabCursor(CanvasCursor.cursor(for: .resize(handle), transform: .identity))
             refreshOverlays()
             return
         }
@@ -1520,6 +1565,9 @@ final class CanvasNSView: NSView {
            let start = layer.annotationEndpoint(.start), let end = layer.annotationEndpoint(.end) {
             endpointDrag = EndpointDragSession(layerID: id, content: content,
                                                originalStart: start, originalEnd: end, drag: drag)
+            // The hand that invited this drag closes for its duration, the same
+            // as a caliper foot or a caption pill.
+            applyGrabCursor(.closedHand)
             onDragBegin(id)
             refreshEndpointPreview(constrained: event.modifierFlags.contains(.shift))
             refreshOverlays()
@@ -1590,13 +1638,14 @@ final class CanvasNSView: NSView {
         }
         // Rotate knob, floated off the selected layer's top edge.
         if let id = selectedLayerID, let layer = selectedLayer, offersRotation(layer),
-           let knob = rotateKnobPoint(for: layer, zoom: viewport.zoom),
-           hypot(p.x - knob.x, p.y - knob.y) * viewport.zoom <= 8 {
+           let knob = layer.rotateKnobPoint(zoom: viewport.zoom),
+           hypot(p.x - knob.x, p.y - knob.y) * viewport.zoom <= CanvasPointer.rotateTolerance {
             let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
             transformDrag = TransformDragSession(
                 layerID: id, kind: .rotate(grabAngle: TransformDrag.pointerAngle(p, around: center)),
                 startTransform: layer.transform, center: center,
                 frameSize: layer.frame.size, transform: layer.transform)
+            applyGrabCursor(CanvasCursor.cursor(for: .rotate, transform: layer.transform))
             onDragBegin(id)
             refreshOverlays()
             return
@@ -1616,6 +1665,8 @@ final class CanvasNSView: NSView {
                     frameSize: layer.frame.size, transform: layer.transform)
             } else {
                 resizeDrag = ResizeDrag(layerID: id, handle: handle, startFrame: frame, frame: frame)
+                applyGrabCursor(CanvasCursor.cursor(for: .resize(handle),
+                                                    transform: selectedLayer?.transform ?? .identity))
             }
             onDragBegin(id)
             refreshOverlays()
@@ -2068,6 +2119,7 @@ final class CanvasNSView: NSView {
             annotationCommitImage = image
             endpointHoldLayerID = session.layerID
             onAnnotationEndpointsCommit(session.layerID, start, end)
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let session = transformDrag {
             transformDrag = nil
@@ -2077,6 +2129,7 @@ final class CanvasNSView: NSView {
                 transformHold = (session.layerID, session.startTransform, session.transform)
                 onTransformCommit(session.layerID, session.transform)
             }
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let drag = resizeDrag {
             resizeDrag = nil
@@ -2085,6 +2138,7 @@ final class CanvasNSView: NSView {
                 holdSpriteUntilRender = true
                 onFrameCommit(drag.layerID, drag.frame)
             }
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let drag = moveDrag {
             moveDrag = nil
@@ -2144,6 +2198,7 @@ final class CanvasNSView: NSView {
             if size != viewport.documentSize {
                 onCanvasResize(size, drag.centered ? .center : .fixing(oppositeOf: drag.handle))
             }
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let session = regionContentDrag {
             regionContentDrag = nil
@@ -2568,7 +2623,7 @@ final class CanvasNSView: NSView {
                 onRegionMoveCancel()
             }
             snapGuide = nil
-            applyGrabCursor(nil)
+            applyGrabCursor(nil, force: true)
             endpointDrag = nil
             cropDrag = nil
             transformDrag = nil
@@ -3165,7 +3220,7 @@ final class CanvasNSView: NSView {
 
             // Rotate knob with its stem, off the (transformed) top edge.
             if !dragInFlight, offersRotation(selectedLayer),
-               let knob = rotateKnobPoint(for: selectedLayer, zoom: viewport.zoom) {
+               let knob = selectedLayer.rotateKnobPoint(zoom: viewport.zoom) {
                 let knobInView = viewport.viewPoint(fromDocument: knob)
                 let topMid = chromePoint(CGPoint(x: frame.midX, y: frame.minY))
                 let path = CGMutablePath()

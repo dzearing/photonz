@@ -1,0 +1,28 @@
+{
+  "id": "the-crop-tool-tells-you-which-corner-you-are-abo",
+  "title": "The Crop tool tells you which corner you are about to drag",
+  "goal": "Crop mode draws eight handles around the crop box, and the pointer stays a plain crosshair over every one of them. Everywhere else on the canvas a handle now shows the matching resize arrows before you press, so Crop is the one place left where you have to press and find out.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 650,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T23:36:42.155Z",
+  "updated": "2026-09-03T23:36:42.156Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The cue is decided in CanvasPointer.cue (PhotonzCore, pure) and applied in CanvasView.pointerCue / refreshGrabCursor, which currently guard on tool == .select. The crop press is CanvasView.mouseDown, the branch that builds CropDrag from Handles.hit(at:frame:cropRect:zoom:screenTolerance:8). Cursor images come from CanvasCursor.cursor(for:transform:). Left out of the every-handle pass on 2026-09-03 because Crop is its own mode with its own pointer, so whether the crosshair should give way is a judgement of its own.",
+  "acceptance": [
+    "Resting on any of the eight crop handles shows the resize arrows that match that corner or edge.",
+    "Resting inside the crop box, or anywhere off a handle, shows the Crop tool crosshair as it does today.",
+    "The playtest walk that reads the pointer covers the crop handles.",
+    "Scripts/test.sh green."
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T23:36:42.156Z",
+      "note": "created (manual)"
+    }
+  ]
+}

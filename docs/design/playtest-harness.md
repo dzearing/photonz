@@ -60,11 +60,21 @@ script; a relative path is relative to the script):
   role, feet, frame), every annotation (shape, caption, frame), legend
   entries, whether the edge map is ready, who has the keyboard, and the
   pointer's shape (`cursor`: `arrow`, `openHand`, `closedHand`, `crosshair`,
-  …), which is how a walk proves a hover cue appeared. A `drag` line also
-  reports the cursor WHILE the button was down, the only moment a closed-hand
-  grab exists. The real OS pointer is not where a synthesized click is, so read
-  the cursor from a `move` step's `describe`, not from the state line right
-  after a drag.
+  `resize-up-down`, `rotate`, …) alongside what the canvas DECIDED was under
+  the pointer (`cue`: `none`, `grab`, `rotate`, `resize-<axis>`). A `drag` line
+  also reports the cursor WHILE the button was down, the only moment a
+  closed-hand grab exists. The real OS pointer is not where a synthesized click
+  is, so read the cursor from a `move` step's `describe`, not from the state
+  line right after a drag.
+
+  **Assert on `cue` and read `cursor` as corroboration.** `cue` is the app's own
+  answer for the point the walk moved to, so it is exact and repeatable.
+  `cursor` is the real OS pointer, and a walk's pointer is synthesized while
+  the real one is somewhere else on the screen entirely: any redraw that
+  re-reads the real pointer position hands the cue back, so one stage in a long
+  walk can come back `arrow` while the other thirty agree. That is the harness,
+  not the app. `Scripts/playtest/grab-cue.json` walks every handle on the canvas
+  this way.
 - `menus-<stage>.json` and `menus-<stage>.txt` for every `menus` step: the menu
   bar as a tree for a program, and the same reading as indented text you can
   `cat` when you want to quote a menu item.
