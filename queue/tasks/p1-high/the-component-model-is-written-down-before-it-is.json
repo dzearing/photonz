@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "docs",
   "created": "2026-09-03T00:00:37.159Z",
-  "updated": "2026-09-03T01:11:40.229Z",
+  "updated": "2026-09-03T01:11:58.925Z",
   "deps": [],
   "blockedBy": [],
   "notes": "RETARGETED by the 2026-09-03 retriage. The original task asked for a new page, docs/design/next-components.md. While it sat in the queue, docs/design/ui-building.md was written and it already covers the IA (one tree, Library as a panel group, main/instance/override/variant, styles), the nine step order of work, the deferred list and the user decisions. Writing a second page now would be two sources of truth for the same ladder, so this task shrank to the three gaps that page has: no coordinate rule, no menu items or shortcuts, no flag names.\n\nThe coordinate rule is the one that has to be settled first, because layers-can-hold-layers is built straight after this and encodes it. The recommendation already written into that task is that a child frame is relative to its parent, which is what an instance needs: a main is placed at many spots and its children cannot each carry canvas coordinates.\n\nPhotoshop parity on the keys (user preference): Command G groups, Shift Command G ungroups. Option Command K for Make Component is what the component task assumes.\n\nObjective: ui-components (staged now, under the focus). It is the spec the rest of the ladder is built from, and it earns its place by stopping four later slices from each inventing a different answer.",
@@ -56,7 +56,12 @@
     {
       "t": "2026-09-03T01:11:40.229Z",
       "note": "Scripts/test.sh green, 1533 tests. Docs only change, so no build or app run and no audit: an audit is for something a person can try, and a spec page is not."
+    },
+    {
+      "t": "2026-09-03T01:11:58.925Z",
+      "note": "Three missing answers written into docs/design/ui-building.md (no second page): the coordinate rule (a layer stores its position against its parent, groups translate only, the group origin holds still), a per-step table of menu items and keys (Command G / Shift Command G for group and ungroup per Photoshop parity, F, Option Command K, Option Command B where Photoshop has no equivalent, no key for Frame Selection or the Library toggle), and the six Next-only flags each step ships behind, all on by default. Plus a section on what the first version deliberately does not do, and the two canvas gestures (double click descends, Escape comes back out) since both keys were already taken. Verified: every key checked against EditorCommands.swift and Tools.swift for collisions, flag defaults checked against FeatureCatalog. Scripts/test.sh green, 1533 tests. Committed 263ab31 and pushed."
     }
   ],
-  "started": "2026-09-03T01:05:31.705Z"
+  "started": "2026-09-03T01:05:31.705Z",
+  "completed": "2026-09-03T01:11:58.925Z"
 }
