@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.176Z",
-  "updated": "2026-09-03T06:33:26.006119Z",
+  "updated": "2026-09-03T06:33:42.953Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today Snapping.swift only attracts a dragged frame to the canvas edges and the canvas centre; there is nothing between one layer and another, and no align or distribute command anywhere in EditorCommands.swift. Blocked on its decision card. Guides while dragging were built once before, on 2026-07-02, and turned down, so this must not be built without an answer. Whatever the answer, the maths belongs in PhotonzCore with tests, next to Snapping.swift.\n\nObjective: ui-building (the current focus). Deliberately kept at ui-building rather than moved down to the later ui-layout sub epic: this is help for arranging by hand, not auto layout, so it is legal work now. Nothing here gets built before the card is answered.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-03T06:33:26.006119Z",
       "note": "Review of the built thing, on the probe. Walked it with Scripts/playtest/align-layers-walk.json: three rough rectangles align to 120, ONE undo puts all three back, spacing holds the ends and evens the gaps to 100 each, a fourth rectangle dragged in catches the column's left edge at 120, and the same drag with Command held lands at 126 with no line. Real window captures, Screen Recording was granted. What is still clumsy: reaching a multi-selection on the picture needs a rubber band, since shift clicking a layer does not add it to the selection, and that is the weakest part of the whole flow. Filed as its own task, along with lining one layer up inside its frame and the user's grid and stack ask from the card."
+    },
+    {
+      "t": "2026-09-03T06:33:42.953Z",
+      "note": "Align and Space Evenly over a selection (Arrange row in the inspector plus Layer menu rows on the design-tool keys), and a dragged layer now sticks to the other layers with a short line saying what it caught, Command drags free. Behind next-align-layers, on by default in Next. LayerArrangement and the extended Snapping are in PhotonzCore with 18 new tests; Scripts/test.sh green at 1890 tests. Verified on the probe with Scripts/playtest/align-layers-walk.json against real window captures; audit at queue/audits/2026-09-03-align-layers.json. Pushed as b3b8591."
     }
   ],
-  "started": "2026-09-03T06:14:36.270Z"
+  "started": "2026-09-03T06:14:36.270Z",
+  "completed": "2026-09-03T06:33:42.953Z"
 }
