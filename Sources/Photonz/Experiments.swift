@@ -280,6 +280,16 @@ extension Experiments {
         libraryEnabled && isEnabled(FeatureCatalog.stylesFlag)
     }
 
+    /// `next-starter-components`: whether the Components shelf arrives with the
+    /// app's own five on it. They are components, so this needs components:
+    /// with them off there is no shelf to stock and the switch reads as off.
+    /// Starters already dropped into a document keep drawing and keep updating
+    /// their copies either way, because turning a flag off takes away a way in,
+    /// never a document's contents.
+    var starterComponentsEnabled: Bool {
+        componentsEnabled && isEnabled(FeatureCatalog.starterComponentsFlag)
+    }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its

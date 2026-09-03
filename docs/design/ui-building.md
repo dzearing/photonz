@@ -815,3 +815,51 @@ Deliberately left: styles are per document, with no shared library across
 documents and no publishing; there is no way to make a style without a layer to
 save it from; a style cannot be applied to several selected layers at once; and
 there are no text or effect styles, only color.
+
+## Landed: the Library arrives stocked (Next, `next-starter-components`, 2026-09-03)
+
+Step D7. The Components shelf now holds five components the first time it is
+opened — **Button, Text Field, Card, Nav Bar, Badge** — so the first thing a
+person does is drag one out rather than author one. `StarterComponents.swift`
+in `PhotonzCore`, the shelf and its section in `LibraryPanel` / `ComponentPanel`.
+
+- **They are data, not views.** Each is a plain subtree of the same boxes and
+  text layers a person draws by hand, so once dropped nothing about one is
+  special: it takes copies, its knobs turn, it detaches, it saves. Nothing
+  downstream — renderer, export, package writer, layers list — learns a word.
+- **A starter's id IS its component id**, fixed in the binary
+  (`StarterComponents.fixedID`, built from bytes so there is no parse to fail).
+  So the first drop brings the ORIGINAL into the document and every drop after
+  that places a copy of it, one shelf tile covers both, and the tile's caption
+  changes from "starter" to "main" / "2 copies placed" rather than the tile
+  moving or vanishing.
+- **They paint from five named styles** — Accent, Surface, Text, Muted, Border —
+  which the drop brings into the document with them. So recoloring Accent once
+  repaints every starter wearing it, which is step D8's argument made with
+  something nobody had to build first. A style already in the document wins,
+  matched by id and then by NAME, so somebody who keeps their own Accent gets
+  theirs. A drop brings only the styles that starter actually paints from.
+- **They are built at the document's `pixelScale`**, because a capture's canvas
+  is measured in image pixels: a 36 point button drawn at one to one would land
+  half size on a Retina screenshot.
+- **`PhotonzCore` cannot measure text**, so `StarterComponents.layer` takes a
+  measuring function and the app hands in `TextRasterizer.naturalSize`. Its own
+  fallback is an estimate, good enough for a test and never what the app draws
+  with. `StarterComponentRenderTests` draws the real thing and checks where the
+  ink lands, because every number can be right and the label still off by ten
+  points.
+- **Starter text carries no contrast halo.** Every text layer normally gets one
+  so a caption stays legible over a screenshot; on a button's label it reads as
+  a defect.
+- **A neutral kit, not a set of macOS controls.** A button that looks exactly
+  like the system's invites people to expect the system's behaviour from it, and
+  this is a drawing. Looking like a starting point is the honest thing for it to
+  look like. It is one table of colors and sizes, so this is cheap to revisit.
+
+Deliberately left: no **choice** knob anywhere in the set. A Filled/Outline
+button needs its label inside each option, which would give the component two
+wording knobs that each work half the time; the honest fix is per-option
+wording, which the model does not have. Wording and show-or-hide only. Also
+left: no way to add to the starter set, no starter frames or screens, and a
+long override still overflows the control it sits in, because there is no auto
+layout yet.

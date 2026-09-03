@@ -332,6 +332,17 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.stylesFlag })
     }
 
+    @Test func theStarterComponentsAreNextOnlyAndOnByDefault() {
+        // A shelf that arrives stocked is a Next idea: Current has no Library
+        // to stock, and never sees this flag.
+        #expect(FeatureCatalog.defaultSettings(for: .next)
+            .isEnabled(FeatureCatalog.starterComponentsFlag))
+        #expect(FeatureCatalog.flags(for: .next)
+            .contains { $0.name == FeatureCatalog.starterComponentsFlag })
+        #expect(!FeatureCatalog.flags(for: .current)
+            .contains { $0.name == FeatureCatalog.starterComponentsFlag })
+    }
+
     @Test func startingFromABlankCanvasIsNextOnlyAndOnByDefault() {
         // Starting from nothing is a Next idea: Current's empty window keeps
         // offering open, capture and paste only, and never sees this flag.

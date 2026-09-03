@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 140,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.298Z",
-  "updated": "2026-09-03T00:08:21.629Z",
+  "updated": "2026-09-03T05:29:27.592634Z",
   "deps": [
     "an-instance-can-be-changed-without-leaving-the-f",
     "a-color-can-be-saved-as-a-named-style-and-reused"
@@ -35,6 +35,19 @@
     {
       "t": "2026-09-03T00:08:21.629Z",
       "note": "seq 150 -> 140"
+    },
+    {
+      "t": "2026-09-03T05:22:52.975Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T05:29:27.592634Z",
+      "note": "adversarial review, before building. (1) The Library is off until View > Show Library, so 'the first time you open it' means 'not empty when opened', which is the Media rule already. (2) Retina: a control drawn at 36 points on a 2x capture would land half size, so a starter is built at the document's pixelScale. (3) Every text layer normally gets the redline contrast halo; on a button label that reads as a defect, so starter text carries no shadow. (4) Cut: a Filled/Outline choice knob. A two-way choice needs the label inside each option, which gives the component two wording knobs that each work half the time. Wording and show/hide only, and the audit says so. (5) Dropping the same starter twice must not make two originals: the starter's id IS its component id, so the second drop places a copy of the first. (6) The tile does not vanish once used, it is the same tile with its caption changed from 'starter' to 'main'. (7) Styles are matched by id, then by name, so a person who already has an Accent keeps theirs and a re-colored Accent paints the next drop."
+    },
+    {
+      "t": "2026-09-03T05:29:27.592634Z",
+      "note": "visual direction decided rather than blocked: a neutral kit, obviously a starting point, not a convincing macOS control. A believable macOS button invites people to expect real macOS behavior we do not have. It is one table of colors and sizes to change, so the question goes to the user as an audit line rather than holding the whole feature behind a card."
     }
-  ]
+  ],
+  "started": "2026-09-03T05:22:52.975Z"
 }

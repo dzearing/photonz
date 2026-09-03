@@ -5787,3 +5787,54 @@ Next: step D7, the starter components, which is now unblocked and is specified
 to draw them from these styles. Two follow-ups filed from the audit: applying a
 style to several selected layers at once, and saying so when a color lets go of
 its style.
+
+## 2026-09-03 — The Library arrives stocked (step D7, `next-starter-components`)
+
+The Components shelf now holds five components the first time it is opened —
+Button, Text Field, Card, Nav Bar, Badge — so the first thing a person does with
+the Library is drag one out rather than author one. Asked for directly by the
+user on 2026-09-02.
+
+- `PhotonzCore/StarterComponents.swift` is the whole model half: five drawings
+  written in points against a small pen (boxes with a radius and a fill, labels
+  hung from their vertical middle), plus the five named colors they paint from.
+  They are data, not views: once dropped, a starter is an ordinary subtree of
+  boxes and text and nothing downstream learns a word.
+- **A starter's id is its component id**, fixed in the binary and built from
+  bytes (`StarterComponents.fixedID`) rather than parsed from a string, so there
+  is no failure to swallow. The first drop brings the ORIGINAL in; every drop
+  after that places a copy of it. One shelf tile covers both cases, and its
+  caption changes from "starter" to "main" / "2 copies placed" instead of the
+  tile moving or vanishing.
+- **The colors come with it.** A drop adopts only the styles that starter paints
+  from, matching a style already in the document by id and then by NAME, so a
+  person who keeps their own Accent gets theirs and never a second one. Recolor
+  Accent once and every starter wearing it follows, which is step D8's argument
+  made with something nobody had to build first.
+- **Built at the document's `pixelScale`**: a 36 point button drawn one to one
+  would land half size on a Retina capture, whose canvas is image pixels.
+- `PhotonzCore` cannot measure text, so `StarterComponents.layer` takes a
+  measuring function; the app hands in `TextRasterizer.naturalSize` and the core
+  keeps a rough estimate for tests. `StarterComponentRenderTests` draws the real
+  thing and checks where the ink lands, which is the only way to catch a label
+  that is centred by arithmetic and off by ten points in the font.
+- Starter text carries no auto-contrast halo. Every text layer normally gets one
+  so a caption reads over a screenshot; on a button's label it looks like a bug.
+- Cut deliberately: no choice knob anywhere in the set. Filled-or-outlined needs
+  the label inside each option, which gives a component two wording knobs that
+  each work half the time; per-option wording is what the model would need
+  first. Wording and show-or-hide only.
+- The visual direction (a neutral kit, not convincing macOS controls) was
+  decided rather than blocked on a card: a believable macOS button invites
+  people to expect macOS behavior the app does not have, and the whole thing is
+  one table of colors and sizes, so it is cheap to say no to. The question is an
+  `evaluate` line on the audit instead.
+- 20 new `StarterComponentTests`, 5 new `StarterComponentRenderTests`, written
+  before the implementation. `Scripts/playtest/starter-components-walk.json`
+  drives the shelf, the drop, the copy and the recolor on the probe with real
+  screenshots (Screen Recording granted); one new playtest action opens the
+  Library on Components, which a walk cannot reach with the pointer.
+
+Next: step E9, the whole scenario audited end to end, plus proof that capture,
+measure and redline are untouched. One follow-up filed from the audit: a shelf
+tile is 80 points wide and the wide components are unreadable at that size.

@@ -1,0 +1,31 @@
+{
+  "feature": "The Library has components in it the first time you open it",
+  "epic": "ui-components",
+  "summary": "The Components shelf now arrives with five components on it, a button, a text field, a card, a nav bar and a badge, so the first thing you do is drag one out instead of building one. Each is an ordinary component: the first drop brings the original into your picture along with the named colors it is painted from, every drop after that places a copy, and recoloring one of those colors repaints them all.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components in the Library from the start is on by default; it needs Make a component out of what you drew, which is also on.",
+  "try": [
+    { "do": "Start a blank canvas from the welcome card." },
+    { "do": "Choose View then Show Library, and click Comps on the shelf's segmented control.", "shot": "2026-09-03-starter-components-1-shelf.png" },
+    { "do": "Click the Button tile and read the section that opens under the shelf.", "shot": "2026-09-03-starter-components-2-picked.png" },
+    { "do": "Drag the Button tile onto the canvas and drop it.", "shot": "2026-09-03-starter-components-3-added.png" },
+    { "do": "Drag the same tile out again and drop it lower down. Click the new one and type a different word into its Label field.", "shot": "2026-09-03-starter-components-4-copy.png" },
+    { "do": "Click Styles on the shelf, click the Accent tile, and change its color.", "shot": "2026-09-03-starter-components-5-recolored.png" },
+    { "do": "Press Command Z once, then drag out the Card and the Nav Bar and try their Show or hide knobs on a copy." }
+  ],
+  "evaluate": [
+    "These are drawn as a plain kit rather than as convincing macOS controls, so nobody expects a real button. Is that the right call, or would you rather they looked like the system's?",
+    "The first drop hands you the original and the second hands you a copy. Does that read as obvious, or did you expect two copies?",
+    "Are these the five you want, or is one of them dead weight and something else missing?",
+    "Dropping a Button quietly adds Accent and Surface to your Styles shelf. Is that a welcome head start or clutter in a picture you were only redlining?",
+    "Is a Button at 128 by 36 points the right size to land on a Retina screenshot, or does it arrive too small to work with?"
+  ],
+  "rough": [
+    "The screenshots are real captures of the app, taken by the probe build with Screen Recording granted.",
+    "No component in the set has a choice knob. A filled-or-outlined button needs its label inside each option, which would give you two wording knobs that each work half the time; wording and show-or-hide are the only two kinds here, and per-option wording is what the model would need first.",
+    "A tile's picture is 80 points wide, so the wide ones lose. The Nav Bar and the Text Field are nearly unreadable at tile size while the Badge and the Button read fine.",
+    "A starter tile wears the same four-diamond mark a component you made wears, before it is in your document at all. It is an original, so that is true, but it may read as though it is already in the picture.",
+    "A longer label overflows the button it sits in, because nothing resizes to its contents yet. That is the auto layout gap, not something specific to these five.",
+    "You cannot add to the set or edit it. What ships is what there is, and your own components sit above them on the same shelf.",
+    "The visual direction was decided rather than asked about: a neutral kit, on the grounds that a convincing macOS button invites people to expect macOS behavior it does not have. It is one table of colors and sizes, so saying no to it is cheap."
+  ]
+}

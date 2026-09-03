@@ -250,6 +250,8 @@ struct InspectorPanel: View {
             // from: a capture's details, or a component's.
             if editorState.selectedComponentLayer != nil {
                 LibraryComponentInspector()
+            } else if editorState.selectedStarterComponent != nil {
+                StarterComponentInspector()
             } else if editorState.selectedColorStyle != nil {
                 LibraryStyleInspector()
             } else {

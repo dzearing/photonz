@@ -223,6 +223,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case cycleChoice
     /// Layer ▸ Detach Instance, so a walk can show a copy stop following.
     case detachInstance
+    /// Put the Library in the dock with its Components shelf showing (Next,
+    /// `next-starter-components`). The segmented control is in the dock, which
+    /// a walk cannot reach with the pointer, so this is how the shelf the app
+    /// arrives stocked with gets photographed.
+    case showComponentShelf
     /// Put every sheet away. Escape reaches the window, not the sheet in front
     /// of it, so a walk that photographs a sheet needs a way back out.
     case closeSheets

@@ -2744,6 +2744,11 @@ final class EditorState {
     /// Thumbnail cache keyed by layer id; `hash` invalidates on any layer edit.
     private var thumbnailCache: [UUID: (hash: Int, image: CGImage)] = [:]
     private var thumbnailsInFlight: Set<Int> = []
+    /// The starter set's subtrees and their shelf pictures. The five never
+    /// change, so both are built once, on the first look at the Components
+    /// shelf, and nothing about them is per document.
+    private var starterPreviewLayers: [StarterComponent: Layer] = [:]
+    private var starterThumbnails: [StarterComponent: CGImage] = [:]
 
     /// Layers in panel order (visual index 0 = topmost).
     var panelLayers: [Layer] {
@@ -3073,10 +3078,97 @@ final class EditorState {
         componentAwaitingName = componentID
     }
 
-    /// Every main in the open document, as shelf items.
+    /// Every main in the open document, as shelf items, and after them the
+    /// starters this document has not taken yet (Next, `next-starter-components`).
+    ///
+    /// The document's own come first: what you made is what you are most
+    /// likely reaching for, and the app's five are always there underneath.
+    /// A starter you HAVE taken is listed by the document rather than twice,
+    /// because a starter's id is its component id.
     var componentEntries: [LibraryEntry] {
         guard componentsEnabled else { return [] }
-        return document?.componentLibraryEntries ?? []
+        let mine = document?.componentLibraryEntries ?? []
+        guard starterComponentsEnabled else { return mine }
+        return mine + (document?.starterComponentEntries ?? [])
+    }
+
+    /// Whether the shelf is stocked with the app's own components.
+    var starterComponentsEnabled: Bool { Experiments.shared.starterComponentsEnabled }
+
+    /// The starter behind a shelf tile, nil for a component somebody made.
+    /// Only answers for one the document has NOT taken yet: once it is in the
+    /// document it is an ordinary component and is described as one.
+    func starterComponent(entryID: String) -> StarterComponent? {
+        guard starterComponentsEnabled, let id = UUID(uuidString: entryID),
+              document?.mainComponent(componentID: id) == nil else { return nil }
+        return StarterComponent(componentID: id)
+    }
+
+    /// The starter behind the picked Components tile.
+    var selectedStarterComponent: StarterComponent? {
+        selectedLibraryItemID.flatMap { starterComponent(entryID: $0) }
+    }
+
+    /// What a shelf tile draws a picture of: a starter's subtree, built in the
+    /// app's own colors at one to one. Not in any document, so it is built
+    /// fresh and cached rather than looked up.
+    func starterPreviewLayer(_ kind: StarterComponent) -> Layer {
+        if let cached = starterPreviewLayers[kind] { return cached }
+        let layer = StarterComponents.layer(kind, measure: { TextRasterizer.naturalSize($0) })
+        starterPreviewLayers[kind] = layer
+        return layer
+    }
+
+    /// The picture on a starter's tile. Rendered off a one-layer document, on
+    /// the same path every other thumbnail takes, and kept: the five never
+    /// change, so this happens once per launch and only once the Components
+    /// shelf has actually been looked at.
+    func starterThumbnail(_ kind: StarterComponent) -> CGImage? {
+        if let cached = starterThumbnails[kind] { return cached }
+        let layer = starterPreviewLayer(kind)
+        let box = layer.localBounds
+        guard box.width > 0, box.height > 0 else { return nil }
+        var preview = layer
+        preview.frame.origin = .zero
+        let document = PhotonzDocument(canvasSize: box.size, layers: [preview])
+        guard let image = previewRenderer.thumbnail(for: preview.id, in: document,
+                                                    store: store, maxDimension: 80) else { return nil }
+        starterThumbnails[kind] = image
+        return image
+    }
+
+    /// Puts a component in the picture, whether it is one of the app's or one
+    /// of yours: the single path a drag from the shelf, a double click on a
+    /// tile and the Layer menu row all run.
+    ///
+    /// A starter the document has not taken yet arrives as the ORIGINAL, with
+    /// its named colors and its knobs; everything else, including a second
+    /// drop of the same starter, is a copy.
+    @discardableResult
+    func placeComponent(componentID: UUID, at point: CGPoint) -> UUID? {
+        if let starter = StarterComponent(componentID: componentID),
+           document?.mainComponent(componentID: componentID) == nil {
+            return insertStarterComponent(starter, at: point)
+        }
+        return insertComponentInstance(componentID: componentID, at: point)
+    }
+
+    /// Brings a starter into the open document, centred on a canvas point. One
+    /// undo step: the component, the colors it paints from and the knobs it
+    /// offers all arrive or none of them do.
+    @discardableResult
+    func insertStarterComponent(_ kind: StarterComponent, at point: CGPoint) -> UUID? {
+        guard starterComponentsEnabled, document != nil else { return nil }
+        discardDragPreview()
+        var placed: UUID?
+        perform {
+            placed = $0.insertStarterComponent(kind, at: point,
+                                               measure: { TextRasterizer.naturalSize($0) })
+        }
+        guard let placed else { return nil }
+        selectedLibraryItemID = nil
+        selectLayer(placed, inGroup: self.document?.parentID(of: placed))
+        return placed
     }
 
     /// The main behind the picked Components tile, or nil when the pick is not
@@ -3100,8 +3192,10 @@ final class EditorState {
     var selectedComponentID: UUID? { selectedComponentLayer?.componentID }
 
     /// Whether Layer ▸ Insert Component would do anything: a component is
-    /// picked on the shelf and the document it belongs to is the open one.
-    var canInsertPickedComponent: Bool { selectedComponentID != nil }
+    /// picked on the shelf, whether it is one of yours or one of the app's.
+    var canInsertPickedComponent: Bool {
+        selectedComponentID != nil || selectedStarterComponent != nil
+    }
 
     /// Layer ▸ Insert Component, and what a double click on a Components tile
     /// does: puts a copy in the middle of what you are looking at.
@@ -3110,8 +3204,11 @@ final class EditorState {
     /// zoomed in on one screen, the middle of the canvas is usually off screen,
     /// and a copy you have to go and find is a copy you did not place.
     func insertPickedComponent() {
-        guard let componentID = selectedComponentID else { return }
-        insertComponentInstance(componentID: componentID, at: visibleCanvasCentre)
+        if let componentID = selectedComponentID {
+            insertComponentInstance(componentID: componentID, at: visibleCanvasCentre)
+        } else if let starter = selectedStarterComponent {
+            insertStarterComponent(starter, at: visibleCanvasCentre)
+        }
     }
 
     /// The middle of what the canvas is showing, in document coordinates.

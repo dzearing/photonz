@@ -455,6 +455,10 @@ private final class Run {
                 }
             case .exportDialog: editor.isExportDialogPresented = true
             case .showLibrary: editor.setLibraryVisible(true)
+            case .showComponentShelf:
+                editor.setLibraryVisible(true)
+                UserDefaults.standard.set(LibraryScope.components.rawValue,
+                                          forKey: LibraryPanel.scopeKey)
             case .hideLibrary: editor.setLibraryVisible(false)
             case .placeLibraryPick: editor.placeLibraryPick()
             case .insertPickedComponent: editor.insertPickedComponent()

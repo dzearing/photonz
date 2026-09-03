@@ -124,15 +124,18 @@ struct LibraryPanel: View {
     }
 
     /// The tiles Components draws for what is typed: the mains in the open
-    /// document, each paired with the layer it stands for so the tile can draw
-    /// a picture of it (Next, `next-components`).
-    private var visibleComponents: [(entry: LibraryEntry, layer: Layer)] {
+    /// document and the starters it has not taken yet, each paired with the
+    /// layer it stands for so the tile can draw a picture of it (Next,
+    /// `next-components` and `next-starter-components`). A starter's layer is
+    /// not in the document — it is what a drop would bring in.
+    private var visibleComponents: [(entry: LibraryEntry, layer: Layer, starter: StarterComponent?)] {
         guard scope == .components, let document = editorState.document else { return [] }
         let hits = LibrarySearch.filter(editorState.componentEntries, query: query)
         return hits.prefix(Self.maxTiles).compactMap { entry in
-            guard let id = UUID(uuidString: entry.id),
-                  let layer = document.mainComponent(componentID: id) else { return nil }
-            return (entry, layer)
+            guard let id = UUID(uuidString: entry.id) else { return nil }
+            if let layer = document.mainComponent(componentID: id) { return (entry, layer, nil) }
+            guard let starter = editorState.starterComponent(entryID: entry.id) else { return nil }
+            return (entry, editorState.starterPreviewLayer(starter), starter)
         }
     }
 
@@ -178,7 +181,7 @@ struct LibraryPanel: View {
                             store: coordinator.capture.store)
             }
             ForEach(visibleComponents, id: \.entry.id) { pair in
-                LibraryComponentTile(entry: pair.entry, layer: pair.layer)
+                LibraryComponentTile(entry: pair.entry, layer: pair.layer, starter: pair.starter)
             }
             ForEach(visibleStyles, id: \.entry.id) { pair in
                 LibraryStyleTile(entry: pair.entry, style: pair.style)

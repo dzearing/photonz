@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/starter-components-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-shelf", "note": "a brand new picture, nothing drawn: the Components shelf should already hold five" },
+    { "do": "snapshot", "name": "starter-1-shelf" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-picked", "note": "picking a starter tile opens its own section: what it is, and Add to Picture" },
+    { "do": "snapshot", "name": "starter-2-picked" },
+
+    { "do": "action", "action": "insertPickedComponent" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-added", "note": "the button is in the picture as the ORIGINAL, selected, with its knob and its named colors" },
+    { "do": "snapshot", "name": "starter-3-added" },
+    { "do": "render", "name": "starter-3-added-doc" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [700, 620] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-copy", "note": "dropping the same tile again places a COPY, not a second original: the tile should say 1 copy placed" },
+    { "do": "snapshot", "name": "starter-4-copy" },
+
+    { "do": "action", "action": "pickFirstColorStyle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "recolorPickedColorStyle" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-recolored", "note": "repainting the Accent style once should repaint the original and its copy together" },
+    { "do": "snapshot", "name": "starter-5-recolored" },
+    { "do": "render", "name": "starter-5-recolored-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-undone", "note": "one undo puts the color back everywhere" },
+    { "do": "render", "name": "starter-6-undone-doc" }
+  ]
+}

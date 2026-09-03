@@ -265,6 +265,45 @@ struct LibraryComponentInspector: View {
     }
 }
 
+/// The section that opens when you pick one of the app's own components off
+/// the shelf, before it is in the document (Next, `next-starter-components`).
+///
+/// It says what the thing is for and offers the one useful act. Deliberately
+/// short: everything else about it, its name, its knobs, its copies, becomes
+/// true the moment it is in the picture, and that is the section that says so.
+struct StarterComponentInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        if let starter = editorState.selectedStarterComponent {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    ComponentMark(size: 12)
+                    Text(starter.name)
+                        .font(.subheadline.weight(.medium))
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                }
+                Text(starter.summary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Comes with the app. Adding it puts it in this picture, along with the colors it is painted from.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Add to Picture") {
+                    editorState.insertStarterComponent(starter, at: editorState.visibleCanvasCentre)
+                }
+                .controlSize(.small)
+                .help("Puts it in the middle of the canvas. Dragging the tile puts it where you drop it")
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+        }
+    }
+}
+
 // MARK: - One tile on the Components shelf
 
 /// A component on the shelf: a picture of itself, its name, and the word that
@@ -275,6 +314,11 @@ struct LibraryComponentTile: View {
     @Environment(EditorState.self) private var editorState
     let entry: LibraryEntry
     let layer: Layer
+    /// Set when this tile is one of the app's own, still on the shelf rather
+    /// than in the document. Everything else about the tile is the same: it is
+    /// the same picture, the same drag and the same double click, because the
+    /// moment it lands it is an ordinary component.
+    var starter: StarterComponent?
 
     private var isSelected: Bool { editorState.selectedLibraryItemID == entry.id }
 
@@ -308,7 +352,7 @@ struct LibraryComponentTile: View {
             guard let componentID = layer.componentID else { return NSItemProvider() }
             return ComponentDrag.itemProvider(componentID: componentID)
         }
-        .help("\(entry.name), \(entry.detail). Drag it onto the canvas, or double click to place one.")
+        .help(helpText)
     }
 
     /// The same picture the layers list draws for this layer, at the same size
@@ -319,7 +363,7 @@ struct LibraryComponentTile: View {
             .fill(.quaternary)
             .frame(height: 44)
             .overlay {
-                if let image = editorState.thumbnail(for: layer) {
+                if let image {
                     Image(decorative: image, scale: 1)
                         .resizable()
                         .scaledToFit()
@@ -333,11 +377,22 @@ struct LibraryComponentTile: View {
             }
     }
 
+    private var image: CGImage? {
+        if let starter { return editorState.starterThumbnail(starter) }
+        return editorState.thumbnail(for: layer)
+    }
+
+    private var helpText: String {
+        guard let starter else {
+            return "\(entry.name), \(entry.detail). Drag it onto the canvas, or double click to place one."
+        }
+        return "\(starter.summary) Drag it onto the canvas, or double click to place one."
+    }
+
     private func place() {
         guard let componentID = layer.componentID else { return }
         editorState.selectLibraryItem(entry.id)
-        editorState.insertComponentInstance(componentID: componentID,
-                                            at: editorState.visibleCanvasCentre)
+        editorState.placeComponent(componentID: componentID, at: editorState.visibleCanvasCentre)
     }
 }
 

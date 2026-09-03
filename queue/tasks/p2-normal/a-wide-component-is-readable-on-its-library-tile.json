@@ -1,0 +1,27 @@
+{
+  "id": "a-wide-component-is-readable-on-its-library-tile",
+  "title": "A wide component is readable on its Library tile",
+  "goal": "On the Library shelf, a wide component like a nav bar or a text field shrinks to a smear you cannot tell apart from its neighbour. A tile should show enough of what it is that you can pick the right one without hovering for the tooltip.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 750,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T05:41:49.320Z",
+  "updated": "2026-09-03T05:41:49.320Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while auditing the starter set on 2026-09-03. A tile picture is 80 points wide (LibraryPanel.maxTiles grid, LibraryComponentTile.thumbnail, DocumentRenderer.thumbnail maxDimension: 80) and scaledToFit, so a 320x48 nav bar renders about 80x12. Options worth weighing: crop to a square of the interesting part rather than fitting the whole thing, give a wide component a two-column tile, or draw the picture larger and let the grid reflow.",
+  "acceptance": [
+    "Every component on the Components shelf is tellable apart from its neighbours at the shelf's default width",
+    "A wide component reads as what it is rather than as a grey line",
+    "Nothing about a tall or square component's tile gets worse"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T05:41:49.320Z",
+      "note": "created (manual)"
+    }
+  ]
+}

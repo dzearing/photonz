@@ -75,6 +75,8 @@ public enum FeatureCatalog {
 
     public static let stylesFlag = "next-styles"
 
+    public static let starterComponentsFlag = "next-starter-components"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -316,6 +318,15 @@ public enum FeatureCatalog {
                     name: stylesFlag,
                     title: "Save a color as a style and reuse it",
                     description: "Save a fill, an outline or a text color under a name, and any layer can wear it. The Fill and Color rows in the inspector grow a small styles button: save what is there as a style, or pick one you already have. Saved styles sit on the Library\u{2019}s Styles shelf, where you rename one, change its color, or take it off the shelf. Changing a style repaints every layer wearing it in one step, which one undo puts back. Needs Keep reusable pieces in a Library. Off means colors are one-offs again and the Styles shelf is empty; styles already in a document keep painting either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: starterComponentsFlag,
+                    title: "Components in the Library from the start",
+                    description: "The Library\u{2019}s Components shelf comes with five ready components on it \u{2014} a button, a text field, a card, a nav bar and a badge \u{2014} so the first thing you do is drag one out instead of building one. Each is an ordinary component: it takes copies, its wording and its parts are adjustable on every copy, and it comes apart. They paint from named styles, so recoloring Accent once repaints every one of them. Dropping one brings it and its colors into the document; a document you never drop one into carries none of it. Needs Make a component out of what you drew. Off means the shelf holds only the components you made yourself; starters already dropped into a document keep working either way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
