@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "render",
   "created": "2026-09-03T00:00:37.165Z",
-  "updated": "2026-09-03T01:28:09.100001Z",
+  "updated": "2026-09-03T01:47:30.936Z",
   "deps": [
     "layers-can-hold-layers"
   ],
@@ -29,6 +29,27 @@
     {
       "t": "2026-09-03T00:08:21.373Z",
       "note": "seq 50 -> 50"
+    },
+    {
+      "t": "2026-09-03T01:29:35.742Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T01:33:43.897Z",
+      "note": "Adversarial review before building. (1) Blind isolation is WRONG for the common case: a highlight annotation forces multiply blend, so grouping a highlight with an arrow would make the highlight stop multiplying with the photo underneath and blend against transparency instead — it would visibly break the most common redline object the moment Command G exists. Design change: a group with NO styling of its own (opacity 1, no blur, no shadow, no corner radius, no border, normal blend) draws its children straight onto the canvas backdrop, exactly as if they were loose (pass through). Isolation into a buffer happens only when the group actually carries styling, which is when the user asked for the group to be one object. That also makes acceptance item 1 true by construction and costs nothing at render time for plain groups. (2) A zoom callout inside an isolated group would magnify only the group buffer (transparency) instead of the canvas beneath it; keep the canvas underlay and hand it to callouts so they still mirror the real canvas. (3) A group buffer cropped to the union of child frames clips the children own shadows and blur, so the buffer is sized by a new derived Layer.renderBounds (own bounds grown by style reach, unioned with every descendant reach). (4) RenderDiff.visualBounds reads layer.frame, which is unused for a group, so an edit inside a group would repaint a zero size region on the interactive path — fix it to use the group derived box. (5) Shortest version: no new UI, no group transform or group crop support (the model says groups only translate and nothing can set either)."
+    },
+    {
+      "t": "2026-09-03T01:47:30.936Z",
+      "note": "Built. DocumentRenderer.compositeLayers walks the layer tree instead of flattenedLayers, carrying the canvas origin down. A group whose style is plain passes through (children draw straight onto the canvas); a styled group composites into a buffer sized by the new Layer.renderBounds, then blur, corner radius, border, shadow and opacity apply once, in that order, through five helpers now shared with the leaf path. Rounded corners and the border follow the group's localBounds box. renderSprite sizes its canvas from localBounds so a group has a drag preview. RenderDiff learned the tree: derived box for a group, callout fixed point over the leaves, and a change inside a plain group recurses so dragging one layer inside a group repaints only that layer."
+    },
+    {
+      "t": "2026-09-03T01:47:30.936Z",
+      "note": "Acceptance checked. (1) Tests first: 21 new tests, GroupRenderingTests (9) and GroupRenderBoundsTests (10) plus 2 perf. A plain group renders byte identical to the same layers loose, including a highlight that must keep multiplying with the canvas; opacity, shadow, corner radius and blur each apply once to the whole group. (2) A group inside a group: origins add up and both fades apply; a styled group wrapped in a plain one is byte identical to the styled group alone. (3) Perf, 12MP with ten layers, five of them in one group, on this machine: interactive drag inside a PLAIN group 5.7ms (the 16ms budget path, matching the 5.4ms the same layers cost loose); cold full render 27.0ms against 36.3ms ungrouped, so grouping costs nothing there. NOT under 16ms: a drag inside a STYLED group is 35.0ms, because a styled group is one object and repaints whole, and in this benchmark the group covers most of a 4000x3000 canvas, which is a full render. Inherent to the feature rather than a regression; recorded in perf.md and in the audit's rough. (4) Nothing new on screen: no grouping UI exists (no menu item, no key), and the 70 step redline-walk playtest runs clean on the probe with a real capture showing the editor unchanged."
+    },
+    {
+      "t": "2026-09-03T01:47:30.936Z",
+      "note": "Second review, on the built thing. There is no way to make a group in the app, so the honest artifacts are a real capture proving no regression plus a rendered before/after of three cards loose versus grouped. In that render the group's rounded corners clip the children, which is right for a card but is a product choice the user should confirm, and blend isolation inside a styled group is the one place behavior differs from loose layers. Both are questions in the audit rather than guesses. Audit: queue/audits/2026-09-03-group-draws-as-one-thing.json."
     }
-  ]
+  ],
+  "started": "2026-09-03T01:29:35.741Z"
 }

@@ -390,12 +390,40 @@ any different. What changed is that the picture can now hold a tree.
 - **On disk nothing changed.** A flat document encodes byte for byte as it did,
   and a legacy payload decodes unchanged; groups are a new case, not a wrapper.
 
-Deliberately left to the next task (`A group draws as one thing`): the renderer
-still composites a group's children individually, so a blur, a shadow or an
-opacity on the GROUP is approximated per child rather than applied to the group
-as one pass, and a drag sprite of a group renders nothing. The Position & Size
-fields would show 0 for a group's W and H, which no one can reach until the
-Layers list learns to show groups.
+### A group draws as one thing (renderer, landed 2026-09-03)
+
+Step 1's second task. Still nothing on screen: no group can be made from the
+interface. What changed is that when one can be, it will look right.
+
+- **A group with no styling of its own passes through.** Its children draw
+  straight onto the canvas, exactly as if they sat loose, so grouping never
+  changes a single pixel and a highlight inside a group still multiplies with
+  the photo underneath it. This is the common case and it costs nothing.
+- **A group that carries styling is one object.** Its children composite into a
+  private buffer first, and then the group's blur, rounded corners, border,
+  shadow and opacity apply once, to that one picture: a card with a shadow looks
+  like a card instead of three overlapping shadows, and a half-faded group does
+  not show its own pieces through each other.
+- **Rounded corners follow the group's box** (`localBounds`) and clip what the
+  group holds. The buffer itself is sized by `Layer.renderBounds` — the box
+  grown by how far everything inside it reaches — so a child's own shadow or
+  blur is never clipped by the edge of its group.
+- **Blending is isolated inside a styled group.** A child that multiplies sees
+  the group's contents below it, not the canvas. That is what being one object
+  means, and it is why a plain group passes through instead. A zoom callout is
+  the exception: it still magnifies the real canvas beneath its group.
+- **Repainting stays cheap where it can.** An edit inside a plain group repaints
+  only what moved; an edit inside a styled group repaints the whole group,
+  because the group's fade and shadow are computed from all of it.
+- **A group has a drag sprite** like any other layer, sized to the box its
+  contents make.
+- `flattenedLayers` stays as the bridge for the package writer, which wants
+  leaves; the renderer now walks the tree itself.
+
+Deliberately left: the Position & Size fields would show 0 for a group's W and
+H, which no one can reach until the Layers list learns to show groups. A group
+never scales or rotates what it holds, so a transform or a crop on a group is
+ignored rather than applied.
 
 ## Questions the user decides, not the loop
 

@@ -130,8 +130,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// Every layer in canvas coordinates with the groups dissolved away: the
     /// leaves only, bottom-up, each one's frame moved into canvas space and
     /// each one carrying the visibility, lock and opacity of the groups above
-    /// it. This is what the renderer and everything else that thinks in canvas
-    /// coordinates runs on until they learn the tree themselves.
+    /// it. This is what anything that wants the leaves in canvas coordinates
+    /// runs on — the package writer, which collects the images to save. The
+    /// renderer walks the tree itself, because a group draws as one thing.
     ///
     /// A document with no groups hands back its own array untouched.
     public var flattenedLayers: [Layer] {

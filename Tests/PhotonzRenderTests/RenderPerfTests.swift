@@ -90,6 +90,95 @@ struct RenderPerfTests {
         #expect(median < bound, "median render time regressed badly: \(median)ms")
     }
 
+    /// The same 12MP document with five of its layers wrapped in one styled
+    /// group. A styled group composites its children into a private buffer
+    /// before the group's own shadow and fade apply, which is the expensive
+    /// group path — the plain-group path costs nothing at all.
+    @Test func renders12MPDocumentWithAGroupOfFiveWithinBudget() {
+        let store = ImageStore()
+        var doc = makeBenchmarkDocument(store: store)
+        let members = Set(doc.layers[1...5].map(\.id))
+        let group = doc.groupLayers(ids: members, name: "Card")
+        #expect(group != nil)
+        guard let group else { return }
+        doc.updateLayer(id: group.id) {
+            $0.style = LayerStyle(opacity: 0.9, shadow: ShadowStyle(radius: 24, offset: CGSize(width: 0, height: 12)))
+        }
+        #expect(doc.allLayers.count == 11, "ten original layers plus the group that holds five of them")
+        let renderer = DocumentRenderer()
+        #expect(renderer.render(doc, store: store) != nil)
+
+        var samples: [Double] = []
+        let clock = ContinuousClock()
+        for _ in 0..<10 {
+            let duration = clock.measure {
+                _ = renderer.render(doc, store: store)
+            }
+            samples.append(Double(duration.components.seconds) * 1000
+                           + Double(duration.components.attoseconds) / 1e15)
+        }
+        samples.sort()
+        let median = samples[samples.count / 2]
+        print("[perf] 12MP/10-layer render, five of them in one styled group — " +
+              "median \(String(format: "%.1f", median))ms, " +
+              "min \(String(format: "%.1f", samples[0]))ms, " +
+              "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
+
+        let bound: Double = ProcessInfo.processInfo.environment["CI"] != nil ? 350 : 250
+        #expect(median < bound, "grouped render time regressed badly: \(median)ms")
+    }
+
+    /// The 16ms budget, on the path the budget is about, with a group in the
+    /// document: dragging a layer that lives INSIDE a group of five. A plain
+    /// group draws its children straight onto the canvas, so only the dragged
+    /// layer repaints; a styled group is one object, so the whole group does.
+    @Test func interactiveEditInsideAGroupMeetsBudget() {
+        func median(groupStyle: LayerStyle, label: String) -> Double {
+            let store = ImageStore()
+            var doc = makeBenchmarkDocument(store: store)
+            let members = Set(doc.layers[1...5].map(\.id))
+            guard let group = doc.groupLayers(ids: members, name: "Card") else {
+                Issue.record("grouping five layers should succeed")
+                return .infinity
+            }
+            doc.updateLayer(id: group.id) { $0.style = groupStyle }
+            let renderer = DocumentRenderer()
+            #expect(renderer.renderInteractive(doc, store: store) != nil)
+
+            // The rotated patch, now a child of the group. Its frame is stored
+            // against the group, so nudging it moves it inside the group.
+            let dragged = doc.layer(id: group.id)!.children[1].id
+            let start = doc.layer(id: dragged)!.frame
+            var samples: [Double] = []
+            let clock = ContinuousClock()
+            for step in 1...10 {
+                doc.updateLayer(id: dragged) {
+                    $0.frame = start.offsetBy(dx: CGFloat(step) * 8, dy: CGFloat(step) * 6)
+                }
+                let duration = clock.measure {
+                    #expect(renderer.renderInteractive(doc, store: store) != nil)
+                }
+                samples.append(Double(duration.components.seconds) * 1000
+                               + Double(duration.components.attoseconds) / 1e15)
+            }
+            samples.sort()
+            let median = samples[samples.count / 2]
+            print("[perf] 12MP/10-layer interactive edit inside \(label) — " +
+                  "median \(String(format: "%.1f", median))ms, " +
+                  "min \(String(format: "%.1f", samples[0]))ms, " +
+                  "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
+            return median
+        }
+
+        let plain = median(groupStyle: LayerStyle(), label: "a plain group of five")
+        let styled = median(groupStyle: LayerStyle(opacity: 0.9,
+                                                   shadow: ShadowStyle(radius: 24, offset: CGSize(width: 0, height: 12))),
+                            label: "a styled group of five")
+        // A plain group costs what the same layers cost loose.
+        #expect(plain < 100, "interactive re-render inside a plain group regressed badly: \(plain)ms")
+        #expect(styled < 200, "interactive re-render inside a styled group regressed badly: \(styled)ms")
+    }
+
     /// The 16ms budget applies to *re-renders during editing* — that's what
     /// the user feels on every drag tick and slider tweak. The interactive
     /// path patches dirty regions, so measure it the way the app uses it:

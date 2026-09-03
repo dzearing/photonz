@@ -5424,3 +5424,48 @@ Handover written into `a-group-draws-as-one-thing`: group opacity is currently
 multiplied per child instead of applied to one composited buffer, and
 `renderSprite` returns nil for a group because it sizes its canvas from
 `frame.size`. Next: the renderer, then Command G, then the layers list.
+
+## 2026-09-03 — a group draws as one thing
+
+The renderer half of grouping. `DocumentRenderer` no longer flattens the tree:
+`compositeLayers` walks it, carrying the canvas origin down so a child's frame,
+stored against its parent, lands in the right place.
+
+The design call that mattered was NOT to isolate every group. A highlight
+annotation forces multiply blend, so an isolated group would have made a
+grouped highlight blend against transparency instead of the photo below it —
+the most common redline object, broken the day Command G ships. So: a group
+whose style is plain (`LayerStyle.isPlain`) passes through, drawing its children
+straight onto the canvas, and grouping alone changes not one pixel. Only a group
+that carries styling composites into its own buffer, which is exactly when the
+user asked for one object. Isolation of blend modes inside a styled group is the
+accepted price and is written into the audit for the user to react to.
+
+`groupImage` sizes that buffer from a new derived `Layer.renderBounds` — the
+box grown by how far the styles inside it reach — rather than the union of child
+frames the task suggested, because the union clips the children's own shadows at
+the group's edge. Rounded corners and the border follow `localBounds`, the
+group's real box. The style pieces (blur, corners, border, shadow, opacity) are
+now five small helpers shared by the leaf path and the group path, so both apply
+them in the same order.
+
+Two smaller fixes came with it: `renderSprite` sizes its canvas from
+`localBounds` instead of `frame.size`, so a group has a drag preview at all; and
+`RenderDiff` learned the tree — `visualBounds` uses the derived box for a group,
+the callout fixed point reads the leaves, and a change inside a PLAIN group
+recurses so dragging one layer inside a group repaints that layer rather than
+the whole group.
+
+Perf (12MP, 10 layers, five of them in one group, this machine):
+interactive drag inside a plain group 5.7ms, inside a styled group 35.0ms
+(the group covers most of the canvas, so it is a full render — a styled group is
+one object and repaints whole), cold full render with the group 27.0ms against
+36.3ms ungrouped. Rows added to `docs/progress/perf.md`.
+
+21 new tests, `Scripts/test.sh` green at 1601. Verified on the probe app: the
+70-step `redline-walk` playtest runs clean and its capture shows the editor
+unchanged, so "nothing new appears on screen" still holds. Audit:
+`queue/audits/2026-09-03-group-draws-as-one-thing.json`, with a rendered
+before/after of three cards loose versus grouped.
+
+Next: Command G in the interface, then the layers list learning to show groups.

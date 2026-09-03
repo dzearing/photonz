@@ -424,6 +424,15 @@ extension LayerStyle {
         borderWidth == 0 && cornerRadius == 0 && blurRadius == 0
             && (shadow?.opacity ?? 0) == 0
     }
+
+    /// True when this style draws nothing of its own: no fade, no blur, no
+    /// rounded corners, no border, no shadow, plain blending. A group styled
+    /// like this is a container rather than an object, so its children can draw
+    /// straight onto the canvas and grouping changes no pixels.
+    public var isPlain: Bool {
+        opacity >= 1 && blurRadius <= 0 && cornerRadius <= 0 && borderWidth <= 0
+            && (shadow?.opacity ?? 0) <= 0 && blendMode == .normal
+    }
 }
 
 public struct ShadowStyle: Hashable, Codable, Sendable {
@@ -520,6 +529,13 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// Whether this layer holds other layers.
     public var isGroup: Bool { group != nil }
 
+    /// The canvas region this layer magnifies, for a zoom callout; nil for
+    /// everything else.
+    public var magnifiedSource: CGRect? {
+        if case .zoomCallout(let callout) = content { return callout.sourceRect.standardized }
+        return nil
+    }
+
     /// The layers this one contains, empty for everything that is not a group.
     public var children: [Layer] {
         get { group?.children ?? [] }
@@ -548,6 +564,20 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         }
         guard let union else { return CGRect(origin: frame.origin, size: .zero) }
         return union.offsetBy(dx: frame.origin.x, dy: frame.origin.y)
+    }
+
+    /// The box this layer's DRAWING can touch in its parent's space, which is
+    /// bigger than `localBounds` wherever a shadow or a blur reaches past the
+    /// box. A group renders into a buffer this size, so nothing inside it is
+    /// clipped: its own reach unioned with the reach of everything it holds.
+    public var renderBounds: CGRect {
+        let box = localBounds
+        guard let group else { return box.insetBy(dx: -style.previewPadding, dy: -style.previewPadding) }
+        var reach = box
+        for child in group.children {
+            reach = reach.union(child.renderBounds.offsetBy(dx: frame.origin.x, dy: frame.origin.y))
+        }
+        return reach.insetBy(dx: -style.previewPadding, dy: -style.previewPadding)
     }
 
     /// Whether "Rasterize Layer" applies: the layer is a vector shape/annotation

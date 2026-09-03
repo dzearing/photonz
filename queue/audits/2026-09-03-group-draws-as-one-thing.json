@@ -1,0 +1,27 @@
+{
+  "feature": "A group draws as one thing",
+  "epic": "ui-components",
+  "summary": "A group of layers now paints as one object: the pieces inside composite together first, then the group's own fade, blur, shadow and rounded corners apply once to the result. A group with no styling of its own still draws exactly like the same layers loose, so grouping alone never changes a picture.",
+  "setup": "Nothing to turn on, and nothing new on screen: groups still cannot be made from the interface, so this is the renderer being ready for the Command G task that follows. The pictures below are what it produces.",
+  "try": [
+    { "do": "Open the first picture: the same three cards, on the left each carrying the fade, shadow and rounded corners itself, on the right the three in a group carrying them once.", "shot": "2026-09-03-group-draws-as-one-thing.png" },
+    { "do": "Look at where the cards overlap on the left: each one is see-through, so you read three stacked sheets and three shadows." },
+    { "do": "Look at the same overlap on the right: one solid stack, one shadow, faded once as a whole." },
+    { "do": "Look at the corners on the right: the rounding follows the outside of the whole group, not each card." },
+    { "do": "Open the second picture, a capture of the running app measuring a screenshot, to confirm the rewritten composite path did not disturb anything that exists today.", "shot": "2026-09-03-group-no-regression-sc.png" }
+  ],
+  "evaluate": [
+    "On the right hand card stack, is one shadow around the whole group what you expected grouping to do?",
+    "Rounded corners on a group clip what it holds, so a card sticking out of the group's box gets cut off at the corner. Is clipping the right default, or should a group only clip when you ask it to?",
+    "A group with no styling is invisible to the renderer: grouping is purely organisational until you style the group. Does that match how you would expect Command G to behave?",
+    "Inside a STYLED group, a highlight blends with the group's own contents instead of the photo below it. Is that acceptable, or should a highlight always see the canvas?",
+    "Should a group be able to be rotated or scaled as a whole later, or is a group always just a box that holds things in place?"
+  ],
+  "rough": [
+    "The first picture is an offscreen render, not a screen capture, because there is no way to make a group in the app yet. The second picture is a real capture of the running app and is there to show nothing regressed.",
+    "Blending is isolated inside a styled group: a child set to multiply or screen sees the group's contents, not the canvas. Blindly isolating every group would have broken highlight annotations the moment Command G shipped, which is why a group with no styling passes straight through instead. A styled group is the case where the user asked for one object, so it isolates.",
+    "An edit inside a styled group repaints the whole group, since its fade and shadow are computed from all of it. On a group the size of a 12 megapixel canvas that is a full render, 35ms rather than the 5.7ms an edit inside a plain group costs. Groups that cover part of a picture pay only their own area.",
+    "A transform or a crop set on a group is ignored: the model says groups only translate, and nothing in the app can set either today.",
+    "The mock said a group renders into a buffer sized to the union of its children. That clips the children's own shadows at the group's edge, so the buffer is sized by how far everything inside it actually reaches instead."
+  ]
+}

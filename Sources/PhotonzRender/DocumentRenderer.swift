@@ -233,31 +233,105 @@ public final class DocumentRenderer: @unchecked Sendable {
         guard canvas.width >= 1, canvas.height >= 1 else { return nil }
         let extent = CGRect(origin: .zero, size: canvas)
 
-        var output = CIImage(color: .clear).cropped(to: extent)
+        let output = compositeLayers(document.layers, origin: .zero,
+                                     onto: CIImage(color: .clear).cropped(to: extent),
+                                     underlay: nil, in: document, store: store, clip: extent)
 
-        for layer in document.flattenedLayers where layer.isVisible {
-            guard let layerImage = ciImage(for: layer, in: document, store: store,
-                                           backdrop: output) else { continue }
+        // The canvas defines the document's bounds: layers hanging outside it
+        // (e.g. after a canvas-size change) must not grow the rendered frame.
+        return output.cropped(to: extent)
+    }
+
+    /// Draws a stack of layers (bottom-up) onto `base`.
+    ///
+    /// `origin` is where their coordinate space starts on the canvas: `.zero`
+    /// for the document's own stack, the group's canvas origin for a group's
+    /// children, since a child's frame is stored against its parent.
+    /// `underlay` is what sits beneath `base` on the canvas while `base` is a
+    /// group's private buffer, so a zoom callout inside a group still magnifies
+    /// the real canvas instead of the transparency around its group.
+    private func compositeLayers(_ layers: [Layer], origin: CGPoint, onto base: CIImage,
+                                 underlay: CIImage?, in document: PhotonzDocument,
+                                 store: ImageStore, clip: CGRect) -> CIImage {
+        var output = base
+        for layer in layers where layer.isVisible {
+            let frame = layer.frame.offsetBy(dx: origin.x, dy: origin.y)
+
+            // A group with no styling of its own is a container, not an object:
+            // its children draw straight onto whatever is already there, so
+            // grouping changes no pixels and a highlight inside a group still
+            // multiplies with the canvas below it. Only a group that carries
+            // styling composites into its own buffer first (`groupImage`).
+            if let group = layer.group, layer.style.isPlain {
+                output = compositeLayers(group.children, origin: frame.origin, onto: output,
+                                         underlay: underlay, in: document, store: store, clip: clip)
+                continue
+            }
+
+            // What a zoom callout magnifies: everything under it on the canvas,
+            // which inside a group means its group's contents so far over the
+            // canvas beneath the group.
+            var backdrop = output
+            if case .zoomCallout = layer.content, let underlay {
+                backdrop = output.composited(over: underlay)
+            }
+            guard let layerImage = ciImage(for: layer, origin: origin, in: document, store: store,
+                                           backdrop: backdrop) else { continue }
             // Zoom callouts carry canvas-space chrome (source outline + leader
             // lines) that lives outside the layer frame; composite it beneath
             // the magnified box.
             if case .zoomCallout(let callout) = layer.content,
                let overlay = ZoomCalloutOverlayRasterizer.rasterize(
-                   source: callout.sourceRect.standardized.intersection(extent),
-                   callout: layer.frame, style: layer.style, magnification: callout.magnification,
+                   source: callout.sourceRect.standardized
+                       .intersection(CGRect(origin: .zero, size: document.canvasSize)),
+                   callout: frame, style: layer.style, magnification: callout.magnification,
                    shape: callout.shape) {
                 let height = CGFloat(overlay.image.height)
                 let positioned = CIImage(cgImage: overlay.image)
                     .transformed(by: CGAffineTransform(translationX: overlay.origin.x,
-                                                       y: canvas.height - overlay.origin.y - height))
-                output = positioned.composited(over: output).cropped(to: extent)
+                                                       y: document.canvasSize.height - overlay.origin.y - height))
+                output = positioned.composited(over: output).cropped(to: clip)
             }
-            output = composite(layerImage, over: output, mode: layer.effectiveBlendMode, extent: extent)
+            output = composite(layerImage, over: output, mode: layer.effectiveBlendMode, extent: clip)
         }
+        return output
+    }
 
-        // The canvas defines the document's bounds: layers hanging outside it
-        // (e.g. after a canvas-size change) must not grow the rendered frame.
-        return output.cropped(to: extent)
+    /// A group drawn as one thing: its children composite into a private buffer
+    /// first, then the group's own blur, rounded corners, border, shadow and
+    /// opacity apply once, to that single picture. A card with a shadow looks
+    /// like a card rather than three overlapping shadows.
+    ///
+    /// The buffer is sized by the group's `renderBounds` — its box grown by how
+    /// far everything inside it reaches — so a child's shadow or blur is never
+    /// clipped by the edge of the group. The group's own box (`localBounds`) is
+    /// what rounded corners and the border follow.
+    ///
+    /// Blending is isolated here: a child that multiplies sees the group's
+    /// contents below it, not the canvas. That is the price of being one
+    /// object, and it is why a group with no styling passes through instead.
+    private func groupImage(_ layer: Layer, group: GroupContent, origin: CGPoint,
+                            in document: PhotonzDocument, store: ImageStore,
+                            backdrop: CIImage) -> CIImage? {
+        let height = document.canvasSize.height
+        let box = flipped(layer.localBounds.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
+        let buffer = flipped(layer.renderBounds.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
+        guard buffer.width >= 1, buffer.height >= 1 else { return nil }
+
+        // Children are stored against the group's origin, so their space starts
+        // where the group sits.
+        let childOrigin = CGPoint(x: origin.x + layer.frame.origin.x,
+                                  y: origin.y + layer.frame.origin.y)
+        var image = compositeLayers(group.children, origin: childOrigin,
+                                    onto: CIImage(color: .clear).cropped(to: buffer),
+                                    underlay: backdrop, in: document, store: store, clip: buffer)
+            .cropped(to: buffer)
+
+        image = blurred(image, radius: layer.style.blurRadius)
+        image = rounded(image, box: box, radius: layer.style.cornerRadius)
+        image = bordered(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
+        image = shadowed(image, style: layer.style)
+        return faded(image, opacity: layer.style.opacity)
     }
 
     /// A region of the composite as pixels ("promote selection to layer").
@@ -289,10 +363,14 @@ public final class DocumentRenderer: @unchecked Sendable {
                              padding: CGFloat) -> CGImage? {
         guard var layer = document.layer(id: id) else { return nil }
         layer.isVisible = true
-        layer.frame = CGRect(x: padding, y: padding,
-                             width: layer.frame.width, height: layer.frame.height)
-        let doc = PhotonzDocument(canvasSize: CGSize(width: layer.frame.width + padding * 2,
-                                                     height: layer.frame.height + padding * 2),
+        // The box the layer occupies: its frame, or for a group the box its
+        // contents make (a group's own frame is an anchor with no size). Slide
+        // it so that box starts `padding` in from the top left.
+        let box = layer.localBounds
+        guard box.width >= 1, box.height >= 1 else { return nil }
+        layer.frame = layer.frame.offsetBy(dx: padding - box.minX, dy: padding - box.minY)
+        let doc = PhotonzDocument(canvasSize: CGSize(width: box.width + padding * 2,
+                                                     height: box.height + padding * 2),
                                   layers: [layer])
         return render(doc, store: store)
     }
@@ -320,8 +398,15 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// `backdrop` is the composite of all visible layers below this one —
     /// zoom callouts magnify a region of it, which is what keeps them live:
     /// they reference the canvas, never a baked copy.
-    private func ciImage(for layer: Layer, in document: PhotonzDocument, store: ImageStore,
-                         backdrop: CIImage) -> CIImage? {
+    private func ciImage(for layer: Layer, origin: CGPoint, in document: PhotonzDocument,
+                         store: ImageStore, backdrop: CIImage) -> CIImage? {
+        if let group = layer.group {
+            return groupImage(layer, group: group, origin: origin, in: document,
+                              store: store, backdrop: backdrop)
+        }
+        // The layer's frame in canvas coordinates: identical to its own frame
+        // at the top level, shifted by its parents' origins inside a group.
+        let frame = layer.frame.offsetBy(dx: origin.x, dy: origin.y)
         var image: CIImage
         switch layer.content {
         case .image(let ref):
@@ -367,11 +452,8 @@ public final class DocumentRenderer: @unchecked Sendable {
                                  width: source.width, height: source.height)
             image = backdrop.cropped(to: flipped)
                 .transformed(by: CGAffineTransform(translationX: -flipped.origin.x, y: -flipped.origin.y))
-        // A group has no pixels of its own. The composite loop runs on
-        // `flattenedLayers`, which dissolves groups into their canvas-space
-        // leaves, so one never reaches here — until the renderer learns to
-        // draw a group as its own isolated pass (group blur, group opacity as
-        // one), which is its own task.
+        // Handled above, before the switch: a group has no pixels of its own,
+        // it draws what it holds.
         case .group:
             return nil
         }
@@ -388,18 +470,13 @@ public final class DocumentRenderer: @unchecked Sendable {
         // Scale content into the layer's frame.
         let contentSize = image.extent.size
         if contentSize.width > 0, contentSize.height > 0 {
-            let sx = layer.frame.width / contentSize.width
-            let sy = layer.frame.height / contentSize.height
+            let sx = frame.width / contentSize.width
+            let sy = frame.height / contentSize.height
             image = image.transformed(by: CGAffineTransform(scaleX: sx, y: sy))
         }
 
         // Style: blur (clamped first so edges don't fade to transparent).
-        if layer.style.blurRadius > 0 {
-            let blurred = image.clampedToExtent()
-                .applyingGaussianBlur(sigma: layer.style.blurRadius)
-                .cropped(to: image.extent)
-            image = blurred
-        }
+        image = blurred(image, radius: layer.style.blurRadius)
 
         // Circle-shaped callouts max out the corner radius (capsule on
         // non-square boxes); everything else takes the style's radius. The
@@ -412,34 +489,15 @@ public final class DocumentRenderer: @unchecked Sendable {
             cornerRadius = layer.style.cornerRadius
         }
 
-        // Style: corner radius — clip content to a rounded rect before the
-        // geometric transform so corners rotate with the layer.
-        if cornerRadius > 0 {
-            let mask = roundedRectImage(rect: image.extent, radius: cornerRadius, color: .white)
-            image = mask.applyingFilter("CIMultiplyCompositing",
-                                        parameters: [kCIInputBackgroundImageKey: image])
-                .cropped(to: mask.extent)
-        }
-
-        // Style: border — an inner stroke hugging the (possibly rounded) outline.
-        // Text is exempt: its border outlines the glyphs (done in the rasterizer),
-        // not the box.
+        // Style: corner radius, then border — both follow the layer's box, and
+        // both happen before the geometric transform so they rotate with it.
+        // Text is exempt from the border: its border outlines the glyphs (done
+        // in the rasterizer), not the box.
+        let box = image.extent
+        image = rounded(image, box: box, radius: cornerRadius)
         let isTextLayer: Bool = { if case .text = layer.content { return true } else { return false } }()
-        if layer.style.borderWidth > 0, !isTextLayer {
-            let width = layer.style.borderWidth
-            let outer = roundedRectImage(rect: image.extent,
-                                         radius: cornerRadius,
-                                         color: ciColor(hex: layer.style.borderColorHex))
-            let innerRect = image.extent.insetBy(dx: width, dy: width)
-            var ring = outer
-            if !innerRect.isNull, !innerRect.isEmpty {
-                let inner = roundedRectImage(rect: innerRect,
-                                             radius: max(0, cornerRadius - width),
-                                             color: .white)
-                ring = outer.applyingFilter("CISourceOutCompositing",
-                                            parameters: [kCIInputBackgroundImageKey: inner])
-            }
-            image = ring.composited(over: image).cropped(to: image.extent)
+        if !isTextLayer {
+            image = bordered(image, box: box, radius: cornerRadius, style: layer.style)
         }
 
         // Geometric transform around the layer's center. LayerTransform angles are
@@ -459,49 +517,105 @@ public final class DocumentRenderer: @unchecked Sendable {
         // flipping from top-left model coords to CI bottom-left. Center-based so
         // rotated/skewed extents stay anchored where the frame is. Must happen
         // before the shadow, whose expanded extent would skew the centering.
-        let frameCenterY = document.canvasSize.height - layer.frame.midY
-        image = image.transformed(by: CGAffineTransform(translationX: layer.frame.midX - image.extent.midX,
+        let frameCenterY = document.canvasSize.height - frame.midY
+        image = image.transformed(by: CGAffineTransform(translationX: frame.midX - image.extent.midX,
                                                         y: frameCenterY - image.extent.midY))
 
-        // Style: shadow — the layer's silhouette tinted, blurred, offset
-        // (model y-down → CI y-up), and composited underneath.
-        if let shadow = layer.style.shadow, shadow.opacity > 0 {
-            let color = ciColor(hex: shadow.colorHex, alpha: shadow.opacity)
-            var silhouette = image.applyingFilter("CIColorMatrix", parameters: [
-                "inputRVector": CIVector(x: 0, y: 0, z: 0, w: color.red * color.alpha),
-                "inputGVector": CIVector(x: 0, y: 0, z: 0, w: color.green * color.alpha),
-                "inputBVector": CIVector(x: 0, y: 0, z: 0, w: color.blue * color.alpha),
-                "inputAVector": CIVector(x: 0, y: 0, z: 0, w: color.alpha)
-            ])
-            // Spread: grow/shrink the silhouette SHAPE before blurring. Dilate
-            // (max) for positive spread, erode (min) for negative — distinct
-            // from blur (softness) and offset (distance).
-            if shadow.spread > 0 {
-                silhouette = silhouette.applyingFilter("CIMorphologyMaximum",
-                                                       parameters: ["inputRadius": shadow.spread])
-            } else if shadow.spread < 0 {
-                silhouette = silhouette.applyingFilter("CIMorphologyMinimum",
-                                                       parameters: ["inputRadius": -shadow.spread])
-            }
-            let blurred = silhouette
-                .applyingGaussianBlur(sigma: shadow.radius)
-                .transformed(by: CGAffineTransform(translationX: shadow.offset.width,
-                                                   y: -shadow.offset.height))
-            image = image.composited(over: blurred)
-        }
+        // Style: shadow, then opacity last so it fades content, border and
+        // shadow together.
+        image = shadowed(image, style: layer.style)
+        return faded(image, opacity: layer.style.opacity)
+    }
 
-        // Style: opacity — last, so it fades content, border, and shadow together.
-        if layer.style.opacity < 1 {
-            let alpha = CGFloat(max(0, min(1, layer.style.opacity)))
-            image = image.applyingFilter("CIColorMatrix", parameters: [
-                "inputAVector": CIVector(x: 0, y: 0, z: 0, w: alpha)
-            ])
-        }
+    // MARK: - Style pieces
+    //
+    // Shared by a leaf layer and a group: a leaf styles its own content in its
+    // frame, a group styles the composite of everything inside it, in the box
+    // its contents make. Same order either way — blur, corners, border,
+    // shadow, opacity.
 
-        return image
+    /// Blur, clamped first so edges don't fade to transparent.
+    private func blurred(_ image: CIImage, radius: CGFloat) -> CIImage {
+        guard radius > 0 else { return image }
+        return image.clampedToExtent()
+            .applyingGaussianBlur(sigma: radius)
+            .cropped(to: image.extent)
+    }
+
+    /// Clips to a rounded rect, which is also what makes a group with rounded
+    /// corners clip what it holds.
+    private func rounded(_ image: CIImage, box: CGRect, radius: CGFloat) -> CIImage {
+        guard radius > 0 else { return image }
+        let mask = roundedRectImage(rect: box, radius: radius, color: .white)
+        return mask.applyingFilter("CIMultiplyCompositing",
+                                   parameters: [kCIInputBackgroundImageKey: image])
+            .cropped(to: mask.extent)
+    }
+
+    /// An inner stroke hugging the (possibly rounded) outline of `box`.
+    private func bordered(_ image: CIImage, box: CGRect, radius: CGFloat,
+                          style: LayerStyle) -> CIImage {
+        guard style.borderWidth > 0 else { return image }
+        let width = style.borderWidth
+        let outer = roundedRectImage(rect: box, radius: radius,
+                                     color: ciColor(hex: style.borderColorHex))
+        let innerRect = box.insetBy(dx: width, dy: width)
+        var ring = outer
+        if !innerRect.isNull, !innerRect.isEmpty {
+            let inner = roundedRectImage(rect: innerRect,
+                                         radius: max(0, radius - width),
+                                         color: .white)
+            ring = outer.applyingFilter("CISourceOutCompositing",
+                                        parameters: [kCIInputBackgroundImageKey: inner])
+        }
+        return ring.composited(over: image).cropped(to: image.extent)
+    }
+
+    /// The silhouette tinted, blurred, offset (model y-down → CI y-up), and
+    /// composited underneath. For a group the silhouette is the whole group,
+    /// which is what makes a card cast one shadow instead of three.
+    private func shadowed(_ image: CIImage, style: LayerStyle) -> CIImage {
+        guard let shadow = style.shadow, shadow.opacity > 0 else { return image }
+        let color = ciColor(hex: shadow.colorHex, alpha: shadow.opacity)
+        var silhouette = image.applyingFilter("CIColorMatrix", parameters: [
+            "inputRVector": CIVector(x: 0, y: 0, z: 0, w: color.red * color.alpha),
+            "inputGVector": CIVector(x: 0, y: 0, z: 0, w: color.green * color.alpha),
+            "inputBVector": CIVector(x: 0, y: 0, z: 0, w: color.blue * color.alpha),
+            "inputAVector": CIVector(x: 0, y: 0, z: 0, w: color.alpha)
+        ])
+        // Spread: grow/shrink the silhouette SHAPE before blurring. Dilate
+        // (max) for positive spread, erode (min) for negative — distinct
+        // from blur (softness) and offset (distance).
+        if shadow.spread > 0 {
+            silhouette = silhouette.applyingFilter("CIMorphologyMaximum",
+                                                   parameters: ["inputRadius": shadow.spread])
+        } else if shadow.spread < 0 {
+            silhouette = silhouette.applyingFilter("CIMorphologyMinimum",
+                                                   parameters: ["inputRadius": -shadow.spread])
+        }
+        let cast = silhouette
+            .applyingGaussianBlur(sigma: shadow.radius)
+            .transformed(by: CGAffineTransform(translationX: shadow.offset.width,
+                                               y: -shadow.offset.height))
+        return image.composited(over: cast)
+    }
+
+    /// Fades the whole picture. For a group that is one fade for the group, not
+    /// one per child, so overlapping pieces don't show through each other.
+    private func faded(_ image: CIImage, opacity: Double) -> CIImage {
+        guard opacity < 1 else { return image }
+        let alpha = CGFloat(max(0, min(1, opacity)))
+        return image.applyingFilter("CIColorMatrix", parameters: [
+            "inputAVector": CIVector(x: 0, y: 0, z: 0, w: alpha)
+        ])
     }
 
     // MARK: - Helpers
+
+    /// A rect in the document's top-left space, in Core Image's bottom-left one.
+    private func flipped(_ rect: CGRect, canvasHeight: CGFloat) -> CGRect {
+        CGRect(x: rect.minX, y: canvasHeight - rect.maxY, width: rect.width, height: rect.height)
+    }
 
     private func composite(_ image: CIImage, over backdrop: CIImage, mode: BlendMode, extent: CGRect) -> CIImage {
         switch mode {
