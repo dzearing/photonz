@@ -396,6 +396,15 @@ private final class Run {
             case .newCanvasDialog: editor.isBlankCanvasDialogPresented = true
             case .group: editor.groupSelection()
             case .ungroup: editor.ungroupSelection()
+            case .newFrameDialog: editor.isNewFrameDialogPresented = true
+            case .frameSelection: editor.frameSelection()
+            case .exportDialog: editor.isExportDialogPresented = true
+            case .closeSheets:
+                editor.isExportDialogPresented = false
+                editor.isNewFrameDialogPresented = false
+                editor.isBlankCanvasDialogPresented = false
+                editor.isResizeDialogPresented = false
+                editor.isCanvasSizeDialogPresented = false
             }
             await sleep(0.2)
             note(number, step.name, action.rawValue, state: describe())

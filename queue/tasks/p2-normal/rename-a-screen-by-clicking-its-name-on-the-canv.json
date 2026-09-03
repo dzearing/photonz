@@ -1,0 +1,28 @@
+{
+  "id": "rename-a-screen-by-clicking-its-name-on-the-canv",
+  "title": "Rename a screen by clicking its name on the canvas",
+  "goal": "A frame carries its name above its top left corner, but the only way to change it is to find its row in the Layers list and double click there. Make the name on the canvas the thing you click: click it to pick the frame, double click it to rename it in place.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 690,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T03:07:25.321Z",
+  "updated": "2026-09-03T03:07:25.322Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Frames landed 2026-09-03. The label is chrome drawn by CanvasFrames.swift (refreshFrameChrome) as a CATextLayer per frame, not a document layer, so it takes no clicks today. Hit testing for it would live beside the canvas mouseDown path; the rename field could reuse the text editor overlay pattern in CanvasView.",
+  "acceptance": [
+    "Clicking a frame name on the canvas selects that frame",
+    "Double clicking the name turns it into an editable field in place, with the whole name selected",
+    "Return lands the new name as one undo step and Escape leaves it as it was",
+    "The name is still renameable from the Layers list, and the two never disagree"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T03:07:25.322Z",
+      "note": "created (manual)"
+    }
+  ]
+}

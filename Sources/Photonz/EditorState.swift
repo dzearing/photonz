@@ -36,6 +36,8 @@ final class EditorState {
     var isExportDialogPresented = false
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false
+    /// The size sheet Layer ▸ New Frame… opens (Next, `next-frames`).
+    var isNewFrameDialogPresented = false
 
     /// The user's persisted show/hide preference for the docked inspector.
     /// Distinct from `isLayersPanelVisible`: auto-collapse never touches this,
@@ -583,13 +585,23 @@ final class EditorState {
     }
 
     /// Renders the composite at `scale` and writes it where the user picks.
-    func exportComposite(format: ImageCodec.Format, scale: CGFloat, quality: Double = 0.9) {
-        guard let document,
-              let image = previewRenderer.render(document, store: store, scale: scale),
+    ///
+    /// `frameID` narrows the picture to one frame (Next, `next-frames`): the
+    /// frame's own box becomes the canvas, so what comes out is that screen and
+    /// nothing else — not the canvas behind it, not the layer overlapping it
+    /// from outside — and the file is named after the frame.
+    func exportComposite(format: ImageCodec.Format, scale: CGFloat, quality: Double = 0.9,
+                         frameID: UUID? = nil) {
+        guard let document else { return }
+        let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
+        let target = frame.flatMap { document.frameDocument(id: $0) } ?? document
+        guard let image = previewRenderer.render(target, store: store, scale: scale),
               let data = ImageCodec.encode(image, format: format, quality: quality) else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [format.utType]
-        let base = documentURL?.deletingPathExtension().lastPathComponent ?? "Photonz Export"
+        let base = frame.flatMap { document.layer(id: $0)?.name }
+            ?? documentURL?.deletingPathExtension().lastPathComponent
+            ?? "Photonz Export"
         panel.nameFieldStringValue = "\(base)\(scale == 2 ? "@2x" : "").\(format.fileExtension)"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
@@ -942,7 +954,7 @@ final class EditorState {
         // Inherit this shape's last non-destructive effects (e.g. a drop shadow
         // added to the previous arrow carries to the next).
         layer.style = annotationStyles.layerStyle(forShape: shape)
-        perform { $0.addLayer(layer) }
+        perform { [layer] in $0.addLayerDrawnOnFrame(layer) }
         // An arrow that is about to offer its caption is not finished yet: the
         // Arrow tool stays in hand while the field is open (a drag draws the
         // next arrow), and the hand-back to Select happens when the field
@@ -1107,6 +1119,10 @@ final class EditorState {
     /// and is the guard on this, so do not change it without a new decision.
     private func finishCreating(_ layerID: UUID, tool: Tool = .select) {
         setTool(tool)
+        // A layer drawn onto a frame is selected INSIDE that frame, so Escape
+        // steps back out to the frame rather than dropping the selection, and
+        // the next click on a sibling stays at that level.
+        groupContextID = document?.parentID(of: layerID)
         selectedLayerID = layerID
     }
 
@@ -1117,7 +1133,7 @@ final class EditorState {
         guard let document,
               let layer = ZoomCalloutBuilder.layer(from: start, to: end,
                                                    canvas: document.canvasSize) else { return }
-        perform { $0.addLayer(layer) }
+        perform { $0.addLayerDrawnOnFrame(layer) }
         finishCreating(layer.id)
     }
 
@@ -2642,7 +2658,7 @@ final class EditorState {
             let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth,
                                                   minWidth: TextRasterizer.minimumTextWidth)
             let layer = TextBuilder.layer(content: content, at: origin, naturalSize: size)
-            perform { $0.addLayer(layer) }
+            perform { $0.addLayerDrawnOnFrame(layer) }
             // Re-editing existing text already runs with Select active, so only
             // the new-block path hands the editor back.
             finishCreating(layer.id)
@@ -2957,6 +2973,138 @@ final class EditorState {
         if groupContextID.map({ document?.layer(id: $0) == nil }) ?? false { groupContextID = nil }
         setSelection(nil, captureLayers: false)
         selectLayers(Set(freed).union(kept))
+    }
+
+    // MARK: - Frames (Next flag `next-frames`)
+
+    /// The size the next frame gets when it is dropped with a plain click, and
+    /// what the New Frame dialog opens on: whatever you made last, so building
+    /// a second phone screen costs one click.
+    @ObservationIgnored
+    @AppStorage("frames.lastSize") private var lastFrameSizeRaw = ""
+
+    var lastFrameSize: CGSize {
+        get {
+            let parts = lastFrameSizeRaw.split(separator: "x").compactMap { Double($0) }
+            guard parts.count == 2 else { return FramePreset.default.size }
+            return FramePreset.normalized(CGSize(width: parts[0], height: parts[1]))
+        }
+        set {
+            let size = FramePreset.normalized(newValue)
+            lastFrameSizeRaw = "\(Int(size.width))x\(Int(size.height))"
+        }
+    }
+
+    /// Whether the frame rows and the frame tool exist at all.
+    var framesEnabled: Bool { Experiments.shared.framesEnabled }
+
+    /// Whether Layer ▸ Frame Selection would do anything: one unlocked layer
+    /// is enough, because putting a single thing on a screen of its own is a
+    /// normal way to start.
+    var canFrameSelection: Bool {
+        guard framesEnabled, let document else { return false }
+        return document.canFrameSelection(ids: actionableLayerIDs)
+    }
+
+    /// The frame Export would offer as its scope: the selected frame, or the
+    /// frame whatever is selected lives in. Nil when the selection is nowhere
+    /// near one.
+    var selectedFrameID: UUID? {
+        guard let document, let id = selectedLayerID else { return nil }
+        return document.frameID(containing: id)
+    }
+
+    /// Every frame in the document, outermost first — the export scope menu
+    /// and the frame label chrome both read this.
+    var documentFrames: [Layer] {
+        document?.frames ?? []
+    }
+
+    /// A frame drawn on the canvas, or dropped at a chosen size. One undo
+    /// step, then the frame is selected with the Select tool in hand, the way
+    /// every other created layer lands.
+    @discardableResult
+    func addFrame(at origin: CGPoint, size: CGSize, name: String? = nil) -> UUID? {
+        guard document != nil else { return nil }
+        let size = FramePreset.normalized(size)
+        var madeID: UUID?
+        perform { document in
+            madeID = document.addFrame(name: name, origin: origin, size: size).id
+        }
+        lastFrameSize = size
+        if let madeID { finishCreating(madeID) }
+        return madeID
+    }
+
+    /// The frame tool's drag: a frame the size you drew, or — when the drag
+    /// was really a click — one at the size you made last, dropped with its
+    /// top left where you clicked.
+    func addFrame(from start: CGPoint, to end: CGPoint) {
+        let rect = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
+                          width: abs(end.x - start.x), height: abs(end.y - start.y))
+        if rect.width < 4 || rect.height < 4 {
+            addFrame(at: start, size: lastFrameSize)
+        } else {
+            addFrame(at: rect.origin, size: rect.size)
+        }
+    }
+
+    /// Layer ▸ New Frame…: a frame at a chosen size, placed where the eye
+    /// already is. The first one lands in the middle of what you are looking
+    /// at; every one after that lines up to the right of the frames already on
+    /// the canvas, which is how a document ends up reading as a row of screens
+    /// rather than a stack of them.
+    func addFrameInView(size: CGSize) {
+        guard let document else { return }
+        let size = FramePreset.normalized(size)
+        let canvas = CGRect(origin: .zero, size: document.canvasSize)
+        var visible = canvas
+        if let viewport {
+            visible = CGRect(x: -viewport.origin.x / viewport.zoom,
+                             y: -viewport.origin.y / viewport.zoom,
+                             width: viewport.viewSize.width / viewport.zoom,
+                             height: viewport.viewSize.height / viewport.zoom)
+                .intersection(canvas)
+        }
+        addFrame(at: document.placementForNewFrame(size: size, visible: visible), size: size)
+    }
+
+    /// Layer ▸ Frame Selection: puts a frame around what is selected, fitted
+    /// to it exactly, in one undo step.
+    func frameSelection() {
+        guard canFrameSelection else { return }
+        let ids = actionableLayerIDs
+        discardDragPreview()
+        var madeID: UUID?
+        perform { document in
+            madeID = document.frameSelection(ids: ids)?.id
+        }
+        groupContextID = madeID.flatMap { document?.parentID(of: $0) }
+        selectedLayerID = madeID
+        setSelection(nil, captureLayers: false)
+    }
+
+    /// The frame inspector's size menu and its typed width and height. The
+    /// layers inside stay where they are: a frame's size says where it clips.
+    func setFrameSize(id: UUID, size: CGSize) {
+        guard document?.layer(id: id)?.isFrame == true else { return }
+        discardDragPreview()
+        perform { $0.setFrameSize(id: id, size: size) }
+        lastFrameSize = size
+    }
+
+    /// Whether a frame hides what hangs off its edge.
+    func setFrameClips(id: UUID, _ clips: Bool) {
+        guard document?.layer(id: id)?.isFrame == true else { return }
+        perform { $0.setFrameClips(id: id, clips) }
+    }
+
+    /// The surface a frame paints behind its contents; nil is a frame you see
+    /// the canvas through.
+    func setFrameBackground(id: UUID, hex: String?) {
+        guard document?.layer(id: id)?.isFrame == true else { return }
+        perform { $0.setFrameBackground(id: id, hex: hex) }
+        if let hex { recordRecentColor(hex: hex) }
     }
 
     /// A canvas click that resolved through the group walk: the layer it
@@ -3593,8 +3741,9 @@ final class EditorState {
         let frame = LayerGeometry.applying(value, to: field, of: current)
         guard frame != current else { return }
         // A group has no frame to set — only an origin to move to, which
-        // carries everything inside it.
-        if layer.isGroup {
+        // carries everything inside it. A FRAME does have one: its box is a
+        // real size, so W and H are typed straight into it.
+        if layer.isGroup, !layer.isFrame {
             perform { $0.moveLayer(id: id, toParentOrigin: frame.origin) }
             return
         }
@@ -3726,7 +3875,9 @@ final class EditorState {
     /// Mouse-up from the canvas, in canvas coordinates: one undo step.
     func commitCanvasFrame(id: UUID, frame: CGRect) {
         guard let document, let layer = document.layer(id: id) else { return }
-        guard !layer.isGroup else {
+        // A group only ever moves; a frame's handles resize its box, so it
+        // takes the ordinary path.
+        if layer.isGroup, !layer.isFrame {
             previewMove = nil
             dragPreviewGeneration += 1
             clearPreviewAfterNextFrame = dragPreview != nil

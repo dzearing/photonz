@@ -1,0 +1,28 @@
+{
+  "id": "a-pasted-or-dropped-layer-lands-on-the-frame-you",
+  "title": "A pasted or dropped layer lands on the frame you dropped it on",
+  "goal": "Drawing a shape inside a screen already puts it on that screen. Pasting one, or dragging a picture in from the Finder, still drops it loose on the canvas, so it sits over the screen without belonging to it and does not get cut off at the edge. Make everything that arrives on a frame belong to it.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 680,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T03:07:18.179Z",
+  "updated": "2026-09-03T03:07:18.180Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Frames landed 2026-09-03. PhotonzCore already has PhotonzDocument.addLayerDrawnOnFrame / addLayerOnFrame (Frames.swift), used by the annotation, text and zoom-callout creation paths in EditorState. The paste paths (pasteLayer, pasteImage) and the image-drop path still call addLayer directly. Paste has no pointer, so decide the anchor: the paste offset position is what addLayerOnFrame tests.",
+  "acceptance": [
+    "Pasting a layer while the pointer or the paste position is over a frame puts it inside that frame, in the same place on screen",
+    "An image dragged in from the Finder onto a frame becomes a layer of that frame",
+    "A paste or a drop that lands on bare canvas behaves exactly as it does today",
+    "A screenshot document with no frames is unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T03:07:18.180Z",
+      "note": "created (manual)"
+    }
+  ]
+}

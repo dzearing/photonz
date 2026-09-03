@@ -262,7 +262,9 @@ public final class DocumentRenderer: @unchecked Sendable {
             // grouping changes no pixels and a highlight inside a group still
             // multiplies with the canvas below it. Only a group that carries
             // styling composites into its own buffer first (`groupImage`).
-            if let group = layer.group, layer.style.isPlain {
+            // A FRAME is never a pass-through: it has a surface to paint and an
+            // edge to cut at, so it always draws as one object.
+            if let group = layer.group, !group.isFrame, layer.style.isPlain {
                 output = compositeLayers(group.children, origin: frame.origin, onto: output,
                                          underlay: underlay, in: document, store: store, clip: clip)
                 continue
@@ -315,15 +317,27 @@ public final class DocumentRenderer: @unchecked Sendable {
                             backdrop: CIImage) -> CIImage? {
         let height = document.canvasSize.height
         let box = flipped(layer.localBounds.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
-        let buffer = flipped(layer.renderBounds.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
+        // A clipping frame's buffer IS its box: everything drawn into it that
+        // reaches past the edge is simply not in the picture, which is the
+        // whole of what clipping means here.
+        let reach = layer.clipsToFrame ? layer.localBounds : layer.renderBounds
+        let buffer = flipped(reach.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
         guard buffer.width >= 1, buffer.height >= 1 else { return nil }
 
         // Children are stored against the group's origin, so their space starts
         // where the group sits.
         let childOrigin = CGPoint(x: origin.x + layer.frame.origin.x,
                                   y: origin.y + layer.frame.origin.y)
+        // A frame's surface: the screen its contents sit on, painted first so
+        // everything inside lands on top of it.
+        let surface: CIImage
+        if group.isFrame, let hex = group.backgroundHex {
+            surface = CIImage(color: ciColor(hex: hex)).cropped(to: box.intersection(buffer))
+        } else {
+            surface = CIImage(color: .clear).cropped(to: buffer)
+        }
         var image = compositeLayers(group.children, origin: childOrigin,
-                                    onto: CIImage(color: .clear).cropped(to: buffer),
+                                    onto: surface,
                                     underlay: backdrop, in: document, store: store, clip: buffer)
             .cropped(to: buffer)
 

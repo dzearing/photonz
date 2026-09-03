@@ -330,11 +330,54 @@ public struct ZoomCalloutContent: Hashable, Codable, Sendable {
 /// translate — they never scale or rotate what they hold — so a layer's canvas
 /// position is the sum of the origins from it up to the canvas, plain addition.
 /// See `docs/design/ui-building.md`.
+/// A **frame** is this same group with `isFrame` set: the one difference is
+/// that its layer's stored `frame.size`, unused by an ordinary group, becomes
+/// a real box the contents live in. That is what a screen is built on, and it
+/// is why a document can hold several screens side by side without growing a
+/// pages concept of its own.
 public struct GroupContent: Hashable, Codable, Sendable {
     public var children: [Layer]
+    /// Whether this group is a frame: a fixed box with a size of its own,
+    /// rather than a box that follows whatever is inside it.
+    public var isFrame: Bool
+    /// Whether a frame hides what sticks out past its box. Meaningless for an
+    /// ordinary group, which has no box of its own to clip to.
+    public var clipsContents: Bool
+    /// The surface a frame paints behind its contents ("#FFFFFF" for a white
+    /// screen), or nil for a frame you can see straight through. Ordinary
+    /// groups never paint one.
+    public var backgroundHex: String?
 
-    public init(children: [Layer] = []) {
+    public init(children: [Layer] = [], isFrame: Bool = false,
+                clipsContents: Bool = true, backgroundHex: String? = nil) {
         self.children = children
+        self.isFrame = isFrame
+        self.clipsContents = clipsContents
+        self.backgroundHex = backgroundHex
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case children, isFrame, clipsContents, backgroundHex
+    }
+
+    /// Only a frame writes the frame keys, so an ordinary group encodes exactly
+    /// as it did before frames existed and a document saved then decodes
+    /// unchanged.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(children, forKey: .children)
+        guard isFrame else { return }
+        try c.encode(true, forKey: .isFrame)
+        try c.encode(clipsContents, forKey: .clipsContents)
+        try c.encodeIfPresent(backgroundHex, forKey: .backgroundHex)
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        children = try c.decode([Layer].self, forKey: .children)
+        isFrame = try c.decodeIfPresent(Bool.self, forKey: .isFrame) ?? false
+        clipsContents = try c.decodeIfPresent(Bool.self, forKey: .clipsContents) ?? true
+        backgroundHex = try c.decodeIfPresent(String.self, forKey: .backgroundHex)
     }
 }
 
@@ -529,6 +572,14 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// Whether this layer holds other layers.
     public var isGroup: Bool { group != nil }
 
+    /// Whether this layer is a frame: a group with a size of its own, which is
+    /// what a screen gets built on.
+    public var isFrame: Bool { group?.isFrame == true }
+
+    /// Whether a frame hides what sticks out past its box. False for
+    /// everything that is not a frame.
+    public var clipsToFrame: Bool { group?.isFrame == true && group?.clipsContents == true }
+
     /// The canvas region this layer magnifies, for a zoom callout; nil for
     /// everything else.
     public var magnifiedSource: CGRect? {
@@ -557,6 +608,10 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// empty group is a zero-size box sitting on its own anchor.
     public var localBounds: CGRect {
         guard let group else { return frame }
+        // A frame is the exception that makes screens possible: its box is the
+        // size it was given and holds still, so drawing something that hangs
+        // off the edge never resizes the screen you are building.
+        if group.isFrame { return frame.standardized }
         var union: CGRect?
         for child in group.children {
             let box = child.localBounds
@@ -573,6 +628,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     public var renderBounds: CGRect {
         let box = localBounds
         guard let group else { return box.insetBy(dx: -style.previewPadding, dy: -style.previewPadding) }
+        // Nothing inside a clipping frame can draw past its edge, so its reach
+        // is its box plus whatever its own shadow adds.
+        if group.isFrame, group.clipsContents {
+            return box.insetBy(dx: -style.previewPadding, dy: -style.previewPadding)
+        }
         var reach = box
         for child in group.children {
             reach = reach.union(child.renderBounds.offsetBy(dx: frame.origin.x, dy: frame.origin.y))
@@ -647,6 +707,13 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             // between two children never swallows a click. Children are stored
             // against the group's origin, so the point moves into their space.
             let local = CGPoint(x: p.x - frame.origin.x, y: p.y - frame.origin.y)
+            if group.isFrame {
+                // A frame IS a surface — a screen you build on — so its whole
+                // box takes a click even where it is empty, and a child that
+                // hangs outside a clipping frame is not on screen to be hit.
+                if localBounds.contains(p) { return true }
+                guard !group.clipsContents else { return false }
+            }
             return group.children.contains { $0.contains(canvasPoint: local, zoom: zoom) }
         }
         if var m = measure {

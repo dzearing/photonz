@@ -110,4 +110,20 @@ public struct ToolBarLayout: Hashable, Sendable {
         [.tool(.arrow), .group(.shapes), .tool(.highlight), .tool(.text), .tool(.zoomCallout)],
         [.tool(.fill)],
     ])
+
+    /// The bar with the frame tool in it (Next, `next-frames`). It joins the
+    /// end of the drawing family — a frame IS something you draw on the canvas —
+    /// rather than being spliced in earlier, so no tool anybody already reaches
+    /// for moves to a new slot.
+    public static let familiesWithFrame = ToolBarLayout(families: [
+        [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)],
+        [.tool(.arrow), .group(.shapes), .tool(.highlight), .tool(.text), .tool(.zoomCallout),
+         .tool(.frame)],
+        [.tool(.fill)],
+    ])
+
+    /// The bar as this release's flags leave it.
+    public static func bar(withFrame: Bool) -> ToolBarLayout {
+        withFrame ? familiesWithFrame : families
+    }
 }

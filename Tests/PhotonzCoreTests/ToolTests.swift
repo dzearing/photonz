@@ -325,16 +325,40 @@ struct ToolGroupTests {
 struct ToolBarLayoutTests {
 
     @Test func everyToolAppearsExactlyOnce() {
-        var counts: [Tool: Int] = [:]
-        for entry in ToolBarLayout.families.entries {
-            switch entry {
-            case .tool(let tool): counts[tool, default: 0] += 1
-            case .group(let group): for tool in group.tools { counts[tool, default: 0] += 1 }
+        // The frame tool is flagged (`next-frames`), so the plain bar does not
+        // hold it and the bar that does holds it exactly once.
+        for bar in [ToolBarLayout.families, ToolBarLayout.familiesWithFrame] {
+            var counts: [Tool: Int] = [:]
+            for entry in bar.entries {
+                switch entry {
+                case .tool(let tool): counts[tool, default: 0] += 1
+                case .group(let group): for tool in group.tools { counts[tool, default: 0] += 1 }
+                }
             }
+            for tool in Tool.allCases where tool != .frame {
+                #expect(counts[tool] == 1, "\(tool) appears \(counts[tool] ?? 0) times")
+            }
+            #expect(counts[.frame] == (bar == ToolBarLayout.familiesWithFrame ? 1 : nil))
         }
-        for tool in Tool.allCases {
-            #expect(counts[tool] == 1, "\(tool) appears \(counts[tool] ?? 0) times")
-        }
+    }
+
+    /// The frame tool joins the END of the drawing family, so no tool anybody
+    /// already reaches for moves to a new slot when the flag comes on.
+    @Test func theFrameToolJoinsTheEndOfTheDrawingFamily() {
+        let plain = ToolBarLayout.families.families
+        let framed = ToolBarLayout.familiesWithFrame.families
+        #expect(framed[0] == plain[0])
+        #expect(framed[2] == plain[2])
+        #expect(framed[1] == plain[1] + [.tool(.frame)])
+        #expect(ToolBarLayout.bar(withFrame: false) == ToolBarLayout.families)
+        #expect(ToolBarLayout.bar(withFrame: true) == ToolBarLayout.familiesWithFrame)
+    }
+
+    /// F is free: it collides with no tool letter already spent.
+    @Test func theFrameToolTakesTheDesignToolLetter() {
+        #expect(Tool.frame.shortcutKey == "f")
+        #expect(Tool.allCases.filter { $0.shortcutKey == "f" }.count == 1)
+        #expect(!Tool.frame.createsAnnotationByDrag)
     }
 
     @Test func theFamiliesReadPickCutMeasureThenDrawThenPaint() {

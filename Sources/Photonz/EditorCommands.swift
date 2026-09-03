@@ -305,6 +305,16 @@ struct EditorCommands: Commands {
                     .keyboardShortcut("g", modifiers: [.command, .shift])
                     .disabled(!(editor?.canUngroupSelection ?? false))
             }
+            // Frames sit with the structure commands, because a frame IS a
+            // group with a size. Neither row takes a key: F already picks the
+            // frame tool, and the design-tool key for Frame Selection (⌥⌘G) is
+            // Photoshop's Create Clipping Mask, which this app may want later.
+            if Experiments.shared.framesEnabled {
+                Button("New Frame…") { editor?.isNewFrameDialogPresented = true }
+                    .disabled(editor?.document == nil)
+                Button("Frame Selection") { editor?.frameSelection() }
+                    .disabled(!(editor?.canFrameSelection ?? false))
+            }
             Divider()
             // The arrange commands, Duplicate and Delete act on the whole
             // selection: the multi-selection a shift-click, command-click or

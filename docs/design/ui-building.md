@@ -485,14 +485,64 @@ row with something hidden behind it.
 Deliberately left: no keyboard way to open a group, no open-all, and no
 horizontal aiming inside a drop line to choose a level.
 
+## Landed: a frame is a group with a size (Next, `next-frames`, 2026-09-03)
+
+Step A2. The first thing in this ladder a person can build a screen on.
+
+- **A frame is a group whose stored size is finally used.** An ordinary group's
+  box follows its contents and its stored size is unused; setting
+  `GroupContent.isFrame` turns that stored size into a real box the contents
+  live in. So moving, restacking, grouping, undo, hit testing and saving are all
+  the code that already existed, and there is no artboard list on the document.
+- **It paints a surface, white by default.** A frame with no fill is invisible
+  on a white canvas, which makes "draw a frame" feel like nothing happened. The
+  Frame inspector section carries the surface, the size preset menu and a
+  **Clip contents** switch; Position & Size types the exact numbers, which is
+  where every layer's numbers already are.
+- **It clips.** Anything past the edge is not drawn, not hit, and not exported.
+  A frame that does not clip is one switch away, for the group you can see out
+  of.
+- **What you draw on a frame lands on it.** A shape, a text block or a callout
+  whose CENTRE falls inside a frame becomes a child of that frame, with its
+  position rewritten so it does not move. Without this a frame would be a
+  picture of a boundary: the only way in would be dragging rows in the layers
+  list. **Measurements deliberately do not join a frame** — a caliper measures
+  across things and must not be clipped by one, so redlining is untouched.
+- **The name and the edge are chrome, not content.** The canvas draws a frame's
+  name above its top left corner and a hairline at its edge, in a neutral grey
+  that reads on a white surface and a dark screenshot alike. Neither is in the
+  document, so neither exports, and both stay one point wide at every zoom.
+- **F draws one; a click drops one.** The frame tool joins the END of the
+  drawing family in the tool bar, so no tool anybody already reaches for moves.
+  A drag makes a frame the size you drew; a plain click drops one at the size
+  you made last, which is how a second phone screen costs one click.
+  Layer ▸ New Frame… opens the size list (Desktop, Laptop, Tablet, Phone,
+  Square, Custom) and places the frame beside the frames already on the canvas,
+  along their top edge, so a document reads as a row of screens. Layer ▸ Frame
+  Selection puts a frame around what you have, fitted exactly and with no
+  surface painted, because that is a boundary drawn around existing work.
+- **Export takes a scope.** With frames in the document the Export sheet asks
+  what to write: the whole canvas, or one frame. It opens on the frame the
+  selection is in, the size line shows that frame's box, and the file is named
+  after the frame. The picture is the frame's contents only: the canvas behind
+  it and the layer overlapping it from outside are not in it.
+- On disk an ordinary group writes none of the frame keys, so a document saved
+  before frames existed is byte for byte what it was.
+
+Deliberately left: a frame does not resize or lay out what is inside it (no
+auto layout, no constraints); pasted and dropped layers do not land on a frame
+yet, only drawn ones; the name is renamed in the Layers list rather than on the
+canvas; and the frame's box has no rounded-corner preset of its own beyond the
+Effects section every layer has.
+
 ## Questions the user decides, not the loop
 
 Each of these becomes a decision card when the step that needs it is claimed.
 None of them blocks the step before it.
 
-- Does a frame clip its contents by default, or only when asked? Clipping is what
-  makes a frame a screen; not clipping is what makes it a group people can see
-  out of.
+- ~~Does a frame clip its contents by default, or only when asked?~~ Answered by
+  the task that built frames: it clips, and a **Clip contents** switch in the
+  Frame section turns that off for the group you can see out of.
 - Does dropping an instance default to the main's own configuration, or to the
   last variant that person used? (`components` raises this and leaves it open.)
 - Do the built-in components look like macOS controls, or like a neutral kit that

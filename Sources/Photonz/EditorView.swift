@@ -199,6 +199,9 @@ struct EditorView: View {
         .sheet(isPresented: $editorState.isBlankCanvasDialogPresented) {
             NewCanvasDialog()
         }
+        .sheet(isPresented: $editorState.isNewFrameDialogPresented) {
+            NewFrameDialog()
+        }
     }
 
     @ViewBuilder
@@ -250,6 +253,7 @@ struct EditorView: View {
                        onAnnotationCommit: { editorState.addAnnotation(from: $0, to: $1) },
                        onAnnotationEndpointsCommit: { editorState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
                        onZoomCalloutCommit: { editorState.addZoomCallout(from: $0, to: $1) },
+                       onFrameCreate: { editorState.addFrame(from: $0, to: $1) },
                        onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },
                        onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
                        onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
@@ -553,7 +557,8 @@ struct EditorView: View {
     /// each: pick, cut and measure the picture; draw on it; paint it. Every
     /// slot is the same widget the compact bar uses, so the two never drift.
     @ViewBuilder private var groupedToolRow: some View {
-        ForEach(Array(ToolBarLayout.families.families.enumerated()), id: \.offset) { index, family in
+        ForEach(Array(ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled)
+            .families.enumerated()), id: \.offset) { index, family in
             if index > 0 {
                 Divider().frame(height: 20)
             }
@@ -743,6 +748,8 @@ struct EditorView: View {
     private enum ToolbarSlot: String, CaseIterable {
         case select, marquee, arrow, line, rectangle, ellipse, highlight, text
         case crop, resize, zoomCallout, measure, fill
+        /// The frame tool (Next, `next-frames`): the screen you build on.
+        case frame
         /// Line, Rectangle and Ellipse as one family. Only in the grouped bar.
         case shapes
 
@@ -781,6 +788,7 @@ struct EditorView: View {
             case .zoomCallout: "Zoom Callout"
             case .measure: "Measure"
             case .fill: "Fill"
+            case .frame: "Frame"
             }
         }
 
@@ -801,6 +809,7 @@ struct EditorView: View {
             case .zoomCallout: "plus.magnifyingglass"
             case .measure: "ruler"
             case .fill: "drop"
+            case .frame: "macwindow"
             }
         }
 
@@ -834,6 +843,7 @@ struct EditorView: View {
             case .zoomCallout: .zoomCallout
             case .measure: .measure
             case .fill: .fill
+            case .frame: .frame
             case .marquee, .shapes, .resize: nil
             }
         }
@@ -844,10 +854,11 @@ struct EditorView: View {
     /// which is what Current ships. Resize stays a button beside Crop only
     /// while the Crop flyout (tool-options flag) is not there to hold it.
     private var toolbarSlots: [ToolbarSlot] {
+        let frames = Experiments.shared.framesEnabled
         guard Experiments.shared.toolGroupsEnabled else {
-            return ToolbarSlot.allCases.filter { $0 != .shapes }
+            return ToolbarSlot.allCases.filter { $0 != .shapes && ($0 != .frame || frames) }
         }
-        var slots = ToolBarLayout.families.entries.map(ToolbarSlot.init)
+        var slots = ToolBarLayout.bar(withFrame: frames).entries.map(ToolbarSlot.init)
         if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
             slots.insert(.resize, at: crop + 1)
         }
@@ -887,6 +898,7 @@ struct EditorView: View {
         case .crop: cropToolButton
         case .resize: resizeButton
         case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
+        case .frame: toolButton(.frame, "macwindow", "Frame")
         case .measure: measureToolButton
         case .fill:
             toolButton(.fill, help: "Fill") {

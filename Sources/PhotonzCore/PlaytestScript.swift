@@ -166,6 +166,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case newCanvasDialog
     /// ⌘G and ⇧⌘G are menu chords too.
     case group, ungroup
+    /// The frame rows in the Layer menu (Next, `next-frames`): the size sheet,
+    /// and putting a frame around what is selected.
+    case newFrameDialog, frameSelection
+    /// The Export sheet, so a walk can photograph its frame scope.
+    case exportDialog
+    /// Put every sheet away. Escape reaches the window, not the sheet in front
+    /// of it, so a walk that photographs a sheet needs a way back out.
+    case closeSheets
 }
 
 /// What a `hover` step rests the pointer on.

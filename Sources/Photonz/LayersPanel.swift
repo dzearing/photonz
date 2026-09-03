@@ -99,6 +99,9 @@ struct InspectorPanel: View {
             // so this shows for all of them; which of the four accept typing
             // is `LayerGeometryEditing`'s call.
             if Experiments.shared.geometryFieldsEnabled { set.insert(.geometry) }
+            // A frame's own properties: its size, its clipping, its surface
+            // (Next, `next-frames`). Only a frame has any of them.
+            if Experiments.shared.framesEnabled, layer.isFrame { set.insert(.frame) }
             if layer.annotation != nil { set.insert(.annotation) }
             if case .text = layer.content { set.insert(.text) }
             if layer.measure != nil { set.insert(.measure) }
@@ -163,6 +166,10 @@ struct InspectorPanel: View {
             WandToolInspector()
         case .cropTool:
             CropToolInspector()
+        case .frame:
+            if let layer = selectedLayer, layer.isFrame {
+                FrameInspector(layer: layer)
+            }
         case .annotation:
             if let layer = selectedLayer, layer.annotation != nil {
                 AnnotationInspector(layer: layer)
@@ -238,6 +245,7 @@ enum InspectorSectionID: String, CaseIterable {
     case cropTool
     case measurements
     case geometry
+    case frame
     case annotation
     case text
     case measure
@@ -254,6 +262,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .cropTool: "Crop Tool"
         case .measurements: "Measurements"
         case .geometry: "Position & Size"
+        case .frame: "Frame"
         case .annotation: "Annotation"
         case .text: "Text"
         case .measure: "Measure"

@@ -1,0 +1,32 @@
+{
+  "feature": "Frames: something to build a screen on",
+  "epic": "ui-building",
+  "summary": "You can now draw a frame: a screen with a fixed size, a name above its top left corner and a white surface, that hides anything hanging off its edge. Several sit side by side on one canvas, what you draw on one belongs to it, and Export can write a single frame instead of the whole canvas.",
+  "setup": "Photonz Dev, Experiments window, release Next. Build on a frame is on by default and needs Group what you selected, which is also on.",
+  "try": [
+    { "do": "Open a new window and pick Blank canvas, Desktop." },
+    { "do": "Press F and drag out a box in the left half of the canvas." },
+    { "do": "Press R and drag a rectangle inside the frame, then press T, click inside the frame and type a word.", "shot": "2026-09-03-frames-1.png" },
+    { "do": "Press R again and drag a bar that starts inside the frame and ends past its right edge." },
+    { "do": "Press F and click once to the right of the frame." },
+    { "do": "Click the empty white part of the first frame, then drag it somewhere else." },
+    { "do": "Press ⇧⌘E and look at what Export offers.", "shot": "2026-09-03-frames-2.png" },
+    { "do": "Draw a rectangle on bare canvas, then choose Layer, Frame Selection.", "shot": "2026-09-03-frames-3.png" }
+  ],
+  "evaluate": [
+    "When you drew the frame, was it obvious that something appeared? The surface is white and so is a blank canvas, so the name and the hairline edge are doing all the work.",
+    "Is the name in the right place and the right size, or does it want to be bigger, closer, or clickable?",
+    "The bar you drew across the edge got cut off. Did that read as the frame doing its job, or as your shape being damaged?",
+    "A click with the frame tool drops the size you made last. Is that the size you expected, and did you want to be asked instead?",
+    "Export opened on the frame you had selected. Is that the right default, or should it always start on the whole canvas?",
+    "Frame Selection paints no surface behind what it wraps. Right, or did you expect a white sheet?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the real window, not an offscreen render.",
+    "Only DRAWN layers land on a frame: a shape, a text block, a callout. Pasting a layer or dropping an image still puts it loose on the canvas, and you have to drag its row onto the frame in the Layers list. Filed as a follow-up.",
+    "Measurements never join a frame, on purpose: a caliper measures across things and would be clipped by one. Redlining a screenshot is untouched.",
+    "The frame's name is renamed by double clicking its row in the Layers list. The label on the canvas is not clickable and not editable, which is not what a design tool user will reach for. Filed as a follow-up.",
+    "A frame does not lay out or resize what is inside it: resizing the box only moves where it clips. Auto layout is sequenced after the rest of the ladder.",
+    "The frame tool sits at the END of the drawing family rather than beside Select, so nothing anyone already reaches for moved. It may belong further left once frames are ordinary."
+  ]
+}

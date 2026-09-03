@@ -54,8 +54,10 @@ extension Layer {
         // (move/delete only) — neither offers the eight frame handles.
         case .measure: false
         // A group's size follows its contents: there is no handle that
-        // stretches five children at once.
-        case .group: false
+        // stretches five children at once. A FRAME is the exception — it has a
+        // size of its own, and resizing it moves where it clips rather than
+        // stretching what is inside.
+        case .group(let g): g.isFrame
         case .image, .zoomCallout, .collage: true
         }
     }

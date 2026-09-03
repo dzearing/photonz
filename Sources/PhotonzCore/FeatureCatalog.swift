@@ -67,6 +67,8 @@ public enum FeatureCatalog {
 
     public static let layerGroupsFlag = "next-layer-groups"
 
+    public static let framesFlag = "next-frames"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -272,6 +274,15 @@ public enum FeatureCatalog {
                     name: layerGroupsFlag,
                     title: "Group what you selected",
                     description: "Select two or more layers and press Command G to make them one thing you can move, hide, lock and delete together; Shift Command G takes it apart again and leaves the pieces exactly where they were. On the canvas a click picks the whole group, and a double click goes inside it so you can pick one piece; Escape comes back out. Off means the Layer menu has no Group or Ungroup rows and a click always picks a single layer. Groups already in a document keep drawing either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: framesFlag,
+                    title: "Build on a frame",
+                    description: "A frame is a screen you build on: press F and drag one out at any size, or click once to drop the size you picked last. It carries its name above its top left corner, paints a white surface, and hides anything that hangs off its edge, and several of them sit side by side on one canvas so a document can hold more than one screen. Layer \u{25B8} New Frame picks a size from a short list, Layer \u{25B8} Frame Selection puts a frame around what you already have, and Export offers a single frame as the picture to write. Needs Group what you selected. Off means no frame tool and no frame rows; frames already in a document keep drawing either way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

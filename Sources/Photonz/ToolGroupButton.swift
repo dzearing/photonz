@@ -19,6 +19,7 @@ extension Tool {
         case .rectSelect: "rectangle.dashed"
         case .ellipseSelect: "circle.dashed"
         case .wand: "wand.and.rays"
+        case .frame: "macwindow"
         }
     }
 
@@ -39,6 +40,7 @@ extension Tool {
         case .rectSelect: "Rectangle Select"
         case .ellipseSelect: "Ellipse Select"
         case .wand: "Magic Wand"
+        case .frame: "Frame"
         }
     }
 }

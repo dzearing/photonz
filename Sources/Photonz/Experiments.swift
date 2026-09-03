@@ -241,6 +241,15 @@ extension Experiments {
     /// is the flat one it always was.
     var layersListShowsGroups: Bool { layerGroupsEnabled }
 
+    /// `next-frames`: whether the frame tool, the two Layer rows and the
+    /// export scope exist. A frame is a group with a size, so this needs
+    /// groups: with them off there is no way in to a frame and the switch
+    /// reads as off. Frames already in a document draw either way — turning a
+    /// flag off takes away a way in, never a document's contents.
+    var framesEnabled: Bool {
+        layerGroupsEnabled && isEnabled(FeatureCatalog.framesFlag)
+    }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its

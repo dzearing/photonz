@@ -24,6 +24,10 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     case rectSelect
     case ellipseSelect
     case wand
+    /// Draws a frame: the fixed-size box a screen gets built on (Next,
+    /// `next-frames`). A drag makes one the size you drew, a plain click drops
+    /// one at the size you picked last.
+    case frame
 
     /// The single key that picks this tool, everywhere in the product.
     ///
@@ -55,6 +59,9 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .measure: "i"
         case .fill: "g"
         case .wand: "w"
+        // F is the design-tool convention for a frame. Photoshop's F cycles
+        // screen modes, which this app does not have, so nothing is displaced.
+        case .frame: "f"
         case .rectSelect, .ellipseSelect: nil
         }
     }
@@ -75,7 +82,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .ellipse: .ellipse
         case .highlight: .highlight
         case .select, .crop, .text, .zoomCallout, .measure, .fill,
-             .rectSelect, .ellipseSelect, .wand: nil
+             .rectSelect, .ellipseSelect, .wand, .frame: nil
         }
     }
 

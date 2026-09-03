@@ -112,6 +112,9 @@ struct CanvasView: NSViewRepresentable {
     let onAnnotationCommit: (CGPoint, CGPoint) -> Layer?
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
     let onZoomCalloutCommit: (CGPoint, CGPoint) -> Void
+    /// The frame tool's drag, in document coordinates. A drag that is really a
+    /// click arrives with both points equal, and drops the last size used.
+    let onFrameCreate: (CGPoint, CGPoint) -> Void
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -197,6 +200,7 @@ struct CanvasView: NSViewRepresentable {
         view.onAnnotationCommit = onAnnotationCommit
         view.onAnnotationEndpointsCommit = onAnnotationEndpointsCommit
         view.onZoomCalloutCommit = onZoomCalloutCommit
+        view.onFrameCreate = onFrameCreate
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
         view.onElementSizeCommit = onElementSizeCommit
@@ -255,6 +259,7 @@ final class CanvasNSView: NSView {
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Layer?) = { _, _ in nil }
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
+    var onFrameCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }
@@ -320,6 +325,11 @@ final class CanvasNSView: NSView {
     /// The faint box around the group you are currently INSIDE, so descending
     /// into one is visible rather than a mode you have to remember.
     let groupContextLayer = CAShapeLayer()
+    /// A frame's name, above its top left corner: one text sublayer per frame.
+    let frameChromeLayer = CALayer()
+    /// The hairline at every frame's edge, so a screen has a visible boundary
+    /// even where its surface matches the canvas behind it.
+    let frameEdgeLayer = CAShapeLayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     private let snapGuideLayer = CAShapeLayer()
     /// Hover snap dot: while the measure tool is active and idle, a dot follows
@@ -410,7 +420,7 @@ final class CanvasNSView: NSView {
     }
     private var cropDrag: CropDrag?
     /// Selected layer (committed state, echoed from EditorState).
-    private var selectedLayerID: UUID?
+    private(set) var selectedLayerID: UUID?
     /// Selected layer's frame in document coordinates (committed state).
     private var selectedLayerFrame: CGRect?
     /// The group the pointer is inside, echoed from EditorState (`CanvasGroups.swift`).
@@ -849,6 +859,18 @@ final class CanvasNSView: NSView {
         layer?.addSublayer(rotateKnobLayer)
         layer?.addSublayer(groupContextLayer)
 
+        // Frame chrome (Next, `next-frames`): the edge hairline under the
+        // labels, both above the picture and both out of the export.
+        // Mid grey rather than a theme separator: a frame's edge has to read
+        // on a white surface and on a dark screenshot alike.
+        frameEdgeLayer.strokeColor = CGColor(gray: 0.5, alpha: 0.7)
+        frameEdgeLayer.fillColor = nil
+        frameEdgeLayer.lineWidth = 1
+        frameEdgeLayer.isHidden = true
+        layer?.addSublayer(frameEdgeLayer)
+        frameChromeLayer.isHidden = true
+        layer?.addSublayer(frameChromeLayer)
+
         // Hover snap dot: an accent-filled dot with a white ring, on top.
         snapDotLayer.fillColor = NSColor.controlAccentColor.cgColor
         snapDotLayer.strokeColor = CGColor(gray: 1, alpha: 0.95)
@@ -1119,7 +1141,7 @@ final class CanvasNSView: NSView {
         }
         // Drawing tools own the pointer: every drag creates a new annotation
         // (or, for the zoom tool, defines the callout's source box).
-        if tool.createsAnnotationByDrag || tool == .zoomCallout {
+        if tool.createsAnnotationByDrag || tool == .zoomCallout || tool == .frame {
             annotationDrag = AnnotationDrag(anchor: p)
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
             return
@@ -1579,7 +1601,16 @@ final class CanvasNSView: NSView {
             annotationDrag = nil
             let closedField = pressClosedCaptionField
             pressClosedCaptionField = false
-            if drag.isClick(atZoom: viewport.zoom) {
+            // The frame tool answers a click as well as a drag: a click drops a
+            // frame at the size you made last, which is how a second screen
+            // costs one click rather than a trip to a dialog.
+            if tool == .frame {
+                clearAnnotationPreview()
+                let end = drag.isClick(atZoom: viewport.zoom)
+                    ? drag.anchor
+                    : drag.end(constrained: event.modifierFlags.contains(.shift), shape: .rectangle)
+                onFrameCreate(drag.anchor, end)
+            } else if drag.isClick(atZoom: viewport.zoom) {
                 clearAnnotationPreview()
                 // The press only dismissed the caption field: the arrow is
                 // finished, so Select comes back as it does for Return or Esc.
@@ -2433,6 +2464,7 @@ final class CanvasNSView: NSView {
 
     private func refreshLayerSelectionDisplay() {
         refreshGroupContextOutline()
+        refreshFrameChrome()
         // The Canvas pseudo-selection: outline + eight handles on the document
         // boundary (or the in-flight proposed boundary). No rotate knob — the
         // canvas doesn't rotate.
@@ -2656,9 +2688,17 @@ final class CanvasNSView: NSView {
                                  colorHex: style.borderColorHex)
     }
 
+    /// What the frame tool's drag previews with: a hairline rectangle, so what
+    /// you are dragging out reads as the edge of a screen rather than as a
+    /// shape you are about to draw.
+    private var frameDraftContent: AnnotationContent {
+        AnnotationContent(shape: .rectangle, strokeWidth: 1, colorHex: "#8E8E93")
+    }
+
     /// In-flight drag-to-create: preview the active tool's styled content.
     private func refreshAnnotationPreview(constrained: Bool) {
-        let draft = tool == .zoomCallout ? calloutDraftContent : nil
+        var draft = tool == .zoomCallout ? calloutDraftContent : nil
+        if tool == .frame { draft = frameDraftContent }
         guard let drag = annotationDrag,
               let content = annotationContent ?? draft ?? tool.defaultAnnotation else {
             clearAnnotationPreview()
@@ -3247,7 +3287,7 @@ final class CanvasNSView: NSView {
         editor.removeFromSuperview()
     }
 
-    private func viewRect(forDocRect r: CGRect, in viewport: Viewport) -> CGRect {
+    func viewRect(forDocRect r: CGRect, in viewport: Viewport) -> CGRect {
         let topLeft = viewport.viewPoint(fromDocument: r.origin)
         return CGRect(x: topLeft.x, y: topLeft.y,
                       width: r.width * viewport.zoom, height: r.height * viewport.zoom)

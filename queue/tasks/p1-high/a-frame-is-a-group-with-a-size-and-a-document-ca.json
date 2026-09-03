@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.177Z",
-  "updated": "2026-09-03T00:08:21.458Z",
+  "updated": "2026-09-03T03:07:40.841Z",
   "deps": [
     "layers-can-hold-layers",
     "group-and-ungroup-what-you-selected"
@@ -36,6 +36,35 @@
     {
       "t": "2026-09-03T00:08:21.457Z",
       "note": "seq 110 -> 80"
+    },
+    {
+      "t": "2026-09-03T02:33:08.644Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T02:37:40.169Z",
+      "note": "Adversarial review before building. (1) A frame with no surface is invisible: drawn on a white canvas and then deselected, nothing would be on screen. So a frame carries a background (white by default) and a name label, and reads as a thing even when empty. (2) The name label is chrome, not content: the canvas view draws it above the frame, never the renderer, so it can sit outside the canvas bounds and never lands in an export. (3) Clipping: the task acceptance already says a frame clips what is inside it, so the design doc question (clip by default or only when asked) is answered by the task itself and no decision card is needed; the frame inspector still carries a Clip contents switch for the group you can see out of. (4) Shortest version: the mock wants a frame tool AND a New Frame dialog. A drag makes a custom frame and a plain click drops the last preset size, so nobody has to visit a dialog to get a phone screen; the dialog stays as the discoverable path in the Layer menu. (5) The frame tool goes at the END of the drawing family in the tool bar, so no existing tool moves under anyone's muscle memory. (6) Model: a frame is a group whose STORED size is finally used rather than a second size field, so moving, resizing and typed W and H all run the code they already run."
+    },
+    {
+      "t": "2026-09-03T02:37:40.169Z",
+      "note": "Plan: GroupContent gains isFrame/clipsContents/backgroundHex (encoded only for frames, so a plain group and a flat document still encode as they did); Layer.localBounds/renderBounds/contains and Document.hitTestPath learn the frame box; the renderer paints the background and clips; the app adds the F tool, Layer > New Frame and Frame Selection, a Frame inspector section with the preset menu, frame name labels on the canvas, and an export scope picker."
+    },
+    {
+      "t": "2026-09-03T03:07:40.841Z",
+      "note": "Built. Model: GroupContent gains isFrame/clipsContents/backgroundHex, and a frame is a group whose stored size is finally used, so moving, restacking, undo, hit testing and saving are the code that already existed. Renderer paints the surface and clips to the box. App (Next, next-frames): the F tool (drag makes a frame the size you drew, a plain click drops the size you made last), Layer > New Frame with a size list, Layer > Frame Selection, a Frame inspector section (size menu, Clip contents, Background), frame name and edge chrome drawn by the canvas, and an Export scope that writes one frame."
+    },
+    {
+      "t": "2026-09-03T03:07:40.841Z",
+      "note": "Adversarial review of the built thing, on the probe app. Two real problems found and fixed. (1) A shape drawn inside a frame did NOT belong to the frame: it sat over the screen as a sibling, nothing was ever clipped, and the only way in would have been dragging rows in the Layers list. Drawn layers whose centre lands on a frame now become children of it, with their position rewritten so nothing moves. Measurements deliberately stay out, so a caliper is never clipped by a screen and redlining is untouched. (2) The frame name used the theme label colour and the edge used the separator colour, both of which vanish over a white surface. Both are now neutral grey that reads on white and on a dark screenshot."
+    },
+    {
+      "t": "2026-09-03T03:07:40.841Z",
+      "note": "Verified on the probe app with Screen Recording granted: Scripts/playtest/frames-walk.json drives the whole feature and the shots are real window captures. Frames drawn and dropped, a card and a label drawn onto one, a bar cut off at the edge, two frames side by side each with its name, the frame moved carrying its contents, the Export sheet showing the frame as its scope at 400 x 580, and Frame Selection fitting a frame around a loose shape. Regression: the redline walk runs clean and the screenshot document behaves as before."
+    },
+    {
+      "t": "2026-09-03T03:07:40.841Z",
+      "note": "Tests: 1698 pass (Scripts/test.sh). New: FrameTests (box, clipping, hit testing, several frames, presets, typed size, Frame Selection, drawing onto a frame, placement, export document, coding) and FrameRenderingTests (surface, clipping, frame-only export, frames side by side, rounded corner). Follow-ups filed: paste and drop should land on a frame too; rename a screen by clicking its name on the canvas."
     }
-  ]
+  ],
+  "started": "2026-09-03T02:33:08.643Z"
 }
