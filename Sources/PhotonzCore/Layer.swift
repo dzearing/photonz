@@ -365,11 +365,20 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// exposes. They are the only things a copy owns; everything else inside it
     /// is refilled from the original after every edit.
     public var overrides: [ComponentOverride]
+    /// Set on an **instance**: the original's look as of the last time this
+    /// copy was put in step with it. Anything the copy's own look differs from
+    /// this by is a part somebody set on the copy, and that part stops
+    /// following (`docs/design/ui-building.md`, "A copy follows the original's
+    /// look"). Nil means this copy has never met its original — a document
+    /// saved before the look followed — and the next sync adopts the
+    /// original's look as the memory without changing one pixel.
+    public var followedStyle: LayerStyle?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool = true, backgroundHex: String? = nil,
                 componentID: UUID? = nil, instanceOf: UUID? = nil,
-                properties: [ComponentProperty] = [], overrides: [ComponentOverride] = []) {
+                properties: [ComponentProperty] = [], overrides: [ComponentOverride] = [],
+                followedStyle: LayerStyle? = nil) {
         self.children = children
         self.isFrame = isFrame
         self.clipsContents = clipsContents
@@ -378,11 +387,12 @@ public struct GroupContent: Hashable, Codable, Sendable {
         self.instanceOf = instanceOf
         self.properties = properties
         self.overrides = overrides
+        self.followedStyle = followedStyle
     }
 
     private enum CodingKeys: String, CodingKey {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
-        case properties, overrides
+        case properties, overrides, followedStyle
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -397,6 +407,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // so a document saved before knobs existed is byte for byte what it was.
         if !properties.isEmpty { try c.encode(properties, forKey: .properties) }
         if !overrides.isEmpty { try c.encode(overrides, forKey: .overrides) }
+        // Only a copy remembers a look, so a group that is not one encodes
+        // exactly as it did before the look followed.
+        if instanceOf != nil { try c.encodeIfPresent(followedStyle, forKey: .followedStyle) }
         guard isFrame else { return }
         try c.encode(true, forKey: .isFrame)
         try c.encode(clipsContents, forKey: .clipsContents)
@@ -413,6 +426,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         instanceOf = try c.decodeIfPresent(UUID.self, forKey: .instanceOf)
         properties = try c.decodeIfPresent([ComponentProperty].self, forKey: .properties) ?? []
         overrides = try c.decodeIfPresent([ComponentOverride].self, forKey: .overrides) ?? []
+        followedStyle = try c.decodeIfPresent(LayerStyle.self, forKey: .followedStyle)
     }
 }
 

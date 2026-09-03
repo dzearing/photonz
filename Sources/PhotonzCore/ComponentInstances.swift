@@ -201,10 +201,12 @@ extension PhotonzDocument {
                          content: .group(GroupContent(children: [], isFrame: main.isFrame,
                                                       clipsContents: main.group?.clipsContents ?? true,
                                                       backgroundHex: main.group?.backgroundHex,
-                                                      instanceOf: componentID)),
+                                                      instanceOf: componentID,
+                                                      followedStyle: main.style)),
                          frame: CGRect(origin: anchor, size: main.frame.size))
-        // A copy takes the original's look at the moment it is placed; where it
-        // sits, whether it is hidden and what it is called are its own.
+        // A copy takes the original's look at the moment it is placed and keeps
+        // following it part by part after that; where it sits, whether it is
+        // hidden and what it is called are its own.
         copy.style = main.style
         // A copy arrives answering nothing: it shows exactly what the original
         // shows, and the knobs are there to be turned afterwards.
@@ -277,6 +279,17 @@ extension PhotonzDocument {
         if let nested = layer.instanceOf {
             copy.children = resolvedChildren(of: nested, instance: id,
                                              overrides: layer.componentOverrides, stack: stack)
+            // A copy inside a component follows ITS original's look here as
+            // well, rather than carrying whatever look it happened to be
+            // holding when this pass started: the two are put in step in the
+            // same sync, and which one runs first must not decide the answer.
+            if let inner = mainComponent(componentID: nested), var group = copy.group {
+                copy.style = LayerStyle.following(inner.style, own: layer.style,
+                                                  lastSeen: group.followedStyle)
+                group.followedStyle = inner.style
+                group.children = copy.children
+                copy.content = .group(group)
+            }
         } else if layer.isGroup {
             copy.children = layer.children.map { rebound($0, instance: instance, stack: stack) }
         }
@@ -310,6 +323,7 @@ extension PhotonzDocument {
                         var group = copy.group ?? GroupContent()
                         group.instanceOf = nil
                         group.overrides = []
+                        group.followedStyle = nil
                         group.children = copy.children
                         copy.content = .group(group)
                         return copy
@@ -321,9 +335,17 @@ extension PhotonzDocument {
                     group.children = snapshot.resolvedChildren(of: componentID, instance: layer.id,
                                                                overrides: group.overrides,
                                                                stack: stack)
+                    // The look follows part by part: everything this copy has
+                    // not set for itself comes from the original again, and the
+                    // original's look is remembered so the next edit can tell
+                    // the two apart.
+                    copy.style = LayerStyle.following(main.style, own: layer.style,
+                                                      lastSeen: group.followedStyle)
+                    group.followedStyle = main.style
                     copy.content = .group(group)
                     if main.isFrame { copy.frame.size = main.frame.size }
-                    if Self.differsBeyondIdentity(copy.children, layer.children) {
+                    if Self.differsBeyondIdentity(copy.children, layer.children)
+                        || copy.style != layer.style {
                         report.updatedInstances += 1
                         report.componentIDs.insert(componentID)
                     }

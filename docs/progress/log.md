@@ -6239,3 +6239,43 @@ recogniser and whether identical placed files need a number on the end.
 
 Next: the audit asks whether the shelf growing under a search reads as helpful
 or as jitter, and whether the grab bar is still findable tucked under the tiles.
+
+## 2026-09-03 — A copy follows the original's look (Next, `next-components`)
+
+Queue task `a-copy-follows-the-original-when-its-look-change`, epic
+`ui-components`. C5 kept a copy's contents in step with its original but left
+its own fade, blur, corner radius, border and shadow alone, so moving a piece
+inside a component reached every copy while rounding the component itself
+reached none of them.
+
+- The look follows **part by part**, so a copy you faded still takes the shadow
+  the original gains afterwards. A shadow is ONE part (six controls, one thing).
+- The mechanism is one fact on the copy: the original's look as of the last
+  time the two were put in step (`GroupContent.followedStyle`, written only for
+  a copy, so documents are byte for byte what they were). Anything the copy's
+  own look differs from that by is a part somebody set on it. No style edit has
+  to announce itself, which matters because the styling paths are many and the
+  one that forgets would snap a person's work back.
+- Chose this over marking each edit site, and over taking the copy's whole look
+  off the original at the first slider. Both are shorter; both are wrong in a
+  way the person only finds out later.
+- Says so twice: a revert arrow on the Effects or Shadow row itself (the knob
+  row idiom), and an **Its own look** line on the copy's section naming the
+  parts with one way back, since Effects may be collapsed or scrolled away.
+- The "copies followed" pill counts a look change exactly as it counts a
+  content change, and does not count a copy that kept its own.
+- Old documents open unrepainted: a copy with no memory adopts the original's
+  current look, so whatever it already differed by becomes its own.
+- `PhotonzCore/ComponentStyle.swift` (`LayerStyleField`, the merge, the
+  document API); the sync in `ComponentInstances.swift` does the merge and
+  reports it; `LayerStyleSlider` grew a `field`, and `InstanceStyleRevert` is
+  the shared way back. 19 tests written first, all 2001 green.
+- Walk: `Scripts/playtest/component-look-walk.json`, which needed five new
+  harness actions (roundCorners, addShadow, fadeLayer, fadeLayerSlightly,
+  borderLayer, followOriginalLook) because a walk cannot reach a dock slider
+  with the pointer. Audit: `queue/audits/2026-09-03-component-look.json`, two
+  real captures.
+
+Next: the audit asks whether part-by-part following is what a person expects,
+and whether the back arrow beside a slider is findable. The named gap is that
+the ORIGINAL's section does not say which of its copies have looks of their own.

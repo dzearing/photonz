@@ -489,6 +489,36 @@ private final class Run {
             case .exposeChoice: editor.exposeFirstProperty(kind: .variant)
             case .cycleChoice: editor.cycleInstanceChoice()
             case .detachInstance: editor.detachInstance()
+            case .roundCorners:
+                if let id = editor.selectedLayerID {
+                    editor.setLayerStyle(id: id) { $0.cornerRadius = 24 }
+                }
+            case .addShadow:
+                if let id = editor.selectedLayerID {
+                    editor.setLayerStyle(id: id) {
+                        $0.shadow = ShadowStyle(radius: 18, offset: CGSize(width: 0, height: 10),
+                                                spread: 0, colorHex: "#000000", opacity: 0.55)
+                    }
+                }
+            case .fadeLayer:
+                if let id = editor.selectedLayerID {
+                    editor.setLayerStyle(id: id) { $0.opacity = 0.35 }
+                }
+            case .fadeLayerSlightly:
+                if let id = editor.selectedLayerID {
+                    editor.setLayerStyle(id: id) { $0.opacity = 0.75 }
+                }
+            case .borderLayer:
+                if let id = editor.selectedLayerID {
+                    editor.setLayerStyle(id: id) {
+                        $0.borderWidth = 6
+                        $0.borderColorHex = "#2B5BFF"
+                    }
+                }
+            case .followOriginalLook:
+                if let id = editor.selectedLayerID {
+                    editor.clearInstanceStyleOverrides(instance: id)
+                }
             case .saveColorStyle:
                 if let id = editor.selectedLayerID,
                    let slot = editor.document?.layer(id: id)?.colorSlots

@@ -3568,6 +3568,39 @@ final class EditorState {
         perform(announcing: false) { $0.clearInstanceOverride(instance: instance, property: property) }
     }
 
+    /// Which parts of a copy's look are its own rather than the original's,
+    /// named as their controls are, in the order they sit in the dock.
+    func instanceStyleOverrideLabels(instance: UUID) -> [String] {
+        guard componentsEnabled else { return [] }
+        return document?.instanceStyleOverrideLabels(instance: instance) ?? []
+    }
+
+    /// Whether one part of a copy's look is its own, which is what puts the way
+    /// back on an Effects row.
+    func isInstanceStyleOwn(instance: UUID, field: LayerStyleField) -> Bool {
+        guard componentsEnabled else { return false }
+        return document?.isInstanceStyleOwn(instance: instance, field: field) ?? false
+    }
+
+    /// Puts one part of a copy's look back to following the original.
+    ///
+    /// Like setting a knob, it is performed without the "copies followed" pill:
+    /// the change lands on the one copy whose panel the person is looking at.
+    func clearInstanceStyleOverride(instance: UUID, field: LayerStyleField) {
+        guard componentsEnabled else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform(announcing: false) { $0.clearInstanceStyleOverride(instance: instance, field: field) }
+    }
+
+    /// Puts a copy's whole look back to the original's.
+    func clearInstanceStyleOverrides(instance: UUID) {
+        guard componentsEnabled else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform(announcing: false) { $0.clearInstanceStyleOverrides(instance: instance) }
+    }
+
     /// Whether Layer ▸ Detach Instance would do anything: one unlocked copy is
     /// selected.
     var canDetachInstance: Bool {

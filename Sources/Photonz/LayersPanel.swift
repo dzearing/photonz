@@ -1270,25 +1270,30 @@ struct EffectsInspector: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             LayerStyleSlider(layerID: layer.id, label: "Opacity", value: style.opacity, range: 0...1,
-                             display: "\(Int((style.opacity * 100).rounded()))%") { style, v in
+                             display: "\(Int((style.opacity * 100).rounded()))%",
+                             field: .opacity) { style, v in
                 style.opacity = v
             }
             LayerStyleSlider(layerID: layer.id, label: "Blur", value: Double(style.blurRadius), range: 0...50,
-                             display: "\(Int(style.blurRadius.rounded())) pt") { style, v in
+                             display: "\(Int(style.blurRadius.rounded())) pt",
+                             field: .blur) { style, v in
                 style.blurRadius = CGFloat(v)
             }
             LayerStyleSlider(layerID: layer.id, label: "Corner Radius", value: Double(style.cornerRadius),
                              range: 0...maxCornerRadius,
-                             display: "\(Int(style.cornerRadius.rounded())) pt") { style, v in
+                             display: "\(Int(style.cornerRadius.rounded())) pt",
+                             field: .cornerRadius) { style, v in
                 style.cornerRadius = CGFloat(v)
             }
             HStack(spacing: 8) {
                 LayerStyleSlider(layerID: layer.id, label: "Border", value: Double(style.borderWidth),
                                  range: 0...20,
-                                 display: "\(Int(style.borderWidth.rounded())) pt") { style, v in
+                                 display: "\(Int(style.borderWidth.rounded())) pt",
+                                 field: .border) { style, v in
                     style.borderWidth = CGFloat(v)
                 }
                 borderColorPicker
+                InstanceStyleRevert(layerID: layer.id, field: .borderColor)
             }
         }
         .padding(.horizontal, 14)
@@ -1326,15 +1331,23 @@ struct ShadowInspector: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Toggle(isOn: Binding(
-                get: { style.shadow != nil },
-                set: { on in
-                    editorState.setLayerStyle(id: layer.id) { $0.shadow = on ? ShadowStyle() : nil }
-                })) {
-                Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 6) {
+                Toggle(isOn: Binding(
+                    get: { style.shadow != nil },
+                    set: { on in
+                        editorState.setLayerStyle(id: layer.id) { $0.shadow = on ? ShadowStyle() : nil }
+                    })) {
+                    Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
+                }
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                // A shadow is ONE part of the look: its softness, size,
+                // distance, direction, opacity and colour are six controls for
+                // the one thing a person means by "the shadow", so there is one
+                // way back rather than six identical arrows.
+                InstanceStyleRevert(layerID: layer.id, field: .shadow)
+                Spacer(minLength: 0)
             }
-            .toggleStyle(.switch)
-            .controlSize(.mini)
             if let shadow = style.shadow {
                 HStack(spacing: 8) {
                     LayerStyleSlider(layerID: layer.id, label: "Blur", value: Double(shadow.radius),
@@ -1407,12 +1420,17 @@ struct LayerStyleSlider: View {
     let value: Double
     let range: ClosedRange<Double>
     let display: String
+    /// The part of the look this slider sets, when it is one a copy of a
+    /// component can own. It puts the way back on the row itself, which is
+    /// where the person who just dragged it is looking.
+    var field: LayerStyleField? = nil
     let apply: (inout LayerStyle, Double) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(label).font(.caption).foregroundStyle(.secondary)
+                if let field { InstanceStyleRevert(layerID: layerID, field: field) }
                 Spacer()
                 Text(display).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
             }

@@ -240,6 +240,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case cycleChoice
     /// Layer ▸ Detach Instance, so a walk can show a copy stop following.
     case detachInstance
+    /// Style the selected layer the way the Effects and Shadow sliders do:
+    /// round its corners, give it a shadow, fade it. The sliders live in the
+    /// dock, which a walk cannot reach with the pointer, so this is how a look
+    /// gets set on an original or on one copy.
+    case roundCorners, addShadow, fadeLayer, fadeLayerSlightly, borderLayer
+    /// Put the selected copy's whole look back to the original's, which is
+    /// what the way back on its section does.
+    case followOriginalLook
     /// Put the Library in the dock with its Components shelf showing (Next,
     /// `next-starter-components`). The segmented control is in the dock, which
     /// a walk cannot reach with the pointer, so this is how the shelf the app

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 720,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T04:20:54.093Z",
-  "updated": "2026-09-03T04:20:54.093Z",
+  "updated": "2026-09-03T09:34:37.488935Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Step C5 left this out on purpose: the sync manages a copy's children, isFrame, clipsContents, backgroundHex and size, but NOT Layer.style, because syncing style would revert an Effects slider dragged on a copy. The honest fix is the override model from C6: style becomes an overridable property, so an untouched copy follows and a touched one does not. Sequence it after C6 (docs/design/ui-building.md, step 6) rather than before.",
@@ -23,6 +23,15 @@
     {
       "t": "2026-09-03T04:20:54.093Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T09:30:18.499Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T09:34:37.488935Z",
+      "note": "Adversarial review before building. (1) Whole-look vs part-by-part: taking the copy's whole look the moment one slider moves would mean a copy that was faded once never gets the original's new shadow. Part by part is what a person expects and is barely more work, so the look follows field by field. (2) How does the app tell a person's edit from the sync's own writing? Not by marking the edit site (every future style path would have to remember, and one that forgot would silently snap back), but by remembering on the copy the original's look as of the last time it was put in step. Anything that differs from that is the copy's own. Automatic, and undo-safe because it is all one snapshot. (3) 'Says so' has to be where the person just dragged, not only in the Component section: a revert arrow appears on the Effects/Shadow row itself, plus one summary row on the copy's section for when Effects is scrolled away. (4) Old documents: a copy with no remembered look adopts the original's current one, so nothing on screen changes on open and a copy that was already styled keeps what it had."
     }
-  ]
+  ],
+  "started": "2026-09-03T09:30:18.499Z"
 }

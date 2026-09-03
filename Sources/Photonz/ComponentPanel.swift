@@ -429,6 +429,7 @@ struct ComponentInstanceInspector: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 ComponentInstanceProperties(instance: layer.id, componentID: componentID)
+                ownLook
                 HStack(spacing: 6) {
                     Button("Edit Original") {
                         editorState.selectComponentOnCanvas(componentID: componentID)
@@ -447,6 +448,64 @@ struct ComponentInstanceInspector: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 4)
+        }
+    }
+
+    /// What this copy has styled for itself, and one way back to the original's
+    /// look.
+    ///
+    /// The Effects and Shadow rows carry their own way back, which is where the
+    /// person who just dragged a slider is looking. This says the same thing
+    /// where a copy answers about itself, because Effects is a different
+    /// section and may be collapsed or scrolled away: without it, a copy you
+    /// faded weeks ago is a copy that mysteriously ignores the original.
+    @ViewBuilder private var ownLook: some View {
+        let parts = editorState.instanceStyleOverrideLabels(instance: layer.id)
+        if !parts.isEmpty {
+            Divider().padding(.vertical, 2)
+            HStack(spacing: 6) {
+                Text("Its own look")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 74, alignment: .leading)
+                Text(parts.joined(separator: ", "))
+                    .font(.caption)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button {
+                    editorState.clearInstanceStyleOverrides(instance: layer.id)
+                } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                }
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+                .help("Follow the original's look again, every part of it")
+            }
+        }
+    }
+}
+
+/// The way back on ONE part of a copy's look, on the control that sets it.
+///
+/// It is there only when this layer is a copy and that part is its own, so an
+/// ordinary layer's Effects section is exactly what it always was, and a copy
+/// that follows the original shows nothing to put back.
+struct InstanceStyleRevert: View {
+    @Environment(EditorState.self) private var editorState
+    let layerID: UUID
+    let field: LayerStyleField
+
+    var body: some View {
+        if editorState.isInstanceStyleOwn(instance: layerID, field: field) {
+            Button {
+                editorState.clearInstanceStyleOverride(instance: layerID, field: field)
+            } label: {
+                Image(systemName: "arrow.uturn.backward")
+            }
+            .buttonStyle(.borderless)
+            .controlSize(.small)
+            .help("This copy's own \(field.label.lowercased()). Follow the original again")
         }
     }
 }

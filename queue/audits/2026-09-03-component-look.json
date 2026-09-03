@@ -1,0 +1,30 @@
+{
+  "feature": "A copy follows the original's look",
+  "epic": "ui-components",
+  "summary": "Changing a component's fade, blur, rounded corners, border or shadow now reaches every copy you have placed, part by part. A copy you styled yourself keeps what you set, says which parts are its own, and has a way back to following the original.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components and the Library are on by default.",
+  "try": [
+    { "do": "Draw a rectangle and a line of text over it, select both and press Command G." },
+    { "do": "Press Option Command K to make it a component, name it Setting, then drop two copies of it out of the Library onto empty canvas." },
+    { "do": "Select the ORIGINAL and drag Corner Radius up in Effects, then switch Enable Shadow on.", "shot": "2026-09-03-component-look-1.png" },
+    { "do": "Select ONE copy and drag its Opacity down to about a third." },
+    { "do": "Select the original again and give it a Border of a few points." },
+    { "do": "Select the original and drag its Opacity to about three quarters." },
+    { "do": "Select the copy you faded and look at its Component section and its Effects section.", "shot": "2026-09-03-component-look-2.png" },
+    { "do": "Click the back arrow beside Opacity in Effects to put that copy on the original's look again." }
+  ],
+  "evaluate": [
+    "When you rounded the original, did the copies changing feel like the app doing what you meant, or like something moving behind your back?",
+    "The faded copy took the original's new border but kept its own fade. Is that what you expected, or would you rather one edit to a copy took its whole look off the original?",
+    "Did you notice the back arrow beside Opacity, or did you have to go looking for a way to undo it?",
+    "Is 'Its own look: Opacity' on the copy's section worth the row, or is the arrow in Effects enough on its own?",
+    "The pill counted one copy when only one followed the fade. Does that number tell you what you want to know?"
+  ],
+  "rough": [
+    "The original's section says how many copies follow it but not which of them have looks of their own, so finding the odd copy out means clicking through them.",
+    "The shadow's way back sits on the Enable Shadow row, not on the shadow control you actually touched. A shadow is one thing here, so six identical arrows felt worse than one that is a row or two away.",
+    "Nothing warns you the moment you drag a slider on a copy that this part has stopped following. It shows afterwards, as an arrow you can press.",
+    "A copy's size, place, name and hidden state still do not follow the original, which is deliberate: those are what let copies sit in different spots.",
+    "Screen Recording was granted for this run, so both pictures are the real window, taken by Scripts/playtest/component-look-walk.json."
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "out": "/tmp/photonz-playtest/component-look-walk",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        200
+      ],
+      "to": [
+        520,
+        300
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        230,
+        330
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Auto-enhance"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        150
+      ],
+      "to": [
+        640,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Setting"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "insertPickedComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        1000,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-two-copies",
+      "note": "the original at the top left and two copies of it, all drawn plain"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-look-1-two-copies"
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        250
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "roundCorners"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "addShadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-original-styled",
+      "note": "rounding and a shadow set on the ORIGINAL reached both copies, and the pill says how many followed"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-look-2-original-styled"
+    },
+    {
+      "do": "render",
+      "name": "component-look-2-original-styled-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        1000,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "fadeLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "3-copy-faded",
+      "note": "one copy faded on its own; its section says Its own look: Opacity, and the Effects row has a way back"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-look-3-copy-faded"
+    },
+    {
+      "do": "render",
+      "name": "component-look-3-copy-faded-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        250
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "borderLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "4-original-bordered",
+      "note": "a border set on the original reached BOTH copies, including the faded one: fading a copy did not stop it following everything else"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-look-4-original-bordered"
+    },
+    {
+      "do": "render",
+      "name": "component-look-4-original-bordered-doc"
+    },
+    {
+      "do": "action",
+      "action": "fadeLayerSlightly"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "5-original-faded",
+      "note": "fading the original to 75% reached the untouched copy only; the copy set to 35% kept its own fade and the notice counted one"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-look-5-original-faded"
+    },
+    {
+      "do": "render",
+      "name": "component-look-5-original-faded-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        1000,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-copy-section",
+      "note": "the copy that kept its own fade, with its section saying Its own look: Opacity and a way back"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-look-6-copy-section"
+    },
+    {
+      "do": "action",
+      "action": "followOriginalLook"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "7-following-again",
+      "note": "the way back put the copy on the original's look, so all three match again"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-look-7-following-again"
+    },
+    {
+      "do": "render",
+      "name": "component-look-7-following-again-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "8-undone",
+      "note": "undo put the copy's own fade back in one step"
+    },
+    {
+      "do": "render",
+      "name": "component-look-8-undone-doc"
+    }
+  ]
+}

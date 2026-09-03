@@ -768,7 +768,8 @@ being a list and starts handing you things.
 Deliberately left, and each one is a real limit rather than an oversight: a
 copy's own opacity, blur, shadow and corner radius are its own and do not follow
 the original (syncing them would make the Effects sliders snap back on a copy,
-which is worse than the gap); renaming an original does not rename copies
+which is worse than the gap; **lifted the same day, see "a copy follows the
+original's look" below**); renaming an original does not rename copies
 already placed; the shelf tile shows a name and keeps the count of copies in its
 tooltip and in the picked component's section; and Ungroup on a copy still
 dissolves it, which is a detach by another name until Detach Instance arrives.
@@ -1093,3 +1094,57 @@ could be neither driven nor photographed. Walked by
 Not in this slice: a component's name in that same spot (a promoted frame shows
 the component mark and is renamed in the Component section), and renaming any
 other layer by clicking it on the canvas — only frames wear a name there.
+
+## Landed: a copy follows the original's look (Next, `next-components`, 2026-09-03)
+
+C5 kept a copy's CONTENTS equal to the original's and left its own fade, blur,
+rounded corners, border and shadow alone, because writing the original's look
+over a copy would snap an Effects slider back the moment it was let go. So
+moving a piece inside a component reached every copy and rounding the component
+itself reached none of them, which is a distinction nobody drawing a button
+would think to make. The look follows now.
+
+- **It follows part by part.** Fade one copy and it keeps that fade; give the
+  original a shadow afterwards and the faded copy takes the shadow anyway. The
+  alternative, where the first slider you touch takes the whole look off the
+  original for good, is how a copy quietly stops being a copy.
+- **The parts are the controls**: opacity, blur, corner radius, border width,
+  border colour, shadow, blending. **A shadow is one part**, not six: its
+  softness, size, distance, direction, opacity and colour are six controls for
+  the one thing a person means by "the shadow".
+- **Nothing has to announce that it styled a copy.** A copy remembers the
+  original's look as of the last time the two were put in step
+  (`GroupContent.followedStyle`), and anything its own look differs from that
+  by is a part somebody set on it. The styling paths are many — sliders,
+  steppers, colour wells, and whatever arrives next — and a model that needed
+  each one to raise a flag is a model where the one that forgets snaps a
+  person's work back.
+- **It says so where you did it.** A revert arrow appears on the Effects or
+  Shadow row itself, beside the label, exactly as it does on a knob's row. The
+  copy's own section also grows an **Its own look** line naming the parts, with
+  one way back to the whole of the original's look, because Effects is a
+  different section and may be collapsed or scrolled away: without it, a copy
+  you faded last week is a copy that mysteriously ignores the original.
+- **The notice counts a look change like a change to the contents.** Rounding
+  an original says "Updated, 2 copies of Setting"; fading it when one copy
+  keeps its own fade says one copy, because that is how far the edit reached.
+  Styling a copy itself announces nothing, the same rule setting a knob follows:
+  the pill reports what moved out of sight.
+- **A copy nested inside another component follows its own original's look**,
+  resolved in the same pass, so which copy the sync reaches first never decides
+  the answer.
+- **A document saved before this opens looking exactly as it did.** A copy with
+  no memory adopts the original's current look as its memory and repaints
+  nothing, so anything it already differed by becomes its own. A copy that was
+  meant to follow is one click on the way back from doing so.
+- On disk only a copy writes the key, so a document saved before this step is
+  byte for byte what it was.
+
+Deliberately left: the original's section does not say which of its copies have
+looks of their own, so finding the odd one out means clicking through them; the
+shadow's way back sits on its Enable row rather than on the control you touched,
+which is the price of treating a shadow as one thing; and a copy's size, place,
+name and whether it is hidden are still its own, which is what lets copies sit
+in different spots at all.
+
+Walked end to end by `Scripts/playtest/component-look-walk.json`.
