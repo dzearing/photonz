@@ -200,6 +200,10 @@ final class EditorState {
         didSet {
             for id in multiSelectedLayerIDs where !oldValue.contains(id) { revealInLayersList(id) }
             if !multiSelectedLayerIDs.isEmpty { selectedLibraryItemID = nil }
+            // A half-typed style name belongs to the layers that were picked
+            // when the field opened, and those are not the layers any more
+            // (Next, `next-styles`).
+            if multiSelectedLayerIDs != oldValue { colorStyleNaming = nil }
         }
     }
     /// The Library tile that is picked, by `LibraryEntry.id` (Next,
@@ -3380,10 +3384,12 @@ final class EditorState {
     /// only one field is ever open, and so a walk can open one.
     var colorStyleNaming: ColorStyleNamingRequest?
 
-    /// Save as Style: opens the name field under that color row.
-    func beginNamingColorStyle(layerID: UUID, slot: ColorSlot) {
+    /// Save as Style: opens the name field under that color row. The row it
+    /// belongs to is the one for that slot, whatever is picked, because only
+    /// one field is open at a time and the selection is what it is about.
+    func beginNamingColorStyle(slot: ColorSlot) {
         guard colorStylesEnabled else { return }
-        colorStyleNaming = ColorStyleNamingRequest(layerID: layerID, slot: slot)
+        colorStyleNaming = ColorStyleNamingRequest(slot: slot)
     }
 
     /// Escape, or the name landing: the field closes.
@@ -3424,38 +3430,78 @@ final class EditorState {
         document?.freshColorStyleName() ?? PhotonzDocument.colorStyleNameBase
     }
 
+    /// The layers a color row speaks for: the whole multi-selection when there
+    /// is one, else the one selected layer — the same set every other
+    /// whole-selection command acts on. In draw order, so the row reads the
+    /// same way twice running and one undo step lands the same way every time.
+    private var colorStyleTargetIDs: [UUID] {
+        let picked = actionableLayerIDs
+        guard !picked.isEmpty, let document else { return [] }
+        return document.allLayers.map(\.id).filter { picked.contains($0) }
+    }
+
+    /// What one color row shows: the picked layers that have a color in this
+    /// slot, what they are painted, and the style painting them when they all
+    /// wear one. With a single layer picked this is that layer, so the rows in
+    /// the Annotation, Text and Frame sections read exactly as they always did.
+    func colorStyleSelection(slot: ColorSlot) -> ColorStyleSelection {
+        guard colorStylesEnabled, let document else {
+            return ColorStyleSelection(slot: slot, members: [], selectionCount: 0)
+        }
+        return document.colorStyleSelection(layerIDs: colorStyleTargetIDs, slot: slot)
+    }
+
+    /// The color rows a multi-selection gets, in inspector order: every slot at
+    /// least one picked layer actually has a color in.
+    var colorStyleSlots: [ColorSlot] {
+        guard colorStylesEnabled, let document else { return [] }
+        return document.colorStyleSlots(layerIDs: colorStyleTargetIDs)
+    }
+
+    /// How many layers are picked, which is what the whole-selection Color
+    /// section says out loud before anything is changed.
+    var colorStyleSelectionCount: Int { colorStyleTargetIDs.count }
+
     /// "Save as Style" on a color row: takes the name typed in the little
-    /// field, saves this color under it, and points the layer at it.
+    /// field, saves the color the picked layers share under it, and points
+    /// every one of them at it. Nil when they do not share one.
     ///
     /// It also **shows the Library on the Styles shelf**, because a style you
-    /// cannot see is a button that appears to do nothing. The layer stays
+    /// cannot see is a button that appears to do nothing. The layers stay
     /// selected, so the row you saved from is right there saying which style it
     /// is now wearing.
     @discardableResult
-    func saveColorStyle(layerID: UUID, slot: ColorSlot, name: String? = nil) -> UUID? {
+    func saveColorStyle(slot: ColorSlot, name: String? = nil) -> UUID? {
         guard colorStylesEnabled else { return nil }
         colorStyleNaming = nil
+        let targets = colorStyleTargetIDs
+        guard !targets.isEmpty else { return nil }
         discardDragPreview()
         var saved: UUID?
-        perform { saved = $0.saveColorStyle(from: layerID, slot: slot, name: name) }
+        perform { saved = $0.saveColorStyle(from: targets, slot: slot, name: name) }
         guard let styleID = saved else { return nil }
         setLibraryVisible(true)
         UserDefaults.standard.set(LibraryScope.styles.rawValue, forKey: LibraryPanel.scopeKey)
         return styleID
     }
 
-    /// Points one of a layer's colors at a style, which paints it in one step.
-    func useColorStyle(layerID: UUID, slot: ColorSlot, styleID: UUID) {
+    /// Points every picked layer's color at a style, which paints all of them
+    /// in ONE step: pick three boxes, choose Accent once, undo once.
+    func useColorStyle(slot: ColorSlot, styleID: UUID) {
         guard colorStylesEnabled else { return }
+        let targets = colorStyleSelection(slot: slot).layerIDs
+        guard !targets.isEmpty else { return }
         discardDragPreview()
-        perform { _ = $0.bindColorStyle(layerID: layerID, slot: slot, styleID: styleID) }
+        perform { _ = $0.bindColorStyle(layerIDs: targets, slot: slot, styleID: styleID) }
     }
 
-    /// "Unlink": the color stays exactly as it is, it just becomes this layer's
-    /// own again.
-    func unlinkColorStyle(layerID: UUID, slot: ColorSlot) {
+    /// "Unlink": every picked color stays exactly as it is, it just becomes its
+    /// own layer's again, in one step.
+    func unlinkColorStyle(slot: ColorSlot) {
         guard colorStylesEnabled else { return }
-        perform { $0.unbindColorStyle(layerID: layerID, slot: slot) }
+        let targets = colorStyleSelection(slot: slot).layerIDs
+        guard !targets.isEmpty else { return }
+        perform { $0.unbindColorStyle(layerIDs: targets, slot: slot) }
     }
 
     /// Repaints a style and everything wearing it, as one undo step.

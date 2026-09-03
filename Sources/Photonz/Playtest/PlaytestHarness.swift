@@ -521,21 +521,20 @@ private final class Run {
                     editor.clearInstanceStyleOverrides(instance: id)
                 }
             case .saveColorStyle:
-                if let id = editor.selectedLayerID,
-                   let slot = editor.document?.layer(id: id)?.colorSlots
-                    .first(where: { editor.document?.layer(id: id)?.colorHex(for: $0) != nil }) {
-                    editor.beginNamingColorStyle(layerID: id, slot: slot)
+                // The picked layers' first color that could carry a name: with
+                // several picked that is the first one they all share.
+                if let slot = editor.colorStyleSlots
+                    .first(where: { editor.colorStyleSelection(slot: $0).savableColorHex != nil }) {
+                    editor.beginNamingColorStyle(slot: slot)
                 }
             case .useFirstColorStyle:
-                if let id = editor.selectedLayerID, let style = editor.colorStyles.first,
-                   let slot = editor.document?.layer(id: id)?.colorSlots.first {
-                    editor.useColorStyle(layerID: id, slot: slot, styleID: style.id)
+                if let style = editor.colorStyles.first, let slot = editor.colorStyleSlots.first {
+                    editor.useColorStyle(slot: slot, styleID: style.id)
                 }
             case .unlinkColorStyle:
-                if let id = editor.selectedLayerID,
-                   let slot = editor.document?.layer(id: id)?.colorSlots
-                    .first(where: { editor.document?.layer(id: id)?.colorStyleID(for: $0) != nil }) {
-                    editor.unlinkColorStyle(layerID: id, slot: slot)
+                if let slot = editor.colorStyleSlots
+                    .first(where: { editor.colorStyleSelection(slot: $0).wearsAnyStyle }) {
+                    editor.unlinkColorStyle(slot: slot)
                 }
             case .pickFirstColorStyle:
                 if let first = editor.colorStyleEntries.first {
@@ -1118,16 +1117,24 @@ private final class Run {
             }
             return line
         }
-        // One line per color the selected layer has: the slot, what it is
-        // painted, and the style painting it when a style is.
+        // One line per color row the SELECTION has: the slot, what the picked
+        // layers are painted, and the style painting them. With several picked
+        // this is what proves one pick reached all of them, and it prints the
+        // same word the row does when they disagree.
         let selectedColors: [String] = {
-            guard let id = editor.selectedLayerID, let layer = editor.document?.layer(id: id) else {
-                return []
-            }
-            return layer.colorSlots.map { slot in
-                let hex = layer.colorHex(for: slot) ?? "none"
-                let style = editor.colorStyle(layerID: id, slot: slot)
-                return "\(slot.rawValue) \(hex)" + (style.map { " · style \($0.name)" } ?? "")
+            guard let document = editor.document else { return [] }
+            return editor.colorStyleSlots.map { slot in
+                let selection = editor.colorStyleSelection(slot: slot)
+                let body: String
+                switch selection.reading {
+                case .empty: body = "none"
+                case .mixed: body = ColorStyleSelection.mixedText.lowercased()
+                case .color(let hex): body = hex
+                case .style(let id):
+                    let name = document.colorStyle(id: id)?.name ?? "?"
+                    body = "\(selection.members.first?.colorHex ?? "?") · style \(name)"
+                }
+                return "\(slot.rawValue) \(body) ×\(selection.count)"
             }
         }()
         // The layer tree in CANVAS coordinates, one line per layer, indented by

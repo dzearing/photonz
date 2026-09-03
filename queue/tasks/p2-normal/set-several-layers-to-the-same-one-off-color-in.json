@@ -1,0 +1,27 @@
+{
+  "id": "set-several-layers-to-the-same-one-off-color-in",
+  "title": "Set several layers to the same one-off color in one go",
+  "goal": "Right now picking several layers lets you set them all to a saved, named color, but not to a plain color you just choose. Select three boxes, open one color well, and paint all three.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 870,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T10:22:38.204Z",
+  "updated": "2026-09-03T10:22:38.205Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from queue/audits/2026-09-03-multi-style.json. The whole-selection reading is already there: EditorState.colorStyleSelection(slot:) and ColorStyleSelection in PhotonzCore. What is missing is the write: a one-off color has to go through the right builder per slot (AnnotationBuilder.restyled for a shape stroke or fill, TextBuilder.restyled for text ink, GroupContent.backgroundHex for a frame), which is why this was cut from the style slice. Layer.setColorHex(_:for:) already routes all three and is what bindColorStyle uses, so a document-level setColorHex(layerIDs:slot:hex:) plus one EditorState perform is probably the whole job. The row is ColorStyleRow in Sources/Photonz/ColorStylePanel.swift; its no-well init is the one the SelectionColorInspector uses.",
+  "acceptance": [
+    "With more than one layer selected, the Color section offers a color well as well as the styles menu",
+    "Picking a color in it paints every selected layer that has that kind of color, in one undo step",
+    "A selection whose colors differ still says Mixed until a color is picked"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T10:22:38.205Z",
+      "note": "created (manual)"
+    }
+  ]
+}

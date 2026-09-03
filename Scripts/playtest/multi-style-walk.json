@@ -1,0 +1,58 @@
+{
+  "out": "/tmp/photonz-playtest/multi-style",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 140], "to": [320, 260], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [380, 140], "to": [580, 260], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [640, 140], "to": [840, 260], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-drew", "note": "three filled boxes, each painted a color of its own" },
+
+    { "do": "click", "at": [220, 200] },
+    { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
+    { "do": "click", "at": [740, 200], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-three-picked", "note": "all three picked: the Color section should now be in the dock, saying fill #hex x3" },
+    { "do": "snapshot", "name": "multi-style-1-color-section" },
+
+    { "do": "action", "action": "saveColorStyle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "multi-style-2-naming" },
+    { "do": "focus", "field": "Style name" },
+    { "do": "type", "text": "Accent" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-saved", "note": "one name typed once: all three boxes should wear Accent, and the shelf should hold it with 3 uses" },
+    { "do": "snapshot", "name": "multi-style-3-all-three-wear-it" },
+
+    { "do": "click", "at": [740, 200] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "unlinkColorStyle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "4-one-unlinked", "note": "the third box keeps its color but lets go of the style" },
+
+    { "do": "click", "at": [220, 200] },
+    { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
+    { "do": "click", "at": [740, 200], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-mixed", "note": "two wear Accent and one does not: the Fill row must say Mixed, not Accent" },
+    { "do": "snapshot", "name": "multi-style-4-mixed" },
+
+    { "do": "action", "action": "useFirstColorStyle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-applied", "note": "one pick, all three wearing Accent again" },
+    { "do": "render", "name": "all-three-accent" },
+    { "do": "snapshot", "name": "multi-style-5-applied" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-undone", "note": "ONE undo should put the whole selection back to Mixed, not just the last box" },
+    { "do": "render", "name": "back-to-mixed" }
+  ]
+}

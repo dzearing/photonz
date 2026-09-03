@@ -63,7 +63,7 @@ struct FrameInspector: View {
                 // The surface, and where it came from: a frame painted from a
                 // named style says the style's name here instead of a swatch
                 // to open (Next, `next-styles`).
-                ColorStyleRow(layerID: layer.id, slot: .fill) {
+                ColorStyleRow(slot: .fill) {
                     backgroundSwatchButton
                 }
             }

@@ -1,0 +1,30 @@
+{
+  "feature": "One style on several layers at once",
+  "epic": "ui-components",
+  "summary": "Pick several layers and a new Color section appears in the dock. Setting a named color there paints every one of them in one step that one undo puts back, and layers wearing different things say Mixed instead of naming one of them.",
+  "setup": "Photonz Dev, Experiments window, release Next. Save a color as a style and reuse it is on by default; it needs Keep reusable pieces in a Library, which is also on.",
+  "try": [
+    { "do": "Start a blank canvas from the welcome card." },
+    { "do": "Press R and drag out three boxes side by side." },
+    { "do": "Press V, click the first box, then shift-click the other two. A Color section appears under Position & Size.", "shot": "2026-09-03-multi-style-1-color-section.png" },
+    { "do": "On the Color section's Fill row, open the swatch fan menu and choose Save as Style for All 3. Type Accent and press Return.", "shot": "2026-09-03-multi-style-2-all-three.png" },
+    { "do": "Click the third box on its own and unlink its fill from the menu, then reselect all three. The Fill row now says Mixed.", "shot": "2026-09-03-multi-style-3-mixed.png" },
+    { "do": "Open the Fill row's menu again and pick Accent under Use a style on all 3. All three wear it." },
+    { "do": "Press Command Z once. All three go back to Mixed together." }
+  ],
+  "evaluate": [
+    "Does a Color section that appears only when several layers are picked read as the natural place to look, or did you go hunting in the Annotation section first?",
+    "The row calls a shape's outline Outline, where the single-layer Annotation section just calls it Color. Does the new word help when a Fill row sits above it, or does it read as a different thing?",
+    "Mixed is the same word Position & Size already uses for numbers that differ. Does it say what you expect about a color?",
+    "The swatch beside the menu is a readout, not something to click. Does it invite a click that goes nowhere?",
+    "Save as Style over a selection only offers itself when the picked layers already share a color. Is that the right moment to refuse, or would you rather it saved the first one's color and repainted the rest?"
+  ],
+  "rough": [
+    "The screenshots are real captures of the app, taken by the probe build with Screen Recording granted.",
+    "A whole-selection row can set a NAMED color and nothing else. There is still no way to set three boxes to one one-off color in a single move: for that you set them one at a time, or save the color as a style first. That is the obvious next thing and it is not here.",
+    "The Color section exists only while more than one layer is picked. With one picked its colors stay in the Annotation, Text or Frame section, so the color you were just editing moves to a different section when you shift-click a second layer.",
+    "Three layers painted three different colors cannot be saved as a style from the row: there is no single color to name. You save from one layer and then set all three to it, which is two moves rather than one.",
+    "A box with its Fill switched off is left out of the Fill row on purpose, so applying a style never switches a fill on behind your back. The row says 'Applies to 2 of the 3 selected layers' when that happens, but nothing on the canvas points at which one sat out.",
+    "Locked layers are left out for the same reason and are counted the same way."
+  ]
+}

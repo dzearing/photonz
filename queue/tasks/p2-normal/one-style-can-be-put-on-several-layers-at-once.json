@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 740,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:21:12.688Z",
-  "updated": "2026-09-03T05:21:12.688Z",
+  "updated": "2026-09-03T10:05:18.238Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-03-color-styles.json. Model side already supports it: bindColorStyle takes one layer, so this is a loop plus the multi-selection reading in the inspector. ColorStyleRow/ColorStyleControl in Sources/Photonz/ColorStylePanel.swift take a single layerID today.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-03T05:21:12.688Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T10:05:18.238Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T10:10:13.150659Z",
+      "note": "Adversarial review before building. (1) The task note says 'a loop plus the multi-selection reading in the inspector', but there is no row to loop from: with two or more layers picked the inspector drops the Annotation, Text and Frame sections entirely (they all read selectedLayerID, which is nil while a multi-selection exists). So a color row has to be given a home first. (2) Reviving the Annotation section for a multi-selection is wrong when the picked layers mix a text block and a box, and the section title would lie. A Color section that exists ONLY while several layers are picked is honest and adds no fourth place to look: with one layer picked it is absent and the colors stay where they are. (3) A box with Fill switched off has a fill slot but no fill color; applying a style there would silently switch its fill on. Those layers stay out of the row, which matches the acceptance wording, and the row says how many of the picked layers it reaches. (4) A locked layer must not be repainted by a command aimed at the layers on top of it, so locked layers stay out too. (5) Two rows both labelled Color (a shape's ink and a text block's ink share the title) would be unreadable side by side, so the whole-selection rows get their own labels: Fill, Outline, Text. (6) Cut from this slice: setting a one-off color across a selection. That is a different feature (three raw colors at once, through three different builders) and the goal here is the named color. The row shows the color they share as a readout beside the menu, the same way a row already wearing a style does today."
+    },
+    {
+      "t": "2026-09-03T10:10:13.150659Z",
+      "note": "Shortest version chosen: make ONE color row that speaks for whatever is picked, one layer or twenty, instead of a second multi-selection row beside the single-layer one. ColorStyleRow/ColorStyleControl drop their layerID and read a ColorStyleSelection for their slot; with one layer picked that selection is that layer, so the existing rows in Annotation, Text and Frame keep behaving exactly as they do now."
+    },
+    {
+      "t": "2026-09-03T10:22:52.292145Z",
+      "note": "Built. PhotonzCore gains ColorStyleSelection (a slot, the picked layers that have a color in it, and what the row shows: one color, one style, or Mixed) plus document-level bindColorStyle/unbindColorStyle/saveColorStyle over a list of layers and colorStyleSlots/colorStyleSelection readers. 25 new tests in Tests/PhotonzCoreTests/ColorStyleSelectionTests.swift, written first. The single-layer saveColorStyle now delegates to the list version so the two cannot drift. In the app, ColorStyleRow and ColorStyleControl dropped their layerID and read the selection; a new SelectionColorInspector renders them as a Color section that exists only while more than one layer is picked. ColorStyleNamingRequest is now keyed on the slot alone, and a changed multi-selection closes an open name field."
+    },
+    {
+      "t": "2026-09-03T10:22:52.292145Z",
+      "note": "Verified on the real app, not assumed. Scripts/playtest/multi-style-walk.json drives the probe build: three boxes drawn, all three shift-clicked, Save as Style for All 3 typed once -> all three read 'fill #FF3B30 \u00b7 style Accent \u00d73' and the shelf says 3 uses (acceptance 1). One box unlinked and all three reselected -> the Fill row reads 'fill mixed \u00d73', not Accent (acceptance 3). Use a style on all 3 -> all three wear it again, and ONE Command Z puts all three back to mixed with the shelf back to 2 uses (acceptance 2). Scripts/playtest/styles-walk.json re-run as a regression: the single-layer flow is byte-identical. Scripts/test.sh green, 2033 tests."
+    },
+    {
+      "t": "2026-09-03T10:22:52.292145Z",
+      "note": "Adversarial review of the built thing. The first pass put the Fill and Outline swatches at different left edges, because a row wearing a name is wider than one wearing a glyph and both were trailing-aligned: in a tool people use to redline alignment that is the first thing anyone would file. Fixed with fixed readout and control columns (ColorStyleRowLayout) on the whole-selection rows only, so the single-layer rows keep hugging their well. Also fixed the hover tip, which read 'These color uses the style Accent' over a multi-selection. Left rough and written into the audit: a whole-selection row still cannot set a one-off color (filed as set-several-layers-to-the-same-one-off-color-in), the readout swatch invites a click that goes nowhere, and a selection whose colors differ cannot be saved as a style at all."
     }
-  ]
+  ],
+  "started": "2026-09-03T10:05:18.237Z"
 }

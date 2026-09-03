@@ -110,6 +110,14 @@ struct InspectorPanel: View {
         if Experiments.shared.geometryFieldsEnabled, editorState.hasLayerSelection {
             set.insert(.geometry)
         }
+        // The color rows a multi-selection gets (Next, `next-styles`). Only
+        // with several layers picked: with one, its colors live in the section
+        // for the kind of layer it is, and a second place to look for the same
+        // color is how a person stops trusting either.
+        if Experiments.shared.colorStylesEnabled, editorState.colorStyleSelectionCount > 1,
+           !editorState.colorStyleSlots.isEmpty {
+            set.insert(.color)
+        }
         if let layer = selectedLayer {
             set.insert(.effects)
             set.insert(.shadow)
@@ -226,6 +234,8 @@ struct InspectorPanel: View {
             } else if let layer = selectedLayer, layer.isComponentInstance {
                 ComponentInstanceInspector(layer: layer)
             }
+        case .color:
+            SelectionColorInspector()
         case .annotation:
             if let layer = selectedLayer, layer.annotation != nil {
                 AnnotationInspector(layer: layer)
@@ -323,6 +333,10 @@ enum InspectorSectionID: String, CaseIterable {
     // say what KIND of group you have selected, and both belong near the top
     // where the name is worth reaching.
     case component
+    // What several picked layers are painted, and one place to set them all to
+    // the same named color (Next, `next-styles`). Above the per-kind sections,
+    // because it is only ever on screen INSTEAD of them.
+    case color
     case annotation
     case text
     case measure
@@ -346,6 +360,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .geometry: "Position & Size"
         case .frame: "Frame"
         case .component: "Component"
+        case .color: "Color"
         case .annotation: "Annotation"
         case .text: "Text"
         case .measure: "Measure"
@@ -1477,7 +1492,7 @@ struct AnnotationInspector: View {
                     // The color, and where it came from: a raw color keeps its
                     // well, a color wearing a style says the style's name
                     // instead (Next, `next-styles`).
-                    ColorStyleRow(layerID: layer.id, slot: .stroke) {
+                    ColorStyleRow(slot: .stroke) {
                         ColorPicker("Color", selection: Binding(
                             get: { Color(hex: a.colorHex) },
                             set: { if let hex = $0.hexString { editorState.setAnnotationColor(layerID: layer.id, hex) } }),
@@ -1497,7 +1512,7 @@ struct AnnotationInspector: View {
                             set: { editorState.setAnnotationFill(layerID: layer.id, $0 ? a.colorHex : nil) }))
                             .font(.caption).controlSize(.small)
                         Spacer()
-                        ColorStyleRow(layerID: layer.id, slot: .fill) {
+                        ColorStyleRow(slot: .fill) {
                             if let fillHex = a.fillColorHex {
                                 ColorPicker("Fill Color", selection: Binding(
                                     get: { Color(hex: fillHex) },
@@ -1690,7 +1705,7 @@ struct TextInspector: View {
                 HStack(alignment: .top) {
                     Text("Text").font(.caption).foregroundStyle(.secondary)
                     Spacer()
-                    ColorStyleRow(layerID: layer.id, slot: .text) {
+                    ColorStyleRow(slot: .text) {
                         ColorPicker("Color", selection: Binding(
                             get: { Color(hex: c.colorHex) },
                             set: { if let hex = $0.hexString {

@@ -188,13 +188,12 @@ extension PhotonzDocument {
     /// that layer at it — the point of saving is to keep using it, so the layer
     /// you saved from is the style's first user. Nil when there is no color
     /// there to save.
+    /// One layer is a selection of one, so this is the same call the row over
+    /// a multi-selection makes and the two can never drift apart.
     @discardableResult
     public mutating func saveColorStyle(from layerID: UUID, slot: ColorSlot,
                                         name: String? = nil) -> UUID? {
-        guard let hex = layer(id: layerID)?.colorHex(for: slot) else { return nil }
-        let styleID = addColorStyle(name: name, colorHex: hex)
-        updateLayer(id: layerID) { $0.bindColorStyle(styleID, for: slot) }
-        return styleID
+        saveColorStyle(from: [layerID], slot: slot, name: name)
     }
 
     /// Points a layer's slot at a style and paints it. False when the layer has
