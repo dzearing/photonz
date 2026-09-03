@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 780,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:55:20.272Z",
-  "updated": "2026-09-03T11:15:42.251Z",
+  "updated": "2026-09-03T11:28:57.178Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the step E9 sitting on 2026-09-03. See the renders /tmp/photonz-playtest/component-end-to-end-walk/e2e-3-three-copies-doc.png: the word Save carries a visible light halo on every copy. StarterComponents.swift already strips the halo for the five built ins and says why; hand authored text keeps it. Decide whether the rule is per component or per group, and whether it is a stored property or a render time rule, since it must not bake into pixels.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-03T11:28:37.057736Z",
       "note": "Adversarial review of the built thing. It is invisible by design and there was nothing clumsy to fix in the flow. Two rough edges recorded in the audit rather than fixed: the difference is quiet at window size and reads best zoomed, and a halo somebody tuned by hand before promoting keeps drawing inside the component, which is deliberate but unexplained on screen. Text typed straight onto a Frame still wears the halo; filed as its own task (text-you-type-on-a-screen-does-not-wear-the-scre) rather than widening this one."
+    },
+    {
+      "t": "2026-09-03T11:28:57.178Z",
+      "note": "Text inside a component draws without the screenshot halo. Layer.drawnShadow(insideComponent:) in PhotonzCore is the rule, read at draw time so nothing is erased and nothing bakes; DocumentRenderer carries the flag down the tree and seeds it in renderSprite; ShadowInspector now describes the drawn shadow so the Enable Shadow switch stops claiming a halo nobody can see. 16 tests written first, all 2076 green. Verified in the probe app with Scripts/playtest/component-text-halo-walk.json: loose text keeps the halo, a plain group keeps it, promoting drops it on the original and on every copy, ungrouping brings it back. Audit queue/audits/2026-09-03-component-text-halo.json with three real captures. Frame case filed separately."
     }
   ],
-  "started": "2026-09-03T11:15:42.250Z"
+  "started": "2026-09-03T11:15:42.250Z",
+  "completed": "2026-09-03T11:28:57.178Z"
 }
