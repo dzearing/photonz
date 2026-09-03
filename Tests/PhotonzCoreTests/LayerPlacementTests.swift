@@ -349,4 +349,71 @@ struct LayerPlacementTests {
         #expect(piece(wider, "Background").width == 300)
         #expect(piece(wider, "Label").midX == 150)
     }
+    // MARK: - The group says which pieces are not following it
+
+    @Test("A group with nothing overriding it lists nobody")
+    func noOverridesListsNobody() {
+        #expect(plate().contentsWithTheirOwnPlacement.isEmpty)
+        #expect(plate(contents: LayerPlacement(horizontal: .center)).contentsWithTheirOwnPlacement
+                    .isEmpty)
+    }
+
+    @Test("A group lists exactly the pieces that placed themselves")
+    func overridesAreTheOnesWithARuleOfTheirOwn() {
+        let group = plate(contents: LayerPlacement(horizontal: .center, vertical: .center),
+                          background: LayerPlacement(horizontal: .stretch))
+        let overrides = group.contentsWithTheirOwnPlacement
+        #expect(overrides.count == 1)
+        #expect(overrides.first?.name == "Background")
+        #expect(overrides.first?.id == group.children.first?.id)
+        #expect(overrides.first?.horizontal == .stretch)
+        #expect(overrides.first?.vertical == nil)
+    }
+
+    @Test("The list reads top-most first, the way the Layers list does")
+    func overridesReadTopMostFirst() {
+        let group = plate(background: LayerPlacement(horizontal: .stretch),
+                          label: LayerPlacement(vertical: .top))
+        #expect(group.contentsWithTheirOwnPlacement.map(\.name) == ["Label", "Background"])
+    }
+
+    @Test("Each listed piece says what its own rule is, per axis")
+    func eachOverrideSaysWhatItDoes() {
+        let acrossOnly = PlacementOverride(id: UUID(), name: "Title", horizontal: .left,
+                                           vertical: nil)
+        let downOnly = PlacementOverride(id: UUID(), name: "Rule", horizontal: nil,
+                                         vertical: .bottom)
+        let both = PlacementOverride(id: UUID(), name: "Badge", horizontal: .right,
+                                     vertical: .center)
+        let filling = PlacementOverride(id: UUID(), name: "Background", horizontal: .stretch,
+                                        vertical: .stretch)
+        #expect(acrossOnly.summary == "Left across")
+        #expect(downOnly.summary == "Bottom down")
+        #expect(both.summary == "Right across, Middle down")
+        #expect(filling.summary == "Stretch both ways")
+    }
+
+    @Test("Only the pieces directly inside are listed, not what is deeper in")
+    func onlyDirectChildrenAreListed() {
+        var inner = plate(background: LayerPlacement(horizontal: .stretch))
+        inner.name = "Inner"
+        let outer = Layer(name: "Outer", content: .group(GroupContent(children: [inner])),
+                          frame: .zero)
+        #expect(outer.contentsWithTheirOwnPlacement.isEmpty)
+    }
+
+    @Test("A piece that says the same thing the group says is still not following it")
+    func matchingTheGroupIsStillItsOwnRule() {
+        // It looks identical today, and stops looking identical the moment the
+        // group's answer changes, which is exactly why it is worth naming.
+        let group = plate(contents: LayerPlacement(horizontal: .center),
+                          label: LayerPlacement(horizontal: .center))
+        #expect(group.contentsWithTheirOwnPlacement.map(\.name) == ["Label"])
+    }
+
+    @Test("Something that is not a group lists nobody")
+    func aLeafListsNobody() {
+        #expect(box("Plain", CGRect(x: 0, y: 0, width: 10, height: 10))
+                    .contentsWithTheirOwnPlacement.isEmpty)
+    }
 }

@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/placement-exceptions",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [160, 200], "to": [520, 760] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [340, 500] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-nothing-overrides",
+      "note": "an empty screen selected: nothing inside it has a rule of its own, so the Layout section should say nothing extra" },
+    { "do": "snapshot", "name": "exceptions-1-nothing-overrides" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [160, 200], "to": [520, 260] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "stretchSelectionAcross" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [340, 500] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-one-exception",
+      "note": "the screen again: the bar across the top now has its own rule, so the Layout section should name it and say what it does" },
+    { "do": "snapshot", "name": "exceptions-2-one-exception" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 300], "to": [300, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "stretchSelectionAcross" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [340, 500] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-two-exceptions",
+      "note": "two pieces with rules of their own: the count line should say two and both names should be listed, top-most first" },
+    { "do": "snapshot", "name": "exceptions-3-two-exceptions" },
+
+    { "do": "action", "action": "pickFirstOwnRule" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "4-followed",
+      "note": "what clicking the first name does: that piece is now the selection, inside the screen, and its own Layout rows read Stretch across" },
+    { "do": "snapshot", "name": "exceptions-4-followed" }
+  ]
+}

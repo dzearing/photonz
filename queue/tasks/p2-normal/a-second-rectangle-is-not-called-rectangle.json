@@ -1,0 +1,27 @@
+{
+  "id": "a-second-rectangle-is-not-called-rectangle",
+  "title": "A second rectangle is not called Rectangle",
+  "goal": "Every new layer of a kind gets the same name, so a document ends up with three layers all called Rectangle and lists that name them cannot tell them apart. New layers should get a number when the name is already taken.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 940,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T19:57:00.193Z",
+  "updated": "2026-09-03T19:57:00.194Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building the group override list (2026-09-03): the list named two pieces Rectangle and Rectangle and there was no way to tell which was which without clicking. Layer naming happens where new layers are made in EditorState; the Layers list has the same problem.",
+  "acceptance": [
+    "Drawing a second rectangle names it Rectangle 2, not Rectangle",
+    "A name already in use anywhere in the document counts as taken",
+    "Renaming a layer by hand is never renumbered afterwards"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T19:57:00.194Z",
+      "note": "created (manual)"
+    }
+  ]
+}

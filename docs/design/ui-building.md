@@ -144,6 +144,19 @@ telling the truth about what is on screen. The promise is precise: **grouping
 never changes a number; resizing a container changes what is measured, and the
 number says so.**
 
+**A container names the pieces that are not following it.** Under the Contents
+rows, a group or screen lists every piece directly inside it that carries a rule
+of its own, with what that rule says beside the name ("Stretch across"), and
+clicking a name goes to that piece. Without it the only way to find an override
+was to click through every piece in turn, so a group whose contents refuse to
+move was a mystery until you did. A container where everybody follows says
+nothing at all, and the list stops at six with a count of the rest, since a
+Layout section taller than the panel helps nobody. A piece that set the same
+answer the container happens to say is still on the list: it stops matching the
+moment the container's answer changes, which is exactly when you want to have
+known. Only DIRECT children are listed — an argument further down belongs to the
+container having it.
+
 **Nested containers place their own contents.** A group inside a group gets its
 new box from its parent's rule, then lays its own contents out by its own rules,
 all the way down. A piece that keeps its size renumbers nothing inside it.

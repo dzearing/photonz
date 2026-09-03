@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 830,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T13:00:26.445Z",
-  "updated": "2026-09-03T13:00:26.445Z",
+  "updated": "2026-09-03T19:57:17.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the placement audit 2026-09-03. The data is already there: Layer.placement is non-nil exactly on the pieces that override. PlacementInspector.contentRows is where it goes.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-03T13:00:26.445Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T19:45:54.545Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T19:57:17.000Z",
+      "note": "Adversarial review before building: the mock had no list at all, this came out of the placement audit. Two things were cut. (1) A 'put them all back to following' button: it is one undoable stroke that would wipe rules the user set on purpose, from a section they came to for something else. (2) Showing every override in the whole subtree: what a grandchild says is an argument with ITS group, and listing it here would name a piece the group's own setting has no power over. Kept: direct children only, the rule each one carries, and a click that goes there."
+    },
+    {
+      "t": "2026-09-03T19:57:17.000Z",
+      "note": "Core: Layer.contentsWithTheirOwnPlacement + PlacementOverride in PhotonzCore/LayerPlacement.swift, top-most first to read like the Layers list. Seven tests in LayerPlacementTests."
+    },
+    {
+      "t": "2026-09-03T19:57:17.000Z",
+      "note": "UI: PlacementInspector.exceptions, at the bottom of contentRows, under the caption it is the exception to. Count line, then up to six rows (name, what it does, chevron), then 'and N more'. Empty list shows nothing. Click calls selectLayer(id, inGroup: group), which is what reveals it in the Layers list."
+    },
+    {
+      "t": "2026-09-03T19:57:17.000Z",
+      "note": "Verified on the probe with Scripts/playtest/placement-exceptions-walk.json (Screen Recording granted, so real captures): nothing overriding shows nothing extra, one override reads 'One layer has a rule of its own', two read '2 layers have rules of their own', and the pick lands the selection on the listed piece inside the frame (log step 31: selection Rectangle, insideGroup Frame). New probe-only action pickFirstOwnRule makes the click reachable from a walk."
+    },
+    {
+      "t": "2026-09-03T19:57:17.000Z",
+      "note": "Review after building: two pieces both named Rectangle read identically, which is the app's layer naming, filed as its own task. Hover highlight is not photographable from a walk. Nothing here touches Current: the whole Layout section sits behind next-placement."
     }
-  ]
+  ],
+  "started": "2026-09-03T19:45:54.544Z"
 }

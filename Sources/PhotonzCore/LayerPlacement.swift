@@ -187,3 +187,54 @@ extension Layer {
         LayerPlacement(horizontal: placement?.horizontal, vertical: vertical).normalized
     }
 }
+
+/// One piece inside a container that places itself rather than following what
+/// the container says, named so the container can list it.
+///
+/// Set on the CHILD, read from the PARENT: a group's Layout section says what
+/// everything inside it does, and this is how it also says who is not doing it.
+/// Without it the only way to find an override is to click every piece in turn.
+public struct PlacementOverride: Identifiable, Hashable, Sendable {
+    public let id: UUID
+    public let name: String
+    /// The axes this piece decides for itself. Nil means it still follows the
+    /// container on that axis, so at least one of the two is always set.
+    public let horizontal: HorizontalPlacement?
+    public let vertical: VerticalPlacement?
+
+    public init(id: UUID, name: String,
+                horizontal: HorizontalPlacement?, vertical: VerticalPlacement?) {
+        self.id = id
+        self.name = name
+        self.horizontal = horizontal
+        self.vertical = vertical
+    }
+
+    /// What this piece's own rule says, in a few words that fit beside its
+    /// name. "Across" and "down" carry the axis so a single word like Stretch
+    /// is never ambiguous about which direction it applies to.
+    public var summary: String {
+        if horizontal == .stretch, vertical == .stretch { return "Stretch both ways" }
+        let across = horizontal.map { "\($0.title) across" }
+        let down = vertical.map { "\($0.title) down" }
+        return [across, down].compactMap { $0 }.joined(separator: ", ")
+    }
+}
+
+extension Layer {
+    /// The pieces directly inside this container that have a rule of their own,
+    /// top-most first so the list reads the way the Layers list does.
+    ///
+    /// Direct children only: what a piece deeper down says is an argument with
+    /// ITS container, and belongs in that container's Layout section, not here.
+    /// A piece whose rule happens to match the container's answer is still in
+    /// the list, because it stops matching the moment the container changes.
+    public var contentsWithTheirOwnPlacement: [PlacementOverride] {
+        children.reversed().compactMap { child in
+            guard let placement = child.placement, !placement.isEmpty else { return nil }
+            return PlacementOverride(id: child.id, name: child.name,
+                                     horizontal: placement.horizontal,
+                                     vertical: placement.vertical)
+        }
+    }
+}

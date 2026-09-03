@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 820,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T13:00:26.415Z",
-  "updated": "2026-09-03T19:44:45.740Z",
+  "updated": "2026-09-03T19:44:58.579Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the placement audit 2026-09-03 (queue/audits/2026-09-03-ui-components-placement.json). Today Stretch widens the layer frame and TextRasterizer draws at the natural size from the frame origin, so nothing visibly moves. Real reflow is auto layout (ui-layout, staged later), so the short version here is probably a text alignment inside the frame, or hiding Stretch for text content.",
@@ -42,7 +42,12 @@
     {
       "t": "2026-09-03T19:44:45.739Z",
       "note": "Reviewed on the real app (probe, Screen Recording granted): Scripts/playtest/stretched-words-walk.json, 56 steps, ok. Verified acceptance 1: setting Stretch on a text layer flips the Align row to Center and adds a line saying what stretch means for words, and the next resize stretches the box and carries the words to the middle of it (words-3-wider-sc.png shows the word 130 points right of where it was pinned before). Honest caveat: nothing on the canvas moves at the MOMENT of the pick, which is true of every Layout rule, so the visible proof is one drag away. Acceptance 2: a label centred in a button is still centred at any width, both through the button's own Center rule (unchanged) and through stretch+Center (covered by aStretchedLabelStaysCentred). Acceptance 3: docs/design/ui-building.md, 'Where the words sit in their box'. Audit written to queue/audits/2026-09-03-stretched-words.json with three real screenshots. Also filed a-screen-repaints-its-surface-as-soon-as-it-is-r: during the walk the frame's painted surface stayed the old size in the window while the offscreen render of the same step was right."
+    },
+    {
+      "t": "2026-09-03T19:44:58.578Z",
+      "note": "Text now says where its words sit in their box (Align: left/center/right across, top/middle/bottom down) and telling text to stretch centres them on that axis, so the choice stops being invisible. Model+rule in Sources/PhotonzCore/TextAlign.swift, drawing in TextRasterizer, Align row in the Text section behind next-placement, caption in the Layout section. Decision recorded in docs/design/ui-building.md ('Where the words sit in their box'): hiding Stretch for text was rejected because a wrapped paragraph already re-wraps. Verified on the probe app with Scripts/playtest/stretched-words-walk.json (56 steps, ok, Screen Recording granted) plus 12 new core tests and 7 new rasterizer tests; full suite 2364 green. Audit: queue/audits/2026-09-03-stretched-words.json. Caveat in the audit: nothing moves on the canvas at the moment of the pick, only on the next resize, as with every Layout rule."
     }
   ],
-  "started": "2026-09-03T19:19:14.693Z"
+  "started": "2026-09-03T19:19:14.693Z",
+  "completed": "2026-09-03T19:44:58.579Z"
 }

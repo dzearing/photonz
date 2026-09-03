@@ -306,6 +306,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Move along to the next piece in the group already stepped into,
     /// wrapping at the end — what clicking the piece beside it does.
     case pickNextSibling
+    /// Go to the first piece the selected group lists as having a rule of its
+    /// own, which is what clicking that name in the Layout section does (Next,
+    /// `next-placement`). The list is in the dock, which a walk cannot reach
+    /// with the pointer, so this is how a walk shows where a name leads.
+    case pickFirstOwnRule
     /// Set the selected layer's own rule to Stretch across (Next,
     /// `next-placement`), which is what picking Stretch in the Layout
     /// section's Horizontal menu does. The menu is in the dock, which a walk

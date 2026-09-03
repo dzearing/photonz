@@ -634,6 +634,12 @@ private final class Run {
                    let at = siblings.firstIndex(where: { $0.id == id }) {
                     editor.selectLayer(siblings[(at + 1) % siblings.count].id, inGroup: context)
                 }
+            case .pickFirstOwnRule:
+                if let id = editor.selectedLayerID,
+                   let group = editor.document?.layer(id: id),
+                   let first = group.contentsWithTheirOwnPlacement.first {
+                    editor.selectLayer(first.id, inGroup: id)
+                }
             case .stretchSelectionAcross:
                 if let id = editor.selectedLayerID {
                     editor.setPlacement(id: id, horizontal: .stretch)

@@ -20,6 +20,9 @@ struct PlacementInspector: View {
     @Environment(EditorState.self) private var editorState
     let layer: Layer
 
+    /// The row the pointer is over, so a name that can be clicked looks like it.
+    @State private var hoveredContentID: UUID?
+
     /// The live layer, so a menu pick redraws the row it came from.
     private var current: Layer { editorState.document?.layer(id: layer.id) ?? layer }
 
@@ -177,7 +180,75 @@ struct PlacementInspector: View {
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            exceptions
         }
+    }
+
+    // MARK: - The pieces that are not following
+
+    /// Who inside this group placed itself, named right under the setting they
+    /// are ignoring. Without this the only way to find an override is to click
+    /// every piece in turn, and a group whose contents will not move is a
+    /// mystery until you do. A group where everybody follows says nothing:
+    /// an empty list would be a permanent question about an answer of none.
+    @ViewBuilder
+    private var exceptions: some View {
+        let overrides = current.contentsWithTheirOwnPlacement
+        if !overrides.isEmpty {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(overrides.count == 1 ? "One layer has a rule of its own"
+                                          : "\(overrides.count) layers have rules of their own")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.bottom, 2)
+                ForEach(overrides.prefix(exceptionsShown)) { exception in
+                    exceptionRow(exception)
+                }
+                // A group with a dozen exceptions would push the rest of the
+                // inspector off the panel, so the list stops and says so; the
+                // Layers list is where you go through all of them.
+                if overrides.count > exceptionsShown {
+                    Text("and \(overrides.count - exceptionsShown) more")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .padding(.leading, 6)
+                }
+            }
+            .padding(.top, 4)
+        }
+    }
+
+    private var exceptionsShown: Int { 6 }
+
+    /// One name, what it does instead, and a click that goes there.
+    private func exceptionRow(_ exception: PlacementOverride) -> some View {
+        Button {
+            editorState.selectLayer(exception.id, inGroup: current.id)
+        } label: {
+            HStack(spacing: 8) {
+                Text(exception.name)
+                    .font(.callout)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer(minLength: 8)
+                Text(exception.summary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .contentShape(.rect(cornerRadius: 5))
+            .background(RoundedRectangle(cornerRadius: 5)
+                .fill(hoveredContentID == exception.id ? AnyShapeStyle(.quaternary)
+                                                       : AnyShapeStyle(.clear)))
+        }
+        .buttonStyle(.plain)
+        .onHover { hoveredContentID = $0 ? exception.id : nil }
+        .help("Select \(exception.name)")
     }
 
     /// The row for an axis the stack decides. It stays in place, with the same

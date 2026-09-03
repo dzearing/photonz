@@ -1,0 +1,28 @@
+{
+  "feature": "A group names the pieces that are not following it",
+  "epic": "ui-components",
+  "summary": "Select a group or screen and its Layout section now lists every piece inside it that has a placement rule of its own, says what that rule is, and takes you to the piece when you click its name. Before this the only way to find one was to click through every piece in turn.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag next-placement on (default). Nothing to turn on beyond that.",
+  "try": [
+    { "do": "Draw a frame with the Frame tool, then draw a rectangle across the top of it." },
+    { "do": "With that rectangle selected, set Layout > Horizontal to Stretch." },
+    { "do": "Click the empty middle of the frame to select the frame itself." },
+    { "do": "Read the bottom of the Layout section: it should name the rectangle and say Stretch across.", "shot": "2026-09-03-placement-exceptions.png" },
+    { "do": "Click that name. The rectangle becomes the selection, inside the frame." },
+    { "do": "Set its Horizontal back to Follow screen, select the frame again, and check the list is gone." }
+  ],
+  "evaluate": [
+    "Reading the group's Layout section, can you tell at a glance whether anything inside is going to ignore it?",
+    "Is 'Stretch across' beside the name enough to know what that piece does, or do you still want to click through to see?",
+    "Does the list belong at the bottom of the section, under the setting it is the exception to, or should it be higher?",
+    "When two pieces are both called Rectangle, is clicking through to find out which is which acceptable?",
+    "Should the list also offer a way to put a piece back to following, without going to it first?"
+  ],
+  "rough": [
+    "Layers with the same default name read identically in the list (two rectangles both say Rectangle). That is the app naming every new rectangle the same thing, not this list, but this list is where it stings; filed as its own task.",
+    "The list stops at six names and then says 'and 4 more' as plain text, which is a dead end: the rest have to be found in the Layers list. A group with that many exceptions is rare enough that a scrolling list inside a section felt worse.",
+    "There is no way to clear an override from here. Selecting the piece and setting its axis back to Follow is still the only route, which is one more click than it could be.",
+    "Real screenshots: the probe held Screen Recording, so the picture above is the window as a person sees it, not an offscreen render.",
+    "The hover highlight under a name could not be photographed. A scripted walk cannot put the pointer in the inspector, so that one detail was checked by reading the code, not by seeing it."
+  ]
+}
