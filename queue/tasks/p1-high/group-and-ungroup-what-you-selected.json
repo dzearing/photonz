@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.168Z",
-  "updated": "2026-09-03T02:09:21.562430Z",
+  "updated": "2026-09-03T02:09:51.581Z",
   "deps": [
     "a-group-draws-as-one-thing"
   ],
@@ -42,7 +42,7 @@
     },
     {
       "t": "2026-09-03T02:09:21.562430Z",
-      "note": "Built. Core: canGroup / canUngroup / ungroupLayers (all the selected groups in one mutation), freshGroupName, and the click walk \u2014 selectionTarget picks the outermost thing you are not already inside, descendTarget goes one level deeper. The change that made the rest possible: canvasLayer(id:) hands back a layer with its frame on the canvas, CanvasView reads that everywhere it used to read layer.frame, and EditorState.previewCanvasFrame / commitCanvasFrame convert back into the space a layer is stored in (a group translating through moveLayer(id:toCanvasOrigin:), since a group's frame is an anchor and not a box). Without that boundary, the moment a double click reached a piece inside a group its outline, handles, caption pill and measure dots would all have drawn one group offset away. App: flag next-layer-groups (Next, on by default), Layer menu Group \u2318G and Ungroup \u21e7\u2318G above the arrange commands and absent when the flag is off, groupContextID in EditorState with Escape stepping out one level, and CanvasGroups.swift holding the canvas side. Position and Size keeps showing PARENT space, per the spec."
+      "note": "Built. Core: canGroup / canUngroup / ungroupLayers (all the selected groups in one mutation), freshGroupName, and the click walk — selectionTarget picks the outermost thing you are not already inside, descendTarget goes one level deeper. The change that made the rest possible: canvasLayer(id:) hands back a layer with its frame on the canvas, CanvasView reads that everywhere it used to read layer.frame, and EditorState.previewCanvasFrame / commitCanvasFrame convert back into the space a layer is stored in (a group translating through moveLayer(id:toCanvasOrigin:), since a group's frame is an anchor and not a box). Without that boundary, the moment a double click reached a piece inside a group its outline, handles, caption pill and measure dots would all have drawn one group offset away. App: flag next-layer-groups (Next, on by default), Layer menu Group ⌘G and Ungroup ⇧⌘G above the arrange commands and absent when the flag is off, groupContextID in EditorState with Escape stepping out one level, and CanvasGroups.swift holding the canvas side. Position and Size keeps showing PARENT space, per the spec."
     },
     {
       "t": "2026-09-03T02:09:21.562430Z",
@@ -50,8 +50,13 @@
     },
     {
       "t": "2026-09-03T02:09:21.562430Z",
-      "note": "Acceptance checked on the probe with a new 50-step walk, Scripts/playtest/group-walk.json. (1) The menu dump reads \"Group \u2318G\" and \"Ungroup \u21e7\u2318G\" in the Layer menu above Bring to Front; both are disabled without a selection that allows them (canGroupSelection needs two unlocked layers of one list, canUngroupSelection an unlocked group). (2) A marquee over a rectangle and a text layer then \u2318G leaves 2 layers and one selection box around both; dragging from (500,400) to (620,300) moved the group and the ungrouped rectangle later read frame (360,140), exactly the drag delta from (240,240), with the text carried along; a double click selected the rectangle alone (X 0 Y 0 W 660 H 400, parent space) and Escape re-selected the group. (3) Undo: \u21e7\u2318G then three undos walk back one step each \u2014 group restored still dragged, drag undone, group undone with the rectangle back at (240,240). (4) The try-it walk is in the audit. (5) Resize filed as resize-a-group-and-the-pieces-inside-follow with the scaling question written into it. (6) Audit queue/audits/2026-09-03-group-and-ungroup.json with three real window captures; rough items filed. Scripts/test.sh green at 1630, 31 new tests."
+      "note": "Acceptance checked on the probe with a new 50-step walk, Scripts/playtest/group-walk.json. (1) The menu dump reads \"Group ⌘G\" and \"Ungroup ⇧⌘G\" in the Layer menu above Bring to Front; both are disabled without a selection that allows them (canGroupSelection needs two unlocked layers of one list, canUngroupSelection an unlocked group). (2) A marquee over a rectangle and a text layer then ⌘G leaves 2 layers and one selection box around both; dragging from (500,400) to (620,300) moved the group and the ungrouped rectangle later read frame (360,140), exactly the drag delta from (240,240), with the text carried along; a double click selected the rectangle alone (X 0 Y 0 W 660 H 400, parent space) and Escape re-selected the group. (3) Undo: ⇧⌘G then three undos walk back one step each — group restored still dragged, drag undone, group undone with the rectangle back at (240,240). (4) The try-it walk is in the audit. (5) Resize filed as resize-a-group-and-the-pieces-inside-follow with the scaling question written into it. (6) Audit queue/audits/2026-09-03-group-and-ungroup.json with three real window captures; rough items filed. Scripts/test.sh green at 1630, 31 new tests."
+    },
+    {
+      "t": "2026-09-03T02:09:51.581Z",
+      "note": "⌘G groups the selection into one thing you can drag, hide, lock and delete together; ⇧⌘G takes it apart leaving the pieces where they were. Layer menu rows on Photoshop's keys, absent when next-layer-groups is off. On the canvas a click picks the outermost thing you are not inside, a double click goes one level in, Escape comes back out, and the group you are inside draws its own faint box. A group offers no resize handles or rotate knob (filed as resize-a-group-and-the-pieces-inside-follow). Made possible by moving the canvas onto canvas coordinates with one conversion boundary in EditorState. 31 new tests, Scripts/test.sh green at 1630, verified on the probe with the new 50-step Scripts/playtest/group-walk.json. Audit: queue/audits/2026-09-03-group-and-ungroup.json"
     }
   ],
-  "started": "2026-09-03T01:48:35.603Z"
+  "started": "2026-09-03T01:48:35.603Z",
+  "completed": "2026-09-03T02:09:51.581Z"
 }
