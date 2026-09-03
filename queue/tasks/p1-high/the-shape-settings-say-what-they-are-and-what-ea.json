@@ -1,0 +1,35 @@
+{
+  "id": "the-shape-settings-say-what-they-are-and-what-ea",
+  "title": "The shape settings say what they are and what each swatch paints",
+  "goal": "Selecting a rectangle shows a section headed Annotation, with two colour swatches that carry no label saying what they paint, and names beside them that look like labels but are actually the names of saved colours. A person cannot tell what any of it does. The section should be named after what is selected, every swatch should say what part of the shape it paints, and picking a saved colour should only offer colours meant for that part.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T12:39:20.843Z",
+  "updated": "2026-09-03T12:39:20.877Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-03 with a screenshot of a selected rectangle: what is annotation, is this Rectangle properties, there are swatches without labels and I do not know what they mean, presets are not scoped to the type of thing (a foreground colour should only offer foreground presets, a surface colour only surface ones), and the layout looks janky. What the code actually does, verified by reading: the section title comes from LayersPanel.swift line 448 which returns the literal Annotation for the .annotation case, an internal content-kind name rather than the shape. The two words the user read as labels, Border and Surface, are the NAMES OF SAVED COLOUR STYLES the user made: ColorStyleRow deliberately replaces a row label with the bound style name (LayersPanel.swift around 1620 and ColorStylePanel.swift ColorStyleRow, comment: a raw colour keeps its well, a colour wearing a style says the style name instead). That is the confusion: the slot loses its name exactly when a style is applied. The menu lists every style regardless of slot: ColorStylePanel.swift ColorStyleControl reads editorState.colorStyles and ForEach over all of them with no filter, so a fill style can be bound to a stroke. Scoping needs a notion of what a style is FOR; decide whether that is a kind stored on the style, or inferred from where it was first saved, and open a decision card if the answer changes what the user has to do when saving one. The janky look comes from the HStack with a Spacer and top alignment around line 1633 rather than a shared label column. Ships behind next-styles. Check the same title bug for measure, text and callout sections while there.",
+  "acceptance": [
+    "With a rectangle selected the section is headed after the thing selected, not after an internal word, and the same rule holds for every other kind of layer",
+    "Every colour swatch has a permanent label saying what it paints, for example the outline and the inside, and that label stays visible when a saved colour is in use",
+    "The saved colour a swatch is wearing is shown without replacing the label, and it is clear which is the name of the colour and which is the name of the part",
+    "The menu on a swatch offers only colours meant for that part, so an inside colour cannot be put on an outline",
+    "Rows line up on a consistent grid: labels in one column, controls in another, with the checkbox and the swatch on the same baseline",
+    "Nothing about how a rectangle actually paints changes, only how the settings read",
+    "Audit written under queue/audits/ with before and after pictures of the section for a rectangle, an ellipse and an arrow, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T12:39:20.843Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-03T12:39:20.877Z",
+      "note": "seq 170 -> 7"
+    }
+  ]
+}
