@@ -170,6 +170,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case createCanvas
     /// ⌘G and ⇧⌘G are menu chords too.
     case group, ungroup
+    /// Edit ▸ Copy and Edit ▸ Paste. Both are menu chords, which do nothing
+    /// while the probe is not the active app, so a walk that checks where a
+    /// pasted layer lands asks for them here.
+    case copyLayer, pasteLayer
     /// The frame rows in the Layer menu (Next, `next-frames`): the size sheet,
     /// and putting a frame around what is selected.
     case newFrameDialog, frameSelection
@@ -309,6 +313,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// drag cannot start a real drag session, so this lands the drop the way
     /// the canvas's drag destination does, pasteboard and all.
     case dropComponent(at: PlaytestPoint)
+    /// A file let go over the canvas, the way one arrives from the Finder.
+    /// `file` is relative to the script, like `open`.
+    case dropImage(file: String, at: PlaytestPoint)
     /// Render the window's content offscreen to `<out>/<name>.png`.
     case snapshot(name: String)
     /// Composite the document itself to `<out>/<name>.png`.
@@ -334,9 +341,9 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "blank", "clearClipboard", "click", "describe", "drag", "hover", "key",
-        "measureMode", "menus", "move", "open", "readClipboard", "render", "shortcut", "snapshot",
-        "tool", "type", "wait", "waitFor",
+        "action", "blank", "clearClipboard", "click", "describe", "drag", "dropComponent",
+        "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
+        "readClipboard", "render", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
@@ -357,6 +364,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .measureMode: "measureMode"
         case .waitFor: "waitFor"
         case .dropComponent: "dropComponent"
+        case .dropImage: "dropImage"
         case .snapshot: "snapshot"
         case .render: "render"
         case .describe: "describe"
@@ -441,6 +449,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .snapshot(name: try f.string("name"))
         case "dropComponent":
             self = .dropComponent(at: try f.point("at"))
+        case "dropImage":
+            self = .dropImage(file: try f.string("file"), at: try f.point("at"))
         case "render":
             self = .render(name: try f.string("name"))
         case "describe":

@@ -283,7 +283,7 @@ struct EditorView: View {
                        onCaptionCancel: { editorState.cancelCaptionEdit() },
                        onDeleteLayer: { editorState.deleteLayer(id: $0) },
                        onDeleteLayers: { editorState.deleteLayers(ids: $0) },
-                       onDropImageURL: { editorState.addImageLayerOrOpen(at: $0) },
+                       onDropImageURL: { editorState.addImageLayerOrOpen(at: $0, droppedAt: $1) },
                        onDropComponent: { componentID, point in
                            editorState.placeComponent(componentID: componentID, at: point)
                        },

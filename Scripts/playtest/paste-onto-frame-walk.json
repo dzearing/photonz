@@ -1,0 +1,40 @@
+{
+  "out": "/tmp/photonz-playtest/paste-onto-frame-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [160, 180], "to": [560, 760] },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 240], "to": [520, 380] },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [360, 310] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-card", "note": "a card drawn on the screen, and picked" },
+    { "do": "snapshot", "name": "paste-1-card" },
+
+    { "do": "action", "action": "copyLayer" },
+    { "do": "action", "action": "pasteLayer" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-pasted", "note": "the pasted copy should be indented under the frame in the tree, 16pt down and right from the original" },
+    { "do": "snapshot", "name": "paste-2-pasted" },
+    { "do": "render", "name": "paste-2-pasted-doc" },
+
+    { "do": "dropImage", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [360, 700] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-dropped-on-frame", "note": "a file let go low on the screen joins it, fitted to its width and nudged up so it sits wholly inside" },
+    { "do": "snapshot", "name": "paste-3-dropped-on-frame" },
+    { "do": "render", "name": "paste-3-dropped-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "dropImage", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [1200, 880] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-dropped-on-canvas", "note": "a file let go on bare canvas is a loose layer, centred on the canvas as it always was" },
+    { "do": "snapshot", "name": "paste-4-dropped-on-canvas" },
+    { "do": "render", "name": "paste-4-dropped-doc" }
+  ]
+}

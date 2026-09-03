@@ -305,14 +305,19 @@ final class EditorState {
     /// (centered, aspect-fit) so it can be cropped/moved/styled; with no
     /// document open, it opens as a fresh document. `.photonz` packages always
     /// open as a document.
-    func addImageLayerOrOpen(at url: URL) {
+    ///
+    /// `point` is where the drop landed, in canvas coordinates, when the drop
+    /// came down on the canvas itself. A file dropped on a frame joins that
+    /// frame; everywhere else the image lands centred on the canvas as it
+    /// always has.
+    func addImageLayerOrOpen(at url: URL, droppedAt point: CGPoint? = nil) {
         if url.pathExtension.lowercased() == "photonz" || document == nil {
             openImage(at: url)
             return
         }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
-        pasteImage(image)
+        pasteImage(image, at: point)
     }
 
     /// Opens a CGImage (from a file or a screen capture) as a fresh document.
@@ -4222,7 +4227,11 @@ final class EditorState {
             if case .image(let ref) = layer.content, let cg = store.image(for: ref) {
                 imageData = ImageCodec.encode(cg, format: .png)
             }
-            guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: imageData)) else { return }
+            // The payload travels in CANVAS coordinates: a button copied out of
+            // a screen remembers where it was on the canvas, not where it was
+            // inside that screen, so pasting it lands it back over the screen.
+            let travelling = document?.detachedLayer(id: id) ?? layer
+            guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: travelling, imageData: imageData)) else { return }
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
             pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
@@ -4345,21 +4354,26 @@ final class EditorState {
         }
         guard document != nil else { return }
         discardDragPreview()
-        perform { [layer] in $0.addLayer(layer) }
+        // Pasted over a screen means pasted ONTO it: the layer keeps the spot
+        // it looks like it landed on and becomes part of that screen, the same
+        // way a shape drawn there does.
+        perform { [layer] in $0.addLayerDrawnOnFrame(layer) }
         selectedLayerID = layer.id
     }
 
-    private func pasteImage(_ image: CGImage) {
+    /// `point` is where a drag let go, in canvas coordinates; nil for ⌘V,
+    /// which has no pointer and falls back to the middle of the canvas.
+    private func pasteImage(_ image: CGImage, at point: CGPoint? = nil) {
         guard let document else {
             openCapture(image)
             return
         }
         let ref = store.register(image)
-        let frame = PastePlacement.frame(forImageOf: ref.pixelSize, canvas: document.canvasSize)
+        let frame = document.placementForIncomingImage(size: ref.pixelSize, at: point)
         guard !frame.isEmpty else { return }
         let layer = Layer(name: "Pasted Image", content: .image(ref), frame: frame)
         discardDragPreview()
-        perform { $0.addLayer(layer) }
+        perform { $0.addLayerDrawnOnFrame(layer) }
         selectedLayerID = layer.id
     }
 

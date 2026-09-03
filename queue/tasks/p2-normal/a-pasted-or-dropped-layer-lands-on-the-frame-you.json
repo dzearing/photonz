@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 680,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T03:07:18.179Z",
-  "updated": "2026-09-03T03:07:18.180Z",
+  "updated": "2026-09-03T08:37:46.336916Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Frames landed 2026-09-03. PhotonzCore already has PhotonzDocument.addLayerDrawnOnFrame / addLayerOnFrame (Frames.swift), used by the annotation, text and zoom-callout creation paths in EditorState. The paste paths (pasteLayer, pasteImage) and the image-drop path still call addLayer directly. Paste has no pointer, so decide the anchor: the paste offset position is what addLayerOnFrame tests.",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-03T03:07:18.180Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T08:24:16.162Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T08:37:46.336916Z",
+      "note": "adversarial review before building: the mock-free version of this is small, but reading the paste path turned up a real hole. Copy put the layer's PARENT-space position on the clipboard, so a button copied out of a screen pasted near the top left of the canvas, nowhere near where it looks. Reparenting alone would not have fixed that, so copy now travels in canvas coordinates (detachedLayer)."
+    },
+    {
+      "t": "2026-09-03T08:37:46.336916Z",
+      "note": "second finding: a copied SCREEN pasted 16pt along would have been swallowed by the screen it came from and hidden inside it. addLayerDrawnOnFrame now never absorbs a frame."
+    },
+    {
+      "t": "2026-09-03T08:37:46.336916Z",
+      "note": "third finding: centring a dropped picture on the frame is what the simplest version does, but it teleports away from the pointer. Landing under the pointer and nudging just inside the edge is better for a small asset and identical for a big one, so that is what shipped."
+    },
+    {
+      "t": "2026-09-03T08:37:46.336916Z",
+      "note": "core (TDD): PastePlacement.frame(forImageOf:in:), PhotonzDocument.detachedLayer(id:), PhotonzDocument.placementForIncomingImage(size:at:), plus the no-frame guard in addLayerDrawnOnFrame. 11 new tests in ClipboardTests; full suite 1949 green."
+    },
+    {
+      "t": "2026-09-03T08:37:46.336916Z",
+      "note": "app: copySelectedLayer sends the detached layer, pasteLayer/pasteImage go through addLayerDrawnOnFrame, and the canvas drag destination now carries the drop point (onDropImageURL gained a CGPoint) into addImageLayerOrOpen(at:droppedAt:)."
+    },
+    {
+      "t": "2026-09-03T08:37:46.336916Z",
+      "note": "harness: new dropImage step and copyLayer/pasteLayer actions, so a walk can land a Finder drop and a paste. Verified in the probe app with Scripts/playtest/paste-onto-frame-walk.json: the pasted rectangle and the dropped file both come out indented under the frame, the bare-canvas drop stays top level at the old placement."
+    },
+    {
+      "t": "2026-09-03T08:37:46.336916Z",
+      "note": "follow-up filed: a dropped file is still named Pasted Image rather than after the file."
     }
-  ]
+  ],
+  "started": "2026-09-03T08:24:16.161Z"
 }

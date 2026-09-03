@@ -597,6 +597,15 @@ Step A2. The first thing in this ladder a person can build a screen on.
   picture of a boundary: the only way in would be dragging rows in the layers
   list. **Measurements deliberately do not join a frame** — a caliper measures
   across things and must not be clipped by one, so redlining is untouched.
+- **What you paste or drop on a frame lands on it too.** ⌘V puts the layer back
+  where it was copied from, sixteen points along, and it joins whichever screen
+  that spot is on. A file dragged in from the Finder joins the screen it was let
+  go over: it is sized to fit that screen rather than arriving four times too
+  big and clipped to its middle, and it is nudged just far enough to sit wholly
+  inside rather than half over the edge. A copied SCREEN is the exception that
+  never gets swallowed: pasting one makes a second screen beside the first, not
+  a screen hidden sixteen points inside it. On bare canvas, and in a document
+  with no frames at all, every one of these lands exactly where it always did.
 - **The name and the edge are chrome, not content.** The canvas draws a frame's
   name above its top left corner and a hairline at its edge, in a neutral grey
   that reads on a white surface and a dark screenshot alike. Neither is in the

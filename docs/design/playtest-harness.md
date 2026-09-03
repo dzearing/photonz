@@ -109,6 +109,8 @@ read coordinates straight off the fixture.
 | `tool` | `tool` | Picks a tool directly (`select`, `arrow`, `measure`, and so on), for when its key was not honoured. |
 | `measureMode` | `mode` | Presses I until the Measure tool is in `distance`, `size`, `gap` or `alignment`, and logs how many presses it took. |
 | `waitFor` | `condition`, optional `value`, `timeout` | Polls until `edgeMap` (element detection done), `captionField` (a caption field has the keyboard), `tool` = `value`, or `measureMode` = `value`. Times out as a failure. |
+| `dropComponent` | `at` | Lets go of the component picked on the Library shelf at a point, the way dropping its tile on the canvas does, through the same pasteboard the real drag writes. |
+| `dropImage` | `file`, `at` | Lets go of a file over the canvas at a point, the way one arrives from the Finder (path relative to the script or absolute). A drop on a frame joins that frame; a drop on bare canvas lands the image centred on the canvas. |
 | `snapshot` | `name` | Renders the window's content offscreen to `<name>.png`. While a sheet is up the SHEET is what gets photographed, since that is what a person is looking at. When the probe holds Screen Recording it also writes `<name>-sc.png`, the window as the screen shows it; read that one for anything judged by color or weight (see below). |
 | `render` | `name` | Composites the document itself to `<name>.png`. |
 | `describe` | `stage`, optional `note` | Logs the editor's state under `stage`. |

@@ -1,0 +1,29 @@
+{
+  "feature": "A pasted or dropped layer lands on the frame you dropped it on",
+  "epic": "ui-building",
+  "summary": "Paste a layer over a screen and it becomes part of that screen instead of floating loose over it. Drag a picture in from the Finder onto a screen and it joins that screen too, sized to fit and sitting wholly inside it.",
+  "setup": "Photonz Dev, Experiments window, release Next, frames on (next-frames). A screenshot document with no screens in it is unaffected.",
+  "try": [
+    { "do": "Press F, drag out a screen on an empty canvas." },
+    { "do": "Press R, drag a rectangle inside that screen." },
+    { "do": "Press ⌘C, then ⌘V.", "shot": "2026-09-03-paste-onto-frame-1.png" },
+    { "do": "Check the layers list: the copy should be indented under the screen, sixteen points down and right of the original." },
+    { "do": "Drag an image file from the Finder and let go low inside the screen.", "shot": "2026-09-03-paste-onto-frame-2.png" },
+    { "do": "Check it is indented under the screen too, fitted to the screen's width and sitting flush inside its bottom edge." },
+    { "do": "Drag the same file in again, this time onto bare canvas outside the screen: it should stay a loose layer, centred on the canvas as before." },
+    { "do": "Select the screen itself, press ⌘C then ⌘V: a second screen appears beside it, not one hidden inside it." }
+  ],
+  "evaluate": [
+    "When you paste, does the copy land where your eye expects, or do you look for it?",
+    "A picture dropped near a screen's edge slides in so it is not half cut off. Is that helpful, or would you rather it stay exactly where you let go and be clipped?",
+    "A picture bigger than the screen arrives fitted to the screen. Is that the size you wanted, or would you rather it arrive full size and clipped?",
+    "Copying a screen and pasting makes a second screen next to it rather than one nested inside it. Is that what you expected?",
+    "Is there ever a time you want a pasted layer to sit OVER a screen without belonging to it, and if so, how would you ask for that?"
+  ],
+  "rough": [
+    "A picture dropped on bare canvas still ignores where you let go and lands in the middle of the canvas. That is the behaviour it has always had and this task left it alone, but it is inconsistent with the drop on a screen now landing under the pointer.",
+    "A file dropped in from the Finder is still called Pasted Image in the layers list rather than the file's name, which reads oddly once a screen holds three of them. Filed as its own task.",
+    "Copying a layer used to put its position INSIDE its group on the clipboard, so pasting a button copied out of a screen flung it near the top left of the canvas. Copy now travels in canvas coordinates, which also fixes pasting anything copied out of an ordinary group.",
+    "Screenshots here are real captures of the probe app taken by the scripted walk Scripts/playtest/paste-onto-frame-walk.json."
+  ]
+}

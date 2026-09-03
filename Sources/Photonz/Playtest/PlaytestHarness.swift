@@ -397,6 +397,22 @@ private final class Run {
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p))",
                  state: describe())
 
+        case .dropImage(let file, let at):
+            // Straight to the same call the canvas's drag destination makes, so
+            // a walk can land a Finder drop without synthesising a drag session.
+            let editor = try requireEditor()
+            _ = try requireCanvas()
+            let url = file.hasPrefix("/")
+                ? URL(fileURLWithPath: file)
+                : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                throw Failure(description: "there is no file at \(url.path) to drop")
+            }
+            let p = try documentPoint(at)
+            editor.addImageLayerOrOpen(at: url, droppedAt: p)
+            await sleep(0.3)
+            note(number, step.name, "\(url.lastPathComponent) at \(short(p)) document", state: describe())
+
         case .snapshot(let name):
             // A sheet is its own window on top of the editor's, so while one is
             // up it IS what a person is looking at, and it is what gets
@@ -464,6 +480,8 @@ private final class Run {
                 editor.createBlankCanvas(size: BlankCanvas.defaultPreset.size)
             case .group: editor.groupSelection()
             case .ungroup: editor.ungroupSelection()
+            case .copyLayer: editor.copySelectedLayer()
+            case .pasteLayer: editor.paste()
             case .newFrameDialog: editor.isNewFrameDialogPresented = true
             case .frameSelection: editor.frameSelection()
             case .makeComponent: editor.makeComponent()
@@ -865,6 +883,18 @@ private final class Run {
         case .document:
             guard let viewport = try requireEditor().viewport else { throw Failure(description: "the editor has no viewport yet") }
             return viewport.viewPoint(fromDocument: at.point)
+        }
+    }
+
+    /// The same point in DOCUMENT coordinates, which is the space a drop
+    /// lands in.
+    private func documentPoint(_ at: PlaytestPoint) throws -> CGPoint {
+        switch at.space {
+        case .document:
+            return at.point
+        case .view:
+            guard let viewport = try requireEditor().viewport else { throw Failure(description: "the editor has no viewport yet") }
+            return viewport.documentPoint(fromView: at.point)
         }
     }
 

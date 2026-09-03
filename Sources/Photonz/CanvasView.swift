@@ -149,7 +149,7 @@ struct CanvasView: NSViewRepresentable {
     let onCaptionCancel: () -> Void
     let onDeleteLayer: (UUID) -> Void
     let onDeleteLayers: ([UUID]) -> Void
-    let onDropImageURL: (URL) -> Void
+    let onDropImageURL: (URL, CGPoint) -> Void
     let onDropComponent: (UUID, CGPoint) -> Void
     let onDropImageURLIntoCollage: (URL, UUID, Int) -> Void
     let onAbsorbLayerIntoCollage: (UUID, UUID, Int) -> Void
@@ -297,7 +297,9 @@ final class CanvasNSView: NSView {
     /// or a Finder file. Handled here on the canvas NSView (which covers the
     /// document) rather than a SwiftUI `.dropDestination`, which doesn't reliably
     /// receive drops layered over an NSViewRepresentable.
-    var onDropImageURL: ((URL) -> Void) = { _ in }
+    /// The point is where the drop landed, in document coordinates, so a file
+    /// let go over a frame can join that frame.
+    var onDropImageURL: ((URL, CGPoint) -> Void) = { _, _ in }
     /// A file dropped straight into a collage slot: (url, collage layer, slot).
     var onDropImageURLIntoCollage: ((URL, UUID, Int) -> Void) = { _, _, _ in }
     /// A component dragged off the Library shelf, dropped at a document point
@@ -970,8 +972,10 @@ final class CanvasNSView: NSView {
         guard let url = droppedURL(sender) else { return false }
         if url.pathExtension.lowercased() != "photonz", let target = dropTarget(for: sender) {
             onDropImageURLIntoCollage(url, target.collageID, target.index)
+        } else if let viewport {
+            onDropImageURL(url, viewport.documentPoint(fromView: convert(sender.draggingLocation, from: nil)))
         } else {
-            onDropImageURL(url)
+            return false
         }
         return true
     }

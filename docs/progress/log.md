@@ -6135,3 +6135,23 @@ sweep leaves the rest outlined with the band gone. `Scripts/test.sh` green,
 be dragged on the canvas (a press on any member collapses the selection), and a
 ⇧-click that lands on empty canvas still clears everything, because ⇧ over empty
 space means constrain-the-band-to-a-square.
+
+## 2026-09-03 — A pasted or dropped layer lands on the frame it was dropped on
+
+Frames could be drawn on but not pasted into: ⌘V and a file dragged in from the
+Finder both dropped a loose layer over the screen instead of onto it.
+
+- `PhotonzCore`: `PastePlacement.frame(forImageOf:in:)` (the old `canvas:` rule
+  against any box), `PhotonzDocument.detachedLayer(id:)` (a layer with its
+  position moved into canvas space, for the clipboard), and
+  `placementForIncomingImage(size:at:)` (fit to the frame under the pointer,
+  nudged wholly inside; unchanged everywhere else). `addLayerDrawnOnFrame` now
+  refuses to absorb a frame, so a copied screen pastes beside its original.
+- App: copy puts canvas coordinates on the clipboard, which also fixes pasting a
+  layer copied out of an ordinary group; paste and drop both go through
+  `addLayerDrawnOnFrame`; the canvas drag destination carries the drop point.
+- Playtest harness: a `dropImage` step and `copyLayer` / `pasteLayer` actions,
+  used by `Scripts/playtest/paste-onto-frame-walk.json`.
+- Audit: `queue/audits/2026-09-03-paste-onto-frame.json` with two real captures.
+
+Next: the follow-up task to name a dropped file's layer after the file.

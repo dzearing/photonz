@@ -156,8 +156,12 @@ extension PhotonzDocument {
     /// `addLayerOnFrame` where frames exist, plain `addLayer` where they do
     /// not — the one call every drawing tool makes, so a document without a
     /// frame in it takes exactly the path it always took.
+    ///
+    /// A frame is the one thing that never gets swallowed: pasting a copied
+    /// screen makes a second screen next to the first, not a screen hidden
+    /// sixteen points inside it.
     public mutating func addLayerDrawnOnFrame(_ layer: Layer) {
-        guard hasFrames else {
+        guard hasFrames, !layer.isFrame else {
             addLayer(layer)
             return
         }

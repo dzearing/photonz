@@ -1,0 +1,27 @@
+{
+  "id": "a-picture-dragged-in-from-the-finder-is-named-af",
+  "title": "A picture dragged in from the Finder is named after the file",
+  "goal": "A file dragged into the picture from the Finder becomes a layer called Pasted Image, whatever the file was called. Once a screen holds three of them the layers list is three rows of the same word. Name the layer after the file instead.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 590,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T08:37:31.388Z",
+  "updated": "2026-09-03T08:37:31.388Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "EditorState.addImageLayerOrOpen -> pasteImage(_:at:) builds Layer(name: \"Pasted Image\"). Pass the URL's deletingPathExtension().lastPathComponent through as the name; freshLayerName-style de-duping already exists for groups (freshGroupName).",
+  "acceptance": [
+    "A file dragged in from the Finder becomes a layer named after the file, without its extension",
+    "An image pasted from the clipboard, which has no file behind it, is still called Pasted Image",
+    "Two files with the same name dropped into one document get distinguishable layer names"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T08:37:31.388Z",
+      "note": "created (manual)"
+    }
+  ]
+}
