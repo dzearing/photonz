@@ -58,8 +58,15 @@ extension CanvasNSView {
     /// selected within it. Without it, descending into a group is a mode with
     /// no sign of itself: the handles move to one piece and nothing on the
     /// canvas says why.
+    ///
+    /// A screen never draws it. The box means "you stepped in here", and you
+    /// never step into a screen: clicking a button on one puts you inside it
+    /// straight away, so the box would be on almost all the time and say
+    /// nothing. A screen already shows where it is, with its surface and its
+    /// name above it.
     func refreshGroupContextOutline() {
         guard let viewport, let document, let context = groupContext,
+              document.layer(id: context)?.isFrame != true,
               let bounds = document.canvasBounds(of: context), bounds.width > 0, bounds.height > 0
         else {
             groupContextLayer.isHidden = true

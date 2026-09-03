@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 980,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T22:15:40.654Z",
-  "updated": "2026-09-03T22:15:40.654Z",
+  "updated": "2026-09-03T23:02:10.617462Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building screen adoption on 2026-09-03. The canvas rule today is EditorState.groupContextID: a click picks the outermost thing you are not already inside, so a frame swallows clicks aimed at its direct children. Figma treats top-level frames as click-through for their DIRECT children while ordinary groups still need a double click. See Scripts/playtest/screen-adoption-walk.json, stage steppedIn, which needs a double click to reach the rectangle it just dropped.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-03T22:15:40.654Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T22:46:50.552Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T22:49:23.975473Z",
+      "note": "Adversarial review before building. (1) The rule to build is one level of click-through, and only for a top-level screen: a plain click picks what sits DIRECTLY on the screen, and anything deeper (a group on the screen, a screen inside a screen) still takes a double click. That keeps 'an ordinary group is one object' intact, which is the thing that makes a grouped card feel like a card. (2) The cost: a screen whose surface is fully covered by a background layer can no longer be picked by clicking it, because there is no empty surface left. Ways back already exist and are the same ones Figma leans on: click the screen's name label above it, click its row in the Layers list, or press Escape from anything on it. Worth calling out in the audit rather than adding new chrome. (3) Consequence I did not want: the faint dashed 'you are inside this group' box would now appear round the whole screen the instant you click any button on it, since a plain click sets the screen as context. That box means 'you stepped in here deliberately'; on a screen you never stepped in, so it is noise. Suppressing it for screens is part of this change. (4) Shift-click has to follow the plain click or it silently stops working: today a shift-click on a button adds the screen, and if only the plain click changes it would start adding nothing at all. (5) Shortest version that delivers the value: two functions in PhotonzCore (selectionTarget, extendTarget) plus the outline suppression. No new gesture, no new setting."
+    },
+    {
+      "t": "2026-09-03T23:02:10.617462Z",
+      "note": "Built and verified. PhotonzCore.selectionTarget now sees through a top-level screen to what sits directly on it (one level, so a group on a screen and a screen inside a screen are still picked whole); extendTarget follows so shift-click reaches the same thing; the dotted 'you are inside this group' box no longer draws for a screen; and the group context now follows the selected layer, so dragging a layer off a screen takes you out of that screen with it. Seven new tests in FrameTests, whole suite green (2530). Verified live in the probe app with a new walk, Scripts/playtest/screen-click-walk.json: one click on a rectangle on a screen selects it (insideGroup Frame), one click on the screen's empty surface selects the screen (insideGroup nil), one press-and-drag takes it off the screen with no double click first, a group on the screen is still one object until a double click, and a screen covered edge to edge is still picked in one click on its name. Screen Recording was granted, so the three audit shots are real window captures."
+    },
+    {
+      "t": "2026-09-03T23:02:10.617462Z",
+      "note": "Second adversarial review, on the running app. The one thing I could not soften: a screen covered edge to edge has no empty surface left, so it is picked from its name or its Layers row rather than from the picture. Proved that path works and put it in the audit as a real cost rather than hiding it. Left alone: a shift click can now build a selection spanning two screens, which Command G still only half acts on (it groups the ones sharing a parent). That is the existing grouping rule, not something this change introduced, and it is in the audit for the user to judge."
     }
-  ]
+  ],
+  "started": "2026-09-03T22:46:50.551Z"
 }

@@ -1,0 +1,29 @@
+{
+  "feature": "Clicking something on a screen picks that thing",
+  "epic": "ui-components",
+  "summary": "A button sitting on a screen is now picked by a single click, and you can drag it off the screen in the same gesture. Before this, the first click always picked the whole screen and reaching anything on it took a double click first.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Press F and drag out a screen." },
+    { "do": "Press R and draw two rectangles inside it, one above the other." },
+    { "do": "Press V, then click the top rectangle once.", "shot": "2026-09-03-screen-click-1-picked-the-button.png" },
+    { "do": "Click an empty part of the screen: the screen itself is picked." },
+    { "do": "Drag the top rectangle straight off the screen onto bare canvas, in one press." },
+    { "do": "Undo, select both rectangles with a click and a shift click, and press Command G." },
+    { "do": "Click bare canvas, then click the group once: the whole group is picked, not one rectangle.", "shot": "2026-09-03-screen-click-2-group-still-one-object.png" },
+    { "do": "Draw a rectangle over the whole screen, then click the screen's name above it to pick the screen.", "shot": "2026-09-03-screen-click-3-name-picks-the-screen.png" }
+  ],
+  "evaluate": [
+    "Does one click landing on the button rather than the screen match what your hand expected?",
+    "Is one level of see-through right, or would you also want a single click to reach inside a group that sits on a screen?",
+    "When the screen is covered edge to edge, is clicking its name above it an obvious enough way to select it, or did you go hunting?",
+    "Escape now takes you from a button up to the screen it sits on. Is that the step back you wanted?",
+    "The faint dotted box that used to appear around a group you stepped into no longer appears around a screen. Do you miss it?"
+  ],
+  "rough": [
+    "The real cost of this: a screen covered edge to edge by a layer has no empty surface left, so it cannot be picked by clicking it any more. It is still one click from its name above it or from its row in the Layers list, and that is the same trade Figma makes, but it is a trade.",
+    "A screen inside a screen is picked whole, the way a group is: reaching what is on the inner screen still takes a double click. That felt right while using it but it is a judgment call, not a proven one.",
+    "Shift clicking two buttons on two different screens now builds one selection spanning both. Command G on it still groups only the ones sharing a parent, which is the existing rule, so the menu quietly does less than the selection suggests.",
+    "Verified live in the probe app with a scripted walk (Scripts/playtest/screen-click-walk.json); the three shots here are real window captures, not offscreen renders."
+  ]
+}

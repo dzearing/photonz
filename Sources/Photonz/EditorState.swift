@@ -5885,6 +5885,13 @@ final class EditorState {
         if let id = groupContextID, document.layer(id: id) == nil {
             groupContextID = nil
         }
+        // Where you are follows what you are holding. Dragging a layer off a
+        // screen takes it out of that screen, and if the context stayed behind,
+        // Escape would jump back to the screen the layer just left.
+        if Experiments.shared.layerGroupsEnabled, let id = selectedLayerID,
+           groupContextID != document.parentID(of: id) {
+            groupContextID = document.parentID(of: id)
+        }
         // Same for the multi-selection (undoing a batch duplicate takes the
         // copies it selected away), so the Layers menu never stays enabled
         // over layers that no longer exist. One survivor becomes the primary.

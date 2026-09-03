@@ -1,0 +1,325 @@
+{
+  "out": "/tmp/photonz-playtest/screen-click",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 620,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        200
+      ],
+      "to": [
+        560,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        260
+      ],
+      "to": [
+        360,
+        320
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        360
+      ],
+      "to": [
+        360,
+        420
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        740,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-nothing",
+      "note": "two rectangles sitting on one screen, nothing selected"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        290
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-picked-the-thing",
+      "note": "ONE click on the top rectangle: selection should be that rectangle, insideGroup the screen"
+    },
+    {
+      "do": "snapshot",
+      "name": "screen-click-2-picked-the-thing"
+    },
+    {
+      "do": "click",
+      "at": [
+        480,
+        510
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-picked-the-screen",
+      "note": "ONE click on the screen's empty surface: selection should be the screen, insideGroup nil"
+    },
+    {
+      "do": "snapshot",
+      "name": "screen-click-3-picked-the-screen"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        290
+      ],
+      "to": [
+        740,
+        300
+      ],
+      "steps": 14
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-dragged-straight-off",
+      "note": "one press and drag, no double click first: the rectangle should be loose on the canvas in the tree"
+    },
+    {
+      "do": "snapshot",
+      "name": "screen-click-4-dragged-straight-off"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-back-on",
+      "note": "one undo puts it back on the screen"
+    },
+    {
+      "do": "click",
+      "at": [
+        740,
+        640
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        290
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        390
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-two-on-the-screen",
+      "note": "a click then a shift click reach BOTH rectangles on the screen, so canGroup is true"
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        740,
+        640
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        290
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "7-group-is-one-object",
+      "note": "an ordinary group on a screen is still one object: one click should select the Group, not the rectangle inside it"
+    },
+    {
+      "do": "snapshot",
+      "name": "screen-click-7-group-is-one-object"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        290
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "8-inside-the-group",
+      "note": "a double click still goes into the group and picks the rectangle"
+    },
+    {
+      "do": "snapshot",
+      "name": "screen-click-8-inside-the-group"
+    },
+    {
+      "do": "click",
+      "at": [
+        740,
+        640
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        200
+      ],
+      "to": [
+        560,
+        560
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        740,
+        640
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        470
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "9-screen-is-covered",
+      "note": "a layer covering the screen edge to edge leaves no empty surface: one click picks the cover, not the screen"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        188
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "10-name-picks-the-screen",
+      "note": "the name above the screen is how a covered screen is still picked in one click"
+    },
+    {
+      "do": "snapshot",
+      "name": "screen-click-10-name-picks-the-screen"
+    }
+  ]
+}

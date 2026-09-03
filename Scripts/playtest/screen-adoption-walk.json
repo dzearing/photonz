@@ -116,8 +116,7 @@
       "at": [
         370,
         380
-      ],
-      "count": 2
+      ]
     },
     {
       "do": "wait",
@@ -125,8 +124,8 @@
     },
     {
       "do": "describe",
-      "stage": "steppedIn",
-      "note": "double click picks the rectangle inside the screen"
+      "stage": "picked",
+      "note": "one click picks the rectangle sitting on the screen"
     },
     {
       "do": "drag",

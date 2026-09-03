@@ -423,13 +423,28 @@ Nesting needs a way in and a way out, and both keys are already busy.
   sign of itself: the handles move to one piece and nothing else on the canvas
   changes. The box is the selection blue at a quarter strength, one point wide
   and finely dotted, so it reads as the room you are standing in rather than
-  competing with the selection outline inside it.
+  competing with the selection outline inside it. A **screen never draws it**
+  (2026-09-03): the box means "you stepped in here", and you never step into a
+  screen, so it would be on almost all the time and say nothing. A screen shows
+  where it is already, with its surface and the name above it.
 - **A click picks the outermost thing you are not already inside**, and the
   group you are inside is remembered only while you are in it: nothing about it
   is stored in the document. Clicking anything outside that group drops you back
   to the top level, so there is always a second way out besides Escape. Clicking
   a sibling of the piece you have selected keeps you at that level rather than
   throwing you to the top.
+- **A screen is the exception: it is see-through for what sits on it**
+  (2026-09-03). One click on a button you dropped on a screen picks the button,
+  and you can drag it back off in the same gesture, because a screen is the
+  surface you are building on rather than a package you opened. One level only,
+  so a group on a screen is still one object and a screen inside a screen is
+  still picked whole; a double click is what reaches into either. A click on the
+  screen's own empty surface still picks the screen. The cost, taken knowingly:
+  a screen covered edge to edge by a layer has no empty surface left to click,
+  so it is picked from its name above it or from its row in the Layers list.
+- **Where you are follows what you are holding** (2026-09-03). Dragging a layer
+  off a screen takes you out of that screen with it, so Escape never jumps back
+  to a screen the layer has already left.
 - **⇧-click adds what you clicked to the selection**, or drops it when it is
   already in (2026-09-03). Before this the only way to pick two things on the
   canvas was to sweep a marquee around them, which takes in whatever else is
@@ -439,8 +454,10 @@ Nesting needs a way in and a way out, and both keys are already busy.
   pieces. It extends the selection at the level you are on and only there: a
   ⇧-click out on the canvas while you are inside a group does nothing, because
   the alternative is a selection made of layers from two different lists and a
-  silent step back out of the group you were working in. And it never starts a
-  drag — the press is about what is selected.
+  silent step back out of the group you were working in. What sits on a screen
+  is reached the same way a plain click reaches it, so picking two buttons on a
+  screen is a click and a ⇧-click. And it never starts a drag — the press is
+  about what is selected.
 
 ## The flag each step ships behind
 

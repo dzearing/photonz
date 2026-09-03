@@ -10,6 +10,11 @@ import Foundation
 /// step into it, which is what makes a grouped card behave like a card rather
 /// than like the pieces it is made of. Stepping in is a double click, and the
 /// group you stepped into is the *context* every function below takes.
+///
+/// A screen is the one exception, and it is one on purpose: what sits directly
+/// on a screen is picked by a plain click, because a screen is the surface you
+/// are building on rather than a package you opened. One level only, so a
+/// group on a screen is still a group.
 /// See `docs/design/ui-building.md`, "The two canvas gestures".
 extension PhotonzDocument {
 
@@ -93,6 +98,11 @@ extension PhotonzDocument {
     /// one of the groups above it) picks the child at that level; a click
     /// anywhere else leaves the group behind and picks a top-level layer, so
     /// there is always one obvious way back out. Nil when nothing was hit.
+    ///
+    /// The exception is a screen: a click on something sitting straight on one
+    /// picks that thing without stepping in first, and the screen comes back
+    /// as the context so the next click stays at that level. A click on the
+    /// screen's own empty surface still picks the screen itself.
     public func selectionTarget(at point: CGPoint, zoom: CGFloat = 1,
                                 inside context: UUID?) -> (id: UUID, context: UUID?)? {
         guard let hit = hitTestPath(point, zoom: zoom) else { return nil }
@@ -107,7 +117,23 @@ extension PhotonzDocument {
             candidate = parentID(of: id)
         }
         guard let outermost = layer(atPath: [hit[0]]) else { return nil }
+        // A screen is see-through for what sits ON it. A screen is a surface
+        // you build on, not a package you open: the button you just dropped is
+        // the thing you meant to click, and needing a double click to reach it
+        // makes every second gesture on a screen a wasted one. Exactly ONE
+        // level deep, so a group on a screen is still one object and a screen
+        // inside a screen is still picked whole.
+        if outermost.isFrame, hit.count > 1,
+           let onIt = layer(atPath: Array(hit.prefix(2))) {
+            return (onIt.id, outermost.id)
+        }
         return (outermost.id, nil)
+    }
+
+    /// Whether `id` is a screen sitting straight on the canvas — the one kind
+    /// of container a plain click sees through.
+    func isTopLevelFrame(_ id: UUID) -> Bool {
+        layers.first { $0.id == id }?.isFrame ?? false
     }
 
     /// What a ⇧-click adds to the selection, or drops from it.
@@ -124,9 +150,14 @@ extension PhotonzDocument {
                              inside context: UUID?) -> UUID? {
         // A context whose group has since gone means the top level.
         let level = context.flatMap { layer(id: $0) != nil ? $0 : nil }
-        guard let pick = selectionTarget(at: point, zoom: zoom, inside: level),
-              pick.context == level else { return nil }
-        return pick.id
+        guard let pick = selectionTarget(at: point, zoom: zoom, inside: level) else { return nil }
+        if pick.context == level { return pick.id }
+        // What sits on a screen is one click away from the canvas, so a
+        // ⇧-click reaches it too. Without this the gesture would quietly stop
+        // working on every screen: a plain click picks the button, and the
+        // ⇧-click aimed at the same button would find nothing to add.
+        if level == nil, let screen = pick.context, isTopLevelFrame(screen) { return pick.id }
+        return nil
     }
 
     /// What a double click selects: one level deeper than a plain click would

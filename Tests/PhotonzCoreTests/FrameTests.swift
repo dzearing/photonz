@@ -84,17 +84,91 @@ struct FrameTests {
         #expect(document.hitTest(CGPoint(x: 400, y: 700))?.id == id)
     }
 
-    @Test("A click on something inside still picks the frame at the top level, and a double click goes in")
-    func clickPicksOutermost() {
+    /// The point over the button that sits on the screen.
+    private var onTheButton: CGPoint { CGPoint(x: 100 + 20 + 10, y: 60 + 40 + 10) }
+
+    @Test("A click on something sitting on a screen picks that thing, not the screen")
+    func clickPicksWhatIsOnTheScreen() {
         let document = makeDocument()
         let id = frameID(in: document)
         let button = document.layer(id: id)!.children[0]
-        let point = CGPoint(x: 100 + 20 + 10, y: 60 + 40 + 10)
-        let picked = document.selectionTarget(at: point, inside: nil)
+        let picked = document.selectionTarget(at: onTheButton, inside: nil)
+        #expect(picked?.id == button.id)
+        #expect(picked?.context == id)
+    }
+
+    @Test("A double click on something already picked on a screen has nothing left to go into")
+    func doubleClickOnAScreenChildDoesNotDescend() {
+        let document = makeDocument()
+        #expect(document.descendTarget(at: onTheButton, inside: nil) == nil)
+    }
+
+    @Test("Clicking the screen's own surface after picking something on it goes back to the screen")
+    func clickingTheSurfaceComesBackOut() {
+        let document = makeDocument()
+        let id = frameID(in: document)
+        let picked = document.selectionTarget(at: CGPoint(x: 400, y: 700), inside: id)
         #expect(picked?.id == id)
+        #expect(picked?.context == nil)
+    }
+
+    @Test("A group sitting on a screen is still one object until a double click")
+    func aGroupOnAScreenStillNeedsADoubleClick() {
+        var document = makeDocument()
+        let id = frameID(in: document)
+        let label = leaf("Label", CGRect(x: 10, y: 10, width: 60, height: 20))
+        let card = Layer(name: "Card", content: .group(GroupContent(children: [label])),
+                         frame: CGRect(x: 200, y: 300, width: 0, height: 0))
+        document.updateLayer(id: id) { $0.children.append(card) }
+        // Canvas (100+200+10, 60+300+10) is over the label inside the card.
+        let point = CGPoint(x: 310, y: 370)
+        let picked = document.selectionTarget(at: point, inside: nil)
+        #expect(picked?.id == card.id)
+        #expect(picked?.context == id)
         let deeper = document.descendTarget(at: point, inside: nil)
-        #expect(deeper?.id == button.id)
-        #expect(deeper?.context == id)
+        #expect(deeper?.id == label.id)
+        #expect(deeper?.context == card.id)
+    }
+
+    @Test("A screen inside a screen is picked whole, and its contents take a double click")
+    func aScreenInsideAScreenIsPickedWhole() {
+        var document = makeDocument()
+        let id = frameID(in: document)
+        let inner = Layer.frameLayer(name: "Sheet", origin: CGPoint(x: 40, y: 400),
+                                     size: CGSize(width: 200, height: 200),
+                                     children: [leaf("Row", CGRect(x: 10, y: 10, width: 80, height: 20))])
+        document.updateLayer(id: id) { $0.children.append(inner) }
+        // Canvas (100+40+20, 60+400+15) is over the row inside the inner screen.
+        let point = CGPoint(x: 160, y: 475)
+        let picked = document.selectionTarget(at: point, inside: nil)
+        #expect(picked?.id == inner.id)
+        #expect(picked?.context == id)
+        #expect(document.descendTarget(at: point, inside: nil)?.id == inner.children[0].id)
+    }
+
+    @Test("An ordinary top level group still swallows the click aimed at its child")
+    func anOrdinaryGroupIsUnchanged() {
+        let label = leaf("Label", CGRect(x: 0, y: 0, width: 60, height: 20))
+        let card = Layer(name: "Card", content: .group(GroupContent(children: [label])),
+                         frame: CGRect(x: 1200, y: 100, width: 0, height: 0))
+        let document = PhotonzDocument(canvasSize: CGSize(width: 2000, height: 1200), layers: [card])
+        let point = CGPoint(x: 1210, y: 110)
+        let picked = document.selectionTarget(at: point, inside: nil)
+        #expect(picked?.id == card.id)
+        #expect(picked?.context == nil)
+        #expect(document.descendTarget(at: point, inside: nil)?.id == label.id)
+    }
+
+    @Test("A shift click on something on a screen adds that thing, not the screen")
+    func shiftClickAddsWhatIsOnTheScreen() {
+        let document = makeDocument()
+        let id = frameID(in: document)
+        let button = document.layer(id: id)!.children[0]
+        #expect(document.extendTarget(at: onTheButton, inside: nil) == button.id)
+        // The screen's own surface still adds the screen.
+        #expect(document.extendTarget(at: CGPoint(x: 400, y: 700), inside: nil) == id)
+        // And a shift click while inside the screen adds at that same level.
+        #expect(document.extendTarget(at: onTheButton, inside: id) == button.id)
     }
 
     @Test("What hangs outside a clipping frame cannot be clicked")
@@ -110,7 +184,9 @@ struct FrameTests {
         // and a plain click still resolves to the frame it belongs to.
         document.setFrameClips(id: id, false)
         #expect(document.hitTest(CGPoint(x: 450, y: 1010))?.name == "Overhang")
-        #expect(document.selectionTarget(at: CGPoint(x: 450, y: 1010), inside: nil)?.id == id)
+        let reached = document.selectionTarget(at: CGPoint(x: 450, y: 1010), inside: nil)
+        #expect(document.layer(id: reached!.id)?.name == "Overhang")
+        #expect(reached?.context == id)
     }
 
     @Test("A layer outside every frame is picked as it always was")
