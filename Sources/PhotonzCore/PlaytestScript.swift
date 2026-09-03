@@ -187,6 +187,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Layer ▸ Insert Component (Next, `next-components`): puts a copy of the
     /// component picked on the shelf in the middle of what is on screen.
     case insertPickedComponent
+    /// Pick the Canvas row, which is what a click on it in the layers dock
+    /// does. A walk cannot reach the dock with the pointer, so this is how the
+    /// Canvas section's own numbers get typed into.
+    case selectCanvas
     /// Layer ▸ Duplicate Layer. ⌘J is a menu chord, so a walk that checks what
     /// a duplicate keeps asks for it here.
     case duplicateLayer

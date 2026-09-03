@@ -5889,3 +5889,42 @@ whatever `objectives.json` ranks under `ui-building` after the four follow-ups.
 Open question for the user, on the audit: whether widening an original leaving
 its label where it was is tolerable, or whether it is the thing that makes
 components unusable before auto layout (`ui-layout`, staged later).
+
+## 2026-09-03 — A number field hands the keyboard back
+
+The trap found in the component sitting is gone. Typing a number in the
+inspector is a moment now, not a mode: **Return** lands it, **Escape** puts it
+back, and both hand the keyboard to the picture, so the very next key picks a
+tool or nudges the layer. Up and Down still step the number for as long as you
+are working in the field, and Tab still walks from W to H without letting go.
+
+- `NumberFieldEntry` (PhotonzCore, TDD) is the one place the keys of a number
+  field are decided: Return commits and releases, Escape reverts and releases,
+  the arrows step with Shift for the coarse 10, everything else types. Both
+  field families read it, so they cannot drift.
+- `KeyboardHandback.toCanvas()` and the `.numberFieldKeys` modifier
+  (`Sources/Photonz/KeyboardHandback.swift`) are the app half. The handback
+  walks `NSApp.windows`, not just the key window: an app that is not frontmost
+  has no key window, which is exactly the state every probe run is in, and the
+  first version silently did nothing in a walk because of it.
+- Applied to the four geometry fields and to the Canvas section's own W and H,
+  which had the same trap. The wording fields (a component copy's label, style
+  names, the hex box) were deliberately left alone and filed as their own task:
+  a name is not a number and Escape-reverts may not be right for it.
+- Escape costs no undo step. Releasing focus lands the draft, which would have
+  committed the rounded number over the fraction a drag left behind, so the
+  field remembers it is finishing and skips that. The walk proves it: one undo
+  after an abandoned edit goes back to the arrow-stepped value, not the
+  abandoned one.
+- Verified on the probe with `Scripts/playtest/number-field-handback.json`
+  (13 stages, real window captures). `geometry-fields-walk` and
+  `component-end-to-end-walk` both still pass. `Scripts/test.sh` green: 1860
+  tests, 190 suites.
+- The harness gained one step (`action: selectCanvas`, because the Canvas row
+  lives in the dock where a walk cannot click) and one state field (`canvas`,
+  the document's size), so a walk can prove a number typed into the Canvas
+  section landed.
+
+Next: the queue's own ranking under `ui-building`. Open question on the audit:
+after Return, Up and Down nudge the layer rather than stepping the number just
+typed, and only the focus ring going out says so.

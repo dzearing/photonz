@@ -329,6 +329,21 @@ struct PlaytestScriptTests {
         #expect(actions == [.group, .ungroup])
     }
 
+    @Test func aWalkCanPickTheCanvasRow() throws {
+        // The Canvas row lives in the layers dock, which a walk cannot reach
+        // with the pointer, so typing into the Canvas section's own numbers
+        // starts by asking for the row directly.
+        let script = try decode("""
+        { "steps": [
+            { "do": "action", "action": "selectCanvas" }
+        ] }
+        """)
+        let actions: [PlaytestAction] = script.steps.compactMap { step in
+            if case .action(let action) = step { return action } else { return nil }
+        }
+        #expect(actions == [.selectCanvas])
+    }
+
     @Test func aDragCanNameAShotTakenWhileTheButtonIsStillDown() throws {
         // The yellow snap guide only exists mid-drag; an audit that has to show
         // it needs the picture taken before the mouse comes up.

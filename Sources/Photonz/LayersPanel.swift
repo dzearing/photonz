@@ -2036,12 +2036,26 @@ struct CanvasInspector: View {
                 .controlSize(.small)
                 .multilineTextAlignment(.trailing)
                 .frame(width: 58)
-                .onSubmit {
-                    let size = CGSize(width: max(1, width.rounded()), height: max(1, height.rounded()))
-                    guard size != canvasSize else { return }
-                    editorState.setCanvasSize(to: size, anchor: .topLeft)
-                }
+                .onSubmit { applyDimensions() }
+                // The same two finishing keys the layer's own numbers answer:
+                // a canvas size typed and finished with lets go of the keyboard
+                // so the next letter picks a tool.
+                .numberFieldKeys(
+                    commit: { applyDimensions() },
+                    revert: { syncFields() },
+                    step: { direction, coarse in
+                        let stepped = LayerGeometry.stepped(value.wrappedValue,
+                                                            direction: direction, coarse: coarse)
+                        value.wrappedValue = max(1, Double(stepped))
+                        applyDimensions()
+                    })
         }
+    }
+
+    private func applyDimensions() {
+        let size = CGSize(width: max(1, width.rounded()), height: max(1, height.rounded()))
+        guard size != canvasSize else { return }
+        editorState.setCanvasSize(to: size, anchor: .topLeft)
     }
 }
 

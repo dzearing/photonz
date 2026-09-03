@@ -1,0 +1,28 @@
+{
+  "id": "a-name-field-lets-go-of-the-keyboard-when-you-ar",
+  "title": "A name field lets go of the keyboard when you are done with it too",
+  "goal": "The boxes where you type words, not numbers, still keep the keyboard after you press Return. Rename a copy's label and the next tool letter lands in the label instead of picking the tool. The number boxes were fixed on 2026-09-03; the word boxes should feel the same.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 790,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T06:13:03.353Z",
+  "updated": "2026-09-03T06:13:03.354Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The number fields go through NumberFieldEntry (PhotonzCore) plus the numberFieldKeys modifier and KeyboardHandback.toCanvas() in Sources/Photonz/KeyboardHandback.swift. Candidates: ComponentPanel.swift:702 (the override field, seen keeping the keyboard in component-end-to-end-walk step 5), ComponentPanel.swift:557, ColorStylePanel name fields, ColorPickerPopover hex field. Careful: the Layers and Measurements rename fields already disappear on commit, so they need nothing; a name is not a number, so decide whether Escape reverting is right for each.",
+  "acceptance": [
+    "After renaming a component copy and pressing Return, a tool letter picks that tool",
+    "Escape while typing a name puts the old name back and hands the keyboard to the picture",
+    "Renaming a layer or a measurement in the list still works exactly as it does today",
+    "A scripted walk shows the tool key landing after a name is typed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T06:13:03.354Z",
+      "note": "created (manual)"
+    }
+  ]
+}

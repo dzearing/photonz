@@ -466,6 +466,7 @@ private final class Run {
             case .hideLibrary: editor.setLibraryVisible(false)
             case .placeLibraryPick: editor.placeLibraryPick()
             case .insertPickedComponent: editor.insertPickedComponent()
+            case .selectCanvas: editor.selectCanvas()
             case .duplicateLayer: editor.duplicateSelectedLayers()
             case .closeSheets:
                 editor.isExportDialogPresented = false
@@ -938,6 +939,9 @@ private final class Run {
             "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",
             "layers": layers.count,
+            // The canvas's own size, so a walk can prove a number typed into
+            // the Canvas section landed on the document rather than nowhere.
+            "canvas": document.map { "\(Int($0.canvasSize.width))x\(Int($0.canvasSize.height))" } ?? "none",
             "measures": measures,
             "arrows": arrows,
             "selected": editor.selectedLayerID?.uuidString ?? "nil",

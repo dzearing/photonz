@@ -110,7 +110,7 @@ read coordinates straight off the fixture.
 | `clearClipboard` | | Empties the clipboard. |
 | `readClipboard` | `stage` | Logs the clipboard's types and text. |
 | `menus` | `stage`, optional `menu` | Writes the app's own menu bar to the log and to `menus-<stage>.json` (plus a `.txt` you can read): every menu, item, shortcut, submenu and enabled state, plus the windows that are open. `menu` narrows it to one top-level menu by title ("Capture"). This is how a runner names a real menu item instead of one guessed from the source, and it needs no privacy grant of any kind. See below for what the dimming is worth. |
-| `action` | `action` | Calls the editor directly: `copySpecList`, `copyImage`, `hideAllMeasurements`, `showAllMeasurements`, `hideInspector`, `showInspector`, `zoomIn`, `zoomOut`, `zoomToFit`, `undo`, `redo`, `newCanvasDialog`. The inspector toggle is a button and the zoom commands are menu chords, so this is how a walk gets a wide canvas or a big picture. |
+| `action` | `action` | Calls the editor directly: `copySpecList`, `copyImage`, `hideAllMeasurements`, `showAllMeasurements`, `hideInspector`, `showInspector`, `zoomIn`, `zoomOut`, `zoomToFit`, `undo`, `redo`, `newCanvasDialog`, `selectCanvas`, and more (`PlaytestAction` is the full list). The inspector toggle is a button, the zoom commands are menu chords, and the Canvas row is in the dock where a walk cannot click, so this is how a walk gets a wide canvas or a big picture. |
 
 ## Things to know
 

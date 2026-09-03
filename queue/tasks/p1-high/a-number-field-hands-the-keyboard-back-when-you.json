@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 160,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:55:20.183Z",
-  "updated": "2026-09-03T05:55:20.183Z",
+  "updated": "2026-09-03T05:57:34.844Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the step E9 end to end sitting on 2026-09-03. Reproduced twice in Scripts/playtest/component-end-to-end-walk.json and redline-with-components-walk.json: after focus W / type 440 / key return, the log reports firstResponder _SystemTextFieldFieldEditor and a following key i never reaches the tool. Escape does not release it either; only a canvas click does. Fields are GeometryInspector.swift, Next only behind next-geometry-fields. Watch that Return keeping focus is what lets shift-arrow nudging work, so releasing on Return needs the arrow keys to still reach the canvas nudge or the field, whichever the design picks.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-03T05:55:20.183Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T05:57:34.844Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T06:13:20.271291Z",
+      "note": "Reproduced first, before touching anything: a walk (focus W, type 440, Return) leaves firstResponder _SystemTextFieldFieldEditor, and both I and A afterwards do nothing. A control walk proved the same I picks Measure when the canvas holds the keyboard, so the walk can prove the fix."
+    },
+    {
+      "t": "2026-09-03T06:13:20.271291Z",
+      "note": "Adversarial review of the idea. The task's own goal is the right behaviour and needed no decision: Return finishes, Escape abandons, both let go. Two risks found. (1) Releasing focus fires the field's land-on-focus-loss, which would commit the rounded number over the fraction a drag left behind and cost an undo step for an edit you abandoned; guarded with an isFinishing flag and proven by an undo step in the walk. (2) After Return, Up and Down nudge the layer instead of stepping the number, which the hint text does not say; left as is (the focus ring going out is the signal, and it is what Photoshop does) and raised in the audit's evaluate list instead of guessed at."
+    },
+    {
+      "t": "2026-09-03T06:13:20.271291Z",
+      "note": "Shortest version built. PhotonzCore gains NumberFieldEntry (the key rule, TDD, 7 tests) and the app gains KeyboardHandback.toCanvas() plus a .numberFieldKeys modifier, applied to the four geometry fields and to the Canvas section's W and H, which had the same trap. Nothing new on screen."
+    },
+    {
+      "t": "2026-09-03T06:13:20.271291Z",
+      "note": "First attempt did not work in a walk: KeyboardHandback looked at NSApp.keyWindow only, and a probe run is never the frontmost app, so there is no key window. Fixed to walk NSApp.windows too, which is what the field's own select-all already did."
+    },
+    {
+      "t": "2026-09-03T06:13:20.271291Z",
+      "note": "Verified on the probe app with Scripts/playtest/number-field-handback.json, all 13 stages: Return lands 440 and hands back (fr CanvasNSView), I picks Measure, Tab still walks W to H, Up and Shift-Up still step 100 to 101 to 111, Escape puts 77 back to 111 and hands back, A picks Arrow, one undo goes to 101 so Escape cost nothing, and the Canvas W field does all of it too. geometry-fields-walk and component-end-to-end-walk both still pass. Scripts/test.sh green: 1860 tests, 190 suites."
+    },
+    {
+      "t": "2026-09-03T06:13:20.271291Z",
+      "note": "Left alone on purpose: the wording fields (component override, style names, the hex box) still keep the keyboard, because a name is not a number. Filed as a-name-field-lets-go-of-the-keyboard-when-you-ar. Audit: queue/audits/2026-09-03-number-field-handback.json."
     }
-  ]
+  ],
+  "started": "2026-09-03T05:57:34.843Z"
 }

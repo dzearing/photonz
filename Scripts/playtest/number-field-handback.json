@@ -1,0 +1,267 @@
+{
+  "out": "/tmp/photonz-playtest/number-field-handback",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        120
+      ],
+      "to": [
+        320,
+        220
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "describe",
+      "stage": "1-drawn",
+      "note": "a rectangle 200 by 100, selected, and the canvas holds the keyboard"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "440"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-return-hands-back",
+      "note": "Return landed the width at 440 AND handed the keyboard back: firstResponder must read CanvasNSView, not a field editor"
+    },
+    {
+      "do": "snapshot",
+      "name": "handback-2-after-return"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-tool-key-lands",
+      "note": "the very next key picks a tool: I must make measure the tool in hand"
+    },
+    {
+      "do": "snapshot",
+      "name": "handback-3-tool-key-lands"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        170
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-reselected",
+      "note": "back on the rectangle so the fields are on screen again"
+    },
+    {
+      "do": "focus",
+      "field": "X"
+    },
+    {
+      "do": "type",
+      "text": "60"
+    },
+    {
+      "do": "key",
+      "key": "tab"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-tab-still-walks",
+      "note": "Tab still lands the number and walks to the next field: X is 60 and a field editor still holds the keyboard"
+    },
+    {
+      "do": "focus",
+      "field": "H"
+    },
+    {
+      "do": "key",
+      "key": "up"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-arrow-steps",
+      "note": "up steps the height from 100 to 101 and the field keeps the keyboard"
+    },
+    {
+      "do": "key",
+      "key": "up",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "7-shift-arrow-steps",
+      "note": "shift and up steps by 10 more, to 111, still in the field"
+    },
+    {
+      "do": "focus",
+      "field": "H"
+    },
+    {
+      "do": "type",
+      "text": "77"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "8-escape-puts-it-back",
+      "note": "Escape abandons the 77: the height is still 111, and the keyboard is back on the canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "handback-8-after-escape"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "9-tool-key-after-escape",
+      "note": "A picks the arrow tool, so Escape hands the keyboard back as completely as Return does"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "10-escape-cost-nothing",
+      "note": "one undo goes back to the 101 the arrow steps made: abandoning a draft with Escape must not have quietly cost an undo step of its own"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "11-canvas-picked",
+      "note": "the Canvas row is picked, so the inspector is showing the canvas's own W and H"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "760"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "12-canvas-width-typed",
+      "note": "the canvas is 760 wide and the keyboard is back on the picture"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "13-canvas-hands-back",
+      "note": "A picks the arrow tool, so the canvas size fields let go the same way the layer's do"
+    }
+  ]
+}

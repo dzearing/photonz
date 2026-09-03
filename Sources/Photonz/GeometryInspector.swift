@@ -75,6 +75,11 @@ struct GeometryInspector: View {
 /// common way a person loses an edit. Up and down arrow step it without leaving
 /// the field. Text that is not a number snaps back to what the layer really is
 /// rather than being guessed at.
+///
+/// Typing a number is a moment, not a mode: Return and Escape both finish it
+/// and hand the keyboard back to the picture, so the very next key picks a tool
+/// or nudges the layer instead of landing in the box. `NumberFieldEntry` owns
+/// that rule.
 private struct GeometryNumberField: View {
     let field: LayerGeometryField
     let value: CGFloat
@@ -83,6 +88,12 @@ private struct GeometryNumberField: View {
     let commit: (CGFloat) -> Void
 
     @State private var text = ""
+    /// Set while Return or Escape is handing the keyboard over, so the focus
+    /// loss that follows does not land the draft a second time. Escape needs
+    /// it: without it, letting go would commit the rounded number on screen
+    /// over the fraction a drag left behind, and abandoning an edit would cost
+    /// an undo step that changes nothing you can see.
+    @State private var isFinishing = false
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -99,32 +110,31 @@ private struct GeometryNumberField: View {
                 .focused($isFocused)
                 .disabled(!isEditable)
                 .monospacedDigit()
+                // Tab, and anything else that moves the keyboard on by itself,
+                // still lands the draft; Return goes through the key rule
+                // below so it can hand the keyboard back as well.
                 .onSubmit { land() }
                 // Up and down step the number. The canvas nudges the layer on
                 // the same keys, but it only sees them when the canvas itself
                 // has focus, so a focused field and a focused canvas never both
-                // answer one press. Left and right stay caret movement, the way
-                // they do in every other number field.
-                .onKeyPress(phases: .down) { press in
-                    // Every key, not just the two, because a key list matches on
-                    // the key alone and ⇧↑ never reaches it: the field editor
-                    // takes it first as "extend the selection upward".
-                    guard isEditable else { return .ignored }
-                    let direction: Int
-                    switch press.key {
-                    case .upArrow: direction = 1
-                    case .downArrow: direction = -1
-                    default: return .ignored
-                    }
-                    step(direction: direction, coarse: press.modifiers.contains(.shift))
-                    return .handled
-                }
+                // answer one press.
+                .numberFieldKeys(
+                    isEditable: isEditable,
+                    commit: { finish { land() } },
+                    revert: { finish { text = display(value) } },
+                    step: { direction, coarse in step(direction: direction, coarse: coarse) })
         }
         .help(fixedReason ?? field.title)
         .onAppear { text = display(value) }
         .onChange(of: value) { text = display(value) }
         .onChange(of: isFocused) { _, focused in
-            if focused { selectEverything() } else { land() }
+            if focused {
+                selectEverything()
+            } else if isFinishing {
+                isFinishing = false
+            } else {
+                land()
+            }
         }
     }
 
@@ -142,6 +152,13 @@ private struct GeometryNumberField: View {
                 }
             }
         }
+    }
+
+    /// Finishing with the field: do the thing the key means, then remember
+    /// that the focus loss on its way over is this, not a click somewhere else.
+    private func finish(_ body: () -> Void) {
+        body()
+        isFinishing = true
     }
 
     /// The field's draft becoming the layer's real number.
