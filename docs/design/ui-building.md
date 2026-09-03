@@ -938,10 +938,22 @@ styles exist.
 - **Four colors can wear one**: a box's interior, a box or line's ink, a text
   block's ink, and a frame's surface. Each is a `ColorSlot` on the layer, so
   adding another later is a case in two switches.
-- **The button sits on the rows that already exist.** The mock hangs "Save as
-  style" off a Fill section of its own; the app already has a Fill row in
-  Annotation, a Color row in Text and a Background row in Frame, so the styles
-  button goes on those rather than making a fourth place to look for a color.
+- **One Color section, whatever is picked.** The mock hangs "Save as style" off
+  a Fill section of its own. The app has a Color section that holds every color
+  the picked layers have, and the styles button sits on each of its rows. It was
+  briefly a section that appeared only over a multi-selection, with a single
+  layer's colors living inside its Rectangle, Text or Frame section: that moved
+  the color you were editing into a different section the moment you
+  shift-clicked a second layer, so the section is now always there and it is the
+  only place a color is.
+- **A row is named by its slot, not by what is picked**: Outline, Fill, Text. A
+  label that read "Color" over a lone arrow and "Outline" the moment a box
+  joined the selection would move house the same way the section used to.
+- **A color that can be absent carries a checkbox**: a box's inside, a frame's
+  surface. It speaks for the whole selection, so it is on only when every layer
+  that could have that color has one, and one click fills the rest. It is what
+  used to be the Fill toggle in a shape's settings and the "No background"
+  button in a frame's.
 - **Saving asks for the name first, in the dock.** A field opens under the color
   row, on a name nobody is using, with the text selected: naming it is typing
   and Return is enough, Escape leaves nothing behind. The alternative — make a

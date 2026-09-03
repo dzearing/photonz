@@ -6624,3 +6624,53 @@ granted, all 41 steps, real window captures, 1 → 2 → 3 layers over three swe
 and one undo still landing on the last rectangle drawn; `shift-click-select`,
 `multi-drag` and `multi-geometry` re-run as regressions. Audit:
 `queue/audits/2026-09-03-shift-sweep-add.json`.
+
+## 2026-09-03 — A color is in the same place whether you have one layer picked or several
+
+The Color section used to exist only over a multi-selection. With one layer
+picked, that layer's colors sat inside its Rectangle, Text or Frame section, so
+shift-clicking a second layer moved the color you were editing into a different
+section and the only thing that had changed was that you picked one more thing.
+
+The fix was a deletion rather than an addition. The whole-selection row already
+read and wrote correctly for a selection of one, so the Color section is now
+present as soon as anything with a color is picked, and the color rows came OUT
+of `AnnotationInspector`, `TextInspector` and `FrameInspector`. One code path
+where there were two. Rows are named by slot and never by what is picked —
+Outline, Fill, Text — because a label that changed word when a second layer
+joined would be the same bug one level down.
+
+Three abilities lived only in the single-layer rows and had to be carried
+across. A box's Fill toggle and a frame's "No background" button are now one
+checkbox on the Fill row that speaks for the whole selection: on only when every
+layer that could have that color has one, and switching on gives each layer its
+own starting point (a box takes its outline color, a frame takes the default
+surface) rather than one shared color. Text color already went through the text
+builder in core, so it came free. `PhotonzDocument` grew `colorRowSlots`,
+`colorSwitch` and `setColorEnabled` for this, all tested.
+
+`colorStyleSelection` and `setSelectionColor` stopped being gated on
+`next-styles`. That flag means "a color can be saved under a name", not "a color
+can be read"; with it off the Color section still works and only the styles
+button goes away, which `ColorStyleControl` already handled itself.
+
+Two things the second review on the probe found and fixed: a rectangle and a
+caption picked together printed three "Applies to 1 of the 2 selected layers"
+notes, which now stay quiet unless the row is skipping a layer it COULD have
+reached (locked, or fill switched off); and a picked highlight would have shown
+an empty section headed Highlight, since a color was all it had, so it brings no
+settings section at all now.
+
+Next: named rough in the audit — the Color section keeps its name and rows but
+still slides about 175pt down the dock between one layer and two, because Align
+arrives above it and Position & Size grows a line. Making it truly stationary
+means leading the dock with Color, which is a question for the user rather than
+a call to make here. Effects and Shadow still vanish over a multi-selection.
+
+Verified: `Scripts/test.sh` green (2222 tests);
+`Scripts/playtest/color-one-home-walk.json` on the probe with Screen Recording
+granted, real window captures, `colorRows` identical at one and two layers
+(`["Fill","Outline"]`) and a text layer joining a box widening it to
+`["Fill","Outline","Text"]` without moving either; the Fill checkbox switched
+off and back on over a selection, and the same on a frame's surface. Audit:
+`queue/audits/2026-09-03-color-one-home.json`.

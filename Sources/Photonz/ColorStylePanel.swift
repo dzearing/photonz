@@ -42,12 +42,10 @@ struct ColorStyleNamingRequest: Hashable {
 /// says which part that is, so a color kept for hairlines is not on the list as
 /// something to fill a box with.
 ///
-/// The mock hangs this off a Fill section of its own; the app already has an
-/// Outline and a Fill row inside a shape's settings, a Color row inside Text
-/// and a Background row inside Frame, so the control goes on those rather than
-/// a fourth place to look for a color. With several layers picked those
-/// sections are gone, and the Color section (`SelectionColorInspector`) is the
-/// one place instead.
+/// It sits on every row of the Color section (`SelectionColorInspector`), which
+/// is the one place a color lives whatever is picked. The mock hangs it off a
+/// Fill section of its own; one section holding every color the selection has
+/// is the same idea without a second place to look.
 struct ColorStyleControl: View {
     @Environment(EditorState.self) private var editorState
     let slot: ColorSlot
@@ -251,12 +249,21 @@ struct ColorPartRow: View {
         self.well = AnyView(well())
     }
 
-    /// The row over several picked layers: one well that paints every one of
-    /// them, and the menu.
+    /// The row in the Color section: one well that paints everything picked,
+    /// and the menu.
     init(part: String, slot: ColorSlot) {
         self.part = part
         self.slot = slot
         self.switchControl = nil
+        self.well = nil
+    }
+
+    /// The same row for a color that can be switched off altogether, like a
+    /// box's inside or a frame's surface.
+    init(part: String, slot: ColorSlot, switchControl: some View) {
+        self.part = part
+        self.slot = slot
+        self.switchControl = AnyView(switchControl)
         self.well = nil
     }
 
@@ -508,28 +515,38 @@ struct SelectionColorWell: View {
 
 // MARK: - The color rows a whole selection gets
 
-/// The Color section: what several picked layers are painted, and one place to
-/// set all of them to the same named color.
+/// The Color section: THE place a color lives, whatever is picked.
 ///
-/// It exists ONLY while more than one layer is picked. With one layer picked
-/// its colors live where they always have, in the Annotation, Text or Frame
-/// section, and this section is absent rather than a second place to look. With
-/// several picked those sections are gone (they each describe one layer), so
-/// this is the only color row on screen and it can safely call a shape's ink
-/// Outline and a text block's ink Text.
+/// It used to appear only while more than one layer was picked; with one
+/// picked, that layer's colors sat inside the Rectangle, Text or Frame section
+/// instead. So shift-clicking a second layer moved the color you were editing
+/// into a different section, and the only thing that had changed was that you
+/// picked one more thing. Now the section is here as soon as anything with a
+/// color is picked, and it is the only place a color is, so adding to the
+/// selection widens what the row speaks for and moves nothing.
+///
+/// That is also why the rows are named by SLOT and not by shape: Outline, Fill,
+/// Text. A label that read Color over a lone arrow and Outline the moment a box
+/// joined it would be the same bug one level down.
+///
+/// A color that can be absent — a box's inside, a frame's surface — carries the
+/// checkbox that turns it on and off, which is the row that used to be a Fill
+/// toggle in a shape's settings and a "No background" button in a frame's.
 struct SelectionColorInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        let slots = editorState.colorStyleSlots
+        let slots = editorState.colorRowSlots
         VStack(alignment: .leading, spacing: 10) {
             ForEach(slots, id: \.self) { slot in
                 row(slot)
             }
-            Text(caption)
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
+            if let caption {
+                Text(caption)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
@@ -537,8 +554,13 @@ struct SelectionColorInspector: View {
 
     @ViewBuilder private func row(_ slot: ColorSlot) -> some View {
         let selection = editorState.colorStyleSelection(slot: slot)
+        let part = slot.selectionTitle
         VStack(alignment: .leading, spacing: 2) {
-            ColorPartRow(part: slot.selectionTitle, slot: slot)
+            if editorState.colorSwitch(slot: slot).isOffered {
+                ColorPartRow(part: part, slot: slot, switchControl: switchControl(slot, part))
+            } else {
+                ColorPartRow(part: part, slot: slot)
+            }
             // A Fill row that quietly skips the arrow in the selection says so
             // here, rather than looking as though it did nothing — and so does
             // one where picking a color would let go of a style, which is said
@@ -550,8 +572,32 @@ struct SelectionColorInspector: View {
         }
     }
 
-    private var caption: String {
+    /// The checkbox beside a color that can be absent. It answers to the row's
+    /// own label rather than carrying a second copy of the word, the way the
+    /// Fill toggle in a shape's settings always has.
+    private func switchControl(_ slot: ColorSlot, _ part: String) -> some View {
+        Toggle(part, isOn: Binding(
+            get: { editorState.colorSwitch(slot: slot).isOn },
+            set: { editorState.setColorEnabled(slot: slot, on: $0) }))
+            .labelsHidden()
+            .controlSize(.small)
+            .help(switchHelp(slot, part))
+    }
+
+    private func switchHelp(_ slot: ColorSlot, _ part: String) -> String {
+        let count = editorState.colorSwitch(slot: slot).layerIDs.count
+        let noun = part.lowercased()
+        return count > 1
+            ? "Turns the \(noun) on or off for all \(count) of them"
+            : "Turns the \(noun) on or off"
+    }
+
+    /// Said only when the section is speaking for more than one layer. Over a
+    /// single layer every row means what it has always meant, and a sentence
+    /// explaining that is a sentence in the way.
+    private var caption: String? {
         let count = editorState.colorStyleSelectionCount
+        guard count > 1 else { return nil }
         return "\(count) layers. A color or a style picked here paints every one "
             + "of them, in one step."
     }

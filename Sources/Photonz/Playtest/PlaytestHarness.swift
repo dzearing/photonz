@@ -567,6 +567,11 @@ private final class Run {
                 if let slot = editor.colorStyleSlots.first {
                     editor.setSelectionColor(slot: slot, hex: "#B0184A")
                 }
+            case .toggleFillSwitch:
+                // The checkbox that used to be a shape's Fill toggle and a
+                // frame's "No background": one click, every picked layer.
+                let fill = editor.colorSwitch(slot: .fill)
+                if fill.isOffered { editor.setColorEnabled(slot: .fill, on: !fill.isOn) }
             case .pickFirstColorStyle:
                 if let first = editor.colorStyleEntries.first {
                     editor.selectLibraryItem(first.id)
@@ -1286,6 +1291,11 @@ private final class Run {
             },
             // What the selected layer's colors are, and where each came from.
             "selectedColors": selectedColors,
+            // The rows the Color section is showing, by their labels, in order.
+            // One layer picked or several, this is the SAME list for the same
+            // kinds of layer, which is how a walk proves a color did not move
+            // house when a second layer joined the selection.
+            "colorRows": editor.colorRowSlots.map(\.selectionTitle),
         ]
     }
 

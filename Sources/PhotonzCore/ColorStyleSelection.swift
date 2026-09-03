@@ -56,11 +56,19 @@ public struct ColorStyleSelection: Hashable, Sendable {
     /// How many layers are picked altogether, including the ones this slot
     /// skips, so the row can say what it does and does not reach.
     public let selectionCount: Int
+    /// How many of the picked layers have this kind of color AT ALL, locked
+    /// ones counted. A text block simply has no fill, and a Fill row that
+    /// announced it was skipping it would be three lines of small print on any
+    /// selection holding two kinds of layer. What is worth saying out loud is a
+    /// layer the row COULD have reached and did not.
+    public let capableCount: Int
 
-    public init(slot: ColorSlot, members: [Member], selectionCount: Int) {
+    public init(slot: ColorSlot, members: [Member], selectionCount: Int,
+                capableCount: Int? = nil) {
         self.slot = slot
         self.members = members
         self.selectionCount = selectionCount
+        self.capableCount = capableCount ?? selectionCount
     }
 
     public var count: Int { members.count }
@@ -102,11 +110,15 @@ public struct ColorStyleSelection: Hashable, Sendable {
         return nil
     }
 
-    /// What to add to the row's hover tip when it speaks for only part of the
-    /// selection, so a Fill row that quietly skips the arrow says so instead of
-    /// looking broken. Nil when it reaches everything picked.
+    /// What the row says out loud when it is leaving a layer out that it could
+    /// have reached: a locked one, or a box whose fill is switched off, since
+    /// painting that one would switch its fill on behind the person's back.
+    ///
+    /// Nil when the only layers it does not reach are layers that have no such
+    /// color in the first place. A Fill row over a box and a caption is doing
+    /// exactly what it looks like it is doing.
     public var note: String? {
-        guard count > 0, count < selectionCount else { return nil }
+        guard count > 0, count < capableCount else { return nil }
         return "Applies to \(count) of the \(selectionCount) selected layers."
     }
 
@@ -134,6 +146,43 @@ public struct ColorStyleSelection: Hashable, Sendable {
     }
 }
 
+/// What the switch on a color row reads and does.
+///
+/// Some colors can simply not be there: a box's inside can be switched off, and
+/// a frame can have no surface at all. Those rows carry a checkbox beside the
+/// label, and the checkbox has to speak for the whole selection the same way
+/// the color beside it does. It is on only when EVERY picked layer that could
+/// have that color has one, so three boxes where two are filled read as off and
+/// one click fills the third rather than emptying the other two.
+///
+/// A slot nothing picked can switch (an outline, a letter) is simply not
+/// offered one, which is what `isOffered` says.
+public struct ColorSwitch: Hashable, Sendable {
+    public let slot: ColorSlot
+    /// The picked layers that have this slot at all, locked ones left out.
+    public let layerIDs: [UUID]
+    /// Of those, how many have a color in it right now.
+    public let onCount: Int
+
+    public init(slot: ColorSlot, layerIDs: [UUID], onCount: Int) {
+        self.slot = slot
+        self.layerIDs = layerIDs
+        self.onCount = onCount
+    }
+
+    /// Whether this row shows a checkbox at all.
+    public var isOffered: Bool { slot.isSwitchable && !layerIDs.isEmpty }
+
+    /// On only when every layer it speaks for already has this color.
+    public var isOn: Bool { !layerIDs.isEmpty && onCount == layerIDs.count }
+}
+
+extension ColorSlot {
+    /// Whether this color can be absent. A box's inside and a frame's surface
+    /// can; an outline and a letter's ink are always painted something.
+    public var isSwitchable: Bool { self == .fill }
+}
+
 extension ColorSlot {
     /// What a row calls this slot when it is speaking for several layers at
     /// once. The per-kind sections can call a shape's ink and a text block's
@@ -159,13 +208,74 @@ extension PhotonzDocument {
             return ColorStyleSelection.Member(id: id, colorHex: hex,
                                               styleID: layer.colorStyleID(for: slot))
         }
-        return ColorStyleSelection(slot: slot, members: members, selectionCount: layerIDs.count)
+        let capable = layerIDs.filter { layer(id: $0)?.colorSlots.contains(slot) == true }
+        return ColorStyleSelection(slot: slot, members: members,
+                                   selectionCount: layerIDs.count,
+                                   capableCount: capable.count)
     }
 
     /// The rows a set of picked layers gets, in the order the inspector shows
     /// them: every slot at least one of them actually has a color in.
     public func colorStyleSlots(layerIDs: [UUID]) -> [ColorSlot] {
         ColorSlot.allCases.filter { !colorStyleSelection(layerIDs: layerIDs, slot: $0).isEmpty }
+    }
+
+    /// The rows the Color section shows for a set of picked layers: every slot
+    /// at least one of them HAS, whether or not there is a color in it today.
+    ///
+    /// Wider than `colorStyleSlots` by exactly one case, and it matters: a box
+    /// with its fill switched off has a fill slot and no fill color, and the
+    /// row is the only way back to a fill. Dropping the row because the color
+    /// is absent would mean switching a fill off removed the switch.
+    public func colorRowSlots(layerIDs: [UUID]) -> [ColorSlot] {
+        let slots = layerIDs.reduce(into: Set<ColorSlot>()) { found, id in
+            guard let layer = layer(id: id), !layer.isLocked else { return }
+            found.formUnion(layer.colorSlots)
+        }
+        return ColorSlot.allCases.filter { slots.contains($0) }
+    }
+
+    /// What the checkbox on a color row reads for a set of picked layers.
+    public func colorSwitch(layerIDs: [UUID], slot: ColorSlot) -> ColorSwitch {
+        let capable = layerIDs.filter { id in
+            guard let layer = layer(id: id), !layer.isLocked else { return false }
+            return layer.colorSlots.contains(slot)
+        }
+        let on = capable.filter { layer(id: $0)?.colorHex(for: slot) != nil }.count
+        return ColorSwitch(slot: slot, layerIDs: capable, onCount: on)
+    }
+
+    /// The checkbox on a color row, over the whole selection: switch three
+    /// boxes' insides on at once, in one step one undo puts back.
+    ///
+    /// Switching ON gives a layer that has no color there its own starting
+    /// point rather than one shared color, because the switch is about whether
+    /// the color EXISTS: a box takes its own outline color, the way toggling a
+    /// single box's fill always has, and a frame takes the surface a new frame
+    /// starts with. A layer that already has the color is left exactly as it
+    /// is. Switching OFF clears the color and lets go of any style painting
+    /// it, since a slot with nothing in it cannot be wearing a name.
+    ///
+    /// Returns how many layers actually changed, so a caller can tell a no-op
+    /// from an edit.
+    @discardableResult
+    public mutating func setColorEnabled(layerIDs: [UUID], slot: ColorSlot,
+                                         on: Bool) -> Int {
+        guard slot.isSwitchable else { return 0 }
+        var changed = 0
+        for id in colorSwitch(layerIDs: layerIDs, slot: slot).layerIDs {
+            guard let layer = layer(id: id) else { continue }
+            let has = layer.colorHex(for: slot) != nil
+            guard has != on else { continue }
+            let seed = on ? layer.startingColorHex(for: slot) : nil
+            guard !on || seed != nil else { continue }
+            updateLayer(id: id) {
+                $0.unbindColorStyle(for: slot)
+                $0.setColorHex(seed, for: slot)
+            }
+            changed += 1
+        }
+        return changed
     }
 
     /// Points several layers' slot at one style, painting them all. Returns how

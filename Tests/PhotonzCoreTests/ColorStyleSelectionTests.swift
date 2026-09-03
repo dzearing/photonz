@@ -125,6 +125,20 @@ struct ColorStyleSelectionTests {
         #expect(selection.note == "Applies to 1 of the 2 selected layers.")
     }
 
+    @Test func aRowSaysNothingAboutLayersThatSimplyHaveNoSuchColor() {
+        // A caption has no fill. A Fill row announcing that it skipped it would
+        // put three lines of small print under any mixed selection, and say
+        // nothing a person did not already know.
+        let shape = box()
+        let label = text()
+        let doc = document([shape, label])
+        let fill = doc.colorStyleSelection(layerIDs: [shape.id, label.id], slot: .fill)
+        #expect(fill.layerIDs == [shape.id])
+        #expect(fill.selectionCount == 2)
+        #expect(fill.capableCount == 1)
+        #expect(fill.note == nil)
+    }
+
     @Test func aLockedLayerStaysOutOfTheRow() {
         var locked = box("Locked")
         locked.isLocked = true
@@ -146,6 +160,131 @@ struct ColorStyleSelectionTests {
         let group = Layer(name: "Group", content: .group(GroupContent(children: [])), frame: .zero)
         let doc = document([group])
         #expect(doc.colorStyleSlots(layerIDs: [group.id]).isEmpty)
+    }
+
+    // MARK: - The rows the Color section shows
+
+    @Test func aBoxWithItsFillSwitchedOffKeepsItsFillRow() {
+        // The row is the only way back to a fill, so it cannot go away just
+        // because there is no color in it right now.
+        let empty = box("Empty", fill: nil)
+        let doc = document([empty])
+        #expect(doc.colorRowSlots(layerIDs: [empty.id]) == [.fill, .stroke])
+        #expect(doc.colorStyleSlots(layerIDs: [empty.id]) == [.stroke])
+    }
+
+    @Test func eachKindOfLayerOffersOnlyTheRowsItHas() {
+        let label = text()
+        var arrowContent = AnnotationContent(shape: .arrow, start: .zero,
+                                             end: CGPoint(x: 20, y: 20))
+        arrowContent.colorHex = "#FF0000"
+        let arrow = Layer(name: "Arrow", content: .annotation(arrowContent), frame: .zero)
+        let frame = Layer.frameLayer(name: "Frame", origin: .zero,
+                                     size: CGSize(width: 200, height: 200))
+        let plain = Layer(name: "Group", content: .group(GroupContent(children: [])), frame: .zero)
+        let doc = document([label, arrow, frame, plain])
+        #expect(doc.colorRowSlots(layerIDs: [label.id]) == [.text])
+        #expect(doc.colorRowSlots(layerIDs: [arrow.id]) == [.stroke])
+        #expect(doc.colorRowSlots(layerIDs: [frame.id]) == [.fill])
+        #expect(doc.colorRowSlots(layerIDs: [plain.id]).isEmpty)
+    }
+
+    @Test func aLockedLayerBringsNoRowsOfItsOwn() {
+        var locked = box("Locked")
+        locked.isLocked = true
+        var arrowContent = AnnotationContent(shape: .arrow, start: .zero,
+                                             end: CGPoint(x: 20, y: 20))
+        arrowContent.colorHex = "#FF0000"
+        let arrow = Layer(name: "Arrow", content: .annotation(arrowContent), frame: .zero)
+        let doc = document([locked, arrow])
+        #expect(doc.colorRowSlots(layerIDs: [locked.id]).isEmpty)
+        #expect(doc.colorRowSlots(layerIDs: [locked.id, arrow.id]) == [.stroke])
+    }
+
+    // MARK: - The switch that turns a fill on and off
+
+    @Test func theFillSwitchIsOnOnlyWhenEveryFillableLayerHasOne() {
+        let filled = box("Filled")
+        let empty = box("Empty", fill: nil)
+        let doc = document([filled, empty])
+        #expect(doc.colorSwitch(layerIDs: [filled.id], slot: .fill).isOn)
+        #expect(doc.colorSwitch(layerIDs: [empty.id], slot: .fill).isOn == false)
+        let both = doc.colorSwitch(layerIDs: [filled.id, empty.id], slot: .fill)
+        #expect(both.isOn == false)
+        #expect(both.layerIDs == [filled.id, empty.id])
+    }
+
+    @Test func onlyTheFillRowHasASwitch() {
+        let shape = box()
+        let label = text()
+        let doc = document([shape, label])
+        #expect(doc.colorSwitch(layerIDs: [shape.id], slot: .stroke).isOffered == false)
+        #expect(doc.colorSwitch(layerIDs: [label.id], slot: .text).isOffered == false)
+        #expect(doc.colorSwitch(layerIDs: [shape.id], slot: .fill).isOffered)
+    }
+
+    @Test func aSelectionWithNothingFillableHasNoSwitch() {
+        var arrowContent = AnnotationContent(shape: .arrow, start: .zero,
+                                             end: CGPoint(x: 20, y: 20))
+        arrowContent.colorHex = "#FF0000"
+        let arrow = Layer(name: "Arrow", content: .annotation(arrowContent), frame: .zero)
+        let doc = document([arrow])
+        #expect(doc.colorSwitch(layerIDs: [arrow.id], slot: .fill).isOffered == false)
+    }
+
+    @Test func switchingAFillOnSeedsItFromTheShapesOwnOutline() {
+        let empty = box("Empty", fill: nil, stroke: "#123456")
+        var doc = document([empty])
+        let changed = doc.setColorEnabled(layerIDs: [empty.id], slot: .fill, on: true)
+        #expect(changed == 1)
+        #expect(doc.layer(id: empty.id)?.colorHex(for: .fill) == "#123456")
+    }
+
+    @Test func switchingAFrameOnGivesItTheDefaultSurface() {
+        let frame = Layer.frameLayer(name: "Frame", origin: .zero,
+                                     size: CGSize(width: 200, height: 200),
+                                     backgroundHex: nil)
+        var doc = document([frame])
+        _ = doc.setColorEnabled(layerIDs: [frame.id], slot: .fill, on: true)
+        #expect(doc.layer(id: frame.id)?.colorHex(for: .fill) == Layer.defaultFrameBackgroundHex)
+    }
+
+    @Test func switchingAFillOffClearsItAndLetsGoOfItsStyle() {
+        let filled = box("Filled")
+        var doc = document([filled])
+        let accent = doc.addColorStyle(name: "Accent", colorHex: "#00A870")
+        doc.bindColorStyle(layerIDs: [filled.id], slot: .fill, styleID: accent)
+        let changed = doc.setColorEnabled(layerIDs: [filled.id], slot: .fill, on: false)
+        #expect(changed == 1)
+        #expect(doc.layer(id: filled.id)?.colorHex(for: .fill) == nil)
+        #expect(doc.layer(id: filled.id)?.colorStyleID(for: .fill) == nil)
+    }
+
+    @Test func oneSwitchReachesEveryPickedLayerAndSkipsTheOnesAlreadyThere() {
+        let filled = box("Filled")
+        let a = box("A", fill: nil, stroke: "#111111")
+        let b = box("B", fill: nil, stroke: "#222222")
+        var doc = document([filled, a, b])
+        let changed = doc.setColorEnabled(layerIDs: [filled.id, a.id, b.id], slot: .fill, on: true)
+        #expect(changed == 2)
+        #expect(doc.layer(id: a.id)?.colorHex(for: .fill) == "#111111")
+        #expect(doc.layer(id: b.id)?.colorHex(for: .fill) == "#222222")
+        #expect(doc.layer(id: filled.id)?.colorHex(for: .fill) == "#3366FF")
+    }
+
+    @Test func aLockedLayerIsNeverSwitched() {
+        var locked = box("Locked", fill: nil)
+        locked.isLocked = true
+        var doc = document([locked])
+        #expect(doc.setColorEnabled(layerIDs: [locked.id], slot: .fill, on: true) == 0)
+        #expect(doc.layer(id: locked.id)?.colorHex(for: .fill) == nil)
+    }
+
+    @Test func aSlotWithNoSwitchIgnoresBeingSwitched() {
+        let shape = box()
+        var doc = document([shape])
+        #expect(doc.setColorEnabled(layerIDs: [shape.id], slot: .stroke, on: false) == 0)
+        #expect(doc.layer(id: shape.id)?.colorHex(for: .stroke) == "#101010")
     }
 
     // MARK: - Painting the whole selection

@@ -1,0 +1,64 @@
+{
+  "out": "/tmp/photonz-playtest/color-one-home",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 140], "to": [320, 260], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [380, 140], "to": [580, 260], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "click", "at": [220, 200] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-one-picked", "note": "one box picked: the Color section holds Fill and Outline" },
+    { "do": "snapshot", "name": "color-one-home-1-one-layer" },
+
+    { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-two-picked", "note": "second box added: the SAME Color section, the SAME rows, in the same place" },
+    { "do": "snapshot", "name": "color-one-home-2-two-layers" },
+
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-painted", "note": "one pick paints both" },
+    { "do": "render", "name": "both-crimson" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [220, 520] },
+    { "do": "click", "at": [220, 200] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-back-to-one", "note": "back to one picked: the rows are still where they were" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [200, 480] },
+    { "do": "type", "text": "Label" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-text-picked", "note": "a text layer alone: one row, Text" },
+    { "do": "snapshot", "name": "color-one-home-3-text" },
+
+    { "do": "click", "at": [220, 200], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-text-and-box", "note": "text plus a box: Fill, Outline and Text, each still under Color" },
+    { "do": "snapshot", "name": "color-one-home-4-text-and-box" },
+
+    { "do": "action", "action": "toggleFillSwitch" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-fill-off", "note": "the Fill checkbox off: the box has no inside, and the Fill row is STILL there, which is the way back" },
+    { "do": "render", "name": "fill-switched-off" },
+
+    { "do": "action", "action": "toggleFillSwitch" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-fill-on", "note": "and on again, seeded from the shape's own outline" },
+    { "do": "render", "name": "fill-switched-back-on" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "9-undone", "note": "two undos put both switches back" }
+  ]
+}

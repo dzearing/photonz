@@ -159,6 +159,22 @@ extension Layer {
         }
     }
 
+    /// What a slot is given when it is switched ON from nothing.
+    ///
+    /// A box takes its own outline color, which is what toggling a single box's
+    /// fill has always done: the fill starts where the shape's own color is and
+    /// the well beside the switch refines it. A frame takes the surface a new
+    /// frame starts with. Nil for a slot that cannot be switched, and for a
+    /// layer that does not have it.
+    public func startingColorHex(for slot: ColorSlot) -> String? {
+        guard colorSlots.contains(slot) else { return nil }
+        switch (slot, content) {
+        case (.fill, .annotation(let annotation)): return annotation.colorHex
+        case (.fill, .group): return Layer.defaultFrameBackgroundHex
+        default: return colorHex(for: slot)
+        }
+    }
+
     /// Paints a slot. Only the slots this layer has answer; an empty color is
     /// only meaningful where the model already allows one (a box's fill, a
     /// frame's surface).

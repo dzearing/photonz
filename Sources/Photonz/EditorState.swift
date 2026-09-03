@@ -3570,20 +3570,50 @@ final class EditorState {
 
     /// What one color row shows: the picked layers that have a color in this
     /// slot, what they are painted, and the style painting them when they all
-    /// wear one. With a single layer picked this is that layer, so the rows in
-    /// the Annotation, Text and Frame sections read exactly as they always did.
+    /// wear one. One layer picked or twenty, this is the same reading, which is
+    /// what lets the Color section be the ONE place a color lives.
+    ///
+    /// Not gated on saved styles: a color still has to be readable and
+    /// settable with `next-styles` off. What that flag takes away is the styles
+    /// button beside the color, and `ColorStyleControl` hides itself.
     func colorStyleSelection(slot: ColorSlot) -> ColorStyleSelection {
-        guard colorStylesEnabled, let document else {
+        guard let document else {
             return ColorStyleSelection(slot: slot, members: [], selectionCount: 0)
         }
         return document.colorStyleSelection(layerIDs: colorStyleTargetIDs, slot: slot)
     }
 
-    /// The color rows a multi-selection gets, in inspector order: every slot at
-    /// least one picked layer actually has a color in.
+    /// The slots the selection actually has a color in. What a style can be
+    /// saved from or applied to.
     var colorStyleSlots: [ColorSlot] {
-        guard colorStylesEnabled, let document else { return [] }
+        guard let document else { return [] }
         return document.colorStyleSlots(layerIDs: colorStyleTargetIDs)
+    }
+
+    /// The rows the Color section shows, in inspector order: every slot the
+    /// picked layers HAVE, whether or not there is a color in it right now. A
+    /// box with its fill switched off keeps its Fill row, because that row is
+    /// the way back to a fill.
+    var colorRowSlots: [ColorSlot] {
+        guard let document else { return [] }
+        return document.colorRowSlots(layerIDs: colorStyleTargetIDs)
+    }
+
+    /// What the checkbox on a color row reads: offered only where the color can
+    /// be absent at all, and on only when every layer it speaks for has one.
+    func colorSwitch(slot: ColorSlot) -> ColorSwitch {
+        guard let document else { return ColorSwitch(slot: slot, layerIDs: [], onCount: 0) }
+        return document.colorSwitch(layerIDs: colorStyleTargetIDs, slot: slot)
+    }
+
+    /// The checkbox on a color row: switches a box's inside, or a frame's
+    /// surface, on or off across everything picked, in one step.
+    func setColorEnabled(slot: ColorSlot, on: Bool) {
+        guard document != nil else { return }
+        let targets = colorSwitch(slot: slot).layerIDs
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { _ = $0.setColorEnabled(layerIDs: targets, slot: slot, on: on) }
     }
 
     /// How many layers are picked, which is what the whole-selection Color
@@ -3655,7 +3685,6 @@ final class EditorState {
     /// Layers wearing a style in that slot are taken off it, which the row says
     /// in words before the color is picked.
     func setSelectionColor(slot: ColorSlot, hex: String) {
-        guard colorStylesEnabled else { return }
         let targets = colorStyleSelection(slot: slot).layerIDs
         guard !targets.isEmpty else { return }
         discardDragPreview()

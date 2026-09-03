@@ -24,6 +24,14 @@ extension AnnotationShape {
         }
     }
 
+    /// Whether this shape has any settings of its own once its colors have
+    /// moved out to the Color section.
+    ///
+    /// Every shape has a thickness except a highlight, which is a band of one
+    /// color and nothing else. So a picked highlight brings no settings section
+    /// at all, rather than one headed "Highlight" with nothing under it.
+    public var hasSettingsBesidesColor: Bool { self != .highlight }
+
     /// What a color row on this shape paints, in the words the row shows. Nil
     /// for a slot this shape does not have, so a caller cannot invent a row.
     ///

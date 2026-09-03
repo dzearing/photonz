@@ -172,12 +172,11 @@ struct InspectorPanel: View {
         if Experiments.shared.geometryFieldsEnabled, editorState.hasLayerSelection {
             set.insert(.geometry)
         }
-        // The color rows a multi-selection gets (Next, `next-styles`). Only
-        // with several layers picked: with one, its colors live in the section
-        // for the kind of layer it is, and a second place to look for the same
-        // color is how a person stops trusting either.
-        if Experiments.shared.colorStylesEnabled, editorState.colorStyleSelectionCount > 1,
-           !editorState.colorStyleSlots.isEmpty {
+        // Every color the picked layers have, in ONE place. Present as soon as
+        // anything with a color is picked, one layer or twenty: a color that
+        // moved to a different section the moment you shift-clicked a second
+        // layer was a color you had to find again for no reason.
+        if !editorState.colorRowSlots.isEmpty {
             set.insert(.color)
         }
         if let layer = selectedLayer {
@@ -203,7 +202,14 @@ struct InspectorPanel: View {
                layer.isMainComponent || layer.isComponentInstance {
                 set.insert(.component)
             }
-            if layer.annotation != nil { set.insert(.annotation) }
+            // A shape's own settings: thickness, corners, an arrow's head and
+            // caption. Its colors are in the Color section, so a highlight —
+            // which has nothing but a color — brings no section at all rather
+            // than an empty one headed with its name.
+            if let annotation = layer.annotation,
+               annotation.shape.hasSettingsBesidesColor {
+                set.insert(.annotation)
+            }
             if case .text = layer.content { set.insert(.text) }
             if layer.measure != nil { set.insert(.measure) }
             if layer.collage != nil { set.insert(.collage) }
@@ -1649,41 +1655,10 @@ struct AnnotationInspector: View {
 
     var body: some View {
         if let a = annotation {
+            // The shape's colors are NOT here: they live in the Color section,
+            // which is where they live whatever is picked, so shift-clicking a
+            // second layer widens what the row speaks for instead of moving it.
             VStack(alignment: .leading, spacing: 8) {
-                // Every color says what part of the shape it paints, and keeps
-                // saying it when a saved color is in use. The section header
-                // above already names the shape, so the row does not have to.
-                if let part = a.shape.colorTitle(for: .stroke) {
-                    ColorPartRow(part: part, slot: .stroke) {
-                        ColorPicker("Color", selection: Binding(
-                            get: { Color(hex: a.colorHex) },
-                            set: { if let hex = $0.hexString { editorState.setAnnotationColor(layerID: layer.id, hex) } }),
-                            supportsOpacity: false)
-                            .labelsHidden().controlSize(.small)
-                    }
-                }
-                if let part = a.shape.colorTitle(for: .fill) {
-                    // The checkbox and the color answer to one label, so the
-                    // switch sits in the row's switch column rather than
-                    // carrying a second copy of the word.
-                    ColorPartRow(
-                        part: part, slot: .fill,
-                        switchControl: Toggle(part, isOn: Binding(
-                            get: { a.fillColorHex != nil },
-                            // Toggling on seeds the fill with the stroke color;
-                            // the well beside it refines it. Off = no fill.
-                            set: { editorState.setAnnotationFill(layerID: layer.id, $0 ? a.colorHex : nil) }))
-                            .labelsHidden().controlSize(.small)
-                    ) {
-                        if let fillHex = a.fillColorHex {
-                            ColorPicker("Fill Color", selection: Binding(
-                                get: { Color(hex: fillHex) },
-                                set: { if let hex = $0.hexString { editorState.setAnnotationFill(layerID: layer.id, hex) } }),
-                                supportsOpacity: false)
-                                .labelsHidden().controlSize(.small)
-                        }
-                    }
-                }
                 if a.shape != .highlight {
                     sliderRow("Thickness", value: widthDraft ?? a.strokeWidth,
                               display: "\(Int((widthDraft ?? a.strokeWidth).rounded())) pt",
@@ -1861,18 +1836,9 @@ struct TextInspector: View {
 
     var body: some View {
         if let c = content {
+            // The ink is in the Color section with every other color; this is
+            // the type itself.
             VStack(alignment: .leading, spacing: 8) {
-                // "Color", not "Text": the section header already says this is
-                // a text layer, so the row says which of its colors this is.
-                ColorPartRow(part: ColorSlot.text.title, slot: .text) {
-                    ColorPicker("Color", selection: Binding(
-                        get: { Color(hex: c.colorHex) },
-                        set: { if let hex = $0.hexString {
-                            editorState.setTextStyle(layerID: layer.id, colorHex: hex)
-                        } }),
-                        supportsOpacity: false)
-                        .labelsHidden().controlSize(.small)
-                }
                 Picker("Font", selection: Binding(
                     get: { c.fontName },
                     set: { editorState.setTextStyle(layerID: layer.id, fontName: $0) })) {

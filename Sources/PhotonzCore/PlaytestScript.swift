@@ -238,6 +238,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// opens a popover in the dock, which a walk cannot reach with the pointer,
     /// so this is how one color landing on three boxes gets photographed.
     case paintSelectionColor
+    /// Flip the Fill row's checkbox for everything picked, which is what
+    /// clicking it in the Color section does: it switches a box's inside, or a
+    /// frame's surface, on or off across the whole selection.
+    case toggleFillSwitch
     /// Pick the first style on the Library shelf, which is what a click on its
     /// tile does, so its own section can be photographed.
     case pickFirstColorStyle

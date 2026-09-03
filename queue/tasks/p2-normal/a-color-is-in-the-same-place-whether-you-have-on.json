@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:06:50.887Z",
-  "updated": "2026-09-03T12:08:27.118Z",
+  "updated": "2026-09-03T16:24:49.438Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review finding, 2026-09-03. Evidence: queue/audits/2026-09-03-multi-style.json, \"The Color section exists only while more than one layer is picked. With one picked its colors stay in the Annotation, Text or Frame section, so the color you were just editing moves to a different section when you shift-click a second layer.\" UX-PATTERNS section 4 says multi-select shows shared properties only, which the app obeys, but the rules never say a property keeps its home, which is why this got built as a separate section without anyone breaking a rule. Fixing the app and scrubbing the rule are two tasks: the scrub is scrub-the-panel-rules-against-what-the-dock-actu. The reading code is already whole-selection: EditorState.colorStyleSelection(slot:) and ColorStyleSelection in PhotonzCore. This is about where the row lives, not about what it can do.",
@@ -28,6 +28,31 @@
     {
       "t": "2026-09-03T12:08:27.118Z",
       "note": "seq 910 -> 80"
+    },
+    {
+      "t": "2026-09-03T16:04:32.327Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T16:09:14.517Z",
+      "note": "Adversarial review of the idea, before building. (1) Walked it as a first-timer: pick a box, the colours sit inside a section headed Rectangle; shift-click a second box and they are gone from there and living under Color. Nothing on screen explains the move, so the second selection costs a hunt. Confirmed in the code: LayersPanel.availableSections only inserts .color when colorStyleSelectionCount > 1, and .annotation/.text/.frame all hang off selectedLayer, which is nil for a multi-selection. (2) The shortest fix is a DELETION, not an addition: the whole-selection row (ColorPartRow plus SelectionColorWell) already reads and writes correctly for a selection of one, so making the Color section always present and pulling the colour rows out of Rectangle, Text and Frame leaves ONE code path instead of two. (3) Three abilities live only in the single-layer rows and must not be dropped: a box's fill on/off checkbox, a frame's No background, and text colour going through the text builder. The third is already handled in core; the first two need a whole-selection switch. A box with its fill switched off has no colour in the fill slot, so the existing colorStyleSlots would drop the row entirely and there would be no way to switch fill back on. (4) Decorative: the caption saying how many layers a pick reaches must not print over a selection of one."
+    },
+    {
+      "t": "2026-09-03T16:09:14.517Z",
+      "note": "Judgement calls made rather than blocking. Row labels become one word per slot, fixed: Outline, Fill, Text, which is the vocabulary the multi-select row already shipped with. A label that changes word when you pick a second layer is the same bug one level down, so an arrow now reads Outline where it read Color and a frame reads Fill where it read Background. The single-layer well changes from the system colour panel to the app's own picker, the one the whole-selection row already uses, which lands a colour on a deliberate pick instead of on every drag tick. Both go in the audit's evaluate list."
+    },
+    {
+      "t": "2026-09-03T16:24:49.438Z",
+      "note": "Built. The Color section is now present as soon as anything with a colour is picked, and the colour rows came out of AnnotationInspector, TextInspector and FrameInspector, so there is one code path instead of two. Rows are named by slot and never by what is picked: Outline, Fill, Text. A box's Fill toggle and a frame's No background button became one checkbox on the Fill row that speaks for the whole selection. Core grew colorRowSlots, colorSwitch and setColorEnabled, plus Layer.startingColorHex and AnnotationShape.hasSettingsBesidesColor, all tested first. colorStyleSelection and setSelectionColor stopped being gated on next-styles, since that flag means a colour can be SAVED under a name, not that a colour can be read."
+    },
+    {
+      "t": "2026-09-03T16:24:49.438Z",
+      "note": "Second review, on the probe app. Two things fixed that only showed up running it: a rectangle and a caption picked together printed three copies of 'Applies to 1 of the 2 selected layers', which now stays quiet unless the row is skipping a layer it could have reached (locked, or fill switched off); and a picked highlight would have shown an empty section headed Highlight, since a colour was all it had, so it brings no settings section at all now. One thing NOT fixed and reported instead: the Color section keeps its name and its rows but still slides about 175pt down the dock between one layer and two, because Align arrives above it and Position and Size grows a line. Making it truly stationary means leading the dock with Color, which is a question for the user, so it is an evaluate line in the audit rather than a change made here."
+    },
+    {
+      "t": "2026-09-03T16:24:49.438Z",
+      "note": "Acceptance, each checked rather than assumed. (1) One section name: Color, in every screenshot, one layer and two. (2) One layer picked shows the same rows under it: colorRows = [Fill, Outline] for a box, [Text] for a caption. (3) Several picked: same rows, Mixed where they differ, and paintSelectionColor landing fill #B0184A x2 in one step that one undo puts back. (4) The scroll position does not jump, and the row keeps its section and its label, but the section itself moves about 175pt, which is written up in rough and asked about in evaluate. (5) Pictures: queue/audits/2026-09-03-color-one-home-1-one-layer.png and -2-two-layers.png, real window captures with Screen Recording granted."
     }
-  ]
+  ],
+  "started": "2026-09-03T16:04:32.326Z"
 }

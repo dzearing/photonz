@@ -64,4 +64,23 @@ struct ShapeSettingsNamingTests {
             }
         }
     }
+
+    /// With colors living in the Color section, a shape's own section is worth
+    /// showing only while it has something else to say.
+    @Test func onlyAHighlightHasNothingLeftOnceItsColorHasMovedOut() {
+        #expect(AnnotationShape.highlight.hasSettingsBesidesColor == false)
+        for shape in AnnotationShape.allCases where shape != .highlight {
+            #expect(shape.hasSettingsBesidesColor)
+        }
+    }
+
+    /// One word per slot, whatever is picked. A label that read Color over a
+    /// lone arrow and Outline the moment a box joined it would move the same
+    /// way the section used to.
+    @Test func aRowIsNamedByItsSlotAndNothingElse() {
+        #expect(ColorSlot.stroke.selectionTitle == "Outline")
+        #expect(ColorSlot.fill.selectionTitle == "Fill")
+        #expect(ColorSlot.text.selectionTitle == "Text")
+        #expect(Set(ColorSlot.allCases.map(\.selectionTitle)).count == ColorSlot.allCases.count)
+    }
 }

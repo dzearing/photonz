@@ -1,0 +1,32 @@
+{
+  "feature": "A color keeps its place, one layer picked or several",
+  "epic": "ui-components",
+  "summary": "Every color the picked layers have now lives in one Color section that is always there. Shift-clicking a second layer widens what a row speaks for and moves nothing, where before the color you were editing jumped out of the Rectangle, Text or Frame section into a Color section that only existed over a multi-selection.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on: the Color section is there with saved styles off too, it just loses its styles button.",
+  "try": [
+    { "do": "Start a blank canvas from the welcome card." },
+    { "do": "Press R and drag out two boxes side by side." },
+    { "do": "Press V and click the first box. The Color section holds Fill and Outline.", "shot": "2026-09-03-color-one-home-1-one-layer.png" },
+    { "do": "Shift-click the second box. The same section, the same two rows, the same words.", "shot": "2026-09-03-color-one-home-2-two-layers.png" },
+    { "do": "Click the Fill swatch and pick a color. Both boxes take it, and one undo puts both back." },
+    { "do": "Untick the Fill checkbox. Both boxes lose their inside and the Fill row stays put, which is the way back." },
+    { "do": "Press T, click below the boxes, type a word, press V, then shift-click a box. Fill, Outline and Text, all three under Color.", "shot": "2026-09-03-color-one-home-3-text-and-box.png" },
+    { "do": "Press F, drag out a frame, click it, and untick its Fill checkbox. That is what No background used to be.", "shot": "2026-09-03-color-one-home-4-frame-surface-off.png" }
+  ],
+  "evaluate": [
+    "Going from one box to two, did your eye stay on the Fill row, or did you still have to re-find it?",
+    "A row is now named after the kind of color and never after what is picked: an arrow's color says Outline where it used to say Color, and a frame's surface says Fill where it used to say Background. Does one steady word beat the more exact one?",
+    "A highlight's color is called Outline too, which is the weakest case for that word. Does it read wrong enough to want a different one for that whole row?",
+    "Between one layer and two, the Color section itself slides about 175 points down the dock, because Align arrives above it and Position & Size grows its multi-layer note. Is that far enough to be annoying, or does the section keeping its name and its rows carry it?",
+    "The Fill checkbox now sets a whole selection at once. Does ticking it on three boxes at a time feel safe, given each box comes back with its own outline color rather than one shared one?",
+    "A picked highlight brings no settings section at all now, because a color was all it had. Does the dock look emptier than it should, or right?"
+  ],
+  "rough": [
+    "The screenshots are real captures of the running app, taken by the probe build with Screen Recording granted.",
+    "The Color section keeps its name and its rows, but it does not hold still on the screen: about 175 points of drop between one layer and two, all of it from Align appearing and Position & Size gaining a line. Making it truly stationary means putting Color above Align and Position & Size, which is a bigger call about what the dock leads with, so it is a question above rather than a change.",
+    "The color well for a single layer is now the app's own picker instead of the system color panel: it lands a color when you pick one rather than on every drag tick, which is one undo step instead of twenty, but it is a different picker than the rest of macOS opens.",
+    "A frame's surface lost its own popover, which had a No background button in it. The checkbox does the same job in one click, but there is no longer a place that says the words no background.",
+    "A measurement's colors are not in the Color section: they are still inside the Measurement section, because they are not one of the layer color slots. Pick a measurement and a box together and only the box's colors show.",
+    "The Effects and Shadow sections still vanish over a multi-selection, so the color problem is fixed and the same problem one section down is not."
+  ]
+}
