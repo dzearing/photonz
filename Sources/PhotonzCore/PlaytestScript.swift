@@ -276,6 +276,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// dock, which a walk cannot reach with the pointer, so this is how a look
     /// gets set on an original or on one copy.
     case roundCorners, addShadow, fadeLayer, fadeLayerSlightly, borderLayer
+    /// The Effects and Shadow sliders as a person drags them, over EVERYTHING
+    /// picked: a few live frames and then a release, so a walk exercises the
+    /// same preview-and-commit path the panel does rather than a shortcut past
+    /// it. One undo step lands per drag, however many layers it reached.
+    case dragCornerRadius, dragOpacity
+    /// The Shadow section's switch, over the whole selection.
+    case toggleShadow
     /// Put the selected copy's whole look back to the original's, which is
     /// what the way back on its section does.
     case followOriginalLook

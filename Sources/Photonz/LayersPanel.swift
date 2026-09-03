@@ -179,9 +179,16 @@ struct InspectorPanel: View {
         if !editorState.colorRowSlots.isEmpty {
             set.insert(.color)
         }
-        if let layer = selectedLayer {
+        // Fade, blur, corners, border and shadow, for EVERYTHING picked. Like
+        // the Color rows above, these speak for the whole selection: one pull
+        // on Corner Radius rounds four buttons rather than sending you round
+        // four times. Absent only when nothing picked can be restyled, which
+        // is a selection of locked layers and nothing else.
+        if editorState.hasRestylableSelection {
             set.insert(.effects)
             set.insert(.shadow)
+        }
+        if let layer = selectedLayer {
             // A frame's own properties: its size, its clipping, its surface
             // (Next, `next-frames`). Only a frame has any of them.
             if Experiments.shared.framesEnabled, layer.isFrame { set.insert(.frame) }
@@ -356,13 +363,9 @@ struct InspectorPanel: View {
                 CanvasInspector()
             }
         case .effects:
-            if let layer = selectedLayer {
-                EffectsInspector(layer: layer)
-            }
+            EffectsInspector()
         case .shadow:
-            if let layer = selectedLayer {
-                ShadowInspector(layer: layer)
-            }
+            ShadowInspector()
         case .library:
             LibraryPanel()
         case .libraryItem:
@@ -1433,60 +1436,67 @@ struct MeasurementsListView: View {
 
 // MARK: - Effects & shadow inspectors
 
-/// Non-destructive effects for the selected layer: opacity, blur, corner
-/// radius, border. Sliders preview live and commit one undo step per gesture.
+/// Non-destructive effects for EVERYTHING picked: opacity, blur, corner
+/// radius, border. One pull rounds four buttons, and one undo puts all four
+/// back. Where the picked layers differ the readout says Mixed rather than
+/// printing one of their numbers as if it spoke for the rest.
 struct EffectsInspector: View {
     @Environment(EditorState.self) private var editorState
-    let layer: Layer
-
-    private var style: LayerStyle {
-        editorState.previewedStyle(of: layer.id) ?? layer.style
-    }
 
     var body: some View {
+        let selection = editorState.layerStyleSelection
+        let ids = selection.layerIDs
         VStack(alignment: .leading, spacing: 8) {
-            LayerStyleSlider(layerID: layer.id, label: "Opacity", value: style.opacity, range: 0...1,
-                             display: "\(Int((style.opacity * 100).rounded()))%",
+            LayerStyleSlider(layerIDs: ids, label: "Opacity",
+                             reading: selection.reading { $0.opacity }, range: 0...1,
+                             format: { "\(Int(($0 * 100).rounded()))%" },
                              field: .opacity) { style, v in
                 style.opacity = v
             }
-            LayerStyleSlider(layerID: layer.id, label: "Blur", value: Double(style.blurRadius), range: 0...50,
-                             display: "\(Int(style.blurRadius.rounded())) pt",
-                             field: .blur) { style, v in
+            LayerStyleSlider(layerIDs: ids, label: "Blur",
+                             reading: selection.number { $0.blurRadius }, range: 0...50,
+                             format: points, field: .blur) { style, v in
                 style.blurRadius = CGFloat(v)
             }
-            LayerStyleSlider(layerID: layer.id, label: "Corner Radius", value: Double(style.cornerRadius),
-                             range: 0...maxCornerRadius,
-                             display: "\(Int(style.cornerRadius.rounded())) pt",
-                             field: .cornerRadius) { style, v in
+            LayerStyleSlider(layerIDs: ids, label: "Corner Radius",
+                             reading: selection.number { $0.cornerRadius },
+                             range: 0...selection.cornerRadiusLimit,
+                             format: points, field: .cornerRadius) { style, v in
                 style.cornerRadius = CGFloat(v)
             }
             HStack(spacing: 8) {
-                LayerStyleSlider(layerID: layer.id, label: "Border", value: Double(style.borderWidth),
-                                 range: 0...20,
-                                 display: "\(Int(style.borderWidth.rounded())) pt",
-                                 field: .border) { style, v in
+                LayerStyleSlider(layerIDs: ids, label: "Border",
+                                 reading: selection.number { $0.borderWidth }, range: 0...20,
+                                 format: points, field: .border) { style, v in
                     style.borderWidth = CGFloat(v)
                 }
-                borderColorPicker
-                InstanceStyleRevert(layerID: layer.id, field: .borderColor)
+                borderColorPicker(ids)
+                if let only = soleLayerID(ids) {
+                    InstanceStyleRevert(layerID: only, field: .borderColor)
+                }
             }
+            SelectionStyleNotes(notes: [selection.note, borderColorNote(selection)],
+                                caption: selectionCaption(selection.count))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
     }
 
-    /// Corner rounding past half the short edge has no visible effect.
-    private var maxCornerRadius: Double {
-        max(1, Double(min(layer.frame.width, layer.frame.height) / 2))
+    private var borderColorReading: StyleReading<String> {
+        editorState.layerStyleSelection.reading { $0.borderColorHex }
     }
 
-    private var borderColorPicker: some View {
+    private func borderColorNote(_ selection: LayerStyleSelection) -> String? {
+        guard selection.reading({ $0.borderColorHex }).isMixed else { return nil }
+        return "Border colors differ. Picking one paints them all."
+    }
+
+    private func borderColorPicker(_ ids: [UUID]) -> some View {
         ColorPicker("Border color", selection: Binding(
-            get: { Color(hex: style.borderColorHex) },
+            get: { Color(hex: borderColorReading.value ?? "#000000") },
             set: { color in
                 if let hex = color.hexString {
-                    editorState.setLayerStyle(id: layer.id) { $0.borderColorHex = hex }
+                    editorState.setLayerStyle(ids: ids) { $0.borderColorHex = hex }
                     editorState.recordRecentColor(hex: hex)
                 }
             }), supportsOpacity: false)
@@ -1495,137 +1505,222 @@ struct EffectsInspector: View {
     }
 }
 
-/// The selected layer's shadow: a toggle plus, when on, blur (softness), size
-/// (spread), distance (offset), direction (angle), opacity, and color (10.6).
+/// The picked layers' shadow: a switch plus, when one is on, blur (softness),
+/// size (spread), distance (offset), direction (angle), opacity, and color
+/// (10.6) — all of them over the whole selection.
 struct ShadowInspector: View {
     @Environment(EditorState.self) private var editorState
-    let layer: Layer
-
-    /// The style the panel describes, carrying the shadow the layer actually
-    /// DRAWS. Text on a designed surface leaves its contrast halo undrawn, so a
-    /// switch reading "on" there would be describing a shadow nobody can see;
-    /// off is the truth, and turning it on gives that label a real shadow.
-    private var style: LayerStyle {
-        var style = editorState.previewedStyle(of: layer.id) ?? layer.style
-        guard editorState.document?.isOnDesignedSurface(layer.id) == true else { return style }
-        var probe = layer
-        probe.style = style
-        style.shadow = probe.drawnShadow(onDesignedSurface: true)
-        return style
-    }
 
     var body: some View {
+        // The layers that have a shadow to talk about. A label whose halo its
+        // surface draws for it is not one of them: a switch reading "on" there
+        // would be describing a shadow nobody can see, so off is the truth and
+        // switching it on gives that label a real shadow.
+        let selection = editorState.layerStyleSelection
+        let shadows = selection.shadows
+        let ids = shadows.layerIDs
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Toggle(isOn: Binding(
-                    get: { style.shadow != nil },
-                    set: { on in
-                        editorState.setLayerStyle(id: layer.id) { $0.shadow = on ? ShadowStyle() : nil }
-                    })) {
+                    get: { selection.hasShadowEverywhere },
+                    set: { editorState.setSelectionShadowEnabled($0) })) {
                     Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
                 }
                 .toggleStyle(.switch)
                 .controlSize(.mini)
+                .help(shadowSwitchHelp(selection))
                 // A shadow is ONE part of the look: its softness, size,
                 // distance, direction, opacity and colour are six controls for
                 // the one thing a person means by "the shadow", so there is one
                 // way back rather than six identical arrows.
-                InstanceStyleRevert(layerID: layer.id, field: .shadow)
+                if let only = soleLayerID(selection.layerIDs) {
+                    InstanceStyleRevert(layerID: only, field: .shadow)
+                }
                 Spacer(minLength: 0)
             }
-            if let shadow = style.shadow {
+            // Said BEFORE the rows, not after them, because a switch reading
+            // off above six rows full of numbers is a contradiction until you
+            // know only some of the picked layers have a shadow. Said first,
+            // it is the sentence that makes the rows make sense.
+            if let reach = shadowReachNote(selection, shadows) {
+                Text(reach)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if !shadows.isEmpty {
                 HStack(spacing: 8) {
-                    LayerStyleSlider(layerID: layer.id, label: "Blur", value: Double(shadow.radius),
-                                     range: 0...40,
-                                     display: "\(Int(shadow.radius.rounded())) pt") { style, v in
+                    LayerStyleSlider(layerIDs: ids, label: "Blur",
+                                     reading: shadows.number { $0.shadow?.radius ?? 0 },
+                                     range: 0...40, format: points) { style, v in
                         style.shadow?.radius = CGFloat(v)
                     }
-                    shadowColorPicker
+                    shadowColorPicker(ids)
                 }
-                LayerStyleSlider(layerID: layer.id, label: "Size", value: Double(shadow.spread),
-                                 range: 0...80,
-                                 display: "\(Int(shadow.spread.rounded())) pt") { style, v in
+                LayerStyleSlider(layerIDs: ids, label: "Size",
+                                 reading: shadows.number { $0.shadow?.spread ?? 0 },
+                                 range: 0...80, format: points) { style, v in
                     style.shadow?.spread = CGFloat(v)
                 }
-                LayerStyleSlider(layerID: layer.id, label: "Distance", value: Double(shadowDistance(shadow)),
-                                 range: 0...40,
-                                 display: "\(Int(shadowDistance(shadow).rounded())) pt") { style, v in
-                    let angle = shadowAngle(style.shadow ?? shadow)
-                    style.shadow?.offset = CGSize(width: CGFloat(v) * cos(angle),
-                                                  height: CGFloat(v) * sin(angle))
+                LayerStyleSlider(layerIDs: ids, label: "Distance",
+                                 reading: shadows.number { $0.shadow?.distance ?? 0 },
+                                 range: 0...40, format: points) { style, v in
+                    // Each layer keeps the way its own shadow points; only how
+                    // far it is thrown is set from here.
+                    style.shadow?.setDistance(CGFloat(v))
                 }
-                LayerStyleSlider(layerID: layer.id, label: "Direction", value: Double(shadowDegrees(shadow)),
+                LayerStyleSlider(layerIDs: ids, label: "Direction",
+                                 reading: shadows.number { $0.shadow?.directionDegrees ?? 90 },
                                  range: 0...360,
-                                 display: "\(Int(shadowDegrees(shadow).rounded()))°") { style, v in
-                    let dist = max(shadowDistance(style.shadow ?? shadow), 1) // so direction is meaningful
-                    let rad = CGFloat(v) * .pi / 180
-                    style.shadow?.offset = CGSize(width: dist * cos(rad), height: dist * sin(rad))
+                                 format: { "\(Int($0.rounded()))°" }) { style, v in
+                    style.shadow?.setDirectionDegrees(CGFloat(v))
                 }
-                LayerStyleSlider(layerID: layer.id, label: "Opacity", value: shadow.opacity, range: 0...1,
-                                 display: "\(Int((shadow.opacity * 100).rounded()))%") { style, v in
+                LayerStyleSlider(layerIDs: ids, label: "Opacity",
+                                 reading: shadows.reading { $0.shadow?.opacity ?? 0 },
+                                 range: 0...1,
+                                 format: { "\(Int(($0 * 100).rounded()))%" }) { style, v in
                     style.shadow?.opacity = v
                 }
+                SelectionStyleNotes(notes: [shadowColorNote(shadows)], caption: nil)
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
     }
 
-    private var shadowColorPicker: some View {
+    /// How many of the picked layers this section is talking to, in words,
+    /// and what the switch does with the rest.
+    private func shadowReachNote(_ selection: LayerStyleSelection,
+                                 _ shadows: LayerStyleSelection) -> String? {
+        let picked = selection.count
+        let shadowed = shadows.count
+        guard picked > 1 else { return nil }
+        if shadowed == 0 {
+            return "\(picked) layers. Switching this on shadows every one of them, in one step."
+        }
+        if shadowed == picked {
+            return "\(picked) layers. A slider here changes every one of them, in one step."
+        }
+        let verb = shadowed == 1 ? "has" : "have"
+        return "\(shadowed) of the \(picked) selected layers \(verb) a shadow. "
+            + "The rows below change those; the switch gives the rest one too."
+    }
+
+    private func shadowSwitchHelp(_ selection: LayerStyleSelection) -> String {
+        selection.count > 1
+            ? "Turns the shadow on or off for all \(selection.count) of them"
+            : "Turns the shadow on or off"
+    }
+
+    private var shadowColorReading: StyleReading<String> {
+        editorState.layerStyleSelection.shadows.reading { $0.shadow?.colorHex ?? "#000000" }
+    }
+
+    private func shadowColorNote(_ shadows: LayerStyleSelection) -> String? {
+        guard shadows.reading({ $0.shadow?.colorHex ?? "#000000" }).isMixed else { return nil }
+        return "Shadow colors differ. Picking one paints them all."
+    }
+
+    private func shadowColorPicker(_ ids: [UUID]) -> some View {
         ColorPicker("Shadow color", selection: Binding(
-            get: { Color(hex: style.shadow?.colorHex ?? "#000000") },
+            get: { Color(hex: shadowColorReading.value ?? "#000000") },
             set: { color in
                 if let hex = color.hexString {
-                    editorState.setLayerStyle(id: layer.id) { $0.shadow?.colorHex = hex }
+                    editorState.setLayerStyle(ids: ids) { $0.shadow?.colorHex = hex }
                     editorState.recordRecentColor(hex: hex)
                 }
             }), supportsOpacity: false)
             .labelsHidden()
             .controlSize(.small)
     }
+}
 
-    private func shadowDistance(_ s: PhotonzCore.ShadowStyle) -> CGFloat { hypot(s.offset.width, s.offset.height) }
-    /// Offset angle in radians; defaults to 90° (straight down) when there's no
-    /// offset so the direction control still reads sensibly.
-    private func shadowAngle(_ s: PhotonzCore.ShadowStyle) -> CGFloat {
-        (s.offset.width == 0 && s.offset.height == 0) ? .pi / 2 : atan2(s.offset.height, s.offset.width)
-    }
-    private func shadowDegrees(_ s: PhotonzCore.ShadowStyle) -> CGFloat {
-        let deg = shadowAngle(s) * 180 / .pi
-        return deg < 0 ? deg + 360 : deg
+/// How a style row writes a length. One place, so Blur and Size and Distance
+/// cannot drift apart.
+private func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }
+
+/// The revert arrow belongs to ONE layer's override of its component, so it is
+/// offered only when the section is speaking for one layer. Over a selection
+/// there is no single copy for it to answer for.
+private func soleLayerID(_ ids: [UUID]) -> UUID? { ids.count == 1 ? ids.first : nil }
+
+/// What a style section says out loud before anything is dragged, and after:
+/// how many layers it is talking to, and anything it is quietly skipping.
+private func selectionCaption(_ count: Int) -> String? {
+    guard count > 1 else { return nil }
+    return "\(count) layers. A slider here changes every one of them, in one step."
+}
+
+/// The small print under a style section: what it skips, where the picked
+/// layers differ, and how many it speaks for. Said only when there is
+/// something to say — over one layer every row means what it always meant, and
+/// a sentence explaining that is a sentence in the way.
+private struct SelectionStyleNotes: View {
+    let notes: [String?]
+    let caption: String?
+
+    var body: some View {
+        let lines = (notes + [caption]).compactMap { $0 }
+        if !lines.isEmpty {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(lines, id: \.self) { line in
+                    Text(line)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
     }
 }
 
-/// A labeled style slider wired to EditorState's preview/commit gesture pattern:
-/// dragging previews without recording undo; release commits one step.
+/// A labeled style slider wired to EditorState's preview/commit gesture
+/// pattern, over every layer the row speaks for: dragging previews without
+/// recording undo; release commits ONE step, however many layers it reached.
 struct LayerStyleSlider: View {
     @Environment(EditorState.self) private var editorState
-    let layerID: UUID
+    /// The layers one pull on this slider changes.
+    let layerIDs: [UUID]
     let label: String
-    let value: Double
+    /// What the layers say: one number when they agree, Mixed when they do not.
+    let reading: StyleReading<Double>
     let range: ClosedRange<Double>
-    let display: String
+    /// How the number is written when they agree.
+    let format: (Double) -> String
     /// The part of the look this slider sets, when it is one a copy of a
     /// component can own. It puts the way back on the row itself, which is
     /// where the person who just dragged it is looking.
     var field: LayerStyleField? = nil
     let apply: (inout LayerStyle, Double) -> Void
 
+    /// Where the knob sits. Over layers that differ this is the first picked
+    /// layer's number, and it is a starting point rather than a claim: the
+    /// readout beside it says Mixed.
+    private var knob: Double {
+        min(max(reading.value ?? range.lowerBound, range.lowerBound), range.upperBound)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(label).font(.caption).foregroundStyle(.secondary)
-                if let field { InstanceStyleRevert(layerID: layerID, field: field) }
+                if let field, let only = soleLayerID(layerIDs) {
+                    InstanceStyleRevert(layerID: only, field: field)
+                }
                 Spacer()
-                Text(display).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                Text(reading.isMixed ? LayerStyleSelection.mixedText : format(knob))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(reading.isMixed ? AnyShapeStyle(.tertiary)
+                                                     : AnyShapeStyle(.secondary))
             }
             Slider(value: Binding(
-                get: { value },
-                set: { v in editorState.previewLayerStyle(id: layerID) { apply(&$0, v) } }),
+                get: { knob },
+                set: { v in editorState.previewLayerStyle(ids: layerIDs) { apply(&$0, v) } }),
                    in: range) { editing in
-                if !editing { editorState.commitLayerStyle(id: layerID) }
+                if !editing { editorState.commitLayerStyle(ids: layerIDs) }
             }
             .controlSize(.small)
+            .disabled(layerIDs.isEmpty)
         }
     }
 }

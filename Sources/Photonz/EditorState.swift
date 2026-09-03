@@ -2816,7 +2816,10 @@ final class EditorState {
     /// Style override while an inspector slider drag is in flight — rendered
     /// as a preview, committed to history only on release (one undo step per
     /// gesture, same pattern as move/resize drags).
-    private var stylePreview: (id: UUID, style: LayerStyle)?
+    ///
+    /// A drag can be aimed at several layers at once: one pull on Corner Radius
+    /// rounds every picked button, and one undo puts them all back.
+    private var stylePreview: (ids: [UUID], styles: [UUID: LayerStyle])?
     /// Thumbnail cache keyed by layer id; `hash` invalidates on any layer edit.
     private var thumbnailCache: [UUID: (hash: Int, image: CGImage)] = [:]
     private var thumbnailsInFlight: Set<Int> = []
@@ -2899,41 +2902,77 @@ final class EditorState {
         selectLayers(ids)
     }
 
-    /// The selected layer's style, preview-aware so inspector sliders don't
-    /// snap back mid-drag.
+    /// A layer's style, preview-aware so inspector sliders don't snap back
+    /// mid-drag.
     func previewedStyle(of id: UUID) -> LayerStyle? {
-        if let stylePreview, stylePreview.id == id { return stylePreview.style }
+        if let style = stylePreview?.styles[id] { return style }
         return document?.layer(id: id)?.style
     }
 
-    /// Live inspector-slider update: renders the new style without touching
-    /// history. The first preview of a gesture drops any held drag sprite
-    /// (it shows the old style).
-    func previewLayerStyle(id: UUID, _ mutate: (inout LayerStyle) -> Void) {
-        guard var style = previewedStyle(of: id) else { return }
-        if stylePreview?.id != id { discardDragPreview() }
-        mutate(&style)
-        stylePreview = (id, style)
-        guard var doc = document else { return }
-        doc.updateLayer(id: id) { $0.style = style }
+    /// Live inspector-slider update over every layer the row speaks for:
+    /// renders the new style without touching history. The first preview of a
+    /// gesture drops any held drag sprite (it shows the old style).
+    func previewLayerStyle(ids: [UUID], _ mutate: (inout LayerStyle) -> Void) {
+        guard !ids.isEmpty, var doc = document else { return }
+        // A drag that has moved to a different row or a different selection is
+        // a new gesture: nothing of the old one carries over.
+        if stylePreview?.ids != ids {
+            discardDragPreview()
+            stylePreview = (ids, [:])
+        }
+        var styles = stylePreview?.styles ?? [:]
+        for id in ids {
+            guard var style = styles[id] ?? doc.layer(id: id)?.style else { continue }
+            mutate(&style)
+            styles[id] = style
+            doc.updateLayer(id: id) { $0.style = style }
+        }
+        stylePreview = (ids, styles)
         submit(doc)
     }
 
-    /// Slider release: one undo step from the pre-gesture style to the last
-    /// previewed one (a no-change release is a History no-op).
-    func commitLayerStyle(id: UUID) {
-        guard let preview = stylePreview, preview.id == id else { return }
-        stylePreview = nil
-        perform { $0.updateLayer(id: id) { $0.style = preview.style } }
-        captureStyleDefault(layerID: id)
+    func previewLayerStyle(id: UUID, _ mutate: (inout LayerStyle) -> Void) {
+        previewLayerStyle(ids: [id], mutate)
     }
 
-    /// One-shot style edit (steppers, toggles): a single undo step, no preview.
-    func setLayerStyle(id: UUID, _ mutate: @escaping (inout LayerStyle) -> Void) {
+    /// Slider release: ONE undo step from the pre-gesture styles to the last
+    /// previewed ones, however many layers the drag reached (a no-change
+    /// release is a History no-op).
+    func commitLayerStyle(ids: [UUID]) {
+        guard let preview = stylePreview, preview.ids == ids else { return }
+        stylePreview = nil
+        perform { doc in
+            for (id, style) in preview.styles {
+                doc.updateLayer(id: id) { $0.style = style }
+            }
+        }
+        rememberStyleDefault(of: ids)
+    }
+
+    func commitLayerStyle(id: UUID) { commitLayerStyle(ids: [id]) }
+
+    /// One-shot style edit (steppers, toggles, the shadow switch): a single
+    /// undo step over the whole selection, no preview.
+    func setLayerStyle(ids: [UUID], _ mutate: @escaping (inout LayerStyle) -> Void) {
+        guard !ids.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { $0.updateLayer(id: id) { mutate(&$0.style) } }
-        captureStyleDefault(layerID: id)
+        perform { doc in _ = doc.updateLayerStyles(layerIDs: ids, mutate) }
+        rememberStyleDefault(of: ids)
+    }
+
+    func setLayerStyle(id: UUID, _ mutate: @escaping (inout LayerStyle) -> Void) {
+        setLayerStyle(ids: [id], mutate)
+    }
+
+    /// The next rectangle you draw inherits the one you just styled — but only
+    /// when you styled ONE. Over a selection the layers still differ in every
+    /// field the drag did not touch, so there is no "the style you just made"
+    /// to hand the tool, and picking one of them would hand it three fields
+    /// nobody set.
+    private func rememberStyleDefault(of ids: [UUID]) {
+        guard ids.count == 1, let only = ids.first else { return }
+        captureStyleDefault(layerID: only)
     }
 
     /// Remember a styled layer's effects as its TOOL's default, so the next
@@ -3623,6 +3662,47 @@ final class EditorState {
         let picked = actionableLayerIDs
         guard !picked.isEmpty, let document else { return [] }
         return document.allLayers.map(\.id).filter { picked.contains($0) }
+    }
+
+    /// What the Effects and Shadow rows show: the picked layers that can be
+    /// restyled, the look each of them is wearing right now, and whether they
+    /// agree. One layer picked or twenty, this is the same reading, which is
+    /// what lets one pull on Corner Radius round every button you picked.
+    ///
+    /// Preview-aware, so a slider mid-drag reads what is on the canvas rather
+    /// than snapping back to what is on disk between frames.
+    var layerStyleSelection: LayerStyleSelection {
+        guard let document else { return LayerStyleSelection(members: [], selectionCount: 0) }
+        return document.layerStyleSelection(layerIDs: colorStyleTargetIDs) { layer in
+            self.previewedStyle(of: layer.id) ?? layer.style
+        }
+    }
+
+    /// Whether anything picked can be restyled at all, which is what decides
+    /// whether the Effects and Shadow sections are in the panel. A locked layer
+    /// is not restylable, so a selection of nothing but locked layers brings no
+    /// sections rather than rows of dead sliders — the same call the Color rows
+    /// make.
+    var hasRestylableSelection: Bool {
+        guard let document else { return false }
+        return actionableLayerIDs.contains { document.layer(id: $0)?.isLocked == false }
+    }
+
+    /// The Shadow switch: turns a shadow on for every picked layer that has
+    /// none, or off for all of them, in one step. On means on EVERYWHERE, so
+    /// three boxes where one is shadowed read off and one click shadows the
+    /// other two rather than un-shadowing the first.
+    func setSelectionShadowEnabled(_ on: Bool) {
+        let ids = layerStyleSelection.layerIDs
+        guard !ids.isEmpty else { return }
+        setLayerStyle(ids: ids) { style in
+            if on {
+                // A layer that already has one keeps the shadow it tuned.
+                if style.shadow == nil { style.shadow = ShadowStyle() }
+            } else {
+                style.shadow = nil
+            }
+        }
     }
 
     /// What one color row shows: the picked layers that have a color in this

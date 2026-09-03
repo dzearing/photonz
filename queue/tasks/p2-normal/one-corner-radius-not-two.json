@@ -1,0 +1,28 @@
+{
+  "id": "one-corner-radius-not-two",
+  "title": "One Corner Radius, not two",
+  "goal": "Pick a rectangle and the panel shows two different sliders both called Corner Radius, one in the Rectangle section and one under Effects. Nobody can tell which one to reach for, or what happens when they disagree. There should be one.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 910,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T19:00:27.858Z",
+  "updated": "2026-09-03T19:00:27.858Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "AnnotationContent.cornerRadius (the shape) and LayerStyle.cornerRadius (the non-destructive layer style) are separate fields, both surfaced: AnnotationInspector's radius row and EffectsInspector's Corner Radius slider in Sources/Photonz/LayersPanel.swift. Decide which is the one the panel offers (the style one already speaks for a whole selection) and either fold the other in or stop showing it. Spotted while auditing 2026-09-03-selection-effects.json.",
+  "acceptance": [
+    "A picked rectangle shows exactly one control called Corner Radius",
+    "Rounding a rectangle drawn before this change still looks the same",
+    "Rounding still reaches every layer in a multi-selection",
+    "Try it: draw a rectangle, round it, and check the panel says one number in one place"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T19:00:27.858Z",
+      "note": "created (manual)"
+    }
+  ]
+}

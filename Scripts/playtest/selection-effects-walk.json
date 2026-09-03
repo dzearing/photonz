@@ -1,0 +1,311 @@
+{
+  "out": "/tmp/photonz-playtest/selection-effects",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1100,
+      "canvasHeight": 700,
+      "width": 1400,
+      "height": 1080
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        140
+      ],
+      "to": [
+        300,
+        260
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        140
+      ],
+      "to": [
+        520,
+        260
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        140
+      ],
+      "to": [
+        740,
+        260
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        210,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-picked",
+      "note": "one box picked: Effects and Shadow are where they have always been"
+    },
+    {
+      "do": "snapshot",
+      "name": "selection-effects-1-one-layer"
+    },
+    {
+      "do": "action",
+      "action": "roundCorners"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-one-rounded",
+      "note": "the first box rounded on its own, so the selection about to be made really does differ"
+    },
+    {
+      "do": "drag",
+      "from": [
+        90,
+        100
+      ],
+      "to": [
+        800,
+        300
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-three-picked",
+      "note": "a band around all three: Effects and Shadow are STILL in the panel, and Corner Radius reads Mixed"
+    },
+    {
+      "do": "snapshot",
+      "name": "selection-effects-2-three-mixed"
+    },
+    {
+      "do": "action",
+      "action": "dragCornerRadius"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-rounded",
+      "note": "one drag on Corner Radius: all three round, and the readout is a number again"
+    },
+    {
+      "do": "snapshot",
+      "name": "selection-effects-3-all-rounded"
+    },
+    {
+      "do": "render",
+      "name": "three-rounded"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-one-undo",
+      "note": "ONE undo puts all three back: the first box is 24pt round again, the other two are square"
+    },
+    {
+      "do": "render",
+      "name": "after-one-undo"
+    },
+    {
+      "do": "action",
+      "action": "dragOpacity"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-faded",
+      "note": "one drag on Opacity fades all three"
+    },
+    {
+      "do": "render",
+      "name": "three-faded"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "toggleShadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-shadowed",
+      "note": "the Shadow switch with three picked: all three get one, and its rows now speak for all three"
+    },
+    {
+      "do": "snapshot",
+      "name": "selection-effects-4-shadow-on"
+    },
+    {
+      "do": "render",
+      "name": "three-shadowed"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "8-shadow-undone",
+      "note": "one undo takes all three shadows away"
+    },
+    {
+      "do": "render",
+      "name": "shadows-undone"
+    },
+    {
+      "do": "click",
+      "at": [
+        900,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        630,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "addShadow"
+    },
+    {
+      "do": "render",
+      "name": "one-box-shadowed"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        90,
+        100
+      ],
+      "to": [
+        800,
+        300
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-half-shadowed",
+      "note": "three picked, one shadowed: the switch reads off, and the shadow rows say they reach 1 of the 3"
+    },
+    {
+      "do": "snapshot",
+      "name": "selection-effects-5-partly-shadowed"
+    },
+    {
+      "do": "action",
+      "action": "toggleShadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "10-all-shadowed",
+      "note": "one click shadows the other two rather than un-shadowing the first, and the first keeps the shadow it had"
+    },
+    {
+      "do": "render",
+      "name": "one-click-shadows-the-rest"
+    },
+    {
+      "do": "snapshot",
+      "name": "selection-effects-6-all-shadowed"
+    }
+  ]
+}

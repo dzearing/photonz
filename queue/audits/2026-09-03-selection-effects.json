@@ -1,0 +1,30 @@
+{
+  "feature": "Effects and Shadow reach everything you picked",
+  "epic": "ui-building",
+  "summary": "Pick several layers and the Effects and Shadow sections stay in the panel instead of vanishing. One pull on Corner Radius, Opacity, Blur or Border rounds, fades or outlines every picked layer in one undo step, and where the picked layers differ the readout says Mixed rather than printing one of their numbers.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flag: this is the same section family as the Color rows, which shipped unflagged.",
+  "try": [
+    { "do": "Draw three rectangles side by side with the Rectangle tool." },
+    { "do": "Click the first one, then drag Corner Radius in the Effects section until it is clearly round." },
+    { "do": "Drag a band around all three with the Select tool." },
+    { "do": "Read Corner Radius: it says Mixed, and Effects and Shadow are both still there.", "shot": "2026-09-03-selection-effects-1-mixed.png" },
+    { "do": "Drag Corner Radius once. All three round together." },
+    { "do": "Press Command-Z once. All three go back to what they each were." },
+    { "do": "Click one box on its own, switch Enable Shadow on, then band-select all three again.", "shot": "2026-09-03-selection-effects-2-partly-shadowed.png" },
+    { "do": "Click Enable Shadow once. The other two get a shadow, the first keeps the shadow you tuned.", "shot": "2026-09-03-selection-effects-3-all-shadowed.png" }
+  ],
+  "evaluate": [
+    "When the picked layers differ, does the slider knob sitting at one of their values (with the readout saying Mixed) feel right, or would you rather it sat at neither end and refused to lie?",
+    "The Shadow switch reads off until every picked layer has a shadow, so one click shadows the stragglers instead of clearing the ones that have one. Is that the click you expected?",
+    "Does the small print under each section earn its space, or is it noise once you know the rule?",
+    "Should a slider you drag over several layers also become the next rectangle's starting look, the way it does when you drag it over one?",
+    "Effects and Shadow sit under Layers, Arrange, Position and Size and Color. Is that far enough down to be annoying?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so the three pictures are real window captures. Arrange, Position and Size and the Layers list were collapsed for them, because with everything open the Shadow rows fall below the bottom of a 1080pt window.",
+    "The revert arrow beside a row (the way back for a copy of a component) shows only when one layer is picked. Over a selection there is no single copy for it to answer for, so it is absent rather than guessing.",
+    "Dragging a slider over several layers does NOT become the next rectangle's starting look. Over one layer it still does. Over a selection the layers still differ in every field you did not touch, so there is no single look to hand the tool.",
+    "The border colour well and the shadow colour well cannot show Mixed in the well itself, so a line of small print says the colours differ and that picking one paints them all.",
+    "A rectangle shows two sliders called Corner Radius, one in its own Rectangle section and one in Effects. That predates this work; filed as a follow-up."
+  ]
+}

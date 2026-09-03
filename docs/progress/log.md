@@ -6789,3 +6789,24 @@ photographed. Audit with four window captures:
 floor where the canvas drag has one, the H field is blank rather than showing
 the number it came out at, and vertical Stretch on a text box now does nothing
 while still being offered.
+
+## 2026-09-03 — Effects and Shadow speak for the whole selection
+
+Picking two layers used to make the Effects and Shadow sections disappear, so
+rounding four buttons was four separate trips. They now behave like the Color
+rows that landed earlier today: one pull on Opacity, Blur, Corner Radius,
+Border or any shadow row reaches every picked layer in one undo step, and where
+the picked layers differ the readout says Mixed instead of printing one of their
+numbers.
+
+The reading and the maths are in `PhotonzCore/LayerStyleSelection.swift`
+(`LayerStyleSelection`, `StyleReading`, and a shadow's distance/direction, which
+used to be trigonometry inside the view), tested first. `EditorState`'s slider
+preview now holds a set of layers rather than one, so a gesture over twenty
+layers is still one undo step. Locked layers sit out, the way they do for
+colours.
+
+Next: two follow-ups filed — a rectangle showing two different sliders both
+called Corner Radius, and the Effects/Shadow sections sitting so far down the
+dock that they fall below the fold. Audit for the user:
+`queue/audits/2026-09-03-selection-effects.json`.

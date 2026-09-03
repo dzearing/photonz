@@ -1,0 +1,28 @@
+{
+  "id": "the-look-of-a-thing-should-not-be-at-the-bottom",
+  "title": "The look of a thing should not be at the bottom of the panel",
+  "goal": "Rounding a corner or fading a layer means scrolling past the layer list, the align buttons, the position numbers and the colors first. The things you reach for most often should be the things you can see without scrolling.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 920,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T19:00:37.292Z",
+  "updated": "2026-09-03T19:00:37.292Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "InspectorPanel's default section order in Sources/Photonz/LayersPanel.swift puts effects/shadow after layers, arrange, geometry and color. In a 1400x1080 probe window with three layers picked, the Shadow rows fall below the fold; the audit screenshots for 2026-09-03-selection-effects.json had to collapse three sections to photograph them. Either reorder the defaults or give the tall sections (Layers list, Arrange) a smaller resting height.",
+  "acceptance": [
+    "With a layer picked in a normal-height window, Effects is reachable without scrolling",
+    "The section order a person sets by dragging still sticks",
+    "Nothing that used to be visible without scrolling stops being visible",
+    "Try it: open a document, pick a layer, and reach Corner Radius without touching the scroll wheel"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T19:00:37.292Z",
+      "note": "created (manual)"
+    }
+  ]
+}

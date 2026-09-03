@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:30:30.210Z",
-  "updated": "2026-09-03T17:32:32.343Z",
+  "updated": "2026-09-03T19:00:58.085606Z",
   "deps": [],
   "blockedBy": [],
   "notes": "LayersPanel.swift availableSections (line 157) inserts .effects and .shadow only inside `if let layer = selectedLayer`, and selectedLayer reads editorState.selectedLayerID, which is empty over a multi-selection, so both sections vanish. The pattern to copy is the Color section right above it: colorRowSlots over editorState.actionableLayerIDs (EditorState.swift:3011) plus the mixed reading and the whole-selection writes in ColorStyleSelection.swift. EffectsInspector and ShadowInspector (LayersPanel.swift:1438 and 1500) take a single Layer and write through setLayerStyle(id:); they need a selection-wide equivalent with a mixed reading, and the maths belongs in PhotonzCore with tests, not in the view. Evidence: the rough line in queue/audits/2026-09-03-color-one-home.json, and queue/audits/2026-09-03-color-one-home-2-two-layers.png, where two picked rectangles show Layers, Arrange, Position and Size, Color and Library and nothing else. Same section family, so no flag: the Color fix shipped unflagged.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-09-03T17:32:32.343Z",
       "note": "seq 190 -> 40"
+    },
+    {
+      "t": "2026-09-03T18:38:54.162Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T19:00:58.085606Z",
+      "note": "Adversarial review BEFORE building. (1) A slider has to sit somewhere even when the picked layers differ, and every choice is arbitrary: averaging is nonsense for Direction, where 350 and 10 average to the opposite way. Chose the first picked layer's number with the readout saying Mixed, one rule for every slider. (2) The revert arrow beside a row answers for ONE copy of a component; over a selection it has nobody to answer for, so it is hidden rather than guessing. (3) Corner Radius stops at half the SHORTEST edge for one layer; over a selection it stops at the biggest picked layer's half-edge, so a small box cannot stop a big one going fully round. (4) The shadow rows had to speak for the layers that HAVE a shadow, not all picked, or Softness would invent shadows. Copied the Color rows' answer: they speak for those layers and say so in a line of small print. (5) Cut nothing from the mock, because there is no mock: the shape came from the Color section that shipped on 3 September."
+    },
+    {
+      "t": "2026-09-03T19:00:58.085606Z",
+      "note": "Built: PhotonzCore/LayerStyleSelection.swift (LayerStyleSelection, StyleReading, ShadowStyle.distance/directionDegrees/setDistance/setDirectionDegrees, PhotonzDocument.layerStyleSelection + updateLayerStyles) with 20 tests written first; EditorState's stylePreview now holds a set of layers so one gesture is one undo step over all of them; EffectsInspector, ShadowInspector and LayerStyleSlider rewritten to speak for the selection; availableSections now offers Effects and Shadow whenever anything restylable is picked instead of only for a single layer."
+    },
+    {
+      "t": "2026-09-03T19:00:58.085606Z",
+      "note": "Adversarial review AFTER building, on the real app (probe build, Screen Recording granted, real window captures). Found: the Shadow switch reading off above six rows full of numbers is a contradiction until you know only some picked layers have a shadow. Fixed by moving that sentence ABOVE the rows, where it explains them, instead of below. Also found and filed as follow-ups: a rectangle shows two different sliders both called Corner Radius (one-corner-radius-not-two), and Effects/Shadow sit so far down the dock that they fall below the fold with several sections open (the-look-of-a-thing-should-not-be-at-the-bottom)."
+    },
+    {
+      "t": "2026-09-03T19:00:58.085606Z",
+      "note": "Verified in the app with Scripts/playtest/selection-effects-walk.json: three boxes, one rounded on its own, then a band round all three. Corner Radius reads Mixed; one drag rounds all three (measured 22pt on each in the render); ONE undo puts them back to 24/0/0. The Shadow switch with one of three shadowed reads off, one click shadows the other two, and the first keeps the shadow it was given (measured: 214 grey under it against 234 under the new ones). Locked layers are covered by the core tests aLockedLayerIsLeftAlone and lockedLayersAreLeftOutOfTheReading."
+    },
+    {
+      "t": "2026-09-03T19:00:58.085606Z",
+      "note": "Note for a future run: the probe remembers a tool's last style, so a walk that relies on a rectangle starting square must clear it first (defaults delete com.dzearing.photonz.probe annotationStyles). A first run of this walk read 24 pt where it should have read Mixed for exactly that reason, and nothing was wrong with the app."
     }
-  ]
+  ],
+  "started": "2026-09-03T18:38:54.161Z"
 }

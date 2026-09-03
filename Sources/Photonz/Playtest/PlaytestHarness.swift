@@ -540,6 +540,16 @@ private final class Run {
                         $0.borderColorHex = "#2B5BFF"
                     }
                 }
+            case .dragCornerRadius:
+                dragStyleSlider(editor, through: [4, 10, 16, 22]) { style, v in
+                    style.cornerRadius = CGFloat(v)
+                }
+            case .dragOpacity:
+                dragStyleSlider(editor, through: [0.9, 0.7, 0.55, 0.45]) { style, v in
+                    style.opacity = v
+                }
+            case .toggleShadow:
+                editor.setSelectionShadowEnabled(!editor.layerStyleSelection.hasShadowEverywhere)
             case .followOriginalLook:
                 if let id = editor.selectedLayerID {
                     editor.clearInstanceStyleOverrides(instance: id)
@@ -955,6 +965,19 @@ private final class Run {
     }
 
     // MARK: - Targets
+
+    /// A style slider dragged over the whole selection, the way a person drags
+    /// it: several live frames and then a release, so one undo step lands for
+    /// the whole gesture however many layers it reached.
+    private func dragStyleSlider(_ editor: EditorState, through values: [Double],
+                                 apply: (inout LayerStyle, Double) -> Void) {
+        let ids = editor.layerStyleSelection.layerIDs
+        guard !ids.isEmpty else { return }
+        for value in values {
+            editor.previewLayerStyle(ids: ids) { apply(&$0, value) }
+        }
+        editor.commitLayerStyle(ids: ids)
+    }
 
     private func requireEditor() throws -> EditorState {
         guard let editor else { throw Failure(description: "no editor is open; add an \"open\" step first") }
