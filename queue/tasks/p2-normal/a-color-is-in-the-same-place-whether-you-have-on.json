@@ -1,0 +1,33 @@
+{
+  "id": "a-color-is-in-the-same-place-whether-you-have-on",
+  "title": "A color is in the same place whether you have one layer picked or several",
+  "goal": "Colors move around the panel depending on how many layers you have picked. With one layer picked a color lives in the Annotation, Text or Frame section. Shift-click a second layer and those sections go away and a Color section appears instead. The color you were just editing has moved somewhere else, so you have to find it again for the only reason that you picked one more thing. It should stay where it was.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T12:06:50.887Z",
+  "updated": "2026-09-03T12:08:27.118Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review finding, 2026-09-03. Evidence: queue/audits/2026-09-03-multi-style.json, \"The Color section exists only while more than one layer is picked. With one picked its colors stay in the Annotation, Text or Frame section, so the color you were just editing moves to a different section when you shift-click a second layer.\" UX-PATTERNS section 4 says multi-select shows shared properties only, which the app obeys, but the rules never say a property keeps its home, which is why this got built as a separate section without anyone breaking a rule. Fixing the app and scrubbing the rule are two tasks: the scrub is scrub-the-panel-rules-against-what-the-dock-actu. The reading code is already whole-selection: EditorState.colorStyleSelection(slot:) and ColorStyleSelection in PhotonzCore. This is about where the row lives, not about what it can do.",
+  "acceptance": [
+    "A colour has one section name, and that name does not change when a second layer is picked",
+    "With one layer picked, that section shows exactly what it shows today, under its settled name",
+    "With several picked, the same section speaks for the whole selection: it says Mixed where they differ and applies to all of them at once",
+    "The scroll position does not jump: adding a layer to the selection does not move the row you were looking at",
+    "A picture in the audit shows one layer picked and two layers picked side by side, with the colour row in the same spot"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T12:06:50.887Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:08:27.118Z",
+      "note": "seq 910 -> 80"
+    }
+  ]
+}

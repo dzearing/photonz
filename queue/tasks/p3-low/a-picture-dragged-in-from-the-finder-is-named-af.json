@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 590,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T08:37:31.388Z",
-  "updated": "2026-09-03T08:37:31.388Z",
+  "updated": "2026-09-03T12:06:12.784Z",
   "deps": [],
   "blockedBy": [],
   "notes": "EditorState.addImageLayerOrOpen -> pasteImage(_:at:) builds Layer(name: \"Pasted Image\"). Pass the URL's deletingPathExtension().lastPathComponent through as the name; freshLayerName-style de-duping already exists for groups (freshGroupName).",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-03T08:37:31.388Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:06:12.783Z",
+      "note": "superseded: the naming half shipped hours after this was filed (PlacedImageNaming, commit 572b6b1), so two of its three acceptance items are already true. The one gap left, two copies of a file giving two identical rows, is filed as two-pictures-with-the-same-name-get-told-apart-i"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Aligning needs two or more layers today, because a layer on its own has nothing to line up with. When a layer sits inside a frame, it does have something: the frame. Make the Arrange buttons line one layer up against its frame, so a single button centres a label inside a card.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 810,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:32:55.847Z",
-  "updated": "2026-09-03T06:32:55.848Z",
+  "updated": "2026-09-03T12:08:26.943Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from next-align-layers (2026-09-03). Today EditorState.arrangeBoxes needs two boxes and LayerArrangement.canAlign(count:) enforces it. The frame case wants the reference box passed in rather than derived from the selection: LayerArrangement.aligned(_:to:) would take an optional container rect. Frames are next-frames; with that flag off the behaviour is unchanged.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-03T06:32:55.848Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:08:26.942Z",
+      "note": "seq 810 -> 20"
     }
   ]
 }

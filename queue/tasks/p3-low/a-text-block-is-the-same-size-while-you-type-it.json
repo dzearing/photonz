@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T23:44:29.466Z",
-  "updated": "2026-09-03T00:06:01.335Z",
+  "updated": "2026-09-03T12:08:27.269Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Same class of drift the arrow caption had (fixed 2026-09-02): the inline editor lays the draft out at (fontSize x zoom) with NSLayoutManager while TextRasterizer measures at document size, and SF spaces letters by point size. The caption fix is the pattern to copy: CanvasNSView.captionDraftFont sets the draft in the document-size face with a scale transform, and layoutCaptionEditor takes its frame from CaptionMetrics. A text block also wraps, so its wrap cap has to be the same on both sides.\n\nObjective: measure-redline (staged now). Typing a label onto a capture is the annotation half of redlining, and this drift is the same family as the arrow caption fix that landed 2026-09-02.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-03T00:06:01.334Z",
       "note": "seq 600 -> 20"
+    },
+    {
+      "t": "2026-09-03T12:08:27.268Z",
+      "note": "seq 20 -> 20"
     }
   ]
 }

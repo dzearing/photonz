@@ -4,14 +4,16 @@
   "goal": "Asked for by the user while answering the alignment decision on 2026-09-03: as well as lining layers up by hand, a component should be able to hold a grid or a stack, so the things inside it space and re-flow themselves instead of being nudged into place one at a time.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 820,
-  "status": "pending",
+  "seq": 100,
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:32:55.878Z",
-  "updated": "2026-09-03T06:32:55.878Z",
+  "updated": "2026-09-03T12:08:27.176Z",
   "deps": [],
-  "blockedBy": [],
+  "blockedBy": [
+    "grid-and-stack-pieces-you-can-put-inside-a-compo-six-audits-in-one-day-say-nothin"
+  ],
   "notes": "User note on decision layers-line-up-with-each-other-while-you-build: \"We should probably also have grid components that can be placed within a component, grid and stack\". This is auto layout, so it belongs to the ui-layout sub epic, which is staged LATER: it is filed so the ask is not lost, and the manager decides when it opens. Sits on top of next-align-layers (the align and space maths in LayerArrangement is the same maths a stack applies continuously).",
   "acceptance": [
     "A grid or a stack can be put inside a component and holds real layers",
@@ -23,6 +25,14 @@
     {
       "t": "2026-09-03T06:32:55.878Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:07:51.158Z",
+      "note": "triage 2026-09-03: auto layout is staged later, so this had nowhere to be worked on. Rather than drop your own ask, it is on a decision card that asks whether auto layout moves up now."
+    },
+    {
+      "t": "2026-09-03T12:08:27.176Z",
+      "note": "seq 820 -> 100"
     }
   ]
 }

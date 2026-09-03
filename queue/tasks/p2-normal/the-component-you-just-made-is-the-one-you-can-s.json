@@ -4,12 +4,12 @@
   "goal": "With a handful of components saved, the shelf shows the first two rows and the rest are behind its own little scroll. Making a new component opens the shelf, but the tile you just made can be sitting below that inner fold, so the shelf is on screen and your work is not. The shelf should be showing the tile you just made.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 880,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T11:14:43.926Z",
-  "updated": "2026-09-03T11:14:43.926Z",
+  "updated": "2026-09-03T12:08:27.032Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-on from when-the-library-opens-on-its-own-you-can-see-it, which scrolls the DOCK to the Library section. The shelf itself is a second ScrollView inside LibraryPanel.tiles (Sources/Photonz/LibraryPanel.swift), bounded by inspector.libraryHeight, so it needs its own ScrollViewReader keyed on the entry id. DockReveal (PhotonzCore) already has the pure math for deciding whether anything needs to move. Ordering note: componentEntries lists the document own mains first (layer-stack order) then untaken starters, so a new main is not necessarily first.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-03T11:14:43.926Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:08:27.031Z",
+      "note": "seq 880 -> 50"
     }
   ]
 }

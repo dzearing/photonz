@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 580,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:21:12.716Z",
-  "updated": "2026-09-03T05:21:12.717Z",
+  "updated": "2026-09-03T12:06:41.199Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-03-color-styles.json. PhotonzDocument.reconcileColorStyles already returns how many bindings broke and runs inside History.perform; the app throws that number away. The copies-followed pill (CopyConfirmation) is the shape to copy.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-03T05:21:12.717Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:06:41.198Z",
+      "note": "folded into when-a-link-quietly-breaks-the-app-says-so-the-s, which covers the same notice for all four ways a link breaks rather than building it once for color and again for copies"
     }
   ]
 }

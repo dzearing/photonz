@@ -1,0 +1,33 @@
+{
+  "id": "a-scripted-walk-can-open-a-menu-in-the-panel-and",
+  "title": "A scripted walk can open a menu in the panel and drag a tile out of it",
+  "goal": "The automated walks that prove features work can only drive the picture. They cannot open a menu inside the right hand panel, and they cannot drag anything out of it. That is where a growing share of the app now lives, so five separate pieces of work in one day had to claim something was right without a picture of it. Give the walks those two moves.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T12:07:11.208Z",
+  "updated": "2026-09-03T12:08:27.298Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review finding, 2026-09-03: five audits in one day admit the same blind spot. queue/audits/2026-09-03-knob-naming.json and 2026-09-03-component-choice-one-step.json (a menu inside the dock cannot be opened by a walk, so its rows are covered by a test rather than a picture), 2026-09-03-layers-tree.json (the harness drives the canvas, not the inspector, and cannot synthesise a panel drag, so the drop indicator picture came from a one-off), 2026-09-03-library.json (dragging a tile and double clicking a tile are both hand paths). 2026-09-03-readable-component-tiles.json also reports that focusing the Library search field hangs the app in a walk; the name field work later the same day (commit b4e804d) touched that box, so check whether it still hangs before assuming it does. The harness is Sources/Photonz/Playtest/PlaytestHarness.swift with its script model in PhotonzCore (PlaytestScript); actions are added in pairs, a pure step in the model and a driver in the harness.",
+  "acceptance": [
+    "A walk can open a menu inside the right hand panel and photograph its rows",
+    "A walk can drag a tile from the Library onto the picture and the layer lands where it was dropped",
+    "A walk can drag a row in the layers list onto another row and photograph the line that says what will happen",
+    "One existing feature that could only be proved by a test is re-proved by a walk with a picture",
+    "Focusing the Library search box in a walk does not hang the app"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T12:07:11.209Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:08:27.297Z",
+      "note": "seq 630 -> 30"
+    }
+  ]
+}

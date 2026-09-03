@@ -1,28 +1,36 @@
 {
   "id": "shift-dragging-a-marquee-adds-what-it-sweeps-to",
   "title": "Shift-dragging a marquee adds what it sweeps to the selection",
-  "goal": "Sweeping a marquee always starts the selection over, and a shift-click on empty space throws the whole selection away, so one slightly-off click undoes careful picking. Holding shift while you sweep should add what the band takes in to what is already picked, and a shift-click that lands on nothing should leave the selection alone.",
+  "goal": "Sweeping a rubber band always starts the selection over. Holding shift while you sweep should add everything the band takes in to what you already picked, so you can build a selection out of two or three sweeps instead of getting it right in one.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 850,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T08:21:50.865Z",
-  "updated": "2026-09-03T08:21:50.865Z",
+  "updated": "2026-09-03T12:08:27.060Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Today shift over an empty press means constrain-the-band-to-a-square (CanvasView.mouseUp reads .shift for that), so the square constraint needs a new home or has to go. mouseDown else-branch calls onClickedNothing()/onSelectLayer(nil) before starting the MarqueeDrag, and mouseUp commits a click as commitSelection(nil, capture: true) which is what wipes the selection. EditorState.setSelection(_:captureLayers:) would need an additive mode that unions with multiSelectedLayerIDs. Noticed while building canvas shift-click (2026-09-03).",
+  "notes": "Half of the original task shipped on 2026-09-03 (commit 3d46af2): a shift-click that lands on bare canvas now spares the selection, through BareCanvasPress in PhotonzCore, latched at mouse-down in CanvasView. What is left is the DRAG: CanvasView still starts a MarqueeDrag that replaces the selection whether or not shift is down. Note the collision the earlier task left alone: shift over an empty press currently also means constrain-the-band-to-a-square (read in CanvasView.mouseUp), so the square constraint needs a new modifier or has to go. BareCanvasPress is the place to put the new rule so it is tested first.",
   "acceptance": [
     "Shift-dragging a band on the canvas adds every layer it fully contains to the existing selection",
-    "A shift-click that lands on empty canvas leaves the selection exactly as it was",
     "A plain sweep still replaces the selection the way it does today",
-    "The outlines after a shift-sweep show every picked layer, swept or clicked"
+    "The outlines after a shift-sweep show every picked layer, swept and clicked",
+    "One undo is not involved: this changes what is picked, not the picture"
   ],
   "log": [
     {
       "t": "2026-09-03T08:21:50.865Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:06:00.967Z",
+      "note": "triage 2026-09-03: half of this shipped in 3d46af2 (a shift-click that misses keeps the selection). Narrowed to the shift-SWEEP, which still replaces."
+    },
+    {
+      "t": "2026-09-03T12:08:27.060Z",
+      "note": "seq 850 -> 60"
     }
   ]
 }

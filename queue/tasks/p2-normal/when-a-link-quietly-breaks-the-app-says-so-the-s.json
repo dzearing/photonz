@@ -1,0 +1,35 @@
+{
+  "id": "when-a-link-quietly-breaks-the-app-says-so-the-s",
+  "title": "When a link quietly breaks, the app says so the same way every time",
+  "goal": "Four things in the app can silently stop following what they came from: a color that was wearing a named style, one part of a copy that has been styled by hand, a copy that has been ungrouped, and copies whose original was deleted. Each one just happens, and you only find out later when editing the original leaves something behind. Every one of them should say so, in the same words and the same place, the moment it happens.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T12:06:37.836Z",
+  "updated": "2026-09-03T12:08:27.147Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Extraction candidate found in the 2026-09-03 design review: the same gap is named in three audits on the same day. queue/audits/2026-09-03-color-styles.json (\"Nothing on screen says the link broke, which is the honest gap\"), 2026-09-03-component-look.json (\"Nothing warns you the moment you drag a slider on a copy that this part has stopped following\") and 2026-09-03-component-instances.json (ungroup on a copy, and deleting an original). Existing shape to build on: the CopyConfirmation pill, which is the canvas notice from UX-PATTERNS section 3. That slot has rules: bottom centre above the tool bar, one notice at a time, and it is reserved for the Measure mode hint while the Measure tool is in hand, so this has to queue or defer rather than fight it. The data is already there and thrown away: PhotonzDocument.reconcileColorStyles returns how many bindings broke and runs inside History.perform. This replaces the narrower task say-so-when-a-color-lets-go-of-its-style, which is folded in here.",
+  "acceptance": [
+    "Painting over a color that came from a named style shows a short notice naming the style it let go of",
+    "Styling one part of a copy by hand shows the same kind of notice, naming the part that stopped following",
+    "Ungrouping a copy says that the copy has become loose layers",
+    "Deleting an original says how many copies were left behind, before it happens or as it happens",
+    "All four read as the same sentence pattern and use one shared piece of code, not four",
+    "An edit that breaks nothing shows nothing",
+    "Undo puts the link back together with whatever it was attached to"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T12:06:37.836Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:08:27.146Z",
+      "note": "seq 900 -> 90"
+    }
+  ]
+}

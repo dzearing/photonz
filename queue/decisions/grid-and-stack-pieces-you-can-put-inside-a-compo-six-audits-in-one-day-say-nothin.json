@@ -1,0 +1,54 @@
+{
+  "id": "grid-and-stack-pieces-you-can-put-inside-a-compo-six-audits-in-one-day-say-nothin",
+  "taskId": "grid-and-stack-pieces-you-can-put-inside-a-compo",
+  "question": "Six audits in one day say nothing resizes to fit what is inside it. Should auto layout move up now?",
+  "context": "The UI building focus shipped a lot on 2026-09-03: groups, frames, the Library, components, copies that follow their original, knobs, named colors. Six of the audits written that day independently name the same limit, that nothing sizes itself to its contents. Auto layout is a sub epic of UI building that is currently staged later, so the grid and stack you asked for on 2026-09-03 has nowhere to be worked on. Only you can restage an epic, so this asks rather than assuming.",
+  "options": [
+    {
+      "id": "now",
+      "label": "Move auto layout up, start it next",
+      "summary": "Auto layout becomes the thing being worked on: a stack and a grid you can put inside a component, so a button grows to fit its label and a row re-flows when something is added.",
+      "pros": [
+        "It is the one thing six separate audits named as the limit",
+        "You asked for grid and stack yourself when you answered the alignment question",
+        "Every remaining component polish task is easier to judge once boxes fit their contents"
+      ],
+      "cons": [
+        "The smaller component fixes already queued get pushed back a few days",
+        "It is the largest single piece of work in the whole UI building epic"
+      ],
+      "mitigation": "The small fixes stay queued and get picked up in the gaps; nothing is dropped, only reordered."
+    },
+    {
+      "id": "after-polish",
+      "label": "Finish the small component fixes first, then auto layout",
+      "summary": "Work through what is already queued (dragging a multi-selection, one-off colors on several layers, a component name you can click, text without the halo), then start auto layout.",
+      "pros": [
+        "Every one of those is under a day and each one is a thing you noticed",
+        "The component story reads finished before a big new piece opens"
+      ],
+      "cons": [
+        "The audits will keep saying the same thing until auto layout exists",
+        "Polishing a button that cannot fit its own label is polish on top of the gap"
+      ],
+      "mitigation": "The queued fixes are a few days of work, not weeks, so this is a short delay rather than a different plan."
+    },
+    {
+      "id": "later",
+      "label": "Leave auto layout where it is",
+      "summary": "Components stay hand-arranged. You size things yourself with the typed width and height fields and the align and space buttons.",
+      "pros": [
+        "Typed numbers plus align and space may be enough for the screens you actually build",
+        "Keeps the focus on finishing what is started"
+      ],
+      "cons": [
+        "A label longer than its button will keep overflowing, and no amount of component polish hides it"
+      ],
+      "mitigation": "The align and space commands shipped on 2026-09-03 already take the worst of the manual work out.",
+      "declines": true
+    }
+  ],
+  "recommended": "now",
+  "status": "pending",
+  "created": "2026-09-03T12:07:31.148Z"
+}

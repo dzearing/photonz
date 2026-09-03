@@ -1,0 +1,33 @@
+{
+  "id": "scrub-the-panel-rules-against-what-the-dock-actu",
+  "title": "Scrub the panel rules against what the dock actually does now",
+  "goal": "Three of the written interface rules have been overtaken by what shipped this week, so a future runner reading them would build the wrong thing. Bring the document back in line with the app, or say plainly where the app is wrong and file that instead.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T12:07:01.600Z",
+  "updated": "2026-09-03T12:08:27.473Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review finding, 2026-09-03. The document is docs/design/mocks/shared/UX-PATTERNS.md. Three specific spots. Section 3 (Panels and surfaces taxonomy) defines each panel group as having its own bounded scroller, but says nothing about reveal: the Library reveal work now scrolls the DOCK to a group and re-opens a group the user had collapsed, which queue/audits/2026-09-03-library-reveal.json flags itself as overruling a deliberate collapse. Section 4 (Selection model) says multi-select shows shared properties only, and never says a property keeps its home, which is how colours ended up in a different section depending on the number of layers picked (queue/audits/2026-09-03-multi-style.json). Section 5 (Layers representation) says a component instance renders as a collapsed group expandable to show its overrides; LayerPanelTree.panelRows deliberately makes a copy non-openable and puts its knobs in the Component section instead.",
+  "acceptance": [
+    "The panel rules say who may open a panel group the user collapsed on purpose, and whether revealing something reaches inside that group scroller or stops at its header",
+    "The selection rules say whether a property keeps its section name when a second layer is picked",
+    "The layers rules say what a copy of a component looks like in the list: today the doc promises a row that opens to show its overrides, and the app ships a row that does not open at all",
+    "Every rule the scrub changes names the audit or the commit that overtook it",
+    "Anywhere the app is judged wrong rather than the rule, a task is filed instead of the rule being bent to match"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T12:07:01.600Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:08:27.473Z",
+      "note": "seq 620 -> 90"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "two-pictures-with-the-same-name-get-told-apart-i",
+  "title": "Two pictures with the same name get told apart in the layers list",
+  "goal": "Pictures dropped into a document are now named after their file, but two copies of the same file give two rows with exactly the same word on them. The only way to tell them apart is to rename one. The second one should arrive already distinguishable.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T12:06:09.122Z",
+  "updated": "2026-09-03T12:08:27.443Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Residue of the placed image naming work that shipped on 2026-09-03 (PlacedImageNaming in PhotonzCore, called from EditorState.pasteImage). PlacedImageNaming.layerName has no idea what is already in the document, so the de-dup has to happen at the call site or the function has to take the names already in use. freshGroupName in EditorState is the existing shape for this. Named in queue/audits/2026-09-03-placed-image-names.json: \"Nothing dedupes names: two copies of the same file give two identical rows.\"",
+  "acceptance": [
+    "Dropping the same file into a document twice gives two layers with different names",
+    "The first one keeps the plain file name: nothing is numbered until there is something to tell apart",
+    "A name a person typed is never renumbered behind their back"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T12:06:09.123Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T12:08:27.443Z",
+      "note": "seq 610 -> 80"
+    }
+  ]
+}
