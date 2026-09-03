@@ -272,6 +272,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Press and release a key, through the window (or the app, for chords so
     /// menu shortcuts are found).
     case key(PlaytestKey, [PlaytestModifier])
+    /// Press a chord and REQUIRE it to reach a menu item, failing the walk
+    /// when it does not. `key` sends a chord and reports whoever took it,
+    /// which is fine for a press that is meant to land in a text field but
+    /// useless for proving a menu shortcut works: a chord that lands on a
+    /// dead or dimmed item still reads as "taken by menu". This step looks
+    /// the item up first, says which one it is, refuses a dimmed one, and
+    /// only then presses. `menuItem` names the item the chord must reach
+    /// ("Undo"), so a walk fails when a shortcut is quietly reassigned.
+    case shortcut(PlaytestKey, [PlaytestModifier], menuItem: String?)
     case move(PlaytestPoint)
     /// Rest the pointer on a control (named by the label its tooltip shows,
     /// or by a point) long enough for its tooltip to appear. A point over no
@@ -326,8 +335,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
         "action", "blank", "clearClipboard", "click", "describe", "drag", "hover", "key",
-        "measureMode", "menus", "move", "open", "readClipboard", "render", "snapshot", "tool",
-        "type", "wait", "waitFor",
+        "measureMode", "menus", "move", "open", "readClipboard", "render", "shortcut", "snapshot",
+        "tool", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
@@ -337,6 +346,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .blank: "blank"
         case .wait: "wait"
         case .key: "key"
+        case .shortcut: "shortcut"
         case .move: "move"
         case .hover: "hover"
         case .click: "click"
@@ -386,6 +396,12 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("key", "\"\(keyName)\" is not a key; use a single character or return, escape, tab, space, delete, left, right, up, down")
             }
             self = .key(key, try f.modifiers())
+        case "shortcut":
+            let keyName = try f.string("key")
+            guard let key = PlaytestKey(keyName) else {
+                throw f.invalid("key", "\"\(keyName)\" is not a key; use a single character or return, escape, tab, space, delete, left, right, up, down")
+            }
+            self = .shortcut(key, try f.modifiers(), menuItem: try f.optionalString("menuItem"))
         case "move":
             self = .move(try f.point("at"))
         case "hover":

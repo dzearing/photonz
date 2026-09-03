@@ -1,0 +1,26 @@
+{
+  "feature": "A walk can check what a keyboard shortcut really does",
+  "epic": "unmanned-loop",
+  "summary": "An unmanned walk can now press a real menu shortcut and fail loudly when it does not run. It also stops reporting a dead chord as a pass: pressing Command Z in a walk used to log \"taken by menu\" and change nothing, which read like undo working.",
+  "setup": "Nothing to install. This is loop tooling, not app UI: run Scripts/playtest.sh Scripts/playtest/undo-shortcut-walk.json and read /tmp/photonz-playtest/undo-shortcut/log.json.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/undo-shortcut-walk.json" },
+    { "do": "In the log, find step 10: shift Command N reached File > New Window and it ran, a real shortcut pressed by an unmanned walk." },
+    { "do": "Find step 13: Command Z now says which item took it and that nothing was behind it, so nothing happened." },
+    { "do": "Compare the layer count at step 15 (still 2, the rectangle is there) with step 19 (1, undone by an action step).", "shot": "2026-09-03-playtest-shortcut-1-after-cmd-z.png" },
+    { "do": "Read the new \"Which shortcuts a walk can press\" section in docs/design/playtest-harness.md." },
+    { "do": "Write a step { \"do\": \"shortcut\", \"key\": \"z\", \"modifiers\": [\"command\"] } into any walk and watch it fail with the reason and the workaround." }
+  ],
+  "evaluate": [
+    "Is a shortcut step that only works for app-level chords worth having, or would you rather walks just never claim to check shortcuts?",
+    "Does the Command Z log line tell you enough to stop trusting it, without having to read the design doc?",
+    "The loop still never takes focus, so window shortcuts stay uncheckable. Is that the right trade, or is a foreground playtest mode worth building?",
+    "Should a walk fail outright when a key step lands on an item with nothing behind it, instead of only saying so?"
+  ],
+  "rough": [
+    "The headline ask was for a walk to press Command Z and show the edit undone. That is not possible and now has proof rather than a hunch: macOS refuses a script-launched background process focus, so NSApp.activate, makeKeyAndOrderFront and becomeKey all leave isActive false, with the window visible and hidden. Without a focus event SwiftUI never re-evaluates the menu bar, so every window-scoped item keeps a nil action for the whole walk and forcing it enabled changes nothing.",
+    "So a walk can prove undo WORKS (action undo, watch layers and canRedo) but cannot prove Command Z is wired to it. That last link still needs a person at the keyboard.",
+    "A first attempt gave the menu commands a stand-in editor for the walk. It was removed once the nil action turned up: it changed nothing and it put a test seam in shared release code for no gain.",
+    "Screen Recording was granted, so the shot above is a real screen capture of the probe, not an offscreen render."
+  ]
+}

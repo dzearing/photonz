@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 650,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:53:29.927Z",
-  "updated": "2026-09-03T00:53:29.928Z",
+  "updated": "2026-09-03T07:52:12.601364Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-03 while verifying next-geometry-fields. Proven with a control walk: after a plain canvas drag with no text field anywhere, command+z logs \"taken by menu\" and the layer frame does not change. Cause is SwiftUI focused-value commands (EditorCommands.swift CommandGroup(replacing: .undoRedo) reads the focused editor), which resolve to nil while the probe is not active; the item is also .disabled then. Already noted as a known limit in docs/design/playtest-harness.md under Things to know. Options: bring the probe to the front for the duration of a walk (rejected before because an unmanned loop must not steal focus - check whether NSApp.activate with a hidden-but-key window is enough), or route the menu action through something a walk can reach. The action step (undo/redo) covers the outcome but not the shortcut.",
@@ -22,6 +22,39 @@
     {
       "t": "2026-09-03T00:53:29.928Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T07:26:49.615Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T07:52:12.601364Z",
+      "note": "Adversarial review before building: the mock here is the task's own premise, that a walk just needs a way to press the chord. Walked it as a walk author: they write a key step with command+z, read \"taken by menu\", and believe undo was checked. That silent pass is the real defect, so the shortest useful version was never a new focus mechanism but a step that fails instead of lying. Kept scope to that plus the honest log line."
+    },
+    {
+      "t": "2026-09-03T07:52:12.601364Z",
+      "note": "Reproduced first with a control walk: blank canvas, draw a rectangle (layers 1 to 2), press command+z. Log said \"taken by menu\", layers stayed 2. An action undo step took it back to 1."
+    },
+    {
+      "t": "2026-09-03T07:52:12.601364Z",
+      "note": "Four routes tried to make the chord actually run, all dead ends at the OS. (1) NSApp.activate(ignoringOtherApps:) leaves isActive false. (2) window.becomeKey() leaves isKeyWindow false. (3) Same with the window left VISIBLE instead of alpha 0, so it is not the hiding. (4) Forcing item.isEnabled = true with autoenablesItems off: the item has target nil and action nil, so there is nothing to run."
+    },
+    {
+      "t": "2026-09-03T07:52:12.601364Z",
+      "note": "Root cause, proven by printing live values into the Undo item's own title mid-walk and getting the launch-time values back: with no focus event ever arriving, SwiftUI never re-evaluates the Commands body, so the probe's whole menu bar is frozen at its launch state. Titles that rename themselves are stale for the same reason, which corrects a claim the harness doc used to make about the menus step."
+    },
+    {
+      "t": "2026-09-03T07:52:12.601364Z",
+      "note": "Shipped: a shortcut step (PlaytestScript + harness) that fails loudly when no menu item carries the chord, when it is not the item the walk named, when something else takes the press, or when the item has no action behind it. App-level shortcuts genuinely run through it: shift+command+N opens a second window in Scripts/playtest/undo-shortcut-walk.json and the next menus step lists it. A key step now names the item it landed on and says when nothing was behind it. describe() gained canUndo, canRedo and appActive."
+    },
+    {
+      "t": "2026-09-03T07:52:12.601364Z",
+      "note": "Acceptance 1 and 3 met. Acceptance 2 (a walk presses command+z and shows the edit undone) is NOT met and is not achievable without taking focus, which macOS refuses anyway. Left as a documented limit rather than papered over; audit queue/audits/2026-09-03-playtest-shortcut.json asks whether a foreground playtest mode is wanted."
+    },
+    {
+      "t": "2026-09-03T07:52:12.601364Z",
+      "note": "A first cut added PlaytestFocus, a stand-in editor for the menu commands to fall back on. Removed once the nil action was found: it changed nothing and put a test seam in shared release code. EditorCommands.swift is untouched."
     }
-  ]
+  ],
+  "started": "2026-09-03T07:26:49.614Z"
 }

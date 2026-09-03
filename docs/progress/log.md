@@ -6051,3 +6051,40 @@ type one X and all four left edges line up.
 
 Next: the queue. Open question for the user in the audit — should a W that
 reaches only part of the selection show its number, or say Mixed?
+
+## 2026-09-03 — What a playtest can check about a keyboard shortcut
+
+An unmanned walk could not press ⌘Z, and worse, it said "taken by menu" when it
+tried, which read like a pass. Reproduced it first with a control walk, then
+chased the cause to the bottom.
+
+**The finding.** macOS will not let a script-launched background process take
+focus. `NSApp.activate(ignoringOtherApps:)`, `makeKeyAndOrderFront` and
+`becomeKey()` all leave `isActive` and `keyWindow` untouched, with the window
+visible and with it hidden. No focus event ever arrives, so SwiftUI never
+re-evaluates the `Commands` body, so the probe's menu bar is frozen at the
+state it was built in at launch — when no editor existed. Every window-scoped
+item therefore carries a **nil target and a nil action** for the whole walk;
+forcing `isEnabled` back on does not help because there is nothing behind the
+item to run. Proven by printing live values into the Undo item's own title
+mid-walk and getting the launch-time values back. Titles that rename themselves
+with the document ("Show History") are stale for the same reason, which
+corrects what the harness doc claimed about the `menus` step.
+
+**What shipped.** A `shortcut` step (`PlaytestScript` + harness, tested) that
+presses a chord and REQUIRES it to reach a menu item that runs — failing loudly
+when no item carries the chord, when it is not the item the walk named, when
+something else takes the press, or when the item is empty. App-level shortcuts
+really do run through it: ⇧⌘N opens a second window in
+`Scripts/playtest/undo-shortcut-walk.json`. A `key` step now names the item it
+landed on and says outright when nothing was behind it. `describe()` gained
+`canUndo`, `canRedo` and `appActive`.
+
+**What did not ship.** A walk still cannot press ⌘Z and watch the edit come
+back; that link needs a person at the keyboard. A first cut gave the menu
+commands a stand-in editor to fall back on, and it was removed once the nil
+action turned up: it changed nothing and put a test seam in shared release
+code. `EditorCommands.swift` is untouched.
+
+**Next.** The audit asks whether an opt-in foreground playtest mode is worth
+building, or whether walks should simply never claim to check window shortcuts.

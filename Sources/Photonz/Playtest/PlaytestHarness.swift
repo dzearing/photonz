@@ -168,10 +168,50 @@ private final class Run {
 
         case .key(let key, let modifiers):
             let window = try requireWindow()
+            // Look the item up BEFORE the press: after it, a menu that renames
+            // itself ("Show History" becoming "Hide History") reports the new
+            // title and the log names the wrong thing.
+            let destination = modifiers.isEmpty ? nil : Self.menuItem(carrying: key, modifiers: modifiers)
             let takenBy = press(key, modifiers: modifiers, in: window)
             await sleep(0.05)
             let chord = "\(modifiers.map(\.rawValue).joined(separator: "+"))\(modifiers.isEmpty ? "" : "+")\(key.name)"
-            note(number, step.name, modifiers.isEmpty ? chord : "\(chord) taken by \(takenBy)", state: describe())
+            var detail = modifiers.isEmpty ? chord : "\(chord) taken by \(takenBy)"
+            // "taken by menu" on its own has read like a pass for chords that
+            // did nothing at all, which is how ⌘Z came to look checked when it
+            // was not. Name the item and say when there is nothing behind it.
+            if takenBy == "menu", let destination {
+                detail += destination.item.action != nil
+                    ? " (\(destination.path), which ran)"
+                    : " (\(destination.path), which has no action behind it, so NOTHING HAPPENED: \(Self.frozenMenuBar))"
+            }
+            note(number, step.name, detail, state: describe())
+
+        case .shortcut(let key, let modifiers, let wanted):
+            let window = try requireWindow()
+            let chord = Self.chord(key, modifiers)
+            guard let destination = Self.menuItem(carrying: key, modifiers: modifiers) else {
+                throw Failure(description: "no menu item carries \(chord); a `menus` step lists every shortcut the app has")
+            }
+            let title = destination.item.title
+            if let wanted, title.caseInsensitiveCompare(wanted) != .orderedSame {
+                throw Failure(description: "\(chord) is \(destination.path), not \"\(wanted)\"")
+            }
+            // SwiftUI hangs a target and an action on a command item only while
+            // it is live; a dimmed one is a bare title with nothing behind it.
+            // So this is the honest test of "would pressing it do anything",
+            // and it is also why a window-scoped shortcut cannot be pressed in
+            // a walk at all. See `Self.frozenMenuBar` for the whole finding.
+            guard destination.item.action != nil else {
+                throw Failure(description: "\(chord) is \(destination.path), but that item has no action behind it, "
+                    + "so pressing it does nothing. \(Self.frozenMenuBar) "
+                    + "Use an `action` step for the outcome and keep a `key` step if you want the press on record.")
+            }
+            let takenBy = press(key, modifiers: modifiers, in: window)
+            guard takenBy == "menu" else {
+                throw Failure(description: "\(chord) should have gone to \(destination.path) but was taken by \(takenBy)")
+            }
+            await sleep(0.2)
+            note(number, step.name, "\(chord) reached \(destination.path) and it ran", state: describe())
 
         case .move(let at):
             let canvas = try requireCanvas()
@@ -395,7 +435,7 @@ private final class Run {
             let outline = Self.outline(tree["menus"] as? [[String: Any]] ?? [], dimming: focused)
             let heading = focused
                 ? "\(tree["focus"] as? String ?? "a window") has focus; menu bar reads:"
-                : "nothing in the probe has focus, so what is dimmed here is not what a person would see; titles, order and shortcuts are exact. Menu bar reads:"
+                : "nothing in the probe has focus, so this menu bar is frozen at the state it was built in at launch: what is dimmed, and any title that renames itself with the document, is NOT what a person would see. Order and shortcuts are exact. Menu bar reads:"
             let open = (tree["windows"] as? [[String: Any]] ?? [])
                 .map { $0["title"] as? String ?? "?" }.joined(separator: ", ")
             let reading = "\(heading)\n\(outline)\n  windows open: \(open)"
@@ -638,6 +678,88 @@ private final class Run {
             "focus": focus ?? NSNull(),
             "windows": windows,
         ]
+    }
+
+    /// A menu item found by the chord it carries, and the path a person would
+    /// read to it ("Edit ▸ Undo").
+    struct MenuDestination {
+        let item: NSMenuItem
+        let path: String
+    }
+
+    /// The chord as a person reads it in a script: "command+shift+z".
+    private static func chord(_ key: PlaytestKey, _ modifiers: [PlaytestModifier]) -> String {
+        (modifiers.map(\.rawValue) + [key.name]).joined(separator: "+")
+    }
+
+    /// The one menu item bound to this chord, wherever it is in the bar.
+    ///
+    /// `update()` runs on every menu on the way down, because that is what
+    /// runs validation: without it `isEnabled` reports whatever the item was
+    /// left with, and the dimmed check below would be worthless.
+    static func menuItem(carrying key: PlaytestKey, modifiers: [PlaytestModifier]) -> MenuDestination? {
+        guard let bar = NSApp.mainMenu else { return nil }
+        bar.update()
+        var wanted = NSEvent.ModifierFlags()
+        for modifier in modifiers {
+            switch modifier {
+            case .command: wanted.insert(.command)
+            case .shift: wanted.insert(.shift)
+            case .option: wanted.insert(.option)
+            case .control: wanted.insert(.control)
+            }
+        }
+        return find(chord: key.characters, flags: wanted, in: bar, path: [], depth: 0)
+    }
+
+    private static func find(chord: String, flags: NSEvent.ModifierFlags,
+                             in menu: NSMenu, path: [String], depth: Int) -> MenuDestination? {
+        for item in menu.items where !item.isSeparatorItem && !item.isHidden {
+            if !item.keyEquivalent.isEmpty,
+               item.keyEquivalent.lowercased() == chord.lowercased(),
+               effectiveFlags(of: item) == flags.intersection([.command, .shift, .option, .control]) {
+                return MenuDestination(item: item, path: (path + [item.title]).joined(separator: " ▸ "))
+            }
+            if let submenu = item.submenu, depth < 4 {
+                submenu.update()
+                if let found = find(chord: chord, flags: flags, in: submenu,
+                                    path: path + [item.title], depth: depth + 1) {
+                    return found
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Why a walk cannot press most of the menu bar, in one sentence a log
+    /// line can carry.
+    ///
+    /// macOS will not let a script-launched background process take focus:
+    /// `NSApp.activate(ignoringOtherApps:)`, `makeKeyAndOrderFront` and
+    /// `becomeKey()` were each tried on 2026-09-03 and each left `isActive`
+    /// and `keyWindow` exactly as they were, with the window visible and with
+    /// it hidden. With no focus event ever arriving, SwiftUI never
+    /// re-evaluates the `Commands` body: the menu bar stays frozen at the
+    /// state it was built in at launch, when no editor existed. Every
+    /// window-scoped item is therefore dimmed with a nil target and a nil
+    /// action for the whole walk, and forcing `isEnabled` back on does not
+    /// help — there is nothing behind the item to run. Proven by printing the
+    /// live values into the Undo item's own title mid-walk, which came back
+    /// reading the launch-time values.
+    ///
+    /// App-level commands (Capture, New Window, Open) are built live and stay
+    /// live, so those shortcuts a walk really can press.
+    static let frozenMenuBar =
+        "macOS will not give a background app focus, so SwiftUI leaves the probe's menu bar frozen at its launch state: "
+        + "every window-scoped command is dimmed and empty for the whole walk, however the document changes."
+
+    /// What a person has to hold down for this item.    /// What a person has to hold down for this item. AppKit spells ⇧⌘Z two
+    /// ways — an uppercase "Z" with ⌘, or a lowercase "z" with ⇧⌘ — and a
+    /// lookup that knew only one of them would miss half the menu bar.
+    private static func effectiveFlags(of item: NSMenuItem) -> NSEvent.ModifierFlags {
+        var flags = item.keyEquivalentModifierMask.intersection([.command, .shift, .option, .control])
+        if let character = item.keyEquivalent.first, character.isUppercase { flags.insert(.shift) }
+        return flags
     }
 
     /// One item and, when it has one, its whole submenu. Depth is capped so a
@@ -952,6 +1074,14 @@ private final class Run {
             "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",
             "layers": layers.count,
+            // Whether Undo and Redo have anything to do, which is what the
+            // Edit menu dims itself on and what a shortcut walk checks.
+            "canUndo": editor.canUndo,
+            "canRedo": editor.canRedo,
+            // Whether this process has focus at all. It never does in a walk,
+            // and that one fact is why most menu shortcuts cannot be pressed
+            // in one. See `frozenMenuBar`.
+            "appActive": NSApp.isActive,
             // The canvas's own size, so a walk can prove a number typed into
             // the Canvas section landed on the document rather than nowhere.
             "canvas": document.map { "\(Int($0.canvasSize.width))x\(Int($0.canvasSize.height))" } ?? "none",

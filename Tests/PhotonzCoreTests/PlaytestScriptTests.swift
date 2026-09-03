@@ -14,6 +14,50 @@ struct PlaytestScriptTests {
         try PlaytestScript.decode(Data(json.utf8))
     }
 
+    @Test("A shortcut step names the chord and the menu item it must reach")
+    func shortcutStepNamesTheMenuItem() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" } ] }
+        """)
+        guard case .shortcut(let key, let modifiers, let item) = script.steps[0] else {
+            Issue.record("shortcut"); return
+        }
+        #expect(key.characters == "z")
+        #expect(modifiers == [.command])
+        #expect(item == "Undo")
+        #expect(script.steps[0].name == "shortcut")
+    }
+
+    @Test("A shortcut step may leave the menu item unnamed and just require the chord to land")
+    func shortcutStepMayNotNameTheItem() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "shortcut", "key": "z", "modifiers": ["command", "shift"] } ] }
+        """)
+        guard case .shortcut(_, let modifiers, let item) = script.steps[0] else {
+            Issue.record("shortcut"); return
+        }
+        #expect(modifiers == [.command, .shift])
+        #expect(item == nil)
+    }
+
+    @Test("A shortcut step with no key is refused with a readable reason")
+    func shortcutStepNeedsAKey() {
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "steps": [ { "do": "shortcut", "modifiers": ["command"] } ] }
+            """.utf8))
+        }
+    }
+
+    @Test("A shortcut step with a key nobody can press is refused")
+    func shortcutStepRefusesAnUnknownKey() {
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "steps": [ { "do": "shortcut", "key": "quux", "modifiers": ["command"] } ] }
+            """.utf8))
+        }
+    }
+
     @Test("A walk can give the keyboard to a named inspector field")
     func focusStepNamesTheField() throws {
         let script = try PlaytestScript.decode(Data("""
