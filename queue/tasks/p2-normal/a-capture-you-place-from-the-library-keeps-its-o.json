@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 700,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T03:36:26.228Z",
-  "updated": "2026-09-03T09:09:37.578249Z",
+  "updated": "2026-09-03T09:09:54.108Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Came out of the Library panel task (2026-09-03). EditorState.placeLibraryPick -> addImageLayerOrOpen -> pasteImage, which hardcodes the Pasted Image name. Give the image-landing path an optional name and pass the URLs last path component from both the Library and the Finder drop.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-03T09:09:37.578249Z",
       "note": "Scripts/test.sh green: 1970 tests in 198 suites. EditorState is shared, not forked into Next, so both releases have it."
+    },
+    {
+      "t": "2026-09-03T09:09:54.108Z",
+      "note": "Placed pictures are named after their file: Finder drop -> 'Hero banner', Library place -> 'Screenshot 16.22.12', clipboard -> 'Pasted Image'. PlacedImageNaming in PhotonzCore (10 tests written first); verified in the probe app with Scripts/playtest/placed-image-name-walk.json; audit at queue/audits/2026-09-03-placed-image-names.json. Full suite green (1970 tests). Pushed as 572b6b1."
     }
   ],
-  "started": "2026-09-03T09:00:23.846Z"
+  "started": "2026-09-03T09:00:23.846Z",
+  "completed": "2026-09-03T09:09:54.108Z"
 }
