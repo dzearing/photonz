@@ -29,36 +29,65 @@ extension CanvasNSView {
 
     // MARK: What is on screen
 
-    /// Every name on screen, in the order they draw, paired with the layer it
-    /// belongs to. Screens first, then components, which is the order the two
-    /// chrome layers sit in, so where two names overlap the one you can read
-    /// is the one a click finds.
+    /// One chip in the strip above the boxes: a screen's name, a component's
+    /// name behind its mark, or the lone mark a copy wears.
+    struct CanvasNameChip {
+        enum Kind { case screen, component, copyMark }
+        let layer: Layer
+        let label: CanvasNameLabel
+        let kind: Kind
+    }
+
+    /// Everything drawn in that strip, in the order it draws, back to front:
+    /// screens, then components, then the marks on copies. That order is what
+    /// decides who moves when two of them want the same spot, and a screen
+    /// wants its own name against its own edge.
+    ///
+    /// Names that would print on top of each other are stacked here, ONCE, so
+    /// drawing a name, clicking a name and typing in a name all agree about
+    /// where it ended up. A copy's bare mark is in the list too: a diamond over
+    /// a screen's name is the same mess as a word over a word.
     ///
     /// Empty when the document has nothing that wears a name, which is every
     /// screenshot anybody has taken.
-    func canvasNameLabels() -> [(layer: Layer, label: CanvasNameLabel)] {
+    func canvasNameChips() -> [CanvasNameChip] {
         guard let viewport, let document else { return [] }
-        var labels: [(layer: Layer, label: CanvasNameLabel)] = []
-        func append(_ layer: Layer, inset: CGFloat) {
+        var chips: [CanvasNameChip] = []
+        func append(_ layer: Layer, inset: CGFloat, kind: CanvasNameChip.Kind) {
             guard layer.isVisible, let bounds = document.canvasBounds(of: layer.id),
                   bounds.width > 0, bounds.height > 0 else { return }
             let rect = viewRect(forDocRect: bounds, in: viewport)
-            let width = (layer.name as NSString)
+            let width = kind == .copyMark ? 0 : (layer.name as NSString)
                 .size(withAttributes: [.font: Self.nameLabelFont]).width
-            labels.append((layer, CanvasNameLabel(id: layer.id, frameRect: rect,
-                                                  textWidth: width.rounded(.up),
-                                                  leadingInset: inset)))
+            chips.append(CanvasNameChip(layer: layer,
+                                        label: CanvasNameLabel(id: layer.id, frameRect: rect,
+                                                               textWidth: width.rounded(.up),
+                                                               leadingInset: inset),
+                                        kind: kind))
         }
         if framesEnabled, document.hasFrames {
             for frame in document.frames {
                 // A promoted screen shows the component's name instead: one
                 // box, one name, so it is skipped here and picked up below.
                 if frame.isMainComponent, componentsEnabled { continue }
-                append(frame, inset: 0)
+                append(frame, inset: 0, kind: .screen)
             }
         }
-        for main in markedComponents { append(main, inset: Self.componentMarkInset) }
-        return labels
+        for main in markedComponents { append(main, inset: Self.componentMarkInset, kind: .component) }
+        for copy in markedComponentInstances {
+            append(copy, inset: Self.componentGlyphSize, kind: .copyMark)
+        }
+        let stacked = CanvasNameLabels.stacked(chips.map(\.label))
+        return zip(chips, stacked).map {
+            CanvasNameChip(layer: $0.layer, label: $1, kind: $0.kind)
+        }
+    }
+
+    /// Every name a click can land on, paired with the layer it belongs to. A
+    /// copy's mark is not one of them: it says what the copy is, it is not a
+    /// handle.
+    func canvasNameLabels() -> [(layer: Layer, label: CanvasNameLabel)] {
+        canvasNameChips().filter { $0.kind != .copyMark }.map { ($0.layer, $0.label) }
     }
 
     // MARK: Clicking a name

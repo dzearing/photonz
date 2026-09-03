@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 840,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T13:25:36.094Z",
-  "updated": "2026-09-03T13:25:36.095Z",
+  "updated": "2026-09-03T19:58:02.532Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Visible in queue/audits/2026-09-03-library-drag-2-over-frame.png: the frame caption \"Frame\" and the component mark plus name \"Button\" collide. Frame name geometry is FrameNameLabels in PhotonzCore (tested, owns where a name draws and which wins when two overlap); the component mark is drawn in CanvasFrames.swift. The tested overlap rule already exists for two FRAME names, so the fix is likely extending it to cover a component name in the same strip.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-03T13:25:36.095Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T19:58:02.532Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T20:14:09.199573Z",
+      "note": "Reviewed the idea before building. The task notes said an overlap rule already existed for two frame names; it does not. What exists decides which name a CLICK finds when two overlap, not where they draw. So the fix is a placement rule, not an extension."
+    },
+    {
+      "t": "2026-09-03T20:14:09.199573Z",
+      "note": "Rejected sliding the second name sideways along the strip (Frame  Component on one line): a long name runs right off the box it names, and the shared left corner is the only thing tying a name to its box. Chose climbing: the name drawn later moves up just far enough to clear, so a screen keeps its own edge and what is inside it stacks above."
+    },
+    {
+      "t": "2026-09-03T20:14:09.199573Z",
+      "note": "PhotonzCore CanvasNameLabels.stacked/chipBox, 14 new tests (TDD, written before the rule). Collision measures the LETTERS plus the mark, not the generous 240pt box, so two screens whose names do not actually touch stay on one line."
+    },
+    {
+      "t": "2026-09-03T20:14:09.199573Z",
+      "note": "App side: CanvasNames.canvasNameChips is now the one list, in drawing order (screens, components, copy marks), stacked once, so drawing, clicking and the rename field all agree. CanvasFrames and CanvasComponents draw from it."
+    },
+    {
+      "t": "2026-09-03T20:14:09.199573Z",
+      "note": "Verified live in the probe (Screen Recording granted): Scripts/playtest/corner-names-walk.json. Component snapped to the screen's exact corner: names on separate lines, still separate zoomed out twice, clicking the upper name picks the component and the lower one picks the screen, double click opens the field on the moved line. A dropped copy's mark takes the third line."
+    },
+    {
+      "t": "2026-09-03T20:14:09.199573Z",
+      "note": "Filed dragging-a-component-onto-a-screen-puts-it-insid: dragging an existing component onto a screen leaves it a sibling, while a Library drop joins it."
     }
-  ]
+  ],
+  "started": "2026-09-03T19:58:02.532Z"
 }

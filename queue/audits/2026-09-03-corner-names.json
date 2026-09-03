@@ -1,0 +1,30 @@
+{
+  "feature": "Names in a crowded corner",
+  "epic": "ui-components",
+  "summary": "A component sitting in a screen's top left corner used to print its name straight over the screen's name, leaving both unreadable. Now the name that would have landed on top climbs onto its own line, just far enough to clear, and every name in that corner stays legible and clickable.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: screens and components are on by default.",
+  "try": [
+    { "do": "Draw a screen with the frame tool, roughly half the canvas." },
+    { "do": "Draw two rectangles out on bare canvas beside it, sweep both, and press Command G." },
+    { "do": "With the group picked, choose Layer, Make Component." },
+    { "do": "Drag the component into the screen's very top left corner until it snaps.", "shot": "2026-09-03-corner-names-1-both-sc.png" },
+    { "do": "Read the two names: the component's violet name sits on the line above the screen's grey one." },
+    { "do": "Click the upper name. The component is picked, not the screen." },
+    { "do": "Double click it and type a new name.", "shot": "2026-09-03-corner-names-2-renaming-sc.png" },
+    { "do": "Drop a copy of the same component on that corner from the Library. Its mark takes the next line up.", "shot": "2026-09-03-corner-names-3-copy-sc.png" }
+  ],
+  "evaluate": [
+    "Reading top down you get the component first and the screen second, which is inside out. Does that bother you, or does the violet mark make it obvious enough?",
+    "The moved name ends up about twenty points above its own box instead of four. Does it still read as belonging to the thing under it?",
+    "Zoom out until the screen is small. Do the two names still look deliberate, or do they look like litter above a tiny box?",
+    "A copy's lone diamond on a line of its own, with no name beside it, says the copy is there. Is that worth a line, or would you rather a copy in a crowded corner showed nothing?",
+    "Two screens side by side, close enough that their names collide, now stack the same way. Is that the right answer there too?"
+  ],
+  "rough": [
+    "The name that moves is the one drawn later, which means the screen keeps its own edge and whatever is inside it climbs. The other direction, pushing the inner name sideways along the strip so it reads \"Frame  Component\" on one line, was rejected: a long name would run right off the box it names, and the corner is the only thing tying a name to its box.",
+    "A name stops climbing after six lines. Pile more than that into one corner and the last ones overlap again, which is the honest tradeoff against a name floating so far above the picture it belongs to nothing.",
+    "A copy's mark now sits centred in its line, two points higher than before, so it lines up with a main's mark. That is a change nobody asked for; it fell out of every chip in the strip being placed by the same rule.",
+    "Screenshots are the real window, taken by the loop's probe app with the Screen Recording grant, not offscreen renders.",
+    "Found while testing, filed separately: dragging an existing component onto a screen leaves it a sibling of the screen rather than joining it, while dropping a copy from the Library does join it."
+  ]
+}

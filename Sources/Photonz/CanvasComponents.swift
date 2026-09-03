@@ -42,9 +42,8 @@ extension CanvasNSView {
     }
 
     func refreshComponentChrome() {
-        let mains = markedComponents
-        let copies = markedComponentInstances
-        guard let viewport, let document, !mains.isEmpty || !copies.isEmpty else {
+        guard viewport != nil, document != nil,
+              !markedComponents.isEmpty || !markedComponentInstances.isEmpty else {
             componentChromeLayer.isHidden = true
             componentChromeLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
             return
@@ -52,11 +51,11 @@ extension CanvasNSView {
         componentChromeLayer.isHidden = false
         componentChromeLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
 
-        for main in mains {
-            guard let bounds = document.canvasBounds(of: main.id),
-                  bounds.width > 0, bounds.height > 0 else { continue }
-            let rect = viewRect(forDocRect: bounds, in: viewport)
-            let strip = CanvasNameLabels.box(forFrameRect: rect)
+        // Where a name goes is decided once, for every chip in the strip at
+        // the top of the boxes, so a component in a screen's corner sits on a
+        // clear line instead of over the screen's name.
+        for chip in canvasNameChips() where chip.kind != .screen {
+            let strip = CanvasNameLabels.box(forFrameRect: chip.label.frameRect)
 
             // The mark stays put through a rename: it says what kind of thing
             // this is, and that does not change while you are typing.
@@ -64,17 +63,26 @@ extension CanvasNSView {
             let box = CGRect(x: strip.minX,
                              y: strip.minY + (strip.height - Self.componentGlyphSize) / 2,
                              width: Self.componentGlyphSize, height: Self.componentGlyphSize)
-            glyph.path = ComponentGlyph.path(in: box)
+            // One diamond for a copy, not the original's four: a different
+            // shape rather than a different weight, so it still reads at ten
+            // points.
+            glyph.path = chip.kind == .component
+                ? ComponentGlyph.path(in: box)
+                : ComponentGlyph.instancePath(in: box)
             glyph.fillColor = ComponentGlyph.cgColor
-            glyph.frame = layer?.bounds ?? rect
+            glyph.frame = layer?.bounds ?? strip
             componentChromeLayer.addSublayer(glyph)
 
+            // A copy gets the mark and NO name: a screen built out of twelve
+            // buttons would otherwise wear twelve labels, and the name of a
+            // copy is already in the layers list and the dock.
+            guard chip.kind == .component else { continue }
             // The component being renamed has a field standing where its name
             // was, so the name itself is not drawn twice.
-            if main.id == canvasRenameID { continue }
+            if chip.layer.id == canvasRenameID { continue }
 
             let label = CATextLayer()
-            label.string = main.name
+            label.string = chip.layer.name
             label.font = Self.nameLabelFont
             label.fontSize = Self.nameLabelFont.pointSize
             // The component violet at rest, the selection accent when the name
@@ -82,31 +90,14 @@ extension CanvasNSView {
             // the name is free to say "selected, or under your pointer" the
             // same way a screen's name does. Neither is a theme label color:
             // this text sits on top of whatever picture is open.
-            label.foregroundColor = isNameLabelLive(main.id)
+            label.foregroundColor = isNameLabelLive(chip.layer.id)
                 ? NSColor.controlAccentColor.cgColor
                 : ComponentGlyph.cgColor
             label.contentsScale = window?.backingScaleFactor ?? 2
             label.alignmentMode = .left
             label.truncationMode = .end
-            label.frame = CanvasNameLabels.box(forFrameRect: rect,
-                                               leadingInset: Self.componentMarkInset)
+            label.frame = CanvasNameLabels.box(for: chip.label)
             componentChromeLayer.addSublayer(label)
-        }
-
-        for copy in copies {
-            guard let bounds = document.canvasBounds(of: copy.id),
-                  bounds.width > 0, bounds.height > 0 else { continue }
-            let rect = viewRect(forDocRect: bounds, in: viewport)
-            let glyph = CAShapeLayer()
-            let box = CGRect(x: rect.minX,
-                             y: rect.minY - Self.componentGlyphSize - CanvasNameLabels.gap,
-                             width: Self.componentGlyphSize, height: Self.componentGlyphSize)
-            // One diamond, not the original's four: a different shape rather
-            // than a different weight, so it still reads at ten points.
-            glyph.path = ComponentGlyph.instancePath(in: box)
-            glyph.fillColor = ComponentGlyph.cgColor
-            glyph.frame = layer?.bounds ?? rect
-            componentChromeLayer.addSublayer(glyph)
         }
     }
 }

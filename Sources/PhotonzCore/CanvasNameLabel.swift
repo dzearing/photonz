@@ -110,6 +110,90 @@ public enum CanvasNameLabels {
                leadingInset: label.leadingInset)
     }
 
+    // MARK: Two names that want the same spot
+
+    /// The daylight left between one name and the one it climbed over.
+    public static let verticalGap: CGFloat = 2
+    /// The distance from one name's line up to the line above it, when both
+    /// started on the same line.
+    public static let rowStep: CGFloat = height + verticalGap
+    /// How much daylight two names need beside each other before they read as
+    /// two names rather than one smear.
+    public static let clearance: CGFloat = 6
+    /// The most lines a name will climb before it gives up and prints where it
+    /// is. A name far enough above its box to belong to nothing is no better
+    /// than a name on top of another name.
+    public static let maximumRows = 6
+    /// The furthest a name ever gets from its own box.
+    public static var maximumLift: CGFloat { rowStep * CGFloat(maximumRows) }
+
+    /// The ink a name actually puts down: its mark, then its letters. Wider
+    /// than nothing and narrower than the generous box it draws in, which is
+    /// the whole point — two boxes overlapping is normal, two names overlapping
+    /// is a bug.
+    public static func chipBox(for label: CanvasNameLabel) -> CGRect {
+        let strip = box(forFrameRect: label.frameRect)
+        let printed = box(for: label)
+        let letters = min(label.textWidth, printed.width)
+        return CGRect(x: strip.minX, y: strip.minY,
+                      width: label.leadingInset + letters, height: strip.height)
+    }
+
+    /// The same names, moved up onto clear lines where they would otherwise
+    /// have printed on top of each other.
+    ///
+    /// A button sitting in a screen's top left corner puts its name in exactly
+    /// the strip the screen's name uses, and two names in one strip is two
+    /// names nobody can read. So a name that lands on one already taken climbs
+    /// a line, and keeps climbing until it is clear.
+    ///
+    /// `labels` comes in drawing order, back to front, so **the name that was
+    /// there first keeps its place and the one on top of it moves.** On a
+    /// screen with a component in its corner that means the screen's name stays
+    /// against its own edge and the component's name sits above it, which reads
+    /// as outside-in: the further from the box, the deeper inside it you are.
+    ///
+    /// A name only ever climbs. Sliding it sideways would take it away from the
+    /// corner it names, and the corner is the only thing tying a name to its
+    /// box.
+    ///
+    /// The result is ordinary labels with their boxes moved: every other rule
+    /// here, drawing and clicking alike, applies to them unchanged.
+    public static func stacked(_ labels: [CanvasNameLabel]) -> [CanvasNameLabel] {
+        var taken: [CGRect] = []
+        var result: [CanvasNameLabel] = []
+        result.reserveCapacity(labels.count)
+        for label in labels {
+            let chip = chipBox(for: label)
+            var lift: CGFloat = 0
+            var climbing = true
+            var passes = 0
+            // Just far enough to clear what is in the way, rather than a fixed
+            // step: two boxes whose tops are a few points apart would otherwise
+            // need two steps to separate and end up twice as far from their
+            // corner as they need to be. Clearing one name can land on the
+            // next, so this goes round until the spot is empty.
+            while climbing, passes <= taken.count {
+                climbing = false
+                passes += 1
+                let here = chip.offsetBy(dx: 0, dy: -lift).insetBy(dx: -clearance, dy: 0)
+                guard let blocking = taken.first(where: { $0.intersects(here) }) else { break }
+                lift = min(lift + (here.maxY - blocking.minY) + verticalGap, maximumLift)
+                climbing = true
+            }
+            taken.append(chip.offsetBy(dx: 0, dy: -lift))
+            guard lift > 0 else {
+                result.append(label)
+                continue
+            }
+            result.append(CanvasNameLabel(id: label.id,
+                                          frameRect: label.frameRect.offsetBy(dx: 0, dy: -lift),
+                                          textWidth: label.textWidth,
+                                          leadingInset: label.leadingInset))
+        }
+        return result
+    }
+
     /// The layer whose name is under `point`, or nil for anywhere else.
     ///
     /// `labels` comes in drawing order, back to front, so where two names

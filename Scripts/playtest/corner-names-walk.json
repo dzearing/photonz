@@ -1,0 +1,309 @@
+{
+  "out": "/tmp/photonz-playtest/corner-names",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 620,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        220
+      ],
+      "to": [
+        640,
+        600
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        300
+      ],
+      "to": [
+        830,
+        344
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        360
+      ],
+      "to": [
+        800,
+        390
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        665,
+        265
+      ],
+      "to": [
+        870,
+        430
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-component",
+      "note": "a component on bare canvas beside the screen, wearing its violet mark and name"
+    },
+    {
+      "do": "snapshot",
+      "name": "corner-names-1-apart"
+    },
+    {
+      "do": "drag",
+      "from": [
+        760,
+        320
+      ],
+      "to": [
+        248,
+        248
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        800,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-corner",
+      "note": "the component moved into the screen's top left corner: both names want the same strip, so they must land on different lines and both stay readable"
+    },
+    {
+      "do": "snapshot",
+      "name": "corner-names-2-both"
+    },
+    {
+      "do": "click",
+      "at": [
+        192,
+        193
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-clicked-upper",
+      "note": "clicking the upper name, the one that moved, should pick the component"
+    },
+    {
+      "do": "snapshot",
+      "name": "corner-names-3-picked-component"
+    },
+    {
+      "do": "click",
+      "at": [
+        192,
+        209
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-clicked-lower",
+      "note": "clicking the lower name, the one that stayed put, should still pick the screen"
+    },
+    {
+      "do": "click",
+      "at": [
+        192,
+        193
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-renaming",
+      "note": "double clicking the moved name opens it for typing on the line it moved to, not back down over the screen's name"
+    },
+    {
+      "do": "snapshot",
+      "name": "corner-names-4-renaming"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "zoomOut"
+    },
+    {
+      "do": "action",
+      "action": "zoomOut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "3-zoomed-out",
+      "note": "zoomed out twice: names are the same size at every zoom, so they must still be on separate lines"
+    },
+    {
+      "do": "snapshot",
+      "name": "corner-names-3-zoomed-out"
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dragComponent",
+      "at": [
+        245,
+        265
+      ]
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        245,
+        265
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "click",
+      "at": [
+        800,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-copy-in-the-corner",
+      "note": "a copy dropped on the same corner: it wears a mark and no name, and that mark must not land on either name either"
+    },
+    {
+      "do": "snapshot",
+      "name": "corner-names-5-copy"
+    },
+    {
+      "do": "describe",
+      "stage": "4-fit",
+      "note": "back to fit"
+    },
+    {
+      "do": "snapshot",
+      "name": "corner-names-4-fit"
+    }
+  ]
+}

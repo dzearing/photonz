@@ -6909,3 +6909,21 @@ Next: nothing here is blocked. Open question in the audit — whether the list
 should also offer a way to put a piece back to following without going to it
 first. Filed while working: new layers of the same kind all get the same name,
 which makes two entries in this list read identically.
+
+## 2026-09-03 — Names in a crowded corner stop overlapping
+
+A component in a screen's top left corner printed its name straight over the
+screen's name (visible in the 2026-09-03 library-drag audit). `CanvasNameLabels`
+gained `chipBox` and `stacked` (PhotonzCore, 14 new tests): a name that would
+land on one already taken climbs just far enough to clear it, measuring the
+letters and the mark rather than the generous label box. The canvas now builds
+one ordered list of everything in that strip (`canvasNameChips`: screens, then
+component names, then the marks on copies), stacks it once, and draws, hits and
+renames from it, so all three agree about where a name ended up.
+
+Verified in the probe with `Scripts/playtest/corner-names-walk.json`, audit at
+`queue/audits/2026-09-03-corner-names.json`.
+
+Next: nothing outstanding here. Found on the way and filed: dragging an existing
+component onto a screen leaves it a sibling of the screen, while dropping a copy
+from the Library joins it.

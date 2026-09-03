@@ -34,18 +34,19 @@ extension CanvasNSView {
         for frame in document.frames {
             guard frame.isVisible, let bounds = document.canvasBounds(of: frame.id),
                   bounds.width > 0, bounds.height > 0 else { continue }
-            let rect = viewRect(forDocRect: bounds, in: viewport)
-            edges.addRect(rect.insetBy(dx: 0.5, dy: 0.5))
+            edges.addRect(viewRect(forDocRect: bounds, in: viewport).insetBy(dx: 0.5, dy: 0.5))
+        }
 
-            // A frame that has been promoted to a component wears the component
-            // mark and name in that same spot, so it keeps its edge but drops
-            // this label: one box, one name.
-            if frame.isMainComponent, componentsEnabled { continue }
+        // Names come from the one stacked list, so a screen whose corner is
+        // crowded prints its name on the line the list gave it rather than on
+        // top of whatever else wanted that spot. A frame promoted to a
+        // component is not in this list at all: it wears the component's mark
+        // and name in the same place, so a box never carries two names.
+        for chip in canvasNameChips() where chip.kind == .screen {
             // The frame being renamed has a field standing where its name was.
-            if frame.id == canvasRenameID { continue }
-
+            if chip.layer.id == canvasRenameID { continue }
             let label = CATextLayer()
-            label.string = frame.name
+            label.string = chip.layer.name
             label.font = Self.nameLabelFont
             label.fontSize = Self.nameLabelFont.pointSize
             // A neutral grey, NOT a theme label color: this text sits on the
@@ -54,7 +55,7 @@ extension CanvasNSView {
             // of them. The accent means "this name is live": the frame is
             // selected, or the pointer is resting on the name, which is the
             // only hint anywhere that the name can be clicked.
-            label.foregroundColor = isNameLabelLive(frame.id)
+            label.foregroundColor = isNameLabelLive(chip.layer.id)
                 ? NSColor.controlAccentColor.cgColor
                 : CGColor(gray: 0.45, alpha: 1)
             label.contentsScale = window?.backingScaleFactor ?? 2
@@ -63,7 +64,7 @@ extension CanvasNSView {
             // The label hangs above the frame's top left corner and is never
             // part of it: it does not move the frame, and clicking through it
             // reaches whatever is behind.
-            label.frame = CanvasNameLabels.box(forFrameRect: rect)
+            label.frame = CanvasNameLabels.box(for: chip.label)
             frameChromeLayer.addSublayer(label)
         }
         frameEdgeLayer.path = edges

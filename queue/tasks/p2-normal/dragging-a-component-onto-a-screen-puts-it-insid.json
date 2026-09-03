@@ -1,0 +1,28 @@
+{
+  "id": "dragging-a-component-onto-a-screen-puts-it-insid",
+  "title": "Dragging a component onto a screen puts it inside the screen",
+  "goal": "Dropping a component from the Library onto a screen makes it part of that screen, but dragging one that is already on the canvas onto the same screen leaves it floating beside it. Moving something onto a screen should mean the same thing however it got there.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 950,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T20:13:50.135Z",
+  "updated": "2026-09-03T20:13:50.136Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen in Scripts/playtest/corner-names-walk.json: after dragging a main component onto the frame corner the tree reads Frame [frame] and Component [group] as siblings, while dropComponent from the Library nests the copy under the frame. The Library drop path already does the adoption; the canvas move path (EditorState drag commit) does not.",
+  "acceptance": [
+    "Dragging an existing layer fully onto a screen makes that screen its parent",
+    "The layers list shows it nested under the screen after the drop",
+    "Dragging it back out onto bare canvas takes it out of the screen again",
+    "One undo puts it back where it was"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T20:13:50.135Z",
+      "note": "created (manual)"
+    }
+  ]
+}

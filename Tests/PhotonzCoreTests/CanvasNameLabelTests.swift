@@ -170,4 +170,145 @@ struct CanvasNameLabelTests {
         let hit = CanvasNameLabels.hitBox(forFrameRect: frame, textWidth: 60, leadingInset: mark)
         #expect(hit.maxY < frame.minY)
     }
+
+    // MARK: Two names that want the same spot
+
+    /// A screen 300 x 400, and a button sitting in its top left corner: both
+    /// names want the strip above that corner.
+    private var stackedPair: [CanvasNameLabel] {
+        let screen = CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 40)
+        let button = CanvasNameLabel(id: UUID(),
+                                     frameRect: CGRect(x: frame.minX + 8, y: frame.minY + 8,
+                                                       width: 120, height: 40),
+                                     textWidth: 42, leadingInset: mark)
+        return [screen, button]
+    }
+
+    @Test("Two names that would print on top of each other end up on different lines")
+    func collidingNamesStack() {
+        let stacked = CanvasNameLabels.stacked(stackedPair)
+        let first = CanvasNameLabels.chipBox(for: stacked[0])
+        let second = CanvasNameLabels.chipBox(for: stacked[1])
+        #expect(!first.intersects(second), "neither name may be drawn over the other")
+        #expect(second.maxY <= first.minY, "the inner name climbs above the one it collided with")
+    }
+
+    @Test("The name that was there first keeps its place")
+    func firstNameStaysPut() {
+        let labels = stackedPair
+        let stacked = CanvasNameLabels.stacked(labels)
+        #expect(stacked[0].frameRect == labels[0].frameRect)
+        #expect(stacked[1].frameRect.minY < labels[1].frameRect.minY)
+        #expect(stacked[1].frameRect.minX == labels[1].frameRect.minX,
+                "a name only ever climbs, it never slides sideways away from its box")
+    }
+
+    @Test("A name that collides with nothing does not move")
+    func loneNameDoesNotMove() {
+        let labels = [CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 40)]
+        #expect(CanvasNameLabels.stacked(labels)[0].frameRect == frame)
+    }
+
+    @Test("Two screens side by side keep their own line")
+    func distantNamesDoNotStack() {
+        let labels = [
+            CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 40),
+            CanvasNameLabel(id: UUID(), frameRect: frame.offsetBy(dx: 400, dy: 0), textWidth: 40),
+        ]
+        let stacked = CanvasNameLabels.stacked(labels)
+        #expect(stacked[1].frameRect == labels[1].frameRect)
+    }
+
+    @Test("A short name leaves room beside it: the box is wide, the letters are not")
+    func stackingMeasuresTheLettersNotTheBox() {
+        // The second box starts 80 points right of the first, whose name is
+        // only 40 points of letters. Both boxes are 240 wide and overlap, the
+        // names do not.
+        let labels = [
+            CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 40),
+            CanvasNameLabel(id: UUID(), frameRect: frame.offsetBy(dx: 80, dy: 0), textWidth: 40),
+        ]
+        #expect(CanvasNameLabels.stacked(labels)[1].frameRect == labels[1].frameRect)
+    }
+
+    @Test("Names that nearly touch still get pulled apart")
+    func namesNeedBreathingRoom() {
+        // Two points of daylight between two names is not enough to read them
+        // as two names.
+        let labels = [
+            CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 40),
+            CanvasNameLabel(id: UUID(), frameRect: frame.offsetBy(dx: 42, dy: 0), textWidth: 40),
+        ]
+        #expect(CanvasNameLabels.stacked(labels)[1].frameRect.minY < labels[1].frameRect.minY)
+    }
+
+    @Test("A component's mark counts as part of its name when they are pulled apart")
+    func theMarkIsPartOfTheChip() {
+        // The letters start clear of the screen's name, but the mark in front
+        // of them does not, and a mark drawn over letters is the same mess.
+        let labels = [
+            CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 40),
+            CanvasNameLabel(id: UUID(), frameRect: frame.offsetBy(dx: 44, dy: 0),
+                            textWidth: 40, leadingInset: mark),
+        ]
+        #expect(CanvasNameLabels.stacked(labels)[1].frameRect.minY < labels[1].frameRect.minY)
+    }
+
+    @Test("Three names in one corner land on three lines")
+    func threeNamesStackInOrder() {
+        let rect = frame
+        let labels = (0..<3).map { i in
+            CanvasNameLabel(id: UUID(), frameRect: rect.offsetBy(dx: CGFloat(i) * 2, dy: 0),
+                            textWidth: 60)
+        }
+        let boxes = CanvasNameLabels.stacked(labels).map(CanvasNameLabels.chipBox(for:))
+        for (i, box) in boxes.enumerated() {
+            for other in boxes[(i + 1)...] {
+                #expect(!box.intersects(other))
+            }
+        }
+    }
+
+    @Test("A pile of names in one corner stops climbing instead of flying off screen")
+    func stackingIsBounded() {
+        let labels = (0..<40).map { _ in
+            CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 60)
+        }
+        let stacked = CanvasNameLabels.stacked(labels)
+        let highest = stacked.map(\.frameRect.minY).min() ?? 0
+        #expect(highest >= frame.minY - CanvasNameLabels.rowStep * CGFloat(CanvasNameLabels.maximumRows) - 1)
+    }
+
+    @Test("A click lands on the name where it ended up, not where it started")
+    func clicksFollowTheStack() {
+        let labels = stackedPair
+        let stacked = CanvasNameLabels.stacked(labels)
+        let lifted = CanvasNameLabels.box(for: stacked[1])
+        #expect(CanvasNameLabels.hit(at: CGPoint(x: lifted.minX + 4, y: lifted.midY),
+                                     labels: stacked) == labels[1].id)
+        let bottom = CanvasNameLabels.box(for: stacked[0])
+        #expect(CanvasNameLabels.hit(at: CGPoint(x: bottom.minX + 4, y: bottom.midY),
+                                     labels: stacked) == labels[0].id,
+                "the name that kept its place still answers clicks there")
+    }
+
+    @Test("A stacked name still keeps off its own box's top edge")
+    func stackedNamesStayOffTheBox() {
+        let stacked = CanvasNameLabels.stacked(stackedPair)
+        for label in stacked {
+            #expect(CanvasNameLabels.hitBox(for: label).maxY < label.frameRect.minY)
+        }
+    }
+
+    @Test("A name climbs just far enough to clear what was in its way")
+    func liftIsNoBiggerThanItNeedsToBe() {
+        // The button's box starts eight points below the screen's, so its name
+        // starts eight points lower too: one line up is not enough to clear
+        // the screen's name, and two lines is further than it needs.
+        let labels = stackedPair
+        let stacked = CanvasNameLabels.stacked(labels)
+        let first = CanvasNameLabels.chipBox(for: stacked[0])
+        let second = CanvasNameLabels.chipBox(for: stacked[1])
+        #expect(second.maxY == first.minY - CanvasNameLabels.verticalGap)
+    }
 }
