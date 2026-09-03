@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.208Z",
-  "updated": "2026-09-03T03:36:58.331Z",
+  "updated": "2026-09-03T03:37:19.420Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Step B3 of docs/design/ui-building.md. The panel can be empty of content at this point; what matters is that it exists as an ordinary panel group and shares the selection model. LayersPanel.swift InspectorSectionID is the pattern to extend. The mocks (components.html, dsys.html) also give the Library a slide-down overlay form for browsing; that is a follow-up, not this task.\n\nObjective: ui-building (the current focus). Kept here rather than under the later interaction-foundations dock epic because it extends the dock the app already has instead of building a new one; if it turns out a real dock group system is needed, stop and file that as a foundations task rather than growing this one.",
@@ -49,7 +49,12 @@
     {
       "t": "2026-09-03T03:36:58.331Z",
       "note": "Verified on the probe with Screen Recording granted (Scripts/playtest/library-walk.json). 1) The dock with the Library hidden is BYTE identical to the dock before and after showing it (same sha256 on the window captures). 2) All four scopes render, three with their own empty line, checked by presetting library.scope on the probe. 3) Search narrows the shelf and a search that finds nothing says so. 4) Return takes the top hit: the tile rings and a Media section opens under the shelf with the capture's age, pixel size, kind and two buttons. 5) Place in Picture lands the capture as a new layer. 6) Drawing a rectangle, and a click on bare canvas, both let the tile go. Fixed during the pass: a wide thumbnail stretched its tile across two neighbours (the image now rides in an overlay, which cannot resize its host); the lazy grid could not be measured so the area clipped the bottom row's caption (the area is now the height you set, and only an empty shelf hugs its sentence); tiles were captioned Scree....22.12 for every capture (now how long ago it was taken). Full suite green, 1715 tests."
+    },
+    {
+      "t": "2026-09-03T03:37:19.420Z",
+      "note": "The Library ships in the right dock behind next-library, off until View > Show Library asks for it: four scopes, a search field, a resizable tile area, and an item section that opens the way a layer's sections do. Media lists the captures the app already keeps, so the shelf is useful on arrival; Components, Styles and Systems say in one line what will fill them. Core: LibraryScope/LibraryEntry/LibrarySearch/LibraryNaming, tested. Verified on the probe with real window captures (Scripts/playtest/library-walk.json): the dock with it hidden is byte identical to today, search narrows, Return picks the top hit, Place in Picture lands a layer, and a canvas selection takes the pick back. Audit: queue/audits/2026-09-03-library.json. Commit f3656b7."
     }
   ],
-  "started": "2026-09-03T03:09:28.851Z"
+  "started": "2026-09-03T03:09:28.851Z",
+  "completed": "2026-09-03T03:37:19.420Z"
 }
