@@ -544,8 +544,13 @@ private final class Run {
                     editor.beginNamingColorStyle(slot: slot)
                 }
             case .useFirstColorStyle:
-                if let style = editor.colorStyles.first, let slot = editor.colorStyleSlots.first {
-                    editor.useColorStyle(slot: slot, styleID: style.id)
+                // The first pairing that is actually on offer. A saved color
+                // only turns up on the parts it is for, so "the first style"
+                // and "the first slot" are not always a pair that go together.
+                if let pair = editor.colorStyleSlots.lazy.compactMap({ slot in
+                    editor.colorStyles(for: slot).first.map { (slot, $0.id) }
+                }).first {
+                    editor.useColorStyle(slot: pair.0, styleID: pair.1)
                 }
             case .unlinkColorStyle:
                 if let slot = editor.colorStyleSlots

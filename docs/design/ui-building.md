@@ -951,7 +951,9 @@ styles exist.
   away.** A shared color is not edited from one of the places it is used, so the
   only way to change it is to change the style. Unlink is in the same menu and
   says what it does, so the way back to a one-off color is one click and never a
-  surprise.
+  surprise. (The name took the ROW LABEL's place at first, which is what made a
+  rectangle's settings unreadable; see "the shape settings say what they are"
+  below.)
 - **The Library's Styles shelf is where a style is renamed, recolored and
   removed.** Picking a tile clears the layer selection by design, so applying a
   style could never be a shelf action; binding belongs on the row, where the
@@ -976,6 +978,54 @@ Deliberately left: styles are per document, with no shared library across
 documents and no publishing; there is no way to make a style without a layer to
 save it from; a style cannot be applied to several selected layers at once; and
 there are no text or effect styles, only color.
+
+## Landed: the shape settings say what they are (Next, `next-styles`, 2026-09-03)
+
+Reported by the user against the section above: a picked rectangle showed a
+section headed **Annotation**, the word "Rectangle" beside one color and nothing
+beside the other, the words "Border" and "Surface" where labels should be, and
+every saved color in the document on every color menu. Four separate faults, one
+unreadable panel.
+
+- **A section that describes what you picked is named after IT.** "Annotation"
+  is the name of a content kind in the model and nothing on screen is called
+  one. The header now reads Rectangle, Ellipse, Arrow, Line or Highlight, and
+  the Measure section reads Measurement. `AnnotationShape.title` lives in
+  `PhotonzCore` (`ShapeSettingsNaming.swift`) so the header and the row labels
+  cannot drift apart.
+- **Every color says what part it paints, in a column of its own.** A box gets
+  Outline and Fill; a line, arrow or highlight is all one color and just says
+  Color, because the header already names the shape. The label is a fixed
+  column and NEVER moves aside for anything — losing it exactly when a saved
+  color was in use was the whole complaint.
+- **The name of a saved color wears a palette mark.** The row label says what
+  gets painted and the menu button says which saved color is doing the
+  painting; without a mark those two read as a pair of labels and neither means
+  anything. `ColorPartLayout` holds the columns: label, switch, color, menu.
+  The switch column is present even when blank, so a rectangle's Outline
+  swatch and its Fill swatch sit at the same left edge.
+- **A saved color is offered only where it belongs.** There are two answers, not
+  three: **ink** (outlines, lines, text) and **surface** (fills, frame
+  backgrounds), which is the split the user described. `ColorStyleRole` on the
+  style records it, saving from a row records it automatically, and each row's
+  menu is titled "Saved outline colors" and so on, so a shorter list reads as
+  scoped rather than as colors having gone missing. A row with no colors for its
+  part says the others are for other parts and offers the way to widen one.
+- **One color can serve both**, because one blue really is a button's fill and a
+  link's ink. The picked style's own section grew a **Use it for** pair of
+  checkboxes; unticking the last one does nothing rather than leaving a color no
+  row will ever offer. Nothing is repainted by a change here.
+- **A color saved before roles existed is never lost.** The document works one
+  out: one of the app's own five keeps what the app made it for, anything else
+  takes the parts it is already painting, and a color nothing uses stays offered
+  everywhere. `effectiveColorStyleRoles` is pure, so nothing has to migrate on
+  open, and a style with no roles writes no roles key.
+- **Nothing about how a shape paints changed.** Only what the panel reads.
+
+Deliberately left: the Measure section's own color row keeps its narrower label
+column, having nothing to line up against; and the styled readout is a plain
+square where a raw one is a clickable well, which is honest but does look like
+two different controls in one column.
 
 ## Landed: the Library arrives stocked (Next, `next-starter-components`, 2026-09-03)
 

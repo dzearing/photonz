@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 7,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:39:20.843Z",
-  "updated": "2026-09-03T12:39:20.877Z",
+  "updated": "2026-09-03T14:03:12.513Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reported by the user on 2026-09-03 with a screenshot of a selected rectangle: what is annotation, is this Rectangle properties, there are swatches without labels and I do not know what they mean, presets are not scoped to the type of thing (a foreground colour should only offer foreground presets, a surface colour only surface ones), and the layout looks janky. What the code actually does, verified by reading: the section title comes from LayersPanel.swift line 448 which returns the literal Annotation for the .annotation case, an internal content-kind name rather than the shape. The two words the user read as labels, Border and Surface, are the NAMES OF SAVED COLOUR STYLES the user made: ColorStyleRow deliberately replaces a row label with the bound style name (LayersPanel.swift around 1620 and ColorStylePanel.swift ColorStyleRow, comment: a raw colour keeps its well, a colour wearing a style says the style name instead). That is the confusion: the slot loses its name exactly when a style is applied. The menu lists every style regardless of slot: ColorStylePanel.swift ColorStyleControl reads editorState.colorStyles and ForEach over all of them with no filter, so a fill style can be bound to a stroke. Scoping needs a notion of what a style is FOR; decide whether that is a kind stored on the style, or inferred from where it was first saved, and open a decision card if the answer changes what the user has to do when saving one. The janky look comes from the HStack with a Spacer and top alignment around line 1633 rather than a shared label column. Ships behind next-styles. Check the same title bug for measure, text and callout sections while there.",
+  "notes": "Reported by the user on 2026-09-03 with a screenshot of a selected rectangle: what is annotation, is this Rectangle properties, there are swatches without labels and I do not know what they mean, presets are not scoped to the type of thing (a foreground colour should only offer foreground presets, a surface colour only surface ones), and the layout looks janky. What the code actually does, verified by reading: the section title comes from LayersPanel.swift line 448 which returns the literal Annotation for the .annotation case, an internal content-kind name rather than the shape. The two words the user read as labels, Border and Surface, are the NAMES OF SAVED COLOUR STYLES the user made: ColorStyleRow deliberately replaces a row label with the bound style name (LayersPanel.swift around 1620 and ColorStylePanel.swift ColorStyleRow, comment: a raw colour keeps its well, a colour wearing a style says the style name instead). That is the confusion: the slot loses its name exactly when a style is applied. The menu lists every style regardless of slot: ColorStylePanel.swift ColorStyleControl reads editorState.colorStyles and ForEach over all of them with no filter, so a fill style can be bound to a stroke. Scoping needs a notion of what a style is FOR; decide whether that is a kind stored on the style, or inferred from where it was first saved, and open a decision card if the answer changes what the user has to do when saving one. The janky look comes from the HStack with a Spacer and top alignment around line 1633 rather than a shared label column. Ships behind next-styles. Check the same title bug for measure, text and callout sections while there.\n\nDONE 2026-09-03. Roles are two, not three: ColorStyleRole.ink covers stroke and text, .surface covers fill. Stored as an optional list on ColorStyle so an old style writes no key; effectiveColorStyleRoles derives an answer for one that has none (starter id first, then the slots already binding it, then everywhere) so nothing migrates on open. ColorPartLayout / ColorPartRow in ColorStylePanel.swift are the shared grid every color row now uses; the switch column must stay present-but-blank or the swatches misalign. Section naming is in LayersPanel.sectionTitle, gated on colorStylesEnabled purely to keep Current byte-identical.",
   "acceptance": [
     "With a rectangle selected the section is headed after the thing selected, not after an internal word, and the same rule holds for every other kind of layer",
     "Every colour swatch has a permanent label saying what it paints, for example the outline and the inside, and that label stays visible when a saved colour is in use",
@@ -30,6 +30,49 @@
     {
       "t": "2026-09-03T12:39:20.877Z",
       "note": "seq 170 -> 7"
+    },
+    {
+      "t": "2026-09-03T13:27:18.519Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T13:31:53.220Z",
+      "note": "runner failed (exit 1, attempt 1): API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com."
+    },
+    {
+      "t": "2026-09-03T13:32:23.982Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T14:03:12.513Z",
+      "note": "adversarial review, before building. (1) The section header is the easy half: Annotation is a model word and nothing on screen is called one, so it becomes the shape's name. Checked the other kinds too: Text was already right, Measure describes a picked measurement so it becomes Measurement, Collage was fine, there is no callout section. (2) The stroke row's label was the SHAPE name, which is redundant the moment the header says it, so the label becomes the part: Outline. For a line, arrow or highlight the whole thing is one color and calling that an outline would be a small lie, so it says Color. (3) The jank is not the Spacer alone: a trailing-aligned control cluster MOVES the swatch whenever the name beside it changes length, so two rows with different names put their swatches in two places. Fixed by columns, not by tweaking alignment. (4) Scoping is where the mock and the task both stop short. Two roles, not three slots: the user's own words were foreground vs surface, and stroke and text are the same kind of paint. Three slots would have split an outline color from a text color for no reason."
+    },
+    {
+      "t": "2026-09-03T14:03:12.513Z",
+      "note": "the trap in strict scoping, and why no decision card was opened: the app's own five starter styles include Accent, which is a button's FILL and a link's INK. A single role per style would force somebody to save the same blue twice. So a style carries a small LIST of roles, set from the row it was saved from (nothing changes about saving one, so there is nothing for the user to decide) and widened by two checkboxes in the picked style's own section. The task said to open a card only if the answer changes what the user has to do when saving; it does not."
+    },
+    {
+      "t": "2026-09-03T14:03:12.513Z",
+      "note": "core landed, TDD: ColorStyleRole (ink | surface) on ColorStyle as an optional list, ColorSlot.styleRole, PhotonzDocument.colorStyles(for:) / effectiveColorStyleRoles(id:) / setColorStyleRoles(id:roles:), AnnotationShape.title + colorTitle(for:) in a new ShapeSettingsNaming.swift, starter styles declaring their own. 29 new tests in ColorStyleRoleTests and ShapeSettingsNamingTests. Roles for a style that predates them are DERIVED, not migrated: pure, so nothing has to run on open, and an unroled style writes no roles key."
+    },
+    {
+      "t": "2026-09-03T14:03:12.513Z",
+      "note": "app landed: ColorPartLayout holds the four columns (label 68, switch 16, color 52 min, menu), ColorPartRow is the one labelled row and every color section uses it (AnnotationInspector, TextInspector, FrameInspector, SelectionColorInspector). ColorStyleControl takes the part name, filters by role and titles its list 'Saved outline colors'. The style name now wears a swatchpalette glyph. sectionTitle names the annotation section after the shape and the measure section Measurement, gated on colorStylesEnabled so Current is untouched."
+    },
+    {
+      "t": "2026-09-03T14:03:12.513Z",
+      "note": "adversarial review, on the built thing (probe app, real captures). Three real faults found and fixed: (a) the switch column reserved NOTHING when empty, because a SwiftUI modifier on a nil optional view lays out nothing, so a rectangle's Outline swatch and Fill swatch still sat 23pt apart. Placeholder added. (b) the style a row is WEARING was looked up in the FILTERED list, so a color whose roles no longer include that slot made a single-layer row read 'Using more than one style'. Now looked up in the whole shelf. (c) a row whose part has no saved colors showed nothing, so somebody who had just saved one and gone looking for it on the other row got silence. The menu now says the others are for other parts and offers the way to widen one."
+    },
+    {
+      "t": "2026-09-03T14:03:12.513Z",
+      "note": "verified: Scripts/test.sh green (2163 tests). shape-settings-walk.json on the probe with Screen Recording granted, run twice — once on this code and once with the change stashed — for real before and after pictures of the section for a rectangle, an ellipse and an arrow. styles-walk, multi-style-walk and starter-components-walk all still pass; useFirstColorStyle in the harness was taught to pick a slot and style that actually go together. Audit: queue/audits/2026-09-03-shape-settings.json with nine captures."
     }
-  ]
+  ],
+  "started": "2026-09-03T13:32:23.981Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-03T13:31:53.219Z",
+    "exit": 1,
+    "message": "API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com."
+  }
 }

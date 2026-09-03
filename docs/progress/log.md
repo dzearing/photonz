@@ -6467,3 +6467,39 @@ probe with Screen Recording granted — the label's ink measured dead centre
 within half a pixel at 80, 128 and 320 wide with its ink width unchanged, and a
 real frame-corner drag took a stretched bar to 540 against a 540-wide screen.
 Audit: `queue/audits/2026-09-03-ui-components-placement.json`.
+
+## 2026-09-03 — the shape settings say what they are
+
+A picked rectangle used to open a section headed **Annotation** with the word
+"Rectangle" beside one color, nothing beside the other, and the names of saved
+colors sitting where labels should be. Reported by the user with a screenshot.
+Four faults in one panel, all fixed (Next, `next-styles`):
+
+The section is named after what you picked (Rectangle, Ellipse, Arrow, Line,
+Highlight; Measurement for a measurement). Every color has a permanent label
+saying which part it paints, in a fixed column that never moves aside — losing
+it exactly when a saved color was in use was the complaint. The name of a saved
+color now wears a palette mark so it cannot be mistaken for a label. Rows sit on
+one grid: label, switch, color, menu, with the switch column reserved even when
+blank, which is what had put a rectangle's two swatches at two different left
+edges.
+
+Scoping saved colors needed a notion of what one is FOR, and there are two
+answers rather than three: ink (outlines, lines, text) and surface (fills, frame
+backgrounds), which is the split the user described. Saving from a row records
+it, so nothing changes about saving one; the picked style's section grew a
+**Use it for** pair of checkboxes because one blue really is both a button's fill
+and a link's ink. A color saved before this existed is never hidden: the document
+works its roles out from the app's own five and from what it is already
+painting, purely, so nothing migrates on open and old documents write the same
+bytes.
+
+Next: nothing here is blocked. Two things left rough and named in the audit —
+the styled readout is a plain square where a raw one is a clickable well, and
+the Measure section's color row keeps its own narrower label column.
+
+Verified: `Scripts/test.sh` green (2163 tests, 29 new in `ColorStyleRoleTests`
+and `ShapeSettingsNamingTests`); `shape-settings-walk.json` on the probe with
+Screen Recording granted, run against both the old and new code for before and
+after pictures; `styles-walk`, `multi-style-walk` and `starter-components-walk`
+still pass. Audit: `queue/audits/2026-09-03-shape-settings.json`.

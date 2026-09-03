@@ -179,7 +179,10 @@ extension PhotonzDocument {
                                         name: String? = nil) -> UUID? {
         guard let hex = colorStyleSelection(layerIDs: layerIDs, slot: slot).savableColorHex,
               !layerIDs.isEmpty else { return nil }
-        let styleID = addColorStyle(name: name, colorHex: hex)
+        // Saved FROM a slot, so it is saved FOR that kind of part: a color
+        // kept off an outline is offered on outlines and on text, not as
+        // something to fill a box with. The Library is where that is widened.
+        let styleID = addColorStyle(name: name, colorHex: hex, roles: [slot.styleRole])
         bindColorStyle(layerIDs: layerIDs, slot: slot, styleID: styleID)
         return styleID
     }

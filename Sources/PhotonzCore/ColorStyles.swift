@@ -37,6 +37,39 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         case .text: return "Color"
         }
     }
+
+    /// The kind of paint this slot takes, which is what decides whether a
+    /// saved color is offered here. An outline and a letter are both ink; a
+    /// box's inside and a frame's surface are both surface.
+    public var styleRole: ColorStyleRole {
+        switch self {
+        case .fill: return .surface
+        case .stroke, .text: return .ink
+        }
+    }
+}
+
+/// What a saved color is FOR.
+///
+/// A color row used to offer every saved color in the document, so the inside
+/// of a box could be painted with a color somebody made for hairlines. There
+/// are only two answers worth keeping apart, and they are the two a person
+/// already thinks in: the color things are drawn IN, and the color areas are
+/// filled WITH.
+public enum ColorStyleRole: String, CaseIterable, Hashable, Codable, Sendable {
+    /// What a line, an outline or letters are drawn in.
+    case ink
+    /// What an area is filled with: a box's inside, a frame's surface.
+    case surface
+
+    /// How the Library offers this as something to tick. Plain words, because
+    /// "ink" and "surface" are our words and not everybody's.
+    public var title: String {
+        switch self {
+        case .ink: return "Outlines and text"
+        case .surface: return "Fills and backgrounds"
+        }
+    }
 }
 
 /// A color saved under a name. `id` is what layers point at, so renaming one
@@ -45,11 +78,35 @@ public struct ColorStyle: Identifiable, Hashable, Codable, Sendable {
     public let id: UUID
     public var name: String
     public var colorHex: String
+    /// The parts of a layer this color is offered for. Nil means nobody has
+    /// said yet — a style saved before this existed — and the document works
+    /// out a sensible answer rather than hiding it from every row.
+    public var roles: [ColorStyleRole]?
 
-    public init(id: UUID = UUID(), name: String, colorHex: String) {
+    public init(id: UUID = UUID(), name: String, colorHex: String,
+                roles: [ColorStyleRole]? = nil) {
         self.id = id
         self.name = name
         self.colorHex = colorHex
+        self.roles = ColorStyle.normalizedRoles(roles)
+    }
+
+    /// In one fixed order, without repeats, so the same two answers always
+    /// write the same JSON and two styles for the same parts compare equal. An
+    /// empty list becomes nil: a color that is for nothing at all would vanish
+    /// from every row with no way back.
+    static func normalizedRoles(_ roles: [ColorStyleRole]?) -> [ColorStyleRole]? {
+        guard let roles else { return nil }
+        let kept = ColorStyleRole.allCases.filter { roles.contains($0) }
+        return kept.isEmpty ? nil : kept
+    }
+
+    /// Whether this color is offered for a slot, going only on what the style
+    /// itself says. A style that has said nothing is offered everywhere; the
+    /// document's `colorStyles(for:)` is the one that guesses better.
+    public func suits(_ slot: ColorSlot) -> Bool {
+        guard let roles else { return true }
+        return roles.contains(slot.styleRole)
     }
 }
 
@@ -177,11 +234,55 @@ extension PhotonzDocument {
     /// Adds a style with a color, and returns its id. A blank name becomes the
     /// made-up one rather than a nameless tile on the shelf.
     @discardableResult
-    public mutating func addColorStyle(name: String? = nil, colorHex: String) -> UUID {
+    public mutating func addColorStyle(name: String? = nil, colorHex: String,
+                                       roles: [ColorStyleRole]? = nil) -> UUID {
         let style = ColorStyle(name: ComponentNaming.normalized(name) ?? freshColorStyleName(),
-                               colorHex: colorHex)
+                               colorHex: colorHex, roles: roles)
         colorStyles.append(style)
         return style.id
+    }
+
+    /// The parts a saved color is offered for, including the answer worked out
+    /// for one that has never said.
+    ///
+    /// Saving a color always records what it was saved from, so this only has
+    /// to guess for styles that predate that. It guesses the way a person
+    /// would: one of the app's own five is what the app made it for, and
+    /// anything else is for the parts it is already painting. A color nothing
+    /// uses and nobody named a part for stays offered everywhere, because a
+    /// style that has quietly disappeared from every row is worse than one
+    /// offered in a row you did not want it in.
+    public func effectiveColorStyleRoles(id: UUID) -> [ColorStyleRole] {
+        guard let style = colorStyle(id: id) else { return [] }
+        if let roles = style.roles { return roles }
+        if let starter = StarterStyle.allCases.first(where: { $0.styleID == id }) {
+            return starter.roles
+        }
+        var found: Set<ColorStyleRole> = []
+        for layer in allLayers {
+            for binding in layer.colorStyleBindings ?? [] where binding.styleID == id {
+                found.insert(binding.slot.styleRole)
+            }
+        }
+        guard !found.isEmpty else { return ColorStyleRole.allCases }
+        return ColorStyleRole.allCases.filter { found.contains($0) }
+    }
+
+    /// The saved colors one row offers: the ones meant for the part it paints,
+    /// in the order the shelf lists them. This is what stops a color made for
+    /// hairlines turning up as something to fill a box with.
+    public func colorStyles(for slot: ColorSlot) -> [ColorStyle] {
+        colorStyles.filter { effectiveColorStyleRoles(id: $0.id).contains(slot.styleRole) }
+    }
+
+    /// Changes what a saved color is offered for. Ticking nothing is refused:
+    /// it would take the style off every row with no way to put it back.
+    /// Nothing is repainted — this is about what gets offered, not what is
+    /// already painted.
+    public mutating func setColorStyleRoles(id: UUID, roles: [ColorStyleRole]) {
+        guard let index = colorStyles.firstIndex(where: { $0.id == id }),
+              let kept = ColorStyle.normalizedRoles(roles) else { return }
+        colorStyles[index].roles = kept
     }
 
     /// Saves what a layer is painted in one slot as a named style, and points

@@ -26,32 +26,51 @@ struct ColorStyleNamingRequest: Hashable {
 /// - **A color of its own.** The row keeps its color well and this button is a
 ///   swatch outline: "Save as Style" makes one, and any style already on the
 ///   shelf can be picked straight from the menu.
-/// - **Wearing a style.** The well is replaced by the style's NAME, because a
-///   color that belongs to a style is not a color you edit here: you change the
-///   style, on the shelf, and everything wearing it follows. "Unlink" is in the
-///   menu and says what it does, so the way back to a one-off color is one
-///   click and never a surprise.
+/// - **Wearing a style.** The well becomes a plain swatch and this button says
+///   the style's NAME beside a palette mark, because a color that belongs to a
+///   style is not a color you edit here: you change the style, on the shelf,
+///   and everything wearing it follows. "Unlink" is in the menu and says what
+///   it does, so the way back to a one-off color is one click and never a
+///   surprise. The row's own label never moves out of the way for the name —
+///   losing it was exactly what made a rectangle's settings unreadable.
 /// - **Disagreeing.** Layers wearing different styles, or different colors, say
 ///   Mixed rather than naming one of them: a row printing Accent over three
 ///   layers when only one wears it is how you unlink a style you never meant to
 ///   touch. Picking a name still lands on all of them, which is the way out.
 ///
-/// The mock hangs this off a Fill section of its own; the app already has a
-/// Fill row inside Annotation, a Color row inside Text and a Background row
-/// inside Frame, so the control goes on those rather than a fourth place to
-/// look for a color. With several layers picked those sections are gone, and
-/// the Color section (`SelectionColorInspector`) is the one place instead.
+/// The menu offers only the saved colors meant for the part the row paints, and
+/// says which part that is, so a color kept for hairlines is not on the list as
+/// something to fill a box with.
+///
+/// The mock hangs this off a Fill section of its own; the app already has an
+/// Outline and a Fill row inside a shape's settings, a Color row inside Text
+/// and a Background row inside Frame, so the control goes on those rather than
+/// a fourth place to look for a color. With several layers picked those
+/// sections are gone, and the Color section (`SelectionColorInspector`) is the
+/// one place instead.
 struct ColorStyleControl: View {
     @Environment(EditorState.self) private var editorState
     let slot: ColorSlot
+    /// What the row beside this paints, in the row's own words: "Outline",
+    /// "Fill", "Background", "Text". The menu says it out loud, so a shorter
+    /// list reads as scoped rather than as colors having gone missing.
+    let part: String
 
     private var selection: ColorStyleSelection { editorState.colorStyleSelection(slot: slot) }
-    private var styles: [ColorStyle] { editorState.colorStyles }
+    /// Only the saved colors meant for this part. A color kept for hairlines
+    /// is not something to fill a box with, and offering it was how the menu
+    /// stopped meaning anything.
+    private var styles: [ColorStyle] { editorState.colorStyles(for: slot) }
 
     var body: some View {
         if Experiments.shared.colorStylesEnabled, !selection.isEmpty {
             let selection = selection
-            let style = selection.boundStyleID.flatMap { id in styles.first { $0.id == id } }
+            // Looked up in the WHOLE shelf, not in the offer list below: a
+            // color already painting this slot has to be named even if it is
+            // no longer offered for it, or a row wearing one style reads as
+            // wearing several.
+            let style = selection.boundStyleID
+                .flatMap { id in editorState.colorStyles.first { $0.id == id } }
             Menu {
                 if let style {
                     Section("Using \(style.name)") {
@@ -70,8 +89,9 @@ struct ColorStyleControl: View {
                     Button(saveTitle(selection)) { editorState.beginNamingColorStyle(slot: slot) }
                 }
                 if !styles.isEmpty {
-                    Section(selection.count > 1 ? "Use a style on all \(selection.count)"
-                                                : "Use a style") {
+                    Section(selection.count > 1
+                            ? "\(offerTitle), for all \(selection.count)"
+                            : offerTitle) {
                         ForEach(styles) { option in
                             Button {
                                 editorState.useColorStyle(slot: slot, styleID: option.id)
@@ -85,6 +105,17 @@ struct ColorStyleControl: View {
                             }
                         }
                     }
+                } else if !editorState.colorStyles.isEmpty {
+                    // There ARE saved colors, they are just for other parts.
+                    // Saying so is the difference between a scoped list and a
+                    // list that looks as though the color you saved a minute
+                    // ago has gone, and it points at the one place that
+                    // changes what a color is for.
+                    Section("Your saved colors are for other parts") {
+                        Button("Change what one is for in the Library") {
+                            editorState.showColorStyleShelf()
+                        }
+                    }
                 }
             } label: {
                 label(style)
@@ -95,22 +126,39 @@ struct ColorStyleControl: View {
         }
     }
 
-    /// Wearing a style: its NAME, with the menu's own chevron beside it so it
-    /// reads as something to open rather than a stray word. Otherwise the
-    /// quiet swatch glyph.
+    /// Wearing a style: a palette mark and the style's NAME, with the menu's
+    /// own chevron beside them so it reads as something to open rather than a
+    /// stray word. Otherwise the quiet swatch glyph on its own.
     ///
     /// A menu's label is drawn by AppKit, which keeps text and symbols and
     /// drops anything else, so the style's color is drawn by the ROW next
     /// door rather than in here (a swatch put in this label came out blank).
     @ViewBuilder private func label(_ style: ColorStyle?) -> some View {
         if let style {
-            Text(style.name)
-                .font(.caption)
-                .lineLimit(1)
-                .truncationMode(.middle)
+            // The glyph is what keeps the two words apart. The row's own label
+            // sits in the column to the left saying what gets painted; this
+            // one is the NAME OF A SAVED COLOR, and without a mark saying so
+            // the two read as a pair of labels and neither means anything.
+            HStack(spacing: 3) {
+                Image(systemName: "swatchpalette")
+                Text(style.name)
+                    .font(.caption)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
         } else {
             Image(systemName: "swatchpalette")
         }
+    }
+
+    /// What the list of saved colors is headed. It names the part, so a list
+    /// with four names on it where the document has six reads as "these are
+    /// the ones that go here" rather than as colors having gone missing.
+    private var offerTitle: String {
+        let noun = part.lowercased()
+        // ...except for a part already called Color, because "saved color
+        // colors" is not a sentence.
+        return noun == "color" ? "Saved colors" : "Saved \(noun) colors"
     }
 
     private func unlinkTitle(_ selection: ColorStyleSelection) -> String {
@@ -125,7 +173,7 @@ struct ColorStyleControl: View {
     /// several it has to say how many layers a pick here reaches, or "Accent"
     /// over three boxes reads as a guess.
     private func help(_ selection: ColorStyleSelection, _ style: ColorStyle?) -> String {
-        let noun = slot.title.lowercased()
+        let noun = part.lowercased()
         let many = selection.count > 1
         let sentence: String
         switch (style, many) {
@@ -144,17 +192,107 @@ struct ColorStyleControl: View {
     }
 }
 
-/// The two columns the whole-selection color rows share, so a swatch sits at
-/// the same left edge whether the row beside it is wearing a name or not.
-enum ColorStyleRowLayout {
+/// The columns every labelled color row shares.
+///
+/// Before this the label sat on the left, a Spacer pushed everything else to
+/// the right edge, and the swatch therefore moved whenever the name beside it
+/// changed length — two rows in one section, one wearing a saved name and one
+/// not, put their swatches in two different places. So the row is columns now:
+/// the label, the switch that turns the color on and off, the color, the menu.
+/// Every one of them is a fixed width, so the swatches line up down the
+/// section whatever any row happens to be wearing.
+enum ColorPartLayout {
+    /// Wide enough for the longest part name the inspector uses.
+    static let labelWidth: CGFloat = 68
+    /// The switch column, left blank in rows with nothing to switch, so a row
+    /// that has a checkbox and a row that does not still agree on where the
+    /// color goes.
+    static let switchWidth: CGFloat = 16
     /// Wide enough for the 18pt swatch and for the word Mixed.
     static let readoutWidth: CGFloat = 52
-    /// Wide enough for a style name and its chevron; longer names truncate.
-    static let controlWidth: CGFloat = 92
+    /// The band the label, the switch and the color all centre on, so nothing
+    /// sits half a line above its neighbour.
+    static let rowHeight: CGFloat = 20
+    static let spacing: CGFloat = 8
 }
 
-/// A color row's two halves: the readout, and the styles button, with the name
-/// field that saving opens sitting under them.
+/// One labelled color row: what it paints, the switch that turns it on and off
+/// where there is one, the color, and the menu of saved colors for that part.
+///
+/// The label is the point. It used to be whatever the section felt like — the
+/// shape's name beside a rectangle's outline, nothing at all beside its
+/// inside — and when a saved color was in use the name of that color took the
+/// label's place, so the one moment you most need to know which color you are
+/// looking at is the moment the row stopped saying. Now the label is a column
+/// of its own and never moves.
+struct ColorPartRow: View {
+    /// What this row paints, in words: Outline, Fill, Background, Color.
+    let part: String
+    let slot: ColorSlot
+    private let switchControl: AnyView?
+    /// The color the row edits directly. Nil for the row over several picked
+    /// layers, which has no single layer to edit a one-off color on.
+    private let well: AnyView?
+
+    init(part: String, slot: ColorSlot, @ViewBuilder well: () -> some View) {
+        self.part = part
+        self.slot = slot
+        self.switchControl = nil
+        self.well = AnyView(well())
+    }
+
+    /// A row whose color can be switched off altogether, like a box's inside.
+    /// The switch answers to the same label as the color beside it.
+    init(part: String, slot: ColorSlot, switchControl: some View,
+         @ViewBuilder well: () -> some View) {
+        self.part = part
+        self.slot = slot
+        self.switchControl = AnyView(switchControl)
+        self.well = AnyView(well())
+    }
+
+    /// The row over several picked layers: a readout and the menu.
+    init(part: String, slot: ColorSlot) {
+        self.part = part
+        self.slot = slot
+        self.switchControl = nil
+        self.well = nil
+    }
+
+    var body: some View {
+        // Top aligned: the menu can open a name field under itself, which
+        // makes the row two lines tall, and the label belongs beside the color
+        // rather than beside the field.
+        HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
+            Text(part)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(width: ColorPartLayout.labelWidth,
+                       height: ColorPartLayout.rowHeight, alignment: .leading)
+            // The switch column is ALWAYS this wide, blank or not: a modifier
+            // on a nil optional view reserves nothing, which is what put a
+            // rectangle's Outline swatch and its Fill swatch at two different
+            // left edges the first time this was built.
+            Group {
+                if let switchControl { switchControl } else { Color.clear }
+            }
+            .frame(width: ColorPartLayout.switchWidth,
+                   height: ColorPartLayout.rowHeight, alignment: .leading)
+            if let well {
+                ColorStyleRow(slot: slot, part: part) { well }
+            } else {
+                ColorStyleRow(slot: slot, part: part)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+/// A color row's right-hand half: the readout, and the styles button, with the
+/// name field that saving opens sitting under them. `ColorPartRow` is what puts
+/// a label in front of it; nothing should use this on its own.
 ///
 /// The readout is whichever of three things is true. One layer with a color of
 /// its own gets the well it always had. A color that comes from a style shows a
@@ -165,6 +303,9 @@ enum ColorStyleRowLayout {
 struct ColorStyleRow<Well: View>: View {
     @Environment(EditorState.self) private var editorState
     let slot: ColorSlot
+    /// What the row paints, passed through to the menu so it can say which
+    /// saved colors it is offering and why there are not more of them.
+    let part: String
     /// False for the whole-selection rows, which have no well to fall back to:
     /// there is no single layer to edit a one-off color on.
     private let hasWell: Bool
@@ -173,15 +314,17 @@ struct ColorStyleRow<Well: View>: View {
     @State private var draft = ""
     @FocusState private var nameFocused: Bool
 
-    init(slot: ColorSlot, @ViewBuilder well: () -> Well) {
+    init(slot: ColorSlot, part: String, @ViewBuilder well: () -> Well) {
         self.slot = slot
+        self.part = part
         self.well = well()
         self.hasWell = true
     }
 
     /// The row over a selection: a readout and the menu, no well.
-    init(slot: ColorSlot) where Well == EmptyView {
+    init(slot: ColorSlot, part: String) where Well == EmptyView {
         self.slot = slot
+        self.part = part
         self.well = EmptyView()
         self.hasWell = false
     }
@@ -192,23 +335,16 @@ struct ColorStyleRow<Well: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 6) {
-            HStack(spacing: 6) {
-                // The whole-selection rows sit under each other, so their
-                // swatches line up in fixed columns: a Fill wearing a name
-                // beside an Outline wearing none must not put the two swatches
-                // at different left edges. The single-layer rows are alone in
-                // their section and keep hugging their well.
-                if hasWell {
-                    readout(selection)
-                    ColorStyleControl(slot: slot)
-                } else {
-                    readout(selection)
-                        .frame(width: ColorStyleRowLayout.readoutWidth, alignment: .trailing)
-                    ColorStyleControl(slot: slot)
-                        .frame(width: ColorStyleRowLayout.controlWidth, alignment: .leading)
-                }
+        VStack(alignment: .leading, spacing: 6) {
+            // The color keeps a column of its own whatever it is showing — a
+            // well, a plain swatch, or the word Mixed — so the menu beside it
+            // starts in the same place in every row of the section.
+            HStack(alignment: .center, spacing: 6) {
+                readout(selection)
+                    .frame(minWidth: ColorPartLayout.readoutWidth, alignment: .leading)
+                ColorStyleControl(slot: slot, part: part)
             }
+            .frame(minHeight: ColorPartLayout.rowHeight)
             if isNaming { namingField }
         }
         // Saving asks for the name first, IN the dock, rather than making a
@@ -234,7 +370,7 @@ struct ColorStyleRow<Well: View>: View {
             Text(ColorStyleSelection.mixedText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .help("The picked layers do not share one \(slot.selectionTitle.lowercased()). "
+                .help("The picked layers do not share one \(part.lowercased()). "
                       + "Choosing a style sets all of them.")
         case .color(let hex):
             if hasWell {
@@ -313,18 +449,12 @@ struct SelectionColorInspector: View {
     @ViewBuilder private func row(_ slot: ColorSlot) -> some View {
         let selection = editorState.colorStyleSelection(slot: slot)
         VStack(alignment: .leading, spacing: 2) {
-            // Top aligned: while the name field is open the row is two lines
-            // tall, and the label belongs beside the color, not beside the
-            // field.
-            HStack(alignment: .top) {
-                Text(slot.selectionTitle).font(.caption).foregroundStyle(.secondary)
-                Spacer(minLength: 8)
-                ColorStyleRow(slot: slot)
-            }
+            ColorPartRow(part: slot.selectionTitle, slot: slot)
             // A Fill row that quietly skips the arrow in the selection says so
             // here, rather than looking as though it did nothing.
             if let note = selection.note {
                 Text(note).font(.caption2).foregroundStyle(.tertiary)
+                    .padding(.leading, ColorPartLayout.labelWidth + ColorPartLayout.spacing)
             }
         }
     }
@@ -420,6 +550,21 @@ struct LibraryStyleInspector: View {
                             }
                         }
                 }
+                // What it is offered for. A color is saved knowing where it
+                // came from, so this is already right the first time you look
+                // at it; it is here because one blue really is both the fill
+                // of a button and the color of a link, and without a way to
+                // say so you would have to save the same blue twice.
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Use it for")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    ForEach(ColorStyleRole.allCases, id: \.self) { role in
+                        Toggle(role.title, isOn: roleBinding(style, role))
+                            .toggleStyle(.checkbox)
+                            .font(.callout)
+                    }
+                }
                 Text(standing(style))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -451,6 +596,19 @@ struct LibraryStyleInspector: View {
             .fill(Color(hex: style.colorHex))
             .frame(width: 18, height: 18)
             .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.primary.opacity(0.25), lineWidth: 1))
+    }
+
+    /// One "Use it for" checkbox. Unticking the last one does nothing rather
+    /// than leaving a color that no row will ever offer.
+    private func roleBinding(_ style: ColorStyle, _ role: ColorStyleRole) -> Binding<Bool> {
+        Binding(
+            get: { editorState.colorStyleRoles(styleID: style.id).contains(role) },
+            set: { wanted in
+                var roles = editorState.colorStyleRoles(styleID: style.id)
+                roles.removeAll { $0 == role }
+                if wanted { roles.append(role) }
+                editorState.setColorStyleRoles(styleID: style.id, roles: roles)
+            })
     }
 
     /// What the style says about itself: how much of the document an edit here

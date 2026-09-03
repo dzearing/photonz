@@ -1,0 +1,59 @@
+{
+  "out": "/tmp/photonz-playtest/shape-settings",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1360, "height": 940 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 140], "to": [420, 320], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-rectangle", "note": "a rectangle picked: the section should be headed Rectangle, with Outline and Fill labelled" },
+    { "do": "snapshot", "name": "1-rectangle" },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [500, 140], "to": [800, 320], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-ellipse", "note": "an ellipse picked: headed Ellipse, same two labels" },
+    { "do": "snapshot", "name": "2-ellipse" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [180, 440], "to": [520, 600], "steps": 8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-arrow", "note": "an arrow picked: headed Arrow, one row labelled Color, no Fill row" },
+    { "do": "snapshot", "name": "3-arrow" },
+
+    { "do": "tool", "tool": "line" },
+    { "do": "drag", "from": [620, 440], "to": [900, 600], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-line", "note": "a line picked: headed Line, one row labelled Color" },
+    { "do": "snapshot", "name": "4-line" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [200, 660] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "escape" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [270, 230] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "showLibrary" },
+    { "do": "action", "action": "saveColorStyle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-naming", "note": "the name field is open under the Fill row, with the label still in place" },
+    { "do": "snapshot", "name": "5-naming" },
+    { "do": "focus", "field": "Style name" },
+    { "do": "type", "text": "Card" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-saved", "note": "the Fill row wears Card: the label Fill must still be there, with the name beside the swatch" },
+    { "do": "snapshot", "name": "6-fill-wears-a-saved-color" },
+
+    { "do": "action", "action": "pickFirstColorStyle" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-style-section", "note": "the saved color's own section, with Use it for" },
+    { "do": "snapshot", "name": "7-use-it-for" }
+  ]
+}

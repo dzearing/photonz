@@ -55,17 +55,10 @@ struct FrameInspector: View {
             }
             .toggleStyle(.checkbox)
 
-            HStack(alignment: .top, spacing: 8) {
-                Text("Background")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 8)
-                // The surface, and where it came from: a frame painted from a
-                // named style says the style's name here instead of a swatch
-                // to open (Next, `next-styles`).
-                ColorStyleRow(slot: .fill) {
-                    backgroundSwatchButton
-                }
+            // The surface, on the same label-then-color grid every other
+            // color row in the inspector uses (Next, `next-styles`).
+            ColorPartRow(part: "Background", slot: .fill) {
+                backgroundSwatchButton
             }
         }
         .padding(.horizontal, 14)

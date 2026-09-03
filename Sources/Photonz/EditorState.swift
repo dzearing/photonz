@@ -3443,10 +3443,32 @@ final class EditorState {
         return document?.colorStyleLibraryEntries ?? []
     }
 
-    /// The styles a color row offers, in the order the shelf lists them.
+    /// Every style in the open document, in the order the shelf lists them.
     var colorStyles: [ColorStyle] {
         guard colorStylesEnabled else { return [] }
         return document?.colorStyles ?? []
+    }
+
+    /// The styles ONE color row offers: only the ones meant for the part it
+    /// paints, so a color kept for hairlines is not on the menu as something
+    /// to fill a box with.
+    func colorStyles(for slot: ColorSlot) -> [ColorStyle] {
+        guard colorStylesEnabled else { return [] }
+        return document?.colorStyles(for: slot) ?? []
+    }
+
+    /// What a saved color is offered for right now, including the answer
+    /// worked out for one saved before anybody said.
+    func colorStyleRoles(styleID: UUID) -> [ColorStyleRole] {
+        document?.effectiveColorStyleRoles(id: styleID) ?? []
+    }
+
+    /// The Style section's "Use it for" checkboxes: which parts of a layer
+    /// this saved color turns up on. Ticking nothing is refused, because a
+    /// color offered nowhere is a shelf tile that cannot be used.
+    func setColorStyleRoles(styleID: UUID, roles: [ColorStyleRole]) {
+        guard colorStylesEnabled else { return }
+        perform { $0.setColorStyleRoles(id: styleID, roles: roles) }
     }
 
     /// The style behind the picked Styles tile, or nil when the pick is not a
@@ -3520,15 +3542,28 @@ final class EditorState {
         var saved: UUID?
         perform { saved = $0.saveColorStyle(from: targets, slot: slot, name: name) }
         guard let styleID = saved else { return nil }
+        showColorStyleShelf()
+        return styleID
+    }
+
+    /// Puts the Library on screen with the Styles shelf showing, which is
+    /// where a saved color is renamed, recolored, or told which parts of a
+    /// layer to turn up on. Saving does this, and so does a color row whose
+    /// list is empty because the saved colors are all for other parts.
+    func showColorStyleShelf() {
         setLibraryVisible(true)
         UserDefaults.standard.set(LibraryScope.styles.rawValue, forKey: LibraryPanel.scopeKey)
-        return styleID
     }
 
     /// Points every picked layer's color at a style, which paints all of them
     /// in ONE step: pick three boxes, choose Accent once, undo once.
     func useColorStyle(slot: ColorSlot, styleID: UUID) {
         guard colorStylesEnabled else { return }
+        // Only a color meant for this part. The menu already offers no other,
+        // so this is the belt: a walk or a stale menu cannot put a color kept
+        // for hairlines on the inside of a box.
+        guard document?.colorStyles(for: slot).contains(where: { $0.id == styleID }) == true
+        else { return }
         let targets = colorStyleSelection(slot: slot).layerIDs
         guard !targets.isEmpty else { return }
         discardDragPreview()

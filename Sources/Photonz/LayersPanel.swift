@@ -270,11 +270,30 @@ struct InspectorPanel: View {
         }
     }
 
-    /// A section's header text. Fixed for all but the picked library item,
-    /// which is named after the kind of thing it is.
+    /// A section's header text.
+    ///
+    /// Most sections are named after what they are. The ones that describe the
+    /// thing you have picked are named after IT, because a header reading
+    /// "Annotation" over a rectangle's settings is a word out of the code:
+    /// nothing on screen is called an annotation, and the person looking at it
+    /// has selected a rectangle. Reported by the user on 2026-09-03.
     private func sectionTitle(_ id: InspectorSectionID) -> String {
-        guard id == .libraryItem else { return id.title }
-        return (LibraryScope(rawValue: libraryScopeRaw) ?? .media).itemTitle
+        if id == .libraryItem {
+            return (LibraryScope(rawValue: libraryScopeRaw) ?? .media).itemTitle
+        }
+        guard Experiments.shared.colorStylesEnabled else { return id.title }
+        switch id {
+        case .annotation:
+            // The shape's own name: Rectangle, Ellipse, Arrow, Line, Highlight.
+            return selectedLayer?.annotation?.shape.title ?? id.title
+        case .measure:
+            // What is selected is a measurement, not the act of measuring.
+            // (The Measure Tool section, which IS about the act, keeps its
+            // name, and the Measurements list keeps its plural.)
+            return "Measurement"
+        default:
+            return id.title
+        }
     }
 
     @ViewBuilder
@@ -1631,13 +1650,11 @@ struct AnnotationInspector: View {
     var body: some View {
         if let a = annotation {
             VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top) {
-                    Text(label(for: a.shape)).font(.caption).foregroundStyle(.secondary)
-                    Spacer()
-                    // The color, and where it came from: a raw color keeps its
-                    // well, a color wearing a style says the style's name
-                    // instead (Next, `next-styles`).
-                    ColorStyleRow(slot: .stroke) {
+                // Every color says what part of the shape it paints, and keeps
+                // saying it when a saved color is in use. The section header
+                // above already names the shape, so the row does not have to.
+                if let part = a.shape.colorTitle(for: .stroke) {
+                    ColorPartRow(part: part, slot: .stroke) {
                         ColorPicker("Color", selection: Binding(
                             get: { Color(hex: a.colorHex) },
                             set: { if let hex = $0.hexString { editorState.setAnnotationColor(layerID: layer.id, hex) } }),
@@ -1645,26 +1662,25 @@ struct AnnotationInspector: View {
                             .labelsHidden().controlSize(.small)
                     }
                 }
-                if a.shape == .rectangle || a.shape == .ellipse {
-                    // Top aligned: while the styles button's name field is
-                    // open the row is two lines tall, and the checkbox belongs
-                    // beside the color, not beside the field.
-                    HStack(alignment: .top) {
-                        Toggle("Fill", isOn: Binding(
+                if let part = a.shape.colorTitle(for: .fill) {
+                    // The checkbox and the color answer to one label, so the
+                    // switch sits in the row's switch column rather than
+                    // carrying a second copy of the word.
+                    ColorPartRow(
+                        part: part, slot: .fill,
+                        switchControl: Toggle(part, isOn: Binding(
                             get: { a.fillColorHex != nil },
                             // Toggling on seeds the fill with the stroke color;
-                            // the well below refines it. Off = no fill.
+                            // the well beside it refines it. Off = no fill.
                             set: { editorState.setAnnotationFill(layerID: layer.id, $0 ? a.colorHex : nil) }))
-                            .font(.caption).controlSize(.small)
-                        Spacer()
-                        ColorStyleRow(slot: .fill) {
-                            if let fillHex = a.fillColorHex {
-                                ColorPicker("Fill Color", selection: Binding(
-                                    get: { Color(hex: fillHex) },
-                                    set: { if let hex = $0.hexString { editorState.setAnnotationFill(layerID: layer.id, hex) } }),
-                                    supportsOpacity: false)
-                                    .labelsHidden().controlSize(.small)
-                            }
+                            .labelsHidden().controlSize(.small)
+                    ) {
+                        if let fillHex = a.fillColorHex {
+                            ColorPicker("Fill Color", selection: Binding(
+                                get: { Color(hex: fillHex) },
+                                set: { if let hex = $0.hexString { editorState.setAnnotationFill(layerID: layer.id, hex) } }),
+                                supportsOpacity: false)
+                                .labelsHidden().controlSize(.small)
                         }
                     }
                 }
@@ -1804,16 +1820,6 @@ struct AnnotationInspector: View {
         }
     }
 
-    private func label(for shape: AnnotationShape) -> String {
-        switch shape {
-        case .arrow: "Arrow"
-        case .line: "Line"
-        case .rectangle: "Rectangle"
-        case .ellipse: "Ellipse"
-        case .highlight: "Highlight"
-        }
-    }
-
     /// The inspector Caption field landing its draft (Return or focus loss).
     /// Skipped while the canvas editor is open on the same arrow: the two
     /// fields share one draft and the canvas holds it.
@@ -1856,18 +1862,16 @@ struct TextInspector: View {
     var body: some View {
         if let c = content {
             VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top) {
-                    Text("Text").font(.caption).foregroundStyle(.secondary)
-                    Spacer()
-                    ColorStyleRow(slot: .text) {
-                        ColorPicker("Color", selection: Binding(
-                            get: { Color(hex: c.colorHex) },
-                            set: { if let hex = $0.hexString {
-                                editorState.setTextStyle(layerID: layer.id, colorHex: hex)
-                            } }),
-                            supportsOpacity: false)
-                            .labelsHidden().controlSize(.small)
-                    }
+                // "Color", not "Text": the section header already says this is
+                // a text layer, so the row says which of its colors this is.
+                ColorPartRow(part: ColorSlot.text.title, slot: .text) {
+                    ColorPicker("Color", selection: Binding(
+                        get: { Color(hex: c.colorHex) },
+                        set: { if let hex = $0.hexString {
+                            editorState.setTextStyle(layerID: layer.id, colorHex: hex)
+                        } }),
+                        supportsOpacity: false)
+                        .labelsHidden().controlSize(.small)
                 }
                 Picker("Font", selection: Binding(
                     get: { c.fontName },

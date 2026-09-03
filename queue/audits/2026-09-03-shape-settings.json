@@ -1,0 +1,31 @@
+{
+  "feature": "The shape settings say what they are",
+  "epic": "ui-components",
+  "summary": "Picking a shape now opens a section headed after that shape, with every color labelled by the part it paints, and the label stays put when the color comes from one you saved. The menu on a color offers only the saved colors meant for that part.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default (this rides next-styles). Nothing about how a shape paints changed, so an old document opens looking identical.",
+  "try": [
+    { "do": "Press R and drag out a rectangle.", "shot": "2026-09-03-shape-settings-after-rectangle-sc.png" },
+    { "do": "Read the section under Position & Size: it should be headed Rectangle, with rows Outline and Fill.", "shot": "2026-09-03-shape-settings-before-rectangle-sc.png" },
+    { "do": "Press O and drag out an ellipse, then A and drag out an arrow, and watch the section rename itself and drop the Fill row.", "shot": "2026-09-03-shape-settings-after-arrow-sc.png" },
+    { "do": "Select the rectangle again and click the palette button on the Fill row, then choose Save as Style and name it Card.", "shot": "2026-09-03-shape-settings-after-saved-color-sc.png" },
+    { "do": "Click the palette button on the Outline row: Card is not on the list, and the menu says your saved colors are for other parts." },
+    { "do": "Click the Card tile on the Library's Styles shelf and tick Outlines and text under Use it for.", "shot": "2026-09-03-shape-settings-use-it-for-sc.png" },
+    { "do": "Open the Outline row's palette button again: Card is now offered there too." }
+  ],
+  "evaluate": [
+    "Does the section header naming itself after the shape help, or does a header that changes as you click around feel unsteady?",
+    "With Card on the Fill row, can you tell at a glance which word is the part and which is the name of the saved color?",
+    "Is Color the right word for an arrow's one color, or should it say something else?",
+    "When a saved color is not offered on a row, is the menu's explanation enough, or did you go looking for the color you just made?",
+    "Do the two checkboxes under Use it for read as obvious, or is Outlines and text versus Fills and backgrounds too coarse a split?"
+  ],
+  "rough": [
+    "Where the mock was wrong: it hangs colors off a Fill section of its own. The app keeps them in the shape's own section, which is one place to look instead of two.",
+    "Scoping needed a notion of what a saved color is FOR, and there are two answers rather than three: ink (outlines, lines, text) and surface (fills, frame backgrounds). Saving records which, so nothing changes about saving one; the Use it for checkboxes are there because one blue really is both a button's fill and a link's color.",
+    "A color saved before this existed has no answer written down, so the app works one out: one of the app's own five keeps what the app made it for, anything else takes the parts it is already painting, and a color nothing uses stays offered everywhere. So an old document never has a color quietly disappear from every menu.",
+    "The color a row shows changes shape when it comes from a saved color: a wide rounded well you can click, versus a plain square you cannot. That is deliberate, because a styled color is edited in the Library, but the two do look like different controls in the same column.",
+    "Screen Recording was granted, so these are real captures. They are cropped to the section out of the full window shots the walk took; the whole windows are in /tmp/photonz-playtest/shape-settings.",
+    "The scoped menu itself is not photographed. A walk cannot click a control in the dock, so the filtering is proved by tests (ColorStyleRoleTests) rather than by a picture of the open menu.",
+    "The Measure section's own color row still uses its own narrower label column (44pt) rather than the shared one. Left alone: it is a different section with nothing to line up against, and touching it was outside this task."
+  ]
+}

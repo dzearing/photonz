@@ -70,6 +70,18 @@ public enum StarterStyle: String, CaseIterable, Hashable, Sendable {
         }
     }
 
+    /// The parts of a layer this one is offered for, so a color row only shows
+    /// the colors that belong in it. Accent is the one that goes both ways: it
+    /// is the fill of a button and the color of a link, and pretending
+    /// otherwise would make somebody save the same blue twice.
+    public var roles: [ColorStyleRole] {
+        switch self {
+        case .accent: return [.ink, .surface]
+        case .surface: return [.surface]
+        case .text, .muted, .border: return [.ink]
+        }
+    }
+
     /// The id a document's copy of this style takes when the document does not
     /// already have one. Fixed, so two starters dropped a week apart share one
     /// Accent rather than each bringing their own.
@@ -77,7 +89,7 @@ public enum StarterStyle: String, CaseIterable, Hashable, Sendable {
 
     /// This style as the document would hold it, before anybody edits it.
     public var colorStyle: ColorStyle {
-        ColorStyle(id: styleID, name: name, colorHex: colorHex)
+        ColorStyle(id: styleID, name: name, colorHex: colorHex, roles: roles)
     }
 
     private var index: UInt8 {
