@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 730,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T04:51:59.280Z",
-  "updated": "2026-09-03T04:51:59.280Z",
+  "updated": "2026-09-03T10:04:03.485297Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the C6 audit (queue/audits/2026-09-03-component-overrides.json). Today: PhotonzDocument.addComponentProperty(kind: .variant) requires a group with 2+ children as its target and settles it on one visible child. The missing rung is a Layer menu command that groups the selection and exposes it in one undo step. See docs/design/ui-building.md, the C6 Landed section.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-03T04:51:59.280Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T09:47:51.400Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T09:53:02.242482Z",
+      "note": "Adversarial review before building. (1) A first-timer draws two buttons on the bare canvas, not inside a component; a choice knob has nowhere to live there, so the command cannot appear and they get no hint. Accepting that limit (a choice only means something on a component) and asking about it in the audit rather than magically making a component for them. (2) The visible result is alarming: settling the choice HIDES one of the two shapes they just selected, so it reads as 'the app deleted my button'. Answering with a notice pill that says what happened. (3) The knob it creates lands on the ORIGINAL's Adjustable list, which is not the panel you are looking at when you are working inside the component, so the pill has to carry the news. (4) Shortest version that delivers the value: one Layer menu row, no dialog, no naming step, no new panel. Cut a naming prompt. (5) Extra rung kept: with one already-grouped set of alternatives selected the same row exposes it where it stands, so somebody who grouped by hand first is not left at a dead end."
+    },
+    {
+      "t": "2026-09-03T10:04:03.485297Z",
+      "note": "Built and verified in the probe app. Core: PhotonzDocument.makeChoice/canMakeChoice (Sources/PhotonzCore/ComponentChoice.swift), 14 tests. App: Layer > Make Alternatives, absent unless the selection can become a choice; a Choice added pill because settling hides one of the two shapes. Playtest component-choice-one-step-walk.json on the real window: canMakeChoice false with the component picked, TRUE with two rectangles picked inside it, false again after (the group is already exposed) and with nothing picked. One undo removes the group AND the knob; one redo restores both. A copy placed afterwards drew the other alternative from its Shape menu. Screen Recording granted, both audit shots are real captures."
+    },
+    {
+      "t": "2026-09-03T10:04:03.485297Z",
+      "note": "Post-build review. Kept: the alternatives keep their drawn names, so a copy's menu reads Rectangle / Rectangle 2 until somebody renames the layers, and the new group's box spans the hidden alternative. Both are pre-existing rules, both are in the audit. The knob still lands on the original's Adjustable list, which is off screen while you work inside the component; the pill names it rather than yanking the selection out to the original."
     }
-  ]
+  ],
+  "started": "2026-09-03T09:47:51.400Z"
 }

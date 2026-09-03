@@ -38,6 +38,11 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// command looks like it did nothing at all. `component` names the
         /// original it used to follow.
         case componentDetached(component: String?)
+        /// Layers became a set of alternatives with a knob that picks between
+        /// them (`docs/design/ui-building.md`, the C6 follow-up). Settling the
+        /// choice HIDES all but one of the shapes that were just selected, so
+        /// without a word on screen it reads as the app having deleted one.
+        case componentChoiceMade(options: Int, knob: String)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -72,6 +77,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentInstances: return "Updated"
         case .componentCycle: return "Not placed"
         case .componentDetached: return "Detached"
+        case .componentChoiceMade: return "Choice added"
         }
     }
 
@@ -93,6 +99,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentDetached(let component):
             guard let component, !component.isEmpty else { return "It no longer follows its original" }
             return "It no longer follows \(component)"
+        case .componentChoiceMade(let options, let knob):
+            return "1 of \(options) shapes shows. Copies pick it with \(knob)"
         }
     }
 

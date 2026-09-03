@@ -393,7 +393,7 @@ extension PhotonzDocument {
     }
 
     /// A knob name nobody is using yet: "Label", then "Label 2", "Label 3"…
-    private func freshPropertyName(base: String, taken: [String]) -> String {
+    func freshPropertyName(base: String, taken: [String]) -> String {
         let root = ComponentNaming.normalized(base) ?? "Property"
         guard taken.contains(root) else { return root }
         var index = 2

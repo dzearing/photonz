@@ -6279,3 +6279,42 @@ reached none of them.
 Next: the audit asks whether part-by-part following is what a person expects,
 and whether the back arrow beside a slider is findable. The named gap is that
 the ORIGINAL's section does not say which of its copies have looks of their own.
+
+## 2026-09-03 — Two shapes become a choice in one step (Next, `next-components`)
+
+The rung the C6 audit named: the choice knob worked, but getting one meant
+already knowing the answer's shape (group the alternatives by hand, then find
+that group in the original's Add menu). What a person has on screen is two
+shapes side by side.
+
+- **Layer ▸ Make Alternatives**: the selected shapes become a group of
+  alternatives, the original settles on one, and the knob every copy picks with
+  exists. One command, one undo, verified in the probe (one ⌘Z removes the group
+  AND the knob, one ⇧⌘Z puts both back).
+- Takes the selection ⌘G would take, so there is no second rule about what
+  "these layers" means. One group that already holds alternatives is exposed
+  where it stands rather than wrapped again, so grouping by hand is no longer a
+  dead end.
+- **The row is absent, not dimmed**, when the selection cannot become a choice.
+  It only means anything on two shapes inside an original, and a dead row on
+  every other selection is a row people hunt the reason for. The cost is that
+  you cannot find it before you need it; the audit asks about that trade.
+- The group is called "Choice" and its knob "Shape": the knob sits beside a chip
+  already reading "choice", and "Choice · choice" says the word twice. A group
+  somebody named keeps its name and the knob borrows it.
+- A pill says so, because settling HIDES one of the two shapes just selected and
+  otherwise the command reads as having deleted it. It names the knob too, since
+  the knob appears on the ORIGINAL's list, not the panel you are looking at.
+- `PhotonzCore/ComponentChoice.swift` (`canMakeChoice`, `makeChoice`, the walk
+  out to the enclosing original that stops at a copy), 14 tests written first,
+  plus the pill's line. All 2014 green.
+- Walk: `Scripts/playtest/component-choice-one-step-walk.json`, with a new
+  `makeChoice` harness action and `canMakeChoice` in the state dump, because a
+  walk cannot photograph an absent menu row: the probe never comes to the front,
+  so its menu bar reads frozen. Audit:
+  `queue/audits/2026-09-03-component-choice-one-step.json`, two real captures.
+
+Next: the audit asks whether appearing exactly when it works is worth being
+unfindable beforehand, and whether the command should make you name the
+alternatives while you are there, since a copy's menu still reads "Rectangle"
+and "Rectangle 2" until somebody renames the layers.

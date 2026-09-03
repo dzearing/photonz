@@ -3667,6 +3667,37 @@ final class EditorState {
         setInstanceOverride(instance: id, property: property.id, value: .variant(next.id))
     }
 
+    /// Whether Layer ▸ Make Alternatives would do anything: the selection can
+    /// become a set of alternatives with a knob that picks between them.
+    var canMakeChoice: Bool {
+        guard componentsEnabled, Experiments.shared.layerGroupsEnabled, let document else { return false }
+        return document.canMakeChoice(ids: actionableLayerIDs)
+    }
+
+    /// Layer ▸ Make Alternatives: the selected shapes become a group of
+    /// alternatives inside the original, and the original grows the knob every
+    /// copy uses to pick between them. One undo step.
+    ///
+    /// It says so out loud, because settling the choice HIDES all but one of
+    /// the shapes that were just selected: without a word on screen the command
+    /// reads as having deleted one of them.
+    func makeChoice() {
+        guard canMakeChoice else { return }
+        let ids = actionableLayerIDs
+        discardDragPreview()
+        var made: PhotonzDocument.MadeChoice?
+        perform(announcing: false) { made = $0.makeChoice(ids: ids) }
+        guard let made, let document else { return }
+        // The new group is selected, the same way ⌘G leaves the group it made
+        // selected: the next thing you do is almost always to it.
+        groupContextID = document.parentID(of: made.group)
+        selectedLayerID = made.group
+        setSelection(nil, captureLayers: false)
+        let knob = document.componentHome(of: made.group)
+            .flatMap { document.componentProperty(componentID: $0, propertyID: made.property) }?.name
+        raiseCanvasNotice(.componentChoiceMade(options: made.options, knob: knob ?? "the choice knob"))
+    }
+
     /// Layer ▸ Select Original: jumps from a copy to the thing every copy
     /// follows, which is where a change to all of them is made.
     func selectComponentOriginal() {

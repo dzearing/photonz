@@ -238,6 +238,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// is what picking the next row in that knob's menu does. A walk cannot
     /// open a menu in the dock, so this is how a swapped shape is photographed.
     case cycleChoice
+    /// Layer ▸ Make Alternatives (the C6 follow-up): turns the selected shapes
+    /// into a set of alternatives with a choice knob over them, so a walk can
+    /// photograph the one-step path instead of grouping by hand first.
+    case makeChoice
     /// Layer ▸ Detach Instance, so a walk can show a copy stop following.
     case detachInstance
     /// Style the selected layer the way the Effects and Shadow sliders do:

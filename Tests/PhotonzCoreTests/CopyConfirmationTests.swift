@@ -58,9 +58,20 @@ struct CopyConfirmationTests {
         #expect(notice.detail == "Spec list with no visible measurements")
     }
 
+    @Test func makingAChoiceSaysWhyAShapeVanished() {
+        // Settling a choice hides all but one of the shapes that were just
+        // selected. The pill is the only thing on screen that says why, and it
+        // says where the other one went as well.
+        let notice = CopyConfirmation(subject: .componentChoiceMade(options: 2, knob: "Shape"),
+                                      shownAt: t0)
+        #expect(notice.title == "Choice added")
+        #expect(notice.detail == "1 of 2 shapes shows. Copies pick it with Shape")
+    }
+
     @Test func noLineCarriesAnEmDash() {
         for subject in [CopyConfirmation.Subject.specList(measurements: 0),
-                        .specList(measurements: 4), .measurements(count: 1), .measurements(count: 5)] {
+                        .specList(measurements: 4), .measurements(count: 1), .measurements(count: 5),
+                        .componentChoiceMade(options: 3, knob: "Shape")] {
             let notice = CopyConfirmation(subject: subject, shownAt: t0)
             #expect(!notice.detail.contains("—"))
             #expect(!notice.detail.isEmpty)

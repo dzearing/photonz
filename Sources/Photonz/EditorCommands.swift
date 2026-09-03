@@ -356,6 +356,15 @@ struct EditorCommands: Commands {
                 // be open with a component picked for it to mean anything.
                 Button("Insert Component") { editor?.insertPickedComponent() }
                     .disabled(!(editor?.canInsertPickedComponent ?? false))
+                // Make Alternatives is ABSENT rather than dimmed when the
+                // selection cannot become a choice. Every other row here reads
+                // as something you might want on any selection; this one only
+                // means anything on two shapes inside an original, and a dead
+                // row on every other selection is a row people hunt the reason
+                // for. It appears the moment it would work.
+                if editor?.canMakeChoice ?? false {
+                    Button("Make Alternatives") { editor?.makeChoice() }
+                }
                 // Option Command B is the design-tool key for detaching, and
                 // Photoshop binds neither the command nor the key. Select
                 // Original takes none: it is a way to get somewhere, not an

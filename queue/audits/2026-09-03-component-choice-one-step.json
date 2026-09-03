@@ -1,0 +1,30 @@
+{
+  "feature": "Two shapes become a choice in one step",
+  "epic": "ui-components",
+  "summary": "Pick two shapes inside a component and one command turns them into alternatives, with the knob every copy uses to pick between them. Before, you had to know to group them by hand first and then expose that group.",
+  "setup": "Photonz Dev, release Next, blank canvas. Flags are on by default; View ▸ Show Library if the shelf is not up.",
+  "try": [
+    { "do": "Draw two filled boxes one above the other, and type a word above them." },
+    { "do": "Select all three, press ⌘G, then ⌥⌘K and name it Row." },
+    { "do": "Double click one box to step inside Row, then shift click the other box." },
+    { "do": "Open the Layer menu and look for Make Alternatives, then pick it.", "shot": "2026-09-03-component-choice-1-made.png" },
+    { "do": "Press ⌘Z once, then ⇧⌘Z once." },
+    { "do": "Select Row, and read the Shape row in its Adjustable list." },
+    { "do": "Drag the Row tile off the Library onto the canvas, then pick the other shape in the copy's Shape menu.", "shot": "2026-09-03-component-choice-2-copy-swapped.png" }
+  ],
+  "evaluate": [
+    "One of your two boxes disappears the moment the command runs. Does the pill answer that fast enough, or did you reach for undo first?",
+    "Make Alternatives is not in the Layer menu at all until two shapes inside a component are picked. Is appearing exactly when it works worth never being able to find it beforehand?",
+    "Is Make Alternatives the name you would have gone looking for, next to Group and Make Component?",
+    "The knob is called Shape and the group it made is called Choice. Do those two words read as the same thing from the copy's panel?",
+    "The copy's menu offers Rectangle and Rectangle 2. Should the command make you name the alternatives while you are there, or is renaming them later fine?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both shots are the real window, taken by Scripts/playtest/component-choice-one-step-walk.json.",
+    "The menu row's presence could not be photographed: a walk never brings the probe to the front, so its menu bar reads frozen at launch. The walk records the exact value the row's own condition reads instead, true with two shapes picked inside the component and false everywhere else.",
+    "The command needs the shapes to be inside a component already. Two boxes on the bare canvas have nowhere to hang a knob, so nothing appears and nothing explains why. Making the component for you was rejected as too much magic for one row.",
+    "The knob lands on the ORIGINAL's Adjustable list, which is not the panel you are looking at when you are working inside the component. The pill names it, but you still have to go and find it.",
+    "The alternatives keep their drawn names, so a copy's menu reads Rectangle and Rectangle 2 until you rename the layers. Numbering them apart is the old C6 rule and it is doing its job, but a one step command makes it likelier nobody named anything.",
+    "The new group's box spans the hidden alternative, so right after the command the selection extends past what is drawn. That is how group bounds already work, not something this command introduced."
+  ]
+}

@@ -488,6 +488,7 @@ private final class Run {
             case .exposeWording: editor.exposeFirstProperty(kind: .text)
             case .exposeChoice: editor.exposeFirstProperty(kind: .variant)
             case .cycleChoice: editor.cycleInstanceChoice()
+            case .makeChoice: editor.makeChoice()
             case .detachInstance: editor.detachInstance()
             case .roundCorners:
                 if let id = editor.selectedLayerID {
@@ -1199,6 +1200,11 @@ private final class Run {
             // Whether Layer ▸ Group would do anything, which is exactly what
             // that menu row dims itself on.
             "canGroup": editor.canGroupSelection,
+            // Whether Layer ▸ Make Alternatives is there at all. That row is
+            // absent rather than dimmed, and a walk cannot photograph an absent
+            // row: the probe never comes to the front, so its menu bar reads
+            // frozen. This is the same value the row's own `if` reads.
+            "canMakeChoice": editor.canMakeChoice,
             "legend": editor.measureLegendEntries.map(\.label),
             "legendAnchor": editor.measureLegendAnchor.rawValue,
             "legendTopInset": editor.measureLegendTopInset,

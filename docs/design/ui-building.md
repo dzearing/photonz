@@ -843,6 +843,46 @@ default from a copy's panel; knobs cannot be reordered; a long wording override
 still overflows the copy, because there is no auto layout; and detach is still
 one way, with undo as the way back.
 
+## Landed: two shapes become a choice in one step (Next, `next-components`, 2026-09-03)
+
+The rung the C6 audit called out: the choice knob worked, but the path to it was
+unguided. A knob reaches a GROUP, so offering a choice meant already knowing the
+shape of the answer — group the alternatives by hand, then find that group again
+in the original's Add menu. What a person actually has is two shapes side by
+side.
+
+- **Layer ▸ Make Alternatives** takes the selected shapes, wraps them in a group
+  of alternatives, settles the original on one of them and adds the knob every
+  copy uses to pick between them. One command, one undo.
+- **It takes the selection ⌘G would take**, so nobody learns a second rule about
+  what "these layers" means. Select one group that already holds alternatives
+  and it exposes that group where it stands rather than wrapping a group in a
+  group, so grouping by hand first is no longer a dead end.
+- **The row is ABSENT, not dimmed, when the selection cannot become a choice.**
+  Every other row in that menu reads as something you might want on any
+  selection; this one only means anything on two shapes inside an original, and
+  a dead row on every other selection is a row people hunt the reason for. It
+  appears the moment it would work. (The cost is discoverability: you cannot
+  find it before you need it. Raised in the audit.)
+- **The group is called "Choice" and its knob "Shape"**, because the knob is met
+  beside a chip that already says "choice" and a row reading "Choice · choice"
+  says the same word twice. A group somebody named themselves keeps its name and
+  the knob borrows it.
+- **A pill says what happened**, because settling the choice HIDES all but one of
+  the shapes that were just selected: without a word on screen the command reads
+  as having deleted one. It names the knob as well, since the knob itself appears
+  on the ORIGINAL's Adjustable list, which is not the panel you are looking at
+  while you work inside the component.
+- **Nothing happens outside an original.** Two shapes on the bare canvas have
+  nowhere to hang a knob, and inside a copy the layers belong to ITS original and
+  would be rewritten by the next sync.
+
+Deliberately left: the alternatives are still named "Rectangle" and
+"Rectangle 2" unless somebody names them, so the copy's menu reads as two
+identical rows numbered apart; the command does not make a component for you
+when the shapes are loose on the canvas; and the new group's box still spans the
+hidden alternative, so the selection can extend past what is drawn.
+
 ## Landed: a color can be saved as a named style and reused (Next, `next-styles`, 2026-09-03)
 
 Step D8, built before step 7 for the reason recorded there: the starter
