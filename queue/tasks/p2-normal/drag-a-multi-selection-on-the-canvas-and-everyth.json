@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T08:21:42.624Z",
-  "updated": "2026-09-03T12:08:26.912Z",
+  "updated": "2026-09-03T12:12:11.127Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CanvasView.mouseDown falls through to onSelectLayerInGroup + a single-layer MoveDrag whenever the pick hits a layer, so a press on a member of EditorState.multiSelectedLayerIDs collapses the selection. Needs a multi-layer move drag: one grab offset, every member offset by the same delta, committed through one History.perform (see EditorState.setLayerGeometry for the fold-into-one-perform pattern). Snapping peers should exclude every member. Noticed while building canvas shift-click (2026-09-03).",
@@ -27,6 +27,11 @@
     {
       "t": "2026-09-03T12:08:26.911Z",
       "note": "seq 840 -> 10"
+    },
+    {
+      "t": "2026-09-03T12:12:11.127Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-03T12:12:11.127Z"
 }

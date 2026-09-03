@@ -10,9 +10,11 @@
   "area": "app",
   "created": "2026-09-03T06:32:55.847Z",
   "updated": "2026-09-03T12:08:26.943Z",
-  "deps": [],
+  "deps": [
+    "a-resized-component-keeps-its-pieces-where-they"
+  ],
   "blockedBy": [],
-  "notes": "Follow-up from next-align-layers (2026-09-03). Today EditorState.arrangeBoxes needs two boxes and LayerArrangement.canAlign(count:) enforces it. The frame case wants the reference box passed in rather than derived from the selection: LayerArrangement.aligned(_:to:) would take an optional container rect. Frames are next-frames; with that flag off the behaviour is unchanged.",
+  "notes": "Sequenced after the persistent alignment model (a-resized-component-keeps-its-pieces-where-they), so the one-shot Arrange action and the container default agree on what centre means rather than inventing it twice. Follow-up from next-align-layers (2026-09-03). Today EditorState.arrangeBoxes needs two boxes and LayerArrangement.canAlign(count:) enforces it. The frame case wants the reference box passed in rather than derived from the selection: LayerArrangement.aligned(_:to:) would take an optional container rect. Frames are next-frames; with that flag off the behaviour is unchanged.",
   "acceptance": [
     "With one layer inside a frame selected, the Arrange row is there and its six align buttons are live",
     "Pressing Align Center puts the layer exactly in the middle of the frame, and one undo puts it back",
