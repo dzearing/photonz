@@ -27,21 +27,27 @@ public struct History: Sendable {
     /// the sync is a no-op for a document with no copies in it, and a no-op for
     /// an edit that did not touch a component, so an edit that changes nothing
     /// still records nothing.
+    ///
+    /// The links that broke on the way are worked out here for the same reason
+    /// (`LinkBreakReport`): a break is a fact about the difference between two
+    /// versions of the document, so every command gets it right without knowing
+    /// it exists.
     @discardableResult
-    public mutating func perform(_ mutate: (inout PhotonzDocument) -> Void) -> ComponentSyncReport {
+    public mutating func perform(_ mutate: (inout PhotonzDocument) -> Void) -> EditReport {
         var next = current
         mutate(&next)
         // A color that was repainted some other way lets go of the style it
         // claimed, BEFORE the copies are refilled, so a copy is never rebuilt
         // from an original whose claim has already gone stale.
         next.reconcileColorStyles()
-        let report = next.syncComponentInstances()
-        guard next != current else { return ComponentSyncReport() }
+        let sync = next.syncComponentInstances()
+        guard next != current else { return EditReport() }
+        let breaks = LinkBreakReport.between(current, next)
         undoStack.append(current)
         if undoStack.count > limit { undoStack.removeFirst() }
         redoStack.removeAll()
         current = next
-        return report
+        return EditReport(componentSync: sync, linkBreaks: breaks)
     }
 
     public mutating func undo() {
@@ -54,5 +60,19 @@ public struct History: Sendable {
         guard let next = redoStack.popLast() else { return }
         undoStack.append(current)
         current = next
+    }
+}
+
+/// What one undoable edit did that something on screen needs to say out loud:
+/// how far it reached into the copies of a component, and what stopped
+/// following what it came from.
+public struct EditReport: Hashable, Sendable {
+    public var componentSync: ComponentSyncReport
+    public var linkBreaks: LinkBreakReport
+
+    public init(componentSync: ComponentSyncReport = ComponentSyncReport(),
+                linkBreaks: LinkBreakReport = LinkBreakReport()) {
+        self.componentSync = componentSync
+        self.linkBreaks = linkBreaks
     }
 }

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:06:37.836Z",
-  "updated": "2026-09-03T12:08:27.147Z",
+  "updated": "2026-09-03T16:47:41.271Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Extraction candidate found in the 2026-09-03 design review: the same gap is named in three audits on the same day. queue/audits/2026-09-03-color-styles.json (\"Nothing on screen says the link broke, which is the honest gap\"), 2026-09-03-component-look.json (\"Nothing warns you the moment you drag a slider on a copy that this part has stopped following\") and 2026-09-03-component-instances.json (ungroup on a copy, and deleting an original). Existing shape to build on: the CopyConfirmation pill, which is the canvas notice from UX-PATTERNS section 3. That slot has rules: bottom centre above the tool bar, one notice at a time, and it is reserved for the Measure mode hint while the Measure tool is in hand, so this has to queue or defer rather than fight it. The data is already there and thrown away: PhotonzDocument.reconcileColorStyles returns how many bindings broke and runs inside History.perform. This replaces the narrower task say-so-when-a-color-lets-go-of-its-style, which is folded in here.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-09-03T12:08:27.146Z",
       "note": "seq 900 -> 90"
+    },
+    {
+      "t": "2026-09-03T16:26:20.402Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T16:30:16.954Z",
+      "note": "Adversarial review before building. (1) The four breaks are one fact with four shapes: a color drifted off a named style, a part of a copy's look was set by hand, a copy was ungrouped into loose layers, an original was deleted out from under its copies. All four are already DERIVABLE by comparing the document before and after an edit, so the honest place for this is one diff in PhotonzCore run from History.perform, not four announcements bolted onto four commands. That also catches every route in (menu, key, playtest script, future command) rather than the ones somebody remembered."
+    },
+    {
+      "t": "2026-09-03T16:30:16.955Z",
+      "note": "Adversarial review, what to cut. (2) The mock instinct here is a warning dialog before deleting an original. Rejected: it puts a modal on the Delete key for an action that is one undo away, and the task allows 'as it happens'. (3) No button on the pill. It is not interactive today and Command Z is the answer. (4) Do NOT report a color letting go when the STYLE was deliberately deleted: Remove Style already means 'these colors are their own now', so a notice there is the app repeating your own command back at you. Only a color that drifted while its style still exists is a quiet break."
+    },
+    {
+      "t": "2026-09-03T16:30:16.955Z",
+      "note": "Adversarial review, noise. (5) Dragging a slider on a copy fires perform() every frame; only NEWLY broken links announce, so one drag says it once. (6) Several colors letting go of one style in one step aggregate into one sentence, not four pills. (7) An edit that breaks nothing produces an empty report and raises nothing."
+    },
+    {
+      "t": "2026-09-03T16:36:13.746Z",
+      "note": "Built the shared piece: PhotonzCore/LinkBreaks.swift finds all four breaks by diffing the document before and after an edit, inside History.perform. History.perform now returns EditReport (component sync + link breaks). One sentence frame for all four: title 'Stopped following', detail '<what> no longer follow(s) <what it came from>'. 22 new tests in Tests/PhotonzCoreTests/LinkBreakTests.swift, whole suite green (2246)."
+    },
+    {
+      "t": "2026-09-03T16:47:41.270Z",
+      "note": "Reviewed the built thing on the real app (probe, Screen Recording granted). Two things were clumsy and are fixed: the pill lived 1.6s, which is under the time it takes to read a whole sentence naming two things, so a broken link now stays 3s; and undo left the notice up, so the canvas said a link was broken a second after undo put it back, which now clears. Also found and fixed an over-count: a color inside an original with two copies out reported 3 colors letting go instead of 1, because what is inside a copy is the original's. The walk proves the fix (test flips to '3 colors' without it)."
+    },
+    {
+      "t": "2026-09-03T16:47:41.271Z",
+      "note": "Verified live end to end by Scripts/playtest/link-break-walk.json against Photonz Probe. The pill text at each stage, read out of log.json: 'Stopped following · 1 color no longer follows Accent', '· Opacity on this copy no longer follows Setting', '· The pieces of this copy no longer follow Setting', '· 1 copy no longer follows Setting', and after undo 'none' with the copy back to Setting [copy] in the layer tree. Four real window captures in queue/audits/."
     }
-  ]
+  ],
+  "started": "2026-09-03T16:26:20.402Z"
 }

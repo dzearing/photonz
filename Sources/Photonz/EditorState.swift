@@ -1539,7 +1539,7 @@ final class EditorState {
         copyConfirmation = notice
         copyConfirmationTimer?.cancel()
         copyConfirmationTimer = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(CopyConfirmation.lifetime))
+            try? await Task.sleep(for: .seconds(notice.lifetime))
             guard !Task.isCancelled, let self, self.copyConfirmation == notice else { return }
             self.copyConfirmation = nil
         }
@@ -3675,7 +3675,7 @@ final class EditorState {
         guard colorStylesEnabled else { return }
         let targets = colorStyleSelection(slot: slot).layerIDs
         guard !targets.isEmpty else { return }
-        perform { $0.unbindColorStyle(layerIDs: targets, slot: slot) }
+        perform(reportingLinkBreaks: false) { $0.unbindColorStyle(layerIDs: targets, slot: slot) }
     }
 
     /// The color well on a whole-selection row: paints every picked layer that
@@ -5195,10 +5195,17 @@ final class EditorState {
     /// in front of the person making them — setting a knob on the copy they
     /// have selected — because the pill exists to report what moved OUT OF
     /// SIGHT, and one that fires on every keystroke in a field is noise.
-    func perform(announcing: Bool = true, _ mutate: (inout PhotonzDocument) -> Void) {
-        let report = history?.perform(mutate) ?? ComponentSyncReport()
+    /// `reportingLinkBreaks` is off for the few commands whose whole point IS
+    /// the break — Unlink takes a color off its style on purpose — because a
+    /// notice there is the app repeating your own command back at you.
+    func perform(announcing: Bool = true, reportingLinkBreaks: Bool = true,
+                 _ mutate: (inout PhotonzDocument) -> Void) {
+        let report = history?.perform(mutate) ?? EditReport()
         rerender()
-        if announcing { announceComponentSync(report) }
+        if announcing { announceComponentSync(report.componentSync) }
+        // Last, so a break wins the one canvas slot: an edit that reached ten
+        // copies is expected, and one that quietly severed something is not.
+        if reportingLinkBreaks { announceLinkBreaks(report.linkBreaks) }
     }
 
     /// Says how many copies followed the edit that just landed
@@ -5215,9 +5222,30 @@ final class EditorState {
         raiseCanvasNotice(.componentInstances(count: report.updatedInstances, component: named))
     }
 
+    /// Says that something stopped following what it came from, the same way
+    /// for all four kinds of break (`LinkBreakReport`).
+    ///
+    /// Every break is silent by nature: painting over a color that wore a style
+    /// looks exactly like painting a color, and deleting an original leaves the
+    /// copies drawing what they always drew. You find out later, when an edit
+    /// to the original stops arriving. This is the moment it is still cheap to
+    /// press Command Z.
+    ///
+    /// Each kind is dropped when the feature it belongs to is switched off, so
+    /// the pill never names a thing this build does not have.
+    private func announceLinkBreaks(_ report: LinkBreakReport) {
+        guard !report.isEmpty else { return }
+        let styles = Experiments.shared.colorStylesEnabled
+        let components = Experiments.shared.componentsEnabled
+        let kept = report.breaks.filter { $0.kind == .colorStyle ? styles : components }
+        guard !kept.isEmpty else { return }
+        raiseCanvasNotice(.linksBroken(LinkBreakReport(breaks: kept)))
+    }
+
     func undo() {
         discardDragPreview() // undone edits may invalidate a held sprite
         stylePreview = nil
+        dropStaleBreakNotice()
         history?.undo()
         rerender()
     }
@@ -5225,8 +5253,18 @@ final class EditorState {
     func redo() {
         discardDragPreview()
         stylePreview = nil
+        dropStaleBreakNotice()
         history?.redo()
         rerender()
+    }
+
+    /// A "stopped following" notice is about the edit that just happened, so
+    /// stepping over that edit takes it off screen. Leaving it up would have
+    /// the canvas saying a link is broken a second after undo put it back.
+    private func dropStaleBreakNotice() {
+        guard case .linksBroken = copyConfirmation?.subject else { return }
+        copyConfirmationTimer?.cancel()
+        copyConfirmation = nil
     }
 
     private func rerender() {

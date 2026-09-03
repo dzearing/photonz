@@ -43,11 +43,23 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// choice HIDES all but one of the shapes that were just selected, so
         /// without a word on screen it reads as the app having deleted one.
         case componentChoiceMade(options: Int, knob: String)
+        /// Something stopped following what it came from: a color let go of a
+        /// named style, a part of a copy's look was set by hand, a copy was
+        /// ungrouped, or an original was deleted out from under its copies
+        /// (`LinkBreakReport`). All four say it in one frame, because to the
+        /// person they are one thing that just happened.
+        case linksBroken(LinkBreakReport)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
     /// that a fluent user is never waiting for it to leave.
     public static let lifetime: TimeInterval = 1.6
+
+    /// How long a broken link stays up. Longer, because it is the only one of
+    /// these you might want to act on: it is a whole sentence naming two
+    /// things, and 1.6 seconds is under the time it takes to read one and
+    /// decide whether to press Command Z.
+    public static let breakLifetime: TimeInterval = 3.0
 
     public var subject: Subject
     public var shownAt: Date
@@ -57,11 +69,18 @@ public struct CopyConfirmation: Hashable, Sendable {
         self.shownAt = shownAt
     }
 
+    /// How long THIS pill stays up, which depends on how much it is asking of
+    /// the person reading it.
+    public var lifetime: TimeInterval {
+        if case .linksBroken = subject { return Self.breakLifetime }
+        return Self.lifetime
+    }
+
     /// Whether the pill should still be on screen at `now`. Strictly inside the
     /// window, so a clock that runs backwards cannot pin it up forever.
     public func isLive(at now: Date) -> Bool {
         let age = now.timeIntervalSince(shownAt)
-        return age >= 0 && age < Self.lifetime
+        return age >= 0 && age < lifetime
     }
 
     /// The same pill, re-shown for a new copy with its clock restarted. Two
@@ -78,6 +97,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentCycle: return "Not placed"
         case .componentDetached: return "Detached"
         case .componentChoiceMade: return "Choice added"
+        case .linksBroken(let report): return report.title
         }
     }
 
@@ -101,6 +121,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "It no longer follows \(component)"
         case .componentChoiceMade(let options, let knob):
             return "1 of \(options) shapes shows. Copies pick it with \(knob)"
+        case .linksBroken(let report):
+            return report.detail ?? ""
         }
     }
 

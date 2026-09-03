@@ -1,0 +1,32 @@
+{
+  "feature": "When a link breaks, the app says so",
+  "epic": "ui-components",
+  "summary": "Four things that used to stop following in silence now say so out loud, in the same words and the same place: a color painted over its named style, a part of a copy's look set by hand, a copy ungrouped into loose layers, and copies left behind by a deleted original.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components and Save a color as a style are on by default.",
+  "try": [
+    { "do": "Start a blank canvas, press R and drag out a box." },
+    { "do": "On the dock's Fill row open the swatch fan, choose Save as Style, type Accent and press Return." },
+    { "do": "Open that same row's color well and pick a different color.", "shot": "2026-09-03-link-break-1-color.png" },
+    { "do": "Draw two more boxes lower down, sweep both, press Command G, then Option Command K and name it Setting." },
+    { "do": "Drag two copies of Setting off the Library shelf onto empty canvas." },
+    { "do": "Select one copy and drag its Opacity down.", "shot": "2026-09-03-link-break-2-part.png" },
+    { "do": "Press Shift Command G on that same copy.", "shot": "2026-09-03-link-break-3-ungrouped.png" },
+    { "do": "Select the original and press Command Delete.", "shot": "2026-09-03-link-break-4-original.png" }
+  ],
+  "evaluate": [
+    "The pill says Stopped following and then a sentence that also says no longer follows. Does the repetition read as plain and clear, or as the app saying it twice?",
+    "It lands at the bottom middle of the canvas, while the thing that broke is wherever you were working. Is that where your eye goes, or would you rather it appeared beside what broke?",
+    "Fading a copy is something you meant to do. Does being told it stopped following feel like useful news, or like being told off?",
+    "Deleting an original says how many copies were left behind AS it happens, not before. Is that enough, or do you want to be asked first?",
+    "Three seconds on screen: too long, too short, or about right for a sentence you might want to act on?",
+    "Press Command Z after any of these. The notice disappears with the undo. Is that what you expected, or would you rather it stayed and said the link is back?"
+  ],
+  "rough": [
+    "Screen Recording was granted for this run, so all four pictures are the real window, taken by Scripts/playtest/link-break-walk.json.",
+    "The pill names what broke but gives you no way to reach it. A copy stranded off screen is still found by hand, and a Select them button would be the obvious next thing.",
+    "Deleting an original is not guarded, on purpose: a warning sheet on the Delete key for something one undo away felt worse than saying it afterwards. That is a judgment worth disagreeing with.",
+    "Commands whose whole point IS the break stay silent: Unlink on a color row, Remove Style, and Detach Instance, which already says Detached in its own words. If you expect Unlink to confirm itself, it does not.",
+    "Two unrelated breaks in one step lead with the heavier one and count the rest, so an edit that severs a style AND strands a copy reads as one sentence plus and 1 more link broke, rather than telling you both.",
+    "The four sentences share one frame but not one length. Opacity on this copy no longer follows Setting is the longest of them and comes close to the width where the pill stops being a glance."
+  ]
+}

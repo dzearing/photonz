@@ -1,0 +1,306 @@
+{
+  "out": "/tmp/photonz-playtest/link-break-walk",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        120
+      ],
+      "to": [
+        420,
+        260
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "saveColorStyle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "focus",
+      "field": "Style name"
+    },
+    {
+      "do": "type",
+      "text": "Accent"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-style-saved",
+      "note": "the box's fill is now the named style Accent"
+    },
+    {
+      "do": "action",
+      "action": "paintSelectionColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-color-let-go",
+      "note": "painting over the box says the color let go of Accent"
+    },
+    {
+      "do": "snapshot",
+      "name": "link-break-1-color"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        420
+      ],
+      "to": [
+        420,
+        520
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        540
+      ],
+      "to": [
+        420,
+        600
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        380
+      ],
+      "to": [
+        520,
+        660
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Component name"
+    },
+    {
+      "do": "type",
+      "text": "Setting"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        900,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        900,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-two-copies",
+      "note": "the original at the left and two copies of it out on the canvas"
+    },
+    {
+      "do": "click",
+      "at": [
+        900,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "fadeLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-part-let-go",
+      "note": "fading one copy by hand says Opacity stopped following Setting"
+    },
+    {
+      "do": "snapshot",
+      "name": "link-break-2-part"
+    },
+    {
+      "do": "action",
+      "action": "ungroup"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-ungrouped",
+      "note": "ungrouping that copy says its pieces are loose now"
+    },
+    {
+      "do": "snapshot",
+      "name": "link-break-3-ungrouped"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        460
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "delete",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-original-deleted",
+      "note": "deleting the original says how many copies were left behind"
+    },
+    {
+      "do": "snapshot",
+      "name": "link-break-4-original"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone",
+      "note": "undo puts the copies back on their original, and says nothing"
+    },
+    {
+      "do": "render",
+      "name": "link-break-5-undone-doc"
+    }
+  ]
+}

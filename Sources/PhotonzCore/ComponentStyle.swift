@@ -114,14 +114,24 @@ extension LayerStyle {
 
 // MARK: - What a copy owns, and putting it back
 
+extension Layer {
+
+    /// Which parts of THIS copy's look are its own rather than the original's:
+    /// everything its look differs from the original's last-seen look by.
+    /// Empty for anything that is not a copy, and for a copy that has never met
+    /// its original.
+    public var ownStyleFields: Set<LayerStyleField> {
+        guard isComponentInstance, let lastSeen = group?.followedStyle else { return [] }
+        return LayerStyle.differences(style, lastSeen)
+    }
+}
+
 extension PhotonzDocument {
 
     /// Which parts of a copy's look are its own rather than the original's.
     /// This is what puts the revert control on an Effects row.
     public func instanceStyleOverrides(instance: UUID) -> Set<LayerStyleField> {
-        guard let copy = layer(id: instance), copy.isComponentInstance,
-              let lastSeen = copy.group?.followedStyle else { return [] }
-        return LayerStyle.differences(copy.style, lastSeen)
+        layer(id: instance)?.ownStyleFields ?? []
     }
 
     /// Whether one part of a copy's look is its own.

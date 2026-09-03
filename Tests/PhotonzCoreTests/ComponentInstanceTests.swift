@@ -158,7 +158,7 @@ struct ComponentInstanceTests {
         let a = doc.insertComponentInstance(of: componentID, at: CGPoint(x: 200, y: 200))!
         var history = History(document: doc)
         let report = history.perform { $0.duplicateLayer(id: a, offsetBy: CGPoint(x: 16, y: 16)) }
-        #expect(report.updatedInstances == 0)
+        #expect(report.componentSync.updatedInstances == 0)
         #expect(history.current.instances(of: componentID).count == 2)
     }
 
@@ -300,7 +300,7 @@ struct ComponentInstanceTests {
         var history = History(document: doc)
         let child = doc.layer(id: main)!.children[1].id
         let report = history.perform { $0.updateLayer(id: child) { $0.name = "Caption" } }
-        #expect(report.updatedInstances == 2)
+        #expect(report.componentSync.updatedInstances == 2)
         #expect(history.current.layer(id: a)!.children.map(\.name) == ["Box", "Caption"])
         history.undo()
         #expect(history.current.layer(id: a)!.children.map(\.name) == ["Box", "Label"])

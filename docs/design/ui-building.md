@@ -1525,3 +1525,48 @@ Deliberately left: a screenshot placed inside a painted screen with a caption
 laid over it loses that caption's halo, because the rule reads the container,
 not what is under each word. Turning the Shadow switch on gives that caption a
 real shadow, which is the way back.
+
+## Landed: when a link breaks, the app says so (Next, `next-components` and `next-styles`, 2026-09-03)
+
+Four things follow something else, and all four could stop following without a
+word: a color painted over stopped being the style it claimed, a slider dragged
+on a copy took that part off the original, ungrouping a copy turned it into
+loose layers, and deleting an original left its copies drawing what they always
+drew. Each one is invisible at the moment it happens. You find out later, when
+an edit to the original stops arriving and something on the canvas is left
+behind. Now all four say so, in the same words, in the same place, while
+Command Z is still one press away.
+
+- **One sentence, four shapes.** The canvas pill says **Stopped following** and
+  one line under it: "1 color no longer follows Accent", "Opacity on this copy
+  no longer follows Setting", "The pieces of this copy no longer follow
+  Setting", "2 copies no longer follow Setting". One frame, so the second time
+  you see it you already know what it is telling you.
+- **Found by looking, not by being told.** A break is a fact about the
+  difference between the document before an edit and after it, so it is worked
+  out in one place (`LinkBreakReport.between`, run from `History.perform`)
+  rather than announced by four commands. Every route in gets it right —
+  a menu item, a key, a walk in the playtest harness, a command written next
+  year — and no command has to remember it exists.
+- **An edit that breaks nothing says nothing.** Editing an original, moving a
+  copy, putting a part back on the original, and picking a different style for
+  a slot are all silent. Dragging one slider says it once, on the frame the
+  part let go, not on every frame of the drag.
+- **What you asked for is not a break.** Unlink takes a color off its style on
+  purpose and Remove Style means those colors are their own now; saying so
+  afterwards is the app repeating your own command back at you. Detach already
+  has its own word. None of those raise this.
+- **What is inside a copy belongs to the original.** A color inside an original
+  that four copies follow counts once, in the original, rather than once per
+  copy.
+- **It stays up longer than a Copied notice** (3 seconds against 1.6): it is a
+  whole sentence naming two things, and it is the only one of these pills you
+  might want to act on. **Undo takes it off screen**, because a notice saying a
+  link broke a second after undo put it back is a lie.
+
+Deliberately left: deleting an original still says it as it happens rather than
+asking first, because that puts a modal on the Delete key for something one
+undo away; and the pill names what broke but does not offer a way to it, so a
+copy stranded off screen is still found by hand.
+
+Walked end to end by `Scripts/playtest/link-break-walk.json`.

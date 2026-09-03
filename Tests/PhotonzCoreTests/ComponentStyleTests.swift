@@ -174,8 +174,8 @@ struct ComponentStyleTests {
         var (doc, main, component, _, _) = withTwoCopies()
         var history = History(document: doc)
         let report = history.perform { $0.updateLayer(id: main) { $0.style.opacity = 0.5 } }
-        #expect(report.updatedInstances == 2)
-        #expect(report.componentIDs == [component])
+        #expect(report.componentSync.updatedInstances == 2)
+        #expect(report.componentSync.componentIDs == [component])
     }
 
     /// A copy that keeps its own fade did not follow, so it is not counted.
@@ -184,7 +184,7 @@ struct ComponentStyleTests {
         var history = History(document: doc)
         history.perform { $0.updateLayer(id: a) { $0.style.opacity = 0.25 } }
         let report = history.perform { $0.updateLayer(id: main) { $0.style.opacity = 0.9 } }
-        #expect(report.updatedInstances == 1)
+        #expect(report.componentSync.updatedInstances == 1)
     }
 
     /// Setting a copy's own fade is an edit to the copy in front of you, not an
@@ -193,7 +193,7 @@ struct ComponentStyleTests {
         var (doc, _, _, a, _) = withTwoCopies()
         var history = History(document: doc)
         let report = history.perform { $0.updateLayer(id: a) { $0.style.opacity = 0.25 } }
-        #expect(report.updatedInstances == 0)
+        #expect(report.componentSync.updatedInstances == 0)
     }
 
     // MARK: - Nothing drifts
