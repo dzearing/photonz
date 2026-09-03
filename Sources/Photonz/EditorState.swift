@@ -5215,6 +5215,11 @@ final class EditorState {
     func commitCanvasOrigins(_ moves: [UUID: CGPoint]) {
         previewMoves = [:]
         guard !moves.isEmpty else { return }
+        // The rubber band that picked these layers described where they WERE,
+        // so it comes down the moment they move. A drag already dropped it on
+        // its first live update; an arrow-key nudge has no live update at all,
+        // and without this the band sits there outlining empty canvas.
+        if selection != nil, !selectionTargetsPixels { setSelection(nil, captureLayers: false) }
         discardDragPreview()
         perform { document in
             for (id, origin) in moves { document.moveLayer(id: id, toCanvasOrigin: origin) }

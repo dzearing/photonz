@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 810,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:28:44.298Z",
-  "updated": "2026-09-03T12:28:44.299Z",
+  "updated": "2026-09-03T19:18:11.355669Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "CanvasView keyDown arrow branch requires selectedLayerID, which is nil whenever multiSelectedLayerIDs is non-empty, so the press falls through to nothing. Reuse PhotonzDocument.multiLayerDrag(moving:) + EditorState.commitCanvasOrigins, the pair the canvas multi-drag added on 2026-09-03: build the plan, offset its bounds by the nudge, commit the origins. Noticed while building the canvas multi-drag.",
+  "notes": "CanvasView keyDown arrow branch requires selectedLayerID, which is nil whenever multiSelectedLayerIDs is non-empty, so the press falls through to nothing. Reuse PhotonzDocument.multiLayerDrag(moving:) + EditorState.commitCanvasOrigins, the pair the canvas multi-drag added on 2026-09-03: build the plan, offset its bounds by the nudge, commit the origins. Noticed while building the canvas multi-drag.\n\nShipped: Sources/PhotonzCore/MultiLayerDrag.swift (origins(offsetBy:)), Sources/Photonz/CanvasView.swift (keyDown multi branch), Sources/Photonz/EditorState.swift (commitCanvasOrigins drops a stale marquee). Walk: Scripts/playtest/nudge-selection-walk.json. Audit: queue/audits/2026-09-03-arrow-keys-nudge.json.",
   "acceptance": [
     "An arrow key with two or more layers picked moves every one of them by one point",
     "Shift and an arrow moves every picked layer by ten points",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-03T12:28:44.299Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T19:10:14.989Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T19:18:11.355669Z",
+      "note": "Adversarial pass before building: the idea holds up. Arrow keys have no other meaning on the canvas with layers picked, the plan multiLayerDrag builds already leaves out locked layers and pieces inside a picked group, and reusing it means a nudge and a drag can never disagree about what moves. Shortest version: one new pure function (a distance instead of a destination) plus one branch in the canvas."
+    },
+    {
+      "t": "2026-09-03T19:18:11.355669Z",
+      "note": "Reproduced first, on the real app: Scripts/playtest/nudge-selection-walk.json. One layer picked, right arrow moved it 120 -> 121. Two picked, right arrow and shift-down both did nothing, and the two undos afterwards unwound the DRAWING, proving no history entry was made at all."
+    },
+    {
+      "t": "2026-09-03T19:18:11.355669Z",
+      "note": "Built it. PhotonzCore: MultiLayerDrag.origins(offsetBy:) with four tests written first (every member travels the nudge, shift is ten, a locked picked layer is left out, zero moves nobody). CanvasView keyDown: a multi branch ahead of the single-layer one, on pickedLayerIDs.count > 1, committing through onMoveSelectionCommit so the whole move is one undo step."
+    },
+    {
+      "t": "2026-09-03T19:18:11.355669Z",
+      "note": "Adversarial pass on the built thing found a real flaw: a selection made by SWEEPING a band left that band on screen after a nudge, outlining where the layers used to be. A drag never showed it because its first live update drops the band. Fixed in EditorState.commitCanvasOrigins so both paths clear it, and re-photographed."
+    },
+    {
+      "t": "2026-09-03T19:18:11.355669Z",
+      "note": "Verified on the real app (probe, Screen Recording granted): two picked + right arrow moves both by 1 and leaves the third alone; shift-down moves both by 10; one undo takes the 10 back in one step; a swept selection of three nudges all three and drops the band. Locked layers are covered by core tests only, since the playtest harness cannot lock a layer. Scripts/test.sh: 2346 tests green."
+    },
+    {
+      "t": "2026-09-03T19:18:11.355669Z",
+      "note": "CanvasView and EditorState are shared files, as the canvas multi-drag this completes already was, so Current and Next both get it. No flag."
     }
-  ]
+  ],
+  "started": "2026-09-03T19:10:14.988Z"
 }

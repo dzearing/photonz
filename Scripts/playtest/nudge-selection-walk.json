@@ -1,0 +1,243 @@
+{
+  "out": "/tmp/photonz-playtest/nudge-selection",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        100
+      ],
+      "to": [
+        280,
+        160
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        220
+      ],
+      "to": [
+        370,
+        280
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        340
+      ],
+      "to": [
+        200,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-drew",
+      "note": "three rectangles: top, middle, bottom"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        130
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-one-picked-nudged",
+      "note": "baseline: one rectangle picked, one press of the right arrow moves it 1 point right"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        130
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        260,
+        250
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-two-picked",
+      "note": "top and middle rectangles picked; note their boxes in the tree"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-nudged-1",
+      "note": "one press of the right arrow should move BOTH picked rectangles 1 point right and leave the bottom one alone"
+    },
+    {
+      "do": "key",
+      "key": "down",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-nudged-10",
+      "note": "shift and the down arrow should move both picked rectangles 10 points down"
+    },
+    {
+      "do": "snapshot",
+      "name": "nudge-5-nudged"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-undone-once",
+      "note": "ONE undo should take the 10 point move back off both rectangles in one step"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone-twice",
+      "note": "a second undo should put both rectangles exactly where stage 3 had them"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "drag",
+      "from": [
+        60,
+        60
+      ],
+      "to": [
+        700,
+        560
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "8-swept",
+      "note": "a rubber band around all three rectangles picks the lot"
+    },
+    {
+      "do": "snapshot",
+      "name": "nudge-8-swept"
+    },
+    {
+      "do": "key",
+      "key": "right",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "9-swept-nudged",
+      "note": "all three should move 10 points right, and the rubber band that picked them should not be left behind describing where they were"
+    },
+    {
+      "do": "snapshot",
+      "name": "nudge-9-swept-nudged"
+    }
+  ]
+}

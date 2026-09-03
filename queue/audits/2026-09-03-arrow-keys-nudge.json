@@ -1,0 +1,29 @@
+{
+  "feature": "Arrow keys nudge everything you picked",
+  "epic": "ui-components",
+  "summary": "Pick several layers and the arrow keys now move all of them together, one point a press and ten with Shift held, landing in one undo step. Until now the arrow keys did nothing at all unless exactly one layer was picked.",
+  "setup": "Photonz Dev, any document with a few layers on it. No flag to turn on: it works in both releases, like dragging a multi-selection does.",
+  "try": [
+    { "do": "Click one layer on the canvas, then Shift-click a second." },
+    { "do": "Press the right arrow once. Both should slide one point right, together." },
+    { "do": "Hold Shift and press the down arrow. Both should drop ten points.", "shot": "2026-09-03-nudge-two-picked.png" },
+    { "do": "Press Command-Z once. Both should go back ten points in a single step." },
+    { "do": "Press Escape, then drag a rubber band around three layers to sweep them up." },
+    { "do": "Press Shift and the right arrow. All three move ten points and the band comes down.", "shot": "2026-09-03-nudge-swept.png" },
+    { "do": "Lock one of the picked layers in the Layers list, then press an arrow. The locked one should not budge." }
+  ],
+  "evaluate": [
+    "Does one point a press feel right for lining things up, or do you reach for Shift almost every time?",
+    "When you sweep a band around layers and then nudge, is dropping the band what you expected, or did you want it to stay and follow them?",
+    "Holding an arrow down repeats the move, and each repeat is its own undo step. Does taking a long slide back one press at a time bother you?",
+    "A nudge lands on an exact number and ignores the snap guides a drag would honour. Is that the behavior you want from the keyboard?",
+    "Does the selection outline keep up with the layers, or does it lag behind a press?"
+  ],
+  "rough": [
+    "Every step above except the locked one was driven on the real app and photographed with the screen capture grant, so the two pictures are the window as you would see it.",
+    "The locked-layer step is checked by unit tests only: the scripted harness has no way to lock a layer, so nobody has watched that one happen on screen.",
+    "Repeated presses each make their own undo step. That matches what one picked layer has always done, so it was left alone rather than made different for a multi-selection.",
+    "A nudge does not snap to neighbouring layers the way a drag does. That is on purpose (a keyboard move is an exact distance), but it is the kind of thing worth disagreeing with.",
+    "Sweeping a band and then nudging used to leave the band sitting on screen outlining where the layers had been. That is fixed here, on the same commit."
+  ]
+}

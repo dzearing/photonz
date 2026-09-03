@@ -2253,6 +2253,21 @@ final class CanvasNSView: NSView {
             onDeleteLayer(id)
             return
         }
+        // Arrow keys nudge a whole multi-selection (1pt, ⇧ for 10pt): every
+        // picked layer travels the same distance, in ONE undo step, exactly as
+        // dragging the selection on the canvas does. Same plan, so a locked
+        // layer stays put and a piece inside a picked group is not moved twice.
+        // This comes first because a multi-selection has no primary layer at
+        // all — `selectedLayerID` is nil — so the branch below can never fire.
+        if let delta = Nudge.delta(keyCode: event.keyCode,
+                                   large: event.modifierFlags.contains(.shift)),
+           moveDrag == nil, resizeDrag == nil, transformDrag == nil,
+           pickedLayerIDs.count > 1,
+           let plan = document?.multiLayerDrag(moving: pickedLayerIDs) {
+            onMoveSelectionCommit(plan.origins(offsetBy: delta))
+            refreshOverlays()
+            return
+        }
         // Arrow keys nudge the selected layer (1pt, ⇧ for 10pt).
         if let delta = Nudge.delta(keyCode: event.keyCode,
                                    large: event.modifierFlags.contains(.shift)),

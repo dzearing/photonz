@@ -34,6 +34,15 @@ public struct MultiLayerDrag: Equatable, Sendable {
         self.bounds = members.dropFirst().reduce(first.bounds) { $0.union($1.bounds) }
     }
 
+    /// Where every member lands when the whole selection travels `delta`, in
+    /// canvas coordinates. This is the arrow keys' half of the same move: a
+    /// nudge is a distance rather than a destination, so nothing has to work
+    /// out where the selection's box would end up first.
+    public func origins(offsetBy delta: CGVector) -> [UUID: CGPoint] {
+        origins(movingBoundsTo: CGPoint(x: bounds.origin.x + delta.dx,
+                                        y: bounds.origin.y + delta.dy))
+    }
+
     /// Where every member lands when the selection's box moves to `origin`,
     /// in canvas coordinates. Worked out from where each one started, so the
     /// order they are applied in cannot change the result.

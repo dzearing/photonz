@@ -156,4 +156,60 @@ struct MultiLayerDragTests {
         #expect(doc.snapPeers(excluding: id(doc, "A")) ==
                 doc.snapPeers(excluding: [id(doc, "A")]))
     }
+
+    // MARK: Nudging everything you picked
+
+    /// The arrow keys move a multi-selection the same way dragging it does:
+    /// one distance, applied to every member, so the shape the selection makes
+    /// is exactly what it was a point ago.
+
+    @Test func everyPickedLayerTravelsTheNudge() {
+        let doc = makeFlat()
+        let ids = [id(doc, "A"), id(doc, "B")]
+        guard let drag = doc.multiLayerDrag(moving: Set(ids)) else {
+            Issue.record("expected a drag")
+            return
+        }
+        let moves = drag.origins(offsetBy: CGVector(dx: 1, dy: 0))
+        #expect(moves[ids[0]] == CGPoint(x: 11, y: 10))
+        #expect(moves[ids[1]] == CGPoint(x: 201, y: 30))
+        #expect(moves.count == 2)
+    }
+
+    @Test func aShiftNudgeMovesTheSelectionTenPoints() {
+        let doc = makeFlat()
+        let ids = [id(doc, "A"), id(doc, "B"), id(doc, "C")]
+        guard let drag = doc.multiLayerDrag(moving: Set(ids)),
+              let down = Nudge.delta(keyCode: 125, large: true) else {
+            Issue.record("expected a drag and a nudge")
+            return
+        }
+        let moves = drag.origins(offsetBy: down)
+        #expect(moves[ids[0]] == CGPoint(x: 10, y: 20))
+        #expect(moves[ids[1]] == CGPoint(x: 200, y: 40))
+        #expect(moves[ids[2]] == CGPoint(x: 40, y: 310))
+    }
+
+    @Test func aLockedPickedLayerIsNotNudged() {
+        var doc = makeFlat()
+        doc.updateLayer(id: id(doc, "A")) { $0.isLocked = true }
+        guard let drag = doc.multiLayerDrag(moving: Set(doc.allLayers.map(\.id))) else {
+            Issue.record("expected a drag")
+            return
+        }
+        let moves = drag.origins(offsetBy: CGVector(dx: -1, dy: 0))
+        #expect(moves[id(doc, "A")] == nil)
+        #expect(moves[id(doc, "B")] == CGPoint(x: 199, y: 30))
+        #expect(moves[id(doc, "C")] == CGPoint(x: 39, y: 300))
+    }
+
+    @Test func nudgingByNothingLeavesEveryoneWhereTheyAre() {
+        let doc = makeFlat()
+        guard let drag = doc.multiLayerDrag(moving: Set(doc.allLayers.map(\.id))) else {
+            Issue.record("expected a drag")
+            return
+        }
+        #expect(drag.origins(offsetBy: .zero) ==
+                drag.origins(movingBoundsTo: drag.bounds.origin))
+    }
 }

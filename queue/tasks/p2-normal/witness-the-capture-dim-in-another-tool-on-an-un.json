@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:58:36.959Z",
-  "updated": "2026-09-03T19:09:17.099416Z",
+  "updated": "2026-09-03T19:09:43.785Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked only on an unlocked screen. Everything else is ready: ONE command answers all four acceptance items now.\n\nRun:\n  ioreg -n Root -d1 -a | plutil -extract IOConsoleLocked raw -   # must print false\n  Scripts/probe-app.sh --quit; open -a \"$PWD/dist/Photonz Probe.app\" --args --capture-diag\n  cat /tmp/photonz-capture-diag.txt\nNote the ABSOLUTE path: `open -a \"dist/Photonz Probe.app\"` fails to resolve.\n\nReport lines map to the acceptance items in order: line 1 says unlocked; the \"dim shows up in another tool's screenshot\" line wants about 0.75 of clean; the \"frozen picture under the overlay\" line wants 1.00 of clean; the \"window shadow below a test window\" line wants the freeze path within 75% of the old path's depth.\n\nThe shadow line is still the real risk. The freeze moved from SCScreenshotManager.captureImage(in:) to SCContentFilter(display:excludingWindows:) with ignoreShadows = false, and the comment on ScreenCapturer.capture(screen:) records a 2026-07-03 measurement that the filter path synthesizes NO window shadows at all (filter path delta-0 luma under every window edge). ignoreShadows = false is supposed to have fixed that and it has never been checked. If the line says SHADOW LOST, the fallback is to keep the filter path only while the overlay is up and note it.\n\nGeometry and mean luma already match the old path exactly (3456x2234, 0.4887 both ways on this run).\n\nAlso worth a real screenshot for queue/audits/2026-09-03-capture-dim-in-recordings.json, which ships without one and says why; /tmp/photonz-capture-diag-drag.png is written every run but is only worth shipping from an unlocked one.",
@@ -35,6 +35,14 @@
     {
       "t": "2026-09-03T19:09:17.099416Z",
       "note": "Screen was locked for the whole run (IOConsoleLocked true at start, middle and end), so nothing could be witnessed: a locked Mac photographs as the lock screen. Did the part that does not need an unlocked screen: --capture-diag can now answer acceptance items 3 and 4, which it could not have answered even unlocked. Item 3 (frozen picture brightness) was inferred from the live screen; it is now measured on the frozen picture itself via a new probe-only RectSelectionController.frozenImages. Item 4 (window shadow) had no instrumentation at all, and the earlier run could not get one because it compared two shots of an empty screen where a missing shadow and nothing to cast one look identical; the diag now puts its own grey backdrop plus white card on screen and reads the shadow band through both capture paths. Ran it on the locked screen to prove it works end to end: it correctly reported INCONCLUSIVE for the shadow rather than inventing a verdict. Blocked on somebody being logged in at the Mac."
+    },
+    {
+      "t": "2026-09-03T19:09:43.784Z",
+      "note": "Needs somebody logged in at the Mac: the screen was locked for the whole run (IOConsoleLocked true at start, middle and end) and a locked Mac photographs as the lock screen, so nothing could be witnessed. Unblock by unlocking and re-running; the task notes carry the one command that now answers all four acceptance items."
+    },
+    {
+      "t": "2026-09-03T19:09:43.785Z",
+      "note": "waiting, but no decision card was opened against this task. Nothing returns a task to the queue except an answer, so this will sit here until someone opens one."
     }
   ],
   "started": "2026-09-03T19:02:25.163Z"
