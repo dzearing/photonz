@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 760,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:55:20.211Z",
-  "updated": "2026-09-03T11:00:07.314Z",
+  "updated": "2026-09-03T11:00:26.725Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the step E9 sitting on 2026-09-03, see queue/audits/2026-09-03-component-e2e-4-overridden.png. The five starter components dodge this by shipping the knob pre-named Label; only hand authored components hit it. Naming lives in ComponentProperties.swift / the Adjustable list in ComponentPanel.swift. The current rule is documented in docs/design/ui-building.md under the C6 landing note, so change that too.",
@@ -39,7 +39,12 @@
     {
       "t": "2026-09-03T11:00:07.314Z",
       "note": "Acceptance checked one by one: (1) a wording knob on an unnamed text layer is named Wording, proven by aKnobOnAnUnnamedTextLayerIsNamedAfterWhatItDoes and by the capture of the overridden copy; (2) aKnobNamedBeforeTheRuleChangedKeepsItsName sets a knob called Save, overrides a copy, syncs, saves and reopens, and the name is still Save; (3) the walk types Label straight into the new knob's name field and later finds that field by its new name, and the rename test still covers blank names; (4) queue/audits/2026-09-03-knob-naming-2-overridden-sc.png is a real screen capture showing Label above Cancel."
+    },
+    {
+      "t": "2026-09-03T11:00:26.724Z",
+      "note": "A knob now takes its layer's name, or what the knob does (Wording, Show, Shape) when that name is one the app wrote itself, so it never repeats the words a copy can override. The words moved to the Add menu row, a new knob lands with its name selected for renaming, and existing documents keep the names they have. Core rule in ComponentProperties/Components with three new tests, panel and walks updated; 2046 tests green and verified on the probe app. Audit: queue/audits/2026-09-03-knob-naming.json"
     }
   ],
-  "started": "2026-09-03T10:48:59.595Z"
+  "started": "2026-09-03T10:48:59.595Z",
+  "completed": "2026-09-03T11:00:26.725Z"
 }
