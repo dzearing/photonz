@@ -6192,3 +6192,22 @@ Finder both dropped a loose layer over the screen instead of onto it.
 - Audit: `queue/audits/2026-09-03-paste-onto-frame.json` with two real captures.
 
 Next: the follow-up task to name a dropped file's layer after the file.
+
+## 2026-09-03 — A picture you place keeps its own name
+
+- `PlacedImageNaming` (PhotonzCore, 10 tests written first) decides what a
+  placed picture is called: a file keeps its name without the extension, the
+  clipboard still reads "Pasted Image".
+- A capture the app named itself keeps only its clock time
+  ("Screenshot 16.22.12"). The task asked for the whole file name, but that is
+  ~220pt of text in a 220pt panel, so every capture would have truncated to an
+  identical prefix. Recorded as a deviation in the audit's `rough`.
+- `EditorState.pasteImage` takes a `fileName`; `addImageLayerOrOpen` hands it
+  over, covering both the Library place and the Finder drop.
+- Playtest harness: a `renameSelectedLayer` action, since the layers dock
+  cannot be reached with the pointer from a walk. Walk:
+  `Scripts/playtest/placed-image-name-walk.json`.
+- Audit: `queue/audits/2026-09-03-placed-image-names.json`, two real captures.
+
+Next: open questions in that audit are whether the clock time is the right
+recogniser and whether identical placed files need a number on the end.
