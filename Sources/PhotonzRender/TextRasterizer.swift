@@ -74,18 +74,19 @@ public enum TextRasterizer {
     /// a hair short makes CoreText drop the last line, and losing a word is
     /// worse than a line of text hugging the top of a box too small for it.
     private static func laidOutBox(_ text: TextContent, in box: CGRect) -> CGRect {
-        guard text.verticalAlignment != nil, text.usedVerticalAlignment != .top,
-              !text.string.isEmpty else { return box }
-        let framesetter = CTFramesetterCreateWithAttributedString(attributedString(text))
-        let suggested = CTFramesetterSuggestFrameSizeWithConstraints(
-            framesetter, CFRange(location: 0, length: 0), nil,
-            CGSize(width: box.width, height: .greatestFiniteMagnitude), nil)
-        // One point of slack: the suggestion and the frame it is handed back to
-        // round differently, and the cost of being one short is a dropped line.
-        let needed = ceil(suggested.height) + 1
-        guard needed < box.height else { return box }
-        let y = text.usedVerticalAlignment == .middle ? ((box.height - needed) / 2).rounded() : 0
-        return CGRect(x: box.minX, y: box.minY + y, width: box.width, height: needed)
+        // `TextBlockMetrics` owns how far down the lines sit, so the field you
+        // type a label in can offset its draft by exactly the same amount.
+        let inset = TextBlockMetrics.topInset(for: text, in: box.size)
+        guard inset > 0 else { return box }
+        let needed = TextBlockMetrics.laidOutHeight(text, width: box.width)
+        return CGRect(x: box.minX, y: box.maxY - inset - needed, width: box.width, height: needed)
+    }
+
+    /// The attributed string a piece of content lays out as: the ONE place the
+    /// face, color and alignment get stamped on, so everything that measures
+    /// text measures the string that actually gets drawn.
+    static func measuringString(_ text: TextContent) -> NSAttributedString {
+        attributedString(text)
     }
 
     /// The size a frame must be for `text` to lay out without wrapping beyond
@@ -111,6 +112,20 @@ public enum TextRasterizer {
             CGSize(width: constraint, height: .greatestFiniteMagnitude), nil)
         return CGSize(width: max(ceil(suggested.width) + frameInset * 2, floor),
                       height: max(ceil(suggested.height), ceil(lineHeight)) + frameInset * 2)
+    }
+
+    /// The document-size face `text` is set in, as a descriptor.
+    ///
+    /// The inline editor builds its draft font from this with a scale transform
+    /// for the zoom, rather than asking for the zoomed point size: SF spaces
+    /// letters by point size, so a draft set at (size x zoom) is a few percent
+    /// off the box the renderer bakes at the document size. Going through the
+    /// descriptor also carries the WEIGHT across — asking AppKit for the
+    /// resolved system face by PostScript name (".SFNS-Regular") returns
+    /// nothing at all, which used to drop a bold label back to regular for as
+    /// long as you were typing it.
+    public static func faceDescriptor(for text: TextContent) -> CTFontDescriptor {
+        CTFontCopyFontDescriptor(font(for: text))
     }
 
     /// The CTFont for a piece of content. Descriptor matching with a weight

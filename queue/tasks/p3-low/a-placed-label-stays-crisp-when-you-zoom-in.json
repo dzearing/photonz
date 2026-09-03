@@ -1,0 +1,27 @@
+{
+  "id": "a-placed-label-stays-crisp-when-you-zoom-in",
+  "title": "A placed label stays crisp when you zoom in",
+  "goal": "Text you have placed is drawn once at the picture's own resolution, so zooming past 100 percent blows that picture up and the words go soft. The label you are still typing stays sharp, so the moment you commit, the text you were looking at gets blurrier. Placed text should stay as crisp as the draft at any zoom.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 670,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T23:58:22.377Z",
+  "updated": "2026-09-03T23:58:22.377Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while fixing the draft/commit parity task on 2026-09-03. Text layers rasterize through TextRasterizer at document size into ImageStore, and DocumentRenderer scales that bitmap by the zoom. Compare queue/audits/2026-09-03-text-draft-parity-placed.png (crisp draft) with the same words after commit at 126 percent. Likely wants the text raster keyed on (content, renderScale) so it is baked at the zoom it will be shown at, with the store keeping the scaled variant.",
+  "acceptance": [
+    "A label placed at 100 percent is still sharp at 200 and 400 percent zoom",
+    "Zooming in and back out does not leave the label softer than it started",
+    "A 12 megapixel document with ten layers still re-renders under 16ms while zoomed in"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T23:58:22.377Z",
+      "note": "created (manual)"
+    }
+  ]
+}

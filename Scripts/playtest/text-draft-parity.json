@@ -1,0 +1,174 @@
+{
+  "out": "/tmp/photonz-playtest/text-draft-parity",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "describe",
+      "stage": "start",
+      "note": "blank canvas, fitted (zoom is fractional)"
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        820,
+        120
+      ]
+    },
+    {
+      "do": "type",
+      "text": "A label near the right edge that has to wrap onto several lines before it is finished"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "wrap-typing"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "wrap-placed"
+    },
+    {
+      "do": "describe",
+      "stage": "wrap-placed",
+      "note": "wrapping label committed at fit zoom"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "describe",
+      "stage": "zoomed",
+      "note": "zoomed in twice"
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        500
+      ],
+      "space": "view"
+    },
+    {
+      "do": "type",
+      "text": "A second label typed while zoomed in, long enough to break across a line"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "zoom-typing"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "zoom-placed"
+    },
+    {
+      "do": "describe",
+      "stage": "zoom-placed",
+      "note": "second label committed while zoomed"
+    },
+    {
+      "do": "render",
+      "name": "document"
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        860,
+        130
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "reedit-typing"
+    },
+    {
+      "do": "describe",
+      "stage": "reedit-typing",
+      "note": "first label reopened for editing, unchanged"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "reedit-placed"
+    },
+    {
+      "do": "describe",
+      "stage": "reedit-placed",
+      "note": "re-edit committed with no change"
+    }
+  ]
+}

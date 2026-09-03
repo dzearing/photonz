@@ -719,6 +719,12 @@ final class CanvasNSView: NSView {
         /// extends the bubble away from the arrow, and nothing slides under the
         /// cursor mid-word. Committing writes this same spot.
         var captionPlacement = CaptionPlacement()
+        /// Where the words sit in the box being re-edited. The font picker's
+        /// style carries no placement, so restyling mid-edit used to drop a
+        /// centred label to the left edge for as long as you were typing it;
+        /// the session holds the placement and stamps it back on instead.
+        var alignment: TextAlign?
+        var verticalAlignment: TextVerticalAlign?
     }
     private var textSession: TextEditSession?
     /// The session's editor overlay, positioned/scaled to track the viewport.
@@ -3631,7 +3637,9 @@ final class CanvasNSView: NSView {
             selectedLayerFrame = nil
             onSelectLayer(nil)
         }
-        textSession = TextEditSession(layerID: layerID, origin: origin)
+        textSession = TextEditSession(layerID: layerID, origin: origin,
+                                      alignment: style.alignment,
+                                      verticalAlignment: style.verticalAlignment)
 
         let editor = makeInlineEditor()
         editor.string = string
@@ -3745,24 +3753,27 @@ final class CanvasNSView: NSView {
         return editor
     }
 
-    /// The face a caption draft is set in: the caption's DOCUMENT-size font with
-    /// a scale transform for the zoom, never the zoomed point size. SF spaces
-    /// letters differently at different point sizes, so a draft set at
-    /// (size x zoom) is a few percent wider or narrower than the pill the
-    /// rasterizer bakes at the document size and the canvas then scales. That
-    /// gap is what made a long caption's far edge jump on Return. Scaling the
-    /// document-size face instead gives the draft exactly the committed
-    /// letter spacing, so the words you type occupy the pill they will land in.
-    private static func captionDraftFont(_ content: TextContent, fontSize: CGFloat,
-                                         zoom: CGFloat) -> NSFont {
-        var document = content
-        document.fontSize = fontSize
-        let ctFont = TextRasterizer.font(for: document)
-        let descriptor = (CTFontCopyFontDescriptor(ctFont) as NSFontDescriptor).withSize(fontSize)
+    /// The face any draft is set in — a caption's or a text block's: the
+    /// content's DOCUMENT-size font with a scale transform for the zoom, never
+    /// the zoomed point size. SF spaces letters differently at different point
+    /// sizes, so a draft set at (size x zoom) is a few percent wider or
+    /// narrower than what the rasterizer bakes at the document size and the
+    /// canvas then scales. That gap is what made a long caption's far edge jump
+    /// on Return, and what made a text block wrap at a different word than the
+    /// label it committed to. Scaling the document-size face instead gives the
+    /// draft exactly the committed letter spacing.
+    ///
+    /// Going through the descriptor is also the only way the WEIGHT survives:
+    /// the resolved system face has no name AppKit will answer to
+    /// (".SFNS-Regular" resolves to nothing), so the old name lookup fell back
+    /// to the plain system font and typed a bold label in regular.
+    private static func draftFont(_ content: TextContent, zoom: CGFloat) -> NSFont {
+        let descriptor = (TextRasterizer.faceDescriptor(for: content) as NSFontDescriptor)
+            .withSize(content.fontSize)
         var transform = AffineTransform()
         transform.scale(zoom)
         return NSFont(descriptor: descriptor, textTransform: transform)
-            ?? NSFont.systemFont(ofSize: fontSize * zoom)
+            ?? NSFont.systemFont(ofSize: content.fontSize * zoom)
     }
 
     /// Applies font/color to the editor, scaled to the current zoom so the
@@ -3772,21 +3783,18 @@ final class CanvasNSView: NSView {
         guard let editor = textEditor, let viewport else { return }
         var stored = content
         stored.string = ""
+        // The font picker's style says nothing about where the words sit, so a
+        // re-edit's placement rides on the session and gets stamped back on
+        // here. Without it, restyling mid-edit dropped a centred label to the
+        // left edge until Return put it back.
+        if let session = textSession, session.captionStyle == nil {
+            stored.alignment = session.alignment
+            stored.verticalAlignment = session.verticalAlignment
+        }
         textEditorContent = stored
         textEditorZoom = viewport.zoom
 
-        let font: NSFont
-        if textSession?.captionStyle != nil {
-            font = Self.captionDraftFont(stored, fontSize: content.fontSize, zoom: viewport.zoom)
-        } else {
-            var scaled = stored
-            scaled.fontSize = content.fontSize * viewport.zoom
-            // The rasterizer picks the face (family + weight); reuse it via its
-            // PostScript name so the draft and the final render match.
-            let ctFont = TextRasterizer.font(for: scaled)
-            font = NSFont(name: CTFontCopyPostScriptName(ctFont) as String, size: scaled.fontSize)
-                ?? NSFont.systemFont(ofSize: scaled.fontSize)
-        }
+        let font = Self.draftFont(stored, zoom: viewport.zoom)
         let rgba = RGBA(hex: content.colorHex) ?? RGBA(r: 1, g: 1, b: 1)
         let color = NSColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
         editor.font = font
@@ -3800,7 +3808,7 @@ final class CanvasNSView: NSView {
         // The draft sits where the committed words will: a centred label is
         // typed centred rather than jumping on Return.
         if textSession?.captionStyle == nil {
-            switch content.usedAlignment {
+            switch stored.usedAlignment {
             case .left: editor.alignment = .left
             case .center: editor.alignment = .center
             case .right: editor.alignment = .right
@@ -3809,61 +3817,60 @@ final class CanvasNSView: NSView {
         layoutTextEditor()
     }
 
-    /// The wrap cap (document points) for a text block placed at `origin`: the
-    /// box wraps at 60% of the canvas, but never past the right edge and never
-    /// below the minimum width. The committed frame re-measures with the same cap.
+    /// The wrap cap (document points) for a text block placed at `origin`.
+    /// `TextBlockMetrics` owns the rule; the committed frame asks it the same
+    /// question, so nothing wraps in one place and not the other.
     private func textWrapWidth(origin: CGPoint) -> CGFloat {
         guard let viewport else { return TextRasterizer.minimumTextWidth }
-        let toEdge = viewport.documentSize.width - origin.x
-        let cap = viewport.documentSize.width * 0.6
-        return max(min(toEdge, cap), TextRasterizer.minimumTextWidth)
+        return TextBlockMetrics.wrapWidth(origin: origin, in: viewport.documentSize)
     }
 
-    /// Positions the editor over the session origin and sizes it: the box wraps
-    /// at `textWrapWidth` but its frame HUGS the laid-out text (floored at the
-    /// minimum width), so it grows with what you type instead of spanning to the
-    /// canvas edge. Height hugs the laid-out text.
+    /// Positions the editor over the session origin and sizes it.
+    ///
+    /// The field IS the box it commits to: its frame comes straight from
+    /// `TextBlockMetrics` — the same measurement `commitTextEdit` sizes the
+    /// layer with — scaled to the zoom, and the text container is that same
+    /// box, so AppKit breaks the draft's lines exactly where CoreText will
+    /// break the placed label's. Nothing here measures the typed text a second
+    /// way, which is what used to make the box drift and the wrap move on
+    /// Return.
     ///
     /// A caption session is a different shape and hands off to
-    /// `layoutCaptionEditor`: its frame IS the pill it commits to, measured once
-    /// by the renderer rather than a second time here.
+    /// `layoutCaptionEditor`.
     private func layoutTextEditor() {
         guard let editor = textEditor, let viewport, let session = textSession else { return }
         if session.captionStyle != nil, let caption = session.captionLayer?.annotation {
             layoutCaptionEditor(editor, caption: caption, session: session, viewport: viewport)
             return
         }
-        let topLeft = viewport.viewPoint(fromDocument: session.origin)
-        let minView = TextRasterizer.minimumTextWidth * viewport.zoom
+        let zoom = viewport.zoom
+        var draft = textEditorContent ?? TextContent(string: "")
+        draft.string = editor.string
         // A box bigger than its words — a paragraph, or a label told to stretch
-        // across what holds it — is typed in at the width it already has, so
-        // centred words are typed where they will land instead of springing to
-        // the left edge for the length of the edit.
-        let roomy = roomyBoxWidth(session).map { $0 * viewport.zoom }
-        let capView = roomy ?? max(minView, textWrapWidth(origin: session.origin) * viewport.zoom)
-        var contentWidth = roomy ?? minView
-        var height = (editor.font?.pointSize ?? 20) * 1.4
-        if let container = editor.textContainer, let layoutManager = editor.layoutManager {
-            container.containerSize = NSSize(width: capView, height: .greatestFiniteMagnitude)
-            layoutManager.ensureLayout(for: container)
-            let used = layoutManager.usedRect(for: container)
-            // Hug the longest laid-out line (+ caret slack), floored at the
-            // minimum and capped at the wrap width.
-            if roomy == nil { contentWidth = min(capView, max(minView, ceil(used.width) + 3)) }
-            height = max(height, used.height + 2)
-        }
-        editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: ceil(height))
+        // across what holds it — keeps the room it has, exactly as the commit
+        // does, so re-wording one re-wraps in place.
+        let room = roomyBox(session)
+        let box = TextBlockMetrics.frameSize(for: draft,
+                                             maxWidth: textWrapWidth(origin: session.origin),
+                                             roomyWidth: room.width, roomyHeight: room.height)
+        // Words that sit low in a roomy box are typed low in it too.
+        editor.textContainerInset = NSSize(width: 0,
+                                           height: TextBlockMetrics.topInset(for: draft, in: box) * zoom)
+        editor.textContainer?.containerSize = NSSize(width: box.width * zoom,
+                                                     height: .greatestFiniteMagnitude)
+        let topLeft = viewport.viewPoint(fromDocument: session.origin)
+        editor.frame = CGRect(x: topLeft.x, y: topLeft.y,
+                              width: box.width * zoom, height: box.height * zoom)
     }
 
-    /// The width of the box being re-edited, when that box is wider than the
-    /// words in it; nil for a new block and for a box that hugs its words.
-    private func roomyBoxWidth(_ session: TextEditSession) -> CGFloat? {
+    /// The room the box being re-edited has beyond its words; both nil for a
+    /// new block and for a box that hugs what is in it.
+    private func roomyBox(_ session: TextEditSession) -> (width: CGFloat?, height: CGFloat?) {
         guard Experiments.shared.placementEnabled,
               session.captionStyle == nil, let layerID = session.layerID,
-              let layer = document?.canvasLayer(id: layerID), let words = layer.text else { return nil }
-        let hugged = TextRasterizer.naturalSize(words, maxWidth: layer.frame.width,
-                                                minWidth: TextRasterizer.minimumTextWidth)
-        return layer.frame.width > hugged.width + 0.5 ? layer.frame.width : nil
+              let layer = document?.canvasLayer(id: layerID),
+              let words = layer.text else { return (nil, nil) }
+        return TextBlockMetrics.roomyBox(for: words, frame: layer.frame)
     }
 
     /// A caption field IS the pill it commits to. Its frame comes straight from

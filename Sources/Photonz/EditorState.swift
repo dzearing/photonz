@@ -2999,19 +2999,17 @@ final class EditorState {
         // Next only, with the rest of placement: Current has no Align, so no
         // text in it can be pulled off centre by a box that re-hugs.
         if Experiments.shared.placementEnabled, let layer = edited, let words = layer.text {
-            let hugged = TextRasterizer.naturalSize(words, maxWidth: layer.frame.width,
-                                                    minWidth: TextRasterizer.minimumTextWidth)
-            if layer.frame.width > hugged.width + 0.5 { roomyWidth = layer.frame.width }
-            if layer.frame.height > hugged.height + 0.5 { roomyHeight = layer.frame.height }
+            (roomyWidth, roomyHeight) = TextBlockMetrics.roomyBox(for: words, frame: layer.frame)
         }
         if let layerID {
             if isEmpty {
                 perform { $0.removeLayer(id: layerID) }
             } else {
-                var size = TextRasterizer.naturalSize(content, maxWidth: roomyWidth ?? maxWidth,
-                                                      minWidth: TextRasterizer.minimumTextWidth)
-                if let roomyWidth { size.width = roomyWidth }
-                if let roomyHeight { size.height = max(size.height, roomyHeight) }
+                // The same measurer the inline editor sized its field with, so
+                // the words land in the box they were typed in.
+                let size = TextBlockMetrics.frameSize(for: content, maxWidth: maxWidth,
+                                                      roomyWidth: roomyWidth,
+                                                      roomyHeight: roomyHeight)
                 perform { document in
                     document.updateLayer(id: layerID) {
                         $0.content = .text(content)
@@ -3027,8 +3025,7 @@ final class EditorState {
             // New text commits in the current foreground color (16.12).
             var content = content
             content.colorHex = foregroundFillHex
-            let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth,
-                                                  minWidth: TextRasterizer.minimumTextWidth)
+            let size = TextBlockMetrics.frameSize(for: content, maxWidth: maxWidth)
             let layer = TextBuilder.layer(content: content, at: origin, naturalSize: size)
             perform { $0.addLayerDrawnOnFrame(layer) }
             // Re-editing existing text already runs with Select active, so only

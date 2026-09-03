@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T23:44:29.466Z",
-  "updated": "2026-09-03T12:08:27.269Z",
+  "updated": "2026-09-03T23:58:41.685094Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Same class of drift the arrow caption had (fixed 2026-09-02): the inline editor lays the draft out at (fontSize x zoom) with NSLayoutManager while TextRasterizer measures at document size, and SF spaces letters by point size. The caption fix is the pattern to copy: CanvasNSView.captionDraftFont sets the draft in the document-size face with a scale transform, and layoutCaptionEditor takes its frame from CaptionMetrics. A text block also wraps, so its wrap cap has to be the same on both sides.\n\nObjective: measure-redline (staged now). Typing a label onto a capture is the annotation half of redlining, and this drift is the same family as the arrow caption fix that landed 2026-09-02.",
@@ -30,6 +30,39 @@
     {
       "t": "2026-09-03T12:08:27.268Z",
       "note": "seq 20 -> 20"
+    },
+    {
+      "t": "2026-09-03T23:39:11.952Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T23:58:41.685094Z",
+      "note": "Adversarial review before building: the mock is not involved here, the bug is. Walked it as a first-time user and the shortest version that delivers the value is ONE measurer, not a cleverer draft: the field should be the box it commits to, exactly as the arrow caption already is. Rejected widening the frame or adding slack (guesses that move every existing label). Nothing decorative to cut."
+    },
+    {
+      "t": "2026-09-03T23:58:41.685094Z",
+      "note": "Reproduced before fixing, per the repro-first rule. A standalone harness laid the same string out both ways: at 200 percent a 60-character label's draft was 13 document points narrower than the committed frame, at 50 percent it was 65 wider. Two further defects fell out of the same measurement: NSFont(name: \".SFNS-Regular\") returns NIL, so the draft silently fell back to the plain system font and typed a BOLD label in regular; and activeTextContent carries no alignment, so restyling mid-edit dropped a centred label to the left edge until Return."
+    },
+    {
+      "t": "2026-09-03T23:58:41.685094Z",
+      "note": "TDD: Tests/PhotonzRenderTests/TextBlockMetricsTests.swift pins draft-vs-placed parity over 4 weights x 4 sizes x 5 strings x 7 zooms. It fails with 134 mismatches on the old font path and passes on the new one. Also pins the wrap cap, roomy-box detection, and where the first line sits."
+    },
+    {
+      "t": "2026-09-03T23:58:41.685094Z",
+      "note": "Shipped: new Sources/PhotonzRender/TextBlockMetrics.swift is the ONE measurer for a text block's box (wrapWidth, roomyBox, frameSize, topInset), the companion to CaptionMetrics. layoutTextEditor now takes its frame straight from frameSize and gives the container that same width, so AppKit breaks the draft where CoreText breaks the label; the draft face comes from TextRasterizer.faceDescriptor with a scale transform, which also carries the weight; commitTextEdit sizes the layer through the same frameSize; TextRasterizer.laidOutBox now asks topInset, so the draft and the render agree on vertical placement too."
+    },
+    {
+      "t": "2026-09-03T23:58:41.685094Z",
+      "note": "Verified on the probe (Screen Recording granted, so these are real window captures, not offscreen renders). Scripts/playtest/text-draft-parity.json walks a wrapping label at fit zoom, a second at 126 percent, and a re-edit committed unchanged. Glyph bounding boxes match within 1 device pixel. Ran the SAME walk against a stashed pre-fix build for the before picture: the old draft is regular weight and breaks after \"several\" while the label it commits to is bold and breaks after \"onto\". All four captures are in queue/audits/."
+    },
+    {
+      "t": "2026-09-03T23:58:41.685094Z",
+      "note": "Note on release scope: the task targets next, but CanvasView, EditorState and TextRasterizer are shared, not forked into Releases/Next. Fixing this in shared code is deliberate - forking a whole file to fix a measurement bug in one release would be worse, and the porting rule wants changes to reach both. The roomy-box branch stays gated on placementEnabled, so no Current-only behaviour changes shape."
+    },
+    {
+      "t": "2026-09-03T23:58:41.685094Z",
+      "note": "Filed a follow-up found while measuring: a placed label is rasterized at document resolution, so above 100 percent zoom the committed words are softer than the draft. Pre-existing and out of scope here - task a-placed-label-stays-crisp-when-you-zoom-in."
     }
-  ]
+  ],
+  "started": "2026-09-03T23:39:11.951Z"
 }

@@ -1,0 +1,28 @@
+{
+  "feature": "Typing a text label is the same shape as placing it",
+  "epic": "measure-redline",
+  "summary": "The box you type a label in is now the box the label lands in: same face, same weight, same width, and it breaks lines at the same words. Before this, the draft was typed in the plain system font at the zoomed point size, so a bold label typed in regular and a long one wrapped a word later than it committed to.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. The Text tool is T; a text block commits on Command Return (plain Return starts a new line).",
+  "try": [
+    { "do": "Open any picture, or start a blank canvas." },
+    { "do": "Press T and set the Text section to bold, 14 pt." },
+    { "do": "Click near the right edge of the picture and type a sentence long enough to wrap onto a second line.", "shot": "2026-09-03-text-draft-parity-typing.png" },
+    { "do": "Look at which word the draft breaks after, and press Command Return.", "shot": "2026-09-03-text-draft-parity-placed.png" },
+    { "do": "Zoom to 200 percent and type a second label the same way." },
+    { "do": "Zoom to 50 percent and type a third." },
+    { "do": "Press V, double click the first label, and press Command Return without changing a word." }
+  ],
+  "evaluate": [
+    "Does the label stay exactly where the draft was when you commit, at every zoom you tried?",
+    "Does the draft break lines at the same word the placed label does?",
+    "Does the text you type look like the weight you picked, rather than turning bold only when you commit?",
+    "Reopening a label and committing it unchanged should look like nothing happened. Does it?",
+    "Is the box you type in the size you expect, or does it feel too tight or too roomy for the words in it?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is the real window, not an offscreen render. The before pictures (2026-09-03-text-draft-parity-before-typing.png and -before-placed.png) are the same walk on the old build: the draft is regular weight and breaks after \"several\", the placed label is bold and breaks after \"onto\".",
+    "A placed label is rasterized at document resolution, so above 100 percent zoom the committed words are visibly softer than the crisp draft you just typed. That is not new and it is not this fix, but it is the one way the two still do not look identical. Filed as its own task.",
+    "The centred and stretched-box cases are proved by tests rather than by a walk: a walk cannot reach the Align controls, which live in the inspector where a synthesized click cannot go.",
+    "Two smaller drifts turned up while measuring this and are fixed with it: a bold draft was typed in regular (AppKit answers to no name for the resolved system face), and restyling mid-edit dropped a centred label to the left edge until you committed."
+  ]
+}
