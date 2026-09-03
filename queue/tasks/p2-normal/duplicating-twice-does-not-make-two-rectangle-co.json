@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 970,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T22:02:21.768Z",
-  "updated": "2026-09-03T22:45:49.560583Z",
+  "updated": "2026-09-03T22:46:17.537Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-second-rectangle-is-not-called-rectangle (2026-09-03). New layers are numbered in PhotonzDocument.uniquelyNamed, called from addLayer/addLayerOnFrame. Duplicate does not go through those: Document.duplicateLayers, duplicateLayers(movingCopiesTo:) and duplicateLayer insert copies straight into the sibling list inside a walk, so the taken-name set is mid-flight and the rename has to happen in a pass after the walk. Layer.duplicated mints the name (name + \" copy\"), so the policy question is whether the second copy reads \"Rectangle copy 2\" or takes the next plain number.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-03T22:45:49.560583Z",
       "note": "Core change, so both releases get it; nothing under Releases/Next forks the duplicate path. Remaining gap noted in the audit: pasting a layer a person named still repeats the exact name."
+    },
+    {
+      "t": "2026-09-03T22:46:17.536Z",
+      "note": "A copy takes a free name: LayerNaming.copyName + PhotonzDocument.nameDuplicates, wired into all three duplicate paths. App-named layers number like a freshly drawn shape (Rectangle 2, Rectangle 3), person-named ones keep their word (Card copy, Card copy 2). 12 new core tests, full suite 2524 green, verified live on the probe with Scripts/playtest/duplicate-names-walk.json. Audit queue/audits/2026-09-03-duplicate-names.json. Pushed as 947468c."
     }
   ],
-  "started": "2026-09-03T22:38:21.250Z"
+  "started": "2026-09-03T22:38:21.250Z",
+  "completed": "2026-09-03T22:46:17.537Z"
 }
