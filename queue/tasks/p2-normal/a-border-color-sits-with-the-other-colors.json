@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 870,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:31:06.576Z",
-  "updated": "2026-09-03T20:34:59.987Z",
+  "updated": "2026-09-03T20:50:55.831Z",
   "deps": [],
   "blockedBy": [],
   "notes": "ColorSlot (PhotonzCore/ColorStyles.swift:24) has fill, stroke and text; the layer style border color is not one of them, so it stayed behind as a raw SwiftUI ColorPicker in EffectsInspector.borderColorPicker (LayersPanel.swift, around line 1490) and opens the system panel, which is the one-undo-step-per-drag-tick problem the Color section already solved. Adding a slot means a case in ColorSlot with styleRole .ink, and Layer.colorSlots / colorHex(for:) / startingColorHex answering for it. Decide what a border color row means on a layer whose border width is zero: the honest reading is that the row appears with the rest and setting it is harmless, but the alternative of only offering it above zero width is worth a line in the audit either way. Evidence: the Color one-home work (queue/audits/2026-09-03-color-one-home.json) moved every other color and left this one, visible in queue/audits/2026-09-03-auto-layout-2.png where Effects still carries a color control.",
@@ -39,7 +39,16 @@
     {
       "t": "2026-09-03T20:40:37.865630Z",
       "note": "adversarial review before building. (1) Border width lives in Effects, the color row will live in Color, two sections up: someone who just dragged a border out has to look up the dock for its color. Mitigated by a hover tip on the Border slider saying where the color went, and by the row appearing the moment a border does. (2) A box would show Outline (the shape's own ink) and Border (the styling ring) at once. They are genuinely two different things and both already exist; the row only turns up once a border does, so they are never both there for nothing. (3) On a text layer the border width strokes the GLYPHS, not a box, so the row reading Border over text is the existing Effects wording carried across; a row named per layer kind is exactly what the one-home work removed, so it stays Border and goes in the audit. (4) Shortest version: one new slot, no new controls, the effects swatch deleted. (5) Zero-width question answered: the row appears only when a border is actually drawn, because a color you cannot see is a dead control, and it ALSO stays while the color is pointed at a saved color, so dropping the width to zero for a moment does not quietly break the link."
+    },
+    {
+      "t": "2026-09-03T20:50:55.798524Z",
+      "note": "review of the built thing, on the running probe. The Border row lands under Fill and Outline and reads black over two fresh boxes, one pick paints both crimson, Save as Style names it Hairline in the field under the row, and one edit to Hairline repaints both borders green (verified in the renders: #B0184A then #00A870, one undo back to #B0184A). Effects keeps the Border slider alone, now full width like the three sliders above it, with a hover tip saying where the color went. Two things left rough and in the audit: on a text layer the border strokes the letters, so the row reads Border over what is really a text outline; and a zoom callout's ring IS a border, so a picked callout now has two places that set its ring color. The second is filed as a-callout-ring-has-one-color-not-two."
+    },
+    {
+      "t": "2026-09-03T20:50:55.830Z",
+      "note": "Border color is a row in the Color section (ColorSlot.border, ink-roled): paints a whole selection in one step, wears a saved color, and follows an edit to it. Slot exists once a border is drawn, and stays while a saved color points at it so the width dropping to zero cannot break the link. Swatch gone from Effects; the borderColor revert arrow moved with it. 14 new PhotonzCore tests, 2410 green. Verified on the running probe with real window captures (Scripts/playtest/border-color-walk.json). Audit queue/audits/2026-09-03-border-color.json. Follow-up filed: a-callout-ring-has-one-color-not-two."
     }
   ],
-  "started": "2026-09-03T20:34:59.986Z"
+  "started": "2026-09-03T20:34:59.986Z",
+  "completed": "2026-09-03T20:50:55.831Z"
 }
