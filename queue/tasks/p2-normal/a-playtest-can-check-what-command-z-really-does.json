@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 650,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:53:29.927Z",
-  "updated": "2026-09-03T07:52:12.601364Z",
+  "updated": "2026-09-03T07:53:58.975Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-03 while verifying next-geometry-fields. Proven with a control walk: after a plain canvas drag with no text field anywhere, command+z logs \"taken by menu\" and the layer frame does not change. Cause is SwiftUI focused-value commands (EditorCommands.swift CommandGroup(replacing: .undoRedo) reads the focused editor), which resolve to nil while the probe is not active; the item is also .disabled then. Already noted as a known limit in docs/design/playtest-harness.md under Things to know. Options: bring the probe to the front for the duration of a walk (rejected before because an unmanned loop must not steal focus - check whether NSApp.activate with a hidden-but-key window is enough), or route the menu action through something a walk can reach. The action step (undo/redo) covers the outcome but not the shortcut.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-03T07:52:12.601364Z",
       "note": "A first cut added PlaytestFocus, a stand-in editor for the menu commands to fall back on. Removed once the nil action was found: it changed nothing and put a test seam in shared release code. EditorCommands.swift is untouched."
+    },
+    {
+      "t": "2026-09-03T07:53:58.974Z",
+      "note": "New shortcut step (PlaytestScript + harness, 4 tests) presses a chord and fails loudly when no item carries it, when it is not the named item, when something else takes it, or when the item has no action. Verified: shift+command+N really opens a second window in Scripts/playtest/undo-shortcut-walk.json; all three failure messages checked against real walks. key steps now name the item and say when nothing was behind it. Acceptance 2 (command+z undoing in a walk) is NOT possible: macOS refuses a background process focus, so SwiftUI leaves the menu bar frozen with nil actions. Proven four ways, documented in docs/design/playtest-harness.md. Audit queue/audits/2026-09-03-playtest-shortcut.json."
     }
   ],
-  "started": "2026-09-03T07:26:49.614Z"
+  "started": "2026-09-03T07:26:49.614Z",
+  "completed": "2026-09-03T07:53:58.975Z"
 }

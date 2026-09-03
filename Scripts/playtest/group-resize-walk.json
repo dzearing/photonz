@@ -1,0 +1,80 @@
+{
+  "out": "/tmp/photonz-playtest/group-resize",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1200, "height": 860 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 300], "to": [700, 560], "steps": 8 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [340, 620] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-drawn", "note": "a card: a rectangle and a line of text, loose on the canvas" },
+    { "do": "snapshot", "name": "resize-1-drawn" },
+
+    { "do": "drag", "from": [220, 220], "to": [860, 700], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-grouped", "note": "one selection box around the whole card, from (300, 300) to (700, 653). It should now carry the eight square handles a photo carries" },
+    { "do": "snapshot", "name": "resize-2-grouped" },
+
+    { "do": "drag", "from": [700, 653], "to": [1000, 880], "steps": 12 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-scaled", "note": "dragging the bottom right handle out should have scaled BOTH pieces: the rectangle wider and taller, the text moved out with it and still 24 pt" },
+    { "do": "snapshot", "name": "resize-3-scaled" },
+    { "do": "render", "name": "resize-3-scaled-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-undo", "note": "ONE undo should put the whole card back, both pieces at once" },
+    { "do": "snapshot", "name": "resize-4-undo" },
+
+    { "do": "drag", "from": [700, 653], "to": [1000, 700], "steps": 12, "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-proportional", "note": "holding shift while dragging the corner should have kept the card's proportions: 400 by 353 grew by the same factor on both sides, to about 700 by 618" },
+    { "do": "snapshot", "name": "resize-5-proportional" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [500, 400] },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "focus", "field": "W" },
+    { "do": "describe", "stage": "6-focus-w", "note": "the W field should take the keyboard for a group now, with no greyed note" },
+    { "do": "snapshot", "name": "resize-6-focus-w" },
+    { "do": "type", "text": "800" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-typed-800", "note": "typing 800 into W should have made the group exactly 800 wide and scaled the pieces inside it horizontally, leaving the height alone" },
+    { "do": "snapshot", "name": "resize-7-typed-800" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [780, 300], "to": [900, 420], "steps": 6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [240, 240], "to": [980, 720], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-nested", "note": "the card group and a loose square are now inside a second group, so there is a group one level inside another" },
+    { "do": "snapshot", "name": "resize-8-nested" },
+    { "do": "drag", "from": [900, 653], "to": [1200, 800], "steps": 12 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "9-nested-scaled", "note": "resizing the outer group should have scaled the inner group and everything in it, and nothing should sit outside the box that was dragged" },
+    { "do": "snapshot", "name": "resize-9-nested-scaled" },
+    { "do": "render", "name": "resize-9-nested-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "10-nested-undo", "note": "one undo takes the whole nested resize back in a single step" }
+  ]
+}

@@ -202,20 +202,34 @@ struct LayerGeometryTests {
         #expect(editing.fixedReason(for: .height) == nil)
     }
 
-    @Test("A group says its size follows what is inside it, not that it has ends to drag")
-    func aGroupExplainsWhyItsSizeIsFixed() {
+    @Test("A group takes all four numbers: resizing it scales what is inside it")
+    func aGroupTakesEveryNumber() {
         let child = Layer(name: "Box", content: .image(ImageRef(pixelSize: CGSize(width: 20, height: 10))),
                           frame: CGRect(x: 0, y: 0, width: 20, height: 10))
         let group = Layer(name: "Group", content: .group(GroupContent(children: [child])),
                           frame: CGRect(x: 5, y: 5, width: 0, height: 0))
         let editing = LayerGeometryEditing(layer: group)
-        // A group moves, so X and Y stay typeable; its size is derived.
+        for field in LayerGeometryField.allCases { #expect(editing.allows(field)) }
+        #expect(editing.fixedReason(for: .width) == nil)
+        #expect(editing.fixedReason(for: .height) == nil)
+    }
+
+    @Test("A copy of a component says its size comes from the original it follows")
+    func aComponentCopyExplainsWhyItsSizeIsFixed() {
+        let child = Layer(name: "Box", content: .image(ImageRef(pixelSize: CGSize(width: 20, height: 10))),
+                          frame: CGRect(x: 0, y: 0, width: 20, height: 10))
+        var content = GroupContent(children: [child])
+        content.instanceOf = UUID()
+        let copy = Layer(name: "Group", content: .group(content),
+                         frame: CGRect(x: 5, y: 5, width: 0, height: 0))
+        let editing = LayerGeometryEditing(layer: copy)
+        // A copy moves, so X and Y stay typeable; its size comes from elsewhere.
         #expect(editing.allows(.x))
         #expect(editing.allows(.y))
         #expect(!editing.allows(.width))
         #expect(!editing.allows(.height))
-        #expect(editing.fixedReason(for: .width) == LayerGeometryEditing.groupSizeReason)
-        #expect(editing.fixedReason(for: .height) == LayerGeometryEditing.groupSizeReason)
+        #expect(editing.fixedReason(for: .width) == LayerGeometryEditing.instanceSizeReason)
+        #expect(editing.fixedReason(for: .height) == LayerGeometryEditing.instanceSizeReason)
     }
 
     @Test("Every reason a field is fixed reads as a plain sentence, not a code word")
@@ -224,7 +238,7 @@ struct LayerGeometryTests {
                                             from: .zero, to: CGPoint(x: 10, y: 10))
         let reasons = [LayerGeometryEditing.lockedReason,
                        LayerGeometryEditing(layer: arrow).fixedReason(for: .width) ?? "",
-                       LayerGeometryEditing.groupSizeReason]
+                       LayerGeometryEditing.instanceSizeReason]
         for reason in reasons {
             #expect(!reason.isEmpty)
             #expect(reason.first!.isUppercase)

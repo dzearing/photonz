@@ -1,0 +1,31 @@
+{
+  "feature": "Resize a group and the pieces inside follow",
+  "epic": "ui-components",
+  "summary": "A group now has the same eight handles a photo has. Drag one and everything inside it moves and grows together, in one undo step, so a card made of a box and a label gets bigger in one gesture instead of piece by piece.",
+  "setup": "Photonz Dev, Experiments window, release Next, with Layer groups on. Draw a rectangle and a line of text, sweep both with the select tool, then Layer > Group.",
+  "try": [
+    { "do": "Select the group. It should now show eight square handles, not just a box." },
+    { "do": "Drag the bottom right handle out and let go.", "shot": "2026-09-03-group-resize-1.png" },
+    { "do": "Look at the label: it moved out with the box but is still the same point size." },
+    { "do": "Press Command Z once. The whole card should snap back in one step." },
+    { "do": "Drag the bottom right handle again with Shift held. The card should keep its proportions." },
+    { "do": "Type 800 into W in Position and Size and press Return. The group should become exactly 800 wide." },
+    { "do": "Group the card together with something else, then resize the outer group.", "shot": "2026-09-03-group-resize-2.png" },
+    { "do": "Place a copy of a component, select it, and look at W. It says the size comes from the original." }
+  ],
+  "evaluate": [
+    "When you make a card bigger, do you expect the label to stay the same point size, or to grow with the card?",
+    "If you wanted the type to grow too, would you reach for a held key while dragging, or for a separate Scale command?",
+    "Does one undo step for a whole group resize feel right, or would you want to undo it piece by piece?",
+    "Does the selection box sitting a little below the last line of text after a stretch bother you?",
+    "Is refusing to resize a copy of a component clear enough from the note in W, or does it need saying on the canvas?"
+  ],
+  "rough": [
+    "Text does not re-wrap. Its box scales but the glyphs keep their point size, so shrinking a group a long way can leave a label hanging over its box, and stretching one can leave the selection box sitting below the last line of text. Re-flow is auto layout's job and auto layout is not built yet.",
+    "There is no way to scale the type along with the layout. Every design tool has a second gesture for that (Figma calls it the Scale tool). I did not invent one here without asking, since it is a new key to learn.",
+    "A group still has no rotate knob. Nothing in the app rotates yet, so that is unchanged rather than missed.",
+    "A copy of a component cannot be resized at all: its contents are refilled from its original after every edit, so a stretched copy would snap straight back. Resizing the original works and every copy follows. The W field says so in words.",
+    "This changed a written rule. docs/design/ui-building.md used to promise that a group only ever translates, so a measured gap of 12 px stayed 12 px. It now says: grouping never changes a number, but resizing a group changes what is measured, and a caliper inside it reports the new distance.",
+    "Verified live in the probe app with Screen Recording granted: the two pictures here are real window captures, not offscreen renders. The walk is Scripts/playtest/group-resize-walk.json."
+  ]
+}

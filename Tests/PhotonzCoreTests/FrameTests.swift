@@ -181,7 +181,7 @@ struct FrameTests {
         #expect(document.canvasFrame(of: buttonID) == before)
     }
 
-    @Test("A frame's width and height are typeable, an ordinary group's are not")
+    @Test("A frame's width and height are typeable, and resizing it moves where it clips")
     func typedSize() {
         let document = makeDocument()
         let frame = document.frames.first!
@@ -191,10 +191,10 @@ struct FrameTests {
         let resized = frame.resized(to: CGRect(x: 10, y: 20, width: 500, height: 900))
         #expect(resized.localBounds == CGRect(x: 10, y: 20, width: 500, height: 900))
         #expect(resized.children.count == frame.children.count)
-
-        let group = Layer(name: "Group", content: .group(GroupContent(children: [leaf("A", .zero)])),
-                          frame: CGRect(x: 0, y: 0, width: 0, height: 0))
-        #expect(!LayerGeometryEditing(layer: group).canSetWidth)
+        // A frame is a window onto what you are building: making the window
+        // bigger shows more of the screen, it does not magnify it. An ordinary
+        // group is the opposite — see LayerScalingTests.
+        #expect(resized.children.map(\.frame) == frame.children.map(\.frame))
     }
 
     // MARK: - Making one out of what is already there

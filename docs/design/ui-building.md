@@ -70,12 +70,57 @@ could never appear in two places. Parent relative also makes moving a group one
 number changing rather than one per child, and it makes dragging a whole screen
 across the canvas free.
 
-**Groups translate, they do not scale or rotate.** In the first version a group
-adds an offset to its children and nothing else. So a layer's canvas position is
-the sum of the origins from it up to the canvas, plain addition, and text sizes,
-stroke widths, corner radii and measurement numbers inside a group are exactly
-what they were outside it. That is worth the constraint on its own: a measured
-gap of 12 px stays 12 px when the thing it measures gets grouped.
+**Groups do not rotate, and they scale only when you drag them.** Sitting still,
+a group adds an offset to its children and nothing else, so a layer's canvas
+position is the sum of the origins from it up to the canvas, plain addition.
+Grouping something never changes a number inside it: a measured gap of 12 px is
+still 12 px the instant it is grouped. Nothing rotates, at any level.
+
+### Resizing a group scales the layout, not the type (landed 2026-09-03)
+
+Dragging a handle on a group multiplies every child's position and box by the
+same amount the group's box changed by, all the way down. That is the whole
+rule, and these are its consequences, written out so nobody has to guess.
+
+**What grows with the box.** Photos, collages, rectangles, ellipses, lines and
+arrows: everything whose drawing is defined by the box it sits in. Make a card
+twice as wide and its picture is twice as wide.
+
+**What holds its size.** Anything measured in points: text point size, stroke
+width, corner radius, shadow and blur, a caliper's ticks and its label. This is
+the same call every interface tool makes, and it is the right one here: 14 pt
+type is 14 pt type on a real screen, and a card that got wider did not change
+what its label should read at. The cost is honest and worth naming: shrink a
+card a long way and its label will overhang the box, because nothing re-wraps
+yet. Reflow is auto layout's job, and auto layout is sequenced after this.
+
+**What a measurement says afterwards.** A caliper's feet move with everything
+else, so a caliper inside a group that doubled now spans twice as far and reads
+twice the number. That is not the number drifting, it is the caliper still
+telling the truth about what is on screen. The promise is therefore precise:
+**grouping never changes a number; resizing a group changes what is measured,
+and the number says so.** Anyone redlining a capture should measure it at the
+size they will hand off, which is what they were going to do anyway.
+
+**Nested groups and frames scale too**, contents and all, including a nested
+frame's own box. A screen inside a group that shrinks gets smaller along with
+what is drawn on it, rather than staying huge and being clipped away.
+
+**The anchor scales with the rest.** A group's origin is still not its box (see
+below); it simply moves by the same factor everything else did, so no sibling
+gets renumbered against an origin that wandered.
+
+**Two things deliberately do not resize.** A **copy of a component** takes its
+size from its original, because a copy's contents are refilled from the original
+after every edit and a stretched copy would snap straight back; resize the
+original and every copy follows. A group with **no width or no height** does not
+stretch in that direction, because there is nothing there to multiply.
+
+**A frame's own handle is still not a scale handle.** Dragging the edge of a
+frame moves where it clips: a screen is a window onto what you are building, and
+making the window bigger should show more of the screen, not magnify it. A frame
+scales only when something ABOVE it is scaled, which is the case where the
+intent was plainly "make all of this bigger".
 
 **A group's origin is set once and then holds still.** Grouping puts the origin
 at the top left of the union of what was selected, and rewrites the selected
@@ -323,10 +368,10 @@ Three rules that go with them:
 So later work is not measured against a promise nobody made. Each of these is a
 real limit of the slices above, not an oversight.
 
-- **A group does not scale what is inside it.** A group's size follows its
-  contents; there is no resize handle that stretches five children at once. A
-  frame has a size, but resizing a frame moves where it clips, it does not
-  resize the layers inside.
+- **Resizing a group does not re-wrap or re-flow anything.** Positions and boxes
+  scale; text keeps its point size and does not re-wrap into its new box, so
+  shrinking a group a long way can leave a label hanging over the edge. That is
+  auto layout's job, and it is sequenced after this.
 - **Nothing rotates.** No layer, group or frame has a rotation, which is what
   keeps the coordinate rule pure addition.
 - **No auto layout and no constraints.** A child does not move or stretch when
@@ -466,8 +511,9 @@ interface. What changed is that when one can be, it will look right.
 
 Deliberately left: the Position & Size fields would show 0 for a group's W and
 H, which no one can reach until the Layers list learns to show groups. A group
-never scales or rotates what it holds, so a transform or a crop on a group is
-ignored rather than applied.
+never rotates what it holds, so a transform or a crop on a group is ignored
+rather than applied. (Scaling landed later — see "Resizing a group scales the
+layout, not the type".)
 
 ### The layers list shows what is inside a group (landed 2026-09-03)
 

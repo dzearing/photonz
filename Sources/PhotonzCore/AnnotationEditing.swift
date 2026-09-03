@@ -53,11 +53,12 @@ extension Layer {
         // Calipers edit via endpoint handles; alignment guides not at all
         // (move/delete only) — neither offers the eight frame handles.
         case .measure: false
-        // A group's size follows its contents: there is no handle that
-        // stretches five children at once. A FRAME is the exception — it has a
-        // size of its own, and resizing it moves where it clips rather than
-        // stretching what is inside.
-        case .group(let g): g.isFrame
+        // A group resizes, and everything in it scales with the box
+        // (`docs/design/ui-building.md`). A COPY of a component is the one
+        // that cannot: its contents are refilled from its original after every
+        // edit, so a stretched copy would snap straight back — resize the
+        // original instead and every copy follows.
+        case .group(let g): g.instanceOf == nil
         case .image, .zoomCallout, .collage: true
         }
     }
@@ -86,11 +87,17 @@ extension Layer {
     /// The layer with its frame set to `frame`. Annotation content remaps its
     /// endpoints so the drawn shape scales with the frame (a bare frame
     /// assignment would clip or distort it); zoom callouts re-derive their
-    /// magnification from the new frame; other content just moves.
+    /// magnification from the new frame; a group re-fits so the box it occupies
+    /// becomes `frame`, scaling everything inside it; other content just moves.
+    ///
+    /// A FRAME is the exception among groups: its box is a real size, and
+    /// resizing it moves where it clips rather than magnifying the screen you
+    /// are building on.
     public func resized(to frame: CGRect) -> Layer {
         if annotation != nil { return AnnotationBuilder.resized(self, to: frame) }
         if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
+        if let group, !group.isFrame { return LayerScaling.resizing(self, to: frame) }
         var layer = self
         layer.frame = frame
         return layer

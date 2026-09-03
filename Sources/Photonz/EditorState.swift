@@ -4441,25 +4441,21 @@ final class EditorState {
         previewMove = nil
         dragPreviewGeneration += 1 // cancels an in-flight preview session
         clearPreviewAfterNextFrame = dragPreview != nil
-        // A group has no frame to set — only an origin to move to, which
-        // carries everything inside it. A FRAME does have one: its box is a
-        // real size, so W and H are typed straight into it. Resolved here, in
-        // draw order, so the one undo step lands the same way every time.
-        let ordered: [(id: UUID, frame: CGRect, originOnly: Bool)] = document.allLayers
+        // Resolved here, in draw order, so the one undo step lands the same way
+        // every time. A group's box is the box its contents make, and
+        // `resized(to:)` re-fits it: typing X moves it, typing W scales what is
+        // inside it.
+        let ordered: [(id: UUID, frame: CGRect)] = document.allLayers
             .compactMap { layer in
                 guard let frame = moves[layer.id] else { return nil }
-                return (layer.id, frame, layer.isGroup && !layer.isFrame)
+                return (layer.id, frame)
             }
         perform { document in
             let canvas = document.canvasSize
             for move in ordered {
-                if move.originOnly {
-                    document.moveLayer(id: move.id, toParentOrigin: move.frame.origin)
-                } else {
-                    document.updateLayer(id: move.id) {
-                        $0 = AnnotationBuilder.planningCaption($0.resized(to: move.frame),
-                                                               canvas: canvas)
-                    }
+                document.updateLayer(id: move.id) {
+                    $0 = AnnotationBuilder.planningCaption($0.resized(to: move.frame),
+                                                           canvas: canvas)
                 }
             }
         }
@@ -4595,35 +4591,22 @@ final class EditorState {
     }
 
     /// Live drag update from the canvas, in canvas coordinates.
+    ///
+    /// A group takes the same path as everything else: the box it is being
+    /// dragged to goes into `resized(to:)`, which moves it when the size did
+    /// not change and scales everything inside it when it did
+    /// (`docs/design/ui-building.md`). Previews always start from the document
+    /// as it was before the drag — `submit` renders without touching history —
+    /// so a hundred mouse-moves compose into one clean scale rather than a
+    /// hundred stacked ones.
     func previewCanvasFrame(id: UUID, frame: CGRect) {
-        guard let document, let layer = document.layer(id: id) else { return }
-        // A group has no frame to set, only an origin to move to: dragging it
-        // carries everything inside it, and nothing about it resizes.
-        guard !layer.isGroup else {
-            previewMove = (id, frame)
-            var doc = document
-            doc.moveLayer(id: id, toCanvasOrigin: frame.origin)
-            guard dragPreview?.layerID != id else { return }
-            submit(doc)
-            return
-        }
-        guard let parent = document.parentSpaceFrame(frame, of: id) else { return }
+        guard let document, let parent = document.parentSpaceFrame(frame, of: id) else { return }
         previewLayerFrame(id: id, frame: parent)
     }
 
     /// Mouse-up from the canvas, in canvas coordinates: one undo step.
     func commitCanvasFrame(id: UUID, frame: CGRect) {
-        guard let document, let layer = document.layer(id: id) else { return }
-        // A group only ever moves; a frame's handles resize its box, so it
-        // takes the ordinary path.
-        if layer.isGroup, !layer.isFrame {
-            previewMove = nil
-            dragPreviewGeneration += 1
-            clearPreviewAfterNextFrame = dragPreview != nil
-            perform { $0.moveLayer(id: id, toCanvasOrigin: frame.origin) }
-            return
-        }
-        guard let parent = document.parentSpaceFrame(frame, of: id) else { return }
+        guard let document, let parent = document.parentSpaceFrame(frame, of: id) else { return }
         commitLayerFrame(id: id, frame: parent)
     }
 

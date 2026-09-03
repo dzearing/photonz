@@ -1065,8 +1065,40 @@ private final class Run {
                 return "\(slot.rawValue) \(hex)" + (style.map { " · style \($0.name)" } ?? "")
             }
         }()
+        // The layer tree in CANVAS coordinates, one line per layer, indented by
+        // how deep it sits. This is what a walk reads to prove a group carried
+        // — or scaled — everything inside it, in the same units its clicks are
+        // written in.
+        var tree: [String] = []
+        func walk(_ list: [Layer], origin: CGPoint, depth: Int) {
+            for layer in list {
+                let box = layer.localBounds.offsetBy(dx: origin.x, dy: origin.y)
+                let kind: String
+                switch layer.content {
+                case .image: kind = "image"
+                case .text: kind = "text"
+                case .annotation(let a): kind = "\(a.shape)"
+                case .zoomCallout: kind = "callout"
+                case .measure: kind = "measure"
+                case .collage: kind = "collage"
+                case .group(let g): kind = g.isFrame ? "frame" : (g.instanceOf != nil ? "copy" : "group")
+                }
+                var line = String(repeating: "  ", count: depth)
+                line += "\(layer.name) [\(kind)] \(box.integral)"
+                if case .text(let content) = layer.content { line += " \(Int(content.fontSize))pt" }
+                if let annotation = layer.annotation {
+                    line += " stroke \(Int(annotation.strokeWidth.rounded()))"
+                }
+                tree.append(line)
+                let inner = CGPoint(x: origin.x + layer.frame.origin.x,
+                                    y: origin.y + layer.frame.origin.y)
+                walk(layer.children, origin: inner, depth: depth + 1)
+            }
+        }
+        walk(layers, origin: .zero, depth: 0)
         return [
             "tool": editor.activeTool.rawValue,
+            "tree": tree,
             // The floating bar's measured width, so a walk can prove a
             // change made it narrower rather than eyeballing a snapshot.
             "toolBarWidth": editor.toolBarWidth,

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 660,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T02:06:18.412Z",
-  "updated": "2026-09-03T02:06:18.412Z",
+  "updated": "2026-09-03T08:11:18.682033Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed out of group-and-ungroup-what-you-selected (2026-09-03), which deliberately left resize out. Where it stands today: Layer.allowsFrameResize returns false for .group, so CanvasView draws no frame handles and LayerGeometryEditing greys W and H with LayerGeometryEditing.groupSizeReason. CanvasGroups.offersRotation also keeps the rotate knob off a group. The model says groups translate and nothing else (docs/design/ui-building.md, \"Groups translate, they do not scale or rotate\"), so THIS TASK CHANGES THAT RULE and the design doc has to be updated in the same change, including what it means for a measured gap inside a group (12 px stays 12 px is the promise that scaling would break). Decide and write the scaling rule before touching code. EditorState.commitCanvasFrame currently routes a group through PhotonzDocument.moveLayer(id:toCanvasOrigin:), which is translation only; resize needs a new document mutation that walks the children.",
@@ -24,6 +24,47 @@
     {
       "t": "2026-09-03T02:06:18.412Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T07:54:24.054Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T08:11:18.682033Z",
+      "note": "adversarial review before building: the fork is whether a group resize scales the LAYOUT (positions and boxes) or EVERYTHING (type, strokes, radii too). Figma and Sketch do layout only; Photoshop's free transform does everything. Acceptance item 2 already writes the layout-only rule, so I built that rather than opening a decision on a question the task had already answered. Cost named honestly in the audit: without auto layout, text does not re-wrap, so shrinking a group a long way leaves a label overhanging its box. Asked in the audit's evaluate whether a second gesture for scaling type is wanted."
+    },
+    {
+      "t": "2026-09-03T08:11:18.682033Z",
+      "note": "second finding: the mock/task said nothing about component copies. A copy's children are refilled from its original after every edit (syncComponentInstances), so a stretched copy would snap straight back. Rather than ship a handle that silently does nothing, a copy keeps its old no-resize state with a new plain reason: 'A copy is the size of the original. Resize the original component and every copy follows.'"
+    },
+    {
+      "t": "2026-09-03T08:11:18.682033Z",
+      "note": "third finding: scaling a nested FRAME. A frame's own handle moves where it clips (deliberate: a screen is a window). But a frame inside a group being scaled must scale contents and all, or the screen shrinks while its UI stays huge and gets clipped away. Both behaviours now exist and both are written down."
+    },
+    {
+      "t": "2026-09-03T08:11:18.682033Z",
+      "note": "rule written into docs/design/ui-building.md BEFORE any code, as the task asked: new section 'Resizing a group scales the layout, not the type', plus the revised promise \u2014 grouping never changes a number; resizing a group changes what is measured, and a caliper inside it reports the new distance."
+    },
+    {
+      "t": "2026-09-03T08:11:18.682033Z",
+      "note": "code: new Sources/PhotonzCore/LayerScaling.swift (the one place the scale is expressed); Layer.resized(to:) now routes a non-frame group through it, so every existing caller \u2014 canvas handles, typed W/H, whole-document resize \u2014 gets it with no new path. Layer.allowsFrameResize returns true for a group unless it is a copy. LayerGeometryEditing.groupSizeReason replaced by instanceSizeReason. EditorState lost both group special cases (previewCanvasFrame/commitCanvasFrame and the originOnly branch in commitGeometry). Previews compose cleanly because submit() renders without touching history, so a hundred mouse-moves are still one scale from the pre-drag document."
+    },
+    {
+      "t": "2026-09-03T08:11:18.682033Z",
+      "note": "tests: Tests/PhotonzCoreTests/LayerScalingTests.swift, 20 cases (box lands on target, children scale, nothing escapes the box, text keeps its point size, strokes and radii hold, nested groups, nested frames, a frame's own resize unchanged, round trip, zero-height group, empty group, handles and typed numbers, a caliper reports the new distance, a copy keeps its size). Scripts/test.sh green: 1933 tests in 195 suites."
+    },
+    {
+      "t": "2026-09-03T08:11:18.682033Z",
+      "note": "verified live in Photonz Probe (Screen Recording granted) with a new walk, Scripts/playtest/group-resize-walk.json. Card 400x353 -> 700x580: rectangle 400x260 -> 700x428, text moved 340,620 -> 370,825 and still 24 pt, stroke still 4. One undo restored both pieces. Shift-drag gave 700x618 (1.75 on both sides). Typing 800 into W made it exactly 800 wide and left the height alone. Nested: outer 600x353 -> 900x500 carried the inner group (400 -> 600) and its sibling square (120 -> 180) with nothing outside the dragged box; one undo took it all back."
+    },
+    {
+      "t": "2026-09-03T08:11:18.682033Z",
+      "note": "harness: PlaytestHarness describe() now emits a 'tree' key \u2014 the layer tree in canvas coordinates, indented by depth, with font size and stroke width. That is what proved the children scaled; every future group walk gets it free."
+    },
+    {
+      "t": "2026-09-03T08:11:18.682033Z",
+      "note": "all five acceptance items checked against the running app, not assumed. Audit: queue/audits/2026-09-03-group-resize.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-03T07:54:24.054Z"
 }
