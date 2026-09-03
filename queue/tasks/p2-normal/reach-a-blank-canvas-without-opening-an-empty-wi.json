@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 630,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:29:10.117Z",
-  "updated": "2026-09-03T07:00:41.873Z",
+  "updated": "2026-09-03T07:12:30.695Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-03-blank-canvas.json. The sheet is NewCanvasDialog and the entry point is EditorState.isBlankCanvasDialogPresented, which is per-editor today; a File-menu route needs to open a fresh window and present the sheet there (AppCoordinator.newDocumentWindow + a pending-blank-canvas flag), or present the sheet first and pass the size to the new window. No key is free in the N family (Cmd N New Layer, Shift Cmd N New Window, Opt Cmd N New from Clipboard), so no shortcut. Behind next-blank-canvas, Next only.",
@@ -34,7 +34,12 @@
     {
       "t": "2026-09-03T07:40:00.000Z",
       "note": "Built. File menu row New Blank Canvas, second under New Window, gated on next-blank-canvas so Current is untouched. Sheet first, window second: the size sheet opens over the window you are in and only Create opens anything. Where it lands is one rule in PhotonzCore (BlankCanvas.destination, tested): empty window fills itself, a window holding a picture keeps it and the canvas arrives in a new window (EditorWindowID.blankCanvas). Second review on the built app found one thing: with a picture behind the sheet, plain Create does not say a new window is coming, so the button now reads Create in New Window in that case. Verified on the probe with Scripts/playtest/blank-canvas-from-menu-walk.json: File menu dump shows the row; after Create the window list gains Untitled 2 while the asking window still reads 900x620 with its rectangle. The card route still passes (blank-canvas-walk), and the harness blank step now goes through the same createBlankCanvas the sheet calls, so it proves the empty-window case too. Scripts/test.sh green, 1892 tests. Audit: queue/audits/2026-09-03-blank-canvas-from-menu.json."
+    },
+    {
+      "t": "2026-09-03T07:12:30.695Z",
+      "note": "File > New Blank Canvas opens the size sheet over any window; an empty window fills itself, a window with a picture keeps it and the canvas opens in a new window (button reads Create in New Window). Behind next-blank-canvas, Next only. Verified on the probe (Scripts/playtest/blank-canvas-from-menu-walk.json: menu dump shows the row, window list gains Untitled 2, asking window unchanged at 900x620) plus blank-canvas-walk for the card route; Scripts/test.sh green. Audit: queue/audits/2026-09-03-blank-canvas-from-menu.json"
     }
   ],
-  "started": "2026-09-03T07:00:41.872Z"
+  "started": "2026-09-03T07:00:41.872Z",
+  "completed": "2026-09-03T07:12:30.695Z"
 }
