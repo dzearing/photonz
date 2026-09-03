@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 640,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:53:19.113Z",
-  "updated": "2026-09-03T07:13:00.388Z",
+  "updated": "2026-09-03T07:26:04.449Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the-position-and-size-of-a-layer-can-be-typed-no (2026-09-03). The single-layer slice is GeometryInspector.swift + LayerGeometry/LayerGeometryEditing in PhotonzCore + EditorState.setLayerGeometry. Multi-selection lives in EditorState.multiSelectedLayerIDs; the batch shape to copy is the existing multi-select visibility/lock paths, which fold several updateLayer calls into one History.perform. Decide first what X means for a group (each layer to that X, or the group box moved there) - that is a UX decision card, not an engineering one.",
@@ -39,7 +39,12 @@
     {
       "t": "2026-09-03T07:25:41.572536Z",
       "note": "Verified on the probe with Scripts/playtest/multi-geometry-walk.json (Screen Recording granted, real captures). W=160 on three rectangles -> all 160, positions untouched; ONE undo restored 160/220/100; X=100 -> every left edge 100; up arrow on a Mixed Y -> 101/221/341, Shift up -> 111/231/351, spread kept; three rectangles plus an arrow, W=120 -> rectangles 120, arrow untouched. Scripts/test.sh green (1908 tests)."
+    },
+    {
+      "t": "2026-09-03T07:26:04.449Z",
+      "note": "Position & Size now edits the whole selection: LayerGeometrySelection in PhotonzCore (15 tests), EditorState.setLayerGeometry(field:to:)/stepLayerGeometry folding every layer into one History.perform, GeometryInspector reading the selection and showing Mixed where layers differ. Verified on the probe with Scripts/playtest/multi-geometry-walk.json (real captures) and Scripts/test.sh green. Audit: queue/audits/2026-09-03-multi-geometry.json"
     }
   ],
-  "started": "2026-09-03T07:13:00.388Z"
+  "started": "2026-09-03T07:13:00.388Z",
+  "completed": "2026-09-03T07:26:04.449Z"
 }
