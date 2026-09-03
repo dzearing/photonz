@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T08:21:42.624Z",
-  "updated": "2026-09-03T12:29:01.223999Z",
+  "updated": "2026-09-03T12:29:24.439Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CanvasView.mouseDown falls through to onSelectLayerInGroup + a single-layer MoveDrag whenever the pick hits a layer, so a press on a member of EditorState.multiSelectedLayerIDs collapses the selection. Needs a multi-layer move drag: one grab offset, every member offset by the same delta, committed through one History.perform (see EditorState.setLayerGeometry for the fold-into-one-perform pattern). Snapping peers should exclude every member. Noticed while building canvas shift-click (2026-09-03).",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-03T12:29:01.223999Z",
       "note": "Audit: queue/audits/2026-09-03-multi-drag.json with three mid-drag captures. Follow-up filed: arrow-keys-nudge-everything-you-picked (arrow keys still do nothing with several layers picked)."
+    },
+    {
+      "t": "2026-09-03T12:29:24.438Z",
+      "note": "Pressing on any picked layer now drags the whole selection: the box the selection makes is what moves and what lines up, committed through one History.perform so one undo puts all of it back. PhotonzCore MultiLayerDrag (11 tests, test-first) + set-taking snapPeers; EditorState previewMoves/previewCanvasOrigins/commitCanvasOrigins; CanvasView MultiMoveDrag with Command to drag free, Escape to cancel, outlines tracking and the alignment guide drawing for a selection with no primary layer. Verified on the probe with Scripts/playtest/multi-drag-walk.json (real captures); Scripts/test.sh green, 2099 tests. Audit: queue/audits/2026-09-03-multi-drag.json. Commit 3586a2b, pushed."
     }
   ],
-  "started": "2026-09-03T12:12:11.127Z"
+  "started": "2026-09-03T12:12:11.127Z",
+  "completed": "2026-09-03T12:29:24.439Z"
 }
