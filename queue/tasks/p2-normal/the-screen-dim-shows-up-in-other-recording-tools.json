@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T23:51:31.917Z",
-  "updated": "2026-09-03T06:53:43.636744Z",
+  "updated": "2026-09-03T07:00:00.384Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while photographing the overlay for 2026-09-02-capture-dim-no-loupe. Two --capture-diag runs both report overlay-up mean luma at 0.997 and 0.999 of clean, i.e. a capture taken 600 ms after begin() sees no overlay at all, while the drag screenshot taken ~250 ms later measures the dim exactly (background 41,44,51 inside the box vs 31,33,38 outside, ratio 0.75). SelectionWindow sets sharingType = .none in its initializer and RectSelectionController.freeze() only flips every window to .readOnly after every screen has been shot, so the overlay stays invisible to captures for as long as the whole freeze takes, which measures longer than 600 ms here. Fix the ordering (flip each window as its own shot lands, or flip up front and exclude our own windows from the freeze another way) and make CaptureDiag poll instead of sleeping a fixed 600 ms, so its overlay-up line stops claiming the dim is broken when it is not. Sources/Photonz/Capture/RectSelection.swift, Sources/Photonz/Playtest/CaptureDiag.swift.\n\nObjective: measure-redline (staged now). A recorded or shared screen is how a redline gets handed off, so a dim that is missing from the recording is a defect in the primary use, not cosmetics. Sits below the focus at p2.",
@@ -58,7 +58,28 @@
     {
       "t": "2026-09-03T06:53:43.636744Z",
       "note": "Blocked on the machine, not on a decision: the screen has been locked all session (ioreg -n Root -d1 -a | plutil -extract IOConsoleLocked raw -). A locked screen makes every capture come back as the lock screen, so the three acceptance items, which are all pixel readings, cannot be checked. Waiting for an unlocked screen before calling this done."
+    },
+    {
+      "t": "2026-09-03T06:59:51.043592Z",
+      "note": "Adversarial pass on the built thing. Checked the one path this change could have broken: a release that beats the freeze falls back to a live re-capture of the same rect, and with the overlay no longer hidden that shot could have photographed our own dim. It cannot: CaptureCenter.captureRect already waits 60 ms after the overlay is dismissed before sampling, for exactly this reason. Also checked that nothing else in the app relied on the overlay being hidden (no other sharingType use anywhere) and that the region-recording path dismisses the overlay before the stream starts."
+    },
+    {
+      "t": "2026-09-03T06:59:51.043592Z",
+      "note": "Cost of the change, stated rather than hidden: the freeze now takes 64-75 ms instead of 30-50 ms, because it asks for the shareable window list before shooting. That is invisible, since the dim no longer waits on the freeze and the frozen picture is identical to the live screen it replaces. Starting a capture still dims in 8-11 ms."
+    },
+    {
+      "t": "2026-09-03T06:59:51.043592Z",
+      "note": "Scope note: the fix lands in shared capture code (RectSelection, ScreenCapturer), not under Releases/Next. The overlay is not forked, the defect is in both releases, and forking a file to fix a bug in one would be wrong. Matches how the sibling audit treats this surface ('either release')."
+    },
+    {
+      "t": "2026-09-03T06:59:51.043592Z",
+      "note": "Waited about 50 minutes across two checks for the Mac to unlock so the pixel acceptance could be witnessed. It stayed locked. Filed 'Witness the capture dim in another tool on an unlocked screen' carrying those readings as its acceptance, and said so plainly in the audit's rough rather than shipping a lock-screen picture dressed up as the overlay."
+    },
+    {
+      "t": "2026-09-03T07:00:00.384Z",
+      "note": "The capture overlay no longer hides itself from screen captures, so a recording or a shared screen shows the dim from the same instant the person sees it. The freeze keeps our own dim out of its own picture by naming our panels in an exclusion filter instead (new ScreenCapturer.capture(screen:excludingWindowNumbers:)); it never falls back to an unfiltered shot, which would bake the dim in. Committed d695df5. Verified through the window server, which answers on a locked Mac: visible to other capture tools at 13-18 ms (the first poll) instead of 58 ms, freeze still lands a picture on 1 of 1 displays, filtered capture 3456x2234 and mean luma 0.4911 against the old path's 3456x2234 and 0.4912. Scripts/test.sh green, 1890 tests in 193 suites. NOT witnessed in pixels: the Mac was locked all session and every capture on a locked Mac returns the lock screen, so acceptance items 1 and 3 (a dimmed screenshot from another tool, the 0.75 reading) and the no-double-dim check are measured but unseen. Filed 'Witness the capture dim in another tool on an unlocked screen' carrying exactly those, and the audit 2026-09-03-capture-dim-in-recordings says so in rough rather than shipping a lock-screen picture. Also rewrote --capture-diag, whose fixed 600 ms single reading is what filed this task with the wrong cause; it now polls and reports the window server and the pixels separately."
     }
   ],
-  "started": "2026-09-03T06:34:18.024Z"
+  "started": "2026-09-03T06:34:18.024Z",
+  "completed": "2026-09-03T07:00:00.384Z"
 }

@@ -1,0 +1,28 @@
+{
+  "id": "witness-the-capture-dim-in-another-tool-on-an-un",
+  "title": "Witness the capture dim in another tool on an unlocked screen",
+  "goal": "The screen darkening that a region capture puts up is supposed to show up in screen recordings and shared screens from the first instant, and the code that makes it do that has shipped. Nobody has actually seen it happen yet, because the Mac was locked when it was built and a locked Mac photographs as the lock screen. Watch it work once on a real screen, so the fix is witnessed rather than argued.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 830,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T06:58:36.959Z",
+  "updated": "2026-09-03T06:58:36.959Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up to the-screen-dim-shows-up-in-other-recording-tools (commit d695df5), which fixed the cause but could only verify it through the window server, since every capture on a locked Mac comes back as the lock screen. Run: Scripts/probe-app.sh, then open -a \"dist/Photonz Probe.app\" --args --capture-diag, and read /tmp/photonz-capture-diag.txt. Check the lock first with: ioreg -n Root -d1 -a | plutil -extract IOConsoleLocked raw - (false means fine to measure). The shadow check is the real risk: the freeze moved from SCScreenshotManager.captureImage(in:) to SCContentFilter(display:excludingWindows:) with ignoreShadows = false, so that it can leave our own panels out by name rather than hiding them from everyone. Geometry and mean luma already match the old path exactly (3456x2234, 0.4911 vs 0.4912); shadows could not be compared with no windows on screen. If shadows come back missing, the fallback is to keep the filter path only while the overlay is up and note it. Also worth a real screenshot for queue/audits/2026-09-03-capture-dim-in-recordings.json, which ships without one and says why.",
+  "acceptance": [
+    "The probe report at /tmp/photonz-capture-diag.txt says the screen was unlocked on its first line",
+    "Its dim line says the dim shows up in another tool screenshot, at about 0.75 of clean rather than 0.99",
+    "The frozen picture under the overlay measures the same brightness as the real screen, so the world is never dimmed twice",
+    "A window drop shadow inside a captured region still looks the way it did before the freeze changed capture APIs"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T06:58:36.959Z",
+      "note": "created (manual)"
+    }
+  ]
+}

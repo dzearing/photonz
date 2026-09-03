@@ -1,0 +1,29 @@
+{
+  "feature": "The capture dim shows up in recordings and shared screens",
+  "epic": "measure-redline",
+  "summary": "When you start a region capture, the screen darkening is now something everyone can see: a screen recording running beside Photonz, a shared screen on a call, or another screenshot tool all show the dim from the same instant you do. Before, they saw an undimmed screen for the whole first part of a capture, so a recorded walkthrough looked like nothing happened and then a screenshot appeared out of nowhere.",
+  "setup": "Photonz Dev, either release. This is the shared region capture overlay, so there is nothing to switch on and nothing that differs between Current and Next.",
+  "try": [
+    { "do": "Start a screen recording in QuickTime Player (File, New Screen Recording) and leave it running." },
+    { "do": "Press Shift Command 4 and drag a box around something, then press Esc." },
+    { "do": "Stop the recording and scrub to the moment you pressed Shift Command 4." },
+    { "do": "Watch that frame: the screen should already be dim, and the bright drag box should be there in the recording exactly as you saw it." },
+    { "do": "Now press Shift Command 4 and drag a box for real, without recording anything, and look at the picture inside the box." },
+    { "do": "Check that the inside of the box is normal brightness, not darkened, and that the world outside it is dimmed once and not twice." },
+    { "do": "Press Shift Command 4 over a window with a visible drop shadow, drag a box across that shadow, and check the shadow is still in the captured image." }
+  ],
+  "evaluate": [
+    "In the recording, does the dim arrive on the same frame as the shortcut, or can you still catch a frame where the screen is bright?",
+    "Is the captured region the same brightness as the real screen, with no hint of the dim baked into it?",
+    "Do window shadows and rounded corners in the captured region look the way they did before this change?",
+    "On a screen share, does the person watching now understand what you are doing when you start a capture?",
+    "Does anything about starting a capture feel slower than it did yesterday?"
+  ],
+  "rough": [
+    "No real screenshot with this audit, and the reason is not the permission. The probe held Screen Recording, but the Mac was locked for the whole session, and every capture on a locked Mac comes back as the lock screen, so any picture would have shown the lock screen rather than the overlay. Shipping one would have been a picture pretending to be the feature.",
+    "That same lock is why two things here are measured but not yet witnessed. On a locked screen the window server still answers questions, so it is verified that the overlay is now visible to other capture tools from 13 to 18 ms after the shortcut, which is the first time anything could ask, down from 58 ms; that the freeze still lands a picture on every display; and that the new filtered capture returns 3456x2234 with mean luma 0.4911 against the old capture's 3456x2234 and 0.4912. What could not be witnessed is the pixels: an actual undimmed-then-dimmed reading, and an actual look at the frozen picture for a double dim. Steps 4 and 6 above are exactly those two checks, which is why they are in your hands.",
+    "The task that filed this had the cause wrong, and it is worth knowing why, because the tool that reported it was the thing at fault. It blamed the order in which multiple displays are un-hidden. There is one display on this machine, so that order was already correct. The real cause was that the overlay hid itself from every capture until its own freeze finished. The diagnostic had taken a single reading 600 ms in, which cannot tell 'the dim never arrives' apart from 'the dim arrives later', and it guessed the second. It now polls instead, and reports the two independently.",
+    "The freeze changed which screenshot API it uses so it can leave our own panels out by name instead of hiding them. Window shadows are explicitly kept, and geometry and overall brightness were checked to match the old path, but shadows specifically could not be compared with no windows visible on a locked screen. That is step 7, and it is the one thing in this change that could have quietly degraded the captured picture.",
+    "A freeze that cannot leave every one of our panels out now returns nothing rather than taking the shot anyway. That is deliberate: a shot with our dim in it would freeze the darkening into the picture and show the world twice as dark. The visible cost of that choice is that on a bad day the dim sits over the live screen instead of a frozen one, which is the behaviour that was already there when a freeze failed."
+  ]
+}
