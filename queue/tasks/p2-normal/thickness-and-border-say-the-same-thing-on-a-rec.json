@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 960,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T21:29:20.778Z",
-  "updated": "2026-09-03T22:37:28.640236Z",
+  "updated": "2026-09-03T22:37:51.141Z",
   "deps": [],
   "blockedBy": [],
   "notes": "AnnotationContent.strokeWidth (the shape stroke, drawn by AnnotationRasterizer) vs LayerStyle.borderWidth (the ring DocumentRenderer.bordered draws round the layer box). Sibling of one-corner-radius-not-two, which folded the two Corner Radius rows into CornerRadiusSelection + CornerRadiusRow; the same shape of fix may or may not apply, since a rectangle can legitimately want a stroke AND an outer ring. Spotted while auditing that fix.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-03T22:37:28.640236Z",
       "note": "Verified in the probe with Screen Recording granted: a picked rectangle shows Thickness and no Border row; a frame shows Border and takes 4pt; a box and a frame together show both rows each saying its reach; one pull to 9pt and one undo back to 3pt. Audit at queue/audits/2026-09-03-outline-width.json with three real captures."
+    },
+    {
+      "t": "2026-09-03T22:37:51.141Z",
+      "note": "A shape now has ONE control for the line round it: the Effects Border row is offered only to layers with no outline of their own (picture, label, frame, group, zoom callout, highlight), and a shape's width is its own Thickness row. New Sources/PhotonzCore/OutlineWidth.swift; 17 core tests + 2 render tests written first, full suite green (2512). Verified in the probe with Screen Recording granted: a rectangle shows Thickness and no Border, a frame shows Border, both picked together show each row's reach, and one pull undoes in one step. Audit: queue/audits/2026-09-03-outline-width.json. Commit 4179447, pushed."
     }
   ],
-  "started": "2026-09-03T22:18:27.321Z"
+  "started": "2026-09-03T22:18:27.321Z",
+  "completed": "2026-09-03T22:37:51.141Z"
 }
