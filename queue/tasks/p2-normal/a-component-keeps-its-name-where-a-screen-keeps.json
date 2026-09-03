@@ -1,0 +1,28 @@
+{
+  "id": "a-component-keeps-its-name-where-a-screen-keeps",
+  "title": "A component keeps its name where a screen keeps its name",
+  "goal": "A screen promoted to a component shows the component name above its top left corner instead of the screen name. Clicking a screen name renames it on the spot, but clicking a component name there does nothing: it can only be renamed in the Component section of the dock. Make the two names behave the same.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 860,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T08:59:50.517Z",
+  "updated": "2026-09-03T08:59:50.518Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Frame names landed 2026-09-03 (FrameNameLabels in PhotonzCore, CanvasFrames.swift). The component mark is drawn by CanvasComponents.refreshComponentChrome as a glyph plus a CATextLayer, offset right of the glyph, so its hit box starts at rect.minX + glyph + 4 rather than rect.minX. Rename goes through EditorState.renameComponent (not renameLayer), which is what keeps instances and the tile in step.",
+  "acceptance": [
+    "Clicking a component name on the canvas selects that component",
+    "Double clicking it opens it for typing in place, with the whole name selected",
+    "Return lands the new name as one undo step and Escape leaves it as it was",
+    "The name matches everywhere at once: the canvas, the Layers list, the Library tile and the Component section"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T08:59:50.518Z",
+      "note": "created (manual)"
+    }
+  ]
+}
