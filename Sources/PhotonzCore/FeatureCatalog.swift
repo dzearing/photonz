@@ -63,6 +63,8 @@ public enum FeatureCatalog {
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
+    public static let geometryFieldsFlag = "next-geometry-fields"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -216,6 +218,15 @@ public enum FeatureCatalog {
                         FeatureParameter(name: windowCaptureShadow, label: "Include the window shadow",
                                          value: .boolean(true)),
                     ]),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: geometryFieldsFlag,
+                    title: "Type a layer's position and size",
+                    description: "The inspector gains a Position and Size section: X, Y, W and H for the selected layer, as numbers you can type. Two buttons can be made the same width, and a row can be made exactly 296 by 118, without nudging a drag until it looks right. Up and down arrow steps a field by 1, Shift and an arrow by 10, and each change is one undo. Off means position and size are drag only.",
+                    isEnabled: false,
+                    parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
             Definition(

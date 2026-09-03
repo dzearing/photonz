@@ -203,6 +203,11 @@ public enum PlaytestStep: Sendable, Equatable {
               modifiers: [PlaytestModifier], hold: String?)
     /// Insert text into whatever field has the keyboard.
     case type(String)
+    /// Give the keyboard to a named text field in the inspector (its label, as
+    /// the field shows it: "W", "H", "X"). Everything after it — `type`, `key`
+    /// tab, an arrow key — then goes to that field, the way it would for a
+    /// person who clicked it.
+    case focus(field: String)
     /// Pick a tool directly, for when its key was not honoured.
     case tool(Tool)
     /// Press I until the Measure tool is in this mode.
@@ -250,6 +255,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .click: "click"
         case .drag: "drag"
         case .type: "type"
+        case .focus: "focus"
         case .tool: "tool"
         case .measureMode: "measureMode"
         case .waitFor: "waitFor"
@@ -311,6 +317,8 @@ public enum PlaytestStep: Sendable, Equatable {
                          modifiers: try f.modifiers(), hold: try f.optionalString("hold"))
         case "type":
             self = .type(try f.string("text"))
+        case "focus":
+            self = .focus(field: try f.string("field"))
         case "tool":
             self = .tool(try f.enumValue("tool", Tool.self))
         case "measureMode":

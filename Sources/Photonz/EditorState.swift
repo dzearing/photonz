@@ -3380,8 +3380,29 @@ final class EditorState {
     /// The selected layer's frame (preview-aware), for the canvas outline.
     var selectedLayerFrame: CGRect? {
         guard let id = selectedLayerID else { return nil }
+        return previewedFrame(of: id)
+    }
+
+    /// A layer's frame, preview-aware: while a move or resize drag is in
+    /// flight the document still holds the pre-drag frame, so anything that
+    /// reads a number off a layer (the inspector's typed X/Y/W/H) has to read
+    /// the preview or it would sit still until mouse-up.
+    func previewedFrame(of id: UUID) -> CGRect? {
         if let previewMove, previewMove.id == id { return previewMove.frame }
         return document?.layer(id: id)?.frame
+    }
+
+    /// A typed geometry field landing (Return, Tab, or an arrow-key step):
+    /// one undo step from the layer's current frame to the typed one. A locked
+    /// layer, a field that layer does not accept, and a value that changes
+    /// nothing are all no-ops, so tabbing through the fields without editing
+    /// never puts anything in the undo stack.
+    func setLayerGeometry(id: UUID, field: LayerGeometryField, to value: CGFloat) {
+        guard let layer = document?.layer(id: id),
+              LayerGeometryEditing(layer: layer).allows(field) else { return }
+        let frame = LayerGeometry.applying(value, to: field, of: layer.frame)
+        guard frame != layer.frame else { return }
+        commitLayerFrame(id: id, frame: frame)
     }
 
     func selectLayer(_ id: UUID?) {

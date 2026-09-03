@@ -1,0 +1,32 @@
+{
+  "id": "typed-text-is-readable-in-every-field-on-the-sta",
+  "title": "Typed text is readable in every field on the status dashboard",
+  "goal": "Typing into the task title, notes, seq note or feedback box on the status dashboard shows black text on a dark background, so you cannot read what you are typing. Every field on that page should show typed text in the normal readable color, in both light and dark.",
+  "epic": "dashboard-polish",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:47:29.777Z",
+  "updated": "2026-09-03T00:47:29.807Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-02: when I type in an input on the status site, the input text is black on a dark background. Root cause found by reading: the shared design system styles the WELL on .input and the TEXT on .input>input (docs/design/mocks/shared/components/input.css lines 33 to 49), so the class belongs on a wrapper element with the real field inside it. Four places in docs/design/mocks/pages/dashboard.html put the class on the field itself instead: line 622 (the per-decision note), 770 (new task title), 773 (new task notes textarea), 1214 (the audit feedback textarea). Those get the dark well background but never the --ink color, so the text falls back to the browser default black. The same file gets it right at line 782 (filter) and 961 (Seq), both of which wrap an input in a label carrying the class. Fix by wrapping, not by adding a color rule for bare elements, unless the design system decides bare elements are legal, in which case make .input,textarea.input,select.input carry the color and say so in the component file. Also check the other mock pages for the same mistake.",
+  "acceptance": [
+    "Typing into every field on the dashboard (new task title, new task notes, the per-decision optional note, the audit feedback box, the task filter, and the seq field) shows readable text in dark and in light",
+    "No field is left styled as a bare element carrying the wrapper class; a check or a comment records the rule so the next field added cannot repeat it",
+    "The dashboard renders the same as today apart from the text color",
+    "Verified by loading the page in both color schemes and typing into each field, with a picture of one dark field in the audit under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:47:29.777Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-03T00:47:29.806Z",
+      "note": "seq 160 -> 5"
+    }
+  ]
+}

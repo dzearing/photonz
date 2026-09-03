@@ -1,0 +1,28 @@
+{
+  "id": "set-the-position-and-size-of-several-layers-at-o",
+  "title": "Set the position and size of several layers at once",
+  "goal": "Selecting four buttons and typing one width does nothing today: the position and size fields only ever show the layer you selected last. Make the fields work on the whole selection, so a row of controls can be made one width, or lined up on one X, in a single move.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 640,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:53:19.113Z",
+  "updated": "2026-09-03T00:53:19.114Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the-position-and-size-of-a-layer-can-be-typed-no (2026-09-03). The single-layer slice is GeometryInspector.swift + LayerGeometry/LayerGeometryEditing in PhotonzCore + EditorState.setLayerGeometry. Multi-selection lives in EditorState.multiSelectedLayerIDs; the batch shape to copy is the existing multi-select visibility/lock paths, which fold several updateLayer calls into one History.perform. Decide first what X means for a group (each layer to that X, or the group box moved there) - that is a UX decision card, not an engineering one.",
+  "acceptance": [
+    "With two or more layers selected, the Position & Size section shows a number where they agree and a mixed marker where they do not",
+    "Typing a width sets every selected layer to that width in one undo step",
+    "Typing an X lines every selected layer up on that edge, and the section says which edge a number means",
+    "An arrow key steps every selected layer together"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:53:19.114Z",
+      "note": "created (manual)"
+    }
+  ]
+}

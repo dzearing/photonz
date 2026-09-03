@@ -129,6 +129,34 @@ it is real in the app, because each one is load-bearing for the next.
    watch them all follow. Plus proof that capture, measure and redline are
    untouched.
 
+## Landed: typed position and size (Next, `next-geometry-fields`, 2026-09-03)
+
+Nothing above can be built to a spec while size and position are drag only, so
+the inspector grew a **Position & Size** section before step 1: X, Y, W and H
+for the selected layer, as numbers you can type.
+
+- The numbers are document points, shown whole, with the same `px` word the
+  measure readouts use, so a number measured with the caliper types straight
+  back in.
+- Typing lands on Return, on Tab and on clicking away. Up or down arrow steps
+  a field by 1 and Shift by 10, the same amounts the canvas nudges by. Each
+  landing is one undo step; tabbing through without editing records nothing.
+- Taking a field selects its whole number, so clicking W and typing replaces
+  the width instead of appending to it.
+- The fields follow a canvas drag live rather than jumping on mouse-up.
+- A field is typeable exactly where the canvas already lets you drag the same
+  thing. Every layer moves, so X and Y are open unless the layer is locked.
+  Size is not: an arrow's frame is padding around a shaft rather than the shape
+  you drew, and a measurement is edited by its feet, so both show a dimmed W and
+  H that say why on hover. Text takes a width (its wrap width) and not a height.
+- Model and rules are `LayerGeometry` / `LayerGeometryEditing` in `PhotonzCore`;
+  the section is `GeometryInspector.swift`; the write goes through
+  `EditorState.setLayerGeometry`, which reuses the canvas drag's
+  `commitLayerFrame` so annotation endpoints and caption placement stay correct.
+
+Not in this slice: several layers selected at once (the section shows the
+primary selection only), a proportional lock, and a rotation field.
+
 ## Questions the user decides, not the loop
 
 Each of these becomes a decision card when the step that needs it is claimed.

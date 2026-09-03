@@ -61,6 +61,11 @@
     }
   ],
   "recommended": "commands",
-  "status": "pending",
-  "created": "2026-09-03T00:00:53.730Z"
+  "status": "resolved",
+  "created": "2026-09-03T00:00:53.730Z",
+  "answer": {
+    "choice": "both",
+    "note": "We should probably also have grid components that can be placed within a component, grid and stack",
+    "resolved": "2026-09-03T00:45:54.722Z"
+  }
 }

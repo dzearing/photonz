@@ -242,6 +242,11 @@ extension Experiments {
         boolean(FeatureCatalog.windowCaptureFlag, FeatureCatalog.windowCaptureShadow) ?? true
     }
 
+    /// `next-geometry-fields`: whether the inspector offers the selected
+    /// layer's position and size as typed numbers. Exists only in the Next
+    /// release's catalog, so Current always reads false and stays drag only.
+    var geometryFieldsEnabled: Bool { isEnabled(FeatureCatalog.geometryFieldsFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

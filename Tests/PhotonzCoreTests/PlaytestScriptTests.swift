@@ -14,6 +14,25 @@ struct PlaytestScriptTests {
         try PlaytestScript.decode(Data(json.utf8))
     }
 
+    @Test("A walk can give the keyboard to a named inspector field")
+    func focusStepNamesTheField() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "focus", "field": "W" } ] }
+        """.utf8))
+        guard case .focus(let field) = script.steps[0] else { Issue.record("focus"); return }
+        #expect(field == "W")
+        #expect(script.steps[0].name == "focus")
+    }
+
+    @Test("A focus step with no field named is refused with a readable reason")
+    func focusStepNeedsAField() {
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "steps": [ { "do": "focus" } ] }
+            """.utf8))
+        }
+    }
+
     @Test("A blank step starts a walk from an empty canvas instead of a file")
     func blankStartsFromNothing() throws {
         let script = try decode("""

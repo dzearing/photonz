@@ -280,6 +280,23 @@ private final class Run {
             await sleep(0.05)
             note(number, step.name, "\"\(text)\" into \(type(of: field))")
 
+        case .focus(let name):
+            let window = try requireWindow()
+            guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
+            let fields = Self.findAll(NSTextField.self, in: content).filter(\.isEditable)
+            func label(_ field: NSTextField) -> String {
+                field.placeholderString ?? field.accessibilityLabel() ?? ""
+            }
+            guard let match = fields.first(where: { label($0).caseInsensitiveCompare(name) == .orderedSame }) else {
+                let seen = fields.map(label).filter { !$0.isEmpty }
+                throw Failure(description: "no editable field labelled \"\(name)\" is on screen; the ones that are: \(seen.isEmpty ? "none" : seen.joined(separator: ", "))")
+            }
+            guard window.makeFirstResponder(match) else {
+                throw Failure(description: "the field labelled \"\(name)\" would not take the keyboard")
+            }
+            await sleep(0.05)
+            note(number, step.name, "\"\(name)\" now holds \"\(match.stringValue)\"", state: describe())
+
         case .tool(let tool):
             let editor = try requireEditor()
             editor.setTool(tool)
@@ -684,6 +701,15 @@ private final class Run {
                 takenBy = "window"
             } else if NSApp.mainMenu?.performKeyEquivalent(with: event) == true {
                 takenBy = "menu"
+            } else {
+                // Nothing claimed it as a shortcut, so it is an ordinary press
+                // that happens to carry a modifier: ⇧↑ stepping a number field,
+                // ⇧⌫, ⌥ plus a letter. AppKit walks the responder chain with
+                // those after the key equivalents miss, and so must this, or the
+                // press would silently vanish and a walk would "prove" a feature
+                // broken that works by hand.
+                window.sendEvent(event)
+                takenBy = "responder chain"
             }
         }
         return takenBy

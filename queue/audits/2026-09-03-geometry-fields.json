@@ -1,0 +1,32 @@
+{
+  "feature": "Type a layer's position and size",
+  "epic": "ui-building",
+  "summary": "The inspector has a Position & Size section: X, Y, W and H for the selected layer, as numbers you can type. Two buttons can be made the same width, and a row can be made exactly 296 by 118, instead of nudging a drag until it looks about right.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is next-geometry-fields and it is on by default. Nothing in Current changes.",
+  "try": [
+    { "do": "Draw a rectangle on a canvas with the Rectangle tool." },
+    { "do": "Look at the Position & Size section in the inspector, under Layers.", "shot": "2026-09-03-geometry-fields-1.png" },
+    { "do": "Click the W field, type 296, press Tab." },
+    { "do": "Press Command Z once, then Shift Command Z." },
+    { "do": "Click the X field and press the up arrow, then Shift and the up arrow." },
+    { "do": "Drag the rectangle around the canvas and watch X and Y while you drag.", "shot": "2026-09-03-geometry-fields-2.png" },
+    { "do": "Draw an arrow and look at the same section for it.", "shot": "2026-09-03-geometry-fields-3.png" },
+    { "do": "Select the locked Background row in the Layers list and try to type in a field." }
+  ],
+  "evaluate": [
+    "Does Position & Size sit where your eye goes first, or should it be above the Layers list?",
+    "Typing 296 and pressing Tab commits the width. Is Tab what your hands expect, or were you looking for Return only?",
+    "Clicking a field selects the whole number so typing replaces it. Is that right, or did you want to edit one digit in place?",
+    "W and H are dimmed for an arrow, because an arrow is stretched by dragging its ends. Is a dimmed field with a reason on hover better than no field at all?",
+    "Each arrow-key press is its own undo step. Does holding the key down and then undoing feel wrong?",
+    "Is the two line hint under the fields useful the first time and clutter after, or is it fine to leave?"
+  ],
+  "rough": [
+    "Several layers selected at once is not handled: the section shows the primary selection only, and nothing lets you set four buttons to one width in a single move. Filed as a follow-up.",
+    "There is no proportional lock and no rotation field. Both were cut as not needed to build to a spec.",
+    "Holding an arrow key down records one undo step per press, so ten presses take ten undos to walk back.",
+    "A locked layer shows the section with every field dimmed rather than hiding it, on the theory that the numbers are still worth reading. Say if a dead section is worse than none.",
+    "How it was verified: a scripted playtest drove the real app (Scripts/playtest/geometry-fields-walk.json) and the screenshots here are real screen captures, not offscreen renders. Typing (as real keystrokes), Tab, Return, the arrow steps, the live drag, nonsense input and a width of 0 were all checked against the document's actual layer frame. Undo and redo were checked by calling them on the editor, not with Command Z, because a playtest can never use a menu shortcut that acts on the focused editor (the probe is never the frontmost app; this is a known harness limit, documented in docs/design/playtest-harness.md). Command Z on the real app is worth one moment of your attention for that reason.",
+    "The locked case is proven by unit test, not on screen: a locked layer can only be selected from the Layers list, and a playtest cannot click that list."
+  ]
+}

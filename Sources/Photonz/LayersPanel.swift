@@ -94,6 +94,11 @@ struct InspectorPanel: View {
         if let layer = selectedLayer {
             set.insert(.effects)
             set.insert(.shadow)
+            // Where a layer sits and how big it is, as numbers you can type
+            // (Next, `next-geometry-fields`). Every layer kind has a position,
+            // so this shows for all of them; which of the four accept typing
+            // is `LayerGeometryEditing`'s call.
+            if Experiments.shared.geometryFieldsEnabled { set.insert(.geometry) }
             if layer.annotation != nil { set.insert(.annotation) }
             if case .text = layer.content { set.insert(.text) }
             if layer.measure != nil { set.insert(.measure) }
@@ -148,6 +153,10 @@ struct InspectorPanel: View {
             LayersListView()
         case .measurements:
             MeasurementsListView()
+        case .geometry:
+            if let layer = selectedLayer {
+                GeometryInspector(layer: layer)
+            }
         case .measureTool:
             MeasureToolInspector()
         case .wandTool:
@@ -228,6 +237,7 @@ enum InspectorSectionID: String, CaseIterable {
     case wandTool
     case cropTool
     case measurements
+    case geometry
     case annotation
     case text
     case measure
@@ -243,6 +253,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .wandTool: "Magic Wand"
         case .cropTool: "Crop Tool"
         case .measurements: "Measurements"
+        case .geometry: "Position & Size"
         case .annotation: "Annotation"
         case .text: "Text"
         case .measure: "Measure"

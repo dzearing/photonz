@@ -355,6 +355,16 @@ struct FeatureCatalogTests {
         #expect(FeatureCatalog.windowCaptureFlag == "next-window-capture")
     }
 
+    @Test func theGeometryFieldsFlagIsNextOnlyAndOnByDefault() {
+        // Building UI to a spec needs numbers, not a drag that lands near
+        // enough: the inspector's typed X, Y, W and H. Next only, so Current
+        // stays drag only.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.geometryFieldsFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.geometryFieldsFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.geometryFieldsFlag })
+        #expect(FeatureCatalog.geometryFieldsFlag == "next-geometry-fields")
+    }
+
     @Test func theCaptureLoupeFlagIsGoneAndCannotComeBack() {
         // The magnifier that rode beside the pointer during a region capture was
         // filed as competitor parity and rejected on sight: a drag shows the box

@@ -5280,3 +5280,70 @@ Blank canvas should lead the card rather than close it, whether the headline
 still reads right, and whether the canvas should be able to start transparent.
 A follow-up is filed for reaching a blank canvas from the File menu with a
 document already open.
+
+## 2026-09-03 — Next: a layer's position and size can be typed
+
+`next-geometry-fields` (Next only, on by default). The inspector grew a
+**Position & Size** section under Layers: X, Y, W and H for the selected layer,
+as numbers you can type. This is table stakes for the `ui-building` objective —
+nothing can be built to a spec while size and position are drag only, so two
+buttons could never be made the same width.
+
+What it does:
+
+- Whole document points, with the same `px` word the measure readouts use, so a
+  number measured with the caliper types straight back in.
+- Lands on Return, on Tab, and on clicking away. Up or down arrow steps a field
+  by 1 and Shift by 10 — the same amounts `Nudge` moves a layer by on the
+  canvas, asserted by a test so the two cannot drift.
+- One undo step per landing. Tabbing through without editing records nothing.
+- Taking a field selects its whole number, so clicking W and typing replaces the
+  width rather than appending to it.
+- The fields follow a canvas drag live (they read a new preview-aware
+  `EditorState.previewedFrame`), instead of jumping on mouse-up.
+- Text that is not plainly one number changes nothing and snaps back. A width of
+  0 clamps to 1; an absurd one caps rather than asking the renderer for a
+  surface no machine can allocate.
+
+The rule for which fields accept typing: **a field is typeable exactly where the
+canvas already lets you drag the same thing.** Every layer moves, so X and Y are
+open unless the layer is locked. Size is not: an arrow's frame is padding around
+a shaft rather than the shape you drew (and arrows resize by their endpoints,
+`allowsFrameResize` is false), and a measurement is edited by its feet, so both
+get a dimmed W and H that say why on hover. Text takes a width, which is its
+wrap width, and not a height. A typed size that never matched what is on screen
+would be worse than no number at all.
+
+New pieces: `LayerGeometry` and `LayerGeometryEditing` (PhotonzCore, pure and
+tested: reading, typing, clamping, stepping, parsing, and the editability rules),
+`GeometryInspector.swift`, `EditorState.setLayerGeometry` (which reuses the
+canvas drag's `commitLayerFrame`, so annotation endpoints and caption placement
+stay correct) and `EditorState.previewedFrame(of:)`.
+
+The playtest harness gained two things it needed to check this:
+
+- **`focus` step** — gives the keyboard to a named inspector field by its label
+  ("W", "H", "X"), and fails with the list of fields that ARE on screen. Without
+  it the inspector was unreachable: `click` is delivered to the canvas view.
+- **Modified key presses now reach the responder chain.** A chord that no key
+  equivalent claimed was being dropped on the floor, so ⇧↑ "did nothing" — the
+  harness now sends it to the window as an ordinary press, the way AppKit does.
+  This was making a working feature look broken.
+
+Verified live on the probe with Screen Recording granted
+(`Scripts/playtest/geometry-fields-walk.json`), against the document's real
+layer frames: 296 typed as three real keystrokes plus Tab gives a width of
+exactly 296; 118 plus Return gives 296 × 118; undo returns 200 and redo 296; ↑
+steps X 120 → 121, ⇧↑ → 131, ↓ → 130; a mid-drag capture shows X and Y already
+reading 330 and 210 with the mouse still down; "wide" changes nothing; 0 clamps
+to 1; an arrow shows bright X and Y beside dimmed W and H.
+
+Undo was driven on the editor rather than with ⌘Z, because a walk can never use
+a menu shortcut that acts on the focused editor — proven again here with a
+control walk that moved a layer by dragging alone and still saw ⌘Z do nothing.
+That is a known harness limit; a task is now filed to fix it rather than keep
+working around it.
+
+Audit: `queue/audits/2026-09-03-geometry-fields.json`. Follow-ups filed for
+several layers selected at once, and for the harness's ⌘Z blind spot. Next in
+`ui-building`: step 1 of the order of work, layers that nest.

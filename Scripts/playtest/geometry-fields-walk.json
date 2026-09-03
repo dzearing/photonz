@@ -1,0 +1,86 @@
+{
+  "out": "/tmp/photonz-playtest/geometry-fields",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-blank", "note": "empty canvas, nothing drawn" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 120], "to": [320, 220], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-drew", "note": "a rectangle drawn roughly 200 by 100; the inspector should now show a Position & Size section" },
+    { "do": "snapshot", "name": "2-drew" },
+
+    { "do": "focus", "field": "W" },
+    { "do": "describe", "stage": "3-focus-w", "note": "the W field has the keyboard" },
+    { "do": "snapshot", "name": "3-focus-w" },
+
+    { "do": "key", "key": "2" },
+    { "do": "key", "key": "9" },
+    { "do": "key", "key": "6" },
+    { "do": "describe", "stage": "3b-typed-keys", "note": "296 typed as three real key presses, not inserted: the field must still take ordinary characters now that it also watches for arrow keys" },
+    { "do": "key", "key": "tab" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-typed-296", "note": "Tab should have landed the width at exactly 296" },
+    { "do": "snapshot", "name": "4-typed-296" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-undo", "note": "one undo should put the width back to what the drag made it. Undo is driven straight on the editor, not with command Z: the probe is never the frontmost app, so SwiftUI's focused-value menu shortcuts never resolve inside a walk (proven with a control walk that moved a layer by dragging alone)" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "6-redo", "note": "redo puts 296 back" },
+
+    { "do": "focus", "field": "H" },
+    { "do": "type", "text": "118" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "7-typed-118", "note": "Return should have landed the height at exactly 118, so the rectangle is now 296 by 118" },
+    { "do": "snapshot", "name": "7-typed-118" },
+
+    { "do": "focus", "field": "X" },
+    { "do": "key", "key": "up" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "8-arrow-up", "note": "up arrow in the X field should step it by 1" },
+    { "do": "key", "key": "up", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "9-shift-arrow", "note": "shift and up should step X by 10 more" },
+    { "do": "key", "key": "down" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "10-arrow-down", "note": "down arrow steps back by 1" },
+    { "do": "snapshot", "name": "10-stepped" },
+
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "wide" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "11-nonsense", "note": "nonsense should change nothing and the field should snap back to 296" },
+    { "do": "snapshot", "name": "11-nonsense" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [200, 170] },
+    { "do": "drag", "from": [200, 170], "to": [400, 260], "steps": 10, "hold": "13-mid-drag" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "13-dragged", "note": "the held snapshot is the middle of the drag: X and Y in the inspector should already read the moved position, not the old one" },
+
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "0" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "12-zero", "note": "a width of zero should clamp to the smallest layer that can still be seen" },
+    { "do": "snapshot", "name": "12-zero" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [200, 400], "to": [500, 500], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "14-arrow", "note": "an arrow is selected: X and Y should still take a number, W and H should be dimmed, because an arrow is resized by dragging its ends" },
+    { "do": "snapshot", "name": "14-arrow" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [750, 120] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "15-deselected", "note": "clicked the empty white canvas, which deselects (the Background is locked and clicks fall through it): with nothing selected the Position & Size section goes away entirely" },
+    { "do": "snapshot", "name": "15-deselected" }
+  ]
+}

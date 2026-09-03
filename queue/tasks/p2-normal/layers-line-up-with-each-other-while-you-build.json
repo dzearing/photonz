@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.176Z",
-  "updated": "2026-09-03T00:06:01.249Z",
+  "updated": "2026-09-03T00:45:54.727Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today Snapping.swift only attracts a dragged frame to the canvas edges and the canvas centre; there is nothing between one layer and another, and no align or distribute command anywhere in EditorCommands.swift. Blocked on its decision card. Guides while dragging were built once before, on 2026-07-02, and turned down, so this must not be built without an answer. Whatever the answer, the maths belongs in PhotonzCore with tests, next to Snapping.swift.\n\nObjective: ui-building (the current focus). Deliberately kept at ui-building rather than moved down to the later ui-layout sub epic: this is help for arranging by hand, not auto layout, so it is legal work now. Nothing here gets built before the card is answered.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-03T00:06:01.248Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-09-03T00:45:54.727Z",
+      "note": "decision \"When you are arranging layers to build UI, what should help you line them up?\" resolved: Both (We should probably also have grid components that can be placed within a component, grid and stack)"
     }
   ]
 }

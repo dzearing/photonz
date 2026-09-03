@@ -1,15 +1,15 @@
 {
   "id": "the-position-and-size-of-a-layer-can-be-typed-no",
   "title": "The position and size of a layer can be typed, not only dragged",
-  "goal": "You can only place and size a layer by dragging it, so two buttons cannot be made the same width and a row cannot be made exactly 296 by 118. Put the selected layer’s position and size in the inspector as numbers you can type.",
+  "goal": "You can only place and size a layer by dragging it, so two buttons cannot be made the same width and a row cannot be made exactly 296 by 118. Put the selected layer\u2019s position and size in the inspector as numbers you can type.",
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.155Z",
-  "updated": "2026-09-03T00:08:21.291Z",
+  "updated": "2026-09-03T00:31:06.876Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Flag: next-geometry-fields, Next only, on by default. The inspector lives in LayersPanel.swift; LayerStyleSlider around line 1017 is the pattern for a live control that commits through the document, and the annotation restyle rows around 1328 show the draft-then-commit shape for a typed value. Numbers are the same document points the measure readouts call px, so use the same formatter and unit word the measure work settled on. Every write goes through History.perform so undo stays correct; Document.updateLayer is the mutation. This is table stakes for building UI: without typed geometry a component sheet cannot be built to a spec.\n\nObjective: ui-building (the current focus). Nothing can be built to a spec while size and position are drag only.",
@@ -18,7 +18,7 @@
     "Typing a number moves or resizes the layer, and one undo puts it back",
     "Arrow keys step the field by 1 and shift and arrow by 10",
     "Try it: open Photonz Dev, Experiments window, release Next, flag next-geometry-fields on, draw a rectangle, type 296 in the width field, press Tab, then press Command Z",
-    "A locked layer’s fields are not editable, and what happens with several layers selected is either handled or filed as a follow-up task",
+    "A locked layer\u2019s fields are not editable, and what happens with several layers selected is either handled or filed as a follow-up task",
     "Audit written under queue/audits/, and anything left rough is filed as a follow-up task"
   ],
   "log": [
@@ -29,6 +29,39 @@
     {
       "t": "2026-09-03T00:08:21.290Z",
       "note": "seq 20 -> 20"
+    },
+    {
+      "t": "2026-09-03T00:31:06.876Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T00:34:02.651114Z",
+      "note": "Adversarial review before building. (1) Frame vs drawn shape: for rectangle/ellipse/highlight renderPadding is 0, so layer.frame IS the drawn rect and typing 296 gives a 296-wide button, which is the case the task is for. Arrows and lines pad their frame by stroke and arrowhead, and they resize by endpoint handles not frame handles (allowsFrameResize false), so typing a width for them would silently stretch a shape by a number that never matched what is drawn. Decision: W and H are editable only where the canvas already offers frame resize; for arrows, lines and measurements they read out but do not accept typing, and X and Y stay editable because every layer moves by drag. (2) Text resizes width only (height follows the wrap), so H is read-only there too, matching the canvas handles. (3) A first-time user has no way to know which number means what: the fields get X, Y, W, H labels plus a hover tip naming the edge, and a px unit word matching the measure readouts. (4) Cut as decorative: no proportional lock, no rotation field, no per-field steppers with clickable arrows. Shortest version that delivers the value is four fields that type, step by arrow key, follow a canvas drag live, and make one undo step each. (5) Collision check: up and down arrow inside a focused field must not also nudge the layer on the canvas; the field consumes them. Left and right arrows stay caret movement, as in every design tool."
+    },
+    {
+      "t": "2026-09-03T00:34:02.651114Z",
+      "note": "Multi-selection: out of scope for this slice, filed as a follow-up. The section shows the primary selected layer only."
+    },
+    {
+      "t": "2026-09-03T00:54:09.894576Z",
+      "note": "Built. PhotonzCore gained LayerGeometry (reading, typing, clamping, stepping, parsing) and LayerGeometryEditing (which fields a layer accepts, and a plain sentence for each one it does not), both test-first. The section is GeometryInspector.swift, the write is EditorState.setLayerGeometry reusing the canvas drag's commitLayerFrame, and the fields read a new preview-aware EditorState.previewedFrame so they follow a drag live. Flag next-geometry-fields, Next only, on by default. Full suite green at 1533 tests."
+    },
+    {
+      "t": "2026-09-03T00:54:09.894576Z",
+      "note": "Adversarial review of the built thing, on the real app. Two things were wrong and are fixed. (1) The fields sat in 58 points with the inspector empty beside them; they now take half the panel each, which is what the section is for. (2) Clicking a field left a caret, so typing 296 into a field holding 200 would have appended; taking a field now selects its whole number, the way every design tool does. The hint line was also cut to one sentence."
+    },
+    {
+      "t": "2026-09-03T00:54:09.894576Z",
+      "note": "Two harness bugs found and fixed while verifying, both of which made working behaviour look broken. (1) A modified key press that no key equivalent claimed was dropped instead of being sent to the window, so shift and up arrow appeared to do nothing; the harness now walks the responder chain the way AppKit does. (2) There was no way to reach the inspector at all, since clicks are delivered to the canvas view; added a focus step that gives the keyboard to a named field. Both documented in docs/design/playtest-harness.md."
+    },
+    {
+      "t": "2026-09-03T00:54:09.894576Z",
+      "note": "Command Z does nothing inside a playtest, and that is not this feature. Proven with a control walk: after a plain canvas drag with no text field anywhere, command+z logs taken by menu and the layer frame does not move. It is the known limit already written in the harness doc (the probe is never the frontmost app, so SwiftUI's focused-value menu commands resolve to nil). Undo and redo were therefore driven on the editor: undo returned the width to 200 and redo to 296, one step each. Filed a task to fix the harness rather than keep working around it."
+    },
+    {
+      "t": "2026-09-03T00:54:09.894576Z",
+      "note": "Acceptance, each checked against the document's real layer frames in Scripts/playtest/geometry-fields-walk.json, on the probe with Screen Recording granted. Fields show and keep up with a drag: a mid-drag capture reads X 330 Y 210 with the mouse still down. Typing moves and resizes: 296 typed as three real keystrokes plus Tab gives width exactly 296, 118 plus Return gives 296 by 118, and one undo returns 200. Arrow keys: up steps X 120 to 121, shift and up to 131, down to 130. Locked layer: covered by unit test rather than on screen, because a locked layer can only be selected from the Layers list and a playtest cannot click that list. Several layers selected: filed as a follow-up, set-the-position-and-size-of-several-layers-at-o. Audit written at queue/audits/2026-09-03-geometry-fields.json with three real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-03T00:31:06.875Z"
 }
