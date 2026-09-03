@@ -1,0 +1,28 @@
+{
+  "id": "a-number-field-hands-the-keyboard-back-when-you",
+  "title": "A number field hands the keyboard back when you are done with it",
+  "goal": "Right now, once you type a width or a position into the inspector, the app keeps listening to that box. Pressing a tool key next types a letter into the number instead of picking the tool, and Escape does not help either: the only way out is to click the picture. Typing a number should end when you press Return or Escape, so the very next key reaches the tools like it always does.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 160,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T05:55:20.183Z",
+  "updated": "2026-09-03T05:55:20.183Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the step E9 end to end sitting on 2026-09-03. Reproduced twice in Scripts/playtest/component-end-to-end-walk.json and redline-with-components-walk.json: after focus W / type 440 / key return, the log reports firstResponder _SystemTextFieldFieldEditor and a following key i never reaches the tool. Escape does not release it either; only a canvas click does. Fields are GeometryInspector.swift, Next only behind next-geometry-fields. Watch that Return keeping focus is what lets shift-arrow nudging work, so releasing on Return needs the arrow keys to still reach the canvas nudge or the field, whichever the design picks.",
+  "acceptance": [
+    "After typing a number and pressing Return, pressing a tool letter picks that tool instead of typing into the field",
+    "Escape while a number field is being typed in puts the value back and hands the keyboard to the picture",
+    "Up and down arrow still step the value for as long as you are working in that field",
+    "A scripted walk proves the tool key lands, with the state before and after"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T05:55:20.183Z",
+      "note": "created (manual)"
+    }
+  ]
+}

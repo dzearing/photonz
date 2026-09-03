@@ -1,0 +1,28 @@
+{
+  "id": "an-adjustable-label-keeps-a-name-that-still-make",
+  "title": "An adjustable label keeps a name that still makes sense once you change it",
+  "goal": "When you make one word of your component adjustable, the knob takes that word as its name. So a button that says Save gets a knob called Save, and the moment a copy says Cancel instead the panel reads Save then Cancel, which looks like a mistake. The knob should be named for what it controls, not for what it currently says.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 760,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T05:55:20.211Z",
+  "updated": "2026-09-03T05:55:20.212Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the step E9 sitting on 2026-09-03, see queue/audits/2026-09-03-component-e2e-4-overridden.png. The five starter components dodge this by shipping the knob pre-named Label; only hand authored components hit it. Naming lives in ComponentProperties.swift / the Adjustable list in ComponentPanel.swift. The current rule is documented in docs/design/ui-building.md under the C6 landing note, so change that too.",
+  "acceptance": [
+    "Making the words of a text layer adjustable gives the knob a name that does not change meaning when a copy overrides it",
+    "An existing document with knobs named after their words keeps working and is not renamed behind the user back",
+    "The name is still a field you can type your own name into",
+    "A picture in the audit shows a copy whose override reads sensibly next to its knob name"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T05:55:20.212Z",
+      "note": "created (manual)"
+    }
+  ]
+}

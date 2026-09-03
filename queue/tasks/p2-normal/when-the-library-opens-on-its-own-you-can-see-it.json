@@ -1,0 +1,28 @@
+{
+  "id": "when-the-library-opens-on-its-own-you-can-see-it",
+  "title": "When the Library opens on its own, you can see it",
+  "goal": "Making a component opens the Library and picks your new component, but the Library is the last thing in a tall column of panels. On a normal window it is below the fold, so you press the key, the app says it did something, and nothing you are looking at changes. The shelf should come into view when the app opens it for you.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 770,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T05:55:20.242Z",
+  "updated": "2026-09-03T05:55:20.242Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the step E9 sitting on 2026-09-03, see queue/audits/2026-09-03-component-e2e-1-component.png and -2-adjustable.png: at a 1240x900 window the Library header is at the very bottom edge and the tiles are cut off. Panels above it are Layers, Position and Size, Component, Effects, Shadow. The dock is a scroll view in the right dock; scrolling a section into view is the change, not reordering the sections.",
+  "acceptance": [
+    "Making a component scrolls the dock so the Library shelf and the new component tile are on screen",
+    "Nothing moves when the shelf is already in view",
+    "Opening the Library from the View menu behaves the same way",
+    "A picture shows the shelf visible right after the component is made, on a window no taller than 900 points"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T05:55:20.242Z",
+      "note": "created (manual)"
+    }
+  ]
+}

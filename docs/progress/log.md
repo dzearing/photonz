@@ -5838,3 +5838,54 @@ user on 2026-09-02.
 Next: step E9, the whole scenario audited end to end, plus proof that capture,
 measure and redline are untouched. One follow-up filed from the audit: a shelf
 tile is 80 points wide and the wide components are unreadable at that size.
+
+## 2026-09-03 — Step E9: the whole scenario, walked end to end
+
+The acceptance bar for `ui-components`, and no feature code in it. Two scripted
+walks, an audit the user can repeat in about five minutes, and four follow-ups
+for what the sitting turned up.
+
+- `Scripts/playtest/component-end-to-end-walk.json` drives the sitting the user
+  named on 2026-09-02: draw a box, type Save in it, group, ⌥⌘K, name it, expose
+  the wording, drop three copies, override the middle one, descend into the
+  original and type a new width. Green in ~19 s, every stage photographed with
+  the real screen capture (`-sc.png`), not the offscreen render. The proof the
+  pictures cannot carry is in the log: the pill reads "Updated · 3 copies of
+  Save button" and one undo takes the width back off the original and all three.
+- `Scripts/playtest/redline-with-components-walk.json` is the other half: open a
+  capture, measure a size and a gap, drag a component onto that same picture,
+  measure again, copy the spec list, copy the image. The numbers are identical
+  either side of the drop, and the component is not in the spec list.
+- The stronger "nothing changed" statement is that `redline-walk.json`, written
+  before any of this work, still passes step for step with the same five
+  measurements and the same clipboard text. It was not adapted to keep passing.
+- `dropComponent` in the playtest harness now falls back to a picked STARTER, so
+  a walk can drag a built-in tile straight onto the canvas. It only knew about a
+  component already in the document, which is not the first thing anyone does.
+  The real drop path (`placeComponent`) always handled both.
+- Stated plainly rather than worked around: a whole-screen capture cannot be
+  scripted at all, because ⇧⌘4's overlay covers every display and owns the
+  pointer, so both redline walks open a capture already on disk. The standalone
+  `--capture-diag` check that does exercise the overlay was run and reported the
+  screen locked, which invalidates its own readings; nothing in this work goes
+  near the capture path.
+- `Scripts/test.sh` green: 1852 tests, 189 suites.
+
+Filed from the sitting, none fixed here:
+
+- **A number field never hands the keyboard back.** After Return in W, the next
+  tool key types a letter into the number, and Escape does not release it
+  either; only clicking the picture does. It lands right between "type the new
+  width" and "reach for Measure", so it is p1.
+- **A wording knob is named after the words it holds**, so an overridden copy
+  reads "Save → Cancel". The five starters dodge it by shipping it as "Label".
+- **The Library opens below the fold.** ⌥⌘K opens the shelf and picks the new
+  tile, and on a 900 pt window the shelf is off the bottom of the dock.
+- **Hand-typed text keeps the screenshot contrast halo inside a component**, so
+  a button label reads smudged. `StarterComponents` already strips it.
+
+Next: the epic's ladder is walked end to end, so the queue's next pull is
+whatever `objectives.json` ranks under `ui-building` after the four follow-ups.
+Open question for the user, on the audit: whether widening an original leaving
+its label where it was is tolerable, or whether it is the thing that makes
+components unusable before auto layout (`ui-layout`, staged later).

@@ -334,7 +334,11 @@ private final class Run {
 
         case .dropComponent(let at):
             let canvas = try requireCanvas()
-            guard let componentID = editor?.selectedComponentID else {
+            // A starter the document has not taken yet has no component layer
+            // to answer for it, but dragging its tile onto the canvas is
+            // exactly what a person does first, so the drop reads both.
+            guard let componentID = editor?.selectedComponentID
+                    ?? editor?.selectedStarterComponent?.componentID else {
                 throw Failure(description: "no component is picked on the Library shelf to drop")
             }
             // Through the same pasteboard the real drag writes, so the type

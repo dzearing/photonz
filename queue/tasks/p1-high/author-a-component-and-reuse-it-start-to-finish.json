@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 150,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.357Z",
-  "updated": "2026-09-03T00:08:21.659Z",
+  "updated": "2026-09-03T05:43:02.167Z",
   "deps": [
     "an-instance-can-be-changed-without-leaving-the-f",
     "the-library-has-components-in-it-the-first-time"
@@ -35,6 +35,43 @@
     {
       "t": "2026-09-03T00:08:21.658Z",
       "note": "seq 170 -> 150"
+    },
+    {
+      "t": "2026-09-03T05:43:02.167Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T05:56:34.559067Z",
+      "note": "adversarial review before building: this is an audit step, not a feature. Shortest version that delivers the value = one walk for the scenario plus the walk that ALREADY existed for redline, since a pre-existing walk still passing is a stronger 'nothing changed' than a new one written to pass. Added one new short walk on top (component dropped onto a capture, then measured) because 'does redlining break when the document holds a component' was the only question neither walk answered."
+    },
+    {
+      "t": "2026-09-03T05:56:34.559067Z",
+      "note": "component-end-to-end-walk.json green first run, 70 steps, 19.4s, real -sc.png captures (Screen Recording granted). Pill reads 'Updated \u00b7 3 copies of Save button'; one undo reverts all four."
+    },
+    {
+      "t": "2026-09-03T05:56:34.559067Z",
+      "note": "redline-walk.json (predates this epic) re-run unchanged: green, 70 steps, same five measurements and same spec list text."
+    },
+    {
+      "t": "2026-09-03T05:56:34.559067Z",
+      "note": "redline-with-components-walk.json green: measurements identical either side of dropping a component, component absent from the spec list."
+    },
+    {
+      "t": "2026-09-03T05:56:34.559067Z",
+      "note": "harness gap found and fixed: playtest dropComponent only knew about a component already in the document, so a walk could not drag a STARTER tile onto the canvas, which is the first thing a person does. Falls back to selectedStarterComponent now; the real path (placeComponent) always handled both."
+    },
+    {
+      "t": "2026-09-03T05:56:34.559067Z",
+      "note": "cannot be done at all, stated rather than worked around: a whole-screen capture cannot be scripted (the overlay owns every display and the pointer). Ran the standalone --capture-diag; it reported the screen LOCKED, which invalidates its own readings. Recorded in the audit's rough."
+    },
+    {
+      "t": "2026-09-03T05:56:34.559067Z",
+      "note": "four rough edges filed: a-number-field-hands-the-keyboard-back-when-you (p1), an-adjustable-label-keeps-a-name-that-still-make, when-the-library-opens-on-its-own-you-can-see-it, text-you-type-inside-a-component-does-not-wear-t."
+    },
+    {
+      "t": "2026-09-03T05:56:34.559067Z",
+      "note": "Scripts/test.sh green: 1852 tests, 189 suites. Audit at queue/audits/2026-09-03-component-end-to-end.json with six real captures."
     }
-  ]
+  ],
+  "started": "2026-09-03T05:43:02.167Z"
 }

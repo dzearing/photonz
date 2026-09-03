@@ -863,3 +863,46 @@ wording, which the model does not have. Wording and show-or-hide only. Also
 left: no way to add to the starter set, no starter frames or screens, and a
 long override still overflows the control it sits in, because there is no auto
 layout yet.
+
+## Landed: the whole scenario, walked end to end (Next, 2026-09-03)
+
+Step E9, the acceptance bar for the epic. No feature in this one: two scripted
+walks, an audit, and four follow-up tasks for what the sitting turned up.
+
+- **`Scripts/playtest/component-end-to-end-walk.json`** drives the scenario the
+  user named: draw a box, type a word in it, group, ⌥⌘K, name it, expose the
+  wording, drop three copies off the shelf, override the middle one, then
+  descend into the original and type a new width. It passes in about 19
+  seconds and photographs every stage with the real screen capture, not the
+  offscreen render. The log carries the proof the pictures cannot: the pill
+  after the width edit reads "Updated · 3 copies of Save button", and one undo
+  takes the width back off all four.
+- **`Scripts/playtest/redline-with-components-walk.json`** is the other half:
+  open a capture, measure a size and a gap, drag a component onto that same
+  picture, measure again, copy the spec list and copy the image. The numbers
+  are identical either side of the drop and the component is not in the spec
+  list. The walk that predates all of this, `redline-walk.json`, also still
+  passes step for step, which is the stronger statement: nothing about the
+  redline flow changed, it was not adapted.
+- **`dropComponent` in the playtest harness now reads a picked starter too.**
+  It only knew about a component already in the document, so a walk could not
+  do the first thing a person does, which is drag a built-in tile straight onto
+  the canvas. The real drop path (`placeComponent`) always handled both.
+- **A whole-screen capture cannot be scripted**, and this is stated in the
+  audit rather than worked around: ⇧⌘4's overlay covers every display and owns
+  the pointer. The redline walks open a capture that is already on disk. The
+  standalone `--capture-diag` check that does exercise the overlay was run and
+  reported the screen locked, which invalidates its own readings.
+
+What the sitting found, each filed as its own task rather than fixed here:
+
+- A number field never hands the keyboard back. After Return in W, a tool key
+  types a letter into the number; Escape does not release it either, only a
+  click on the picture. This bites in the middle of the scenario, between
+  "type the new width" and "reach for Measure".
+- A wording knob is named after the words it holds, so an overridden copy reads
+  "Save → Cancel". The five starters dodge it by shipping the knob as "Label".
+- The Library opens below the fold. ⌥⌘K opens the shelf and picks the new
+  component, and on a 900 pt window the shelf is off the bottom of the dock.
+- Text typed by hand keeps the screenshot contrast halo inside a component, so
+  a button label reads smudged. `StarterComponents` already strips it.

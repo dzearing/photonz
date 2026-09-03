@@ -1,0 +1,28 @@
+{
+  "id": "text-you-type-inside-a-component-does-not-wear-t",
+  "title": "Text you type inside a component does not wear the screenshot halo",
+  "goal": "Words typed on a screenshot get a soft white glow behind them so they stay readable over a photo. Inside a component that glow reads as a printing error: the label on a button you drew looks smudged. Text that sits inside a component should be drawn clean, the way the built in components already are.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 780,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T05:55:20.272Z",
+  "updated": "2026-09-03T05:55:20.273Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the step E9 sitting on 2026-09-03. See the renders /tmp/photonz-playtest/component-end-to-end-walk/e2e-3-three-copies-doc.png: the word Save carries a visible light halo on every copy. StarterComponents.swift already strips the halo for the five built ins and says why; hand authored text keeps it. Decide whether the rule is per component or per group, and whether it is a stored property or a render time rule, since it must not bake into pixels.",
+  "acceptance": [
+    "A text layer inside a component draws with no halo, on the original and on every copy",
+    "Text outside a component still keeps its halo over a screenshot",
+    "Grouping existing text into a component drops the halo, and ungrouping puts it back",
+    "A before and after picture is in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T05:55:20.273Z",
+      "note": "created (manual)"
+    }
+  ]
+}
