@@ -4,15 +4,15 @@
   "goal": "When you start a region capture, the whole screen darkens right away for you, but anyone recording your screen with another tool, or watching a shared screen, sees no dim at all for about half a second. Make the dim appear to them at the same moment it appears to you, so a recorded demo or a shared screen shows what actually happened.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 630,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T23:51:31.917Z",
-  "updated": "2026-09-02T23:51:31.917Z",
+  "updated": "2026-09-03T00:06:01.278Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found while photographing the overlay for 2026-09-02-capture-dim-no-loupe. Two --capture-diag runs both report overlay-up mean luma at 0.997 and 0.999 of clean, i.e. a capture taken 600 ms after begin() sees no overlay at all, while the drag screenshot taken ~250 ms later measures the dim exactly (background 41,44,51 inside the box vs 31,33,38 outside, ratio 0.75). SelectionWindow sets sharingType = .none in its initializer and RectSelectionController.freeze() only flips every window to .readOnly after every screen has been shot, so the overlay stays invisible to captures for as long as the whole freeze takes, which measures longer than 600 ms here. Fix the ordering (flip each window as its own shot lands, or flip up front and exclude our own windows from the freeze another way) and make CaptureDiag poll instead of sleeping a fixed 600 ms, so its overlay-up line stops claiming the dim is broken when it is not. Sources/Photonz/Capture/RectSelection.swift, Sources/Photonz/Playtest/CaptureDiag.swift.",
+  "notes": "Found while photographing the overlay for 2026-09-02-capture-dim-no-loupe. Two --capture-diag runs both report overlay-up mean luma at 0.997 and 0.999 of clean, i.e. a capture taken 600 ms after begin() sees no overlay at all, while the drag screenshot taken ~250 ms later measures the dim exactly (background 41,44,51 inside the box vs 31,33,38 outside, ratio 0.75). SelectionWindow sets sharingType = .none in its initializer and RectSelectionController.freeze() only flips every window to .readOnly after every screen has been shot, so the overlay stays invisible to captures for as long as the whole freeze takes, which measures longer than 600 ms here. Fix the ordering (flip each window as its own shot lands, or flip up front and exclude our own windows from the freeze another way) and make CaptureDiag poll instead of sleeping a fixed 600 ms, so its overlay-up line stops claiming the dim is broken when it is not. Sources/Photonz/Capture/RectSelection.swift, Sources/Photonz/Playtest/CaptureDiag.swift.\n\nObjective: measure-redline (staged now). A recorded or shared screen is how a redline gets handed off, so a dim that is missing from the recording is a defect in the primary use, not cosmetics. Sits below the focus at p2.",
   "acceptance": [
     "A capture taken by another tool half a second after the region capture starts shows the screen dimmed",
     "The frozen picture underneath still shows the world without our own dim baked into it, so the screen never goes twice as dark",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-02T23:51:31.917Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T00:06:01.277Z",
+      "note": "seq 630 -> 20"
     }
   ]
 }

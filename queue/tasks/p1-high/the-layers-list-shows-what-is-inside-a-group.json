@@ -9,12 +9,12 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.171Z",
-  "updated": "2026-09-03T00:00:37.184Z",
+  "updated": "2026-09-03T00:08:21.429Z",
   "deps": [
     "group-and-ungroup-what-you-selected"
   ],
   "blockedBy": [],
-  "notes": "LayersPanel.swift builds a flat row list and reorders through Document.moveLayers(visualSources:visualDestination:); both need a tree aware version. Keep the row height, icon weight and hover treatment identical to the rows that exist, so the tree reads as the same panel. Depends on Group and ungroup landing first.",
+  "notes": "LayersPanel.swift builds a flat row list and reorders through Document.moveLayers(visualSources:visualDestination:); both need a tree aware version. Keep the row height, icon weight and hover treatment identical to the rows that exist, so the tree reads as the same panel. Depends on Group and ungroup landing first.\n\nObjective: ui-components (staged now, under the focus). A group is only usable if you can see and rearrange what is inside it.",
   "acceptance": [
     "A group row has a twist open control, remembers whether it was open, and shows the count of what is inside when closed",
     "Dragging a row onto a group puts it inside, dragging it out takes it out, and the drop line says which of the two will happen before the mouse is released",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-03T00:00:37.171Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T00:08:21.428Z",
+      "note": "seq 70 -> 70"
     }
   ]
 }

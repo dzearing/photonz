@@ -9,12 +9,12 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.168Z",
-  "updated": "2026-09-03T00:00:37.182Z",
+  "updated": "2026-09-03T00:08:21.402Z",
   "deps": [
     "a-group-draws-as-one-thing"
   ],
   "blockedBy": [],
-  "notes": "Flag: next-layer-groups, Next only, on by default. Photoshop parity on the keys: Command G groups, Shift Command G ungroups. EditorCommands.swift holds the menu command groups; EditorState.swift owns the selection set and every mutation goes through History.perform. Canvas selection, marquee and drag live in CanvasView.swift, which is already large, so put the group specific canvas logic in its own file the way the measure work did with CanvasMeasure.swift. Depends on the group model and the group renderer.",
+  "notes": "Flag: next-layer-groups, Next only, on by default. Photoshop parity on the keys: Command G groups, Shift Command G ungroups. EditorCommands.swift holds the menu command groups; EditorState.swift owns the selection set and every mutation goes through History.perform. Canvas selection, marquee and drag live in CanvasView.swift, which is already large, so put the group specific canvas logic in its own file the way the measure work did with CanvasMeasure.swift. Depends on the group model and the group renderer.\n\nObjective: ui-components (staged now, under the focus). The first rung of the component ladder a person actually sees.",
   "acceptance": [
     "The Layer menu gains Group with Command G and Ungroup with Shift Command G, each enabled only when the selection allows it",
     "Clicking a group on the canvas selects the whole group and dragging it moves everything inside; double clicking goes inside so one piece can be picked",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-03T00:00:37.168Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T00:08:21.401Z",
+      "note": "seq 60 -> 60"
     }
   ]
 }

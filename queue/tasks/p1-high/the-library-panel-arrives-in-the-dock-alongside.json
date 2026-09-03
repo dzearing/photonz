@@ -4,15 +4,15 @@
   "goal": "Reusable pieces need a shelf. A Library panel joins the existing right dock next to Layers, with four sections for media, components, styles and systems, a search box, and tiles you can pick. Selecting a tile shows its details in the inspector, exactly like selecting a layer, so there is one way to select things in the app.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 120,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.208Z",
-  "updated": "2026-09-03T00:04:07.416Z",
+  "updated": "2026-09-03T00:08:21.486Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Step B3 of docs/design/ui-building.md. The panel can be empty of content at this point; what matters is that it exists as an ordinary panel group and shares the selection model. LayersPanel.swift InspectorSectionID is the pattern to extend. The mocks (components.html, dsys.html) also give the Library a slide-down overlay form for browsing; that is a follow-up, not this task.",
+  "notes": "Step B3 of docs/design/ui-building.md. The panel can be empty of content at this point; what matters is that it exists as an ordinary panel group and shares the selection model. LayersPanel.swift InspectorSectionID is the pattern to extend. The mocks (components.html, dsys.html) also give the Library a slide-down overlay form for browsing; that is a follow-up, not this task.\n\nObjective: ui-building (the current focus). Kept here rather than under the later interaction-foundations dock epic because it extends the dock the app already has instead of building a new one; if it turns out a real dock group system is needed, stop and file that as a foundations task rather than growing this one.",
   "acceptance": [
     "A Library panel group appears in the right dock, collapsible and resizable like the other sections, and remembers whether it was open",
     "It offers Media, Components, Styles and Systems as sections, with an honest empty state in each",
@@ -29,6 +29,10 @@
     {
       "t": "2026-09-03T00:04:07.415Z",
       "note": "seq 150 -> 120"
+    },
+    {
+      "t": "2026-09-03T00:08:21.485Z",
+      "note": "seq 120 -> 90"
     }
   ]
 }

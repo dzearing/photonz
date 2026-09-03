@@ -4,17 +4,17 @@
   "goal": "A copy is only useful if you can adjust it. The original chooses which parts are adjustable, and every copy can set those without breaking the link back. There are three kinds of knob: wording, whether a part shows at all, and a choice among shapes the original already contains. A copy can also be detached, which turns it into ordinary layers that no longer follow the original.",
   "epic": "ui-components",
   "priority": "p1-high",
-  "seq": 140,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.268Z",
-  "updated": "2026-09-03T00:04:07.474Z",
+  "updated": "2026-09-03T00:08:21.572Z",
   "deps": [
     "an-instance-dropped-from-the-library-follows-its"
   ],
   "blockedBy": [],
-  "notes": "Step C6 of docs/design/ui-building.md, the last rung before the library is worth shipping. The three property kinds and the no-drift rule come from component-configure-wt.html. States, composites and data binding are explicitly out of scope here (see the deferred list in the spec).",
+  "notes": "Step C6 of docs/design/ui-building.md, the last rung before the library is worth shipping. The three property kinds and the no-drift rule come from component-configure-wt.html. States, composites and data binding are explicitly out of scope here (see the deferred list in the spec).\n\nObjective: ui-components (staged now, under the focus). Override safely is the other half of the sub epic title, and this is that half.",
   "acceptance": [
     "On an original, a control adds a property of one of three kinds: text, show or hide, and a choice among existing shapes",
     "An instance inspector shows only those knobs, and changing one changes that instance alone",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-03T00:04:07.474Z",
       "note": "seq 170 -> 140"
+    },
+    {
+      "t": "2026-09-03T00:08:21.572Z",
+      "note": "seq 140 -> 120"
     }
   ]
 }

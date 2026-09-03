@@ -1,21 +1,23 @@
 {
   "id": "retriage-queue-against-objectives-2",
   "title": "Retriage queue against objectives",
-  "goal": "",
-  "epic": "",
+  "goal": "The user reordered what matters in the objectives, so the task queue has to be checked against it. Every open task should sit at a priority and in an order that matches what the objectives now say comes first, with no duplicates, and each task should say in plain words which objective it serves.",
+  "epic": "unmanned-loop",
   "priority": "p0-critical",
-  "seq": 1,
-  "status": "in_progress",
+  "seq": 10,
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T23:48:09.131Z",
-  "updated": "2026-09-03T00:02:41.897Z",
+  "updated": "2026-09-03T00:09:17.577Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user updated queue/objectives.json and asked for a retriage. Read the objectives tree (order is priority, nesting is sub-epics) and every open task, then make the queue reflect it: reprioritize (queue.mjs priority), resequence to clean steps of 10 per priority (queue.mjs seq), dedupe, and groom notes so each task names the objective it serves. Do NOT write a digest. Record one history event: queue.mjs event triage with a summary of what moved.",
   "acceptance": [
-    "Every open task priority/sequence is consistent with the objectives ordering",
-    "A triage history event summarizes the changes"
+    "Every open task priority and sequence is consistent with the objectives ordering, and any task that no longer fits is reclassified, deprioritised or dropped with a reason",
+    "Each open task names, in its notes, the objective it serves and why it earns its place",
+    "Sequence numbers are clean steps of ten within each priority, and there are no duplicate open tasks",
+    "One triage history event summarises what moved, and no digest is written"
   ],
   "log": [
     {
@@ -33,8 +35,37 @@
     {
       "t": "2026-09-03T00:02:41.897Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T00:05:45.974Z",
+      "note": "read objectives.json and all 14 open tasks; the 17:01 manager pass had already filed against the same objectives edit (16:48 local = 23:48Z), so priorities were already aligned. Real findings: two tasks were filed under the wrong epic (a playtest-harness bug under measure-redline, an app Capture-menu bug under unmanned-loop) and the older measure tasks still carried sequence numbers in the 570-630 range."
+    },
+    {
+      "t": "2026-09-03T00:06:01.220Z",
+      "note": "seq 1 -> 10"
+    },
+    {
+      "t": "2026-09-03T00:09:07.170Z",
+      "note": "Seven more tasks were filed at 00:04 by another session while this pass was reading, extending the component ladder from a new docs/design/ui-building.md. Triaged them in rather than ignoring them: the pass covers all 22 open tasks."
+    },
+    {
+      "t": "2026-09-03T00:09:07.171Z",
+      "note": "Adversarial read of the queue, not just a sort. Three things were actually wrong. (1) The built-in components task is specified as drawn from named styles, but the styles task sat at p2 below it, so it would have been claimed before its own prerequisite; styles promoted to p1 and sequenced first, and named as a dep. This reverses steps 7 and 8 of the plan doc on purpose and the reason is written into the task. (2) Two tasks were filed under the epic that found them rather than the one they serve: a playtest harness bug sat under measure-redline and an app Capture menu bug sat under unmanned-loop; swapped. (3) The spec task asked for a page that had since been written under a different name, so it was retargeted to the three things that page genuinely does not say (child coordinate rule, menu items and shortcuts per step, flag names) instead of producing a second source of truth."
+    },
+    {
+      "t": "2026-09-03T00:09:07.171Z",
+      "note": "Nothing was reprioritised downward and nothing dropped. The 17:01 manager pass had already filed against the same objectives edit (16:48 local is 23:48Z), so the priorities were sound; saying so is the honest result rather than manufacturing churn. Sequenced Show History after the shifted-shortcut harness fix, because its chord is Command Shift H and the harness bug may be the whole story."
+    },
+    {
+      "t": "2026-09-03T00:09:07.171Z",
+      "note": "Verified: all 22 open tasks have a goal and an acceptance checklist, every epic id exists in objectives.json, no open task is sequenced before a dep it names, sequences are clean steps of ten in every priority, and queue.mjs state still generates for the dashboard. No digest written."
+    },
+    {
+      "t": "2026-09-03T00:09:17.576Z",
+      "note": "Retriaged all 22 open tasks against the ui-building focus. Promoted named styles to p1 and sequenced it before the built-in components that are specified to use it; moved two tasks to the epic they serve (playtest harness bug to unmanned-loop, Capture menu bug to measure-redline); retargeted the component spec task because docs/design/ui-building.md had been written while it waited; resequenced every priority to clean steps of ten in the plan build order. Verified with a checker: all 22 have a goal and acceptance, every epic id exists in objectives.json, no task is ordered before a dep it names, and queue.mjs state still generates. Triage history event written, no digest."
     }
   ],
   "started": "2026-09-03T00:02:41.897Z",
-  "failures": 1
+  "failures": 1,
+  "completed": "2026-09-03T00:09:17.577Z"
 }

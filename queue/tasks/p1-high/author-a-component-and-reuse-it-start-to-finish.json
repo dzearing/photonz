@@ -4,18 +4,18 @@
   "goal": "The whole point of this line of work, tried as one sitting: draw a control, turn it into a component, drop three copies, make its label adjustable, change one copy, then edit the original and watch them all follow. And prove that taking a screenshot, measuring it and redlining it is exactly as it was.",
   "epic": "ui-components",
   "priority": "p1-high",
-  "seq": 170,
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.357Z",
-  "updated": "2026-09-03T00:04:07.562Z",
+  "updated": "2026-09-03T00:08:21.659Z",
   "deps": [
     "an-instance-can-be-changed-without-leaving-the-f",
     "the-library-has-components-in-it-the-first-time"
   ],
   "blockedBy": [],
-  "notes": "Step E9 of docs/design/ui-building.md, the acceptance bar for the whole epic; the user named this scenario on 2026-09-02. Use Scripts/playtest.sh with a new walk under Scripts/playtest/. This task is claimed only after the instance, override and built-in library tasks are done; set its deps to them when they exist.",
+  "notes": "Step E9 of docs/design/ui-building.md, the acceptance bar for the whole epic; the user named this scenario on 2026-09-02. Use Scripts/playtest.sh with a new walk under Scripts/playtest/. This task is claimed only after the instance, override and built-in library tasks are done; set its deps to them when they exist.\n\nObjective: ui-components (staged now, under the focus). The acceptance bar for the whole sub epic, and the proof that none of it disturbed capture and redline.",
   "acceptance": [
     "A scripted walk drives the whole scenario on the probe app and every step is captured as a picture",
     "The audit reads as a sitting a person can repeat in under five minutes, with the pictures in order",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-03T00:04:07.562Z",
       "note": "seq 190 -> 170"
+    },
+    {
+      "t": "2026-09-03T00:08:21.658Z",
+      "note": "seq 170 -> 150"
     }
   ]
 }

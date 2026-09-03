@@ -9,10 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.155Z",
-  "updated": "2026-09-03T00:00:37.155Z",
+  "updated": "2026-09-03T00:08:21.291Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Flag: next-geometry-fields, Next only, on by default. The inspector lives in LayersPanel.swift; LayerStyleSlider around line 1017 is the pattern for a live control that commits through the document, and the annotation restyle rows around 1328 show the draft-then-commit shape for a typed value. Numbers are the same document points the measure readouts call px, so use the same formatter and unit word the measure work settled on. Every write goes through History.perform so undo stays correct; Document.updateLayer is the mutation. This is table stakes for building UI: without typed geometry a component sheet cannot be built to a spec.",
+  "notes": "Flag: next-geometry-fields, Next only, on by default. The inspector lives in LayersPanel.swift; LayerStyleSlider around line 1017 is the pattern for a live control that commits through the document, and the annotation restyle rows around 1328 show the draft-then-commit shape for a typed value. Numbers are the same document points the measure readouts call px, so use the same formatter and unit word the measure work settled on. Every write goes through History.perform so undo stays correct; Document.updateLayer is the mutation. This is table stakes for building UI: without typed geometry a component sheet cannot be built to a spec.\n\nObjective: ui-building (the current focus). Nothing can be built to a spec while size and position are drag only.",
   "acceptance": [
     "The inspector shows X, Y, width and height for one selected layer, and they keep up while it is dragged or resized on the canvas",
     "Typing a number moves or resizes the layer, and one undo puts it back",
@@ -25,6 +25,10 @@
     {
       "t": "2026-09-03T00:00:37.155Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T00:08:21.290Z",
+      "note": "seq 20 -> 20"
     }
   ]
 }

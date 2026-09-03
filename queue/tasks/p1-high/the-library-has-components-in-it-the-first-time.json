@@ -4,17 +4,18 @@
   "goal": "An empty library is a chore. The app should ship with a small set of ready components, so the first thing a person does is drag one out and use it rather than build one. A handful is enough: a button, a text field, a card, a nav bar and a badge.",
   "epic": "ui-components",
   "priority": "p1-high",
-  "seq": 150,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.298Z",
-  "updated": "2026-09-03T00:04:07.504Z",
+  "updated": "2026-09-03T00:08:21.629Z",
   "deps": [
-    "an-instance-can-be-changed-without-leaving-the-f"
+    "an-instance-can-be-changed-without-leaving-the-f",
+    "a-color-can-be-saved-as-a-named-style-and-reused"
   ],
   "blockedBy": [],
-  "notes": "Step D7 of docs/design/ui-building.md. Asked for directly by the user on 2026-09-02: maybe having some baked in components. Decision card to open when claimed: do these look like real macOS controls, or like a neutral kit that is obviously a starting point. A convincing macOS button invites people to expect real macOS behavior. Ship them as data the app reads, not as Swift views, so they are the same kind of thing a person authors.",
+  "notes": "Step D7 of docs/design/ui-building.md. Asked for directly by the user on 2026-09-02: maybe having some baked in components. Decision card to open when claimed: do these look like real macOS controls, or like a neutral kit that is obviously a starting point. A convincing macOS button invites people to expect real macOS behavior. Ship them as data the app reads, not as Swift views, so they are the same kind of thing a person authors.\n\nObjective: ui-components (staged now, under the focus). Asked for by the user on 2026-09-02, and it is what makes the Library worth opening the first time.",
   "acceptance": [
     "A new document shows five or so components in the Library with no setup",
     "Each one is an ordinary component: it can be dropped, adjusted through its knobs, and taken apart, with nothing special-cased about it",
@@ -30,6 +31,10 @@
     {
       "t": "2026-09-03T00:04:07.504Z",
       "note": "seq 180 -> 150"
+    },
+    {
+      "t": "2026-09-03T00:08:21.629Z",
+      "note": "seq 150 -> 140"
     }
   ]
 }

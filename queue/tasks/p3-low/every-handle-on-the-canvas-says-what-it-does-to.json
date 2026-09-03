@@ -4,15 +4,15 @@
   "goal": "A selected measurement now turns the pointer into a hand over the parts you can drag, but an arrow's two endpoint handles and the eight resize handles around a layer still show a plain arrow. They are the odd ones out, and a resize handle probably wants a resize arrow rather than a hand, so this needs deciding and then doing everywhere at once.",
   "epic": "measure-redline",
   "priority": "p3-low",
-  "seq": 570,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T21:12:05.528Z",
-  "updated": "2026-09-02T21:12:05.528Z",
+  "updated": "2026-09-03T00:06:01.306Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "The cue lives in Sources/PhotonzCore/CanvasGrab.swift (hit test, pure) and Sources/Photonz/CanvasView.swift (refreshGrabCursor / applyGrabCursor). Handles hit-testing is Handles.hit and AnnotationEndpoints.hit. Verification: Scripts/playtest/grab-cue.json reads the live pointer through PlaytestHarness.cursorName(); extend it. A hand is likely wrong for resize handles: NSCursor has no public diagonal resize cursor, so a drawn one (like SelectionCursor) may be needed, which is why this is worth its own pass.",
+  "notes": "The cue lives in Sources/PhotonzCore/CanvasGrab.swift (hit test, pure) and Sources/Photonz/CanvasView.swift (refreshGrabCursor / applyGrabCursor). Handles hit-testing is Handles.hit and AnnotationEndpoints.hit. Verification: Scripts/playtest/grab-cue.json reads the live pointer through PlaytestHarness.cursorName(); extend it. A hand is likely wrong for resize handles: NSCursor has no public diagonal resize cursor, so a drawn one (like SelectionCursor) may be needed, which is why this is worth its own pass.\n\nObjective: measure-redline (staged now), and it also lands on the layer resize handles the ui-building work leans on. Polish, so it stays below the focus at p3.",
   "acceptance": [
     "Resting on any of a selected layer's eight resize handles shows the resize cursor that matches that corner or edge.",
     "Resting on either endpoint of a selected line or arrow shows the agreed cursor, and it closes or changes while dragging.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-02T21:12:05.528Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T00:06:01.305Z",
+      "note": "seq 570 -> 10"
     }
   ]
 }

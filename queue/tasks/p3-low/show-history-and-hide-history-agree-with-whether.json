@@ -2,17 +2,17 @@
   "id": "show-history-and-hide-history-agree-with-whether",
   "title": "Show History and Hide History agree with whether history is open",
   "goal": "Pressing the Show History shortcut while the app is not in front does not open the history window, and the menu still reads Show History afterwards. A person should be able to trust that the menu item name matches what is actually on screen.",
-  "epic": "unmanned-loop",
+  "epic": "measure-redline",
   "priority": "p3-low",
-  "seq": 590,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T22:25:34.438Z",
-  "updated": "2026-09-02T22:25:34.439Z",
+  "updated": "2026-09-03T00:06:06.405Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found while building the playtest menus step. Walk: press key h with command+shift, then a menus step on Capture. Observed: log says the chord was taken by menu, no history window appears in the menus step window list, and the title stays Show History (Sources/Photonz/EditorCommands.swift:127 and PhotonzApp.swift:191 both key off coordinator.isHistoryShown). Likely the shortcut not landing on an unfocused app rather than a stale title. This is what leaves 2026-09-02-capture-menu-names try step 5 unverified.",
+  "notes": "Found while building the playtest menus step. Walk: press key h with command+shift, then a menus step on Capture. Observed: log says the chord was taken by menu, no history window appears in the menus step window list, and the title stays Show History (Sources/Photonz/EditorCommands.swift:127 and PhotonzApp.swift:191 both key off coordinator.isHistoryShown). Likely the shortcut not landing on an unfocused app rather than a stale title. This is what leaves 2026-09-02-capture-menu-names try step 5 unverified.\n\nSequenced after scripted-walks-can-press-shifted-letter-shortcut on purpose: the chord here is Command Shift H, and that task is fixing a playtest harness bug where a shifted letter never matches its key equivalent. Re-run the walk after that lands before digging into the app, because it may already be the whole story.\n\nObjective: measure-redline (retriaged 2026-09-02 from unmanned-loop: the loop only found it, the defect is in the app Capture menu). Capture history is part of the redline hand off.",
   "acceptance": [
     "Pressing the history shortcut opens the history window whether or not Photonz was the front app.",
     "With history open the Capture menu reads Hide History; with it closed it reads Show History.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-02T22:25:34.439Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T00:06:01.391Z",
+      "note": "seq 590 -> 40"
     }
   ]
 }

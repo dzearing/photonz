@@ -4,18 +4,18 @@
   "goal": "To build a screen you need something to build it on: a rectangle with a fixed size that clips what is inside it, with a name you can see. A frame is an ordinary group that has a size, so several screens can sit side by side on one canvas without the app growing a separate pages concept. Export can target one frame.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 110,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.177Z",
-  "updated": "2026-09-03T00:04:07.387Z",
+  "updated": "2026-09-03T00:08:21.458Z",
   "deps": [
     "layers-can-hold-layers",
     "group-and-ungroup-what-you-selected"
   ],
   "blockedBy": [],
-  "notes": "Step A2 of docs/design/ui-building.md. Depends on nesting landing first. A frame is a group layer plus a size and a clip flag, not a new document-level concept; read the IA reasoning in that doc before proposing artboards as a list on PhotonzDocument. Decision card to open when claimed: does a frame clip by default or only when asked. Frame naming and the label chrome come from the ui-build-screen and ui-grid mocks.",
+  "notes": "Step A2 of docs/design/ui-building.md. Depends on nesting landing first. A frame is a group layer plus a size and a clip flag, not a new document-level concept; read the IA reasoning in that doc before proposing artboards as a list on PhotonzDocument. Decision card to open when claimed: does a frame clip by default or only when asked. Frame naming and the label chrome come from the ui-build-screen and ui-grid mocks.\n\nObjective: ui-building (the current focus). A screen needs something to sit on, and this gives it one without the app growing a second kind of document.",
   "acceptance": [
     "A frame can be drawn at a chosen size, shows its name above its top left corner, and clips the layers inside it",
     "Several frames coexist on one canvas; selecting, moving and restacking them behaves like any other layer",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-03T00:04:07.387Z",
       "note": "seq 140 -> 110"
+    },
+    {
+      "t": "2026-09-03T00:08:21.457Z",
+      "note": "seq 110 -> 80"
     }
   ]
 }

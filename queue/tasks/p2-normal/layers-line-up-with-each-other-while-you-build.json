@@ -9,10 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.176Z",
-  "updated": "2026-09-03T00:01:09.259Z",
+  "updated": "2026-09-03T00:06:01.249Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Today Snapping.swift only attracts a dragged frame to the canvas edges and the canvas centre; there is nothing between one layer and another, and no align or distribute command anywhere in EditorCommands.swift. Blocked on its decision card. Guides while dragging were built once before, on 2026-07-02, and turned down, so this must not be built without an answer. Whatever the answer, the maths belongs in PhotonzCore with tests, next to Snapping.swift.",
+  "notes": "Today Snapping.swift only attracts a dragged frame to the canvas edges and the canvas centre; there is nothing between one layer and another, and no align or distribute command anywhere in EditorCommands.swift. Blocked on its decision card. Guides while dragging were built once before, on 2026-07-02, and turned down, so this must not be built without an answer. Whatever the answer, the maths belongs in PhotonzCore with tests, next to Snapping.swift.\n\nObjective: ui-building (the current focus). Deliberately kept at ui-building rather than moved down to the later ui-layout sub epic: this is help for arranging by hand, not auto layout, so it is legal work now. Nothing here gets built before the card is answered.",
   "acceptance": [
     "Build whichever answer the decision card returns, and nothing else",
     "Try it: open Photonz Dev, Experiments window, release Next, flag on, draw three rectangles at rough positions, and line them up the way the answer describes",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-03T00:01:09.258Z",
       "note": "Waiting on the decision card: which kind of help arranging layers should get, given guides were turned down once before."
+    },
+    {
+      "t": "2026-09-03T00:06:01.248Z",
+      "note": "seq 10 -> 10"
     }
   ]
 }

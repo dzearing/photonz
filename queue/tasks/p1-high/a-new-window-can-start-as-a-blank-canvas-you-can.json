@@ -9,10 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.150Z",
-  "updated": "2026-09-03T00:00:37.151Z",
+  "updated": "2026-09-03T00:08:21.262Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Flag: next-blank-canvas, Next only, on by default (FeatureCatalog.swift). Today: EditorView.swift:402 emptyState offers three rows through onboardingRow (Open a file, Capture a rectangle, Paste an image); EditorState.swift:288 leaves `document` nil for a .fresh window, so there is nothing to draw on. CanvasSizeDialog.swift already asks for a canvas size and PhotonzDocument(canvasSize:) already exists, so most of the parts are there. Pick one background for the new picture (white is the simple answer), say which you picked in the audit, and file a follow-up if a transparent canvas turns out to matter for building UI. This is the front door for the ui-building focus: components, groups and screens all need somewhere to be drawn that is not a screenshot.",
+  "notes": "Flag: next-blank-canvas, Next only, on by default (FeatureCatalog.swift). Today: EditorView.swift:402 emptyState offers three rows through onboardingRow (Open a file, Capture a rectangle, Paste an image); EditorState.swift:288 leaves `document` nil for a .fresh window, so there is nothing to draw on. CanvasSizeDialog.swift already asks for a canvas size and PhotonzDocument(canvasSize:) already exists, so most of the parts are there. Pick one background for the new picture (white is the simple answer), say which you picked in the audit, and file a follow-up if a transparent canvas turns out to matter for building UI. This is the front door for the ui-building focus: components, groups and screens all need somewhere to be drawn that is not a screenshot.\n\nObjective: ui-building (the current focus). Building UI needs somewhere to start from nothing; today every picture begins as a capture, a file or a paste.",
   "acceptance": [
     "In Next with the blank canvas flag on, the card in an empty window offers Blank canvas next to Open a file, Paste an image and Capture a rectangle",
     "Choosing it asks for a size with a few sensible presets, then leaves an empty picture that every tool draws on right away",
@@ -24,6 +24,10 @@
     {
       "t": "2026-09-03T00:00:37.151Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T00:08:21.261Z",
+      "note": "seq 10 -> 10"
     }
   ]
 }

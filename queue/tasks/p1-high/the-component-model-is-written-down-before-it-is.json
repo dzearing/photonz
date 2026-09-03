@@ -1,7 +1,7 @@
 {
   "id": "the-component-model-is-written-down-before-it-is",
-  "title": "The component model is written down before it is built",
-  "goal": "Before anyone writes component code, the model detail has to be settled and written down: what a group and an instance actually store, how documents saved before any of this still open, and what must always be true so an edit to one component cannot corrupt the document. The product decisions are already written; this is the engineering half.",
+  "title": "The component plan says which keys, flags and coordinate rule each slice uses",
+  "goal": "A plan for building components already exists and says what a component is, how copies stay linked, and in what order the pieces get built. Three things it does not say would each be guessed differently by whoever builds next: where a piece inside a group thinks it is, which menu items and keyboard shortcuts each step adds, and which switch in the Experiments window turns each step on. Fill those in so the ladder is built one way.",
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 30,
@@ -9,21 +9,25 @@
   "release": "next",
   "area": "docs",
   "created": "2026-09-03T00:00:37.159Z",
-  "updated": "2026-09-03T00:00:37.159Z",
+  "updated": "2026-09-03T00:08:21.318Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "The product-level IA is now decided and written: docs/design/ui-building.md (one tree, a frame is a group with a size, the Library is a panel group in the existing dock, a component is a subtree with instances pointing at it, styles are named values). Do NOT redo that. This task turns its component section into the model detail a runner can build from: the Codable shape of a group and an instance in PhotonzCore, how an old flat document decodes unchanged, what an instance stores versus what it resolves from its main, the invariants (an instance may not contain its own main, a variant may only pick among shapes the main holds), and how History.perform stays correct when an edit to a main changes every instance. Write it into docs/design/ui-building.md as a Model section, not a new file. Original note: Source material: docs/design/mocks/pages/component-configure-wt.html (the eleven step walkthrough is the whole flow: select the layers you drew, Make component, Add property, expose a toggle as a boolean, expose a control as a variant, bind a fill to a Style, drop an instance, configure it, reset it), components.html (the Library with scopes, drag to place), ui-variants.html (the variant by size matrix and instance props). The mock\u2019s one line definition to build on: a component is a reusable layer tree with configurable properties, and nothing about it is a special editor. Where the app is today: PhotonzDocument holds one flat array of layers (Document.swift), LayerContent has image, text, annotation, zoomCallout, measure and collage cases (Layer.swift:324), there is no group, no library and no component anywhere in Sources. Copy the shape of docs/design/next-measure.md, which has served the measure epic well: numbered sections, a Done when list, and flags named next to the behavior they gate. Styles and tokens belong to the ui-design-systems epic, staged later, so the spec should name the seam and stop there.",
+  "notes": "RETARGETED by the 2026-09-03 retriage. The original task asked for a new page, docs/design/next-components.md. While it sat in the queue, docs/design/ui-building.md was written and it already covers the IA (one tree, Library as a panel group, main/instance/override/variant, styles), the nine step order of work, the deferred list and the user decisions. Writing a second page now would be two sources of truth for the same ladder, so this task shrank to the three gaps that page has: no coordinate rule, no menu items or shortcuts, no flag names.\n\nThe coordinate rule is the one that has to be settled first, because layers-can-hold-layers is built straight after this and encodes it. The recommendation already written into that task is that a child frame is relative to its parent, which is what an instance needs: a main is placed at many spots and its children cannot each carry canvas coordinates.\n\nPhotoshop parity on the keys (user preference): Command G groups, Shift Command G ungroups. Option Command K for Make Component is what the component task assumes.\n\nObjective: ui-components (staged now, under the focus). It is the spec the rest of the ladder is built from, and it earns its place by stopping four later slices from each inventing a different answer.",
   "acceptance": [
-    "docs/design/next-components.md exists and covers, in plain language: a group, a main component, an instance, an override, a variant, where the Library lives, every menu item and key, and the flag each slice ships behind",
-    "It has a Done when section listing the slices in build order, each small enough for one working session",
-    "It states whether a child layer\u2019s position is stored against its parent or against the whole picture, and why",
-    "It says what the first version does not do, so later work is not judged against a promise nobody made",
-    "It records where it disagrees with the mock pages and the reason"
+    "docs/design/ui-building.md states whether a layer inside a group stores its position against its parent or against the whole picture, and why, in one short section",
+    "It lists, per step in The order of work, the menu items and keyboard shortcuts that step adds, using the Photoshop shortcut where one exists",
+    "It names the feature flag each step ships behind, and whether that flag is on by default in Next",
+    "It says what the first version deliberately does not do, so later work is not judged against a promise nobody made",
+    "No second component page is written: everything lands in the existing document"
   ],
   "log": [
     {
       "t": "2026-09-03T00:00:37.159Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-03T00:08:21.317Z",
+      "note": "seq 30 -> 30"
     }
   ]
 }
