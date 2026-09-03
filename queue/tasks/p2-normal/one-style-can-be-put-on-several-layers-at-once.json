@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 740,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:21:12.688Z",
-  "updated": "2026-09-03T10:05:18.238Z",
+  "updated": "2026-09-03T10:23:05.133Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-03-color-styles.json. Model side already supports it: bindColorStyle takes one layer, so this is a loop plus the multi-selection reading in the inspector. ColorStyleRow/ColorStyleControl in Sources/Photonz/ColorStylePanel.swift take a single layerID today.",
@@ -41,12 +41,17 @@
     },
     {
       "t": "2026-09-03T10:22:52.292145Z",
-      "note": "Verified on the real app, not assumed. Scripts/playtest/multi-style-walk.json drives the probe build: three boxes drawn, all three shift-clicked, Save as Style for All 3 typed once -> all three read 'fill #FF3B30 \u00b7 style Accent \u00d73' and the shelf says 3 uses (acceptance 1). One box unlinked and all three reselected -> the Fill row reads 'fill mixed \u00d73', not Accent (acceptance 3). Use a style on all 3 -> all three wear it again, and ONE Command Z puts all three back to mixed with the shelf back to 2 uses (acceptance 2). Scripts/playtest/styles-walk.json re-run as a regression: the single-layer flow is byte-identical. Scripts/test.sh green, 2033 tests."
+      "note": "Verified on the real app, not assumed. Scripts/playtest/multi-style-walk.json drives the probe build: three boxes drawn, all three shift-clicked, Save as Style for All 3 typed once -> all three read 'fill #FF3B30 · style Accent ×3' and the shelf says 3 uses (acceptance 1). One box unlinked and all three reselected -> the Fill row reads 'fill mixed ×3', not Accent (acceptance 3). Use a style on all 3 -> all three wear it again, and ONE Command Z puts all three back to mixed with the shelf back to 2 uses (acceptance 2). Scripts/playtest/styles-walk.json re-run as a regression: the single-layer flow is byte-identical. Scripts/test.sh green, 2033 tests."
     },
     {
       "t": "2026-09-03T10:22:52.292145Z",
       "note": "Adversarial review of the built thing. The first pass put the Fill and Outline swatches at different left edges, because a row wearing a name is wider than one wearing a glyph and both were trailing-aligned: in a tool people use to redline alignment that is the first thing anyone would file. Fixed with fixed readout and control columns (ColorStyleRowLayout) on the whole-selection rows only, so the single-layer rows keep hugging their well. Also fixed the hover tip, which read 'These color uses the style Accent' over a multi-selection. Left rough and written into the audit: a whole-selection row still cannot set a one-off color (filed as set-several-layers-to-the-same-one-off-color-in), the readout swatch invites a click that goes nowhere, and a selection whose colors differ cannot be saved as a style at all."
+    },
+    {
+      "t": "2026-09-03T10:23:05.132Z",
+      "note": "A Color section in the dock speaks for a whole selection: one named color set once paints every picked layer that has that kind of color, in one undo step, and a selection wearing different things says Mixed. New ColorStyleSelection in PhotonzCore (25 tests, written first), ColorStyleRow/ColorStyleControl unified onto it, SelectionColorInspector in Sources/Photonz/ColorStylePanel.swift. Verified on the probe build with Scripts/playtest/multi-style-walk.json (all three acceptance items), styles-walk re-run as a single-layer regression, Scripts/test.sh green at 2033 tests. Audit: queue/audits/2026-09-03-multi-style.json"
     }
   ],
-  "started": "2026-09-03T10:05:18.237Z"
+  "started": "2026-09-03T10:05:18.237Z",
+  "completed": "2026-09-03T10:23:05.133Z"
 }
