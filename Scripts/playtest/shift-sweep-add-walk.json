@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/shift-sweep-add",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 100], "to": [260, 180], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [400, 100], "to": [540, 180], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 300], "to": [260, 380], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-drew", "note": "three rectangles: top left, top right, lower left. Nothing selected" },
+
+    { "do": "drag", "from": [80, 60], "to": [300, 220], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-plain-sweep", "note": "a plain sweep around the top-left rectangle: selection should be that one alone" },
+
+    { "do": "drag", "from": [620, 480], "to": [840, 640], "steps": 10, "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2b-shift-sweep-caught-nothing", "note": "a shift-sweep over blank canvas straight after a plain sweep: the top-left rectangle stays picked and NO rubber band is left behind, neither this one nor the plain sweep's" },
+    { "do": "snapshot", "name": "sweep-2b-nothing" },
+
+    { "do": "drag", "from": [360, 60], "to": [580, 220], "steps": 10, "modifiers": ["shift"], "hold": "sweep-3-mid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-shift-sweep", "note": "shift-sweep around the top-right rectangle: selection should now hold BOTH top rectangles, and the mid-drag shot should already outline both" },
+    { "do": "snapshot", "name": "sweep-3-two" },
+
+    { "do": "drag", "from": [80, 260], "to": [300, 420], "steps": 10, "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "4-three", "note": "a third shift-sweep: all three rectangles picked, built out of three sweeps" },
+    { "do": "snapshot", "name": "sweep-4-three" },
+
+    { "do": "drag", "from": [620, 480], "to": [840, 640], "steps": 10, "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-empty-shift-sweep", "note": "a shift-sweep over blank canvas catches nothing, so all three should still be picked" },
+    { "do": "snapshot", "name": "sweep-5-empty" },
+
+    { "do": "drag", "from": [360, 60], "to": [580, 220], "steps": 10, "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "6-resweep", "note": "shift-sweeping a rectangle that is already picked leaves it picked: still all three" },
+
+    { "do": "drag", "from": [80, 260], "to": [300, 420], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "7-plain-replaces", "note": "a plain sweep still starts over: the lower-left rectangle alone" },
+    { "do": "snapshot", "name": "sweep-7-plain-replaces" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-one-undo", "note": "one undo goes straight past every sweep to the last rectangle drawn: layers should drop from 4 to 3" }
+  ]
+}

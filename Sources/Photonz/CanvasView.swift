@@ -101,6 +101,7 @@ struct CanvasView: NSViewRepresentable {
     /// the group it picked it inside.
     let onSelectLayerInGroup: (UUID?, UUID?) -> Void
     let onExtendSelection: (UUID) -> Void
+    let onAddSweptLayers: (SelectionRegion) -> Void
     /// A name typed on the canvas: the layer and what it is now called.
     let onRenameLayer: (UUID, String) -> Void
     /// A component's name typed on the canvas: the component and what it is now
@@ -209,6 +210,7 @@ struct CanvasView: NSViewRepresentable {
         view.onSelectLayer = onSelectLayer
         view.onSelectLayerInGroup = onSelectLayerInGroup
         view.onExtendSelection = onExtendSelection
+        view.onAddSweptLayers = onAddSweptLayers
         view.onRenameLayer = onRenameLayer
         view.onRenameComponent = onRenameComponent
         view.onClickedNothing = onClickedNothing
@@ -275,6 +277,7 @@ final class CanvasNSView: NSView {
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
     var onSelectLayerInGroup: ((UUID?, UUID?) -> Void) = { _, _ in }
     var onExtendSelection: ((UUID) -> Void) = { _ in }
+    var onAddSweptLayers: ((SelectionRegion) -> Void) = { _ in }
     var onRenameLayer: ((UUID, String) -> Void) = { _, _ in }
     var onRenameComponent: ((UUID, String) -> Void) = { _, _ in }
     var onClickedNothing: (() -> Void) = {}
@@ -475,6 +478,11 @@ final class CanvasNSView: NSView {
     /// The marquee's multi-selection, echoed from EditorState (committed).
     /// Read by the frame chrome too, so every picked screen's name tints.
     private(set) var multiSelectedLayerIDs: Set<UUID> = []
+    /// Every layer currently picked, however it got there: the multi-selection
+    /// plus the single primary selection. What a ⇧-sweep adds to.
+    private var pickedLayerIDs: Set<UUID> {
+        multiSelectedLayerIDs.union(selectedLayerID.map { [$0] } ?? [])
+    }
     /// Pre-rendered drag preview from EditorState; arrives async after drag start
     /// and outlives the drag until the post-commit render lands.
     private var dragPreview: DragPreview?
@@ -1845,7 +1853,7 @@ final class CanvasNSView: NSView {
         } else if var drag = marquee {
             drag.update(to: p)
             marquee = drag
-            refreshOverlays(constrainSquare: event.modifierFlags.contains(.shift))
+            refreshOverlays()
         }
     }
 
@@ -2067,15 +2075,28 @@ final class CanvasNSView: NSView {
             }
             if drag.isClick(atZoom: viewport.zoom) {
                 commitSelection(nil, capture: true) // a plain click deselects
-            } else {
-                // A sweep decides the selection whatever started it, so the
-                // Library tile lets go here the way the plain press already did.
-                if !press.clearsSelectionOnPress { onClickedNothing() }
-                let square = event.modifierFlags.contains(.shift)
-                let rect = drag.selectionRect(constrainSquare: square, in: viewport.documentSize)
-                commitSelection(rect.map(Geometry.pixelAligned).flatMap(SelectionRegion.rect),
-                                capture: true)
+                return
             }
+            // A sweep decides the selection whatever started it, so the
+            // Library tile lets go here the way the plain press already did.
+            if !press.clearsSelectionOnPress { onClickedNothing() }
+            let region = drag.selectionRect(in: viewport.documentSize)
+                .map(Geometry.pixelAligned).flatMap(SelectionRegion.rect)
+            if press.sweepAddsToSelection {
+                // ⇧-sweep: the catch joins what was already picked. The band
+                // itself comes down, because it describes only this sweep and
+                // not the whole selection — the outlines carry that, the same
+                // way they do after a ⇧-click on the picture. A pixel region
+                // belongs to the region tools, so that one stays put.
+                if let region {
+                    if !selectionTargetsPixels { selection = nil }
+                    onAddSweptLayers(region)
+                } else {
+                    refreshOverlays() // swept only empty space: nothing changes
+                }
+                return
+            }
+            commitSelection(region, capture: true)
         }
     }
 
@@ -2507,15 +2528,15 @@ final class CanvasNSView: NSView {
         refreshOverlaysInsideTransaction()
     }
 
-    func refreshOverlays(constrainSquare: Bool = false) {
+    func refreshOverlays() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        refreshOverlaysInsideTransaction(constrainSquare: constrainSquare)
+        refreshOverlaysInsideTransaction()
         CATransaction.commit()
     }
 
-    private func refreshOverlaysInsideTransaction(constrainSquare: Bool = false) {
-        refreshMarqueeDisplay(constrainSquare: constrainSquare)
+    private func refreshOverlaysInsideTransaction() {
+        refreshMarqueeDisplay()
         refreshLayerSelectionDisplay()
         refreshCropDisplay()
         refreshPreviewSprite()
@@ -2741,7 +2762,7 @@ final class CanvasNSView: NSView {
             .concatenating(session.current.affineTransform(around: .zero))
     }
 
-    private func refreshMarqueeDisplay(constrainSquare: Bool) {
+    private func refreshMarqueeDisplay() {
         // The ants show, in priority order: the live region-tool combination
         // (base region ⊕ in-flight shape as ONE path), the live arrow
         // marquee, else the committed region.
@@ -2764,7 +2785,7 @@ final class CanvasNSView: NSView {
                 antsDocPath = selection?.path
             }
         } else if let viewport, let marquee {
-            let rect = marquee.selectionRect(constrainSquare: constrainSquare, in: viewport.documentSize)
+            let rect = marquee.selectionRect(in: viewport.documentSize)
             antsDocPath = rect.map { CGPath(rect: $0, transform: nil) }
             marqueeRect = rect
         } else {
@@ -2808,7 +2829,11 @@ final class CanvasNSView: NSView {
         // stays outlined rather than blinking out while the button is down.
         let captured: Set<UUID>
         if marquee != nil, let rect = marqueeRect {
-            captured = Set(document.layerIDs(fullyInside: rect))
+            // With ⇧ the band adds, so mid-sweep it outlines the layers it has
+            // taken in AND the ones already picked: what you let go on is what
+            // you saw.
+            captured = marqueePress.selection(afterSweeping: document.layerIDs(fullyInside: rect),
+                                              startingFrom: pickedLayerIDs)
         } else if marquee != nil, marqueePress.clearsSelectionOnPress {
             captured = []
         } else {

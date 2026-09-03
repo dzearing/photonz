@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import PhotonzCore
 import Testing
 
@@ -128,5 +129,47 @@ struct BareCanvasPressTests {
         // actually dragged still says what is picked, ⇧ or not.
         #expect(BareCanvasPress(shift: false).commitsOnRelease(isClick: false))
         #expect(BareCanvasPress(shift: true).commitsOnRelease(isClick: false))
+    }
+
+    // MARK: What a finished sweep leaves picked
+
+    let a = UUID(), b = UUID(), c = UUID()
+
+    @Test func aPlainSweepReplacesWhateverWasPicked() {
+        let press = BareCanvasPress(shift: false)
+        #expect(!press.sweepAddsToSelection)
+        #expect(press.selection(afterSweeping: [b, c], startingFrom: [a]) == [b, c])
+    }
+
+    @Test func aShiftSweepAddsWhatItTookInToWhatWasPicked() {
+        let press = BareCanvasPress(shift: true)
+        #expect(press.sweepAddsToSelection)
+        #expect(press.selection(afterSweeping: [b, c], startingFrom: [a]) == [a, b, c])
+    }
+
+    @Test func aShiftSweepThatCatchesNothingChangesNothing() {
+        // Sweeping empty canvas with ⇧ is a miss, and a miss costs nothing.
+        #expect(BareCanvasPress(shift: true).selection(afterSweeping: [], startingFrom: [a, b])
+                == [a, b])
+    }
+
+    @Test func aPlainSweepThatCatchesNothingPicksNothing() {
+        #expect(BareCanvasPress(shift: false).selection(afterSweeping: [], startingFrom: [a, b])
+                == [])
+    }
+
+    @Test func sweepingSomethingAlreadyPickedLeavesItPicked() {
+        // Adding is adding, not toggling: sweeping back over a layer you
+        // already have must not drop it out from under you.
+        #expect(BareCanvasPress(shift: true).selection(afterSweeping: [a, b], startingFrom: [a])
+                == [a, b])
+    }
+
+    @Test func aShiftSweepBuildsUpOverThreeSweeps() {
+        let press = BareCanvasPress(shift: true)
+        var picked = press.selection(afterSweeping: [a], startingFrom: [])
+        picked = press.selection(afterSweeping: [b], startingFrom: picked)
+        picked = press.selection(afterSweeping: [c], startingFrom: picked)
+        #expect(picked == [a, b, c])
     }
 }

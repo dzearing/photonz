@@ -48,16 +48,16 @@ public struct MarqueeDrag: Equatable, Sendable {
 /// What a press that lands on bare canvas means for the selection.
 ///
 /// A rubber band starts either way, so these two only differ in what happens
-/// to what was already picked. The ⇧ case exists because a ⇧-click is aimed
-/// at a layer: missing it by a few pixels must not throw away the selection it
-/// was about to be added to.
+/// to what was already picked. The ⇧ case exists because ⇧ means "and this
+/// too": a ⇧-click that misses a layer by a few pixels must not throw away
+/// the selection it was about to be added to, and a ⇧-sweep hands what it
+/// takes in to that selection rather than starting over.
 public enum BareCanvasPress: Equatable, Sendable {
     /// No modifier: bare canvas means "nothing", so the press lets go of the
     /// selection and letting go without moving leaves nothing picked.
     case replaces
-    /// ⇧: a miss changes nothing at all. The selection survives the press and
-    /// survives a release that never moved. A real sweep still decides the
-    /// selection, the same as without the modifier.
+    /// ⇧: nothing is taken away. The selection survives the press, survives a
+    /// release that never moved, and a real sweep ADDS its catch to it.
     case spares
 
     public init(shift: Bool) {
@@ -71,6 +71,21 @@ public enum BareCanvasPress: Equatable, Sendable {
     /// one gesture on bare canvas that changes nothing.
     public func commitsOnRelease(isClick: Bool) -> Bool {
         !(isClick && self == .spares)
+    }
+
+    /// Whether a finished sweep ADDS what it took in to what was already
+    /// picked, instead of becoming the whole selection. ⇧ means "and this
+    /// too" everywhere else you pick something — a row in the list, a layer
+    /// on the picture — so it means it for a rubber band as well, and a
+    /// selection can be built out of two or three sweeps.
+    public var sweepAddsToSelection: Bool { self == .spares }
+
+    /// What is picked once a sweep that took in `swept` lets go. Adding is
+    /// adding and never toggling: sweeping back over something already
+    /// picked leaves it picked.
+    public func selection(afterSweeping swept: [UUID],
+                          startingFrom existing: Set<UUID>) -> Set<UUID> {
+        sweepAddsToSelection ? existing.union(swept) : Set(swept)
     }
 }
 

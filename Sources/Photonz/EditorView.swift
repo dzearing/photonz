@@ -250,6 +250,7 @@ struct EditorView: View {
                        onSelectLayer: { editorState.selectLayer($0) },
                        onSelectLayerInGroup: { editorState.selectLayer($0, inGroup: $1) },
                        onExtendSelection: { editorState.extendSelection(toLayer: $0) },
+                       onAddSweptLayers: { editorState.addSweptLayersToSelection(in: $0) },
                        onRenameLayer: { editorState.renameLayer(id: $0, to: $1) },
                        onRenameComponent: { editorState.renameComponent(componentID: $0, to: $1) },
                        onExitGroup: { editorState.exitGroupContext() },

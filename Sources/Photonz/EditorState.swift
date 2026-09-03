@@ -4095,6 +4095,35 @@ final class EditorState {
         if selection != nil, !selectionTargetsPixels { setSelection(nil, captureLayers: false) }
     }
 
+    /// A ⇧-sweep on the canvas: every layer the band fully contains joins what
+    /// was already picked, so a selection can be built out of two or three
+    /// sweeps instead of having to be right in one. Sweeping over something
+    /// already picked leaves it picked, and a sweep that catches nothing new
+    /// changes nothing.
+    func addSweptLayersToSelection(in region: SelectionRegion) {
+        guard let document else { return }
+        let was = actionableLayerIDs
+        let picked = BareCanvasPress.spares
+            .selection(afterSweeping: document.layerIDs(fullyInside: region.bounds),
+                       startingFrom: was)
+        // Whatever the sweep caught, the band that is on screen came from an
+        // EARLIER gesture and no longer describes anything: it comes down
+        // before anything else, even when this sweep caught nothing new. A
+        // pixel region stays put: it is the region tools' selection, not a
+        // layer pick.
+        if selection != nil, !selectionTargetsPixels { setSelection(nil, captureLayers: false) }
+        guard picked != was else { return }
+        if picked.count == 1 {
+            selectedLayerID = picked.first // didSet clears any multi-selection
+        } else {
+            selectedLayerID = nil // didSet clears the multi-selection first
+            multiSelectedLayerIDs = picked
+            // A sweep has no anchor row, the same as any other marquee: the
+            // next ⇧-click in the list starts over from the row it lands on.
+            rowSelection = ListSelection(selected: picked)
+        }
+    }
+
     /// Escape, one level: leaves the group you are in with that group selected.
     /// Returns false when you are already at the top, which is when Escape
     /// means what it always meant (clear the selection).

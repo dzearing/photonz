@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T11:14:43.926Z",
-  "updated": "2026-09-03T15:32:27.834446Z",
+  "updated": "2026-09-03T15:32:41.813Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-on from when-the-library-opens-on-its-own-you-can-see-it, which scrolls the DOCK to the Library section. The shelf itself is a second ScrollView inside LibraryPanel.tiles (Sources/Photonz/LibraryPanel.swift), bounded by inspector.libraryHeight, so it needs its own ScrollViewReader keyed on the entry id. DockReveal (PhotonzCore) already has the pure math for deciding whether anything needs to move. Ordering note: componentEntries lists the document own mains first (layer-stack order) then untaken starters, so a new main is not necessarily first.",
@@ -74,7 +74,12 @@
     {
       "t": "2026-09-03T15:32:27.834446Z",
       "note": "Audit: queue/audits/2026-09-03-shelf-tile-reveal.json with two real captures."
+    },
+    {
+      "t": "2026-09-03T15:32:41.812Z",
+      "note": "The Library shelf scrolls to the tile the app just made (a new component, a saved color), by the shortest move, and does not move when that tile is already showing. LibraryShelfLayout.tileTop/tileReveal in PhotonzCore with 6 new tests reusing the DockReveal rule; Scripts/test.sh green (2193 tests); verified with real 1240x900 window captures in Scripts/playtest/shelf-tile-reveal-walk.json (two components: no scroll; ten: Card 10 on screen; eleven: shelf stays put). Audit: queue/audits/2026-09-03-shelf-tile-reveal.json"
     }
   ],
-  "started": "2026-09-03T15:19:39.088Z"
+  "started": "2026-09-03T15:19:39.088Z",
+  "completed": "2026-09-03T15:32:41.813Z"
 }

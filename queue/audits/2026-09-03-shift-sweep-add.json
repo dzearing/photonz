@@ -1,0 +1,28 @@
+{
+  "feature": "Shift-sweeping adds to the selection",
+  "epic": "ui-components",
+  "summary": "Holding shift while you sweep a rubber band on the canvas adds everything the band takes in to what you already picked, so a selection can be built out of two or three sweeps instead of having to be right in one.",
+  "setup": "Photonz Dev, release Next (Current has it too: the canvas is shared code). No flag to turn on.",
+  "try": [
+    { "do": "Open a blank canvas and draw three rectangles apart from each other." },
+    { "do": "With the arrow tool, sweep a band around the first rectangle. It alone is picked." },
+    { "do": "Hold shift and sweep a band around the second one.", "shot": "2026-09-03-shift-sweep-add-1.png" },
+    { "do": "Let go: both rectangles are outlined and the Layers list says 2 layers selected.", "shot": "2026-09-03-shift-sweep-add-2.png" },
+    { "do": "Shift-sweep the third one too, then shift-sweep back over one you already have." },
+    { "do": "Sweep once without shift: the selection starts over from that band." },
+    { "do": "Press undo once. It undoes the last rectangle you drew, not any of the sweeps." }
+  ],
+  "evaluate": [
+    "Mid-sweep the band outlines what it has taken in AND what was already picked. Is that the feedback you want, or should the band only show its own catch until you let go?",
+    "The band lifts as soon as a shift-sweep lands, leaving just the outlines. Does that read as finished, or do you miss the band?",
+    "Shift over the canvas used to constrain the band to a square. Do you ever want a square band when you are only picking layers?",
+    "A shift-sweep that catches nothing changes nothing. Is that the forgiving behavior you expected, or would you rather it clear?",
+    "Does the outlined-plus-handles look on the layer that was already picked feel too busy mid-sweep?"
+  ],
+  "rough": [
+    "Shift on the arrow-tool band no longer constrains it to a square. Shift cannot mean both add and square in the same gesture, and a square band picks nothing a free band cannot, so the square went rather than moving to another modifier. The rect and ellipse region tools never had it and are untouched.",
+    "Adding is adding, not toggling: shift-sweeping back over a picked layer leaves it picked. Dropping layers is still shift-click, one at a time.",
+    "A sweep still ignores which group you are inside, so it picks top-level layers even when you are down inside a group. That was already true of a plain sweep and this change did not fix it.",
+    "Verified on the probe build with Screen Recording granted, so both shots are real window captures, not offscreen renders. Walk: Scripts/playtest/shift-sweep-add-walk.json."
+  ]
+}
