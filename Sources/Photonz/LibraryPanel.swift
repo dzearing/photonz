@@ -136,10 +136,23 @@ struct LibraryPanel: View {
         }
     }
 
+    /// The tiles Styles draws for what is typed: the named colors saved in the
+    /// open document, each paired with the style so the tile can draw its
+    /// color (Next, `next-styles`).
+    private var visibleStyles: [(entry: LibraryEntry, style: ColorStyle)] {
+        guard scope == .styles, let document = editorState.document else { return [] }
+        let hits = LibrarySearch.filter(editorState.colorStyleEntries, query: query)
+        return hits.prefix(Self.maxTiles).compactMap { entry in
+            guard let id = UUID(uuidString: entry.id),
+                  let style = document.colorStyle(id: id) else { return nil }
+            return (entry, style)
+        }
+    }
+
     /// Whether this scope has anything to show at all, whatever the search
     /// says. The empty state and the resize grabber both hang off this.
     private var isEmpty: Bool {
-        visibleEntries.isEmpty && visibleComponents.isEmpty
+        visibleEntries.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
     }
 
     @ViewBuilder
@@ -167,6 +180,9 @@ struct LibraryPanel: View {
             ForEach(visibleComponents, id: \.entry.id) { pair in
                 LibraryComponentTile(entry: pair.entry, layer: pair.layer)
             }
+            ForEach(visibleStyles, id: \.entry.id) { pair in
+                LibraryStyleTile(entry: pair.entry, style: pair.style)
+            }
         }
         .padding(.vertical, 2)
     }
@@ -188,6 +204,8 @@ struct LibraryPanel: View {
         if let first = visibleEntries.first {
             editorState.selectLibraryItem(first.url.path)
         } else if let first = visibleComponents.first {
+            editorState.selectLibraryItem(first.entry.id)
+        } else if let first = visibleStyles.first {
             editorState.selectLibraryItem(first.entry.id)
         }
     }

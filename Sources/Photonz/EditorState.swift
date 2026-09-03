@@ -183,6 +183,9 @@ final class EditorState {
             // selected in this window at a time, wherever it was picked.
             // selectLibraryItem() re-raises it afterwards.
             selectedLibraryItemID = nil
+            // A half-typed style name belongs to the row that opened it, and
+            // that row is gone (Next, `next-styles`).
+            colorStyleNaming = nil
         }
     }
     /// The "Canvas" pseudo-layer selection: no layer is selected, the canvas
@@ -3176,6 +3179,130 @@ final class EditorState {
     func selectComponentOnCanvas(componentID: UUID) {
         guard let main = document?.mainComponent(componentID: componentID) else { return }
         selectLayer(main.id, inGroup: document?.parentID(of: main.id))
+    }
+
+    // MARK: - Color styles (Next flag `next-styles`)
+
+    /// Whether colors can be saved under a name at all.
+    var colorStylesEnabled: Bool { Experiments.shared.colorStylesEnabled }
+
+    /// The color row that is asking for a name right now, raised by its Save as
+    /// Style button and lowered when the name lands, when Escape drops it, or
+    /// when the selection moves on. It lives here rather than inside the row so
+    /// only one field is ever open, and so a walk can open one.
+    var colorStyleNaming: ColorStyleNamingRequest?
+
+    /// Save as Style: opens the name field under that color row.
+    func beginNamingColorStyle(layerID: UUID, slot: ColorSlot) {
+        guard colorStylesEnabled else { return }
+        colorStyleNaming = ColorStyleNamingRequest(layerID: layerID, slot: slot)
+    }
+
+    /// Escape, or the name landing: the field closes.
+    func endNamingColorStyle() {
+        colorStyleNaming = nil
+    }
+
+    /// Every style in the open document, as shelf items.
+    var colorStyleEntries: [LibraryEntry] {
+        guard colorStylesEnabled else { return [] }
+        return document?.colorStyleLibraryEntries ?? []
+    }
+
+    /// The styles a color row offers, in the order the shelf lists them.
+    var colorStyles: [ColorStyle] {
+        guard colorStylesEnabled else { return [] }
+        return document?.colorStyles ?? []
+    }
+
+    /// The style behind the picked Styles tile, or nil when the pick is not a
+    /// style.
+    var selectedColorStyle: ColorStyle? {
+        guard colorStylesEnabled, let raw = selectedLibraryItemID,
+              let styleID = UUID(uuidString: raw) else { return nil }
+        return document?.colorStyle(id: styleID)
+    }
+
+    /// The style painting one of a layer's colors, nil when that color is the
+    /// layer's own.
+    func colorStyle(layerID: UUID, slot: ColorSlot) -> ColorStyle? {
+        guard colorStylesEnabled,
+              let styleID = document?.layer(id: layerID)?.colorStyleID(for: slot) else { return nil }
+        return document?.colorStyle(id: styleID)
+    }
+
+    /// The name the Save as Style field opens on: one nobody is using yet.
+    var suggestedColorStyleName: String {
+        document?.freshColorStyleName() ?? PhotonzDocument.colorStyleNameBase
+    }
+
+    /// "Save as Style" on a color row: takes the name typed in the little
+    /// field, saves this color under it, and points the layer at it.
+    ///
+    /// It also **shows the Library on the Styles shelf**, because a style you
+    /// cannot see is a button that appears to do nothing. The layer stays
+    /// selected, so the row you saved from is right there saying which style it
+    /// is now wearing.
+    @discardableResult
+    func saveColorStyle(layerID: UUID, slot: ColorSlot, name: String? = nil) -> UUID? {
+        guard colorStylesEnabled else { return nil }
+        colorStyleNaming = nil
+        discardDragPreview()
+        var saved: UUID?
+        perform { saved = $0.saveColorStyle(from: layerID, slot: slot, name: name) }
+        guard let styleID = saved else { return nil }
+        setLibraryVisible(true)
+        UserDefaults.standard.set(LibraryScope.styles.rawValue, forKey: LibraryPanel.scopeKey)
+        return styleID
+    }
+
+    /// Points one of a layer's colors at a style, which paints it in one step.
+    func useColorStyle(layerID: UUID, slot: ColorSlot, styleID: UUID) {
+        guard colorStylesEnabled else { return }
+        discardDragPreview()
+        perform { _ = $0.bindColorStyle(layerID: layerID, slot: slot, styleID: styleID) }
+    }
+
+    /// "Unlink": the color stays exactly as it is, it just becomes this layer's
+    /// own again.
+    func unlinkColorStyle(layerID: UUID, slot: ColorSlot) {
+        guard colorStylesEnabled else { return }
+        perform { $0.unbindColorStyle(layerID: layerID, slot: slot) }
+    }
+
+    /// Repaints a style and everything wearing it, as one undo step.
+    func setColorStyleHex(styleID: UUID, hex: String) {
+        guard colorStylesEnabled else { return }
+        discardDragPreview()
+        perform { _ = $0.setColorStyleHex(styleID: styleID, hex: hex) }
+        recordRecentColor(hex: hex)
+    }
+
+    /// The Style section's Name field. One name in one place: the shelf tile
+    /// and every row wearing it read the same string.
+    func renameColorStyle(styleID: UUID, to name: String) {
+        guard colorStylesEnabled else { return }
+        perform { $0.renameColorStyle(id: styleID, to: name) }
+    }
+
+    /// Takes a style off the shelf. Nothing is repainted: every layer keeps the
+    /// color it is wearing and simply owns it again.
+    func deleteColorStyle(styleID: UUID) {
+        guard colorStylesEnabled else { return }
+        perform { $0.deleteColorStyle(id: styleID) }
+        if selectedLibraryItemID == styleID.uuidString { selectedLibraryItemID = nil }
+    }
+
+    /// How many of the document's colors this style paints.
+    func colorStyleUsageCount(styleID: UUID) -> Int {
+        document?.colorStyleUsageCount(id: styleID) ?? 0
+    }
+
+    /// "Select what uses this": the layers wearing a style become the
+    /// selection, which is how the shelf answers "where is this thing?".
+    func selectLayersUsingColorStyle(styleID: UUID) {
+        guard let ids = document?.layersUsingColorStyle(id: styleID), !ids.isEmpty else { return }
+        selectLayers(Set(ids))
     }
 
     // MARK: - Component knobs and overrides (Next flag `next-components`)

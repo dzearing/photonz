@@ -11,11 +11,31 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// 2 for a Retina screenshot). Measures divide raw pixel distances by this to
     /// read out in points. Set from the capture's `backingScaleFactor`.
     public var pixelScale: CGFloat
+    /// The named colors this document's layers point at
+    /// (`docs/design/ui-building.md`, step D8). Styles live in the document
+    /// they were made in, the same way components do.
+    public var colorStyles: [ColorStyle]
 
-    public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1) {
+    public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
+                colorStyles: [ColorStyle] = []) {
         self.canvasSize = canvasSize
         self.layers = layers
         self.pixelScale = pixelScale
+        self.colorStyles = colorStyles
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case canvasSize, layers, pixelScale, colorStyles
+    }
+
+    /// A document with no styles in it writes no styles key, so one saved
+    /// before styles existed is byte for byte what it was.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(canvasSize, forKey: .canvasSize)
+        try c.encode(layers, forKey: .layers)
+        try c.encode(pixelScale, forKey: .pixelScale)
+        if !colorStyles.isEmpty { try c.encode(colorStyles, forKey: .colorStyles) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -24,6 +44,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         layers = try c.decode([Layer].self, forKey: .layers)
         // `pixelScale` postdates the format; legacy documents omit it.
         pixelScale = try c.decodeIfPresent(CGFloat.self, forKey: .pixelScale) ?? 1
+        // `colorStyles` postdates it too; a document from before has none.
+        colorStyles = try c.decodeIfPresent([ColorStyle].self, forKey: .colorStyles) ?? []
     }
 
     /// A new document built around a base image, which becomes the bottom layer.

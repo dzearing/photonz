@@ -73,6 +73,8 @@ public enum FeatureCatalog {
 
     public static let componentsFlag = "next-components"
 
+    public static let stylesFlag = "next-styles"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -305,6 +307,15 @@ public enum FeatureCatalog {
                     name: componentsFlag,
                     title: "Make a component out of what you drew",
                     description: "Draw something, group it, and press Option Command K to turn it into a component: it takes a name, wears a small mark on the canvas and in the layers list so you never mistake it for an ordinary group, and lands on the Library's Components shelf where you can find it again. Renaming it anywhere renames it everywhere, because it only has one name. Placing copies of it, exposing properties and detaching come later. Needs Keep reusable pieces in a Library. Off means no Make Component row and no components on the shelf; components already in a document keep drawing either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: stylesFlag,
+                    title: "Save a color as a style and reuse it",
+                    description: "Save a fill, an outline or a text color under a name, and any layer can wear it. The Fill and Color rows in the inspector grow a small styles button: save what is there as a style, or pick one you already have. Saved styles sit on the Library\u{2019}s Styles shelf, where you rename one, change its color, or take it off the shelf. Changing a style repaints every layer wearing it in one step, which one undo puts back. Needs Keep reusable pieces in a Library. Off means colors are one-offs again and the Styles shelf is empty; styles already in a document keep painting either way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

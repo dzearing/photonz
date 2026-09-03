@@ -1,0 +1,31 @@
+{
+  "feature": "A color saved as a named style",
+  "epic": "ui-components",
+  "summary": "A fill, an outline or a text color can be saved under a name, other layers can be set to use that name, and changing the name's color repaints everything wearing it in one step that one undo puts back.",
+  "setup": "Photonz Dev, Experiments window, release Next. Save a color as a style and reuse it is on by default; it needs Keep reusable pieces in a Library, which is also on.",
+  "try": [
+    { "do": "Start a blank canvas from the welcome card." },
+    { "do": "Press R and drag out a box. It arrives filled." },
+    { "do": "In the dock, on the Annotation section's Fill row, click the small swatch fan next to the color and choose Save as Style.", "shot": "2026-09-03-color-styles-1-naming.png" },
+    { "do": "Type Accent and press Return. The Library opens on Styles with the new tile." },
+    { "do": "Draw a second box, then on its Fill row open the same menu and pick Accent under Use a style.", "shot": "2026-09-03-color-styles-2-bound.png" },
+    { "do": "Click the Accent tile in the Library and read what the Style section says about it.", "shot": "2026-09-03-color-styles-3-shelf.png" },
+    { "do": "Click the Style section's color swatch and pick a green. Both boxes change.", "shot": "2026-09-03-color-styles-4-repainted.png" },
+    { "do": "Press Command Z once. Both boxes go back together." }
+  ],
+  "evaluate": [
+    "Is the swatch fan next to a color obviously the way to save one, or does it read as decoration?",
+    "Naming happens before the style exists, in a field under the color row. Is that the right moment to be asked, or would you rather it were named after the fact?",
+    "A row wearing a style loses its color well and shows the style's name instead. Does that read as 'this color is shared' or as 'this control broke'?",
+    "Is the Library the right home for changing a style's color, or would you expect to change it from a layer that uses it?",
+    "The Style section says how many colors a style paints before you change it. Is that the fact you want before you touch it?"
+  ],
+  "rough": [
+    "The screenshots are real captures of the app, taken by the probe build with Screen Recording granted.",
+    "Only colors can be saved. The mock's example is a gradient, and the Styles shelf still says the scope holds colors alone: no text styles, no effect styles, and no light and dark resolution of a name, which is the token layer this deliberately stops short of.",
+    "A style cannot be applied to more than one layer at a time. With three boxes selected you still set them one at a time, which is the first thing that will feel slow once a document has real components in it.",
+    "There is no way to make a style from nothing: you save one from a layer that is already painted. A New Style button on the shelf would be the obvious way in and is not there.",
+    "Changing a bound color by some other route (the paint bucket, a paste) quietly unlinks that color rather than refusing the edit, so the row never claims a style it is not wearing. Nothing on screen says the link broke, which is the honest gap in this slice.",
+    "Removing a style repaints nothing, on purpose. A person who expects Remove to put colors back the way they were will be surprised, and the button's tooltip is the only place that says so."
+  ]
+}

@@ -5746,3 +5746,44 @@ alternatives in one command, which is the unguided part of a choice knob today.
 
 Open question for the user, in the audit: whether Add belongs on the original,
 or whether people expect to select the part itself and expose it from there.
+
+## 2026-09-03 — Styles: a color saved under a name (Next, `next-styles`)
+
+Step D8 of `docs/design/ui-building.md`, built before D7 for the reason that
+step records: the starter components are specified as painted from styles.
+
+- `ColorStyles.swift` (PhotonzCore) is the whole model: a `ColorStyle` (id,
+  name, hex) list on the document, and `ColorStyleBinding`s on the layer saying
+  which of its `ColorSlot`s (fill, stroke, text) came from which style.
+- The color is kept ON the layer as well as in the style, the same trick copies
+  of a component use: a styled layer draws exactly like a hand-colored one, so
+  the renderer, export, thumbnails and the package writer learn nothing.
+- `setColorStyleHex` changes the style and repaints every bound slot in the same
+  mutation, so one undo puts the lot back. `deleteColorStyle` repaints nothing:
+  every layer keeps what it is wearing and owns it again.
+- `reconcileColorStyles` runs inside `History.perform`, before the component
+  sync. A binding is a claim, and anything that repaints a layer some other way
+  (bucket, paste, tool default) would make it false, so a drifted or orphaned
+  binding lets go and keeps its color. One nil check per layer.
+- Document and layer both write their new keys only when they have something to
+  say, so a document saved before this step encodes byte for byte as it did.
+- App side: the styles menu sits on the color rows that already exist (Fill and
+  Color in Annotation, Color in Text, Background in Frame) rather than in a Fill
+  section of its own as the mock draws it. Saving opens a name field under the
+  row (`EditorState.colorStyleNaming`), so naming is typing and Escape leaves
+  nothing behind. A row wearing a style shows a plain swatch and the name, and
+  the well goes away: a shared color is not edited from one of its users.
+- The Library's Styles scope has tiles at last, and the picked style's section
+  renames, recolors, selects what uses it, and removes it.
+- A menu's label is drawn by AppKit and drops anything that is not text or a
+  symbol: a swatch put inside the menu label came out blank, which is why the
+  row draws the color next door.
+- 30 new tests in `ColorStyleTests`, written before the implementation.
+  `Scripts/playtest/styles-walk.json` drives the whole thing on the probe with
+  real screenshots (Screen Recording granted), including the name field, which
+  five new playtest actions and two new state lines made reachable.
+
+Next: step D7, the starter components, which is now unblocked and is specified
+to draw them from these styles. Two follow-ups filed from the audit: applying a
+style to several selected layers at once, and saying so when a color lets go of
+its style.

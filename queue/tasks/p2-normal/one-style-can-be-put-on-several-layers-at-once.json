@@ -1,0 +1,27 @@
+{
+  "id": "one-style-can-be-put-on-several-layers-at-once",
+  "title": "One style can be put on several layers at once",
+  "goal": "Right now a saved color has to be applied to one layer at a time. Select three boxes and set them all to the same named color in one go.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 740,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T05:21:12.688Z",
+  "updated": "2026-09-03T05:21:12.688Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from queue/audits/2026-09-03-color-styles.json. Model side already supports it: bindColorStyle takes one layer, so this is a loop plus the multi-selection reading in the inspector. ColorStyleRow/ColorStyleControl in Sources/Photonz/ColorStylePanel.swift take a single layerID today.",
+  "acceptance": [
+    "With more than one layer selected, the color row offers the styles menu and applying a style paints every selected layer that has that kind of color",
+    "Applying to a multi-selection is one undo step",
+    "A selection mixing layers that wear different styles says so rather than claiming one of them"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T05:21:12.688Z",
+      "note": "created (manual)"
+    }
+  ]
+}

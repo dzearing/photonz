@@ -60,7 +60,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         switch self {
         case .media: return "Captures you take show up here."
         case .components: return "Components you make will show up here."
-        case .styles: return "Colors, text and effects you save will show up here."
+        case .styles: return "Colors you save under a name will show up here."
         case .systems: return "Design systems you add will show up here."
         }
     }

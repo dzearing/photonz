@@ -758,3 +758,60 @@ Deliberately left: a knob cannot reach into a copy nested inside the original
 default from a copy's panel; knobs cannot be reordered; a long wording override
 still overflows the copy, because there is no auto layout; and detach is still
 one way, with undo as the way back.
+
+## Landed: a color can be saved as a named style and reused (Next, `next-styles`, 2026-09-03)
+
+Step D8, built before step 7 for the reason recorded there: the starter
+components are specified as painted from styles, and that cannot happen until
+styles exist.
+
+- **A style is a color with a name, and it lives in the document.** No gradients
+  (nothing in the app paints one), no text or effect styles yet, and no token
+  layer underneath, so a name still resolves to one color rather than one per
+  mode.
+- **The color stays ON the layer.** A layer wearing a style is painted exactly
+  as a layer somebody colored by hand, and the binding is the extra fact that
+  says where the color came from. So the renderer, export, thumbnails and the
+  package writer learn nothing about styles, and a copy of a component keeps
+  drawing correctly whatever happens to the shelf.
+- **Four colors can wear one**: a box's interior, a box or line's ink, a text
+  block's ink, and a frame's surface. Each is a `ColorSlot` on the layer, so
+  adding another later is a case in two switches.
+- **The button sits on the rows that already exist.** The mock hangs "Save as
+  style" off a Fill section of its own; the app already has a Fill row in
+  Annotation, a Color row in Text and a Background row in Frame, so the styles
+  button goes on those rather than making a fourth place to look for a color.
+- **Saving asks for the name first, in the dock.** A field opens under the color
+  row, on a name nobody is using, with the text selected: naming it is typing
+  and Return is enough, Escape leaves nothing behind. The alternative — make a
+  style called "Color" and hope the person finds where to rename it — is how a
+  shelf fills with "Color 2", "Color 3".
+- **A row wearing a style shows its color and its NAME, and the well goes
+  away.** A shared color is not edited from one of the places it is used, so the
+  only way to change it is to change the style. Unlink is in the same menu and
+  says what it does, so the way back to a one-off color is one click and never a
+  surprise.
+- **The Library's Styles shelf is where a style is renamed, recolored and
+  removed.** Picking a tile clears the layer selection by design, so applying a
+  style could never be a shelf action; binding belongs on the row, where the
+  layer is still selected. The picked style's section says how many colors it
+  paints before you change it, has Select What Uses This, and Remove.
+- **Editing a style repaints everything wearing it in one undo step**, because
+  the repaint happens inside the same document mutation as the style's own
+  change.
+- **Removing a style repaints nothing.** Every layer keeps the color it is
+  wearing and simply owns it again. Deleting a name must never delete work.
+- **A safety net runs after every edit.** A binding is a claim, and anything
+  that paints a layer some other way — the paint bucket, a paste, a tool default
+  — would make that claim false. So a slot whose color has drifted from its
+  style, or whose style is gone, quietly lets go and keeps what it is wearing. A
+  row can never say "Accent" over a color that is not Accent. The check is one
+  nil test per layer, on the walk the component sync already makes.
+- On disk a document with no styles writes no styles key and a layer wearing
+  none writes no bindings key, so a document saved before this step is byte for
+  byte what it was.
+
+Deliberately left: styles are per document, with no shared library across
+documents and no publishing; there is no way to make a style without a layer to
+save it from; a style cannot be applied to several selected layers at once; and
+there are no text or effect styles, only color.

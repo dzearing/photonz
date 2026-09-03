@@ -571,10 +571,16 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     public var style: LayerStyle
     public var isVisible: Bool
     public var isLocked: Bool
+    /// Which of this layer's colors come from a named style rather than being
+    /// its own (`docs/design/ui-building.md`, step D8). Nil until somebody
+    /// saves a color as a style and points this layer at it, so a layer that
+    /// has never met one writes exactly what it always wrote.
+    public var colorStyleBindings: [ColorStyleBinding]?
 
     public init(id: UUID = UUID(), name: String, content: LayerContent, frame: CGRect,
                 crop: CGRect? = nil, transform: LayerTransform = .identity,
-                style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false) {
+                style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false,
+                colorStyleBindings: [ColorStyleBinding]? = nil) {
         self.id = id
         self.name = name
         self.content = content
@@ -584,6 +590,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         self.style = style
         self.isVisible = isVisible
         self.isLocked = isLocked
+        self.colorStyleBindings = colorStyleBindings
     }
 
     /// A copy with a fresh identity, for duplicate/paste. The frame offset
@@ -593,7 +600,8 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         var copy = Layer(name: name + " copy", content: content.reidentified(map: &map),
                          frame: frame.offsetBy(dx: offset.x, dy: offset.y),
                          crop: crop, transform: transform, style: style,
-                         isVisible: isVisible, isLocked: false)
+                         isVisible: isVisible, isLocked: false,
+                         colorStyleBindings: colorStyleBindings)
         copy.repointComponentProperties(map)
         return copy
     }
@@ -615,7 +623,8 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     func reidentified(map: inout [UUID: UUID]) -> Layer {
         let copy = Layer(name: name, content: content.reidentified(map: &map), frame: frame,
                          crop: crop, transform: transform, style: style,
-                         isVisible: isVisible, isLocked: isLocked)
+                         isVisible: isVisible, isLocked: isLocked,
+                         colorStyleBindings: colorStyleBindings)
         map[id] = copy.id
         return copy
     }

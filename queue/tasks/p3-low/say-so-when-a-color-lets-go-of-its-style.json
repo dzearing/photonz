@@ -1,0 +1,27 @@
+{
+  "id": "say-so-when-a-color-lets-go-of-its-style",
+  "title": "Say so when a color lets go of its style",
+  "goal": "If you paint over a color that came from a named style, the link quietly breaks and nothing tells you. The app should say it happened, so nobody is surprised later when editing the style leaves that layer behind.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 580,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T05:21:12.716Z",
+  "updated": "2026-09-03T05:21:12.717Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from queue/audits/2026-09-03-color-styles.json. PhotonzDocument.reconcileColorStyles already returns how many bindings broke and runs inside History.perform; the app throws that number away. The copies-followed pill (CopyConfirmation) is the shape to copy.",
+  "acceptance": [
+    "Painting over a color that was using a style shows a short notice naming the style it let go of",
+    "The notice does not appear for an edit that did not break a link",
+    "Undo puts the link back with the color"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T05:21:12.717Z",
+      "note": "created (manual)"
+    }
+  ]
+}

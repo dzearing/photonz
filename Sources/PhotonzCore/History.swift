@@ -31,6 +31,10 @@ public struct History: Sendable {
     public mutating func perform(_ mutate: (inout PhotonzDocument) -> Void) -> ComponentSyncReport {
         var next = current
         mutate(&next)
+        // A color that was repainted some other way lets go of the style it
+        // claimed, BEFORE the copies are refilled, so a copy is never rebuilt
+        // from an original whose claim has already gone stale.
+        next.reconcileColorStyles()
         let report = next.syncComponentInstances()
         guard next != current else { return ComponentSyncReport() }
         undoStack.append(current)

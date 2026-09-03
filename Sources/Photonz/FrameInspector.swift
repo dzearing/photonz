@@ -55,40 +55,49 @@ struct FrameInspector: View {
             }
             .toggleStyle(.checkbox)
 
-            HStack(spacing: 8) {
+            HStack(alignment: .top, spacing: 8) {
                 Text("Background")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 8)
-                Button {
-                    isBackgroundPickerShown = true
-                } label: {
-                    swatch
-                }
-                .buttonStyle(.plain)
-                .help("The surface this frame paints behind its contents")
-                .popover(isPresented: $isBackgroundPickerShown, arrowEdge: .top) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        ColorPickerPopover(initialHex: backgroundHex ?? Layer.defaultFrameBackgroundHex,
-                                           recents: editorState.recentColors.colors,
-                                           embedded: true) { hex in
-                            editorState.setFrameBackground(id: layer.id, hex: hex)
-                        }
-                        Divider()
-                        Button("No background") {
-                            editorState.setFrameBackground(id: layer.id, hex: nil)
-                            isBackgroundPickerShown = false
-                        }
-                        .buttonStyle(.plain)
-                        .font(.callout)
-                    }
-                    .padding(14)
+                // The surface, and where it came from: a frame painted from a
+                // named style says the style's name here instead of a swatch
+                // to open (Next, `next-styles`).
+                ColorStyleRow(layerID: layer.id, slot: .fill) {
+                    backgroundSwatchButton
                 }
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .id(layer.id)
+    }
+
+    private var backgroundSwatchButton: some View {
+        Button {
+            isBackgroundPickerShown = true
+        } label: {
+            swatch
+        }
+        .buttonStyle(.plain)
+        .help("The surface this frame paints behind its contents")
+        .popover(isPresented: $isBackgroundPickerShown, arrowEdge: .top) {
+            VStack(alignment: .leading, spacing: 10) {
+                ColorPickerPopover(initialHex: backgroundHex ?? Layer.defaultFrameBackgroundHex,
+                                   recents: editorState.recentColors.colors,
+                                   embedded: true) { hex in
+                    editorState.setFrameBackground(id: layer.id, hex: hex)
+                }
+                Divider()
+                Button("No background") {
+                    editorState.setFrameBackground(id: layer.id, hex: nil)
+                    isBackgroundPickerShown = false
+                }
+                .buttonStyle(.plain)
+                .font(.callout)
+            }
+            .padding(14)
+        }
     }
 
     /// The preset's name when the size is one, the numbers when it is not, so

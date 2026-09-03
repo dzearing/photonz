@@ -250,6 +250,8 @@ struct InspectorPanel: View {
             // from: a capture's details, or a component's.
             if editorState.selectedComponentLayer != nil {
                 LibraryComponentInspector()
+            } else if editorState.selectedColorStyle != nil {
+                LibraryStyleInspector()
             } else {
                 LibraryItemInspector()
             }
@@ -1434,17 +1436,25 @@ struct AnnotationInspector: View {
     var body: some View {
         if let a = annotation {
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
+                HStack(alignment: .top) {
                     Text(label(for: a.shape)).font(.caption).foregroundStyle(.secondary)
                     Spacer()
-                    ColorPicker("Color", selection: Binding(
-                        get: { Color(hex: a.colorHex) },
-                        set: { if let hex = $0.hexString { editorState.setAnnotationColor(layerID: layer.id, hex) } }),
-                        supportsOpacity: false)
-                        .labelsHidden().controlSize(.small)
+                    // The color, and where it came from: a raw color keeps its
+                    // well, a color wearing a style says the style's name
+                    // instead (Next, `next-styles`).
+                    ColorStyleRow(layerID: layer.id, slot: .stroke) {
+                        ColorPicker("Color", selection: Binding(
+                            get: { Color(hex: a.colorHex) },
+                            set: { if let hex = $0.hexString { editorState.setAnnotationColor(layerID: layer.id, hex) } }),
+                            supportsOpacity: false)
+                            .labelsHidden().controlSize(.small)
+                    }
                 }
                 if a.shape == .rectangle || a.shape == .ellipse {
-                    HStack {
+                    // Top aligned: while the styles button's name field is
+                    // open the row is two lines tall, and the checkbox belongs
+                    // beside the color, not beside the field.
+                    HStack(alignment: .top) {
                         Toggle("Fill", isOn: Binding(
                             get: { a.fillColorHex != nil },
                             // Toggling on seeds the fill with the stroke color;
@@ -1452,12 +1462,14 @@ struct AnnotationInspector: View {
                             set: { editorState.setAnnotationFill(layerID: layer.id, $0 ? a.colorHex : nil) }))
                             .font(.caption).controlSize(.small)
                         Spacer()
-                        if let fillHex = a.fillColorHex {
-                            ColorPicker("Fill Color", selection: Binding(
-                                get: { Color(hex: fillHex) },
-                                set: { if let hex = $0.hexString { editorState.setAnnotationFill(layerID: layer.id, hex) } }),
-                                supportsOpacity: false)
-                                .labelsHidden().controlSize(.small)
+                        ColorStyleRow(layerID: layer.id, slot: .fill) {
+                            if let fillHex = a.fillColorHex {
+                                ColorPicker("Fill Color", selection: Binding(
+                                    get: { Color(hex: fillHex) },
+                                    set: { if let hex = $0.hexString { editorState.setAnnotationFill(layerID: layer.id, hex) } }),
+                                    supportsOpacity: false)
+                                    .labelsHidden().controlSize(.small)
+                            }
                         }
                     }
                 }
@@ -1640,16 +1652,18 @@ struct TextInspector: View {
     var body: some View {
         if let c = content {
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
+                HStack(alignment: .top) {
                     Text("Text").font(.caption).foregroundStyle(.secondary)
                     Spacer()
-                    ColorPicker("Color", selection: Binding(
-                        get: { Color(hex: c.colorHex) },
-                        set: { if let hex = $0.hexString {
-                            editorState.setTextStyle(layerID: layer.id, colorHex: hex)
-                        } }),
-                        supportsOpacity: false)
-                        .labelsHidden().controlSize(.small)
+                    ColorStyleRow(layerID: layer.id, slot: .text) {
+                        ColorPicker("Color", selection: Binding(
+                            get: { Color(hex: c.colorHex) },
+                            set: { if let hex = $0.hexString {
+                                editorState.setTextStyle(layerID: layer.id, colorHex: hex)
+                            } }),
+                            supportsOpacity: false)
+                            .labelsHidden().controlSize(.small)
+                    }
                 }
                 Picker("Font", selection: Binding(
                     get: { c.fontName },

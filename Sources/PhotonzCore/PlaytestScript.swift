@@ -198,6 +198,25 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The same for a choice: expose the first group inside the selected
     /// original that holds alternatives.
     case exposeChoice
+    /// Save as Style on the selected layer's first painted color (Next,
+    /// `next-styles`, step D8): opens the name field under that color row. The
+    /// button is in the dock, which a walk cannot reach with the pointer, so
+    /// this is the way in; the field itself is then a `focus` and a `type`
+    /// like any other, and Return saves.
+    case saveColorStyle
+    /// Point the selected layer's first color at the first style on the shelf,
+    /// which is what picking a name out of a color row's menu does.
+    case useFirstColorStyle
+    /// Let go of the style painting the selected layer's first color, keeping
+    /// the color it is wearing.
+    case unlinkColorStyle
+    /// Pick the first style on the Library shelf, which is what a click on its
+    /// tile does, so its own section can be photographed.
+    case pickFirstColorStyle
+    /// Repaint the picked style green (#00A870), which is what dragging the
+    /// Style section's color well to a new color does: everything wearing it
+    /// follows in one step.
+    case recolorPickedColorStyle
     /// Move the selected copy's first choice knob on to its next option, which
     /// is what picking the next row in that knob's menu does. A walk cannot
     /// open a menu in the dock, so this is how a swapped shape is photographed.

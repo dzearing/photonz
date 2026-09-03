@@ -324,6 +324,14 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measureModesFlag })
     }
 
+    @Test func savingAColorAsAStyleIsNextOnlyAndOnByDefault() {
+        // Named colors are a Next idea: Current's colors stay one-offs and it
+        // never sees this flag.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.stylesFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.stylesFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.stylesFlag })
+    }
+
     @Test func startingFromABlankCanvasIsNextOnlyAndOnByDefault() {
         // Starting from nothing is a Next idea: Current's empty window keeps
         // offering open, capture and paste only, and never sees this flag.

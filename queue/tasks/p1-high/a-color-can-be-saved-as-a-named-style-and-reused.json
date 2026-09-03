@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.329Z",
-  "updated": "2026-09-03T00:08:21.601Z",
+  "updated": "2026-09-03T05:21:43.447Z",
   "deps": [
     "the-library-panel-arrives-in-the-dock-alongside"
   ],
@@ -39,6 +39,23 @@
     {
       "t": "2026-09-03T00:08:21.600Z",
       "note": "seq 160 -> 130"
+    },
+    {
+      "t": "2026-09-03T04:53:21.159Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T04:57:27.921Z",
+      "note": "Adversarial review, before building. (1) The mock (ds-build-wt) hangs Save as style off a Fill section that does not exist here: in the app a shape's fill lives in the Annotation section, a frame's surface in the Frame section, text ink in the Text section. Building the mock's Fill section would duplicate controls, so the affordance attaches to the rows that already exist. (2) The mock shows a style already named (Brand / gradient) and no naming step. A first timer needs to name it, and a modal for one word is heavy, so saving reuses the flow Make Component already taught: the style is made with a placeholder name, the Library flips to Styles, the new tile is picked and its name field takes focus with the text selected. (3) The mock's example style is a gradient. Photonz fills are solid hexes, so this builds solid color styles only. (4) Applying a style from the Library is impossible without breaking the one selection model: picking a tile clears the layer selection by design. So binding happens in the inspector, where the layer is still selected, and the Library is where a style is renamed, recolored and deleted. (5) Editing a bound color by hand: rather than silently repainting the person's edit back to the style, a bound row shows the style name instead of the color well, so the only way to a raw color is Unlink, said out loud. A safety net in the model unlinks any bound color some other path (paint bucket, paste) changes, so the row can never claim a style it is not wearing. (6) Shortest version that delivers the value: solid color styles on three slots (a shape's fill, a shape's ink, text ink) plus a frame's surface, which is what a starter button, card or badge is painted from."
+    },
+    {
+      "t": "2026-09-03T05:21:43.420Z",
+      "note": "Built and verified. Core: Sources/PhotonzCore/ColorStyles.swift (ColorStyle, ColorSlot, ColorStyleBinding, save/bind/unlink/recolor/rename/delete, colorStyleLibraryEntries, reconcileColorStyles) plus stored colorStyles on the document and colorStyleBindings on the layer, both written only when non-empty so old documents encode unchanged. 30 tests in ColorStyleTests written before the implementation; suite green at 1826. App: Sources/Photonz/ColorStylePanel.swift (the styles menu on a color row, the name field saving opens, the Styles shelf tile, the picked style's section), wired into the Annotation Fill and Color rows, the Text Color row and the Frame Background row, behind next-styles (needs next-library). Verified end to end on the probe with Scripts/playtest/styles-walk.json: draw a box, Save as Style, type Accent, draw a second box, use the style, recolor it on the shelf, both repaint, one undo puts both back. Real screen captures in queue/audits/."
+    },
+    {
+      "t": "2026-09-03T05:21:43.446Z",
+      "note": "Adversarial review of the built thing, on the real app. Two things were wrong and are fixed: the styled row printed the style's name with no color at all (a swatch inside a menu label is dropped by AppKit, so the row draws the color next door now), and the name field had nowhere to live because saving keeps the LAYER selected, not the new tile (so naming moved into a field under the color row, which also made it drivable by a walk). One thing stands, in the audit's rough: a style can only be applied to one layer at a time, and nothing says out loud when a color lets go of its style. Both are filed."
     }
-  ]
+  ],
+  "started": "2026-09-03T04:53:21.158Z"
 }

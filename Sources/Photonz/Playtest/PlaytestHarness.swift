@@ -424,6 +424,31 @@ private final class Run {
             case .exposeChoice: editor.exposeFirstProperty(kind: .variant)
             case .cycleChoice: editor.cycleInstanceChoice()
             case .detachInstance: editor.detachInstance()
+            case .saveColorStyle:
+                if let id = editor.selectedLayerID,
+                   let slot = editor.document?.layer(id: id)?.colorSlots
+                    .first(where: { editor.document?.layer(id: id)?.colorHex(for: $0) != nil }) {
+                    editor.beginNamingColorStyle(layerID: id, slot: slot)
+                }
+            case .useFirstColorStyle:
+                if let id = editor.selectedLayerID, let style = editor.colorStyles.first,
+                   let slot = editor.document?.layer(id: id)?.colorSlots.first {
+                    editor.useColorStyle(layerID: id, slot: slot, styleID: style.id)
+                }
+            case .unlinkColorStyle:
+                if let id = editor.selectedLayerID,
+                   let slot = editor.document?.layer(id: id)?.colorSlots
+                    .first(where: { editor.document?.layer(id: id)?.colorStyleID(for: $0) != nil }) {
+                    editor.unlinkColorStyle(layerID: id, slot: slot)
+                }
+            case .pickFirstColorStyle:
+                if let first = editor.colorStyleEntries.first {
+                    editor.selectLibraryItem(first.id)
+                }
+            case .recolorPickedColorStyle:
+                if let style = editor.selectedColorStyle {
+                    editor.setColorStyleHex(styleID: style.id, hex: "#00A870")
+                }
             case .pickFirstComponent:
                 if let first = editor.componentEntries.first {
                     editor.selectLibraryItem(first.id)
@@ -884,6 +909,18 @@ private final class Run {
             }
             return line
         }
+        // One line per color the selected layer has: the slot, what it is
+        // painted, and the style painting it when a style is.
+        let selectedColors: [String] = {
+            guard let id = editor.selectedLayerID, let layer = editor.document?.layer(id: id) else {
+                return []
+            }
+            return layer.colorSlots.map { slot in
+                let hex = layer.colorHex(for: slot) ?? "none"
+                let style = editor.colorStyle(layerID: id, slot: slot)
+                return "\(slot.rawValue) \(hex)" + (style.map { " · style \($0.name)" } ?? "")
+            }
+        }()
         return [
             "tool": editor.activeTool.rawValue,
             // The floating bar's measured width, so a walk can prove a
@@ -906,6 +943,13 @@ private final class Run {
             // The pointer's shape, so a walk can prove the grab cue appeared
             // over a draggable pill and nowhere else.
             "cursor": Self.cursorName(),
+            // The named colors in the document, and what each one paints, so a
+            // walk can prove an edit to a style reached everything wearing it.
+            "styles": (editor.document?.colorStyles ?? []).map {
+                "\($0.name) \($0.colorHex) · \(editor.colorStyleUsageCount(styleID: $0.id)) used"
+            },
+            // What the selected layer's colors are, and where each came from.
+            "selectedColors": selectedColors,
         ]
     }
 

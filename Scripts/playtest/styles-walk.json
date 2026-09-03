@@ -1,0 +1,136 @@
+{
+  "out": "/tmp/photonz-playtest/styles-walk",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        160
+      ],
+      "to": [
+        420,
+        340
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "box-one",
+      "note": "a filled box, painted with a color of its own"
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "action",
+      "action": "saveColorStyle"
+    },
+    {
+      "do": "snapshot",
+      "name": "styles-naming"
+    },
+    {
+      "do": "focus",
+      "field": "Style name"
+    },
+    {
+      "do": "type",
+      "text": "Accent"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "describe",
+      "stage": "saved",
+      "note": "the fill is now a named style, and the shelf has it"
+    },
+    {
+      "do": "snapshot",
+      "name": "styles-saved"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        160
+      ],
+      "to": [
+        860,
+        340
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "box-two",
+      "note": "a second box, its own color again"
+    },
+    {
+      "do": "action",
+      "action": "useFirstColorStyle"
+    },
+    {
+      "do": "describe",
+      "stage": "bound",
+      "note": "the second box now wears the style"
+    },
+    {
+      "do": "snapshot",
+      "name": "styles-bound"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstColorStyle"
+    },
+    {
+      "do": "snapshot",
+      "name": "style-section"
+    },
+    {
+      "do": "action",
+      "action": "recolorPickedColorStyle"
+    },
+    {
+      "do": "describe",
+      "stage": "recolored",
+      "note": "one edit, both boxes"
+    },
+    {
+      "do": "render",
+      "name": "both-repainted"
+    },
+    {
+      "do": "snapshot",
+      "name": "styles-recolored"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "describe",
+      "stage": "undone",
+      "note": "one undo puts both back"
+    },
+    {
+      "do": "render",
+      "name": "back-before-recolor"
+    }
+  ]
+}

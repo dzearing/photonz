@@ -269,6 +269,17 @@ extension Experiments {
         libraryEnabled && isEnabled(FeatureCatalog.componentsFlag)
     }
 
+    /// `next-styles`: whether a color can be saved under a name, whether the
+    /// inspector's color rows offer the styles button, and whether the
+    /// Library's Styles scope has anything in it. A style is something you
+    /// fetch off the shelf, so this needs the Library: with it off there is no
+    /// way in and the switch reads as off. Colors already pointing at a style
+    /// keep drawing either way, because turning a flag off takes away a way
+    /// in, never a document's contents.
+    var colorStylesEnabled: Bool {
+        libraryEnabled && isEnabled(FeatureCatalog.stylesFlag)
+    }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its
