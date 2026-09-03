@@ -573,6 +573,21 @@ private final class Run {
             case .alignBottom: editor.alignSelection(.bottom)
             case .spaceEvenlyAcross: editor.distributeSelection(.horizontal)
             case .spaceEvenlyDown: editor.distributeSelection(.vertical)
+            case .stepIntoSelection:
+                if let id = editor.selectedLayerID,
+                   let child = editor.document?.layer(id: id)?.children.first {
+                    editor.selectLayer(child.id, inGroup: id)
+                }
+            case .pickNextSibling:
+                if let context = editor.groupContextID, let id = editor.selectedLayerID,
+                   let siblings = editor.document?.layer(id: context)?.children,
+                   let at = siblings.firstIndex(where: { $0.id == id }) {
+                    editor.selectLayer(siblings[(at + 1) % siblings.count].id, inGroup: context)
+                }
+            case .stretchSelectionAcross:
+                if let id = editor.selectedLayerID {
+                    editor.setPlacement(id: id, horizontal: .stretch)
+                }
             case .closeSheets:
                 editor.isExportDialogPresented = false
                 editor.isNewFrameDialogPresented = false

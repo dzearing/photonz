@@ -3,12 +3,13 @@ import Foundation
 import Testing
 @testable import PhotonzCore
 
-/// Resizing a group scales the layout, not the type
-/// (`docs/design/ui-building.md`). Dragging a group's handle multiplies every
-/// child's position and box by the amount the group's box changed by, all the
-/// way down; what is measured in points — text size, stroke width, corner
-/// radius — holds still.
-@Suite("Resizing a group scales what is inside it")
+/// Resizing a group whose pieces carry NO placement rule: everything is
+/// multiplied by the amount the group's box changed by, all the way down, and
+/// what is measured in points — text size, stroke width, corner radius — holds
+/// still. This is the default half of "Resizing places the pieces"
+/// (`docs/design/ui-building.md`); the rules themselves are in
+/// `LayerPlacementTests`.
+@Suite("Resizing a group with no placement rules scales what is inside it")
 struct LayerScalingTests {
 
     private func box(_ name: String, _ frame: CGRect) -> Layer {

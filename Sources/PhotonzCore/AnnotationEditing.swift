@@ -92,12 +92,17 @@ extension Layer {
     ///
     /// A FRAME is the exception among groups: its box is a real size, and
     /// resizing it moves where it clips rather than magnifying the screen you
-    /// are building on.
+    /// are building on. What is ON the screen still follows any placement rule
+    /// it was given, so a bar stretches across a screen dragged wider while
+    /// everything nobody has given a rule to holds still.
     public func resized(to frame: CGRect) -> Layer {
         if annotation != nil { return AnnotationBuilder.resized(self, to: frame) }
         if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
-        if let group, !group.isFrame { return LayerScaling.resizing(self, to: frame) }
+        if let group {
+            return group.isFrame ? LayerScaling.refitting(self, to: frame)
+                                 : LayerScaling.resizing(self, to: frame)
+        }
         var layer = self
         layer.frame = frame
         return layer

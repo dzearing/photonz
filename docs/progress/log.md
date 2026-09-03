@@ -6418,3 +6418,52 @@ also queued and is what makes a shift-click-then-drag work in one motion.
 Verified: `Scripts/test.sh` green (2088 tests), `shift-click-miss-walk.json`
 and `shift-click-select-walk.json` on the probe. Audit:
 `queue/audits/2026-09-03-canvas-multi-pick.json`.
+
+## 2026-09-03 — A resized component keeps its pieces where they belong
+
+The user dragged a built-in button onto the canvas, made it wider, and its word
+stopped sitting in the middle. The old rule — resizing a group multiplies every
+child's position and box, but deliberately never the type — is the right default
+for a photo collage and the wrong one for a control: the label's position scaled
+while its point size did not, so it landed off centre at every new width.
+
+Replaced with placement. A container says how its contents line up (`Left`,
+`Center`, `Right`, `Stretch` across; `Top`, `Middle`, `Bottom`, `Stretch` down)
+and any one piece inside may say something different for itself, one axis at a
+time. `Scale` is the fifth choice and is what nothing-set means, so every
+document saved before today resizes exactly as it did and writes exactly the
+bytes it wrote. The maths is one `span` function shared by both axes in
+`LayerScaling`; the model is `LayerPlacement.swift`.
+
+The fix a person actually feels is that the five Library components arrive
+already set up: the button centres its contents and its fill stretches, the nav
+bar pins its hairline to the bottom and runs it across, the card's picture well
+takes the room a taller card gains while the two lines under it hug the bottom.
+Dragging a button wider needs no panel at all.
+
+Reviewing the built thing turned up the frame hole: acceptance names frames, but
+a frame's own handle deliberately moves where it clips rather than magnifying,
+so a Contents setting on a screen would have been a control that did nothing.
+A frame resize now places its children by their rules, with unset meaning hold
+still — which in a frame's own space IS pinning to the top left, so today's
+behaviour is preserved exactly. Scale is not offered on a screen, and the rows
+read Left and Top because that is what they honour.
+
+The inspector's new Layout section (`next-placement`) shows a group's Contents
+rows, a child's own rows, or both. A row nobody has set reads the group's answer
+dimmed with "Following the group" under it, so you can see what is going to
+happen without changing anything to find out. The mock draws these as a
+four-button segmented control; there are five choices and a child needs a sixth
+state for following, so each axis is a menu matching the Frame section's Size
+menu right above it.
+
+Next: `One layer lines up inside the frame it sits in` already depends on this
+and is the momentary version of the same idea. Two follow-ups filed from the
+audit: a text layer set to Stretch widens its box and moves no glyphs, and a
+group cannot see from its own section which pieces inside it override it.
+
+Verified: `Scripts/test.sh` green (2124 tests), `placement-walk.json` on the
+probe with Screen Recording granted — the label's ink measured dead centre
+within half a pixel at 80, 128 and 320 wide with its ink width unchanged, and a
+real frame-corner drag took a stretched bar to 540 against a 540-wide screen.
+Audit: `queue/audits/2026-09-03-ui-components-placement.json`.

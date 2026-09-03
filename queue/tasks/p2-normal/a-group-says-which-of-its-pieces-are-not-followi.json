@@ -1,0 +1,27 @@
+{
+  "id": "a-group-says-which-of-its-pieces-are-not-followi",
+  "title": "A group says which of its pieces are not following it",
+  "goal": "A group can now tell its contents how to line up, and any one piece can disagree. There is no way to see the disagreements: you have to click every piece in turn to find out which ones have a rule of their own. The group should say so where the setting is.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 830,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T13:00:26.445Z",
+  "updated": "2026-09-03T13:00:26.445Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the placement audit 2026-09-03. The data is already there: Layer.placement is non-nil exactly on the pieces that override. PlacementInspector.contentRows is where it goes.",
+  "acceptance": [
+    "With a group selected, the Layout section names the pieces inside it that have their own rule",
+    "Clicking one of those names selects that piece",
+    "A group where nothing disagrees says nothing extra rather than showing an empty list"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T13:00:26.445Z",
+      "note": "created (manual)"
+    }
+  ]
+}

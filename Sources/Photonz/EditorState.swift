@@ -3943,6 +3943,39 @@ final class EditorState {
         if let hex { recordRecentColor(hex: hex) }
     }
 
+    // MARK: - Where the pieces sit when something is resized
+
+    /// The group the selected layer sits in, or nil when it sits loose on the
+    /// canvas. What the Layout section asks before it offers a row about "the
+    /// container", since without one there is nothing to line up against.
+    var containerOfSelection: Layer? {
+        guard multiSelectedLayerIDs.isEmpty, let id = selectedLayerID else { return nil }
+        return document?.containingGroup(of: id)
+    }
+
+    /// What a group tells everything inside it to do when it is resized.
+    func setContentPlacement(id: UUID, horizontal: HorizontalPlacement?) {
+        guard document?.layer(id: id)?.isGroup == true else { return }
+        perform { $0.setContentPlacement(id: id, horizontal: horizontal) }
+    }
+
+    func setContentPlacement(id: UUID, vertical: VerticalPlacement?) {
+        guard document?.layer(id: id)?.isGroup == true else { return }
+        perform { $0.setContentPlacement(id: id, vertical: vertical) }
+    }
+
+    /// What ONE piece does, overriding the group it sits in. Nil hands the
+    /// axis back to the group.
+    func setPlacement(id: UUID, horizontal: HorizontalPlacement?) {
+        guard document?.layer(id: id) != nil else { return }
+        perform { $0.setPlacement(id: id, horizontal: horizontal) }
+    }
+
+    func setPlacement(id: UUID, vertical: VerticalPlacement?) {
+        guard document?.layer(id: id) != nil else { return }
+        perform { $0.setPlacement(id: id, vertical: vertical) }
+    }
+
     /// A canvas click that resolved through the group walk: the layer it
     /// picked and the group it picked it inside.
     func selectLayer(_ id: UUID?, inGroup context: UUID?) {

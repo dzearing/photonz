@@ -270,6 +270,20 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case alignLeft, alignHorizontalCenter, alignRight
     case alignTop, alignVerticalCenter, alignBottom
     case spaceEvenlyAcross, spaceEvenlyDown
+    /// Step into the selected group and pick the first piece inside it, which
+    /// is what a double click on that piece does. A walk cannot know where a
+    /// component landed on screen, so this is how one of its insides gets
+    /// photographed.
+    case stepIntoSelection
+    /// Move along to the next piece in the group already stepped into,
+    /// wrapping at the end — what clicking the piece beside it does.
+    case pickNextSibling
+    /// Set the selected layer's own rule to Stretch across (Next,
+    /// `next-placement`), which is what picking Stretch in the Layout
+    /// section's Horizontal menu does. The menu is in the dock, which a walk
+    /// cannot reach with the pointer, so this is how a walk proves a rule set
+    /// by hand survives the next resize.
+    case stretchSelectionAcross
     /// Put every sheet away. Escape reaches the window, not the sheet in front
     /// of it, so a walk that photographs a sheet needs a way back out.
     case closeSheets

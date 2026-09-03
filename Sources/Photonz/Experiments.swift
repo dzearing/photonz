@@ -316,6 +316,14 @@ extension Experiments {
     /// with it on is an ordinary document.
     var alignLayersEnabled: Bool { isEnabled(FeatureCatalog.alignLayersFlag) }
 
+    /// `next-placement`: whether the Layout section exists, so a group can say
+    /// how its contents line up and one piece inside can say something
+    /// different for itself. The RULE itself is not flagged: a layer with
+    /// nothing set resizes proportionally exactly as it always did, so with
+    /// this off a document already carrying placements keeps honouring them
+    /// and only the way to change them is gone.
+    var placementEnabled: Bool { isEnabled(FeatureCatalog.placementFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

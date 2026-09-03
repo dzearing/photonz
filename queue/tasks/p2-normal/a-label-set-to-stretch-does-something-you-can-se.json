@@ -1,0 +1,27 @@
+{
+  "id": "a-label-set-to-stretch-does-something-you-can-se",
+  "title": "A label set to stretch does something you can see",
+  "goal": "In the new Layout section you can tell a piece to stretch, and a piece of text will take the setting and then look identical, because its box gets wider and its words stay where they were. Either the words should sit somewhere sensible in the box they now fill, or text should say plainly that stretching is not for it.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 820,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T13:00:26.415Z",
+  "updated": "2026-09-03T13:00:26.415Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the placement audit 2026-09-03 (queue/audits/2026-09-03-ui-components-placement.json). Today Stretch widens the layer frame and TextRasterizer draws at the natural size from the frame origin, so nothing visibly moves. Real reflow is auto layout (ui-layout, staged later), so the short version here is probably a text alignment inside the frame, or hiding Stretch for text content.",
+  "acceptance": [
+    "Setting a text layer to Stretch either moves its words in a way you can see, or the choice is not offered for text and the row says why",
+    "Whatever is chosen, a label that was centred in a button is still centred after the button is resized",
+    "The design doc records the decision"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T13:00:26.415Z",
+      "note": "created (manual)"
+    }
+  ]
+}

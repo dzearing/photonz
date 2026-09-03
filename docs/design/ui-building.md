@@ -76,51 +76,84 @@ position is the sum of the origins from it up to the canvas, plain addition.
 Grouping something never changes a number inside it: a measured gap of 12 px is
 still 12 px the instant it is grouped. Nothing rotates, at any level.
 
-### Resizing a group scales the layout, not the type (landed 2026-09-03)
+### Resizing places the pieces (landed 2026-09-03)
 
-Dragging a handle on a group multiplies every child's position and box by the
-same amount the group's box changed by, all the way down. That is the whole
-rule, and these are its consequences, written out so nobody has to guess.
+A container says how its contents line up, and any one piece inside may say
+something different for itself. That is the whole rule. Each axis has four real
+answers plus the one everything starts on:
 
-**What grows with the box.** Photos, collages, rectangles, ellipses, lines and
-arrows: everything whose drawing is defined by the box it sits in. Make a card
-twice as wide and its picture is twice as wide.
+| Across | Down | What it keeps |
+| --- | --- | --- |
+| Left | Top | its distance from that edge, and its own size |
+| Right | Bottom | its distance from that edge, and its own size |
+| Center | Middle | its offset from the middle, and its own size |
+| Stretch | Stretch | BOTH distances, so it grows and shrinks with the container |
+| Scale | Scale | nothing: position and size are both multiplied |
 
-**What holds its size.** Anything measured in points: text point size, stroke
-width, corner radius, shadow and blur, a caliper's ticks and its label. This is
-the same call every interface tool makes, and it is the right one here: 14 pt
-type is 14 pt type on a real screen, and a card that got wider did not change
-what its label should read at. The cost is honest and worth naming: shrink a
-card a long way and its label will overhang the box, because nothing re-wraps
-yet. Reflow is auto layout's job, and auto layout is sequenced after this.
+**Scale is what nothing-set means**, which is the proportional multiply this app
+did before any of this existed, so every document saved before it resizes
+exactly as it did. A container's default lives on the group
+(`GroupContent.contentPlacement`), a piece's override lives on the layer
+(`Layer.placement`), and each is optional PER AXIS: a divider can say "stretch
+across" and leave "down" to the bar it sits in. Neither writes a key when it is
+unset, so an untouched document is byte for byte what it was.
+
+**This replaces the earlier rule that resizing a group scaled the layout
+proportionally.** That rule is still what an unset piece does, but it was the
+wrong DEFAULT for a container: a label centred in a button lands off centre at
+any new width, because the label's position scaled while its type did not. The
+five Library components therefore arrive with placements set — a button centres
+its contents and stretches its fill, a nav bar pins its hairline to the bottom
+and stretches it across — so dragging one wider needs no manual fixing.
+
+**What holds its size, always.** Anything measured in points: text point size,
+stroke width, corner radius, shadow and blur, a caliper's ticks and its label.
+14 pt type is 14 pt type on a real screen, and a card that got wider did not
+change what its label should read at. The cost is honest: shrink a card a long
+way and its label will overhang, because nothing re-wraps yet. Reflow is auto
+layout's job, and auto layout is sequenced after this.
+
+**A screen is a container too, with one substitution.** Dragging a frame's edge
+moves where it clips rather than magnifying what is on it, so on a screen
+nothing ever scales: a piece nobody gave a rule to holds still, which in a
+frame's own space is pinning to the top left. Scale is therefore not offered for
+anything on a screen, and a screen's Contents rows read Left and Top rather than
+Scale, because that is what they honour. A bar set to Stretch runs the full
+width of a screen dragged wider; a button set to bottom right stays in the
+corner. A frame nested inside a group being scaled still scales, contents and
+all, because there the intent was plainly "make all of this bigger".
+
+**A piece that is both stretched and rotated** is stretched by its BOX, not by
+what you see. Rotation is applied at render time around the frame's centre, and
+placement is worked out on the unrotated frame, so a rotated child set to
+Stretch gets a wider box and keeps spinning about that box's new centre. Its
+visible corners will therefore poke past the inset you pinned, because the
+inset was measured on the box. This is deliberate: the alternative is solving
+for a rotated bounding box, which has no answer at 45 degrees that anybody can
+predict. Rotate the container instead of the piece when you want the edges to
+stay honest.
 
 **What a measurement says afterwards.** A caliper's feet move with everything
 else, so a caliper inside a group that doubled now spans twice as far and reads
 twice the number. That is not the number drifting, it is the caliper still
-telling the truth about what is on screen. The promise is therefore precise:
-**grouping never changes a number; resizing a group changes what is measured,
-and the number says so.** Anyone redlining a capture should measure it at the
-size they will hand off, which is what they were going to do anyway.
+telling the truth about what is on screen. The promise is precise: **grouping
+never changes a number; resizing a container changes what is measured, and the
+number says so.**
 
-**Nested groups and frames scale too**, contents and all, including a nested
-frame's own box. A screen inside a group that shrinks gets smaller along with
-what is drawn on it, rather than staying huge and being clipped away.
+**Nested containers place their own contents.** A group inside a group gets its
+new box from its parent's rule, then lays its own contents out by its own rules,
+all the way down. A piece that keeps its size renumbers nothing inside it.
 
-**The anchor scales with the rest.** A group's origin is still not its box (see
-below); it simply moves by the same factor everything else did, so no sibling
-gets renumbered against an origin that wandered.
+**The anchor moves with the box.** A group's origin is still not its box (see
+below); it simply moves with the box so no sibling gets renumbered against an
+origin that wandered. A frame's stored size IS its box, so it takes the new box
+exactly rather than a multiply that rounds.
 
 **Two things deliberately do not resize.** A **copy of a component** takes its
 size from its original, because a copy's contents are refilled from the original
 after every edit and a stretched copy would snap straight back; resize the
-original and every copy follows. A group with **no width or no height** does not
-stretch in that direction, because there is nothing there to multiply.
-
-**A frame's own handle is still not a scale handle.** Dragging the edge of a
-frame moves where it clips: a screen is a window onto what you are building, and
-making the window bigger should show more of the screen, not magnify it. A frame
-scales only when something ABOVE it is scaled, which is the case where the
-intent was plainly "make all of this bigger".
+original and every copy follows. A container with **no width or no height** does
+not stretch in that direction, because there is nothing there to divide by.
 
 **A group's origin is set once and then holds still.** Grouping puts the origin
 at the top left of the union of what was selected, and rewrites the selected
@@ -140,12 +173,15 @@ group and typing Y = 0 puts it at the top of its group, not the top of the
 canvas, which is what the numbers stored on that layer say and what every other
 design tool does. For a top level layer, parent space IS canvas space, so a
 person who redlines a screenshot and never makes a group sees no difference.
-Watch this one in the frames audit: someone measuring against the whole picture
-may expect canvas numbers, and if that turns out to bite, the answer is a
-readout that shows both, not a change to what is stored.
 
-**On disk**, a document saved before groups existed decodes unchanged, because a
-flat list is a tree of depth one.
+**Where it lives.** `LayerPlacement` and the resolution rule are in
+`Sources/PhotonzCore/LayerPlacement.swift`; the maths is one function per axis
+in `LayerScaling`; the inspector's Layout section is
+`Sources/Photonz/PlacementInspector.swift`, behind `next-placement`. The RULE is
+unflagged, because a layer with nothing set behaves exactly as it always did.
+
+**On disk**, a document saved before any of this decodes unchanged, because a
+flat list is a tree of depth one and an unset placement writes nothing.
 
 ### The Library is a panel group, not a place you go
 
@@ -379,10 +415,10 @@ Three rules that go with them:
 So later work is not measured against a promise nobody made. Each of these is a
 real limit of the slices above, not an oversight.
 
-- **Resizing a group does not re-wrap or re-flow anything.** Positions and boxes
-  scale; text keeps its point size and does not re-wrap into its new box, so
-  shrinking a group a long way can leave a label hanging over the edge. That is
-  auto layout's job, and it is sequenced after this.
+- **Resizing a container does not re-wrap or re-flow anything.** A piece is
+  placed by its rule; text keeps its point size and does not re-wrap into its
+  new box, so shrinking a container a long way can leave a label hanging over
+  the edge. That is auto layout's job, and it is sequenced after this.
 - **Nothing rotates.** No layer, group or frame has a rotation, which is what
   keeps the coordinate rule pure addition.
 - **No auto layout and no constraints.** A child does not move or stretch when
@@ -523,8 +559,8 @@ interface. What changed is that when one can be, it will look right.
 Deliberately left: the Position & Size fields would show 0 for a group's W and
 H, which no one can reach until the Layers list learns to show groups. A group
 never rotates what it holds, so a transform or a crop on a group is ignored
-rather than applied. (Scaling landed later — see "Resizing a group scales the
-layout, not the type".)
+rather than applied. (Resizing landed later — see "Resizing places the
+pieces".)
 
 ### The layers list shows what is inside a group (landed 2026-09-03)
 

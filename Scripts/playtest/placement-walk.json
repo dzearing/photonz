@@ -1,0 +1,287 @@
+{
+  "out": "/tmp/photonz-playtest/placement",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "insertPickedComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-dropped",
+      "note": "a built-in button, 128 wide, its word in the middle of its fill"
+    },
+    {
+      "do": "snapshot",
+      "name": "placement-1-dropped"
+    },
+    {
+      "do": "render",
+      "name": "placement-1-dropped-doc"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "320"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-wide",
+      "note": "320 wide: the fill should have grown to 320 and the word should still be dead centre, still 14 pt"
+    },
+    {
+      "do": "snapshot",
+      "name": "placement-2-wide"
+    },
+    {
+      "do": "render",
+      "name": "placement-2-wide-doc"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "80"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-narrow",
+      "note": "80 wide: the fill shrinks, the word stays centred on it and does not shrink with it"
+    },
+    {
+      "do": "snapshot",
+      "name": "placement-3-narrow"
+    },
+    {
+      "do": "render",
+      "name": "placement-3-narrow-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-undone",
+      "note": "one undo puts the whole button back to 320, pieces and all"
+    },
+    {
+      "do": "render",
+      "name": "placement-4-undone-doc"
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "5-background",
+      "note": "the fill inside the button: the Layout section should say Stretch on both axes, as its own rule rather than the button's"
+    },
+    {
+      "do": "snapshot",
+      "name": "placement-5-background"
+    },
+    {
+      "do": "action",
+      "action": "pickNextSibling"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "6-label",
+      "note": "the word inside the button: the Layout section should say it is FOLLOWING the button, which says Center on both axes"
+    },
+    {
+      "do": "snapshot",
+      "name": "placement-6-label"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        160,
+        200
+      ],
+      "to": [
+        520,
+        760
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        160,
+        200
+      ],
+      "to": [
+        520,
+        260
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-bar",
+      "note": "a bar drawn across the top of a screen, selected: the Layout section should offer Left/Center/Right/Stretch with no Scale, because a screen never magnifies what is on it"
+    },
+    {
+      "do": "snapshot",
+      "name": "placement-7-bar"
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionAcross"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "7b-stretch",
+      "note": "the bar now carries its own rule: Stretch across"
+    },
+    {
+      "do": "snapshot",
+      "name": "placement-7b-stretch"
+    },
+    {
+      "do": "click",
+      "at": [
+        340,
+        500
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "8-screen",
+      "note": "the screen itself: its Contents rows should read Left and Top, which is what an unset piece on a screen actually does"
+    },
+    {
+      "do": "snapshot",
+      "name": "placement-8-screen"
+    },
+    {
+      "do": "render",
+      "name": "placement-8-screen-doc"
+    },
+    {
+      "do": "drag",
+      "from": [
+        520,
+        760
+      ],
+      "to": [
+        700,
+        900
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-screen-wider",
+      "note": "dragging the screen's bottom right corner out: the bar should now run the whole new width, while the button that was dropped earlier holds still"
+    },
+    {
+      "do": "snapshot",
+      "name": "placement-9-screen-wider"
+    },
+    {
+      "do": "render",
+      "name": "placement-9-screen-wider-doc"
+    }
+  ]
+}

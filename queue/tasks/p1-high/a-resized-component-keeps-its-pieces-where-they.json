@@ -9,10 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:20:11.356Z",
-  "updated": "2026-09-03T12:29:57.801Z",
+  "updated": "2026-09-03T12:59:48.121826Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reported by the user on 2026-09-03 after dragging a built-in button onto the canvas and resizing it: the text does not stay centred; the parent should have child alignment settings that provide defaults, and children should have their own alignment settings. Root cause of what they saw: resize-a-group-and-the-pieces-inside-follow (done 2026-09-03) scales the layout proportionally but deliberately does not scale type, so a label that was centred lands off centre at any new width. Proportional scaling is the wrong rule for a container; alignment is the right one. This is the constraints model the design study describes in ui-grid.html (Horizontal: Left, Centre, Right, Stretch; Vertical: Top, Centre, Bottom, Stretch), expressed as the user asks for it: the container carries the default and a child may override. Write the decision into docs/design/ui-building.md as the resize rule, replacing the scale-the-layout rule that task recorded, and say what happens to a piece that is both stretched and rotated. Related open task one-layer-lines-up-inside-the-frame-it-sits-in is a one-shot Arrange action against a frame; this task is the persistent version, so fold that one in or make it depend on this. Auto-layout (a container that stacks and spaces its children) stays deferred per the spec; this is placement only.",
+  "notes": "Reported by the user on 2026-09-03 after dragging a built-in button onto the canvas and resizing it: the text does not stay centred; the parent should have child alignment settings that provide defaults, and children should have their own alignment settings. Root cause of what they saw: resize-a-group-and-the-pieces-inside-follow (done 2026-09-03) scales the layout proportionally but deliberately does not scale type, so a label that was centred lands off centre at any new width. Proportional scaling is the wrong rule for a container; alignment is the right one. This is the constraints model the design study describes in ui-grid.html (Horizontal: Left, Centre, Right, Stretch; Vertical: Top, Centre, Bottom, Stretch), expressed as the user asks for it: the container carries the default and a child may override. Write the decision into docs/design/ui-building.md as the resize rule, replacing the scale-the-layout rule that task recorded, and say what happens to a piece that is both stretched and rotated. Related open task one-layer-lines-up-inside-the-frame-it-sits-in is a one-shot Arrange action against a frame; this task is the persistent version, so fold that one in or make it depend on this. Auto-layout (a container that stacks and spaces its children) stays deferred per the spec; this is placement only.\n\nAdversarial review BEFORE building: the best version of this is invisible. The user's complaint is fixed by the five Library components arriving with placements already set, not by a panel they have to find. So the order of work was (1) the resize rule, (2) starter data, (3) the inspector. The mock's four-button segmented control was cut: there are five choices (Scale has to exist, it is what every old document does) and a child needs a sixth state for following its group, which is a word not a glyph, so each axis is a menu matching the Frame section's Size menu right above it.\n\nAdversarial review of the BUILT thing found the frame hole: acceptance names frames, but a frame's own handle deliberately does not scale its contents, so a Contents setting on a screen would have been a control that visibly did nothing. Fixed by making a frame resize place its children by their rules, with unset meaning hold still (which in a frame's space IS pinning to the top left, so today's behaviour is preserved exactly). Scale is not offered on a screen and the rows read Left/Top, because that is what they honour.\n\nModel: LayerPlacement.swift (HorizontalPlacement/VerticalPlacement/LayerPlacement/ResolvedPlacement, both axes separately optional so a piece can override one). Storage: Layer.placement and GroupContent.contentPlacement, both writing no key when unset. Maths: LayerScaling.span, one function shared by both axes; LayerScaling.refitting is the screen variant. Editing: LayerPlacementEditing.swift + EditorState.setPlacement/setContentPlacement. UI: PlacementInspector.swift behind next-placement.\n\nVerified in the probe app: label ink measured dead centre within half a pixel at 80, 128 and 320 wide, ink width unchanged (type never scaled), fill exactly the new width. Screen leg drove a real frame-corner drag and the stretched bar came out 540 wide against a 540-wide frame.\n\nNew probe-only playtest actions: stepIntoSelection, pickNextSibling, stretchSelectionAcross. Walk: Scripts/playtest/placement-walk.json.\n\nStill open, filed in the audit's rough: no reflow, Stretch on text does nothing visible, a group cannot see which of its pieces override, rotated+stretched is stretched by the unrotated box.",
   "acceptance": [
     "A group or frame has an alignment setting for its contents, horizontal and vertical, and every piece inside follows it when the container is resized",
     "A single layer inside can set its own horizontal and vertical behaviour, which wins over the container default, and the inspector shows when a piece is following the default and when it is overriding",
@@ -34,6 +34,38 @@
     {
       "t": "2026-09-03T12:29:57.801Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T12:59:48.121826Z",
+      "note": "claimed: read objectives, task serves ui-components which is staged now"
+    },
+    {
+      "t": "2026-09-03T12:59:48.121826Z",
+      "note": "adversarial review before building written into notes; mock's segmented control cut for menus"
+    },
+    {
+      "t": "2026-09-03T12:59:48.121826Z",
+      "note": "core: LayerPlacement model + LayerScaling rewritten around it, tests first, 2124 tests green"
+    },
+    {
+      "t": "2026-09-03T12:59:48.121826Z",
+      "note": "starter components ship with placements; button centres, background stretches"
+    },
+    {
+      "t": "2026-09-03T12:59:48.121826Z",
+      "note": "frames honour placement on their own resize, with unset meaning hold still"
+    },
+    {
+      "t": "2026-09-03T12:59:48.121826Z",
+      "note": "Layout inspector section behind next-placement; verified in the probe at three widths and on a screen"
+    },
+    {
+      "t": "2026-09-03T12:59:48.121826Z",
+      "note": "design doc rewritten: 'Resizing places the pieces' replaces the scale-the-layout rule"
+    },
+    {
+      "t": "2026-09-03T12:59:48.121826Z",
+      "note": "audit written: queue/audits/2026-09-03-ui-components-placement.json with five real screenshots"
     }
   ],
   "started": "2026-09-03T12:29:57.801Z"

@@ -260,12 +260,15 @@ extension PhotonzDocument {
         guard a.name == b.name, a.frame == b.frame, a.crop == b.crop,
               a.transform == b.transform, a.style == b.style,
               a.isVisible == b.isVisible, a.isLocked == b.isLocked else { return false }
-        guard a.colorStyleBindings == b.colorStyleBindings else { return false }
+        guard a.colorStyleBindings == b.colorStyleBindings, a.placement == b.placement else {
+            return false
+        }
         guard let ga = a.group else { return b.group == nil && a.content == b.content }
         guard let gb = b.group, ga.isFrame == gb.isFrame, ga.clipsContents == gb.clipsContents,
               ga.backgroundHex == gb.backgroundHex, ga.componentID == gb.componentID,
               ga.instanceOf == gb.instanceOf, ga.properties == gb.properties,
-              ga.overrides == gb.overrides else { return false }
+              ga.overrides == gb.overrides,
+              ga.contentPlacement == gb.contentPlacement else { return false }
         return !differsBeyondIdentity(ga.children, gb.children)
     }
 
@@ -275,7 +278,8 @@ extension PhotonzDocument {
         var copy = Layer(id: id, name: layer.name, content: layer.content, frame: layer.frame,
                          crop: layer.crop, transform: layer.transform, style: layer.style,
                          isVisible: layer.isVisible, isLocked: layer.isLocked,
-                         colorStyleBindings: layer.colorStyleBindings)
+                         colorStyleBindings: layer.colorStyleBindings,
+                         placement: layer.placement)
         if let nested = layer.instanceOf {
             copy.children = resolvedChildren(of: nested, instance: id,
                                              overrides: layer.componentOverrides, stack: stack)

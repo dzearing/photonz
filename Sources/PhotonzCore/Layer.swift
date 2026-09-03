@@ -373,12 +373,19 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// saved before the look followed — and the next sync adopts the
     /// original's look as the memory without changing one pixel.
     public var followedStyle: LayerStyle?
+    /// How everything inside this group lines up when the group is resized —
+    /// the container's default, which any one child may override with its own
+    /// `Layer.placement` (`docs/design/ui-building.md`, "Resizing places the
+    /// pieces"). Nil, or a nil axis, means the proportional multiply this app
+    /// did before placement existed, so a group made before it decodes and
+    /// resizes exactly as it always has.
+    public var contentPlacement: LayerPlacement?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool = true, backgroundHex: String? = nil,
                 componentID: UUID? = nil, instanceOf: UUID? = nil,
                 properties: [ComponentProperty] = [], overrides: [ComponentOverride] = [],
-                followedStyle: LayerStyle? = nil) {
+                followedStyle: LayerStyle? = nil, contentPlacement: LayerPlacement? = nil) {
         self.children = children
         self.isFrame = isFrame
         self.clipsContents = clipsContents
@@ -388,11 +395,12 @@ public struct GroupContent: Hashable, Codable, Sendable {
         self.properties = properties
         self.overrides = overrides
         self.followedStyle = followedStyle
+        self.contentPlacement = contentPlacement
     }
 
     private enum CodingKeys: String, CodingKey {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
-        case properties, overrides, followedStyle
+        case properties, overrides, followedStyle, contentPlacement
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -410,6 +418,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // Only a copy remembers a look, so a group that is not one encodes
         // exactly as it did before the look followed.
         if instanceOf != nil { try c.encodeIfPresent(followedStyle, forKey: .followedStyle) }
+        // A group that never had a placement set writes no key, so a document
+        // saved before placement existed is byte for byte what it was.
+        try c.encodeIfPresent(contentPlacement?.normalized, forKey: .contentPlacement)
         guard isFrame else { return }
         try c.encode(true, forKey: .isFrame)
         try c.encode(clipsContents, forKey: .clipsContents)
@@ -427,6 +438,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         properties = try c.decodeIfPresent([ComponentProperty].self, forKey: .properties) ?? []
         overrides = try c.decodeIfPresent([ComponentOverride].self, forKey: .overrides) ?? []
         followedStyle = try c.decodeIfPresent(LayerStyle.self, forKey: .followedStyle)
+        contentPlacement = try c.decodeIfPresent(LayerPlacement.self, forKey: .contentPlacement)
     }
 }
 
@@ -590,11 +602,18 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// saves a color as a style and points this layer at it, so a layer that
     /// has never met one writes exactly what it always wrote.
     public var colorStyleBindings: [ColorStyleBinding]?
+    /// What this layer does when the group holding it is resized, overriding
+    /// that group's default one axis at a time (`docs/design/ui-building.md`,
+    /// "Resizing places the pieces"). Nil, or a nil axis, means follow the
+    /// container, so a layer that has never been given one behaves exactly as
+    /// it always did.
+    public var placement: LayerPlacement?
 
     public init(id: UUID = UUID(), name: String, content: LayerContent, frame: CGRect,
                 crop: CGRect? = nil, transform: LayerTransform = .identity,
                 style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false,
-                colorStyleBindings: [ColorStyleBinding]? = nil) {
+                colorStyleBindings: [ColorStyleBinding]? = nil,
+                placement: LayerPlacement? = nil) {
         self.id = id
         self.name = name
         self.content = content
@@ -605,6 +624,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         self.isVisible = isVisible
         self.isLocked = isLocked
         self.colorStyleBindings = colorStyleBindings
+        self.placement = placement
     }
 
     /// A copy with a fresh identity, for duplicate/paste. The frame offset
@@ -615,7 +635,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          frame: frame.offsetBy(dx: offset.x, dy: offset.y),
                          crop: crop, transform: transform, style: style,
                          isVisible: isVisible, isLocked: false,
-                         colorStyleBindings: colorStyleBindings)
+                         colorStyleBindings: colorStyleBindings, placement: placement)
         copy.repointComponentProperties(map)
         return copy
     }
@@ -638,7 +658,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         let copy = Layer(name: name, content: content.reidentified(map: &map), frame: frame,
                          crop: crop, transform: transform, style: style,
                          isVisible: isVisible, isLocked: isLocked,
-                         colorStyleBindings: colorStyleBindings)
+                         colorStyleBindings: colorStyleBindings, placement: placement)
         map[id] = copy.id
         return copy
     }

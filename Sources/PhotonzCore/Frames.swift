@@ -240,7 +240,10 @@ extension PhotonzDocument {
     /// a frame's size says where it clips, it does not stretch its contents.
     public mutating func setFrameSize(id: UUID, size: CGSize) {
         guard layer(id: id)?.isFrame == true else { return }
-        updateLayer(id: id) { $0.frame.size = FramePreset.normalized(size) }
+        updateLayer(id: id) { layer in
+            let box = CGRect(origin: layer.frame.origin, size: FramePreset.normalized(size))
+            layer = LayerScaling.refitting(layer, to: box)
+        }
     }
 
     /// Whether a frame hides what sticks out past its box.

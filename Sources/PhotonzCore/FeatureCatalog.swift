@@ -79,6 +79,8 @@ public enum FeatureCatalog {
 
     public static let starterComponentsFlag = "next-starter-components"
 
+    public static let placementFlag = "next-placement"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -338,6 +340,15 @@ public enum FeatureCatalog {
                     name: starterComponentsFlag,
                     title: "Components in the Library from the start",
                     description: "The Library\u{2019}s Components shelf comes with five ready components on it \u{2014} a button, a text field, a card, a nav bar and a badge \u{2014} so the first thing you do is drag one out instead of building one. Each is an ordinary component: it takes copies, its wording and its parts are adjustable on every copy, and it comes apart. They paint from named styles, so recoloring Accent once repaints every one of them. Dropping one brings it and its colors into the document; a document you never drop one into carries none of it. Needs Make a component out of what you drew. Off means the shelf holds only the components you made yourself; starters already dropped into a document keep working either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: placementFlag,
+                    title: "Say where the pieces sit when something is resized",
+                    description: "The inspector gains a Layout section. A group says how its contents line up \u{2014} left, centre, right or stretch across, top, middle, bottom or stretch down \u{2014} and any one piece inside can say something different for itself, so a button dragged wider keeps its label in the middle while the fill behind it grows. A row that has not been set says which setting it is following from the group it sits in. The five Library components arrive already set up this way whether this is on or off. Off means the section is gone and a resize multiplies everything proportionally, which is what a layer with nothing set does anyway.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

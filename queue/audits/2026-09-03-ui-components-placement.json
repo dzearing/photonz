@@ -1,0 +1,31 @@
+{
+  "feature": "A resized component keeps its pieces where they belong",
+  "epic": "ui-components",
+  "summary": "A group or a screen now says how its contents line up when it is resized, and any one piece inside can say something different for itself. The five Library components arrive already set up, so dragging a button wider keeps its word in the middle of a fill that grows with it.",
+  "setup": "Photonz Dev, Experiments window, release Next. The new flag is \"Say where the pieces sit when something is resized\" (next-placement), on by default. The resize behaviour itself is not flagged.",
+  "try": [
+    { "do": "Open a blank canvas, show the Library, pick Components, drag the Button onto the picture.", "shot": "2026-09-03-placement-1-dropped-sc.png" },
+    { "do": "With it selected, type 320 into W in Position & Size and press Return.", "shot": "2026-09-03-placement-2-wide-sc.png" },
+    { "do": "Type 80 into W and press Return.", "shot": "2026-09-03-placement-3-narrow-sc.png" },
+    { "do": "Double click the word inside the button and read the new Layout section.", "shot": "2026-09-03-placement-6-label-sc.png" },
+    { "do": "Click the fill behind the word and read the same section: it says Stretch, as its own rule." },
+    { "do": "Draw a frame, draw a bar across its top, set that bar's Layout Horizontal to Stretch, then drag the frame's bottom right corner out.", "shot": "2026-09-03-placement-9-screen-wider-sc.png" },
+    { "do": "Select the frame itself and read its Contents rows: Left and Top, with no Scale offered." }
+  ],
+  "evaluate": [
+    "At 80 and at 320 wide, does the word land where your eye expects, or does it read half a pixel off?",
+    "Does a dimmed word plus the sentence under it make it clear enough that a row is following the group rather than set on the layer?",
+    "Is Layout the right name for the section, sitting under Frame, or does it promise auto layout it does not do?",
+    "Should a group you make yourself with Command G start on Scale, as it does now, or should it start on Center?",
+    "On a screen, is Left and Top the right thing for the rows to say, given that is what an unset piece actually does there?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot above is the real window, not an offscreen render.",
+    "The mock (ui-grid) draws these as a four-button segmented control. There are five choices, not four, and a child's row needs a sixth state for following its group, so each axis is a menu instead. It matches the Frame section's Size menu directly above it, but it is one click slower than the mock.",
+    "Nothing re-wraps. Shrink a component far enough and its label overhangs the fill, because text keeps its point size. That is auto layout's job and auto layout is still deferred.",
+    "Stretch is offered on a text layer, where it widens the box and moves no glyphs. Harmless, but it looks like it should do something.",
+    "A group shows no sign in its own section of which pieces inside it are overriding. You have to select each one to find out.",
+    "A piece that is both stretched and rotated is stretched by its unrotated box, so its visible corners poke past the inset. Written down in the design doc rather than solved.",
+    "The one-shot Arrange-against-a-frame task (one-layer-lines-up-inside-the-frame-it-sits-in) already depends on this one and is still open; it is the momentary version of the same idea."
+  ]
+}

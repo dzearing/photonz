@@ -186,6 +186,14 @@ struct InspectorPanel: View {
             // A frame's own properties: its size, its clipping, its surface
             // (Next, `next-frames`). Only a frame has any of them.
             if Experiments.shared.framesEnabled, layer.isFrame { set.insert(.frame) }
+            // Where the pieces sit when something is resized (Next,
+            // `next-placement`). Only worth showing when there is something to
+            // place: a group has contents, and a layer inside a group has a
+            // container. A layer loose on the canvas has neither.
+            if Experiments.shared.placementEnabled,
+               layer.isGroup || editorState.containerOfSelection != nil {
+                set.insert(.placement)
+            }
             // A main component's own section (Next, `next-components`): its
             // name, which is the one name the layers list and the shelf both
             // print. Only a main has one.
@@ -289,6 +297,10 @@ struct InspectorPanel: View {
         case .frame:
             if let layer = selectedLayer, layer.isFrame {
                 FrameInspector(layer: layer)
+            }
+        case .placement:
+            if let layer = selectedLayer {
+                PlacementInspector(layer: layer)
             }
         case .component:
             if let layer = selectedLayer, layer.isMainComponent {
@@ -413,6 +425,10 @@ enum InspectorSectionID: String, CaseIterable {
     case arrange
     case geometry
     case frame
+    // Where the pieces sit when something is resized (Next, `next-placement`).
+    // Under Frame, because Frame says how big the box is and this says what
+    // happens to what is in it when that box changes.
+    case placement
     // A main component's own properties, right beside the Frame section: both
     // say what KIND of group you have selected, and both belong near the top
     // where the name is worth reaching.
@@ -443,6 +459,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .arrange: "Arrange"
         case .geometry: "Position & Size"
         case .frame: "Frame"
+        case .placement: "Layout"
         case .component: "Component"
         case .color: "Color"
         case .annotation: "Annotation"

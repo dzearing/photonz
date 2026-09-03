@@ -191,6 +191,19 @@ public enum StarterComponent: String, CaseIterable, Identifiable, Hashable, Send
         return found
     }
 
+    /// How this starter lines its contents up when somebody drags it wider or
+    /// taller. A control centres its label; a card and a bar start their
+    /// contents at the left, because that is where a title and a first line
+    /// begin. Any one piece inside says something different for itself where
+    /// it needs to (`docs/design/ui-building.md`, "Resizing places the pieces").
+    var contentPlacement: LayerPlacement {
+        switch self {
+        case .button, .badge: LayerPlacement(horizontal: .center, vertical: .center)
+        case .textField, .navBar: LayerPlacement(horizontal: .left, vertical: .center)
+        case .card: LayerPlacement(horizontal: .left, vertical: .top)
+        }
+    }
+
     private var index: UInt8 {
         switch self {
         case .button: return 1
@@ -257,7 +270,8 @@ public enum StarterComponents {
         }
         return Layer(name: kind.name,
                      content: .group(GroupContent(children: children,
-                                                  componentID: kind.componentID)),
+                                                  componentID: kind.componentID,
+                                                  contentPlacement: kind.contentPlacement)),
                      frame: .zero)
     }
 
@@ -296,7 +310,7 @@ public enum StarterComponents {
         /// already reads it as.
         func box(_ name: String, x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat,
                  radius: CGFloat = 0, fill: StarterStyle?, stroke: StarterStyle? = nil,
-                 strokeWidth: CGFloat = 0) -> Layer {
+                 strokeWidth: CGFloat = 0, placement: LayerPlacement? = nil) -> Layer {
             let size = CGSize(width: px(width), height: px(height))
             var annotation = AnnotationContent(shape: .rectangle,
                                                start: .zero,
@@ -315,7 +329,7 @@ public enum StarterComponents {
             }
             return Layer(name: name, content: .annotation(annotation),
                          frame: CGRect(origin: CGPoint(x: px(x), y: px(y)), size: size),
-                         colorStyleBindings: bindings)
+                         colorStyleBindings: bindings, placement: placement)
         }
 
         /// A piece of text, hung from its vertical middle so it sits where a
@@ -323,7 +337,8 @@ public enum StarterComponents {
         /// halo: that belongs on a caption over a screenshot, not on a label
         /// inside a control.
         func label(_ name: String, _ string: String, x: CGFloat, centerY: CGFloat,
-                   size: CGFloat, weight: TextWeight = .regular, color: StarterStyle) -> Layer {
+                   size: CGFloat, weight: TextWeight = .regular, color: StarterStyle,
+                   placement: LayerPlacement? = nil) -> Layer {
             let content = TextContent(string: string, fontSize: px(size),
                                       colorHex: palette.style(color).colorHex, weight: weight)
             let natural = measure(content)
@@ -331,16 +346,17 @@ public enum StarterComponents {
                                width: natural.width, height: natural.height)
             return Layer(name: name, content: .text(content), frame: frame,
                          colorStyleBindings: [ColorStyleBinding(slot: .text,
-                                                                styleID: palette.style(color).id)])
+                                                                styleID: palette.style(color).id)],
+                         placement: placement)
         }
 
         /// The same, centred across a width: the glyphs are centred, not the
         /// frame, so the measuring slack does not push the word off centre.
         func centeredLabel(_ name: String, _ string: String, across width: CGFloat,
                            centerY: CGFloat, size: CGFloat, weight: TextWeight = .regular,
-                           color: StarterStyle) -> Layer {
+                           color: StarterStyle, placement: LayerPlacement? = nil) -> Layer {
             var layer = label(name, string, x: 0, centerY: centerY, size: size,
-                              weight: weight, color: color)
+                              weight: weight, color: color, placement: placement)
             let ink = max(layer.frame.width - textSlack, 1)
             layer.frame.origin.x = ((px(width) - ink) / 2).rounded()
             return layer
@@ -349,9 +365,12 @@ public enum StarterComponents {
 
     // MARK: The five drawings
 
-    /// 128 × 36. One filled box and a word in the middle of it.
+    /// 128 × 36. One filled box and a word in the middle of it. The button
+    /// centres everything by default, and the fill behind the word stretches,
+    /// so dragging it wider keeps the word in the middle of a full-width pill.
     private static func button(_ pen: Pen) -> [Layer] {
-        [pen.box("Background", x: 0, y: 0, width: 128, height: 36, radius: 8, fill: .accent),
+        [pen.box("Background", x: 0, y: 0, width: 128, height: 36, radius: 8, fill: .accent,
+                 placement: .fill),
          pen.centeredLabel("Label", "Button", across: 128, centerY: 18, size: 14,
                            weight: .semibold, color: .surface)]
     }
@@ -359,7 +378,7 @@ public enum StarterComponents {
     /// 220 × 32. A hairline box with quiet wording sitting in from the left.
     private static func textField(_ pen: Pen) -> [Layer] {
         [pen.box("Background", x: 0, y: 0, width: 220, height: 32, radius: 6,
-                 fill: .surface, stroke: .border, strokeWidth: 1),
+                 fill: .surface, stroke: .border, strokeWidth: 1, placement: .fill),
          pen.label("Placeholder", "Placeholder", x: pen.px(10), centerY: 16, size: 13,
                    color: .muted)]
     }
@@ -368,28 +387,39 @@ public enum StarterComponents {
     /// cards are, and the one that shows what a show-or-hide knob is for.
     private static func card(_ pen: Pen) -> [Layer] {
         [pen.box("Background", x: 0, y: 0, width: 260, height: 180, radius: 12,
-                 fill: .surface, stroke: .border, strokeWidth: 1),
-         pen.box("Picture", x: 12, y: 12, width: 236, height: 96, radius: 8, fill: .border),
+                 fill: .surface, stroke: .border, strokeWidth: 1, placement: .fill),
+         // The well takes whatever room the card gains; the two lines under it
+         // keep their distance from the bottom, so they never drift apart.
+         pen.box("Picture", x: 12, y: 12, width: 236, height: 96, radius: 8, fill: .border,
+                 placement: .fill),
          pen.label("Title", "Card title", x: pen.px(14), centerY: 126, size: 16,
-                   weight: .semibold, color: .text),
+                   weight: .semibold, color: .text,
+                   placement: LayerPlacement(horizontal: .left, vertical: .bottom)),
          pen.label("Body", "Supporting text goes here.", x: pen.px(14), centerY: 152,
-                   size: 13, color: .muted)]
+                   size: 13, color: .muted,
+                   placement: LayerPlacement(horizontal: .left, vertical: .bottom))]
     }
 
     /// 320 × 48. A surface, a hairline along the bottom, a centred title and a
     /// back label you can turn off.
     private static func navBar(_ pen: Pen) -> [Layer] {
-        [pen.box("Background", x: 0, y: 0, width: 320, height: 48, fill: .surface),
-         pen.box("Divider", x: 0, y: 47, width: 320, height: 1, fill: .border),
+        [pen.box("Background", x: 0, y: 0, width: 320, height: 48, fill: .surface,
+                 placement: .fill),
+         // A hairline stays a hairline: it spans the bar and hugs the bottom
+         // rather than fattening up when the bar gets taller.
+         pen.box("Divider", x: 0, y: 47, width: 320, height: 1, fill: .border,
+                 placement: LayerPlacement(horizontal: .stretch, vertical: .bottom)),
          pen.label("Back", "Back", x: pen.px(14), centerY: 24, size: 15, color: .accent),
          pen.centeredLabel("Title", "Title", across: 320, centerY: 24, size: 15,
-                           weight: .semibold, color: .text)]
+                           weight: .semibold, color: .text,
+                           placement: LayerPlacement(horizontal: .center))]
     }
 
     /// 26 × 20. The smallest thing on the shelf, and the one that shows a
     /// component does not have to be big.
     private static func badge(_ pen: Pen) -> [Layer] {
-        [pen.box("Background", x: 0, y: 0, width: 26, height: 20, radius: 10, fill: .accent),
+        [pen.box("Background", x: 0, y: 0, width: 26, height: 20, radius: 10, fill: .accent,
+                 placement: .fill),
          pen.centeredLabel("Count", "3", across: 26, centerY: 10, size: 12,
                            weight: .semibold, color: .surface)]
     }
