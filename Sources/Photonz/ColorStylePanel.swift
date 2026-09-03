@@ -231,7 +231,7 @@ struct ColorPartRow: View {
     let slot: ColorSlot
     private let switchControl: AnyView?
     /// The color the row edits directly. Nil for the row over several picked
-    /// layers, which has no single layer to edit a one-off color on.
+    /// layers, which brings a well of its own: one that paints all of them.
     private let well: AnyView?
 
     init(part: String, slot: ColorSlot, @ViewBuilder well: () -> some View) {
@@ -251,7 +251,8 @@ struct ColorPartRow: View {
         self.well = AnyView(well())
     }
 
-    /// The row over several picked layers: a readout and the menu.
+    /// The row over several picked layers: one well that paints every one of
+    /// them, and the menu.
     init(part: String, slot: ColorSlot) {
         self.part = part
         self.slot = slot
@@ -294,21 +295,24 @@ struct ColorPartRow: View {
 /// name field that saving opens sitting under them. `ColorPartRow` is what puts
 /// a label in front of it; nothing should use this on its own.
 ///
-/// The readout is whichever of three things is true. One layer with a color of
-/// its own gets the well it always had. A color that comes from a style shows a
-/// plain swatch and the style's name instead: the color is still there to see,
-/// it is just not edited here. Several layers that disagree say Mixed, because
-/// showing one of their colors is how three layers end up somewhere nobody
-/// asked for.
+/// The readout is whichever of three things is true. A color of its own gets a
+/// well — one layer's, or the whole selection's, which paints every picked
+/// layer at once. A color that comes from a style shows a plain swatch and the
+/// style's name instead: the color is still there to see, it is just not edited
+/// here, and Unlink in the menu is the way back. Several layers that disagree
+/// say Mixed, because showing one of their colors is how three layers end up
+/// somewhere nobody asked for — and over a selection that word is itself the
+/// well, so the way out of Mixed is the thing you were already looking at.
 struct ColorStyleRow<Well: View>: View {
     @Environment(EditorState.self) private var editorState
     let slot: ColorSlot
     /// What the row paints, passed through to the menu so it can say which
     /// saved colors it is offering and why there are not more of them.
     let part: String
-    /// False for the whole-selection rows, which have no well to fall back to:
-    /// there is no single layer to edit a one-off color on.
-    private let hasWell: Bool
+    /// True for the row over several picked layers. Its well paints all of
+    /// them, and stands in for the word Mixed as the thing you click when they
+    /// disagree.
+    private let paintsSelection: Bool
     private let well: Well
 
     @State private var draft = ""
@@ -318,15 +322,15 @@ struct ColorStyleRow<Well: View>: View {
         self.slot = slot
         self.part = part
         self.well = well()
-        self.hasWell = true
+        self.paintsSelection = false
     }
 
-    /// The row over a selection: a readout and the menu, no well.
-    init(slot: ColorSlot, part: String) where Well == EmptyView {
+    /// The row over a selection: one well for all of them, and the menu.
+    init(slot: ColorSlot, part: String) where Well == SelectionColorWell {
         self.slot = slot
         self.part = part
-        self.well = EmptyView()
-        self.hasWell = false
+        self.well = SelectionColorWell(slot: slot, part: part)
+        self.paintsSelection = true
     }
 
     private var selection: ColorStyleSelection { editorState.colorStyleSelection(slot: slot) }
@@ -367,19 +371,21 @@ struct ColorStyleRow<Well: View>: View {
                     .help("This color comes from the style \(style.name)")
             }
         case .mixed:
-            Text(ColorStyleSelection.mixedText)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .help("The picked layers do not share one \(part.lowercased()). "
-                      + "Choosing a style sets all of them.")
-        case .color(let hex):
-            if hasWell {
+            // Over a selection the word IS the well: it says they differ and
+            // it is the one thing to click to stop them differing.
+            if paintsSelection {
                 well
             } else {
-                swatch(hex).help("The color all \(selection.count) of them share")
+                Text(ColorStyleSelection.mixedText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .help("The picked layers do not share one \(part.lowercased()). "
+                          + "Choosing a color or a style sets all of them.")
             }
+        case .color:
+            well
         case .empty:
-            if hasWell { well }
+            if !paintsSelection { well }
         }
     }
 
@@ -417,6 +423,89 @@ struct ColorStyleRow<Well: View>: View {
     }
 }
 
+/// The color well on a row that speaks for several picked layers: one click,
+/// one color, every one of them painted, in a step one undo puts back.
+///
+/// It is the readout AND the control, because two of them in a 264pt dock is
+/// one too many. Layers that agree show the color they share and it opens on
+/// that color. Layers that do not still say Mixed, and the word itself is the
+/// button: the row keeps saying they differ right up until a color is picked,
+/// and the way to stop them differing is the thing the eye is already on.
+///
+/// It is the app's own picker rather than the system panel, so a color lands on
+/// a deliberate action (a swatch, a slider let go of, a hex typed) instead of
+/// on every drag tick. Twenty undo steps for one blue is not one move.
+struct SelectionColorWell: View {
+    @Environment(EditorState.self) private var editorState
+    let slot: ColorSlot
+    /// What the row beside this paints, in the row's own words, so the hover
+    /// tip can say it: "Fill", "Outline", "Text".
+    let part: String
+
+    @State private var isPickerShown = false
+    @State private var isHovering = false
+
+    private var selection: ColorStyleSelection { editorState.colorStyleSelection(slot: slot) }
+
+    var body: some View {
+        let selection = self.selection
+        Button { isPickerShown = true } label: { label(selection) }
+            .buttonStyle(.plain)
+            // A readout and a control look alike sitting still, so the hairline
+            // firms up under the pointer: that is what says this one is worth
+            // clicking, and it is the difference between finding the way out of
+            // Mixed and giving up on the row.
+            .onHover { isHovering = $0 }
+            .help(help(selection))
+            .accessibilityLabel("\(part) of \(selection.count) selected layers")
+            .popover(isPresented: $isPickerShown, arrowEdge: .top) {
+                ColorPickerPopover(initialHex: openingHex(selection),
+                                   recents: editorState.recentColors.colors) { hex in
+                    editorState.setSelectionColor(slot: slot, hex: hex)
+                }
+            }
+    }
+
+    @ViewBuilder private func label(_ selection: ColorStyleSelection) -> some View {
+        if case .color(let hex) = selection.reading {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(hex: hex))
+                .frame(width: 18, height: 18)
+                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
+        } else {
+            // A chip rather than bare text: the same height and the same
+            // hairline as the swatch it replaces, so a row that says Mixed
+            // still looks like a row with something to press.
+            Text(ColorStyleSelection.mixedText)
+                .font(.caption)
+                .foregroundStyle(isHovering ? .primary : .secondary)
+                .padding(.horizontal, 6)
+                .frame(height: 18)
+                .background(RoundedRectangle(cornerRadius: 4).fill(.quaternary))
+                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
+        }
+    }
+
+    private var edge: Color { .primary.opacity(isHovering ? 0.55 : 0.25) }
+
+    /// The color the picker opens on: the one they share, else the first
+    /// picked layer's, so a Mixed row opens somewhere in the neighbourhood
+    /// rather than on white.
+    private func openingHex(_ selection: ColorStyleSelection) -> String {
+        selection.savableColorHex ?? selection.members.first?.colorHex ?? "#FFFFFF"
+    }
+
+    private func help(_ selection: ColorStyleSelection) -> String {
+        // "the text of all 3 of them" would read as the words rather than the
+        // ink, so every slot says color out loud: fill color, outline color,
+        // text color.
+        var lines = ["Sets the \(part.lowercased()) color of all "
+                     + "\(selection.count) of them, in one step."]
+        if let note = selection.unlinkNote { lines.append(note) }
+        return lines.joined(separator: " ")
+    }
+}
+
 // MARK: - The color rows a whole selection gets
 
 /// The Color section: what several picked layers are painted, and one place to
@@ -451,8 +540,10 @@ struct SelectionColorInspector: View {
         VStack(alignment: .leading, spacing: 2) {
             ColorPartRow(part: slot.selectionTitle, slot: slot)
             // A Fill row that quietly skips the arrow in the selection says so
-            // here, rather than looking as though it did nothing.
-            if let note = selection.note {
+            // here, rather than looking as though it did nothing — and so does
+            // one where picking a color would let go of a style, which is said
+            // before the click rather than discovered after it.
+            ForEach([selection.note, selection.unlinkNote].compactMap { $0 }, id: \.self) { note in
                 Text(note).font(.caption2).foregroundStyle(.tertiary)
                     .padding(.leading, ColorPartLayout.labelWidth + ColorPartLayout.spacing)
             }
@@ -461,7 +552,8 @@ struct SelectionColorInspector: View {
 
     private var caption: String {
         let count = editorState.colorStyleSelectionCount
-        return "\(count) layers. A style picked here paints every one of them, in one step."
+        return "\(count) layers. A color or a style picked here paints every one "
+            + "of them, in one step."
     }
 }
 

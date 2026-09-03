@@ -1,0 +1,29 @@
+{
+  "feature": "One color on several layers at once",
+  "epic": "ui-components",
+  "summary": "Pick several layers and the Color section's swatch is now something you click: choose one color and every picked layer that has that kind of color takes it, in a step one undo puts back. When they disagree the row still says Mixed, and the word itself is the button.",
+  "setup": "Photonz Dev, Experiments window, release Next. Save a color as a style and reuse it is on by default; it needs Keep reusable pieces in a Library, which is also on.",
+  "try": [
+    { "do": "Start a blank canvas from the welcome card." },
+    { "do": "Press R and drag out three boxes side by side." },
+    { "do": "Press V, click the first box, then shift-click the other two. The Color section shows a Fill row and an Outline row.", "shot": "2026-09-03-selection-color-1-well-sc.png" },
+    { "do": "Click the Fill row's swatch and pick any color. All three boxes take it." },
+    { "do": "Press Command Z once. All three go back together." },
+    { "do": "Click empty canvas, click the third box alone, and save its fill as a style called Accent from the Annotation section's Fill row menu. With one layer picked its colors live there, not in the Color section." },
+    { "do": "Click empty canvas, then pick all three again. The Fill row says Mixed and a line under it says a color picked here takes 1 of them off their style.", "shot": "2026-09-03-selection-color-2-mixed-sc.png" },
+    { "do": "Click the word Mixed and pick a color. All three wear it, and Accent drops to nothing using it." }
+  ],
+  "evaluate": [
+    "Did you try clicking the swatch before reading anything, or did it still look like a readout?",
+    "Mixed is a word, not a swatch. Does clicking the word to get out of Mixed feel obvious, or would you rather the row showed a swatch you could click and kept Mixed as a label beside it?",
+    "The line warning that a color takes layers off their style: does it read as useful, or as the app fussing at you?",
+    "Painting by hand silently drops the style rather than asking. Is that what you expect, or should it stop and confirm?",
+    "The color picker here is the app's own popover with recents, while a single shape's Color row still opens the system color panel. Does the difference between the two show?"
+  ],
+  "rough": [
+    "The screenshots are real captures of the probe app with Screen Recording granted.",
+    "A row where EVERY picked layer wears one style keeps its plain swatch and has no well: that color is edited on the shelf, the way it is everywhere else, and Unlink in the menu is the way back to a color of your own. So two swatches in the same section can look identical and only one of them is clickable. Hovering firms up the hairline on the one that is.",
+    "The click that opens the picker could not be driven by automation on this machine: the loop has no Accessibility grant, so a walk can only reach the picture, not the dock. The paint itself, the single undo step, the Mixed reading and the style being let go were all driven live in the probe app; the button opening its popover is the same control the Frame section's Background row already ships.",
+    "Three boxes that all look the same crimson can still say Mixed, because one of them wears a style and two do not. That reading predates this change and is unchanged by it, but the well makes it easier to walk into."
+  ]
+}

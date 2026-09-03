@@ -3648,6 +3648,21 @@ final class EditorState {
         perform { $0.unbindColorStyle(layerIDs: targets, slot: slot) }
     }
 
+    /// The color well on a whole-selection row: paints every picked layer that
+    /// has this kind of color the one color chosen, in ONE step. Pick three
+    /// boxes, choose a blue once, undo once.
+    ///
+    /// Layers wearing a style in that slot are taken off it, which the row says
+    /// in words before the color is picked.
+    func setSelectionColor(slot: ColorSlot, hex: String) {
+        guard colorStylesEnabled else { return }
+        let targets = colorStyleSelection(slot: slot).layerIDs
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { _ = $0.setColorHex(layerIDs: targets, slot: slot, hex: hex) }
+        recordRecentColor(hex: hex)
+    }
+
     /// Repaints a style and everything wearing it, as one undo step.
     func setColorStyleHex(styleID: UUID, hex: String) {
         guard colorStylesEnabled else { return }

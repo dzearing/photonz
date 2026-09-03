@@ -561,6 +561,12 @@ private final class Run {
                     .first(where: { editor.colorStyleSelection(slot: $0).wearsAnyStyle }) {
                     editor.unlinkColorStyle(slot: slot)
                 }
+            case .paintSelectionColor:
+                // The first row on screen, which is the one a person reaches
+                // for: the well paints every picked layer that has that color.
+                if let slot = editor.colorStyleSlots.first {
+                    editor.setSelectionColor(slot: slot, hex: "#B0184A")
+                }
             case .pickFirstColorStyle:
                 if let first = editor.colorStyleEntries.first {
                     editor.selectLibraryItem(first.id)

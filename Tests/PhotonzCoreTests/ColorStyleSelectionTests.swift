@@ -229,4 +229,98 @@ struct ColorStyleSelectionTests {
         #expect(titles == ["Fill", "Outline", "Text"])
         #expect(Set(titles).count == titles.count)
     }
+
+    // MARK: - Painting a selection one one-off color
+
+    @Test func pickingAColorPaintsEveryPickedLayerThatHasThatKindOfColor() {
+        let a = box("A", fill: "#3366FF")
+        let b = box("B", fill: "#FF0000")
+        let c = box("C", fill: "#00FF00")
+        var doc = document([a, b, c])
+        let painted = doc.setColorHex(layerIDs: [a.id, b.id, c.id], slot: .fill, hex: "#123456")
+        #expect(painted == 3)
+        for id in [a.id, b.id, c.id] {
+            #expect(doc.layer(id: id)?.colorHex(for: .fill) == "#123456")
+        }
+        // ...and the row that said Mixed now says the color they share.
+        #expect(doc.colorStyleSelection(layerIDs: [a.id, b.id, c.id], slot: .fill).reading
+                == .color("#123456"))
+    }
+
+    /// The write reaches exactly the layers the row speaks for, so what the
+    /// row promises and what a pick does can never drift apart.
+    @Test func paintingSkipsTheLayersTheRowItselfLeavesOut() {
+        let painted = box("Painted", fill: "#3366FF")
+        var locked = box("Locked", fill: "#3366FF")
+        locked.isLocked = true
+        let noFill = box("No fill", fill: nil)
+        let ids = [painted.id, locked.id, noFill.id]
+        var doc = document([painted, locked, noFill])
+        #expect(doc.setColorHex(layerIDs: ids, slot: .fill, hex: "#123456") == 1)
+        #expect(doc.layer(id: painted.id)?.colorHex(for: .fill) == "#123456")
+        #expect(doc.layer(id: locked.id)?.colorHex(for: .fill) == "#3366FF")
+        // Switched off stays switched off: painting must never turn a fill on.
+        #expect(doc.layer(id: noFill.id)?.colorHex(for: .fill) == nil)
+    }
+
+    @Test func paintingReachesEverySlotItsOwnWay() {
+        let shape = box("Box", fill: "#3366FF", stroke: "#101010")
+        let label = text("Label", color: "#FFFFFF")
+        var doc = document([shape, label])
+        #expect(doc.setColorHex(layerIDs: [shape.id, label.id], slot: .stroke, hex: "#AA0000") == 1)
+        #expect(doc.setColorHex(layerIDs: [shape.id, label.id], slot: .text, hex: "#00AA00") == 1)
+        #expect(doc.layer(id: shape.id)?.colorHex(for: .stroke) == "#AA0000")
+        #expect(doc.layer(id: label.id)?.colorHex(for: .text) == "#00AA00")
+    }
+
+    /// A color chosen by hand is the layer's own. Leaving the binding on would
+    /// mean the next edit to that style silently repainted it.
+    @Test func paintingByHandTakesALayerOffItsStyle() {
+        let a = box("A", fill: "#3366FF")
+        let b = box("B", fill: "#3366FF")
+        var doc = document([a, b])
+        let accent = doc.addColorStyle(name: "Accent", colorHex: "#00A870")
+        doc.bindColorStyle(layerIDs: [a.id], slot: .fill, styleID: accent)
+        #expect(doc.setColorHex(layerIDs: [a.id, b.id], slot: .fill, hex: "#123456") == 2)
+        #expect(doc.layer(id: a.id)?.colorStyleID(for: .fill) == nil)
+        #expect(doc.layer(id: a.id)?.colorHex(for: .fill) == "#123456")
+        // The style itself is untouched: nothing else wearing it moves.
+        #expect(doc.colorStyle(id: accent)?.colorHex == "#00A870")
+    }
+
+    @Test func paintingNothingChangesNothing() {
+        let a = box("A", fill: "#3366FF")
+        var doc = document([a])
+        #expect(doc.setColorHex(layerIDs: [], slot: .fill, hex: "#123456") == 0)
+        #expect(doc.layer(id: a.id)?.colorHex(for: .fill) == "#3366FF")
+    }
+
+    // MARK: - Saying what a pick will do before it is picked
+
+    @Test func aMixedRowHoldingStyledLayersWarnsThatPaintingLetsThemGo() {
+        let styled = UUID()
+        let selection = ColorStyleSelection(slot: .fill, members: [
+            member(UUID(), "#3366FF", styled), member(UUID(), "#FF0000"),
+        ], selectionCount: 2)
+        #expect(selection.reading == .mixed)
+        #expect(selection.unlinkNote == "A color picked here takes 1 of them off their style.")
+    }
+
+    @Test func aRowWithNoStyleInItSaysNothingExtra() {
+        let selection = ColorStyleSelection(slot: .fill, members: [
+            member(UUID(), "#3366FF"), member(UUID(), "#FF0000"),
+        ], selectionCount: 2)
+        #expect(selection.unlinkNote == nil)
+    }
+
+    /// Layers that all wear one style keep their plain swatch and their Unlink
+    /// button, so there is no well there to warn about.
+    @Test func aRowAllWearingOneStyleSaysNothingExtra() {
+        let accent = UUID()
+        let selection = ColorStyleSelection(slot: .fill, members: [
+            member(UUID(), "#00A870", accent), member(UUID(), "#00A870", accent),
+        ], selectionCount: 2)
+        #expect(selection.reading == .style(accent))
+        #expect(selection.unlinkNote == nil)
+    }
 }

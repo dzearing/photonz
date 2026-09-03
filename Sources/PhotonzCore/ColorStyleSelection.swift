@@ -110,6 +110,22 @@ public struct ColorStyleSelection: Hashable, Sendable {
         return "Applies to \(count) of the \(selectionCount) selected layers."
     }
 
+    /// What the row has to say out loud before a color is picked, when some of
+    /// the layers it speaks for are wearing a style: painting them by hand
+    /// takes them off it. Said BEFORE the click rather than after, because a
+    /// style that quietly stopped being worn is one nobody notices until an
+    /// edit to it fails to reach a layer.
+    ///
+    /// Nil when no style is involved, and nil when they ALL wear one: that row
+    /// keeps its plain swatch and its Unlink button and has no well to warn
+    /// about.
+    public var unlinkNote: String? {
+        guard reading == .mixed else { return nil }
+        let styled = members.filter { $0.styleID != nil }.count
+        guard styled > 0 else { return nil }
+        return "A color picked here takes \(styled) of them off their style."
+    }
+
     /// Hex is written uppercase everywhere the app makes one, but a document
     /// read from disk or a pasted color can arrive either way, and two rows
     /// saying Mixed over the identical blue would be a lie.
@@ -163,6 +179,30 @@ extension PhotonzDocument {
             painted += 1
         }
         return painted
+    }
+
+    /// Paints several layers' slot ONE color of its own: pick three boxes,
+    /// choose a color once, undo once. Returns how many took it.
+    ///
+    /// It reaches exactly the layers the row speaks for. A locked layer and a
+    /// box with its fill switched off sit out here for the same reason they sit
+    /// out of what the row reads, so what a row says and what a pick in it does
+    /// can never drift apart, and painting can never switch a fill on behind
+    /// somebody's back.
+    ///
+    /// A layer wearing a style in that slot is taken off it. A color chosen by
+    /// hand is the layer's own; leaving the binding on would mean the next edit
+    /// to that style silently repainted a color somebody picked.
+    @discardableResult
+    public mutating func setColorHex(layerIDs: [UUID], slot: ColorSlot, hex: String) -> Int {
+        let targets = colorStyleSelection(layerIDs: layerIDs, slot: slot).layerIDs
+        for id in targets {
+            updateLayer(id: id) {
+                $0.unbindColorStyle(for: slot)
+                $0.setColorHex(hex, for: slot)
+            }
+        }
+        return targets.count
     }
 
     /// Lets several layers' slot go back to being a color of its own. Nothing

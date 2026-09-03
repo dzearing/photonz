@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/selection-color",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 140], "to": [320, 260], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [380, 140], "to": [580, 260], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [640, 140], "to": [840, 260], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-drew", "note": "three filled boxes" },
+
+    { "do": "click", "at": [220, 200] },
+    { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
+    { "do": "click", "at": [740, 200], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-three-picked", "note": "all three picked and sharing one fill: the Fill row should show a color well, not a dead swatch" },
+    { "do": "snapshot", "name": "selection-color-1-well" },
+
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-painted", "note": "one color picked once: fill should read #B0184A x3" },
+    { "do": "render", "name": "all-three-crimson" },
+    { "do": "snapshot", "name": "selection-color-2-painted" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-undone", "note": "ONE undo should put all three back, not just the last one" },
+    { "do": "render", "name": "back-before-paint" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [220, 520] },
+    { "do": "click", "at": [740, 200] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "saveColorStyle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "focus", "field": "Style name" },
+    { "do": "type", "text": "Accent" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-one-styled", "note": "the third box now wears Accent, the other two do not" },
+
+    { "do": "click", "at": [220, 520] },
+    { "do": "click", "at": [220, 200] },
+    { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
+    { "do": "click", "at": [740, 200], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-mixed", "note": "one wears a style and two do not: the Fill row must say Mixed and warn that picking a color lets the style go" },
+    { "do": "snapshot", "name": "selection-color-3-mixed" },
+
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-painted-over-style", "note": "all three crimson, and the styled one is off Accent, which the row said it would be" },
+    { "do": "snapshot", "name": "selection-color-4-painted-over-style" },
+    { "do": "render", "name": "crimson-over-style" }
+  ]
+}

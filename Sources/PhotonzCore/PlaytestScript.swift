@@ -233,6 +233,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Let go of the style painting the selected layer's first color, keeping
     /// the color it is wearing.
     case unlinkColorStyle
+    /// Paint every picked layer's first color one crimson (#B0184A), which is
+    /// what choosing a color in the whole-selection row's well does. The well
+    /// opens a popover in the dock, which a walk cannot reach with the pointer,
+    /// so this is how one color landing on three boxes gets photographed.
+    case paintSelectionColor
     /// Pick the first style on the Library shelf, which is what a click on its
     /// tile does, so its own section can be photographed.
     case pickFirstColorStyle

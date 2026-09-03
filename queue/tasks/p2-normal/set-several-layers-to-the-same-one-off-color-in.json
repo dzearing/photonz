@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T10:22:38.204Z",
-  "updated": "2026-09-03T12:08:27.089Z",
+  "updated": "2026-09-03T16:03:46.800404Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-03-multi-style.json. The whole-selection reading is already there: EditorState.colorStyleSelection(slot:) and ColorStyleSelection in PhotonzCore. What is missing is the write: a one-off color has to go through the right builder per slot (AnnotationBuilder.restyled for a shape stroke or fill, TextBuilder.restyled for text ink, GroupContent.backgroundHex for a frame), which is why this was cut from the style slice. Layer.setColorHex(_:for:) already routes all three and is what bindColorStyle uses, so a document-level setColorHex(layerIDs:slot:hex:) plus one EditorState perform is probably the whole job. The row is ColorStyleRow in Sources/Photonz/ColorStylePanel.swift; its no-well init is the one the SelectionColorInspector uses.",
@@ -26,6 +26,19 @@
     {
       "t": "2026-09-03T12:08:27.089Z",
       "note": "seq 870 -> 70"
+    },
+    {
+      "t": "2026-09-03T15:49:07.066Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T15:52:47.350141Z",
+      "note": "Adversarial review before building. The idea holds: a person who picks three boxes and wants them blue has no move today (Save as Style is refused when they differ, and one at a time is three moves plus an undo each), so the well is the missing half of a row that already speaks for the whole selection. Shortest version wins: no new section and no new control, just make the readout the row already draws into the thing you click. Cut from the mock-ish version: a separate Apply button, a second Fill section, and a swatch-plus-word layout that would have needed the readout column widened past what a 264pt dock can spare. Two real hazards found. (1) A row whose layers ALL wear one style must not grow a well: the app's rule everywhere else is that a styled color is edited on the shelf, not on the layer, so that reading keeps its plain swatch and Unlink stays the way out. (2) A Mixed row can hold layers that wear a style, and painting them while leaving the binding on would mean the next edit to that style silently repaints a color somebody chose by hand. So painting takes those layers off their style, and the row says so in words BEFORE the click rather than after."
+    },
+    {
+      "t": "2026-09-03T16:03:46.800404Z",
+      "note": "Built and verified. Core: PhotonzDocument.setColorHex(layerIDs:slot:hex:) paints exactly the layers the row speaks for (locked layers and switched-off fills sit out, so the row's promise and the pick can never drift), and takes any of them off a style in that slot, because a color chosen by hand is the layer's own. ColorStyleSelection.unlinkNote is the sentence the row says before the click when that would happen. App: SelectionColorWell in ColorStylePanel.swift is the readout AND the control (a 264pt dock has no room for both) - a swatch when they agree, the word Mixed as a chip when they do not, both opening the app's own picker so a color lands on a deliberate action rather than every drag tick; EditorState.setSelectionColor does it in one perform. Nine new core tests; the full suite is green at 2207. Live in the probe app via Scripts/playtest/selection-color-walk.json (new action paintSelectionColor): three boxes -> one color -> fill #B0184A x3, ONE undo puts all three back, a selection holding one styled layer reads mixed x3, and painting it drops Accent to 0 uses. Real captures in queue/audits/2026-09-03-selection-color.json. Not verified by automation: the click that opens the picker, because the loop has no Accessibility grant and a walk can only reach the picture, not the dock - said plainly in the audit's rough."
     }
-  ]
+  ],
+  "started": "2026-09-03T15:49:07.065Z"
 }
