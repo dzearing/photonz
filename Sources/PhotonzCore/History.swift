@@ -40,6 +40,14 @@ public struct History: Sendable {
         // claimed, BEFORE the copies are refilled, so a copy is never rebuilt
         // from an original whose claim has already gone stale.
         next.reconcileColorStyles()
+        // Every stack and grid puts its contents back in order inside the same
+        // step, BEFORE the copies are refilled, so a copy of a component is
+        // rebuilt from an original that has already settled. It happens here
+        // rather than in each command so nothing can forget: paste a layer into
+        // a stack, delete one, drag one past another, and the flow runs without
+        // the command knowing stacks exist. A document with none in it is
+        // untouched.
+        next.reflowLayouts()
         let sync = next.syncComponentInstances()
         guard next != current else { return EditReport() }
         let breaks = LinkBreakReport.between(current, next)

@@ -111,44 +111,78 @@ struct PlacementInspector: View {
 
     private var contentRows: some View {
         let effective = current.contentPlacementDefault
+        let arrangement = Experiments.shared.autoLayoutEnabled ? current.group?.layout : nil
         return VStack(alignment: .leading, spacing: 6) {
             Text("Contents of \(current.name)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            row("Horizontal") {
-                Menu {
-                    ForEach(current.horizontalPlacementChoices, id: \.self) { choice in
-                        Button(choice.title) {
-                            editorState.setContentPlacement(id: current.id, horizontal: choice)
-                        }
-                    }
-                } label: {
-                    menuLabel(effective.horizontal.title, following: false)
-                }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
+            // How this group arranges its contents, above where each one sits,
+            // because the arrangement decides which of the two rows below is
+            // still a question (Next, `next-auto-layout`).
+            if Experiments.shared.autoLayoutEnabled {
+                ArrangementInspector(layer: current)
             }
-            row("Vertical") {
-                Menu {
-                    ForEach(current.verticalPlacementChoices, id: \.self) { choice in
-                        Button(choice.title) {
-                            editorState.setContentPlacement(id: current.id, vertical: choice)
+            // The axis a stack runs along is the stack's answer, not a menu:
+            // a live control that changes nothing is worse than a row that
+            // says who owns it.
+            if arrangement?.flowsHorizontally == true {
+                ownedByTheFlow("Horizontal", arrangement)
+            } else {
+                row("Horizontal") {
+                    Menu {
+                        ForEach(current.horizontalPlacementChoices, id: \.self) { choice in
+                            Button(choice.title) {
+                                editorState.setContentPlacement(id: current.id, horizontal: choice)
+                            }
                         }
+                    } label: {
+                        menuLabel(effective.horizontal.title, following: false)
                     }
-                } label: {
-                    menuLabel(effective.vertical.title, following: false)
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
                 }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
             }
-            Text(current.isFrame
-                 ? "Everything on this screen follows this when the screen is resized, "
-                   + "unless a layer says otherwise for itself."
-                 : "Everything inside follows this when the group is resized, "
-                   + "unless a layer says otherwise for itself.")
-                .font(.caption2)
+            if let arrangement, arrangement.kind == .stack, !arrangement.flowsHorizontally {
+                ownedByTheFlow("Vertical", arrangement)
+            } else {
+                row("Vertical") {
+                    Menu {
+                        ForEach(current.verticalPlacementChoices, id: \.self) { choice in
+                            Button(choice.title) {
+                                editorState.setContentPlacement(id: current.id, vertical: choice)
+                            }
+                        }
+                    } label: {
+                        menuLabel(effective.vertical.title, following: false)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                }
+            }
+            // With an arrangement on, the Arrangement rows say what happens in
+            // words already, so this would be the second caption in a row.
+            if arrangement == nil {
+                Text(current.isFrame
+                     ? "Everything on this screen follows this when the screen is resized, "
+                       + "unless a layer says otherwise for itself."
+                     : "Everything inside follows this when the group is resized, "
+                       + "unless a layer says otherwise for itself.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    /// The row for an axis the stack decides. It stays in place, with the same
+    /// label in the same column, so nothing shuffles under the pointer when a
+    /// group becomes a stack.
+    private func ownedByTheFlow(_ title: String, _ arrangement: GroupLayout?) -> some View {
+        row(title) {
+            Text(arrangement?.direction.isHorizontal == true ? "Set by the row"
+                                                             : "Set by the stack")
+                .font(.callout)
                 .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

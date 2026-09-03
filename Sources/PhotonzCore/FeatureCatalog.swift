@@ -81,6 +81,8 @@ public enum FeatureCatalog {
 
     public static let placementFlag = "next-placement"
 
+    public static let autoLayoutFlag = "next-auto-layout"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -340,6 +342,15 @@ public enum FeatureCatalog {
                     name: starterComponentsFlag,
                     title: "Components in the Library from the start",
                     description: "The Library\u{2019}s Components shelf comes with five ready components on it \u{2014} a button, a text field, a card, a nav bar and a badge \u{2014} so the first thing you do is drag one out instead of building one. Each is an ordinary component: it takes copies, its wording and its parts are adjustable on every copy, and it comes apart. They paint from named styles, so recoloring Accent once repaints every one of them. Dropping one brings it and its colors into the document; a document you never drop one into carries none of it. Needs Make a component out of what you drew. Off means the shelf holds only the components you made yourself; starters already dropped into a document keep working either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: autoLayoutFlag,
+                    title: "Groups that arrange their own contents",
+                    description: "A group can be made a stack or a grid, so the things inside it space themselves instead of being nudged into place one at a time. Pick a group and set Arrangement in the Layout section, or pick several layers and choose Layer \u{25B8} Stack Selection (\u{2303}\u{2318}G) or Grid Selection. A stack lays everything along one axis with a gap you type; a grid fills rows of equal cells with a column count you type. Add a layer, delete one, hide one or drag one past another and everything re-flows on its own. Turning a group you arranged by hand into a stack reads the direction and the gap it already has, so nothing moves when you switch it on. Off means the Arrangement rows and the menu items are gone; a group already set to a stack keeps arranging itself.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

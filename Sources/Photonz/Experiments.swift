@@ -324,6 +324,12 @@ extension Experiments {
     /// and only the way to change them is gone.
     var placementEnabled: Bool { isEnabled(FeatureCatalog.placementFlag) }
 
+    /// `next-auto-layout`: whether a group can be made a stack or a grid, so
+    /// the things inside it space themselves. Like placement, the RULE is not
+    /// flagged: a group already set to a stack keeps arranging itself with
+    /// this off, and only the Arrangement rows and the two menu items go.
+    var autoLayoutEnabled: Bool { isEnabled(FeatureCatalog.autoLayoutFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

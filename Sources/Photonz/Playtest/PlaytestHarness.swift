@@ -496,6 +496,10 @@ private final class Run {
                 editor.createBlankCanvas(size: BlankCanvas.defaultPreset.size)
             case .group: editor.groupSelection()
             case .ungroup: editor.ungroupSelection()
+            case .stackSelection: editor.stackSelection(.stack)
+            case .gridSelection: editor.stackSelection(.grid)
+            case .deleteLayer: editor.deleteSelectedLayers()
+            case .selectComponentOriginal: editor.selectComponentOriginal()
             case .copyLayer: editor.copySelectedLayer()
             case .pasteLayer: editor.paste()
             case .paintScreenSurface:

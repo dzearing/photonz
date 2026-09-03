@@ -380,6 +380,11 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// did before placement existed, so a group made before it decodes and
     /// resizes exactly as it always has.
     public var contentPlacement: LayerPlacement?
+    /// Set when this group arranges its own contents: a stack along one axis,
+    /// or a grid of rows (`GroupLayout`). Nil is a group that holds whatever
+    /// you dragged into it wherever you dragged it, which is every group this
+    /// app has ever made and every group in every document saved before this.
+    public var layout: GroupLayout?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool = true, backgroundHex: String? = nil,
@@ -400,7 +405,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
-        case properties, overrides, followedStyle, contentPlacement
+        case properties, overrides, followedStyle, contentPlacement, layout
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -421,6 +426,10 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // A group that never had a placement set writes no key, so a document
         // saved before placement existed is byte for byte what it was.
         try c.encodeIfPresent(contentPlacement?.normalized, forKey: .contentPlacement)
+        // Only a group somebody asked to arrange itself writes this key, so a
+        // document saved before stacks and grids existed is byte for byte what
+        // it was.
+        try c.encodeIfPresent(layout, forKey: .layout)
         guard isFrame else { return }
         try c.encode(true, forKey: .isFrame)
         try c.encode(clipsContents, forKey: .clipsContents)
@@ -439,6 +448,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         overrides = try c.decodeIfPresent([ComponentOverride].self, forKey: .overrides) ?? []
         followedStyle = try c.decodeIfPresent(LayerStyle.self, forKey: .followedStyle)
         contentPlacement = try c.decodeIfPresent(LayerPlacement.self, forKey: .contentPlacement)
+        layout = try c.decodeIfPresent(GroupLayout.self, forKey: .layout)
     }
 }
 

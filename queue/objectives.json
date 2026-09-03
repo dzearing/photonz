@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-02T23:48:07.363Z",
+  "updated": "2026-09-03T17:19:14.274Z",
   "focus": "ui-building",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -25,8 +25,8 @@
         {
           "id": "ui-layout",
           "title": "Auto-layout and grids that behave like real UI",
-          "note": "",
-          "stage": "later",
+          "note": "Moved up on 2026-09-03 by the decision \"Six audits in one day say nothing resizes to fit what is inside it. Should auto layout move up now?\" \u2014 answered \"Move auto layout up, start it next\".",
+          "stage": "now",
           "children": []
         },
         {

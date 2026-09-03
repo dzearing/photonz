@@ -6674,3 +6674,52 @@ granted, real window captures, `colorRows` identical at one and two layers
 `["Fill","Outline","Text"]` without moving either; the Fill checkbox switched
 off and back on over a selection, and the same on a frame's surface. Audit:
 `queue/audits/2026-09-03-color-one-home.json`.
+
+## 2026-09-03 — Groups that arrange their own contents (Next, `next-auto-layout`)
+
+The user's ask from the alignment decision card: as well as lining layers up by
+hand, a component should be able to hold a grid or a stack. The `ui-layout` epic
+was staged `later`; the decision "Six audits in one day say nothing resizes to
+fit what is inside it" was answered "Move auto layout up, start it next", so
+`queue/objectives.json` now stages it `now` and this is the first slice.
+
+`GroupContent` gained an optional `layout` (kind, direction, columns, gap, row
+gap, padding) that writes no key when unset, so every saved document decodes and
+draws exactly as before. `GroupFlow` does the maths; `PhotonzDocument.setGroupLayout`,
+`stackSelection` and `reflowLayouts` do the edits. The reflow runs inside
+`History.perform`, next to the component sync, so adding, deleting, pasting,
+hiding, dragging and undoing all put a stack back in order without any command
+knowing stacks exist, and each stays one undo step.
+
+Two design calls worth remembering. **The flow owns the axis it runs along and
+the placement rules own the other one**, so a column stack decides Y while the
+Horizontal menu that was already in the Layout section decides Left / Centre /
+Right / Stretch, and one layer can still override it. That is why there is no
+per-child Hug / Fill / Fixed row: it would be a second control answering a
+question the panel already answers. And **turning a hand-arranged group into a
+stack reads the direction and gap off where things already are**, so a row you
+spaced by eye at 16 points converts with nothing moving.
+
+Cut from the `ui-autolayout` mock: Distribute (three of its four options mean
+nothing in a container that is exactly as big as its contents) and per-child
+sizing. The `ui-grid` mock turned out to be a different feature — a column
+overlay you eyeball against, not a container that positions what it holds — so
+it is still unbuilt.
+
+Second review on the probe added two things: a group that arranges itself no
+longer offers Scale (it places its contents, it never magnifies them) and reads
+as Left / Top instead; and X and Y stopped taking typing for a layer inside a
+stack, saying who owns them on hover, because the number used to land and be put
+straight back.
+
+Next: a container that hugs or fills along the flow axis (a stack is always
+exactly as big as its contents today), wrapping as a fourth direction, per-side
+padding.
+
+Verified: `Scripts/test.sh` green (2283 tests, 33 new in `GroupLayoutTests`);
+`Scripts/playtest/stack-and-grid-walk.json` on the probe with Screen Recording
+granted, real window captures — conversion moved nothing (gap read as 55 from
+40 and 70), a typed gap of 8 landed on every row, a grid of 2 columns wrapped
+the third, dragging a row past its neighbour reordered rather than snapping
+back, and adding a row to a component's original grew the copy in the same place
+in one undoable step. Audit: `queue/audits/2026-09-03-auto-layout.json`.

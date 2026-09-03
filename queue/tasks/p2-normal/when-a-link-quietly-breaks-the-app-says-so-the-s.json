@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:06:37.836Z",
-  "updated": "2026-09-03T16:47:41.271Z",
+  "updated": "2026-09-03T16:48:23.925Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Extraction candidate found in the 2026-09-03 design review: the same gap is named in three audits on the same day. queue/audits/2026-09-03-color-styles.json (\"Nothing on screen says the link broke, which is the honest gap\"), 2026-09-03-component-look.json (\"Nothing warns you the moment you drag a slider on a copy that this part has stopped following\") and 2026-09-03-component-instances.json (ungroup on a copy, and deleting an original). Existing shape to build on: the CopyConfirmation pill, which is the canvas notice from UX-PATTERNS section 3. That slot has rules: bottom centre above the tool bar, one notice at a time, and it is reserved for the Measure mode hint while the Measure tool is in hand, so this has to queue or defer rather than fight it. The data is already there and thrown away: PhotonzDocument.reconcileColorStyles returns how many bindings broke and runs inside History.perform. This replaces the narrower task say-so-when-a-color-lets-go-of-its-style, which is folded in here.",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-03T16:47:41.271Z",
       "note": "Verified live end to end by Scripts/playtest/link-break-walk.json against Photonz Probe. The pill text at each stage, read out of log.json: 'Stopped following · 1 color no longer follows Accent', '· Opacity on this copy no longer follows Setting', '· The pieces of this copy no longer follow Setting', '· 1 copy no longer follows Setting', and after undo 'none' with the copy back to Setting [copy] in the layer tree. Four real window captures in queue/audits/."
+    },
+    {
+      "t": "2026-09-03T16:48:23.925Z",
+      "note": "One canvas notice for all four quiet breaks, found by one diff in PhotonzCore (LinkBreakReport.between, run from History.perform) rather than four announcements: color off a style, a part of a copy's look, an ungrouped copy, copies left by a deleted original. Pill reads 'Stopped following' + one sentence; stays 3s; undo clears it. Next only, behind next-components/next-styles. 26 new tests, Scripts/test.sh green (2250). Verified live on the probe app by Scripts/playtest/link-break-walk.json with four real window captures; audit at queue/audits/2026-09-03-link-breaks.json. Commit 3b99260."
     }
   ],
-  "started": "2026-09-03T16:26:20.402Z"
+  "started": "2026-09-03T16:26:20.402Z",
+  "completed": "2026-09-03T16:48:23.925Z"
 }

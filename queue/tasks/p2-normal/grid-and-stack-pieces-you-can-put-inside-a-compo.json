@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:32:55.878Z",
-  "updated": "2026-09-03T13:49:24.509Z",
+  "updated": "2026-09-03T17:20:49.982Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User note on decision layers-line-up-with-each-other-while-you-build: \"We should probably also have grid components that can be placed within a component, grid and stack\". This is auto layout, so it belongs to the ui-layout sub epic, which is staged LATER: it is filed so the ask is not lost, and the manager decides when it opens. Sits on top of next-align-layers (the align and space maths in LayerArrangement is the same maths a stack applies continuously).",
@@ -35,6 +35,27 @@
     {
       "t": "2026-09-03T13:49:24.509Z",
       "note": "decision \"Six audits in one day say nothing resizes to fit what is inside it. Should auto layout move up now?\" resolved: Move auto layout up, start it next"
+    },
+    {
+      "t": "2026-09-03T16:48:53.497Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T16:54:50.841Z",
+      "note": "Adversarial review before building. (1) The auto-layout mock (docs/design/mocks/pages/ui-autolayout.html) draws EIGHT controls: direction, gap, pad, cross align, distribute, frame size hug/fixed, and per-child hug/fill/fixed. A first-time user facing eight dropdowns cannot tell which one does the thing they want. (2) Distribute (packed/center/between/around) only means anything when the container is BIGGER than its contents; a plain group hugs its contents by definition, so three of the four options would be dead on arrival. Cut. (3) Per-child hug/fill/fixed is a SECOND system saying where a child sits, next to the placement rules we already ship (Layout section: left/center/right/stretch). Two systems answering one question is exactly the confusion to avoid, so the stack reuses placement instead of inventing a control: the flow owns the main axis, the existing placement menus own the cross axis. That also means no new per-child UI at all. (4) The ui-grid mock is NOT what the user asked for: its grid is a column overlay you eyeball against, not a container that positions what is inside it. The ask (grid and stack pieces you can put inside a component) is a grid CONTAINER, so that is what gets built. (5) Shortest version that delivers the ask: one Contents row saying Free / Stack / Grid, plus the two or three numbers that shape it."
+    },
+    {
+      "t": "2026-09-03T16:54:50.841Z",
+      "note": "Shape of the build: GroupContent gains an optional layout (kind, direction, gap, row gap, columns, padding), absent by default so every saved document decodes and draws unchanged. A pure flow in PhotonzCore places the contents; History.perform reflows after every edit, so adding, deleting, pasting or dragging a layer all re-flow without any command knowing the feature exists. Turning a hand-arranged group into a stack INFERS direction and gap from where things already are, so a tidy row converts with nothing moving at all."
+    },
+    {
+      "t": "2026-09-03T17:20:49.982Z",
+      "note": "Second adversarial review, on the running probe app. Two things it found, both fixed. (1) A stacked group still offered Scale in its Horizontal and Vertical menus and reported Scale as the default, which is a lie: a container that places its contents never magnifies them. Scale is now absent from the choices and the rows read Left / Top, the same rule a screen already followed. (2) Typing Y on a layer inside a stack landed and was then put straight back by the flow, with nothing said. X and Y no longer take typing there and say who owns them on hover, the way a copy of a component already explains its fixed size. Also caught by the screenshot: the word Arrangement wrapped onto two lines in the panel, so the label no longer shrinks and the control gives up the points instead."
+    },
+    {
+      "t": "2026-09-03T17:20:49.982Z",
+      "note": "Left rough, in the audit: a stack is always exactly as big as its contents (no hug/fill/fixed on the container), padding is one number and only on a screen, a locked layer inside a stack is still moved by the stack, and the only way to move one row by hand is to drag it."
     }
-  ]
+  ],
+  "started": "2026-09-03T16:48:53.497Z"
 }

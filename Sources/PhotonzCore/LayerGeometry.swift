@@ -171,23 +171,42 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// Why text has no typeable height.
     public static let textHeightReason = "Height follows the text. Change the width to re-wrap it, or the font size in the Text section."
 
+    /// Why a layer in a stack has no typeable position: the stack decides it,
+    /// and a typed number would be put straight back. Says what to do instead.
+    public static let stackedReason = "The stack this is in decides where it sits. Change the group's Gap or Direction in the Layout section, or drag this past its neighbours to reorder them."
+
+    /// The same for a grid.
+    public static let griddedReason = "The grid this is in decides where it sits. Change the group's Columns or gaps in the Layout section, or drag this past its neighbours to reorder them."
+
     public let canMove: Bool
     public let canSetWidth: Bool
     public let canSetHeight: Bool
 
     private let widthReason: String?
     private let heightReason: String?
+    private let moveReason: String?
 
-    public init(layer: Layer) {
+    /// `container` is the group this layer sits in, when it has one. It only
+    /// matters when that group arranges itself: a stack or a grid decides
+    /// where its contents sit, so typing a position there would be undone
+    /// before you saw it, and the field says who owns it instead.
+    public init(layer: Layer, in container: Layer? = nil) {
         if layer.isLocked {
             canMove = false
             canSetWidth = false
             canSetHeight = false
             widthReason = Self.lockedReason
             heightReason = Self.lockedReason
+            moveReason = Self.lockedReason
             return
         }
-        canMove = true
+        if let layout = container?.group?.layout {
+            canMove = false
+            moveReason = layout.kind == .grid ? Self.griddedReason : Self.stackedReason
+        } else {
+            canMove = true
+            moveReason = nil
+        }
         if layer.allowsFrameResize {
             canSetWidth = true
             canSetHeight = !layer.resizeWidthOnly
@@ -219,7 +238,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     public func fixedReason(for field: LayerGeometryField) -> String? {
         guard !allows(field) else { return nil }
         switch field {
-        case .x, .y: return Self.lockedReason
+        case .x, .y: return moveReason
         case .width: return widthReason
         case .height: return heightReason
         }

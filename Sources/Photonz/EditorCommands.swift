@@ -333,6 +333,20 @@ struct EditorCommands: Commands {
                     .keyboardShortcut("g", modifiers: [.command, .shift])
                     .disabled(!(editor?.canUngroupSelection ?? false))
             }
+            // Groups that arrange their own contents (`next-auto-layout`),
+            // right under Group, because a stack IS a group that arranges
+            // itself and the two are pressed for the same reason. Stacking is
+            // one modifier off grouping, and Photoshop binds neither the
+            // command nor Control Command G. Grid Selection takes no key: it
+            // is the same act with a column count, and a grid is picked far
+            // less often than a row of things.
+            if Experiments.shared.autoLayoutEnabled {
+                Button("Stack Selection") { editor?.stackSelection(.stack) }
+                    .keyboardShortcut("g", modifiers: [.command, .control])
+                    .disabled(!(editor?.canStackSelection ?? false))
+                Button("Grid Selection") { editor?.stackSelection(.grid) }
+                    .disabled(!(editor?.canStackSelection ?? false))
+            }
             // Frames sit with the structure commands, because a frame IS a
             // group with a size. Neither row takes a key: F already picks the
             // frame tool, and the design-tool key for Frame Selection (⌥⌘G) is

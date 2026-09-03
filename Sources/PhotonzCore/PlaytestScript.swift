@@ -170,6 +170,18 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case createCanvas
     /// ⌘G and ⇧⌘G are menu chords too.
     case group, ungroup
+    /// Layer ▸ Stack Selection and Grid Selection (Next, `next-auto-layout`):
+    /// the picked layers become one group that arranges them, or the picked
+    /// group starts arranging itself.
+    case stackSelection, gridSelection
+    /// Layer ▸ Select Original: jumps from a copy of a component to the
+    /// original it follows, so a walk can edit the original after dropping a
+    /// copy without hunting for its row.
+    case selectComponentOriginal
+    /// Layer ▸ Delete Layer, which is a menu chord (⌘⌫) and so cannot be
+    /// pressed in a walk. A walk that checks what happens after something is
+    /// taken away asks for it here.
+    case deleteLayer
     /// Edit ▸ Copy and Edit ▸ Paste. Both are menu chords, which do nothing
     /// while the probe is not the active app, so a walk that checks where a
     /// pasted layer lands asks for them here.

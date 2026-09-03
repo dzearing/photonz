@@ -135,34 +135,46 @@ extension ResolvedPlacement {
 }
 
 extension Layer {
+    /// Whether this container PLACES what it holds rather than magnifying it.
+    ///
+    /// True of a screen, whose handle moves where it clips, and true of a group
+    /// that arranges itself, whose flow puts every piece somewhere. In both,
+    /// the proportional Scale a layer starts on means nothing, so it is neither
+    /// offered nor reported: what an unset piece really does is hold to the
+    /// leading edge.
+    public var placesItsContents: Bool { isFrame || group?.layout != nil }
+
     /// How this layer behaves when the group holding it is resized, resolved
     /// against that group's default.
     public func resolvedPlacement(in container: Layer?) -> ResolvedPlacement {
         let resolved = LayerPlacement.resolving(child: placement,
                                                 container: container?.group?.contentPlacement)
-        return container?.isFrame == true ? resolved.onAScreen : resolved
+        return container?.placesItsContents == true ? resolved.onAScreen : resolved
     }
 
     /// What this container's contents do by default, in the words the
     /// inspector shows. A screen's unset default is the top left it actually
-    /// honours, not the Scale a group would do.
+    /// honours, not the Scale a group would do, and so is a stack's.
     public var contentPlacementDefault: ResolvedPlacement {
         let placement = group?.contentPlacement
         let resolved = ResolvedPlacement(horizontal: placement?.horizontal ?? .scale,
                                          vertical: placement?.vertical ?? .scale,
                                          followsHorizontal: placement?.horizontal == nil,
                                          followsVertical: placement?.vertical == nil)
-        return isFrame ? resolved.onAScreen : resolved
+        return placesItsContents ? resolved.onAScreen : resolved
     }
 
     /// The choices worth offering for something in this container. Scale is not
-    /// one of them on a screen, which never magnifies what is on it.
+    /// one of them on a screen, which never magnifies what is on it, nor in a
+    /// stack or a grid, which place their contents instead.
     public var horizontalPlacementChoices: [HorizontalPlacement] {
-        isFrame ? HorizontalPlacement.allCases.filter { $0 != .scale } : HorizontalPlacement.allCases
+        placesItsContents ? HorizontalPlacement.allCases.filter { $0 != .scale }
+                          : HorizontalPlacement.allCases
     }
 
     public var verticalPlacementChoices: [VerticalPlacement] {
-        isFrame ? VerticalPlacement.allCases.filter { $0 != .scale } : VerticalPlacement.allCases
+        placesItsContents ? VerticalPlacement.allCases.filter { $0 != .scale }
+                          : VerticalPlacement.allCases
     }
 
     /// This layer's own setting with one axis changed, collapsed back to

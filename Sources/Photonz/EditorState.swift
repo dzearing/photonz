@@ -3214,6 +3214,63 @@ final class EditorState {
         selectLayers(Set(freed).union(kept))
     }
 
+    // MARK: - Groups that arrange themselves (Next flag `next-auto-layout`)
+
+    /// The group whose Arrangement the Layout section is editing: the one group
+    /// picked, and nothing when the selection is anything else.
+    var arrangingGroupID: UUID? {
+        guard Experiments.shared.autoLayoutEnabled, let document,
+              document.canSetGroupLayout(ids: actionableLayerIDs) else { return nil }
+        return actionableLayerIDs.first
+    }
+
+    /// How the picked group arranges its contents right now, or nil for a group
+    /// that holds things wherever you put them.
+    var arrangement: GroupLayout? {
+        arrangingGroupID.flatMap { document?.layer(id: $0)?.group?.layout }
+    }
+
+    /// Whether Layer ▸ Stack Selection would do anything: one group to convert,
+    /// or several layers to wrap up and arrange.
+    var canStackSelection: Bool {
+        guard Experiments.shared.autoLayoutEnabled, let document else { return false }
+        let ids = actionableLayerIDs
+        return document.canSetGroupLayout(ids: ids) || document.canGroup(ids: ids)
+    }
+
+    /// The Layout section's Arrangement row: this group becomes a stack, a
+    /// grid, or goes back to holding things wherever they were put. Nothing
+    /// moves at the moment it lands — the layout is read off where the contents
+    /// already are.
+    func setArrangement(id: UUID, kind: GroupLayoutKind?) {
+        guard document?.layer(id: id)?.isGroup == true else { return }
+        discardDragPreview()
+        perform { $0.setGroupLayout(id: id, kind: kind) }
+    }
+
+    /// One typed number on a group's arrangement: the gap, the columns, the
+    /// padding. Lands as one undo step, like every other typed number.
+    func updateArrangement(id: UUID, _ change: @escaping (inout GroupLayout) -> Void) {
+        guard document?.layer(id: id)?.group?.layout != nil else { return }
+        perform { $0.updateGroupLayout(id: id, change) }
+    }
+
+    /// Layer ▸ Stack Selection (⇧⌘S) / Grid Selection: several layers become
+    /// one group that arranges them, and a group already picked simply starts
+    /// arranging itself. The group is left selected, so the very next thing you
+    /// type is its gap.
+    func stackSelection(_ kind: GroupLayoutKind) {
+        guard canStackSelection else { return }
+        let ids = actionableLayerIDs
+        discardDragPreview()
+        var madeID: UUID?
+        perform { madeID = $0.stackSelection(ids: ids, kind: kind) }
+        guard let madeID else { return }
+        groupContextID = document?.parentID(of: madeID)
+        selectedLayerID = madeID
+        setSelection(nil, captureLayers: false)
+    }
+
     // MARK: - Components (Next flag `next-components`)
 
     /// A component whose Name field should be waiting for typing, set by the
@@ -4846,8 +4903,13 @@ final class EditorState {
                 if selected.contains(up) { return nil }
                 parent = document.parentID(of: up)
             }
+            // The group it sits in comes along, because a group that arranges
+            // itself owns where its contents sit and the fields must say so
+            // rather than taking a number and putting it back.
+            let holder = document.parentID(of: layer.id).flatMap { document.layer(id: $0) }
             return LayerGeometrySelection.Member(id: layer.id, frame: frame,
-                                                 editing: LayerGeometryEditing(layer: layer))
+                                                 editing: LayerGeometryEditing(layer: layer,
+                                                                               in: holder))
         }
         return LayerGeometrySelection(members)
     }

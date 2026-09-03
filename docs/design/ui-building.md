@@ -1570,3 +1570,87 @@ undo away; and the pill names what broke but does not offer a way to it, so a
 copy stranded off screen is still found by hand.
 
 Walked end to end by `Scripts/playtest/link-break-walk.json`.
+
+## Landed: a group can arrange its own contents (Next, `next-auto-layout`, 2026-09-03)
+
+Asked for by the user while answering the alignment decision: as well as lining
+layers up by hand, a component should be able to hold a **grid** or a **stack**,
+so the things inside it space and re-flow themselves.
+
+**One control, three words.** Pick a group and the Layout section opens with an
+**Arrangement** row: **Free**, **Stack**, **Grid**.
+
+- **Free** is every group this app has ever made: things stay where you put
+  them.
+- **Stack** lays them along one axis with an even **Gap**, and a **Direction**
+  of Row or Column.
+- **Grid** fills rows of equal cells, with **Columns**, a **Column gap** and a
+  **Row gap**.
+- On a **screen** there is also **Padding**, the space kept clear inside its
+  edges. A plain group has no edges of its own to keep clear of, so it has no
+  padding row.
+
+Every number is typed, never dragged for, with the same keys as the other
+number fields (Return lands it, Escape puts it back, up and down step by 1 and
+Shift by 10).
+
+**Turning what you already arranged into a stack moves nothing.** The direction
+and the gap are READ off where the contents already are, so a row you spaced by
+eye at 16 points becomes a row with a gap of 16 and not one thing shifts. Where
+the spacing was uneven the average wins, which is the tidy-up you were about to
+do by hand. The group's own anchor moves with its contents, so nothing on the
+canvas jumps at the moment you press it.
+
+**The flow owns one axis; the placement rules own the other.** A column stack
+decides every Y, and whether a row sits Left, Centre, Right or Stretch across is
+the same Horizontal menu that was already in this section, which any one layer
+can still answer differently for itself. A grid decides the cells, and the two
+menus say where each thing sits inside its cell. The axis the flow owns says
+"Set by the stack" rather than offering a menu that changes nothing, and
+**Scale** disappears from the choices, because a container that places its
+contents never magnifies them.
+
+**Everything re-flows, and nobody had to be told.** The flow runs inside
+`History.perform`, so adding a layer, deleting one, pasting one, hiding one or
+undoing all put the contents back in order without any command knowing stacks
+exist — and each of them stays exactly one undo step. Hiding a row closes the
+space it held. **Dragging a row past its neighbour reorders the stack** rather
+than snapping it back, because order comes from where things are, not from the
+order they were drawn in. Since the stack decides where its contents sit, X and
+Y in Position & Size stop taking typing for a layer inside one and say who owns
+them on hover.
+
+**Inside a component it works the way you would hope.** Make the stack a
+component, drop a copy, add a row to the original, and the copy grows the same
+row in the same place, in one step.
+
+**Menus and keys.** Layer ▸ **Stack Selection** (⌃⌘G) and **Grid Selection**,
+right under Group: several layers picked become one group that arranges them,
+and a group already picked simply starts arranging itself. Stacking is one
+modifier off grouping, and Photoshop binds neither the command nor the key.
+Grid Selection takes no key.
+
+**Cut from the mock on purpose** (`ui-autolayout` draws eight controls):
+
+- **Distribute** (packed / centre / between / around). Three of its four
+  options only mean anything in a container BIGGER than its contents, and a
+  plain group is exactly as big as its contents.
+- **Per-child hug / fill / fixed.** It would be a second control saying what
+  the Horizontal and Vertical rows right below already say. The stack reuses
+  those instead.
+- The `ui-grid` mock's "layout grid" is a different thing again: a column
+  overlay you eyeball against, not a container that positions what it holds.
+  The ask was for a container, so that is what this is.
+
+**Where it lives.** `GroupLayout` (the model and reading a layout off an
+existing arrangement), `GroupFlow` (the maths) and `GroupLayoutEditing`
+(`setGroupLayout`, `stackSelection`, `reflowLayouts`) in `PhotonzCore`, all
+tested; `GroupContent.layout` is optional and writes no key when unset, so every
+document saved before this decodes and draws unchanged.
+`ArrangementInspector.swift` and `EditorState.setArrangement` /
+`updateArrangement` / `stackSelection` in the app. Walked by
+`Scripts/playtest/stack-and-grid-walk.json`.
+
+Not in this slice: a container that hugs or fills along the flow axis (a stack
+is always exactly as big as its contents), wrapping as a fourth direction,
+per-side padding, and binding gaps to spacing tokens.

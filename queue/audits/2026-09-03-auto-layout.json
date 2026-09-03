@@ -1,0 +1,32 @@
+{
+  "feature": "Groups that arrange their own contents",
+  "epic": "ui-layout",
+  "summary": "A group can now be a stack or a grid, so the things inside it space themselves instead of being nudged into place one at a time. Add a layer, delete one, or drag one past another and everything re-flows on its own, inside a component too.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Groups that arrange their own contents\" is on by default.",
+  "try": [
+    { "do": "On a blank canvas draw three rectangles roughly in a column, deliberately unevenly spaced." },
+    { "do": "Rubber-band all three and press ⌃⌘G (Layer ▸ Stack Selection). Nothing should move: the Gap it shows is read off the spacing you already had.", "shot": "2026-09-03-auto-layout-1.png" },
+    { "do": "Type 8 into Gap and press Return." },
+    { "do": "Drag the second row up past the first. It should take first place rather than snapping back." },
+    { "do": "In the Layout section press Grid, then type 2 into Columns.", "shot": "2026-09-03-auto-layout-2.png" },
+    { "do": "Press Stack again, press ⌥⌘K to make it a component, then drag a copy of it out of the Library." },
+    { "do": "Double-click into the original, select a row and press ⌘J to duplicate it.", "shot": "2026-09-03-auto-layout-3.png" },
+    { "do": "Press ⌘Z once." }
+  ],
+  "evaluate": [
+    "When you turned a hand-arranged group into a stack, did it feel like it read your spacing, or like it took it over?",
+    "Are Free / Stack / Grid the right three words, and is the top of the Layout section the right place for them?",
+    "Dragging a row past its neighbour reorders the stack. Did that read as helpful or as the app refusing your drag?",
+    "The row for the axis the stack decides says \"Set by the stack\" instead of a menu. Is that clear enough, or does it look broken?",
+    "Is one Gap number enough for a stack, or do you reach for padding on a plain group too?"
+  ],
+  "rough": [
+    "A stack is always exactly as big as its contents. There is no Hug / Fill / Fixed on the container yet, so you cannot say \"this stack is 320 wide and the rows fill it\" unless the container is a screen.",
+    "Padding is one number and only on a screen, because a plain group has no edges of its own. Per-side padding is not built.",
+    "Cut from the mock on purpose: the mock's Distribute row (packed / centre / between / around) means nothing in a container that is exactly as big as its contents, and its per-child Hug / Fill / Fixed would be a second control saying what the Horizontal and Vertical rows already say. The stack reuses those rows instead: the flow owns the axis it runs along, the placement rows own the other one.",
+    "The ui-grid mock's \"layout grid\" is a column overlay you eyeball against, not a container that positions what it holds. The ask was for a container, so that is what was built; the overlay is still unbuilt.",
+    "X and Y stop taking typing for a layer inside a stack, and say who owns them on hover. That is honest but it does mean the only way to move one row is to drag it, or to change the gap.",
+    "A locked layer inside a stack is still moved by the stack. Lock stops you dragging it; it does not opt out of the arrangement.",
+    "Screenshots here are real captures of the running app (Screen Recording was granted), taken by Scripts/playtest/stack-and-grid-walk.json."
+  ]
+}
