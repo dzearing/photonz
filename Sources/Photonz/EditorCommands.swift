@@ -323,6 +323,11 @@ struct EditorCommands: Commands {
                 Button("Make Component") { editor?.makeComponent() }
                     .keyboardShortcut("k", modifiers: [.command, .option])
                     .disabled(!(editor?.canMakeComponent ?? false))
+                // Insert Component takes no key: it is the keyboard way to do
+                // what a drag from the shelf already does, and the shelf has to
+                // be open with a component picked for it to mean anything.
+                Button("Insert Component") { editor?.insertPickedComponent() }
+                    .disabled(!(editor?.canInsertPickedComponent ?? false))
             }
             Divider()
             // The arrange commands, Duplicate and Delete act on the whole

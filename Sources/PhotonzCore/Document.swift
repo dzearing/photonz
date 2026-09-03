@@ -219,7 +219,12 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                     if layer.clipsToFrame, !layer.localBounds.contains(point) { continue }
                     let local = CGPoint(x: point.x - layer.frame.origin.x,
                                         y: point.y - layer.frame.origin.y)
-                    if let found = search(layer.children, local, prefix + [index]) { return found }
+                    if let found = search(layer.children, local, prefix + [index]) {
+                        // A copy of a component answers for everything inside
+                        // it: its contents belong to its original, so a click
+                        // that lands on one of them picks the whole copy.
+                        return layer.isComponentInstance ? prefix + [index] : found
+                    }
                     // Nothing inside was hit, but a frame is a surface of its
                     // own: its empty room picks the frame itself.
                     if layer.isFrame, layer.localBounds.contains(point) { return prefix + [index] }

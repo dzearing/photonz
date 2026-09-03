@@ -352,19 +352,25 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// It is not the layer's own id, because a copy of a main is its own
     /// component and needs an identity that did not exist before.
     public var componentID: UUID?
+    /// Set on an **instance**: the component this copy follows
+    /// (`docs/design/ui-building.md`, step C5). Its children are not its own —
+    /// the document keeps them equal to the main's, so editing the main is the
+    /// only way anything inside a copy changes.
+    public var instanceOf: UUID?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool = true, backgroundHex: String? = nil,
-                componentID: UUID? = nil) {
+                componentID: UUID? = nil, instanceOf: UUID? = nil) {
         self.children = children
         self.isFrame = isFrame
         self.clipsContents = clipsContents
         self.backgroundHex = backgroundHex
         self.componentID = componentID
+        self.instanceOf = instanceOf
     }
 
     private enum CodingKeys: String, CodingKey {
-        case children, isFrame, clipsContents, backgroundHex, componentID
+        case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -374,6 +380,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(children, forKey: .children)
         try c.encodeIfPresent(componentID, forKey: .componentID)
+        try c.encodeIfPresent(instanceOf, forKey: .instanceOf)
         guard isFrame else { return }
         try c.encode(true, forKey: .isFrame)
         try c.encode(clipsContents, forKey: .clipsContents)
@@ -387,6 +394,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         clipsContents = try c.decodeIfPresent(Bool.self, forKey: .clipsContents) ?? true
         backgroundHex = try c.decodeIfPresent(String.self, forKey: .backgroundHex)
         componentID = try c.decodeIfPresent(UUID.self, forKey: .componentID)
+        instanceOf = try c.decodeIfPresent(UUID.self, forKey: .instanceOf)
     }
 }
 
@@ -424,6 +432,8 @@ public enum LayerContent: Hashable, Codable, Sendable {
         // claiming to be the same one: editing either must never move the
         // other, and the shelf must be able to tell them apart.
         if group.componentID != nil { group.componentID = UUID() }
+        // `instanceOf` is deliberately kept: a copy of a copy is another copy
+        // of the same component, which is what ⌘J on an instance has to mean.
         return .group(group)
     }
 }

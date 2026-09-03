@@ -1,0 +1,28 @@
+{
+  "id": "a-copy-follows-the-original-when-its-look-change",
+  "title": "A copy follows the original when its look changes, not just its shape",
+  "goal": "Today, changing a component's own fade, blur, shadow or rounded corners does not reach the copies you have placed, even though moving a piece inside it does. Make the whole look follow, without the copy's own sliders snapping back under your hand.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 720,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T04:20:54.093Z",
+  "updated": "2026-09-03T04:20:54.093Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Step C5 left this out on purpose: the sync manages a copy's children, isFrame, clipsContents, backgroundHex and size, but NOT Layer.style, because syncing style would revert an Effects slider dragged on a copy. The honest fix is the override model from C6: style becomes an overridable property, so an untouched copy follows and a touched one does not. Sequence it after C6 (docs/design/ui-building.md, step 6) rather than before.",
+  "acceptance": [
+    "Changing opacity, blur, shadow or corner radius on the original changes every copy",
+    "A copy you have styled yourself keeps what you set, and says so",
+    "The notice counts these edits the same way it counts a change to the contents",
+    "Covered by tests in PhotonzCore written before the implementation"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T04:20:54.093Z",
+      "note": "created (manual)"
+    }
+  ]
+}

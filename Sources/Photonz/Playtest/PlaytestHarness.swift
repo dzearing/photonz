@@ -332,6 +332,27 @@ private final class Run {
             }
             note(number, step.name, "\(condition) holds", state: describe())
 
+        case .dropComponent(let at):
+            let canvas = try requireCanvas()
+            guard let componentID = editor?.selectedComponentID else {
+                throw Failure(description: "no component is picked on the Library shelf to drop")
+            }
+            // Through the same pasteboard the real drag writes, so the type
+            // identifier and the payload are exercised, not just the placing.
+            let board = NSPasteboard(name: NSPasteboard.Name("photonz.playtest.componentDrag"))
+            board.clearContents()
+            board.setData(Data(componentID.uuidString.utf8), forType: ComponentDrag.pasteboardType)
+            guard ComponentDrag.componentID(on: board) == componentID else {
+                throw Failure(description: "the component drag payload did not survive the pasteboard")
+            }
+            let p = try viewPoint(at)
+            guard canvas.dropComponent(componentID, atViewPoint: p) else {
+                throw Failure(description: "the canvas refused the component drop")
+            }
+            await sleep(0.2)
+            note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p))",
+                 state: describe())
+
         case .snapshot(let name):
             // A sheet is its own window on top of the editor's, so while one is
             // up it IS what a person is looking at, and it is what gets
@@ -407,6 +428,8 @@ private final class Run {
             case .showLibrary: editor.setLibraryVisible(true)
             case .hideLibrary: editor.setLibraryVisible(false)
             case .placeLibraryPick: editor.placeLibraryPick()
+            case .insertPickedComponent: editor.insertPickedComponent()
+            case .duplicateLayer: editor.duplicateSelectedLayers()
             case .closeSheets:
                 editor.isExportDialogPresented = false
                 editor.isNewFrameDialogPresented = false

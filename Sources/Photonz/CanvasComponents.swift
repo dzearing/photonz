@@ -31,9 +31,18 @@ extension CanvasNSView {
         return document.mainComponents.filter(\.isVisible)
     }
 
+    /// The copies this canvas should mark. They get the glyph and NO name: a
+    /// screen built out of twelve buttons would otherwise wear twelve labels,
+    /// and the name of a copy is already in the layers list and the dock.
+    var markedComponentInstances: [Layer] {
+        guard componentsEnabled, let document else { return [] }
+        return document.allLayers.filter { $0.isComponentInstance && $0.isVisible }
+    }
+
     func refreshComponentChrome() {
         let mains = markedComponents
-        guard let viewport, let document, !mains.isEmpty else {
+        let copies = markedComponentInstances
+        guard let viewport, let document, !mains.isEmpty || !copies.isEmpty else {
             componentChromeLayer.isHidden = true
             componentChromeLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
             return
@@ -72,6 +81,22 @@ extension CanvasNSView {
                                  width: max(min(rect.width, 240), 40),
                                  height: Self.componentLabelHeight)
             componentChromeLayer.addSublayer(label)
+        }
+
+        for copy in copies {
+            guard let bounds = document.canvasBounds(of: copy.id),
+                  bounds.width > 0, bounds.height > 0 else { continue }
+            let rect = viewRect(forDocRect: bounds, in: viewport)
+            let glyph = CAShapeLayer()
+            let box = CGRect(x: rect.minX,
+                             y: rect.minY - Self.componentGlyphSize - Self.componentLabelGap,
+                             width: Self.componentGlyphSize, height: Self.componentGlyphSize)
+            // One diamond, not the original's four: a different shape rather
+            // than a different weight, so it still reads at ten points.
+            glyph.path = ComponentGlyph.instancePath(in: box)
+            glyph.fillColor = ComponentGlyph.cgColor
+            glyph.frame = layer?.bounds ?? rect
+            componentChromeLayer.addSublayer(glyph)
         }
     }
 }

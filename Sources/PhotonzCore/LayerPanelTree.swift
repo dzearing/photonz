@@ -121,10 +121,14 @@ extension PhotonzDocument {
         var rows: [LayerPanelRow] = []
         func walk(_ list: [Layer], depth: Int, parent: UUID?) {
             for layer in list.reversed() {
-                let open = layer.isGroup && expanded.contains(layer.id)
+                // A copy of a component has no twist open: what is inside it
+                // belongs to its original, so a row you could open would show
+                // pieces nobody can keep an edit to.
+                let openable = layer.isOpenableGroup
+                let open = openable && expanded.contains(layer.id)
                 rows.append(LayerPanelRow(id: layer.id, depth: depth,
-                                          isGroup: layer.isGroup,
-                                          childCount: layer.isGroup ? layer.children.count : 0,
+                                          isGroup: openable,
+                                          childCount: openable ? layer.children.count : 0,
                                           isExpanded: open, parentID: parent))
                 if open { walk(layer.children, depth: depth + 1, parent: layer.id) }
             }
@@ -159,7 +163,9 @@ extension PhotonzDocument {
         let target = drop.targetID
         guard !ids.contains(target), let targetPath = path(of: target) else { return [] }
         if case .inside = drop {
-            guard let group = layer(id: target), group.isGroup, !group.isLocked else { return [] }
+            // `isOpenableGroup`: a copy of a component is not a container you
+            // can put anything in, because its contents are its original's.
+            guard let group = layer(id: target), group.isOpenableGroup, !group.isLocked else { return [] }
         }
         // A group can never be dropped into its own contents: that is a loop
         // with no way back out. Locked layers stay put, the way Bring Forward

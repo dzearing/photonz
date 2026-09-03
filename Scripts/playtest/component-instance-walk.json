@@ -1,0 +1,291 @@
+{
+  "out": "/tmp/photonz-playtest/component-instance-walk",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        200
+      ],
+      "to": [
+        520,
+        300
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        230,
+        330
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Auto-enhance"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        150
+      ],
+      "to": [
+        640,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Setting"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-original",
+      "note": "one component called Setting, its tile on the shelf saying main"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-instance-1-original"
+    },
+    {
+      "do": "menus",
+      "stage": "1-layer-menu",
+      "menu": "Layer"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "insertPickedComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-inserted",
+      "note": "Insert Component put a copy in the middle of the view, selected, with the outlined mark"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-instance-2-inserted"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        1050,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-dropped",
+      "note": "a copy dropped from the shelf lands centred on the drop, and the tile now says 2 copies"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-instance-3-dropped"
+    },
+    {
+      "do": "render",
+      "name": "component-instance-3-dropped-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        1050,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-copy-selected",
+      "note": "clicking inside a copy picks the whole copy, and the dock says which original it follows"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-instance-4-copy-selected"
+    },
+    {
+      "do": "action",
+      "action": "duplicateLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-duplicated",
+      "note": "Command J on a copy makes another copy that is still linked: the shelf tile should now count 3"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-instance-5-duplicated"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        250
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        280,
+        330
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-inside-original",
+      "note": "double click went into the ORIGINAL and picked the label inside it"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-followed",
+      "note": "nudging a piece of the original moved the same piece in both copies, and the pill says how many followed"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-instance-6-followed"
+    },
+    {
+      "do": "render",
+      "name": "component-instance-6-followed-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone",
+      "note": "one undo put the original and both copies back together"
+    },
+    {
+      "do": "render",
+      "name": "component-instance-7-undone-doc"
+    }
+  ]
+}

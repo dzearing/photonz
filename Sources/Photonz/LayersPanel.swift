@@ -108,7 +108,10 @@ struct InspectorPanel: View {
             // A main component's own section (Next, `next-components`): its
             // name, which is the one name the layers list and the shelf both
             // print. Only a main has one.
-            if Experiments.shared.componentsEnabled, layer.isMainComponent {
+            // ...and a copy gets the same slot, saying which original it
+            // follows, so the two kinds of component layer answer in one place.
+            if Experiments.shared.componentsEnabled,
+               layer.isMainComponent || layer.isComponentInstance {
                 set.insert(.component)
             }
             if layer.annotation != nil { set.insert(.annotation) }
@@ -209,6 +212,8 @@ struct InspectorPanel: View {
         case .component:
             if let layer = selectedLayer, layer.isMainComponent {
                 ComponentInspector(layer: layer)
+            } else if let layer = selectedLayer, layer.isComponentInstance {
+                ComponentInstanceInspector(layer: layer)
             }
         case .annotation:
             if let layer = selectedLayer, layer.annotation != nil {
@@ -748,9 +753,11 @@ struct LayersListView: View {
             }
             // The mark that says this group is a component. It sits with the
             // name rather than out at the edge, because it is part of what the
-            // row IS, not one more thing you can do to it.
-            if Experiments.shared.componentsEnabled, layer.isMainComponent {
-                ComponentMark()
+            // row IS, not one more thing you can do to it. Filled is the
+            // original, outlined is a copy that follows it.
+            if Experiments.shared.componentsEnabled,
+               layer.isMainComponent || layer.isComponentInstance {
+                ComponentMark(isInstance: layer.isComponentInstance)
             }
             Spacer(minLength: 4)
             // A shut group says how much it is hiding, so the row is not a

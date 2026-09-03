@@ -1,0 +1,35 @@
+{
+  "feature": "Copies that follow their original",
+  "epic": "ui-components",
+  "summary": "A component on the Library shelf now hands you copies: drag one onto the canvas or double click its tile, and every copy stays tied to the original. Editing the original changes all of them at once, in one undo step, and a pill at the bottom of the canvas says how many followed.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags next-layer-groups, next-library and next-components are on by default.",
+  "try": [
+    { "do": "Draw a rectangle, put a text label under it, sweep both with a marquee and press Command G." },
+    { "do": "Press Option Command K, type Setting, press Return." },
+    { "do": "Drag the Setting tile off the Library shelf and drop it on an empty part of the canvas.", "shot": "2026-09-03-component-instances-1.png" },
+    { "do": "Double click the Setting tile to place a second copy." },
+    { "do": "Click in the middle of one copy.", "shot": "2026-09-03-component-instances-2.png" },
+    { "do": "Press Command J to duplicate that copy." },
+    { "do": "Double click into the original to select the label inside it, then press the down arrow five times.", "shot": "2026-09-03-component-instances-3.png" },
+    { "do": "Press Command Z once and watch the original and every copy go back together." }
+  ],
+  "evaluate": [
+    "The original wears four violet diamonds and a copy wears one, on the canvas and in the layers list. Can you tell which one you are about to edit without reading a panel?",
+    "A copy is one object: clicking inside it picks the whole copy and double click does not go in. Does that feel protective, or does it feel like the app is refusing you something you wanted?",
+    "The pill says \"Updated, 2 copies of Setting\" after an edit of the original. Is that the right amount of noise, or would you rather nothing said anything?",
+    "A copy dropped from the shelf lands centred on where you let go. Is that where you expected it, or did you expect its top left corner there?",
+    "Double click on a component tile now places a copy instead of selecting the original, matching what double click already does on a Media tile. Selecting the original moved to a Select Original button. Is that the trade you would have made?",
+    "The Component section on a copy says which original it follows and offers Edit Original, and nothing else. Is anything missing you reached for?"
+  ],
+  "rough": [
+    "You cannot change anything inside a copy yet, and that is deliberate: a copy's contents are its original's, so any edit you made in there would be silently thrown away the next time the original moved. Exposed properties and detach are the next task, and they are the supported way in.",
+    "A copy's own opacity, blur, shadow and corner radius ARE its own, and do not follow the original. So changing effects on the original does not reach the copies. That is a real gap, filed as a follow-up, and the reason it is not fixed here is that syncing them would make the Effects sliders snap back on a copy, which is worse.",
+    "Renaming the original does not rename copies already placed. A copy takes the original's name once, when it is placed.",
+    "Command J on a copy names it \"Setting copy\", which is the app's existing duplicate naming and reads a bit oddly for something that is already a copy.",
+    "Deleting the original does not delete the copies: they keep exactly what they were drawing and become ordinary groups. Undoable, but nothing warns you first.",
+    "Ungroup on a copy still works and quietly turns it into loose layers, which is a detach nobody asked for by that name. It is undoable and Detach Instance arrives next, so it was left alone rather than guarded.",
+    "The shelf tile still shows only a name. How many copies are out is in the tile's tooltip and in the picked component's section, not on the tile itself.",
+    "A copy nested inside another component updating when the innermost original changes is proved by a test in PhotonzCore, not by the playtest walk: scripting three levels of component through the canvas was more fragile than the thing it was checking.",
+    "Screenshots here are real window captures from the probe app, not offscreen renders."
+  ]
+}

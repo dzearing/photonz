@@ -278,6 +278,9 @@ struct EditorView: View {
                        onDeleteLayer: { editorState.deleteLayer(id: $0) },
                        onDeleteLayers: { editorState.deleteLayers(ids: $0) },
                        onDropImageURL: { editorState.addImageLayerOrOpen(at: $0) },
+                       onDropComponent: { componentID, point in
+                           editorState.insertComponentInstance(componentID: componentID, at: point)
+                       },
                        onDropImageURLIntoCollage: { url, collageID, slot in
                            editorState.dropImage(at: url, intoCollage: collageID, slot: slot)
                        },

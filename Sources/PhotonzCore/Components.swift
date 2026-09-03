@@ -108,13 +108,15 @@ extension PhotonzDocument {
     }
 
     /// What the Library's Components scope shows: one tile per main, named by
-    /// its layer. The detail line says "main", which is the only kind of
-    /// component entry there is until instances arrive.
+    /// its layer. The detail line says how many copies of it are out, which is
+    /// the question a shelf raises the moment copies exist; a component nobody
+    /// has placed yet says "main".
     public var componentLibraryEntries: [LibraryEntry] {
         mainComponents.compactMap { layer in
             guard let componentID = layer.componentID else { return nil }
             return LibraryEntry(id: componentID.uuidString, scope: .components,
-                                name: layer.name, detail: ComponentNaming.mainDetail)
+                                name: layer.name,
+                                detail: ComponentNaming.detail(instanceCount: instanceCount(of: componentID)))
         }
     }
 }

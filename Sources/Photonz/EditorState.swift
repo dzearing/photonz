@@ -1445,6 +1445,13 @@ final class EditorState {
     /// copies keep one pill up that fades from the last one.
     private func showCopyConfirmation(_ subject: CopyConfirmation.Subject) {
         guard Experiments.shared.measurePanelEnabled else { return }
+        raiseCanvasNotice(subject)
+    }
+
+    /// Puts a notice in the canvas-bottom slot. The flag each caller lives
+    /// under is checked by the caller, so one pill can answer more than one
+    /// feature without either knowing about the other's switch.
+    private func raiseCanvasNotice(_ subject: CopyConfirmation.Subject) {
         measureModeHintTimer?.cancel()
         measureModeHint = nil
         let now = Date()
@@ -3085,6 +3092,85 @@ final class EditorState {
         perform { $0.renameComponent(componentID: componentID, to: name) }
     }
 
+    /// The component id behind the picked Components tile, whatever it is
+    /// called and wherever the original sits.
+    var selectedComponentID: UUID? { selectedComponentLayer?.componentID }
+
+    /// Whether Layer ▸ Insert Component would do anything: a component is
+    /// picked on the shelf and the document it belongs to is the open one.
+    var canInsertPickedComponent: Bool { selectedComponentID != nil }
+
+    /// Layer ▸ Insert Component, and what a double click on a Components tile
+    /// does: puts a copy in the middle of what you are looking at.
+    ///
+    /// The middle of the VIEW, not the middle of the canvas: on a document
+    /// zoomed in on one screen, the middle of the canvas is usually off screen,
+    /// and a copy you have to go and find is a copy you did not place.
+    func insertPickedComponent() {
+        guard let componentID = selectedComponentID else { return }
+        insertComponentInstance(componentID: componentID, at: visibleCanvasCentre)
+    }
+
+    /// The middle of what the canvas is showing, in document coordinates.
+    var visibleCanvasCentre: CGPoint {
+        guard let document else { return .zero }
+        guard let viewport else {
+            return CGPoint(x: document.canvasSize.width / 2, y: document.canvasSize.height / 2)
+        }
+        let visible = CGRect(x: -viewport.origin.x / viewport.zoom,
+                             y: -viewport.origin.y / viewport.zoom,
+                             width: viewport.viewSize.width / viewport.zoom,
+                             height: viewport.viewSize.height / viewport.zoom)
+            .intersection(CGRect(origin: .zero, size: document.canvasSize))
+        guard !visible.isNull, visible.width > 0, visible.height > 0 else {
+            return CGPoint(x: document.canvasSize.width / 2, y: document.canvasSize.height / 2)
+        }
+        return CGPoint(x: visible.midX, y: visible.midY)
+    }
+
+    /// Places a copy of a component with its centre on a canvas point: the one
+    /// path a drag from the shelf, a double click on a tile and the menu row
+    /// all run, so all three land the same copy in the same place.
+    ///
+    /// The copy becomes the selection, because the thing you just placed is the
+    /// thing you want to move next, and the shelf lets go of its tile so the
+    /// dock talks about the copy rather than the component you took it from.
+    @discardableResult
+    func insertComponentInstance(componentID: UUID, at point: CGPoint) -> UUID? {
+        guard Experiments.shared.componentsEnabled, let document else { return nil }
+        guard document.mainComponent(componentID: componentID) != nil else { return nil }
+        // Dropping a component onto its own original would make a thing that
+        // draws forever, so it is refused out loud rather than quietly ignored.
+        if let host = document.frameID(under: point), enclosesComponent(componentID, at: host) {
+            raiseComponentCycleNotice()
+            return nil
+        }
+        discardDragPreview()
+        var placed: UUID?
+        perform { placed = $0.insertComponentInstance(of: componentID, at: point) }
+        guard let placed else { return nil }
+        selectedLibraryItemID = nil
+        selectLayer(placed, inGroup: self.document?.parentID(of: placed))
+        return placed
+    }
+
+    /// Whether the drop target sits inside the component being placed, which is
+    /// the one case a copy is refused rather than placed loose on the canvas.
+    private func enclosesComponent(_ componentID: UUID, at host: UUID) -> Bool {
+        guard let document else { return false }
+        var current: UUID? = host
+        while let id = current {
+            if document.layer(id: id)?.componentID == componentID { return true }
+            current = document.parentID(of: id)
+        }
+        return false
+    }
+
+    private func raiseComponentCycleNotice() {
+        guard Experiments.shared.componentsEnabled else { return }
+        raiseCanvasNotice(.componentCycle)
+    }
+
     /// "Select on Canvas" on a Components tile: answers "where is this thing?"
     /// by selecting the main itself, which hands the dock back to the layer.
     func selectComponentOnCanvas(componentID: UUID) {
@@ -4142,8 +4228,23 @@ final class EditorState {
     }
 
     func perform(_ mutate: (inout PhotonzDocument) -> Void) {
-        history?.perform(mutate)
+        let report = history?.perform(mutate) ?? ComponentSyncReport()
         rerender()
+        announceComponentSync(report)
+    }
+
+    /// Says how many copies followed the edit that just landed
+    /// (`docs/design/ui-building.md`, step C5). Editing an original changes
+    /// things that are elsewhere on the canvas, often scrolled off it, so
+    /// without this you change one thing and have no idea what else moved.
+    /// Placing a copy and moving one both report nothing, because neither is
+    /// an edit that reached anywhere.
+    private func announceComponentSync(_ report: ComponentSyncReport) {
+        guard Experiments.shared.componentsEnabled, !report.isEmpty else { return }
+        let named = report.componentIDs.count == 1
+            ? report.componentIDs.first.flatMap { document?.mainComponent(componentID: $0)?.name }
+            : nil
+        raiseCanvasNotice(.componentInstances(count: report.updatedInstances, component: named))
     }
 
     func undo() {

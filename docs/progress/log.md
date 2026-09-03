@@ -5675,3 +5675,32 @@ Audit: `queue/audits/2026-09-03-components.json`.
 
 Next: step 5, placing an instance from the Library and having a main edit reach
 every copy.
+
+## 2026-09-03 — Copies that follow their original (step C5)
+
+The Library shelf stopped being a list and started handing you things. Dragging
+a component tile onto the canvas, double clicking it, or Layer ▸ Insert
+Component all place a copy that stays tied to the original; editing the original
+updates every copy in one undo step, and a pill says how many followed.
+
+- `PhotonzCore/ComponentInstances.swift` is the whole model: `GroupContent.instanceOf`,
+  `insertComponentInstance`, `syncComponentInstances`, the cycle guard, and
+  `ComponentIdentity.derived` (ids inside a copy are derived from the copy so a
+  sync is idempotent and an edit that changes nothing still records nothing).
+- The sync runs inside `History.perform`, so no command can forget it, and it is
+  skipped for a document with no copies.
+- A copy is opaque: `hitTestPath` answers with the copy, `panelRows` gives it no
+  twist open, `canDrop(.inside:)` refuses it. That is what stops an edit inside a
+  copy being silently thrown away by the next sync.
+- Four diamonds is the original, one diamond is a copy. The first attempt drew a
+  copy's mark as the four diamonds hollow, which at nine points is a smudge that
+  reads exactly like the fill.
+- 26 new tests in `ComponentInstanceTests`, and `Scripts/playtest/component-instance-walk.json`
+  drives place, drop, duplicate and follow in the probe app.
+
+Next: step C6, exposed properties and overrides plus detach. A follow-up is
+filed for a copy following the original's own effects, which C6's override model
+is the honest place to fix.
+
+Open question for the user, in the audit: whether a copy being one object you
+cannot open feels protective or feels like a refusal.

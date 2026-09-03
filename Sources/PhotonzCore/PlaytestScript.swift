@@ -184,6 +184,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Place the picked Library tile in the picture, which is what the item
     /// section's button and a double click on the tile both do.
     case placeLibraryPick
+    /// Layer ▸ Insert Component (Next, `next-components`): puts a copy of the
+    /// component picked on the shelf in the middle of what is on screen.
+    case insertPickedComponent
+    /// Layer ▸ Duplicate Layer. ⌘J is a menu chord, so a walk that checks what
+    /// a duplicate keeps asks for it here.
+    case duplicateLayer
     /// Put every sheet away. Escape reaches the window, not the sheet in front
     /// of it, so a walk that photographs a sheet needs a way back out.
     case closeSheets
@@ -236,6 +242,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Press I until the Measure tool is in this mode.
     case measureMode(MeasureToolMode)
     case waitFor(PlaytestCondition, timeout: Double)
+    /// Drop the component picked on the Library shelf onto the canvas at a
+    /// point, which is where a drag off the shelf ends. A synthesized mouse
+    /// drag cannot start a real drag session, so this lands the drop the way
+    /// the canvas's drag destination does, pasteboard and all.
+    case dropComponent(at: PlaytestPoint)
     /// Render the window's content offscreen to `<out>/<name>.png`.
     case snapshot(name: String)
     /// Composite the document itself to `<out>/<name>.png`.
@@ -282,6 +293,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .tool: "tool"
         case .measureMode: "measureMode"
         case .waitFor: "waitFor"
+        case .dropComponent: "dropComponent"
         case .snapshot: "snapshot"
         case .render: "render"
         case .describe: "describe"
@@ -358,6 +370,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "snapshot":
             self = .snapshot(name: try f.string("name"))
+        case "dropComponent":
+            self = .dropComponent(at: try f.point("at"))
         case "render":
             self = .render(name: try f.string("name"))
         case "describe":

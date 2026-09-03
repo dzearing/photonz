@@ -149,6 +149,7 @@ struct CanvasView: NSViewRepresentable {
     let onDeleteLayer: (UUID) -> Void
     let onDeleteLayers: ([UUID]) -> Void
     let onDropImageURL: (URL) -> Void
+    let onDropComponent: (UUID, CGPoint) -> Void
     let onDropImageURLIntoCollage: (URL, UUID, Int) -> Void
     let onAbsorbLayerIntoCollage: (UUID, UUID, Int) -> Void
     let onSwapCollageSlots: (UUID, Int, Int) -> Void
@@ -228,6 +229,7 @@ struct CanvasView: NSViewRepresentable {
         view.onDeleteLayers = onDeleteLayers
         view.onDropImageURL = onDropImageURL
         view.onDropImageURLIntoCollage = onDropImageURLIntoCollage
+        view.onDropComponent = onDropComponent
         view.onAbsorbLayerIntoCollage = onAbsorbLayerIntoCollage
         view.onSwapCollageSlots = onSwapCollageSlots
         view.onCanvasResize = onCanvasResize
@@ -295,6 +297,9 @@ final class CanvasNSView: NSView {
     var onDropImageURL: ((URL) -> Void) = { _ in }
     /// A file dropped straight into a collage slot: (url, collage layer, slot).
     var onDropImageURLIntoCollage: ((URL, UUID, Int) -> Void) = { _, _, _ in }
+    /// A component dragged off the Library shelf, dropped at a document point
+    /// (Next, `next-components`).
+    var onDropComponent: ((UUID, CGPoint) -> Void) = { _, _ in }
     /// A photo layer dropped onto a collage slot: (photo layer, collage, slot).
     var onAbsorbLayerIntoCollage: ((UUID, UUID, Int) -> Void) = { _, _, _ in }
     /// Two slots of one collage swapped by dragging: (collage, from, to).
@@ -919,7 +924,7 @@ final class CanvasNSView: NSView {
         handlesLayer.zPosition = 100
         snapDotLayer.zPosition = 100
 
-        registerForDraggedTypes([.fileURL])
+        registerForDraggedTypes([.fileURL, ComponentDrag.pasteboardType])
     }
 
     @available(*, unavailable)
@@ -928,10 +933,14 @@ final class CanvasNSView: NSView {
     // MARK: - Drag destination (drop an image to add it as a layer)
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        droppedURL(sender) != nil ? .copy : []
+        if droppedComponent(sender) != nil { return .copy }
+        return droppedURL(sender) != nil ? .copy : []
     }
 
     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        // A component off the shelf lands wherever the pointer is: there is no
+        // collage slot to highlight, and the copy is centred on the drop.
+        if droppedComponent(sender) != nil { return .copy }
         guard droppedURL(sender) != nil else { return [] }
         // Highlight the collage slot under the pointer — dropping there fills
         // the slot instead of adding a floating layer.
@@ -948,6 +957,9 @@ final class CanvasNSView: NSView {
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         hoverSlot = nil
         refreshOverlays()
+        if let componentID = droppedComponent(sender) {
+            return dropComponent(componentID, atViewPoint: convert(sender.draggingLocation, from: nil))
+        }
         guard let url = droppedURL(sender) else { return false }
         if url.pathExtension.lowercased() != "photonz", let target = dropTarget(for: sender) {
             onDropImageURLIntoCollage(url, target.collageID, target.index)
@@ -961,6 +973,22 @@ final class CanvasNSView: NSView {
         guard let viewport else { return nil }
         let p = viewport.documentPoint(fromView: convert(sender.draggingLocation, from: nil))
         return collageSlotTarget(at: p)
+    }
+
+    /// The component a drag off the Library shelf is carrying, nil for
+    /// everything else. Its own pasteboard type, so a dropped file and a
+    /// dropped component can never be mistaken for each other.
+    private func droppedComponent(_ sender: NSDraggingInfo) -> UUID? {
+        ComponentDrag.componentID(on: sender.draggingPasteboard)
+    }
+
+    /// Places a copy at a point in this view, which is what a drag from the
+    /// shelf ends in. Internal so a playtest can land the same drop without
+    /// synthesising a drag session.
+    func dropComponent(_ componentID: UUID, atViewPoint point: CGPoint) -> Bool {
+        guard let viewport else { return false }
+        onDropComponent(componentID, viewport.documentPoint(fromView: point))
+        return true
     }
 
     private func droppedURL(_ sender: NSDraggingInfo) -> URL? {

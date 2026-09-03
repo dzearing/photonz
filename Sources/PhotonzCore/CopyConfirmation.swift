@@ -1,8 +1,8 @@
 import Foundation
 
-/// The "Copied" notice (Next, `next-measure-panel`): the glass pill at the
-/// bottom of the canvas that answers Copy as Spec List, Copy Measurement and
-/// Copy Image.
+/// The notice pill (Next): the glass pill at the bottom of the canvas that
+/// answers Copy as Spec List, Copy Measurement and Copy Image, and that says
+/// how many copies of a component followed an edit of its original.
 ///
 /// Nothing else on screen changes when text lands on the clipboard, so without
 /// it a person cannot tell whether the key was taken. It is a glance, not a
@@ -22,6 +22,16 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// Copy Image: the picture, plus the spec list when `measurements`
         /// is above zero (`CompositeCopy`).
         case image(measurements: Int)
+        /// Copies of a component followed an edit of their original
+        /// (`docs/design/ui-building.md`, step C5). Nothing else on screen says
+        /// how far an edit reached: the pieces that moved are somewhere else on
+        /// the canvas, often off it, so without this you edit one thing and
+        /// have no idea what else you changed. `component` names the original
+        /// when exactly one was involved.
+        case componentInstances(count: Int, component: String?)
+        /// A copy of a component was NOT placed, because it would have put a
+        /// component inside itself.
+        case componentCycle
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -50,7 +60,13 @@ public struct CopyConfirmation: Hashable, Sendable {
     }
 
     /// The verdict, set in its own weight at the head of the pill.
-    public var title: String { "Copied" }
+    public var title: String {
+        switch subject {
+        case .specList, .measurements, .image: return "Copied"
+        case .componentInstances: return "Updated"
+        case .componentCycle: return "Not placed"
+        }
+    }
 
     /// What was copied, in plain words.
     public var detail: String {
@@ -61,6 +77,12 @@ public struct CopyConfirmation: Hashable, Sendable {
             return Self.measurementPhrase(count)
         case .image(let count):
             return count == 0 ? "Image" : "Image and spec list with \(Self.measurementPhrase(count))"
+        case .componentInstances(let count, let component):
+            let copies = count == 1 ? "1 copy" : "\(count) copies"
+            guard let component, !component.isEmpty else { return copies }
+            return "\(copies) of \(component)"
+        case .componentCycle:
+            return "A component cannot hold a copy of itself"
         }
     }
 

@@ -38,22 +38,85 @@ enum ComponentGlyph {
         }
         return path
     }
+
+    /// The mark a COPY wears: one diamond, in the middle of the same box.
+    ///
+    /// Not the four-diamond glyph drawn hollow. At the sizes this appears —
+    /// nine points on a shelf tile, twelve in a layers row, ten on the canvas —
+    /// each of the four diamonds is under three points across, and an outline
+    /// at that size is a smudge that reads exactly like the filled one. One
+    /// diamond against four is a different SHAPE, so it survives being small,
+    /// and it is the distinction a design tool user already has in their eye.
+    static func instancePath(in rect: CGRect) -> CGPath {
+        let side = min(rect.width, rect.height)
+        let radius = side * 0.34
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: center.x, y: center.y - radius))
+        path.addLine(to: CGPoint(x: center.x + radius, y: center.y))
+        path.addLine(to: CGPoint(x: center.x, y: center.y + radius))
+        path.addLine(to: CGPoint(x: center.x - radius, y: center.y))
+        path.closeSubpath()
+        return path
+    }
 }
 
 /// The glyph as a SwiftUI shape, for the layers list and the Library tile.
 struct ComponentGlyphShape: Shape {
-    func path(in rect: CGRect) -> Path { Path(ComponentGlyph.path(in: rect)) }
+    /// One diamond for a copy, four for the original it follows.
+    var isInstance = false
+
+    func path(in rect: CGRect) -> Path {
+        Path(isInstance ? ComponentGlyph.instancePath(in: rect) : ComponentGlyph.path(in: rect))
+    }
 }
 
 /// The mark itself, at the size a list row wants it.
+///
+/// **Four diamonds is the original, one diamond is a copy.** Both are violet
+/// and both read as "component" at a glance, and the shapes are far enough
+/// apart to tell at nine points, so you never have to open a panel to know
+/// which one you are about to edit.
 struct ComponentMark: View {
     var size: CGFloat = 12
+    var isInstance = false
 
     var body: some View {
-        ComponentGlyphShape()
+        ComponentGlyphShape(isInstance: isInstance)
             .fill(ComponentGlyph.color)
             .frame(width: size, height: size)
-            .help("A component. Copies of it come from the Library.")
+        .help(isInstance
+              ? "A copy of a component. It follows the original."
+              : "A component. Copies of it come from the Library.")
+    }
+}
+
+/// Carrying a component from the Library shelf to the canvas
+/// (Next, `next-components`).
+///
+/// Its own pasteboard type, so a dropped file and a dropped component can never
+/// be mistaken for each other, and so a component dragged out of Photonz means
+/// nothing anywhere else.
+enum ComponentDrag {
+    static let typeIdentifier = "com.photonz.component-id"
+    static let pasteboardType = NSPasteboard.PasteboardType(typeIdentifier)
+
+    /// The drag a Components tile starts.
+    static func itemProvider(componentID: UUID) -> NSItemProvider {
+        let provider = NSItemProvider()
+        provider.registerDataRepresentation(forTypeIdentifier: typeIdentifier,
+                                            visibility: .ownProcess) { completion in
+            completion(Data(componentID.uuidString.utf8), nil)
+            return nil
+        }
+        return provider
+    }
+
+    /// The component a pasteboard is carrying, nil for anything else.
+    static func componentID(on pasteboard: NSPasteboard) -> UUID? {
+        guard let data = pasteboard.data(forType: pasteboardType),
+              let text = String(data: data, encoding: .utf8) else { return nil }
+        return UUID(uuidString: text)
     }
 }
 
@@ -93,7 +156,7 @@ struct ComponentInspector: View {
             }
             HStack(spacing: 6) {
                 ComponentMark(size: 11)
-                Text("This is the main. Copies you place will follow it.")
+                Text(standing)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -126,6 +189,19 @@ struct ComponentInspector: View {
         DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
     }
 
+    /// What the original says about itself. Once copies exist it says how many,
+    /// because "editing this changes eleven other things" is the one fact
+    /// somebody about to edit an original needs before they start.
+    private var standing: String {
+        guard let componentID,
+              let count = editorState.document?.instanceCount(of: componentID), count > 0 else {
+            return "This is the original. Copies you place will follow it."
+        }
+        return count == 1
+            ? "This is the original. 1 copy follows it."
+            : "This is the original. \(count) copies follow it."
+    }
+
     private func commit() {
         guard let componentID else { return }
         guard let name = ComponentNaming.normalized(draft) else {
@@ -154,18 +230,37 @@ struct LibraryComponentInspector: View {
                         .lineLimit(2)
                         .truncationMode(.middle)
                 }
-                Text("\(main.children.count == 1 ? "1 layer" : "\(main.children.count) layers") inside")
+                Text(inside(main) + copies(componentID))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Button("Select on Canvas") {
-                    editorState.selectComponentOnCanvas(componentID: componentID)
+                HStack(spacing: 6) {
+                    // Place first: the shelf exists to hand you copies, and the
+                    // way back to the original is the secondary errand.
+                    Button("Place a Copy") {
+                        editorState.insertPickedComponent()
+                    }
+                    .controlSize(.small)
+                    .help("Puts a copy in the middle of the canvas. Dragging the tile places one where you drop it")
+                    Button("Select Original") {
+                        editorState.selectComponentOnCanvas(componentID: componentID)
+                    }
+                    .controlSize(.small)
+                    .help("Selects the original on the canvas")
                 }
-                .controlSize(.small)
-                .help("Selects the original on the canvas")
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 4)
         }
+    }
+
+    private func inside(_ main: Layer) -> String {
+        main.children.count == 1 ? "1 layer inside" : "\(main.children.count) layers inside"
+    }
+
+    private func copies(_ componentID: UUID) -> String {
+        let count = editorState.document?.instanceCount(of: componentID) ?? 0
+        guard count > 0 else { return "" }
+        return count == 1 ? " • 1 copy placed" : " • \(count) copies placed"
     }
 }
 
@@ -202,9 +297,17 @@ struct LibraryComponentTile: View {
                 .strokeBorder(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.clear), lineWidth: 1.5)
         )
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { selectOnCanvas() }
+        // Double click PLACES, the way it already does on a Media tile: one
+        // gesture for "give me one of these" everywhere on the shelf. Finding
+        // the original is the Select Original button in the section below.
+        .onTapGesture(count: 2) { place() }
         .onTapGesture { editorState.selectLibraryItem(entry.id) }
-        .help("\(entry.name), a component. Double click to select the original.")
+        .onDrag {
+            editorState.selectLibraryItem(entry.id)
+            guard let componentID = layer.componentID else { return NSItemProvider() }
+            return ComponentDrag.itemProvider(componentID: componentID)
+        }
+        .help("\(entry.name), \(entry.detail). Drag it onto the canvas, or double click to place one.")
     }
 
     /// The same picture the layers list draws for this layer, at the same size
@@ -229,12 +332,57 @@ struct LibraryComponentTile: View {
             }
     }
 
-    private func selectOnCanvas() {
+    private func place() {
         guard let componentID = layer.componentID else { return }
-        editorState.selectComponentOnCanvas(componentID: componentID)
+        editorState.selectLibraryItem(entry.id)
+        editorState.insertComponentInstance(componentID: componentID,
+                                            at: editorState.visibleCanvasCentre)
     }
 }
 
+
+// MARK: - A copy's own section
+
+/// What the dock says about a copy you have selected: which component it
+/// follows, and the way back to that original.
+///
+/// It deliberately offers nothing to change inside the copy. Its contents
+/// belong to the original, so a control here that edited a piece would be a
+/// control whose effect the next edit of the original silently undoes. Reaching
+/// in on purpose is what exposed properties and detach are for, and they are
+/// the next step.
+struct ComponentInstanceInspector: View {
+    @Environment(EditorState.self) private var editorState
+    let layer: Layer
+
+    private var componentID: UUID? { editorState.document?.layer(id: layer.id)?.instanceOf }
+    private var main: Layer? { componentID.flatMap { editorState.document?.mainComponent(componentID: $0) } }
+
+    var body: some View {
+        if let componentID, let main {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    ComponentMark(size: 12, isInstance: true)
+                    Text(main.name)
+                        .font(.subheadline.weight(.medium))
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                }
+                Text("A copy. Editing the original changes this one too.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Edit Original") {
+                    editorState.selectComponentOnCanvas(componentID: componentID)
+                }
+                .controlSize(.small)
+                .help("Selects the original, which is where a change to every copy is made")
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+        }
+    }
+}
 
 extension NSResponder {
     /// Selects everything in a text field that has just taken focus. SwiftUI

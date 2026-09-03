@@ -625,3 +625,67 @@ A person opens Photonz, drags a button out of the Library onto a frame, changes
 its label, draws a control of their own, makes it a component, drops three of
 them, edits the original, and watches all three follow. Then they take a
 screenshot, measure it, and notice nothing about their editor has changed.
+
+## Landed: a copy follows its original (Next, `next-components`, 2026-09-03)
+
+Step C5. The other half of "create once, reuse everywhere": the shelf stops
+being a list and starts handing you things.
+
+- **A copy is a group that carries the id of the component it follows**
+  (`GroupContent.instanceOf`). What is inside it is NOT its own: the document
+  keeps every copy's contents equal to the original's. Because the contents are
+  kept rather than referenced, the renderer, hit testing, export, thumbnails and
+  the package writer all see an ordinary group and needed no change at all.
+- **The sync runs inside `History.perform`**, so no command can forget it and
+  editing an original plus every copy following is ONE undo step. It is skipped
+  outright for a document with no copies in it (`holdsComponentInstance` stops
+  at the first one it finds), so nothing about a screenshot costs anything.
+- **The ids inside a copy are derived, not minted** (`ComponentIdentity.derived`,
+  a stable mix of the copy's id and the piece's id). Fresh ids each sync would
+  rewrite the document on every edit, and `History.perform` would record an undo
+  step for an edit that changed nothing.
+- **A copy is one object.** A click picks the whole copy, a double click does
+  not descend into it, its layers row has no twist open, and nothing can be
+  dropped inside it. A piece you could select inside a copy is a piece you could
+  edit and lose the next time the original moved, and that silent loss is worse
+  than the restriction. Overrides (C6) are the supported way in.
+- **Four diamonds is the original, one diamond is a copy**, in violet, on the
+  canvas, in the layers list and in the dock. The first cut drew a copy's mark
+  as the four diamonds hollow; at nine to twelve points each diamond is under
+  three points across and the outline read exactly like the fill, so it became a
+  different SHAPE rather than a different weight. The original also carries its
+  name on the canvas and a copy does not: a screen built from twelve buttons
+  would otherwise wear twelve labels.
+- **Three ways to place one**, all landing in `insertComponentInstance`: drag a
+  tile onto the canvas (its own pasteboard type, so a dropped file and a dropped
+  component can never be confused), double click a tile, or Layer ▸ Insert
+  Component. Double click PLACES, which is what it already does on a Media tile;
+  finding the original moved to a Select Original button. ⌘J on a copy makes
+  another copy that is still linked.
+- **A copy lands centred on where you let go**, and joins the frame it was
+  dropped on, the same rule a drawn shape follows. Dropping a button on a phone
+  screen has to put the button on that screen or moving the screen leaves it
+  behind.
+- **The pill says how far an edit reached**: "Updated, 2 copies of Setting". The
+  things that moved are elsewhere on the canvas, often scrolled off it, so
+  without it you change one thing and have no idea what else you changed.
+  Placing, moving and duplicating a copy all report nothing, because none of
+  them is an edit that reached anywhere — the count compares subtrees ignoring
+  ids, since duplicating re-mints every id under a copy without one pixel
+  moving.
+- **A component may not hold a copy of itself**, directly or through anything it
+  already holds; the model refuses rather than trusting the interface, and a
+  drop onto the component's own original says "A component cannot hold a copy of
+  itself" instead of quietly doing nothing.
+- **Deleting an original does not delete the copies.** They keep exactly what
+  they were drawing and become ordinary groups.
+- On disk a group that is not a copy writes no copy key, so a document saved
+  before this step is byte for byte what it was.
+
+Deliberately left, and each one is a real limit rather than an oversight: a
+copy's own opacity, blur, shadow and corner radius are its own and do not follow
+the original (syncing them would make the Effects sliders snap back on a copy,
+which is worse than the gap); renaming an original does not rename copies
+already placed; the shelf tile shows a name and keeps the count of copies in its
+tooltip and in the picked component's section; and Ungroup on a copy still
+dissolves it, which is a detach by another name until Detach Instance arrives.

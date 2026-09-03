@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 110,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.238Z",
-  "updated": "2026-09-03T00:08:21.543Z",
+  "updated": "2026-09-03T03:56:57.245Z",
   "deps": [
     "make-a-component-out-of-what-you-drew-and-find-i",
     "the-library-panel-arrives-in-the-dock-alongside"
@@ -36,6 +36,15 @@
     {
       "t": "2026-09-03T00:08:21.543Z",
       "note": "seq 130 -> 110"
+    },
+    {
+      "t": "2026-09-03T03:56:57.245Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T04:03:24.216936Z",
+      "note": "Adversarial review before building. (1) The decision the task asks for is not a decision yet: 'does a copy start from the original or from the last one you configured' presupposes overrides, and there are none until C6, so there is nothing a person could see either way. Recorded rather than filed as a card. (2) The real hazard is descending: the canvas already goes one level in on a double click, so a copy you could open would let you edit a piece that the next edit of the original silently overwrites. A copy is therefore ONE object: clicks pick it whole, double click does not enter it, its layers row has no twist open, and nothing can be dropped inside it. Overrides are the supported way in, and they are C6. (3) A copy must read as a copy: the original keeps the filled violet mark and its name, a copy wears the same mark outlined and no name, because a name over each of twelve buttons is twelve labels. (4) Deleting the original must not delete the copies: they stay exactly as they look, as ordinary groups. (5) Double click on a component tile currently selects the original, which collides with insert. Insert wins, because that is already what double click does on a Media tile; Select on Canvas stays the button it already is. (6) A dropped copy joins the frame it lands on, the same rule a drawn shape follows, or dropping a button on a phone screen leaves it floating off the screen. (7) Cut as decorative for this step: exposed properties, variant pickers, an override list, a swap-component menu. Kept: a copies count on the shelf tile, because 'how many of these are out there' is the question the shelf raises."
     }
-  ]
+  ],
+  "started": "2026-09-03T03:56:57.244Z"
 }
