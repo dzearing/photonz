@@ -3064,18 +3064,65 @@ final class EditorState {
         }
     }
 
+    /// The frame ONE selected layer lines up against, when it has one.
+    ///
+    /// A layer picked on its own has nothing to line up with, unless something
+    /// holds it: a frame carries a size of its own, so a label sitting on a
+    /// card can answer to the card.
+    ///
+    /// It is the layer's OWN parent or nothing. Two things fall out of that,
+    /// both on purpose:
+    ///
+    /// - A plain group is not a reference. Its box is the union of what is
+    ///   inside it, so a group of one would hand back the layer's own box and
+    ///   leave six buttons that do nothing.
+    /// - The search does not climb past a group. A word inside a button inside
+    ///   a screen answers to nobody, rather than flying to the middle of the
+    ///   screen and out of the button it belongs to. Pick the button and it
+    ///   lines up on the screen; how the word sits inside the button is what
+    ///   the Layout section is for.
+    ///
+    /// Nil for everything else, which keeps a multi-selection lining up with
+    /// itself exactly as it did.
+    private var arrangeReference: (frame: Layer, bounds: CGRect)? {
+        guard Experiments.shared.framesEnabled, let document else { return nil }
+        let boxes = arrangeBoxes
+        guard boxes.count == 1, let id = boxes.first?.id,
+              let parent = document.parentID(of: id),
+              let frame = document.layer(id: parent), frame.isFrame,
+              let bounds = document.canvasBounds(of: parent) else { return nil }
+        return (frame, bounds)
+    }
+
+    /// What the Arrange row is lining things up against, in the words it shows:
+    /// the frame's name when there is one, nil when the selection is its own
+    /// reference. The row has to say this out loud, because six live buttons
+    /// with only one layer on screen otherwise leave you guessing what moves
+    /// where.
+    var arrangeReferenceName: String? {
+        guard let frame = arrangeReference?.frame else { return nil }
+        let name = frame.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? "the frame around it" : name
+    }
+
     /// How many layers the Arrange row is speaking for, so it can say so.
     var arrangeableLayerCount: Int { arrangeBoxes.count }
 
-    var canAlignSelection: Bool { LayerArrangement.canAlign(count: arrangeBoxes.count) }
+    var canAlignSelection: Bool {
+        LayerArrangement.canAlign(count: arrangeBoxes.count,
+                                  hasContainer: arrangeReference != nil)
+    }
 
     var canDistributeSelection: Bool { LayerArrangement.canDistribute(count: arrangeBoxes.count) }
 
     /// Layer ▸ Align: every selected layer moves onto the selection's own
     /// edge or middle, in ONE undo step. The layer already on that edge does
     /// not move, so pressing it twice is a no-op rather than a slow drift.
+    /// One layer inside a frame moves onto the FRAME'S edge or middle instead,
+    /// so a single press centres a label inside a card.
     func alignSelection(_ alignment: LayerAlignment) {
-        moveLayers(LayerArrangement.aligned(arrangeBoxes, to: alignment))
+        moveLayers(LayerArrangement.aligned(arrangeBoxes, to: alignment,
+                                            within: arrangeReference?.bounds))
     }
 
     /// Layer ▸ Space Evenly: the outermost two hold still and everything

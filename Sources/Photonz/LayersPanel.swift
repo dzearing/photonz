@@ -156,10 +156,10 @@ struct InspectorPanel: View {
     /// is selected; Annotation only for annotation layers.
     private var availableSections: Set<InspectorSectionID> {
         var set: Set<InspectorSectionID> = [.layers]
-        // Lining several layers up with each other (`next-align-layers`).
-        // Present only with something to line up: with one layer picked there
-        // is nothing to line it up with, so the section is absent rather than
-        // a row of dead buttons.
+        // Lining layers up (`next-align-layers`). Present only with something
+        // to line up: two or more layers picked, or one layer inside a frame,
+        // which has the frame to answer to. A lone layer on the canvas has
+        // nothing, so the section is absent rather than a row of dead buttons.
         if Experiments.shared.alignLayersEnabled, editorState.canAlignSelection {
             set.insert(.arrange)
         }

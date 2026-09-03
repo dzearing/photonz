@@ -68,6 +68,12 @@ public enum LayerDistribution: String, CaseIterable, Hashable, Sendable {
 ///   leftmost one" and the layer already there does not move. One layer alone
 ///   has nothing to line up with, so the commands are unavailable rather than
 ///   quietly aligning it to the picture.
+/// - **Unless something holds it.** Hand these commands a container box and it
+///   becomes the reference instead, which is how ONE layer can be lined up:
+///   a label inside a card has the card to answer to. Centring against a
+///   container is the same sum the persistent centre rule makes
+///   (`LayerScaling.span`), down to the half point, so centring a label and
+///   then dragging the card wider leaves it exactly where it was put.
 /// - **Space evenly means equal GAPS, not equal centres.** The outermost two
 ///   hold still and everything between them slides so the space between
 ///   neighbours is the same all the way along. When boxes differ in width,
@@ -89,7 +95,11 @@ public enum LayerArrangement {
     }
 
     /// Whether Align would do anything with this many layers selected.
-    public static func canAlign(count: Int) -> Bool { count >= 2 }
+    /// With a container to answer to, one layer is enough; without one, a
+    /// layer has only itself and the command means nothing.
+    public static func canAlign(count: Int, hasContainer: Bool = false) -> Bool {
+        count >= (hasContainer ? 1 : 2)
+    }
 
     /// Whether Space Evenly would: with two, "evenly" has no meaning, since
     /// there is only one gap.
@@ -97,8 +107,14 @@ public enum LayerArrangement {
 
     /// Where each layer's top left corner should land to line the selection up.
     /// Layers already in place are left out.
-    public static func aligned(_ boxes: [Box], to alignment: LayerAlignment) -> [UUID: CGPoint] {
-        guard canAlign(count: boxes.count), let bounds = bounds(of: boxes) else { return [:] }
+    ///
+    /// `container` is the box everything answers to, when there is one: the
+    /// frame a layer sits inside. With nothing there the selection answers to
+    /// itself, which is what two or more layers picked on the canvas mean.
+    public static func aligned(_ boxes: [Box], to alignment: LayerAlignment,
+                               within container: CGRect? = nil) -> [UUID: CGPoint] {
+        guard canAlign(count: boxes.count, hasContainer: container != nil),
+              let bounds = container ?? bounds(of: boxes) else { return [:] }
         var moves: [UUID: CGPoint] = [:]
         for box in boxes {
             let origin: CGPoint

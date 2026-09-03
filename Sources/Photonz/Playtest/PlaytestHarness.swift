@@ -1249,6 +1249,11 @@ private final class Run {
             // this same value, so a walk can prove the row arrived with the
             // second layer without measuring pixels in a snapshot.
             "canAlign": editor.canAlignSelection,
+            // What the Arrange row says it is lining up against: a frame's
+            // name for one layer inside a frame, "selection" when the layers
+            // answer to each other. The caption and every hover tip read this
+            // same value.
+            "alignsTo": editor.arrangeReferenceName ?? "selection",
             // Whether Layer ▸ Make Alternatives is there at all. That row is
             // absent rather than dimmed, and a walk cannot photograph an absent
             // row: the probe never comes to the front, so its menu bar reads

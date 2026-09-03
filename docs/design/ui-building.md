@@ -1176,8 +1176,47 @@ and ⌃⌥V for spacing.
 
 Not in this slice: shift-clicking a second layer on the canvas to add it to the
 selection (a rubber band around them, or shift-clicking rows in the layers
-list, is the way in today), aligning one layer to the frame it sits in, and
-equal-gap badges while dragging.
+list, is the way in today) and equal-gap badges while dragging. Aligning one
+layer to the frame it sits in landed next, below.
+
+## Landed: one layer lines up inside its screen (Next, `next-align-layers`, 2026-09-03)
+
+Align needed two layers, because a layer picked on its own had nothing to line
+up with. A layer sitting **on a screen** does have something: the screen. So
+one box on a screen now gets the Arrange row with its six align buttons live,
+and one press puts it in the middle.
+
+- **The reference is the screen the layer is directly on**, so Align Center
+  means the middle of the screen and Align Right means the screen's right
+  edge. The layer already there does not move, and each press is one undo step.
+- **A plain group is not a reference.** A group's box is the union of what is
+  inside it, so a group of one would hand back the layer's own box and leave
+  six buttons that do nothing.
+- **The search does not climb past a group.** A word inside a button on a
+  screen answers to nobody, rather than flying to the middle of the screen and
+  out of the button it belongs to. Pick the button and it lines up on the
+  screen; how the word sits inside the button is what Layout is for.
+- **Two or more layers still line up with each other**, on a screen or off it.
+  One thing picked answers to what holds it, several answer to each other,
+  which is what every other interface tool does.
+- **The row says what it is lining up against.** The caption reads "This layer
+  lines up inside Card" and every button's tip reads "Align Center in Card",
+  because six live buttons with only one layer on screen would otherwise be a
+  guess about what is about to move where.
+- **Centring here is the same sum as centring under Layout** (`LayerScaling.span`),
+  unrounded, down to the half point. If the two disagreed, centring a label and
+  then dragging the card wider would nudge it sideways.
+
+**Where it lives.** `LayerArrangement.aligned(_:to:within:)` takes an optional
+container box and `canAlign(count:hasContainer:)` drops to one layer when there
+is one, both tested; `EditorState.arrangeReference` finds the parent screen,
+and `ArrangeInspector` carries the wording. Walked by
+`Scripts/playtest/align-in-frame-walk.json`.
+
+Not in this slice: lining a piece up inside the plain group it sits in (the
+label-in-a-button case, which wants the group's box and a rule for the
+group-of-one), spacing evenly against a screen's inner edges, and making an
+align press also write a lasting Layout rule.
 
 ## Landed: a screen is renamed by clicking its name (Next, `next-frames`, 2026-09-03)
 

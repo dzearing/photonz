@@ -3,10 +3,15 @@ import SwiftUI
 
 /// Lining several layers up with each other (Next, `next-align-layers`).
 ///
-/// The section appears only once two or more movable layers are picked, which
-/// is the only time any of it means anything, and it sits above Position &
-/// Size because the two answer the same question at different scales: where do
-/// these sit against each other, and where does this one sit on the picture.
+/// The section appears once there is something to line up: two or more movable
+/// layers picked, or one layer that sits inside a frame, since the frame is
+/// then the thing it answers to. It sits above Position & Size because the two
+/// answer the same question at different scales: where do these sit against
+/// each other, and where does this one sit on the picture.
+///
+/// Whatever the reference is, the caption says it and every button's hover tip
+/// repeats it, so a single layer with six live buttons is never a guess about
+/// what is about to move where.
 ///
 /// Eight buttons in two rows, in the order every design tool puts them: the
 /// three horizontal alignments, the three vertical ones, then spacing. Spacing
@@ -43,11 +48,21 @@ struct ArrangeInspector: View {
     }
 
     private var caption: String {
+        if let reference = editorState.arrangeReferenceName {
+            return "This layer lines up inside \(reference). Spacing evenly needs three layers."
+        }
         let count = editorState.arrangeableLayerCount
         if editorState.canDistributeSelection {
             return "\(count) layers line up with each other, not with the picture."
         }
         return "\(count) layers line up with each other. Spacing evenly needs three."
+    }
+
+    /// The button's hover tip: the command, and what it lines up against when
+    /// that is not just the selection itself.
+    private func tip(_ alignment: LayerAlignment) -> String {
+        guard let reference = editorState.arrangeReferenceName else { return alignment.title }
+        return "\(alignment.title) in \(reference)"
     }
 
     private func alignButton(_ alignment: LayerAlignment) -> some View {
@@ -57,8 +72,8 @@ struct ArrangeInspector: View {
             Image(systemName: symbol(alignment))
         }
         .buttonStyle(IconActionButtonStyle(diameter: 26, squareHitTarget: true))
-        .help(alignment.title)
-        .accessibilityLabel(alignment.title)
+        .help(tip(alignment))
+        .accessibilityLabel(tip(alignment))
     }
 
     private func spaceButton(_ axis: LayerDistribution) -> some View {

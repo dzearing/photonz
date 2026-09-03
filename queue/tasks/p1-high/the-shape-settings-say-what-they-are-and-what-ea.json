@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:39:20.843Z",
-  "updated": "2026-09-03T14:03:46.422Z",
+  "updated": "2026-09-03T14:04:15.761Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-03 with a screenshot of a selected rectangle: what is annotation, is this Rectangle properties, there are swatches without labels and I do not know what they mean, presets are not scoped to the type of thing (a foreground colour should only offer foreground presets, a surface colour only surface ones), and the layout looks janky. What the code actually does, verified by reading: the section title comes from LayersPanel.swift line 448 which returns the literal Annotation for the .annotation case, an internal content-kind name rather than the shape. The two words the user read as labels, Border and Surface, are the NAMES OF SAVED COLOUR STYLES the user made: ColorStyleRow deliberately replaces a row label with the bound style name (LayersPanel.swift around 1620 and ColorStylePanel.swift ColorStyleRow, comment: a raw colour keeps its well, a colour wearing a style says the style name instead). That is the confusion: the slot loses its name exactly when a style is applied. The menu lists every style regardless of slot: ColorStylePanel.swift ColorStyleControl reads editorState.colorStyles and ForEach over all of them with no filter, so a fill style can be bound to a stroke. Scoping needs a notion of what a style is FOR; decide whether that is a kind stored on the style, or inferred from where it was first saved, and open a decision card if the answer changes what the user has to do when saving one. The janky look comes from the HStack with a Spacer and top alignment around line 1633 rather than a shared label column. Ships behind next-styles. Check the same title bug for measure, text and callout sections while there.\n\nDONE 2026-09-03. Roles are two, not three: ColorStyleRole.ink covers stroke and text, .surface covers fill. Stored as an optional list on ColorStyle so an old style writes no key; effectiveColorStyleRoles derives an answer for one that has none (starter id first, then the slots already binding it, then everywhere) so nothing migrates on open. ColorPartLayout / ColorPartRow in ColorStylePanel.swift are the shared grid every color row now uses; the switch column must stay present-but-blank or the swatches misalign. Section naming is in LayersPanel.sectionTitle, gated on colorStylesEnabled purely to keep Current byte-identical.",
@@ -73,7 +73,7 @@
     }
   ],
   "started": "2026-09-03T13:32:23.981Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-03T13:31:53.219Z",
     "exit": 1,

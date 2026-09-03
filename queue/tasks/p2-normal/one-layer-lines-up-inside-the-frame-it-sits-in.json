@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:32:55.847Z",
-  "updated": "2026-09-03T12:08:26.943Z",
+  "updated": "2026-09-03T14:19:52.978Z",
   "deps": [
     "a-resized-component-keeps-its-pieces-where-they"
   ],
@@ -29,6 +29,43 @@
     {
       "t": "2026-09-03T12:08:26.942Z",
       "note": "seq 810 -> 20"
+    },
+    {
+      "t": "2026-09-03T14:04:29.450Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T14:08:36.445Z",
+      "note": "claimed: task serves ui-building, staged now. Objectives read first."
+    },
+    {
+      "t": "2026-09-03T14:08:36.445Z",
+      "note": "adversarial review BEFORE building. (1) Groups are out: a plain group's box is the union of its children, so lining one child up against it is circular and mostly a no-op. A FRAME has a size of its own, so it is the only container that can be a reference. That is exactly what acceptance item 3 asks for. (2) The reference is the nearest FRAME above the layer, so a layer inside a group inside a screen still lines up with the screen, which is the box a person can see. (3) A multi-selection keeps lining up with itself, matching every other design tool: one thing picked answers to its frame, several answer to each other. No new mode, nothing to learn. (4) Cut: spacing evenly against the frame's inner edges. Two layers plus two frame edges is a different feature with two readings (gaps including the edges, or not), and nobody asked. (5) Cut: making Align Center also write a persistent Center rule. Pressing a one-shot button and silently gaining a rule that keeps acting later is a surprise; the Layout section is where a rule is set, and the audit says so. (6) First-time user: six live buttons with no second layer on screen is the one confusing bit, so the row must NAME what it is lining up against. Hence acceptance item 4, carried by the caption and each button's hover tip. (7) Shortest version: an optional reference rect passed into the existing align maths, the frame derived in the editor, one new caption. No new panel, no new setting, no new gesture."
+    },
+    {
+      "t": "2026-09-03T14:11:52.932Z",
+      "note": "core: LayerArrangement.aligned gains an optional container box and canAlign(count:hasContainer:), tests written first (2168 green). Centring against a container is deliberately unrounded, matching LayerScaling.span, so the one-shot action and the persistent Center rule agree to the half point."
+    },
+    {
+      "t": "2026-09-03T14:11:52.933Z",
+      "note": "app: EditorState.arrangeReference finds the nearest frame above ONE selected layer (frames only, gated on next-frames); canAlignSelection, alignSelection and the Layer menu all follow. ArrangeInspector caption names the frame and every align button's tip says 'Align Center in Card'. Playtest state now reports alignsTo."
+    },
+    {
+      "t": "2026-09-03T14:19:52.977Z",
+      "note": "adversarial review of the BUILT thing, on the probe app. The first build climbed to the nearest frame ANY number of levels up, and the walk showed why that is wrong: a word inside a button on a screen would fly to the middle of the screen and out of the button it belongs to. Changed to the layer's OWN parent, and only when that parent is a frame. A plain group is not a reference either, because a group's box is the union of its children, so a group of one hands back the layer's own box and leaves six buttons that do nothing. The label-in-a-button case is filed as a-piece-lines-up-inside-the-group-that-holds-it, with the group-of-one problem written out."
+    },
+    {
+      "t": "2026-09-03T14:19:52.978Z",
+      "note": "second finding, not fixed on purpose: centring a box on a screen leaves the Layout section right underneath reading Left and Top, so resizing the screen slides it back. Align is a move, Layout is a rule, and a button that silently writes a rule is a surprise. Filed in the audit's rough as the weakest part, where the user can react to it."
+    },
+    {
+      "t": "2026-09-03T14:19:52.978Z",
+      "note": "verified on the probe app with Screen Recording granted, Scripts/playtest/align-in-frame-walk.json, numbers read from the document tree: one box on a 400x360 screen spanning 200..600 by 180..540 gets canAlign true and alignsTo Frame; Align Center 230 -> 340 (exact middle), Align Middle 210 -> 340, Align Right 230 -> 480; two undos put both back one press at a time; two layers picked go back to alignsTo selection; a piece inside a group and a layer loose on the canvas both get no Arrange row. 2168 tests green."
+    },
+    {
+      "t": "2026-09-03T14:19:52.978Z",
+      "note": "docs: 'One layer lines up inside its screen' in docs/design/ui-building.md. Audit: queue/audits/2026-09-03-align-in-frame.json with three real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-03T14:04:29.449Z"
 }

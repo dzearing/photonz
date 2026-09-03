@@ -58,6 +58,67 @@ struct LayerArrangementTests {
         #expect(LayerArrangement.canAlign(count: 2))
     }
 
+    // MARK: Align inside the thing it sits in
+
+    /// A card 200 by 100 with a small label near its top left corner: one
+    /// layer inside a frame, which is the only case where a single layer has
+    /// something to line up with.
+    let card = CGRect(x: 100, y: 100, width: 200, height: 100)
+    let label = LayerArrangement.Box(id: UUID(), frame: CGRect(x: 110, y: 110, width: 60, height: 20))
+
+    @Test func alignsOneLayerToEveryEdgeAndMiddleOfItsContainer() {
+        #expect(LayerArrangement.aligned([label], to: .left, within: card)
+            == [label.id: CGPoint(x: 100, y: 110)])
+        #expect(LayerArrangement.aligned([label], to: .horizontalCenter, within: card)
+            == [label.id: CGPoint(x: 170, y: 110)])
+        #expect(LayerArrangement.aligned([label], to: .right, within: card)
+            == [label.id: CGPoint(x: 240, y: 110)])
+        #expect(LayerArrangement.aligned([label], to: .top, within: card)
+            == [label.id: CGPoint(x: 110, y: 100)])
+        #expect(LayerArrangement.aligned([label], to: .verticalCenter, within: card)
+            == [label.id: CGPoint(x: 110, y: 140)])
+        #expect(LayerArrangement.aligned([label], to: .bottom, within: card)
+            == [label.id: CGPoint(x: 110, y: 180)])
+    }
+
+    @Test func aLayerAlreadyInTheMiddleOfItsContainerDoesNotMove() {
+        let centred = LayerArrangement.Box(id: UUID(),
+                                           frame: CGRect(x: 170, y: 140, width: 60, height: 20))
+        #expect(LayerArrangement.aligned([centred], to: .horizontalCenter, within: card).isEmpty)
+        #expect(LayerArrangement.aligned([centred], to: .verticalCenter, within: card).isEmpty)
+    }
+
+    @Test func centringMeansTheSameHereAsItDoesWhenTheContainerIsResized() {
+        // An odd difference lands on the half point rather than rounding to a
+        // whole one, which is what the persistent centre rule
+        // (`LayerScaling.span`) does. If these two disagreed, centring a label
+        // and then dragging the card wider would nudge it a point sideways.
+        let odd = CGRect(x: 0, y: 0, width: 101, height: 41)
+        let box = LayerArrangement.Box(id: UUID(), frame: CGRect(x: 0, y: 0, width: 20, height: 10))
+        #expect(LayerArrangement.aligned([box], to: .horizontalCenter, within: odd)[box.id]
+            == CGPoint(x: 40.5, y: 0))
+        #expect(LayerArrangement.aligned([box], to: .verticalCenter, within: odd)[box.id]
+            == CGPoint(x: 0, y: 15.5))
+    }
+
+    @Test func oneLayerCanAlignOnlyWhenSomethingHoldsIt() {
+        #expect(!LayerArrangement.canAlign(count: 1))
+        #expect(LayerArrangement.canAlign(count: 1, hasContainer: true))
+        // Nothing selected is still nothing to line up, container or not.
+        #expect(!LayerArrangement.canAlign(count: 0, hasContainer: true))
+        #expect(LayerArrangement.aligned([], to: .left, within: card).isEmpty)
+    }
+
+    @Test func aContainerWinsOverTheSelectionsOwnBox() {
+        // The app lines a multi-selection up with itself and only hands over a
+        // container for a single layer, but the maths has to be unambiguous:
+        // given a container, every box answers to the container.
+        let moves = LayerArrangement.aligned(boxes, to: .left, within: card)
+        #expect(moves[a.id] == CGPoint(x: 100, y: 20))
+        #expect(moves[b.id] == CGPoint(x: 100, y: 90))
+        #expect(moves[c.id] == CGPoint(x: 100, y: 160))
+    }
+
     // MARK: Space evenly
 
     @Test func spacesEvenlyAcrossWithEqualGaps() {

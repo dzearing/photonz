@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/align-in-frame",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 900, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [200, 180], "to": [600, 540], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [230, 210], "to": [350, 250], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-one-layer-in-a-screen", "note": "a screen 400x360 with one small box near its top left corner, that box selected: canAlign should be true with ONE layer picked, and alignsTo should name the screen" },
+    { "do": "snapshot", "name": "align-frame-1-row" },
+    { "do": "render", "name": "align-frame-1-row-doc" },
+
+    { "do": "action", "action": "alignHorizontalCenter" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-centred-across", "note": "one press: the box should be centred across the screen, x 340 for a 120 wide box in a screen spanning 200 to 600, and its y should not have moved" },
+    { "do": "snapshot", "name": "align-frame-2-centred-across" },
+
+    { "do": "action", "action": "alignVerticalCenter" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-centred-both", "note": "second press: the box should now sit dead centre of the screen, y 340 for a 40 tall box in a screen spanning 180 to 540" },
+    { "do": "snapshot", "name": "align-frame-3-centred" },
+    { "do": "render", "name": "align-frame-3-centred-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-one-undo", "note": "ONE undo should put the vertical press back: y 210 again, x still centred at 340" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-two-undos", "note": "a second undo puts the horizontal press back: the box is at 230, 210 where it was drawn" },
+    { "do": "render", "name": "align-frame-5-undone-doc" },
+
+    { "do": "action", "action": "alignRight" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-right-edge", "note": "Align Right against the screen: the box's right edge should land on the screen's, x 480" },
+    { "do": "snapshot", "name": "align-frame-6-right" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [240, 400], "to": [320, 440], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [520, 230] },
+    { "do": "click", "at": [280, 420], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-two-in-a-screen", "note": "two boxes inside the screen, both picked: they should line up with EACH OTHER now, so alignsTo goes back to the selection and the caption counts two layers" },
+    { "do": "snapshot", "name": "align-frame-7-two-picked" },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "stepIntoSelection" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7b-inside-a-group", "note": "the two wrapped in a group, then stepped into one of them: a piece inside a group answers to nobody on purpose, so canAlign should be false. Centring it on the screen would fly it out of the group it belongs to" },
+    { "do": "snapshot", "name": "align-frame-7b-inside-group" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [760, 240], "to": [900, 300], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "8-loose-layer", "note": "one rectangle drawn out on the canvas with no screen around it, selected: canAlign should be false and the Arrange row should be gone from the inspector" },
+    { "do": "snapshot", "name": "align-frame-8-no-row" }
+  ]
+}

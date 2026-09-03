@@ -1,0 +1,28 @@
+{
+  "id": "a-piece-lines-up-inside-the-group-that-holds-it",
+  "title": "A piece lines up inside the group that holds it",
+  "goal": "Lining one thing up works when it sits on a screen, because a screen has a size of its own. It does nothing for a word inside a button, which is the case people hit most while building UI: pick the word, and there is no way to say centre it in the button. Give a piece inside any group the same one-press alignment it gets on a screen.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 850,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T14:19:40.887Z",
+  "updated": "2026-09-03T14:19:40.888Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from one-layer-lines-up-inside-the-frame-it-sits-in (2026-09-03), which deliberately stopped at frames. Today EditorState.arrangeReference takes the immediate parent and only when it isFrame, so a piece inside a group gets no row. The hard part is not the maths (LayerArrangement.aligned already takes a container box) but the group-of-one case: a group box is the union of its children, so with one child the reference IS the child and all six buttons are no-ops. Options: hide the row when the parent box equals the layer box on both axes; or dim per axis. Also decide whether aligning a child that currently defines the group edge should be allowed to shrink the group box, which it would today since the box is derived. See docs/design/ui-building.md, One layer lines up inside its screen.",
+  "acceptance": [
+    "With one piece inside a group selected, the Arrange row is there and says it is lining up inside that group",
+    "Pressing Align Center puts the piece in the middle of the group, and one undo puts it back",
+    "A group whose box is exactly the piece itself offers nothing that does nothing, so no dead buttons",
+    "Lining a piece up never changes the size of the group around it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T14:19:40.888Z",
+      "note": "created (manual)"
+    }
+  ]
+}

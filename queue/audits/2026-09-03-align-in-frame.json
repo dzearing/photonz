@@ -1,0 +1,30 @@
+{
+  "feature": "One layer lines up inside its screen",
+  "epic": "ui-building",
+  "summary": "Align used to need two layers. Now one box sitting on a screen can be lined up against the screen, so a single press puts a label in the middle of a card.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Screens and Align, both on by default.",
+  "try": [
+    { "do": "Press F and drag out a screen about 400 by 360." },
+    { "do": "Press R and draw a small box near the screen's top left corner." },
+    { "do": "Press V. The inspector should now show an Arrange row with six live buttons and a line naming the screen.", "shot": "2026-09-03-align-in-frame-1-row.png" },
+    { "do": "Click the third align button in the top row's left group (Align Center). The box jumps to the middle across." },
+    { "do": "Click the middle button of the right group (Align Middle). The box is now dead centre of the screen.", "shot": "2026-09-03-align-in-frame-2-centred.png" },
+    { "do": "Press Command Z twice. Each press puts one of those two back." },
+    { "do": "Draw a second box on the screen, shift-click both, and read the line under the buttons: two layers line up with each other, not with the screen." },
+    { "do": "Press Command G to group them, double click into the group, and click one piece. The Arrange row is gone on purpose.", "shot": "2026-09-03-align-in-frame-3-inside-group.png" }
+  ],
+  "evaluate": [
+    "With one layer picked, does the line under the buttons tell you what is about to move, before you press anything?",
+    "Is centring on the screen what you expected Align Center to mean there, or did you expect the picture's middle?",
+    "Two layers picked still line up with each other rather than with the screen around them. Is that the switch you would predict?",
+    "A piece inside a group on a screen gets no Arrange row at all. Would you rather it lined up inside its group?",
+    "Does one press per undo feel right, or would you want both centring presses to come back together?"
+  ],
+  "rough": [
+    "Align is a move, not a rule. Centre a box on a screen and the Layout section right underneath still reads Left and Top, so dragging the screen wider slides the box back off centre. Making an align press write a lasting rule was deliberately not done, because a button that silently changes a setting is a surprise, but the two sections sitting next to each other saying different things is the weakest part of this.",
+    "A piece inside a plain group has no reference and shows no Arrange row. Lining a word up inside the button that holds it is the obvious next want and is filed as a follow-up: it needs the group's own box and a rule for a group of one, whose box is the piece itself and whose buttons would do nothing.",
+    "The line reads 'This layer lines up inside Frame' for a screen still carrying its default name, which is a little stiff. It reads properly once the screen is named, and screens are named by clicking their label.",
+    "Screen Recording was granted, so all three pictures are real window captures from the probe app, not offscreen renders.",
+    "Spacing evenly against a screen's inner edges is not offered. Two boxes plus two screen edges has two readings and nobody asked for it yet."
+  ]
+}
