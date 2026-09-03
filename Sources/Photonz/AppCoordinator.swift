@@ -531,6 +531,20 @@ final class AppCoordinator {
         openWindow(.clipboard(UUID()))
     }
 
+    /// File ▸ New Blank Canvas, once a size has been chosen: a new window born
+    /// holding that canvas. The window the question was asked from keeps its
+    /// picture untouched.
+    func newBlankCanvasWindow(size: CGSize) {
+        openWindow(.blankCanvas(UUID(), size))
+    }
+
+    /// File ▸ New Blank Canvas asked from somewhere with no canvas to hang a
+    /// sheet over (a recording window): open a window and let it ask for the
+    /// size itself.
+    func newBlankCanvasWindowAskingForSize() {
+        openWindow(.blankCanvas(UUID(), nil))
+    }
+
     /// Edit a capture from history: dismiss the overlay, open/focus its window.
     /// Captures are files now, so this just opens the file (re-opening the same
     /// URL focuses the existing window).

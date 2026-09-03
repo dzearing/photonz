@@ -40,6 +40,25 @@ public enum BlankCanvas {
     /// What the sheet opens on, so Return alone makes a canvas.
     public static let defaultPreset = presets[0]
 
+    /// Where the canvas lands once a size has been chosen. Starting from
+    /// nothing must never cost you the picture you were already looking at,
+    /// and it must never leave a window nobody asked for, so the answer is
+    /// simply whether the window that asked is already holding something.
+    public enum Destination: Sendable, Equatable {
+        /// Fill the window that asked. It is empty, so a second window would
+        /// be one more thing to close.
+        case thisWindow
+        /// Open a new window. The asking window holds a picture, and that
+        /// picture stays exactly as it was.
+        case newWindow
+    }
+
+    /// The rule above, in one place, so every route to a blank canvas (the
+    /// empty window's card, the File menu) agrees on where it lands.
+    public static func destination(windowHasDocument: Bool) -> Destination {
+        windowHasDocument ? .newWindow : .thisWindow
+    }
+
     /// A typed size made safe to build: whole pixels, inside the legal range,
     /// and never NaN.
     public static func normalized(_ size: CGSize) -> CGSize {

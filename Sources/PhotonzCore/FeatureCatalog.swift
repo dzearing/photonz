@@ -346,7 +346,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: blankCanvasFlag,
                     title: "Start from a blank canvas",
-                    description: "A new window can start as an empty picture instead of only offering to open, paste or capture one. The card adds Blank canvas: pick a size (Desktop, Phone, Tablet, Square, or type your own), and you land on a white canvas every tool draws on right away. Off means a new window offers open, capture and paste only.",
+                    description: "You can start a picture from nothing instead of only opening, pasting or capturing one. Choose File \u{25B8} New Blank Canvas from any window, or click Blank canvas on an empty window\u{2019}s card: pick a size (Desktop, Phone, Tablet, Square, or type your own) and you land on a white canvas every tool draws on right away. Asking from a window that already holds a picture leaves that picture alone and opens the canvas in a new window. Off means the File menu row is gone and a new window offers open, capture and paste only.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

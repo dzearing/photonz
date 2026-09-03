@@ -1,11 +1,21 @@
 import PhotonzCore
 import SwiftUI
 
-/// "How big?" — the one question between an empty window and a canvas you can
-/// draw on. Opens with a size already picked, so Return alone makes a canvas
-/// and nobody has to think about pixels to get started.
+/// "How big?" — the one question between nothing and a canvas you can draw on.
+/// Opens with a size already picked, so Return alone makes a canvas and nobody
+/// has to think about pixels to get started.
+///
+/// The sheet does not decide where the canvas lands: whoever presents it hands
+/// in `onCreate`, so the empty window's card fills that window and the File
+/// menu can open a new one, from the same sheet.
 struct NewCanvasDialog: View {
-    @Environment(EditorState.self) private var editorState
+    /// Called with the chosen size when Create is pressed.
+    let onCreate: (CGSize) -> Void
+    /// Whether the canvas will arrive in a window of its own. The button says
+    /// so, because the picture behind this sheet is not going anywhere and
+    /// nobody should have to press Create to find that out.
+    var opensNewWindow: Bool = false
+
     @Environment(\.dismiss) private var dismiss
 
     /// A preset's id, or `customID` while the size is typed by hand.
@@ -50,8 +60,8 @@ struct NewCanvasDialog: View {
                 Spacer()
                 Button("Cancel", role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                Button("Create") {
-                    editorState.newBlankCanvas(size: chosenSize)
+                Button(opensNewWindow ? "Create in New Window" : "Create") {
+                    onCreate(chosenSize)
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)

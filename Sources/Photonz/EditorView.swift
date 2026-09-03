@@ -197,7 +197,12 @@ struct EditorView: View {
             ExportDialog()
         }
         .sheet(isPresented: $editorState.isBlankCanvasDialogPresented) {
-            NewCanvasDialog()
+            // Where the canvas lands is the editor's call (empty window fills
+            // itself, a busy one opens a new window), so both routes into this
+            // sheet behave the same.
+            NewCanvasDialog(onCreate: { editorState.createBlankCanvas(size: $0) },
+                            opensNewWindow: BlankCanvas.destination(
+                                windowHasDocument: editorState.document != nil) == .newWindow)
         }
         .sheet(isPresented: $editorState.isNewFrameDialogPresented) {
             NewFrameDialog()

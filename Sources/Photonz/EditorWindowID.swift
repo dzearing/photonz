@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 /// Identity for an editor window. The editor is a value-based
@@ -16,11 +17,17 @@ import Foundation
 ///   convention); unique id per invocation.
 /// - `.video` — a recording opened in the in-app video editor (phase 13.3),
 ///   keyed by URL so re-opening the same recording focuses its window.
+/// - `.blankCanvas` — a window that starts from nothing (File ▸ New Blank
+///   Canvas). A size means the canvas is already decided and the window is
+///   born holding it; `nil` means the window opens and asks for the size
+///   itself, which is the fallback for asking from a window that has no
+///   canvas to hang the question on.
 enum EditorWindowID: Hashable, Codable, Sendable {
     case file(URL)
     case fresh(UUID)
     case clipboard(UUID)
     case video(URL)
+    case blankCanvas(UUID, CGSize?)
 
     /// A video-editor id for `url`, standardized so the same recording always
     /// hashes to the same window (re-opening focuses rather than duplicates),

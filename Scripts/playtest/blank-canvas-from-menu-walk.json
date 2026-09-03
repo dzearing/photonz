@@ -1,0 +1,24 @@
+{
+  "out": "/tmp/photonz-playtest/blank-canvas-from-menu",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1100, "height": 800 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 120], "to": [520, 380] },
+    { "do": "tool", "tool": "select" },
+    { "do": "describe", "stage": "1-working", "note": "a document with something in it, the case the File menu row exists for" },
+    { "do": "snapshot", "name": "blank-canvas-menu-1-working" },
+
+    { "do": "menus", "stage": "file-menu", "menu": "File" },
+
+    { "do": "action", "action": "newCanvasDialog" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-sheet", "note": "the same New Canvas sheet, now over a window that already holds a picture" },
+    { "do": "snapshot", "name": "blank-canvas-menu-2-sheet" },
+
+    { "do": "action", "action": "createCanvas" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "3-after", "note": "the window we asked from must still hold its rectangle at 900 by 620" },
+    { "do": "menus", "stage": "after-create", "menu": "File" },
+    { "do": "snapshot", "name": "blank-canvas-menu-3-after" }
+  ]
+}

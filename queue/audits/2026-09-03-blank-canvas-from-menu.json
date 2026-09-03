@@ -1,0 +1,28 @@
+{
+  "feature": "New Blank Canvas from the File menu",
+  "epic": "ui-building",
+  "summary": "Starting from nothing is now one step from anywhere: File > New Blank Canvas asks for a size over whatever window you are in, and only once you pick one does a canvas appear. Cancelling leaves nothing behind.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag \"Start from a blank canvas\" is on by default.",
+  "try": [
+    { "do": "Open any screenshot, or make a blank canvas, so a window has a picture in it." },
+    { "do": "Open the File menu and look at the second row, New Blank Canvas." },
+    { "do": "Choose it. The size sheet drops over the window you are in.", "shot": "2026-09-03-blank-canvas-from-menu-sheet.png" },
+    { "do": "Press Escape. Nothing was created and no window opened." },
+    { "do": "Choose File > New Blank Canvas again and press Return to take Desktop, 1440 by 1024." },
+    { "do": "Check the window you asked from: same picture, same size, untouched.", "shot": "2026-09-03-blank-canvas-from-menu-after.png" },
+    { "do": "Choose File > New Window, then File > New Blank Canvas from that empty window, and press Return." }
+  ],
+  "evaluate": [
+    "New Blank Canvas sits second in File, under New Window. Should it be first, above New Window?",
+    "Asking from a window that holds a picture opens a new window, and the button says Create in New Window. Is that the behavior you expected, or would you rather it asked?",
+    "Asking from an empty window fills that window instead of opening a second one. Right call?",
+    "The sheet is titled New Canvas while the menu row says New Blank Canvas. Does that read as one thing or two?",
+    "The row has no keyboard shortcut. Is starting from nothing frequent enough that you would want one, even an odd key?"
+  ],
+  "rough": [
+    "No shortcut. Every N is taken: Command N is New Layer, Shift Command N is New Window, Option Command N is New from Clipboard. Inventing an unrelated key seemed worse than leaving the column blank.",
+    "The row is only in the app's File menu, not in the menu bar icon's drop-down. With no window open there is nothing for the sheet to drop over, so that route would have to open an empty window first, which is exactly what this task removed.",
+    "If a recording window is frontmost there is no picture window to hang the sheet on, so the row opens a window that asks for the size itself. That path is built but was not exercised live: the walk cannot drive a recording window.",
+    "Screen Recording was granted, so both pictures here are real screen captures of the app, not offscreen renders."
+  ]
+}

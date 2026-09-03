@@ -164,6 +164,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Open the New Canvas sheet, so a walk can photograph it. A snapshot
     /// taken while a sheet is up photographs the sheet.
     case newCanvasDialog
+    /// Answer the New Canvas sheet with the size it opens on, which is what
+    /// pressing Return in it does. A sheet cannot be typed into from a walk,
+    /// so this is how a walk proves where the canvas lands.
+    case createCanvas
     /// ⌘G and ⇧⌘G are menu chords too.
     case group, ungroup
     /// The frame rows in the Layer menu (Next, `next-frames`): the size sheet,

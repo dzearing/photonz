@@ -419,6 +419,9 @@ private final class Run {
             case .undo: editor.undo()
             case .redo: editor.redo()
             case .newCanvasDialog: editor.isBlankCanvasDialogPresented = true
+            case .createCanvas:
+                editor.isBlankCanvasDialogPresented = false
+                editor.createBlankCanvas(size: BlankCanvas.defaultPreset.size)
             case .group: editor.groupSelection()
             case .ungroup: editor.ungroupSelection()
             case .newFrameDialog: editor.isNewFrameDialogPresented = true
@@ -525,7 +528,9 @@ private final class Run {
         if let card {
             try await photographEmptyWindow(fresh, window: window, name: card, number: number)
         }
-        fresh.newBlankCanvas(size: size)
+        // Through the same door the sheet uses, so a walk proves the empty
+        // window fills itself rather than spawning a second one.
+        fresh.createBlankCanvas(size: size)
         try await adopt(fresh, window: window, step: "blank",
                         subject: "blank \(Int(size.width))x\(Int(size.height))", number: number)
     }

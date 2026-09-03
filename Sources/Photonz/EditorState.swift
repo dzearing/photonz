@@ -338,6 +338,21 @@ final class EditorState {
         installDocument(.withBaseImage(ref), url: nil)
     }
 
+    /// How this window opens another one holding a blank canvas. Set once by
+    /// the window root, which is where the app coordinator lives; the editor
+    /// itself stays free of window plumbing.
+    @ObservationIgnored var openBlankCanvasWindow: ((CGSize) -> Void)?
+
+    /// Answers the New Canvas sheet, from whichever route opened it. An empty
+    /// window fills itself; a window already holding a picture keeps it and the
+    /// canvas arrives in a window of its own.
+    func createBlankCanvas(size: CGSize) {
+        switch BlankCanvas.destination(windowHasDocument: document != nil) {
+        case .thisWindow: newBlankCanvas(size: size)
+        case .newWindow: openBlankCanvasWindow?(size)
+        }
+    }
+
     /// What a blank canvas starts as. White, not transparent: it is what the
     /// canvas already looks like on screen and what it exports as, so there is
     /// no gap between the two.
@@ -368,6 +383,19 @@ final class EditorState {
             // A walk that starts from a blank canvas needs to find it.
             PlaytestHarness.register(self)
             #endif
+        case .blankCanvas(_, let size):
+            untitledName = Self.nextUntitledName()
+            if let size {
+                newBlankCanvas(size: size)
+            } else {
+                // Nobody has picked a size yet: this window opens empty and
+                // asks. Only reached when the question came from a window with
+                // no canvas of its own to ask over.
+                isBlankCanvasDialogPresented = true
+                #if PHOTONZ_PLAYTEST
+                PlaytestHarness.register(self)
+                #endif
+            }
         case .video:
             break // routed to the video editor (VideoEditorState), never here
         }

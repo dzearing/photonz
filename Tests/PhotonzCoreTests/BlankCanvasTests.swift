@@ -68,4 +68,14 @@ struct BlankCanvasTests {
         #expect(!BlankCanvas.isValid(CGSize(width: 0, height: 600)))
         #expect(!BlankCanvas.isValid(CGSize(width: 800, height: 99_999)))
     }
+
+    @Test("A window that already holds a picture never has it replaced")
+    func destinationForABusyWindow() {
+        #expect(BlankCanvas.destination(windowHasDocument: true) == .newWindow)
+    }
+
+    @Test("An empty window fills itself instead of spawning a second one")
+    func destinationForAnEmptyWindow() {
+        #expect(BlankCanvas.destination(windowHasDocument: false) == .thisWindow)
+    }
 }

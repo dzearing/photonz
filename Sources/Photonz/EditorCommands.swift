@@ -75,6 +75,20 @@ struct EditorCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("New Window") { coordinator.newDocumentWindow() }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
+            // Starting from nothing used to mean New Window first, then the
+            // card. Here it is one step from wherever you are: the size sheet
+            // opens over the window you are in, and only once you have picked
+            // a size does a window appear. No shortcut: every N is spoken for
+            // (⌘N New Layer, ⇧⌘N New Window, ⌥⌘N New from Clipboard).
+            if Experiments.shared.blankCanvasEnabled {
+                Button("New Blank Canvas…") {
+                    if let editor {
+                        editor.isBlankCanvasDialogPresented = true
+                    } else {
+                        coordinator.newBlankCanvasWindowAskingForSize()
+                    }
+                }
+            }
             Button("New from Clipboard") { coordinator.newFromClipboardWindow() }
                 .keyboardShortcut("n", modifiers: [.command, .option])
             Button("Open…") { coordinator.presentOpenPanel() }

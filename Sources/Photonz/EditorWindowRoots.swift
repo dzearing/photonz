@@ -26,6 +26,11 @@ struct ImageEditorRootView: View {
                 editorState.hostWindow?.isDocumentEdited = dirty
             }
             .task {
+                // Starting from nothing while this window holds a picture opens
+                // another window rather than replacing what is here.
+                editorState.openBlankCanvasWindow = { [coordinator] size in
+                    coordinator.newBlankCanvasWindow(size: size)
+                }
                 if let windowID {
                     editorState.seed(from: windowID, capture: coordinator.capture)
                 }
