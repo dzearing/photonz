@@ -1,0 +1,72 @@
+{
+  "out": "/tmp/photonz-playtest/multi-geometry",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 100], "to": [280, 160], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [150, 220], "to": [370, 280], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [100, 340], "to": [200, 400], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-drew", "note": "three rectangles, three different widths and three different left edges: 160/220/100 wide at x 120/150/100" },
+    { "do": "render", "name": "multi-1-rough-doc" },
+
+    { "do": "drag", "from": [60, 60], "to": [520, 460], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-selected", "note": "a rubber band around all three: Position & Size should now be showing with Mixed in every field, and the caption should say 3 layers" },
+    { "do": "snapshot", "name": "multi-2-mixed" },
+
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "160" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-one-width", "note": "one typed width: all three rectangles should be exactly 160 wide, none of them moved" },
+    { "do": "snapshot", "name": "multi-3-one-width" },
+    { "do": "render", "name": "multi-3-one-width-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-undone", "note": "ONE undo should put all three widths back to 160/220/100" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "focus", "field": "X" },
+    { "do": "type", "text": "100" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-one-x", "note": "one typed X: every left edge should read 100, and the widths should still all be 160" },
+    { "do": "snapshot", "name": "multi-5-one-x" },
+    { "do": "render", "name": "multi-5-one-x-doc" },
+
+    { "do": "focus", "field": "Y" },
+    { "do": "key", "key": "up" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "6-arrow", "note": "Y reads Mixed: one up arrow should move all three down by 1 from their own tops (100/220/340 becomes 101/221/341), keeping the spread" },
+    { "do": "key", "key": "up", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "7-shift-arrow", "note": "shift and up should step all three by 10 more (111/231/351)" },
+    { "do": "snapshot", "name": "multi-7-stepped" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [600, 200], "to": [800, 320], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [60, 60], "to": [860, 500], "steps": 12 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-with-arrow", "note": "three rectangles plus an arrow selected: X and Y still take a number for all four, W should still be live and read 160 because it speaks only for the three that take a width" },
+    { "do": "snapshot", "name": "multi-8-partial" },
+
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "120" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "9-partial-width", "note": "the three rectangles should be 120 wide and the arrow untouched" },
+    { "do": "snapshot", "name": "multi-9-partial-width" },
+    { "do": "render", "name": "multi-9-partial-doc" }
+  ]
+}

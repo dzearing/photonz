@@ -238,7 +238,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: geometryFieldsFlag,
                     title: "Type a layer's position and size",
-                    description: "The inspector gains a Position and Size section: X, Y, W and H for the selected layer, as numbers you can type. Two buttons can be made the same width, and a row can be made exactly 296 by 118, without nudging a drag until it looks right. Up and down arrow steps a field by 1, Shift and an arrow by 10, and each change is one undo. Off means position and size are drag only.",
+                    description: "The inspector gains a Position and Size section: X, Y, W and H for everything you have picked, as numbers you can type. One button can be made exactly 296 by 118, and a whole row of them can be made one width, or lined up on one left edge, in a single move and a single undo. Where the picked layers differ, a field says Mixed rather than a number. Up and down arrow steps a field by 1, Shift and an arrow by 10. Off means position and size are drag only.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

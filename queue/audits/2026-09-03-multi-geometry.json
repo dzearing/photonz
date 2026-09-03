@@ -1,0 +1,30 @@
+{
+  "feature": "Set the position and size of several layers at once",
+  "epic": "ui-building",
+  "summary": "The Position & Size fields now speak for everything you have picked, not just the last layer you clicked. Select a row of buttons, type one width, and they all take it in a single undo step.",
+  "setup": "Photonz Dev, release Next. Experiments flag \"Type a layer's position and size\" is on by default. Start a blank canvas (File > New) and draw three rectangles of different widths at different left edges.",
+  "try": [
+    { "do": "With the Select tool, drag a rubber band around all three rectangles.", "shot": "2026-09-03-multi-geometry-1.png" },
+    { "do": "Read the Position & Size section: X, Y and W should say Mixed, H should say 60." },
+    { "do": "Click W, type 160, press Return.", "shot": "2026-09-03-multi-geometry-2.png" },
+    { "do": "Press Command Z once, and check all three widths come back at the same time." },
+    { "do": "Redo, then click X, type 100 and press Return, so every left edge lines up." },
+    { "do": "Click Y (still Mixed) and press the up arrow, then Shift and up arrow." },
+    { "do": "Draw an arrow, rubber band all four layers, and hover the W field.", "shot": "2026-09-03-multi-geometry-3.png" },
+    { "do": "Type 120 into W and press Return: the three rectangles resize, the arrow does not." }
+  ],
+  "evaluate": [
+    "When the fields say Mixed, is it obvious that typing a number will change every picked layer rather than just one?",
+    "Typing an X moves every layer onto that left edge. Is that what you expected, or did you expect the whole group to slide across as one block?",
+    "Pressing up arrow on a Mixed field moves everything by 1 but the field still reads Mixed. Does that feel right or does it look like nothing happened?",
+    "The caption under the fields runs three lines. Is it earning its space, or is it noise once you have used the section twice?",
+    "With an arrow in the selection, W shows 160 for the three rectangles that have a width. Is a number that speaks for part of the selection honest enough, or should it say Mixed?"
+  ],
+  "rough": [
+    "The fact that W only reaches 3 of 4 picked layers lives in the hover tip alone. Nothing on the field itself hints that one layer is sitting out.",
+    "An arrow key on a Mixed field is the one edit with no visible change in the panel: the layers move on canvas but the box still reads Mixed.",
+    "Dragging several layers on canvas does not update the fields live the way a single-layer drag does. The numbers catch up on mouse up.",
+    "Typing X sets every layer's own left edge rather than moving the selection's bounding box. The task notes flagged this as a possible decision card, but the acceptance list had already settled it, and it is the only reading that makes \"lines every selected layer up on that edge\" true.",
+    "Verified live: the probe held Screen Recording, so all three shots are real window captures from Scripts/playtest/multi-geometry-walk.json."
+  ]
+}

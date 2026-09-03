@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 640,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:53:19.113Z",
-  "updated": "2026-09-03T00:53:19.114Z",
+  "updated": "2026-09-03T07:13:00.388Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the-position-and-size-of-a-layer-can-be-typed-no (2026-09-03). The single-layer slice is GeometryInspector.swift + LayerGeometry/LayerGeometryEditing in PhotonzCore + EditorState.setLayerGeometry. Multi-selection lives in EditorState.multiSelectedLayerIDs; the batch shape to copy is the existing multi-select visibility/lock paths, which fold several updateLayer calls into one History.perform. Decide first what X means for a group (each layer to that X, or the group box moved there) - that is a UX decision card, not an engineering one.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-03T00:53:19.114Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T07:13:00.388Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T07:25:41.572536Z",
+      "note": "Pre-build review. The task notes asked whether X should mean 'every layer to that X' or 'move the group box there'. The acceptance list had already settled it ('Typing an X lines every selected layer up on that edge'), and it is also what every other design tool does, so no decision card: the group-box reading is what dragging already gives you. Cut from scope: a proportional lock and a rotation field, neither of which the task asks for. Shortest version that delivers the value is exactly the four acceptance items."
+    },
+    {
+      "t": "2026-09-03T07:25:41.572536Z",
+      "note": "Built. PhotonzCore gained LayerGeometrySelection + LayerGeometryReading (agreed/mixed/empty), tested first: 15 tests in 'Typed geometry across a whole selection'. EditorState gained geometrySelection, setLayerGeometry(field:to:), stepLayerGeometry, all folded into one History.perform. GeometryInspector no longer takes a layer, it reads the selection; the panel shows the section on hasLayerSelection so it survives a multi-selection (selectedLayerID is nil then). A field acts only on the layers that accept it; the hover tip says 'Applies to 3 of the 4 selected layers.'"
+    },
+    {
+      "t": "2026-09-03T07:25:41.572536Z",
+      "note": "Verified on the probe with Scripts/playtest/multi-geometry-walk.json (Screen Recording granted, real captures). W=160 on three rectangles -> all 160, positions untouched; ONE undo restored 160/220/100; X=100 -> every left edge 100; up arrow on a Mixed Y -> 101/221/341, Shift up -> 111/231/351, spread kept; three rectangles plus an arrow, W=120 -> rectangles 120, arrow untouched. Scripts/test.sh green (1908 tests)."
     }
-  ]
+  ],
+  "started": "2026-09-03T07:13:00.388Z"
 }

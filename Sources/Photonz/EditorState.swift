@@ -4390,24 +4390,79 @@ final class EditorState {
         return layer.isGroup ? layer.localBounds : layer.frame
     }
 
-    /// A typed geometry field landing (Return, Tab, or an arrow-key step):
-    /// one undo step from the layer's current frame to the typed one. A locked
-    /// layer, a field that layer does not accept, and a value that changes
-    /// nothing are all no-ops, so tabbing through the fields without editing
-    /// never puts anything in the undo stack.
-    func setLayerGeometry(id: UUID, field: LayerGeometryField, to value: CGFloat) {
-        guard let layer = document?.layer(id: id), let current = previewedFrame(of: id),
-              LayerGeometryEditing(layer: layer).allows(field) else { return }
-        let frame = LayerGeometry.applying(value, to: field, of: current)
-        guard frame != current else { return }
+    /// The layers the Position & Size fields speak for: the whole
+    /// multi-selection when there is one, else the one selected layer. Frames
+    /// are in the space each layer's numbers are shown in — its parent's —
+    /// and preview-aware, so a drag in flight is what the fields read.
+    ///
+    /// A layer inside a selected group takes no place of its own: the group
+    /// already carries it, and setting both would move it twice. Locked layers
+    /// stay in the list but accept nothing, so the section can say honestly
+    /// how many of the picked layers a number reaches.
+    var geometrySelection: LayerGeometrySelection {
+        guard let document else { return LayerGeometrySelection([]) }
+        let selected = actionableLayerIDs
+        guard !selected.isEmpty else { return LayerGeometrySelection([]) }
+        // Draw order, so the fields read the same way twice running.
+        let members = document.allLayers.compactMap { layer -> LayerGeometrySelection.Member? in
+            guard selected.contains(layer.id), let frame = previewedFrame(of: layer.id) else {
+                return nil
+            }
+            var parent = document.parentID(of: layer.id)
+            while let up = parent {
+                if selected.contains(up) { return nil }
+                parent = document.parentID(of: up)
+            }
+            return LayerGeometrySelection.Member(id: layer.id, frame: frame,
+                                                 editing: LayerGeometryEditing(layer: layer))
+        }
+        return LayerGeometrySelection(members)
+    }
+
+    /// A typed geometry field landing (Return, Tab, or a click away): every
+    /// selected layer that accepts the field goes to the typed number, in ONE
+    /// undo step. A locked layer, a field a layer does not accept, and a value
+    /// that changes nothing are all no-ops, so tabbing through the fields
+    /// without editing never puts anything in the undo stack.
+    func setLayerGeometry(field: LayerGeometryField, to value: CGFloat) {
+        commitGeometry(geometrySelection.applying(value, to: field))
+    }
+
+    /// An arrow-key press in a field: every selected layer steps from its own
+    /// number, in ONE undo step, so a row that is spread out moves together
+    /// and stays spread out.
+    func stepLayerGeometry(field: LayerGeometryField, direction: Int, coarse: Bool) {
+        commitGeometry(geometrySelection.stepping(field, direction: direction, coarse: coarse))
+    }
+
+    /// One undo step for a whole selection's worth of typed frames.
+    private func commitGeometry(_ moves: [UUID: CGRect]) {
+        guard !moves.isEmpty, let document else { return }
+        previewMove = nil
+        dragPreviewGeneration += 1 // cancels an in-flight preview session
+        clearPreviewAfterNextFrame = dragPreview != nil
         // A group has no frame to set — only an origin to move to, which
         // carries everything inside it. A FRAME does have one: its box is a
-        // real size, so W and H are typed straight into it.
-        if layer.isGroup, !layer.isFrame {
-            perform { $0.moveLayer(id: id, toParentOrigin: frame.origin) }
-            return
+        // real size, so W and H are typed straight into it. Resolved here, in
+        // draw order, so the one undo step lands the same way every time.
+        let ordered: [(id: UUID, frame: CGRect, originOnly: Bool)] = document.allLayers
+            .compactMap { layer in
+                guard let frame = moves[layer.id] else { return nil }
+                return (layer.id, frame, layer.isGroup && !layer.isFrame)
+            }
+        perform { document in
+            let canvas = document.canvasSize
+            for move in ordered {
+                if move.originOnly {
+                    document.moveLayer(id: move.id, toParentOrigin: move.frame.origin)
+                } else {
+                    document.updateLayer(id: move.id) {
+                        $0 = AnnotationBuilder.planningCaption($0.resized(to: move.frame),
+                                                               canvas: canvas)
+                    }
+                }
+            }
         }
-        commitLayerFrame(id: id, frame: frame)
     }
 
     func selectLayer(_ id: UUID?) {

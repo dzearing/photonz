@@ -6024,3 +6024,30 @@ locked Mac comes back as the lock screen, so "another tool now sees the dim"
 and "the frozen picture has no dim baked into it" are measured but not yet
 witnessed. Re-run `open -a "dist/Photonz Probe.app" --args --capture-diag` once
 somebody is logged in and read the two dim lines.
+
+## 2026-09-03 — Position & Size acts on the whole selection
+
+`next-geometry-fields` grew up: the inspector's **Position & Size** section now
+speaks for everything you have picked, not just the last layer you clicked.
+Select four buttons, type one width, and all four take it in a single undo step;
+type one X and all four left edges line up.
+
+- New in `PhotonzCore`: `LayerGeometrySelection` and `LayerGeometryReading`
+  (`agreed` / `mixed` / `empty`), tested first (15 tests). A field reads and
+  writes only the picked layers that accept it, so three rectangles and an arrow
+  still give a live W that speaks for the three.
+- `EditorState.geometrySelection` builds the members in draw order from
+  `actionableLayerIDs`, dropping layers inside a picked group the way Arrange
+  does. `setLayerGeometry(field:to:)` and `stepLayerGeometry` fold every layer
+  into one `History.perform`.
+- Where the picked layers differ a field shows **Mixed** in secondary text. An
+  arrow key on a Mixed field steps each layer from its own number, so a spread
+  out row moves together and stays spread out.
+- The section now appears on `hasLayerSelection` rather than on a primary
+  selected layer, because a multi-selection leaves `selectedLayerID` nil.
+- Walked on the probe with `Scripts/playtest/multi-geometry-walk.json` (real
+  window captures, Screen Recording granted). `Scripts/test.sh` green, 1908
+  tests. Audit: `queue/audits/2026-09-03-multi-geometry.json`.
+
+Next: the queue. Open question for the user in the audit — should a W that
+reaches only part of the selection show its number, or say Mixed?

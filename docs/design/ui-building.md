@@ -347,8 +347,6 @@ real limit of the slices above, not an oversight.
 - **A main cannot be made from a group that already contains a main.** An
   instance inside a main is fine and updates correctly; promoting a group that
   holds a main is out, and the command is disabled with the reason on hover.
-- **The Position & Size fields still show one layer at a time**, so a group and
-  a child cannot be edited together.
 - States, composites bound to data, prototyping connections, modes and published
   systems stay deferred as set out above.
 
@@ -373,13 +371,33 @@ for the selected layer, as numbers you can type.
   Size is not: an arrow's frame is padding around a shaft rather than the shape
   you drew, and a measurement is edited by its feet, so both show a dimmed W and
   H that say why on hover. Text takes a width (its wrap width) and not a height.
-- Model and rules are `LayerGeometry` / `LayerGeometryEditing` in `PhotonzCore`;
-  the section is `GeometryInspector.swift`; the write goes through
-  `EditorState.setLayerGeometry`, which reuses the canvas drag's
-  `commitLayerFrame` so annotation endpoints and caption placement stay correct.
+- **The section speaks for the whole selection** (2026-09-03). Pick four
+  buttons and one typed width makes all four that width; one typed X lines all
+  four left edges up. Where the picked layers already agree the field shows
+  their number, and where they do not it says **Mixed**, because a number that
+  stands for one layer out of four is how you set three layers to something you
+  never meant to type. Every edit is ONE undo step.
+  - An arrow key on a Mixed field steps each layer from its OWN number, so a
+    row that is spread out moves together and stays spread out. A number typed
+    into the box and then stepped lands on all of them.
+  - A field acts only on the layers that accept it. Select three rectangles and
+    an arrow and W still reads and sets the three rectangles; the hover tip
+    says "Applies to 3 of the 4 selected layers." A field no picked layer
+    accepts is dimmed with the reason, as before.
+  - A layer inside a picked group takes no place of its own, the same rule
+    Arrange uses: the group already carries it, and setting both would move it
+    twice. Locked layers stay in the count and accept nothing.
+- Model and rules are `LayerGeometry` / `LayerGeometryEditing` /
+  `LayerGeometrySelection` in `PhotonzCore`; the section is
+  `GeometryInspector.swift`; the write goes through
+  `EditorState.setLayerGeometry(field:to:)` and `stepLayerGeometry`, which fold
+  the whole selection into one `History.perform` and reuse the canvas drag's
+  frame commit so annotation endpoints and caption placement stay correct.
+  Walked end to end by `Scripts/playtest/multi-geometry-walk.json`.
 
-Not in this slice: several layers selected at once (the section shows the
-primary selection only), a proportional lock, and a rotation field.
+Not in this slice: a proportional lock, a rotation field, and treating the
+selection as one box (typing X moves every layer onto that edge, it does not
+slide the group of them as a unit).
 
 ## Landed: layers can hold layers (Next, unflagged, 2026-09-03)
 

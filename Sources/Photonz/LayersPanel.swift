@@ -101,14 +101,18 @@ struct InspectorPanel: View {
         if Experiments.shared.alignLayersEnabled, editorState.canAlignSelection {
             set.insert(.arrange)
         }
+        // Where the selected layers sit and how big they are, as numbers you
+        // can type (Next, `next-geometry-fields`). Every layer kind has a
+        // position, so this shows for all of them, and it speaks for the whole
+        // selection: pick four buttons and one typed width reaches all four.
+        // Which of the four fields accept typing is `LayerGeometryEditing`'s
+        // call.
+        if Experiments.shared.geometryFieldsEnabled, editorState.hasLayerSelection {
+            set.insert(.geometry)
+        }
         if let layer = selectedLayer {
             set.insert(.effects)
             set.insert(.shadow)
-            // Where a layer sits and how big it is, as numbers you can type
-            // (Next, `next-geometry-fields`). Every layer kind has a position,
-            // so this shows for all of them; which of the four accept typing
-            // is `LayerGeometryEditing`'s call.
-            if Experiments.shared.geometryFieldsEnabled { set.insert(.geometry) }
             // A frame's own properties: its size, its clipping, its surface
             // (Next, `next-frames`). Only a frame has any of them.
             if Experiments.shared.framesEnabled, layer.isFrame { set.insert(.frame) }
@@ -205,9 +209,7 @@ struct InspectorPanel: View {
         case .arrange:
             ArrangeInspector()
         case .geometry:
-            if let layer = selectedLayer {
-                GeometryInspector(layer: layer)
-            }
+            GeometryInspector()
         case .measureTool:
             MeasureToolInspector()
         case .wandTool:

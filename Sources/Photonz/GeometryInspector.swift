@@ -2,13 +2,20 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
-/// Where the selected layer sits and how big it is, as four numbers you can
+/// Where the selected layers sit and how big they are, as four numbers you can
 /// type (Next, `next-geometry-fields`).
 ///
 /// The point of this section is building to a spec: two buttons the same width,
 /// a row exactly 296 by 118. Dragging can get close and never exact, so every
 /// number here is typeable, steps by an arrow key the same 1 and 10 the canvas
 /// nudges by, and lands as one undo step.
+///
+/// It speaks for the WHOLE selection. Pick four buttons and type one width and
+/// all four take it; type one X and all four line up on that left edge. Where
+/// the picked layers already agree the field shows their number, and where they
+/// do not it says Mixed rather than showing the last one you clicked, because a
+/// number that stands for one layer out of four is how you set three layers to
+/// something you never meant to type.
 ///
 /// The fields follow a drag in flight (they read `previewedFrame`), so the
 /// numbers move with the layer instead of jumping on mouse-up. Which of the
@@ -17,64 +24,81 @@ import SwiftUI
 /// is not says why on hover rather than sitting there dead.
 struct GeometryInspector: View {
     @Environment(EditorState.self) private var editorState
-    let layer: Layer
 
-    /// Preview-aware, so the numbers keep up with a canvas drag.
-    private var frame: CGRect {
-        editorState.previewedFrame(of: layer.id) ?? layer.frame
-    }
-
-    /// Read fresh from the document: locking a layer while it is selected has
-    /// to close its fields on the spot.
-    private var editing: LayerGeometryEditing {
-        LayerGeometryEditing(layer: editorState.document?.layer(id: layer.id) ?? layer)
-    }
+    private var selection: LayerGeometrySelection { editorState.geometrySelection }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let selection = selection
+        return VStack(alignment: .leading, spacing: 6) {
             // Two pairs, position over size, each field taking half the panel:
             // the numbers are the point of the section, so they get the room
             // rather than sitting in 58 points with the panel empty beside them.
             HStack(spacing: 8) {
-                field(.x)
-                field(.y)
+                field(.x, selection)
+                field(.y, selection)
             }
             HStack(spacing: 8) {
-                field(.width)
-                field(.height)
+                field(.width, selection)
+                field(.height, selection)
             }
-            Text("\(LayerGeometry.unitSuffix) from the top left. Up or down arrow steps by 1, Shift by 10.")
+            Text(caption(selection))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-        // A different layer is a different set of numbers, so its fields start
-        // fresh rather than carrying the last one's half-typed draft.
-        .id(layer.id)
+        // A different set of layers is a different set of numbers, so the
+        // fields start fresh rather than carrying the last selection's
+        // half-typed draft.
+        .id(selection.members.map(\.id))
     }
 
-    private func field(_ field: LayerGeometryField) -> some View {
-        let editing = editing
-        return GeometryNumberField(
+    /// What the numbers mean, in words. With one layer picked that is where
+    /// the layer sits on the picture; with several it has to say that a number
+    /// lands on every one of them, and which edge each letter is, or "type 24
+    /// into X" reads as a guess.
+    private func caption(_ selection: LayerGeometrySelection) -> String {
+        guard selection.count > 1 else {
+            return "\(LayerGeometry.unitSuffix) from the top left. Up or down arrow steps by 1, Shift by 10."
+        }
+        return "\(selection.count) layers, all at once. X sets every left edge, Y every top edge, "
+            + "W and H each layer's own size. Arrow steps them all by 1, Shift by 10."
+    }
+
+    private func field(_ field: LayerGeometryField,
+                       _ selection: LayerGeometrySelection) -> some View {
+        GeometryNumberField(
             field: field,
-            value: LayerGeometry.displayValue(field, of: frame),
-            isEditable: editing.allows(field),
-            fixedReason: editing.fixedReason(for: field),
+            reading: selection.reading(field),
+            isEditable: selection.allows(field),
+            help: help(field, selection),
             commit: { value in
-                editorState.setLayerGeometry(id: layer.id, field: field, to: value)
+                editorState.setLayerGeometry(field: field, to: value)
+            },
+            stepAll: { direction, coarse in
+                editorState.stepLayerGeometry(field: field, direction: direction, coarse: coarse)
             })
+    }
+
+    /// The hover tip: why a field takes nothing, or what it is plus how much of
+    /// the selection it reaches. A width that quietly skips the arrow in the
+    /// selection says so here rather than looking broken.
+    private func help(_ field: LayerGeometryField,
+                      _ selection: LayerGeometrySelection) -> String {
+        if let reason = selection.fixedReason(for: field) { return reason }
+        guard let note = selection.note(for: field) else { return field.title }
+        return "\(field.title). \(note)"
     }
 }
 
-/// One typed geometry number.
+/// One typed geometry number, standing for every selected layer.
 ///
 /// The draft lives in the field until it lands, and it lands on Return, on Tab,
 /// and on clicking away, because a number typed and then abandoned is the most
 /// common way a person loses an edit. Up and down arrow step it without leaving
-/// the field. Text that is not a number snaps back to what the layer really is
-/// rather than being guessed at.
+/// the field. Text that is not a number snaps back to what the layers really
+/// are rather than being guessed at.
 ///
 /// Typing a number is a moment, not a mode: Return and Escape both finish it
 /// and hand the keyboard back to the picture, so the very next key picks a tool
@@ -82,10 +106,13 @@ struct GeometryInspector: View {
 /// that rule.
 private struct GeometryNumberField: View {
     let field: LayerGeometryField
-    let value: CGFloat
+    let reading: LayerGeometryReading
     let isEditable: Bool
-    let fixedReason: String?
+    let help: String
     let commit: (CGFloat) -> Void
+    /// An arrow key with no number in the box: every layer steps from its own
+    /// value, which is the only thing a step can mean when they differ.
+    let stepAll: (Int, Bool) -> Void
 
     @State private var text = ""
     /// Set while Return or Escape is handing the keyboard over, so the focus
@@ -110,6 +137,9 @@ private struct GeometryNumberField: View {
                 .focused($isFocused)
                 .disabled(!isEditable)
                 .monospacedDigit()
+                // Mixed is a word among numbers, so it reads as the quieter
+                // thing it is rather than as a value someone typed.
+                .foregroundStyle(reading.isMixed ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
                 // Tab, and anything else that moves the keyboard on by itself,
                 // still lands the draft; Return goes through the key rule
                 // below so it can hand the keyboard back as well.
@@ -121,12 +151,12 @@ private struct GeometryNumberField: View {
                 .numberFieldKeys(
                     isEditable: isEditable,
                     commit: { finish { land() } },
-                    revert: { finish { text = display(value) } },
+                    revert: { finish { text = display() } },
                     step: { direction, coarse in step(direction: direction, coarse: coarse) })
         }
-        .help(fixedReason ?? field.title)
-        .onAppear { text = display(value) }
-        .onChange(of: value) { text = display(value) }
+        .help(help)
+        .onAppear { text = display() }
+        .onChange(of: reading) { text = display() }
         .onChange(of: isFocused) { _, focused in
             if focused {
                 selectEverything()
@@ -161,28 +191,45 @@ private struct GeometryNumberField: View {
         isFinishing = true
     }
 
-    /// The field's draft becoming the layer's real number.
+    /// The field's draft becoming every selected layer's real number.
     private func land() {
         guard isEditable, let parsed = LayerGeometry.parse(text) else {
-            text = display(value)
+            text = display()
             return
         }
         commit(parsed)
-        // The layer may have clamped what was asked for (a width of 0 is not a
-        // layer); showing what it actually became beats showing what was typed.
-        text = display(value)
+        // The layers may have clamped what was asked for (a width of 0 is not
+        // a layer); showing what they actually became beats showing what was
+        // typed.
+        text = display()
     }
 
+    /// An arrow key. A number in the box steps that number and lands it on
+    /// everything; an empty box or a Mixed one steps each layer from its own
+    /// value, so a spread-out row moves together and stays spread out.
     private func step(direction: Int, coarse: Bool) {
-        let base = LayerGeometry.parse(text) ?? value
+        guard let base = LayerGeometry.parse(text) ?? reading.number else {
+            stepAll(direction, coarse)
+            return
+        }
         let next = LayerGeometry.stepped(base, direction: direction, coarse: coarse)
         commit(next)
-        text = display(next)
+        text = displayed(next)
+    }
+
+    /// What the box shows: the number the layers agree on, or the word that
+    /// says they do not.
+    private func display() -> String {
+        switch reading {
+        case .empty: return ""
+        case .mixed: return LayerGeometrySelection.mixedText
+        case .agreed(let value): return displayed(value)
+        }
     }
 
     /// Whole points, the same rounding `LayerGeometry.displayValue` does, so
     /// what is on screen is exactly what an arrow key steps from.
-    private func display(_ value: CGFloat) -> String {
+    private func displayed(_ value: CGFloat) -> String {
         String(Int(value.rounded()))
     }
 }
