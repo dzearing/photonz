@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-03T19:00:37.292Z",
-  "updated": "2026-09-03T21:43:52.045121Z",
+  "updated": "2026-09-03T21:44:14.402Z",
   "deps": [],
   "blockedBy": [],
   "notes": "InspectorPanel's default section order in Sources/Photonz/LayersPanel.swift puts effects/shadow after layers, arrange, geometry and color. In a 1400x1080 probe window with three layers picked, the Shadow rows fall below the fold; the audit screenshots for 2026-09-03-selection-effects.json had to collapse three sections to photograph them. Either reorder the defaults or give the tall sections (Layers list, Arrange) a smaller resting height.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-03T21:43:52.045121Z",
       "note": "Honest gap: at laptop height (900pt window, 868pt dock) with SEVERAL layers picked, Effects still ends ~60pt below the fold. One picked is fine at that height. Recorded in the audit's rough, with the small-print question as the way to win it back."
+    },
+    {
+      "t": "2026-09-03T21:44:14.402Z",
+      "note": "Effects moved up beside Color; layers list rests at 5 rows. Measured in the probe with a new dock-layout readout in the playtest describe step: with three picked, Effects went from 820-1046 (below a 996pt fold) to 704-930. One-time order migration keeps a hand-arranged order. Tests green, audit at queue/audits/2026-09-03-inspector-reach-effects.json, pushed as 7041c0d."
     }
   ],
-  "started": "2026-09-03T21:30:39.571Z"
+  "started": "2026-09-03T21:30:39.571Z",
+  "completed": "2026-09-03T21:44:14.402Z"
 }
