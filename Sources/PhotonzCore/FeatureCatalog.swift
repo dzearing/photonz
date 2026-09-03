@@ -69,6 +69,8 @@ public enum FeatureCatalog {
 
     public static let framesFlag = "next-frames"
 
+    public static let libraryFlag = "next-library"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -283,6 +285,15 @@ public enum FeatureCatalog {
                     name: framesFlag,
                     title: "Build on a frame",
                     description: "A frame is a screen you build on: press F and drag one out at any size, or click once to drop the size you picked last. It carries its name above its top left corner, paints a white surface, and hides anything that hangs off its edge, and several of them sit side by side on one canvas so a document can hold more than one screen. Layer \u{25B8} New Frame picks a size from a short list, Layer \u{25B8} Frame Selection puts a frame around what you already have, and Export offers a single frame as the picture to write. Needs Group what you selected. Off means no frame tool and no frame rows; frames already in a document keep drawing either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: libraryFlag,
+                    title: "Keep reusable pieces in a Library",
+                    description: "Adds a Library to the right dock, under View \u{25B8} Show Library. It is one shelf with four scopes you switch between, Media, Components, Styles and Systems, and a search field that narrows whichever one you are in. Media shows the captures you have taken: click one to see its details, double click or drag it onto the picture to place it. Components, Styles and Systems are empty until there is something to put in them, and each says so. Needs Group what you selected. Off means the right dock exactly as it is today and no Show Library row.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

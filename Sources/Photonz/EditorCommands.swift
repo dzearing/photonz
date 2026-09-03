@@ -388,6 +388,17 @@ struct EditorCommands: Commands {
             }
             .keyboardShortcut("l", modifiers: [.command, .option])
             .disabled(!hasDocument)
+            // The Library shelf, right under Show Layers because they are the
+            // same kind of thing. No key: Photoshop binds none for its
+            // Libraries panel, and Option Command L is already Show Layers.
+            // A flagged command is absent, not greyed, so the row is simply
+            // not there when the flag is off.
+            if Experiments.shared.libraryEnabled {
+                Button((editor?.isLibraryVisible ?? false) ? "Hide Library" : "Show Library") {
+                    if let editor { editor.setLibraryVisible(!editor.isLibraryVisible) }
+                }
+                .disabled(!hasDocument)
+            }
             Button("Zoom In") { editor?.zoomIn() }
                 .keyboardShortcut("=", modifiers: .command) // the ⌘+ key
                 .disabled(!hasDocument)

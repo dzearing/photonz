@@ -1,0 +1,28 @@
+{
+  "id": "a-capture-you-place-from-the-library-keeps-its-o",
+  "title": "A capture you place from the Library keeps its own name",
+  "goal": "When you drop a capture from the Library into a picture, the new layer is called \"Pasted Image\". It should be called what the file is called, so a stack of placed captures is readable in the layers list.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 700,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T03:36:26.228Z",
+  "updated": "2026-09-03T03:36:26.229Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Came out of the Library panel task (2026-09-03). EditorState.placeLibraryPick -> addImageLayerOrOpen -> pasteImage, which hardcodes the Pasted Image name. Give the image-landing path an optional name and pass the URLs last path component from both the Library and the Finder drop.",
+  "acceptance": [
+    "Placing a capture from the Library names the layer after the file, without its extension",
+    "Dropping an image file from the Finder names the layer the same way",
+    "Pasting an image from the clipboard, which has no file name, still reads Pasted Image",
+    "Renaming the layer afterwards still works and survives undo"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T03:36:26.229Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -33,6 +33,13 @@ final class EditorState {
     /// persisted *preference* that survives relaunch (and feeds window sizing)
     /// is `inspectorPreferredVisible`, written only on an explicit toggle.
     var isLayersPanelVisible = EditorState.inspectorPreferredVisibleDefault
+    /// Whether the right dock carries the Library shelf (Next,
+    /// `next-library`). Its own switch, separate from the dock's: the dock is
+    /// where someone who only redlines lives, so the Library is there only
+    /// once View ▸ Show Library asks for it, and the answer persists.
+    var isLibraryVisible = EditorState.libraryVisibleDefault {
+        didSet { UserDefaults.standard.set(isLibraryVisible, forKey: Self.libraryVisibleKey) }
+    }
     var isExportDialogPresented = false
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false
@@ -50,6 +57,13 @@ final class EditorState {
     // MARK: Persisted inspector state (shared with EditorView's @AppStorage)
 
     static let inspectorVisibleKey = "inspector.visible"
+    static let libraryVisibleKey = "inspector.libraryVisible"
+    /// Off until asked for: with the Library holding nothing but your
+    /// captures, a dock that grew a new section on its own would be a change
+    /// nobody asked for.
+    static var libraryVisibleDefault: Bool {
+        UserDefaults.standard.object(forKey: libraryVisibleKey) as? Bool ?? false
+    }
     static let inspectorWidthKey = "inspector.width"
     /// Default matches EditorView's `@AppStorage("inspector.width")` seed.
     static let inspectorWidthDefault: CGFloat = 264
@@ -69,6 +83,19 @@ final class EditorState {
     /// Explicit user show/hide of the inspector (menu or in-window toggle):
     /// updates the live visibility AND persists the preference. Auto-collapse
     /// must NOT route through here — it only mutates `isLayersPanelVisible`.
+    /// Explicit user show/hide of the Library shelf (the View menu). Showing
+    /// it opens the dock too, because a shelf inside a hidden dock is a menu
+    /// item that appears to do nothing; hiding it drops any tile that was
+    /// picked, so the inspector is not left describing something off screen.
+    func setLibraryVisible(_ visible: Bool) {
+        isLibraryVisible = visible
+        if visible {
+            setInspectorVisible(true)
+        } else {
+            selectedLibraryItemID = nil
+        }
+    }
+
     func setInspectorVisible(_ visible: Bool) {
         isLayersPanelVisible = visible
         inspectorPreferredVisible = visible
@@ -152,6 +179,10 @@ final class EditorState {
             // Selecting anything (or explicitly deselecting) drops the Canvas
             // pseudo-selection; selectCanvas() re-raises the flag afterwards.
             isCanvasSelected = false
+            // ...and drops the Library tile, for the same reason: one thing is
+            // selected in this window at a time, wherever it was picked.
+            // selectLibraryItem() re-raises it afterwards.
+            selectedLibraryItemID = nil
         }
     }
     /// The "Canvas" pseudo-layer selection: no layer is selected, the canvas
@@ -165,8 +196,15 @@ final class EditorState {
     private(set) var multiSelectedLayerIDs: Set<UUID> = [] {
         didSet {
             for id in multiSelectedLayerIDs where !oldValue.contains(id) { revealInLayersList(id) }
+            if !multiSelectedLayerIDs.isEmpty { selectedLibraryItemID = nil }
         }
     }
+    /// The Library tile that is picked, by `LibraryEntry.id` (Next,
+    /// `next-library`). It shares the layer selection's rule rather than
+    /// running beside it: picking a tile clears the layer and canvas
+    /// selection, and picking anything on the canvas or in the layers list
+    /// clears the tile. So the inspector always describes exactly one thing.
+    private(set) var selectedLibraryItemID: String?
     /// Row-click bookkeeping for the Layers and Measurements lists: the anchor
     /// a shift-click ranges from and the rows the last shift-click swept in.
     /// The selection itself lives in `selectedLayerID` /
@@ -3792,6 +3830,30 @@ final class EditorState {
 
     /// Selects the Canvas pseudo-layer (panel row click): boundary handles
     /// appear on canvas and the Canvas inspector section opens.
+    /// Picks a tile in the Library, or clears the pick with nil. Routed
+    /// through the layer selection so the canvas, the layers list and the
+    /// inspector all agree on what is selected.
+    func selectLibraryItem(_ id: String?) {
+        selectLayer(nil)             // ...which clears any tile in its didSet
+        selectedLibraryItemID = id   // ...so this is the only thing selected
+    }
+
+    /// Puts the picked Library media into the open picture as a new layer, the
+    /// same way a file dragged in from the Finder lands. One method, so the
+    /// tile's double click, the item section's button and a playtest all run
+    /// the same code. Media ids ARE the file's path (`LibraryEntry.id`), which
+    /// is what lets this live here rather than in the panel.
+    func placeLibraryPick() {
+        guard let id = selectedLibraryItemID else { return }
+        addImageLayerOrOpen(at: URL(fileURLWithPath: id))
+    }
+
+    /// Lets go of the Library tile without touching the layer selection: what
+    /// a click on the canvas that landed on nothing means.
+    func clearLibraryPick() {
+        selectedLibraryItemID = nil
+    }
+
     func selectCanvas() {
         guard document != nil else { return }
         selectedLayerID = nil     // didSet clears the flag…

@@ -399,6 +399,9 @@ private final class Run {
             case .newFrameDialog: editor.isNewFrameDialogPresented = true
             case .frameSelection: editor.frameSelection()
             case .exportDialog: editor.isExportDialogPresented = true
+            case .showLibrary: editor.setLibraryVisible(true)
+            case .hideLibrary: editor.setLibraryVisible(false)
+            case .placeLibraryPick: editor.placeLibraryPick()
             case .closeSheets:
                 editor.isExportDialogPresented = false
                 editor.isNewFrameDialogPresented = false

@@ -104,6 +104,11 @@ struct CanvasView: NSViewRepresentable {
     /// selected. Returns false at the top level, where Escape means what it
     /// always meant.
     let onExitGroup: () -> Bool
+    /// A click that landed on nothing. The Library needs it: a tile stays
+    /// picked until something else is, and clicking past every layer is a
+    /// person saying they are done with it, even though the canvas selection
+    /// itself did not change (there was nothing selected to change).
+    let onClickedNothing: () -> Void
     let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
@@ -191,6 +196,7 @@ struct CanvasView: NSViewRepresentable {
         view.onCropCommit = onCropCommit
         view.onSelectLayer = onSelectLayer
         view.onSelectLayerInGroup = onSelectLayerInGroup
+        view.onClickedNothing = onClickedNothing
         view.onExitGroup = onExitGroup
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
@@ -250,6 +256,7 @@ final class CanvasNSView: NSView {
     var onCropCommit: (() -> Void) = {}
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
     var onSelectLayerInGroup: ((UUID?, UUID?) -> Void) = { _, _ in }
+    var onClickedNothing: (() -> Void) = {}
     var onExitGroup: (() -> Bool) = { false }
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
@@ -1360,6 +1367,7 @@ final class CanvasNSView: NSView {
                                 startOrigin: hit.frame.origin,
                                 snapped: Snapping.Result(origin: hit.frame.origin))
         } else {
+            onClickedNothing()
             if selectedLayerFrame != nil || isCanvasSelected {
                 selectedLayerFrame = nil
                 onSelectLayer(nil) // also drops the Canvas pseudo-selection

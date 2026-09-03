@@ -245,6 +245,7 @@ struct EditorView: View {
                        onSelectLayer: { editorState.selectLayer($0) },
                        onSelectLayerInGroup: { editorState.selectLayer($0, inGroup: $1) },
                        onExitGroup: { editorState.exitGroupContext() },
+                       onClickedNothing: { editorState.clearLibraryPick() },
                        onDragBegin: { editorState.beginLayerDrag(id: $0) },
                        onFramePreview: { editorState.previewCanvasFrame(id: $0, frame: $1) },
                        onFrameCommit: { editorState.commitCanvasFrame(id: $0, frame: $1) },

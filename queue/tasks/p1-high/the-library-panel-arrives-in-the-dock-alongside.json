@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.208Z",
-  "updated": "2026-09-03T00:08:21.486Z",
+  "updated": "2026-09-03T03:36:58.331Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Step B3 of docs/design/ui-building.md. The panel can be empty of content at this point; what matters is that it exists as an ordinary panel group and shares the selection model. LayersPanel.swift InspectorSectionID is the pattern to extend. The mocks (components.html, dsys.html) also give the Library a slide-down overlay form for browsing; that is a follow-up, not this task.\n\nObjective: ui-building (the current focus). Kept here rather than under the later interaction-foundations dock epic because it extends the dock the app already has instead of building a new one; if it turns out a real dock group system is needed, stop and file that as a foundations task rather than growing this one.",
@@ -33,6 +33,23 @@
     {
       "t": "2026-09-03T00:08:21.485Z",
       "note": "seq 120 -> 90"
+    },
+    {
+      "t": "2026-09-03T03:09:28.852Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T03:13:29.491Z",
+      "note": "Adversarial review before building. 1) The design doc's own rule 2 says the panel must be useful the first time it opens, and two acceptance items (tile selection, search) cannot be verified against an empty shelf. So Media is wired to the capture history the app already keeps; Components, Styles and Systems stay honestly empty. 2) A new panel visible by default would put an empty shelf in front of someone who only redlines, so the Library is hidden until View > Show Library asks for it, and that choice persists. 3) Cut as decorative at this step: the slide-down browse overlay, the plus/Add to Library menu, the category chip row, the dock rail tab, and the 'N uses' counts. Nothing exists yet for any of them to count or add. 4) The mock gives Show Library the key Control Command L; docs/design/ui-building.md says no key (Photoshop binds none and Option Command L is Show Layers). Doc wins. 5) One selection at a time: picking a tile clears the layer and canvas selection, and any layer or canvas selection clears the tile. 6) A tile you can select but cannot use is theatre, so a media tile can be placed in the document (double click, a button in its inspector, or dragged onto the canvas, which already accepts a file drop)."
+    },
+    {
+      "t": "2026-09-03T03:19:42.449Z",
+      "note": "Built: core LibraryScope/LibraryEntry/LibrarySearch with tests, next-library flag, EditorState library visibility + one-selection wiring, LibraryPanel + LibraryItemInspector sections in the dock, View > Show Library row. Renamed the core type to LibraryEntry because SwiftUI already ships a LibraryItem."
+    },
+    {
+      "t": "2026-09-03T03:36:58.331Z",
+      "note": "Verified on the probe with Screen Recording granted (Scripts/playtest/library-walk.json). 1) The dock with the Library hidden is BYTE identical to the dock before and after showing it (same sha256 on the window captures). 2) All four scopes render, three with their own empty line, checked by presetting library.scope on the probe. 3) Search narrows the shelf and a search that finds nothing says so. 4) Return takes the top hit: the tile rings and a Media section opens under the shelf with the capture's age, pixel size, kind and two buttons. 5) Place in Picture lands the capture as a new layer. 6) Drawing a rectangle, and a click on bare canvas, both let the tile go. Fixed during the pass: a wide thumbnail stretched its tile across two neighbours (the image now rides in an overlay, which cannot resize its host); the lazy grid could not be measured so the area clipped the bottom row's caption (the area is now the height you set, and only an empty shelf hugs its sentence); tiles were captioned Scree....22.12 for every capture (now how long ago it was taken). Full suite green, 1715 tests."
     }
-  ]
+  ],
+  "started": "2026-09-03T03:09:28.851Z"
 }

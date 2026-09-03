@@ -1,0 +1,199 @@
+{
+  "out": "/tmp/photonz-playtest/library-walk",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-dock-today",
+      "note": "the right dock with the Library switched off: this is the dock someone who only redlines has today"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-dock-today"
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-library-open",
+      "note": "View > Show Library: the shelf joins the dock under the property sections, scope Media, holding the captures the app already keeps"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-library-open"
+    },
+    {
+      "do": "focus",
+      "field": "Search media"
+    },
+    {
+      "do": "type",
+      "text": "screenshot"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-search",
+      "note": "typing narrows the shelf: screenshots stay, recordings drop out"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-search"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-picked",
+      "note": "Return takes the top hit: the tile is outlined and a Media section opens in the dock, the way picking a layer opens its sections"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-picked"
+    },
+    {
+      "do": "action",
+      "action": "placeLibraryPick"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "5-placed",
+      "note": "Place in Picture (the same thing a double click on the tile does): the capture lands as a new layer, centred, and the layers list has it"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-placed"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Search media"
+    },
+    {
+      "do": "type",
+      "text": "zzz"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-no-match",
+      "note": "a search that finds nothing says so, instead of the scope's own empty line"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-no-match"
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-clicked-away",
+      "note": "a click on the picture that lands on nothing lets the tile go: the Media section closes"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-clicked-away"
+    },
+    {
+      "do": "focus",
+      "field": "Search media"
+    },
+    {
+      "do": "type",
+      "text": "screenshot"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "7-picked-again",
+      "note": "pick a tile again, so the next step has something to take the selection away from it"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-picked-again"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        300
+      ],
+      "to": [
+        560,
+        460
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-canvas-wins",
+      "note": "drawing a rectangle selects it on the canvas, and the tile lets go: one thing selected at a time"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-canvas-wins"
+    }
+  ]
+}

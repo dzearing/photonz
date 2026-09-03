@@ -44,13 +44,16 @@ struct InspectorPanel: View {
     @AppStorage("inspector.collapsed") private var collapsedRaw = ""
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
     @State private var dragging: InspectorSectionID?
+    /// The Library's scope, so the picked item's section can be titled after
+    /// what it is ("Media", "Component") rather than "Library Item".
+    @AppStorage(LibraryPanel.scopeKey) private var libraryScopeRaw = LibraryScope.media.rawValue
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(orderedAvailableSections, id: \.self) { id in
                     CollapsibleSection(
-                        title: id.title,
+                        title: sectionTitle(id),
                         isCollapsed: isCollapsed(id),
                         onToggle: { toggleCollapsed(id) },
                         dragItem: {
@@ -108,6 +111,16 @@ struct InspectorPanel: View {
             if layer.collage != nil { set.insert(.collage) }
         }
         if editorState.isCanvasSelected { set.insert(.canvas) }
+        // The Library shelf (step B3, `next-library`): an ordinary panel group,
+        // present only once View ▸ Show Library has asked for it. With it
+        // off the dock is exactly the dock someone who only redlines has today.
+        if Experiments.shared.libraryEnabled, editorState.isLibraryVisible,
+           editorState.document != nil {
+            set.insert(.library)
+            // ...and the picked tile's own section, the way a picked layer
+            // brings its sections. Nothing picked, nothing shown.
+            if editorState.selectedLibraryItemID != nil { set.insert(.libraryItem) }
+        }
         // The Measurements group (§6, `next-measure-panel`): a filtered view of
         // the layer stack, present whenever the document holds a measurement.
         if Experiments.shared.measurePanelEnabled, editorState.measurementCount > 0 {
@@ -143,10 +156,27 @@ struct InspectorPanel: View {
     }
 
     /// Header furniture for sections that carry any: the Measurements group's
-    /// count badge and panel menu (§6).
+    /// count badge and panel menu (§6), and the Library's scope, so a
+    /// collapsed Library still says what it is set to.
     private func sectionAccessory(_ id: InspectorSectionID) -> AnyView? {
-        guard id == .measurements else { return nil }
-        return AnyView(MeasurementsSectionAccessory())
+        switch id {
+        case .measurements:
+            return AnyView(MeasurementsSectionAccessory())
+        case .library:
+            let scope = LibraryScope(rawValue: libraryScopeRaw) ?? .media
+            return AnyView(Text(scope.title)
+                .font(.caption)
+                .foregroundStyle(.secondary))
+        default:
+            return nil
+        }
+    }
+
+    /// A section's header text. Fixed for all but the picked library item,
+    /// which is named after the kind of thing it is.
+    private func sectionTitle(_ id: InspectorSectionID) -> String {
+        guard id == .libraryItem else { return id.title }
+        return (LibraryScope(rawValue: libraryScopeRaw) ?? .media).itemTitle
     }
 
     @ViewBuilder
@@ -198,6 +228,10 @@ struct InspectorPanel: View {
             if let layer = selectedLayer {
                 ShadowInspector(layer: layer)
             }
+        case .library:
+            LibraryPanel()
+        case .libraryItem:
+            LibraryItemInspector()
         }
     }
 
@@ -253,6 +287,10 @@ enum InspectorSectionID: String, CaseIterable {
     case canvas
     case effects
     case shadow
+    // The shelf sits under the property sections, where the mock puts it: it is
+    // where you go to fetch something, not what the thing you have selected is.
+    case library
+    case libraryItem
 
     var title: String {
         switch self {
@@ -270,6 +308,9 @@ enum InspectorSectionID: String, CaseIterable {
         case .canvas: "Canvas"
         case .effects: "Effects"
         case .shadow: "Shadow"
+        case .library: "Library"
+        // Replaced at draw time by the scope's own noun; this is the fallback.
+        case .libraryItem: "Library Item"
         }
     }
 }
@@ -446,6 +487,51 @@ struct InspectorResizeHandle: View {
     }
 }
 
+/// The grab bar under a bounded list area (the layers rows, the Library
+/// tiles): drag it to set how tall that area may get before it scrolls on its
+/// own, so the sections below it stay in view. One idiom, so every resizable
+/// area in the dock feels the same.
+struct PanelAreaResizeHandle: View {
+    /// The persisted ceiling, owned by the caller's `@AppStorage`.
+    @Binding var maxHeight: Double
+    /// The area's ACTUAL height right now (content, capped). Dragging bases off
+    /// this rather than the stored ceiling — which can exceed short content —
+    /// so the bar tracks the cursor 1:1 instead of needing a big pull to catch
+    /// up.
+    let currentHeight: CGFloat
+    let minHeight: CGFloat
+    let maxAllowedHeight: CGFloat
+    let help: String
+
+    @State private var dragStartHeight: Double?
+
+    var body: some View {
+        Capsule()
+            .fill(.tertiary)
+            .frame(width: 32, height: 4)
+            .frame(maxWidth: .infinity)
+            .frame(height: 12)
+            .contentShape(Rectangle())
+            .onHover { inside in
+                if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
+            }
+            .gesture(
+                // GLOBAL space: the handle moves as the area resizes, so a
+                // local-space translation would be measured against the moving
+                // handle and jiggle.
+                DragGesture(coordinateSpace: .global)
+                    .onChanged { value in
+                        let base = dragStartHeight ?? Double(currentHeight)
+                        if dragStartHeight == nil { dragStartHeight = Double(currentHeight) }
+                        maxHeight = min(Double(maxAllowedHeight),
+                                        max(Double(minHeight), base + value.translation.height))
+                    }
+                    .onEnded { _ in dragStartHeight = nil }
+            )
+            .help(help)
+    }
+}
+
 // MARK: - Layers section
 
 /// The layer list: thumbnails, visibility, lock, rename (double-click),
@@ -470,7 +556,6 @@ struct LayersListView: View {
     /// Measured natural height of all the rows, so the area hugs the content when
     /// it's short and only caps + scrolls once it exceeds `maxHeight`.
     @State private var contentHeight: CGFloat = 160
-    @State private var dragStartHeight: CGFloat?
 
     static let minHeight: CGFloat = 120
     static let maxAllowedHeight: CGFloat = 600
@@ -550,32 +635,11 @@ struct LayersListView: View {
     /// Only meaningful once the list is tall enough to scroll, but always shown
     /// so the affordance is discoverable.
     private var resizeHandle: some View {
-        Capsule()
-            .fill(.tertiary)
-            .frame(width: 32, height: 4)
-            .frame(maxWidth: .infinity)
-            .frame(height: 12)
-            .contentShape(Rectangle())
-            .onHover { inside in
-                if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
-            }
-            .gesture(
-                // GLOBAL space: the handle moves as the area resizes, so a
-                // local-space translation would be measured against the moving
-                // handle and jiggle. Base off the ACTUAL frame height (not the
-                // stored max, which can exceed content) so it tracks the cursor
-                // 1:1 instead of needing a big pull to catch up.
-                DragGesture(coordinateSpace: .global)
-                    .onChanged { value in
-                        let currentFrame = min(contentHeight, maxHeight)
-                        let base = dragStartHeight ?? currentFrame
-                        if dragStartHeight == nil { dragStartHeight = currentFrame }
-                        maxHeight = min(Self.maxAllowedHeight,
-                                        max(Self.minHeight, base + value.translation.height))
-                    }
-                    .onEnded { _ in dragStartHeight = nil }
-            )
-            .help("Drag to resize the layers area")
+        PanelAreaResizeHandle(maxHeight: $maxHeight,
+                              currentHeight: min(contentHeight, maxHeight),
+                              minHeight: Self.minHeight,
+                              maxAllowedHeight: Self.maxAllowedHeight,
+                              help: "Drag to resize the layers area")
     }
 
     private var canvasRow: some View {

@@ -5585,3 +5585,41 @@ deliberately never join a frame, so redlining is untouched.
 
 Next: the shelf (step B3, the Library panel group). Follow-ups filed for paste
 and drop landing on a frame, and for renaming a screen by clicking its name.
+
+## 2026-09-03 — The Library: a shelf in the dock (Next, `next-library`)
+
+Step B3 of `docs/design/ui-building.md`. The Library joins the right dock as an
+ordinary panel group: one shelf, four scopes on a segmented switch (Media,
+Comps, Styles, Systems), a search field, a resizable tile area, and the app's
+one selection running through it. Picking a tile clears the layer and canvas
+selection and opens the item's own section in the same dock; picking anything on
+the canvas, or clicking past every layer, lets the tile go.
+
+Two departures from the plan, both argued in the doc and the audit. The panel is
+**off until View ▸ Show Library asks for it** (the plan let it ship visible and
+empty, which is a dock that grew a section nobody asked for). And **Media is not
+empty**: it lists the captures the app already keeps, so the shelf is useful the
+first time it opens and its search and selection are things a person can
+actually try. Tiles are captioned with how long ago a capture was taken, because
+every capture's file name is the same six words and a 70pt tile only ever shows
+the shared part. A picked capture can be placed with a button, a double click or
+a drag onto the canvas, all one method (`EditorState.placeLibraryPick`).
+
+Core got `LibraryScope`, `LibraryEntry`, `LibrarySearch` and `LibraryNaming`,
+all pure and tested (the type is `LibraryEntry`, not `LibraryItem`, because
+SwiftUI already ships a `LibraryItem`). The layers list's grab bar became a
+shared `PanelAreaResizeHandle` so the Library resizes the same way. The harness
+gained `showLibrary`, `hideLibrary` and `placeLibraryPick` actions, and
+`Scripts/playtest/library-walk.json` drives the whole flow.
+
+Verified on the probe with Screen Recording granted: the dock with the Library
+hidden is byte-identical to the dock before it existed, search narrows, Return
+takes the top hit, placing lands a layer, and drawing a rectangle takes the
+selection back off the tile. Audit: `queue/audits/2026-09-03-library.json`.
+
+Rough: three scopes are honestly empty until Make Component lands; a placed
+capture is still called Pasted Image (filed); the panel's own double click and
+drag are hand paths the harness cannot drive.
+
+Next: step 4, promoting a group to a component so the Components scope has
+something in it.

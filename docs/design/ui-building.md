@@ -114,6 +114,20 @@ app and nothing new to learn.
 turns "the app I screenshot with" into "the app that also has a design tool in
 it".
 
+**Built 2026-09-02, and two things changed from this plan.** First, the Library
+is **off until asked for**: View ▸ Show Library puts it in the dock and the
+answer sticks. Step 3 said the panel could ship empty, and a dock that grows an
+empty section on its own is a change nobody asked for, least of all the person
+who only redlines. Second, Media is **not** empty: it shows the captures the
+app already keeps in the capture folder, so the shelf is useful the first time
+it opens (rule 2) and its search and selection are things you can actually try.
+Components, Styles and Systems are empty and each says in one line what will
+fill it. Picking a media tile opens its own section in the same dock, with the
+capture's size and age and two buttons (Place in Picture, Reveal); a double
+click or a drag onto the canvas places it too. Cut from the mock as decorative
+at this step: the slide-down browse overlay, the plus/Add to Library menu, the
+category chip row inside a scope, the dock rail tab, and the "N uses" counts.
+
 ### A component is a subtree with a name, an instance is a layer that points at it
 
 Promoting a group makes it a **main**. An **instance** is a layer whose content

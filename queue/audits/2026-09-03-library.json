@@ -1,0 +1,31 @@
+{
+  "feature": "The Library: a shelf in the dock",
+  "epic": "ui-building",
+  "summary": "The right dock can now carry a Library: one shelf with four scopes (Media, Comps, Styles, Systems) and a search field. Media holds the captures the app already keeps, so you can find one by name or by how long ago you took it, pick it, read its details in the dock, and drop it into the picture without leaving the window.",
+  "setup": "Photonz Dev, Experiments window, release Next. Keep reusable pieces in a Library is on by default and needs Group what you selected, which is also on. The shelf itself stays out of the dock until you ask for it.",
+  "try": [
+    { "do": "Open any screenshot, then choose View, Show Library.", "shot": "2026-09-03-library-1.png" },
+    { "do": "Type a word into the search field, for example png or part of a name you gave a file." },
+    { "do": "Press Return.", "shot": "2026-09-03-library-2.png" },
+    { "do": "Click Place in Picture in the section that opened underneath.", "shot": "2026-09-03-library-3.png" },
+    { "do": "Press Command Z, then click a bare part of the picture." },
+    { "do": "Click Comps on the scope switch.", "shot": "2026-09-03-library-4.png" },
+    { "do": "Drag the grab bar under the tiles to make the shelf taller, then quit and reopen the app." },
+    { "do": "Choose View, Hide Library." }
+  ],
+  "evaluate": [
+    "Media shows every capture in your capture folder. Is that the shelf you wanted, or should it hold only what is in this document, or only what you deliberately put there?",
+    "Tiles are captioned with when the capture was taken, because every capture's file name is the same six words. Does that read, or do you want the name back?",
+    "The Library stays out of the dock until View, Show Library. Should it turn itself on once there are components in it, or stay something you ask for?",
+    "With a layer selected the shelf sits below that layer's own sections, so it can need a scroll. Near enough, or does the Library want to be pinned above them?",
+    "Return takes the top hit and selects it. Did you expect that, or did you expect Return to place it straight onto the picture?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the real window, not an offscreen render.",
+    "Three of the four scopes are empty and say so. That is honest but it is a quarter of a shelf until Make Component lands, which is the next step.",
+    "A capture you place is called Pasted Image in the layers list rather than being named after the file. Filed as a follow-up.",
+    "Dragging a tile onto the canvas rides the same file drop the canvas already takes from the Finder, and a double click on a tile places it. Both are hand paths: the automated walk drives the canvas, not the panel, so those two gestures were not exercised in an unmanned run.",
+    "Cut from the mock as decorative at this step: the slide-down overlay for browsing, the plus and Add to Library menu, the category chips inside a scope, the dock rail tab, and the number of uses on a tile. None of them has anything to count or add yet.",
+    "The mock gives Show Library the key Control Command L. It got no key, because Photoshop binds none for its Libraries panel and Option Command L is already Show Layers."
+  ]
+}

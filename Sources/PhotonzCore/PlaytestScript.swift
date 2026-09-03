@@ -171,6 +171,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case newFrameDialog, frameSelection
     /// The Export sheet, so a walk can photograph its frame scope.
     case exportDialog
+    /// The View menu's Library rows (Next, `next-library`), so a walk can
+    /// photograph the shelf.
+    case showLibrary, hideLibrary
+    /// Place the picked Library tile in the picture, which is what the item
+    /// section's button and a double click on the tile both do.
+    case placeLibraryPick
     /// Put every sheet away. Escape reaches the window, not the sheet in front
     /// of it, so a walk that photographs a sheet needs a way back out.
     case closeSheets

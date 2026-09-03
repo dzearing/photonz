@@ -250,6 +250,14 @@ extension Experiments {
         layerGroupsEnabled && isEnabled(FeatureCatalog.framesFlag)
     }
 
+    /// `next-library`: whether the right dock offers the Library shelf and the
+    /// View menu its Show Library row. The Library exists to hold reusable
+    /// pieces, and the first of those is a group you promote, so this needs
+    /// groups: with them off there is no way in and the switch reads as off.
+    var libraryEnabled: Bool {
+        layerGroupsEnabled && isEnabled(FeatureCatalog.libraryFlag)
+    }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its
