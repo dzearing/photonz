@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 160,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T05:55:20.183Z",
-  "updated": "2026-09-03T05:57:34.844Z",
+  "updated": "2026-09-03T06:14:02.906Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the step E9 end to end sitting on 2026-09-03. Reproduced twice in Scripts/playtest/component-end-to-end-walk.json and redline-with-components-walk.json: after focus W / type 440 / key return, the log reports firstResponder _SystemTextFieldFieldEditor and a following key i never reaches the tool. Escape does not release it either; only a canvas click does. Fields are GeometryInspector.swift, Next only behind next-geometry-fields. Watch that Return keeping focus is what lets shift-arrow nudging work, so releasing on Return needs the arrow keys to still reach the canvas nudge or the field, whichever the design picks.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-03T06:13:20.271291Z",
       "note": "Left alone on purpose: the wording fields (component override, style names, the hex box) still keep the keyboard, because a name is not a number. Filed as a-name-field-lets-go-of-the-keyboard-when-you-ar. Audit: queue/audits/2026-09-03-number-field-handback.json."
+    },
+    {
+      "t": "2026-09-03T06:14:02.905Z",
+      "note": "Return lands the number and Escape puts it back; both hand the keyboard to the canvas, so the next tool letter lands. Rule in PhotonzCore (NumberFieldEntry, test-first), applied to the geometry fields and the Canvas W/H. Proven on the probe by Scripts/playtest/number-field-handback.json (13 stages, real captures); geometry-fields and component-end-to-end walks still pass; 1860 tests green. Audit: queue/audits/2026-09-03-number-field-handback.json"
     }
   ],
-  "started": "2026-09-03T05:57:34.843Z"
+  "started": "2026-09-03T05:57:34.843Z",
+  "completed": "2026-09-03T06:14:02.906Z"
 }
