@@ -1415,6 +1415,23 @@ private final class Run {
             "legendAnchor": editor.measureLegendAnchor.rawValue,
             "legendTopInset": editor.measureLegendTopInset,
             "inspector": editor.isLayersPanelVisible,
+            // The dock's sections in draw order, with where each one sits in
+            // the scrolling area: "Effects 612-812" reads as the section
+            // starting 612 points down. A walk proves a section is reachable
+            // from these numbers instead of from someone squinting at a
+            // snapshot.
+            "dockSections": InspectorLayoutProbe.shared.measured.map {
+                "\($0.title) \(Int($0.frame.minY.rounded()))-\(Int($0.frame.maxY.rounded()))"
+            },
+            "dockViewport": Int(InspectorLayoutProbe.shared.viewportHeight.rounded()),
+            // The sections a person can see WHOLE without touching the scroll
+            // wheel, which is the claim the panel order has to keep true.
+            "dockInView": InspectorLayoutProbe.shared.measured
+                .filter { InspectorLayoutProbe.shared.isFullyVisible($0) }.map(\.title),
+            // ...and the weaker claim: the ones whose header is on screen, so
+            // you at least know the section is there.
+            "dockHeadersInView": InspectorLayoutProbe.shared.measured
+                .filter { InspectorLayoutProbe.shared.isHeaderVisible($0) }.map(\.title),
             "tooltip": HintTooltipController.shared.visibleDescription ?? "none",
             "edgeMap": !editor.snappingEdgeMap.isEmpty,
             "firstResponder": window?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil",

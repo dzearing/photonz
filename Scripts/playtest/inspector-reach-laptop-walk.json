@@ -1,0 +1,117 @@
+{
+  "out": "/tmp/photonz-playtest/inspector-reach-laptop",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1000,
+      "canvasHeight": 600,
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        140
+      ],
+      "to": [
+        300,
+        260
+      ],
+      "steps": 6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        140
+      ],
+      "to": [
+        520,
+        260
+      ],
+      "steps": 6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        140
+      ],
+      "to": [
+        740,
+        260
+      ],
+      "steps": 6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        210,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "laptop-1-one-picked",
+      "note": "laptop-height window, one rectangle picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "inspector-reach-laptop-1-one-picked"
+    },
+    {
+      "do": "drag",
+      "from": [
+        90,
+        100
+      ],
+      "to": [
+        800,
+        300
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "laptop-2-three-picked",
+      "note": "laptop-height window, all three picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "inspector-reach-laptop-2-three-picked"
+    }
+  ]
+}

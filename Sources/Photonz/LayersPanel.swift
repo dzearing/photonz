@@ -42,6 +42,11 @@ struct InspectorPanel: View {
     @Environment(EditorState.self) private var editorState
     @AppStorage("inspector.sectionOrder") private var orderRaw = ""
     @AppStorage("inspector.collapsed") private var collapsedRaw = ""
+    /// Which one-time section moves this panel's saved order has had. See
+    /// `loadOrder`.
+    @AppStorage("inspector.sectionOrder.version") private var orderVersion = 0
+    /// Effects joined the Color section instead of trailing every per-kind one.
+    private static let orderVersionEffectsWithColor = 1
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
     @State private var dragging: InspectorSectionID?
     /// The Library's scope, so the picked item's section can be titled after
@@ -79,6 +84,7 @@ struct InspectorPanel: View {
                         .onGeometryChange(for: CGRect.self) {
                             $0.frame(in: .named(inspectorDockSpace))
                         } action: { frame in
+                            recordInspectorSection(id, title: sectionTitle(id), frame: frame)
                             guard id == .library else { return }
                             reveal.libraryFrame = frame
                             if reveal.isPending { applyLibraryReveal(proxy) }
@@ -99,7 +105,9 @@ struct InspectorPanel: View {
             .coordinateSpace(.named(inspectorDockSpace))
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                 reveal.viewportHeight = $0
+                recordInspectorViewportHeight($0)
             }
+            .inspectorLayoutProbe(sections: orderedAvailableSections)
             // The app opened the Library for you: put it where you can see it.
             // On appear too, because showing the shelf opens the dock as well,
             // and then this panel is born with the request already waiting.
@@ -388,20 +396,26 @@ struct InspectorPanel: View {
     // MARK: Persistence
 
     private func loadOrder() {
-        let ids = orderRaw.split(separator: ",").compactMap { InspectorSectionID(rawValue: String($0)) }
         // Sections added after this panel's order was last saved get spliced in
         // at their canonical position rather than dumped at the bottom, so a new
         // section lands where it was designed to sit for people who have already
         // run the app (which is everyone).
-        var merged = ids
-        for section in InspectorSectionID.allCases where !merged.contains(section) {
-            let canonical = InspectorSectionID.allCases.firstIndex(of: section) ?? 0
-            let insertAt = merged.firstIndex {
-                (InspectorSectionID.allCases.firstIndex(of: $0) ?? 0) > canonical
-            } ?? merged.endIndex
-            merged.insert(section, at: insertAt)
+        var merged = PanelSectionOrder.merged(
+            saved: orderRaw.split(separator: ",").map(String.init),
+            canonical: InspectorSectionID.allCases.map(\.rawValue))
+        // A section that shipped in the wrong place has to reach the people who
+        // already ran the app, and every one of them has an order saved (the
+        // panel writes one on first launch). So each fix is a numbered, one-time
+        // move of that ONE section, leaving any arrangement they made by hand
+        // around it alone.
+        if orderVersion < Self.orderVersionEffectsWithColor {
+            merged = PanelSectionOrder.moving(InspectorSectionID.effects.rawValue,
+                                              after: InspectorSectionID.color.rawValue,
+                                              in: merged)
+            orderVersion = Self.orderVersionEffectsWithColor
         }
-        if merged != order { order = merged }
+        let ids = merged.compactMap { InspectorSectionID(rawValue: $0) }
+        if ids != order { order = ids }
     }
 
     private func persistOrder() {
@@ -467,12 +481,23 @@ enum InspectorSectionID: String, CaseIterable {
     // the same named color (Next, `next-styles`). Above the per-kind sections,
     // because it is only ever on screen INSTEAD of them.
     case color
+    // Fade, corners, blur and border: the look of the thing, right beside the
+    // colors it is painted, because they are the same question. This is the
+    // section people reach for most and it used to sit under every per-kind
+    // section, which in a normal window put Corner Radius below the bottom of
+    // the panel (reported 2026-09-03). Anyone who already had an order saved
+    // gets Effects moved here once, keeping the rest of their arrangement:
+    // see `inspector.sectionOrder.version`.
+    case effects
     case annotation
     case text
     case measure
     case collage
     case canvas
-    case effects
+    // Shadow stays under the per-kind sections. It is part of the same look
+    // family, but it is a switch you set once rather than a slider you pull,
+    // and it is the tallest section in the panel: putting it above the picked
+    // thing's own settings would push THOSE off the bottom instead.
     case shadow
     // The shelf sits under the property sections, where the mock puts it: it is
     // where you go to fetch something, not what the thing you have selected is.
@@ -743,7 +768,12 @@ struct LayersListView: View {
     /// list scrolls INTERNALLY so a tall stack doesn't shove the Effects/Shadow
     /// sections off the bottom of the inspector — you keep the other palettes in
     /// view and scroll layers on their own.
-    @AppStorage("inspector.layersHeight") private var maxHeight = 260.0
+    ///
+    /// Five rows at rest. It was eight, which in a document with any real number
+    /// of layers spent a third of the panel on a list you were not looking at
+    /// and pushed the look of the thing off the bottom. Drag the grabber under
+    /// the list to give it back as much room as you want; that sticks.
+    @AppStorage("inspector.layersHeight") private var maxHeight = 200.0
     /// Measured natural height of all the rows, so the area hugs the content when
     /// it's short and only caps + scrolls once it exceeds `maxHeight`.
     @State private var contentHeight: CGFloat = 160

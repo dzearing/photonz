@@ -1,0 +1,230 @@
+{
+  "out": "/tmp/photonz-playtest/inspector-reach",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1100,
+      "canvasHeight": 700,
+      "width": 1400,
+      "height": 1080
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "0-nothing-picked",
+      "note": "empty document, nothing picked"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        140
+      ],
+      "to": [
+        300,
+        260
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        140
+      ],
+      "to": [
+        520,
+        260
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        140
+      ],
+      "to": [
+        740,
+        260
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        210,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-picked",
+      "note": "one rectangle picked: where does Effects land?"
+    },
+    {
+      "do": "snapshot",
+      "name": "inspector-reach-1-one-picked"
+    },
+    {
+      "do": "drag",
+      "from": [
+        90,
+        100
+      ],
+      "to": [
+        800,
+        300
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-three-picked",
+      "note": "all three picked: Arrange joins, Effects goes further down"
+    },
+    {
+      "do": "snapshot",
+      "name": "inspector-reach-2-three-picked"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        300
+      ],
+      "to": [
+        300,
+        420
+      ],
+      "steps": 6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        300
+      ],
+      "to": [
+        520,
+        420
+      ],
+      "steps": 6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        300
+      ],
+      "to": [
+        740,
+        420
+      ],
+      "steps": 6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        440
+      ],
+      "to": [
+        300,
+        560
+      ],
+      "steps": 6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        440
+      ],
+      "to": [
+        520,
+        560
+      ],
+      "steps": 6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        210,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-eight-layers",
+      "note": "eight layers in the document, one picked: the list caps and Effects stays reachable"
+    },
+    {
+      "do": "snapshot",
+      "name": "inspector-reach-3-eight-layers"
+    }
+  ]
+}

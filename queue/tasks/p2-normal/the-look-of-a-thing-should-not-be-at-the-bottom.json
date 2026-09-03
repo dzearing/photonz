@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 920,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T19:00:37.292Z",
-  "updated": "2026-09-03T19:00:37.292Z",
+  "updated": "2026-09-03T21:43:52.045121Z",
   "deps": [],
   "blockedBy": [],
   "notes": "InspectorPanel's default section order in Sources/Photonz/LayersPanel.swift puts effects/shadow after layers, arrange, geometry and color. In a 1400x1080 probe window with three layers picked, the Shadow rows fall below the fold; the audit screenshots for 2026-09-03-selection-effects.json had to collapse three sections to photograph them. Either reorder the defaults or give the tall sections (Layers list, Arrange) a smaller resting height.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-03T19:00:37.292Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T21:30:39.572Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T21:43:52.045121Z",
+      "note": "Adversarial review before building: reordering alone cannot fix this. Measured the dock with 3 rectangles picked in a 1400x1080 window: Layers 265pt, Arrange 146, Position & Size 145, Color 138, Rectangles 115, Effects 226. That is 1035pt of content in a 996pt viewport, so SOME section has to lose whichever order you choose. Roughly half of each section's height is grey small print rather than controls (Position & Size spends 145pt to show 50pt of fields), which is the only lever that would fit everything. Cutting the app's own copy is the user's call, so it went into the audit as a question rather than being done here."
+    },
+    {
+      "t": "2026-09-03T21:43:52.045121Z",
+      "note": "Built a measuring tool first: the playtest 'describe' step now reports dockSections (every section's title and its top/bottom inside the scrolling area), dockViewport, dockInView and dockHeadersInView. 'Corner Radius is reachable without scrolling' is now a number a walk reads, not something someone squints at in a snapshot. Probe builds only; the shipping app compiles no-ops."
+    },
+    {
+      "t": "2026-09-03T21:43:52.045121Z",
+      "note": "Shipped: Effects moved to sit immediately after Color, so the four look sections (Color, Effects, then the picked thing's own, then Shadow) are together at the reachable end. Shadow deliberately stayed under the per-kind section: it is the tallest section in the panel and moving it up would push the picked thing's own settings off the bottom instead. Layers list rests at 5 rows (200pt) instead of 8 (260pt)."
+    },
+    {
+      "t": "2026-09-03T21:43:52.045121Z",
+      "note": "Order migration: PanelSectionOrder in PhotonzCore, tested first (11 tests). merged() splices new sections into their canonical spot; moving() relocates ONE section and leaves every other relative position alone. inspector.sectionOrder.version stamps the one-time move so it never repeats. Verified end to end by writing a pre-change order with Layers dragged to the bottom into the probe's defaults: after launch Effects had moved next to Color and Layers was still at the bottom."
+    },
+    {
+      "t": "2026-09-03T21:43:52.045121Z",
+      "note": "Measured after (1400x1080, viewport 996): one picked, Effects 491-683 fully visible; three picked, Effects 704-930 fully visible (was 820-1046, header only). Eight layers in the document, one picked: Layers stays capped at 254 and the whole panel through Shadow fits. Nothing that was fully visible before is gone except the picked shape's own Thickness row, which trades places with Effects. Scripts/test.sh green, 2457 tests."
+    },
+    {
+      "t": "2026-09-03T21:43:52.045121Z",
+      "note": "Honest gap: at laptop height (900pt window, 868pt dock) with SEVERAL layers picked, Effects still ends ~60pt below the fold. One picked is fine at that height. Recorded in the audit's rough, with the small-print question as the way to win it back."
     }
-  ]
+  ],
+  "started": "2026-09-03T21:30:39.571Z"
 }

@@ -1,0 +1,29 @@
+{
+  "feature": "The look of a thing is at the top of the panel",
+  "epic": "ui-building",
+  "summary": "Effects now sits next to Color instead of under every other section, so Opacity, Blur, Corner Radius and Border are on screen the moment you pick something. The layers list also rests at five rows instead of eight, so a document with a real number of layers no longer spends a third of the panel on a list you are not looking at.",
+  "setup": "Photonz Dev, release Next or Current: the dock is shared, so both get it. No flag. If you had already dragged the sections into an order you like, that order is kept and only Effects moves.",
+  "try": [
+    { "do": "Open a blank document and draw three rectangles with the Rectangle tool." },
+    { "do": "Click one of them." },
+    { "do": "Look down the panel without touching the scroll wheel: Corner Radius is there." },
+    { "do": "Drag a band around all three with the Select tool.", "shot": "2026-09-03-inspector-reach-effects.png" },
+    { "do": "Pull Corner Radius. You never scrolled to reach it." },
+    { "do": "Draw five more rectangles, then click one.", "shot": "2026-09-03-inspector-reach-eight-layers.png" },
+    { "do": "The layers list stops at five rows and scrolls on its own. Drag the grabber under it to give it more room; that sticks." },
+    { "do": "Drag the Shadow header up above Color, quit, and reopen. Your order is still there." }
+  ],
+  "evaluate": [
+    "With something picked, is Effects where your hand goes first, or would you rather Position and Size stayed above it?",
+    "Shadow stayed under the picked thing's own section. It is the tallest section in the panel, so putting it beside Effects would have pushed Thickness off the bottom instead. Is that the right thing to leave low?",
+    "Five rows of layers at rest: too few, about right, or should the list just take whatever room it needs?",
+    "Every section carries two or three lines of grey small print under it. Four of those are on screen at once now. Do they still earn the room, or should they go once you know the rule?",
+    "Is there anything you now have to scroll for that you did not before?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures are real window captures.",
+    "Effects and the picked shape's own section swapped places, so with several rectangles picked you now scroll for Thickness where you used to scroll for Corner Radius. That is the trade the task asked for, and Thickness is one row against Effects's four.",
+    "In a laptop-height window (900pt) with SEVERAL layers picked, Effects still ends about 60 points below the bottom. One picked is fine at that height, even with eight layers in the document. The room to win it back is the small print, which is a call for you rather than for me.",
+    "Capping the layers list at five rows hides the Background and Canvas rows behind an internal scroll in a document with a few layers. Canvas is how you select the canvas itself, so that is slightly further away than it was."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 910,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T19:00:27.858Z",
-  "updated": "2026-09-03T21:15:26.475Z",
+  "updated": "2026-09-03T21:30:11.241Z",
   "deps": [],
   "blockedBy": [],
   "notes": "AnnotationContent.cornerRadius (the shape) and LayerStyle.cornerRadius (the non-destructive layer style) are separate fields, both surfaced: AnnotationInspector's radius row and EffectsInspector's Corner Radius slider in Sources/Photonz/LayersPanel.swift. Decide which is the one the panel offers (the style one already speaks for a whole selection) and either fold the other in or stop showing it. Spotted while auditing 2026-09-03-selection-effects.json. RESOLVED by folding, not by dropping either: PhotonzCore/CornerRadiusSelection.swift (selection + setCornerRadius), CornerRadiusRow in Sources/Photonz/LayersPanel.swift, previewCornerRadius/commitCornerRadius in EditorState.swift. Walk: Scripts/playtest/one-corner-radius-walk.json. Audit: queue/audits/2026-09-03-one-corner-radius.json.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-03T21:29:39.230951Z",
       "note": "Adversarial review of the built thing: the same duplication survives one row down. On a rectangle, Thickness (Rectangle section) and Border (Effects) are both the width of a line round the box. Filed as thickness-and-border-say-the-same-thing-on-a-rec rather than fixed here. Also noted in the audit: a rectangle component copy loses the follow-the-original arrow beside Corner Radius, because its curve is part of the shape rather than part of the look."
+    },
+    {
+      "t": "2026-09-03T21:30:11.241Z",
+      "note": "One Corner Radius row under Effects, folded from the two that disagreed. CornerRadiusSelection + PhotonzDocument.setCornerRadius in PhotonzCore (14 new tests) write the outline curve for a rectangle and the corner mask for everything else, in one undo step; ShapeSettingRow.cornerRadius is gone and CornerRadiusRow in LayersPanel is the one control. Rounding a rectangle from it now curves the outline instead of chopping the corners off. Verified with real window captures from Scripts/playtest/one-corner-radius-walk.json in the probe build; selection-effects and component-look walks re-run green; Scripts/test.sh green (2449). Audit: queue/audits/2026-09-03-one-corner-radius.json. Follow-up filed: thickness-and-border-say-the-same-thing-on-a-rec."
     }
   ],
-  "started": "2026-09-03T21:15:26.475Z"
+  "started": "2026-09-03T21:15:26.475Z",
+  "completed": "2026-09-03T21:30:11.241Z"
 }
