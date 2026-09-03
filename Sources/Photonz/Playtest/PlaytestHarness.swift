@@ -41,6 +41,11 @@ enum PlaytestHarness {
         Task { await run.start() }
     }
 
+    /// Every editor that has announced itself, ready or not — an empty window
+    /// has no document yet but still has to be findable, so a walk can hand it
+    /// a blank canvas.
+    fileprivate static var knownEditors: [EditorState] { editors }
+
     /// The editors that are open and ready to be driven, oldest first.
     fileprivate static var readyEditors: [EditorState] {
         editors.filter { $0.document != nil && $0.hostWindow != nil && $0.viewport != nil }
@@ -147,6 +152,9 @@ private final class Run {
 
     private func perform(_ step: PlaytestStep, number: Int) async throws {
         switch step {
+        case .blank(let canvas, let size, let card):
+            try await blank(canvas: canvas, window: size, card: card, number: number)
+
         case .open(let file, let size):
             // Relative to the script, like `out`, so a walk travels with its fixture.
             let url = file.hasPrefix("/")
@@ -308,7 +316,10 @@ private final class Run {
             note(number, step.name, "\(condition) holds", state: describe())
 
         case .snapshot(let name):
-            let window = try requireWindow()
+            // A sheet is its own window on top of the editor's, so while one is
+            // up it IS what a person is looking at, and it is what gets
+            // photographed.
+            let window = try requireWindow().attachedSheet ?? (try requireWindow())
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
             try snapshot(content, name: name)
             await screenCapture(window, name: name)
@@ -365,6 +376,7 @@ private final class Run {
             case .zoomToFit: editor.zoomToFit()
             case .undo: editor.undo()
             case .redo: editor.redo()
+            case .newCanvasDialog: editor.isBlankCanvasDialogPresented = true
             }
             await sleep(0.2)
             note(number, step.name, action.rawValue, state: describe())
@@ -388,7 +400,61 @@ private final class Run {
                 ?? PlaytestHarness.readyEditors.last
             return opened != nil
         }
-        guard let opened, let window = opened.hostWindow else { throw Failure(description: "the editor lost its window") }
+        guard let opened else { throw Failure(description: "the editor lost its window") }
+        try await adopt(opened, window: size, step: "open", subject: url.lastPathComponent, number: number)
+    }
+
+    /// Start from nothing: a new window, handed a blank canvas of `canvas`,
+    /// which is what the empty window's Blank canvas row does once a size has
+    /// been chosen. From here on the walk drives it like any other document.
+    private func blank(canvas size: CGSize, window: CGSize?, card: String?, number: Int) async throws {
+        try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
+        let before = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
+        coordinator.openWindowAction?(.fresh(UUID()))
+        var fresh: EditorState?
+        try await poll("an empty editor window", within: 15) {
+            fresh = PlaytestHarness.knownEditors.last { !before.contains(ObjectIdentifier($0)) }
+            return fresh != nil
+        }
+        guard let fresh else { throw Failure(description: "no empty window appeared") }
+        if let card {
+            try await photographEmptyWindow(fresh, window: window, name: card, number: number)
+        }
+        fresh.newBlankCanvas(size: size)
+        try await adopt(fresh, window: window, step: "blank",
+                        subject: "blank \(Int(size.width))x\(Int(size.height))", number: number)
+    }
+
+    /// The empty window before anything is in it: the onboarding card, which
+    /// stops existing the moment a document arrives.
+    private func photographEmptyWindow(_ fresh: EditorState, window size: CGSize?,
+                                       name: String, number: Int) async throws {
+        try await poll("the empty window", within: 5) { fresh.hostWindow != nil }
+        guard let window = fresh.hostWindow else { throw Failure(description: "the empty window had no window") }
+        if let size {
+            let screen = window.screen ?? NSScreen.main
+            let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1600, height: 1000)
+            window.setFrame(NSRect(x: visible.minX + 40, y: visible.maxY - size.height - 40,
+                                   width: size.width, height: size.height), display: true)
+        }
+        // The screen capture reads what the compositor has, so the window has
+        // to have been drawn on screen at least once. It stays visible for this
+        // one beat only, then goes invisible for the rest of the walk like
+        // every other playtest window.
+        await sleep(0.8)
+        guard let content = window.contentView else { throw Failure(description: "the empty window has no content view") }
+        try snapshot(content, name: name)
+        await screenCapture(window, name: name)
+        window.alphaValue = 0
+        note(number, "blank", "\(name).png: the empty window's card")
+    }
+
+    /// Takes over a freshly filled editor: hides its window, sizes it, finds
+    /// its canvas, and logs where the walk's coordinates live.
+    private func adopt(_ opened: EditorState, window size: CGSize?,
+                       step: String, subject: String, number: Int) async throws {
+        try await poll("the editor's window", within: 5) { opened.hostWindow != nil }
+        guard let window = opened.hostWindow else { throw Failure(description: "the editor lost its window") }
         // Let the open-time sizing reveal the window, then hide it for the
         // whole run: it stays on screen for AppKit but invisible to a person.
         _ = try? await poll("reveal", within: 2) { window.alphaValue >= 1 }
@@ -410,7 +476,7 @@ private final class Run {
         editor = opened
         self.window = window
         let documentSize = opened.document?.canvasSize ?? .zero
-        note(number, "open", "\(url.lastPathComponent): document \(Int(documentSize.width))x\(Int(documentSize.height)) at pixelScale \(opened.document?.pixelScale ?? 0) (points are in these units); window \(Int(window.frame.width))x\(Int(window.frame.height)) pt; canvas \(Int(canvas?.bounds.width ?? 0))x\(Int(canvas?.bounds.height ?? 0)) pt; zoom \(String(format: "%.3f", opened.viewport?.zoom ?? 0))", state: describe())
+        note(number, step, "\(subject): document \(Int(documentSize.width))x\(Int(documentSize.height)) at pixelScale \(opened.document?.pixelScale ?? 0) (points are in these units); window \(Int(window.frame.width))x\(Int(window.frame.height)) pt; canvas \(Int(canvas?.bounds.width ?? 0))x\(Int(canvas?.bounds.height ?? 0)) pt; zoom \(String(format: "%.3f", opened.viewport?.zoom ?? 0))", state: describe())
     }
 
     // MARK: - Menus

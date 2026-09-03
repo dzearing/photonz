@@ -34,6 +34,8 @@ final class EditorState {
     /// is `inspectorPreferredVisible`, written only on an explicit toggle.
     var isLayersPanelVisible = EditorState.inspectorPreferredVisibleDefault
     var isExportDialogPresented = false
+    /// The "how big?" sheet the empty window's Blank canvas row opens.
+    var isBlankCanvasDialogPresented = false
 
     /// The user's persisted show/hide preference for the docked inspector.
     /// Distinct from `isLayersPanelVisible`: auto-collapse never touches this,
@@ -267,6 +269,26 @@ final class EditorState {
         installDocument(.withBaseImage(ref, pixelScale: pixelScale), url: nil)
     }
 
+    /// Starts a picture from nothing: an opaque white canvas at `size`, which
+    /// every tool can draw on immediately. The white is a real full-size
+    /// bitmap, not a stretched swatch, so a marquee fill or an eraser stroke on
+    /// the background redraws at full resolution.
+    ///
+    /// Downstream this is indistinguishable from an opened file — locked
+    /// Background layer, window sized to the canvas, clean undo baseline — so
+    /// save, export and history need to know nothing about it.
+    func newBlankCanvas(size: CGSize) {
+        let size = BlankCanvas.normalized(size)
+        guard let white = SolidImage.make(size: size, hex: Self.blankCanvasBackgroundHex) else { return }
+        let ref = store.register(white)
+        installDocument(.withBaseImage(ref), url: nil)
+    }
+
+    /// What a blank canvas starts as. White, not transparent: it is what the
+    /// canvas already looks like on screen and what it exports as, so there is
+    /// no gap between the two.
+    static let blankCanvasBackgroundHex = "#FFFFFF"
+
     /// Seeds a freshly created editor window from its window identity (phase
     /// 11.1). Called once when the window appears; window reuse (re-opening the
     /// same id) keeps the existing state, giving focus-existing for free, so
@@ -287,6 +309,11 @@ final class EditorState {
             untitledName = Self.nextUntitledName()
         case .fresh:
             untitledName = Self.nextUntitledName() // empty editor; onboarding card guides next step
+            #if PHOTONZ_PLAYTEST
+            // An empty window has no canvas view, so nothing else announces it.
+            // A walk that starts from a blank canvas needs to find it.
+            PlaytestHarness.register(self)
+            #endif
         case .video:
             break // routed to the video editor (VideoEditorState), never here
         }

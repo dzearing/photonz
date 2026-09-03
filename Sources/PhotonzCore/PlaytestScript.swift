@@ -161,6 +161,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Undo and redo are menu chords too, so a walk that checks an undo step
     /// asks for it here.
     case undo, redo
+    /// Open the New Canvas sheet, so a walk can photograph it. A snapshot
+    /// taken while a sheet is up photographs the sheet.
+    case newCanvasDialog
 }
 
 /// What a `hover` step rests the pointer on.
@@ -175,6 +178,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Open a file in an editor window and wait until it is ready to drive.
     /// The window is kept invisible; `size` sets its frame first.
     case open(file: String, size: CGSize?)
+    /// Start from nothing: a new window given a blank canvas of `canvas`,
+    /// waited on until it can be driven, the way clicking Blank canvas in an
+    /// empty window and taking the offered size does. `window` sets the window
+    /// frame, as `open` does.
+    /// `card` names a snapshot taken of the EMPTY window, before the canvas
+    /// exists: the onboarding card is the only thing on screen then, and this
+    /// is the only way a walk can photograph it.
+    case blank(canvas: CGSize, window: CGSize?, card: String?)
     case wait(seconds: Double)
     /// Press and release a key, through the window (or the app, for chords so
     /// menu shortcuts are found).
@@ -222,15 +233,16 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "clearClipboard", "click", "describe", "drag", "hover", "key", "measureMode",
-        "menus", "move", "open", "readClipboard", "render", "snapshot", "tool", "type", "wait",
-        "waitFor",
+        "action", "blank", "clearClipboard", "click", "describe", "drag", "hover", "key",
+        "measureMode", "menus", "move", "open", "readClipboard", "render", "snapshot", "tool",
+        "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
     public var name: String {
         switch self {
         case .open: "open"
+        case .blank: "blank"
         case .wait: "wait"
         case .key: "key"
         case .move: "move"
@@ -261,6 +273,17 @@ public enum PlaytestStep: Sendable, Equatable {
             let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
             let size: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
             self = .open(file: try f.string("file"), size: size)
+        case "blank":
+            let canvasWidth = try f.optionalNumber("canvasWidth")
+            let canvasHeight = try f.optionalNumber("canvasHeight")
+            let canvas: CGSize = if let canvasWidth, let canvasHeight {
+                CGSize(width: canvasWidth, height: canvasHeight)
+            } else {
+                BlankCanvas.defaultPreset.size
+            }
+            let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
+            let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
+            self = .blank(canvas: canvas, window: window, card: try f.optionalString("card"))
         case "wait":
             self = .wait(seconds: try f.number("seconds"))
         case "key":

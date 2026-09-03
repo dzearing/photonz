@@ -1,0 +1,30 @@
+{
+  "feature": "Start from a blank canvas",
+  "epic": "ui-building",
+  "summary": "A new window can now start as an empty white picture at a size you pick, so you can build something from nothing instead of only opening, pasting or capturing one.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag \"Start from a blank canvas\" is on by default.",
+  "try": [
+    { "do": "Choose File > New Window.", "shot": "2026-09-03-blank-canvas-card.png" },
+    { "do": "Click Blank canvas, the last row in the card.", "shot": "2026-09-03-blank-canvas-sheet.png" },
+    { "do": "Press Return to take Desktop, 1440 by 1024." },
+    { "do": "Press R and drag a rectangle across the white.", "shot": "2026-09-03-blank-canvas-drawn.png" },
+    { "do": "Press Command Z, then Command Shift Z." },
+    { "do": "Press T, click, and type a word, then press V to leave the text." },
+    { "do": "Choose File > Export and save it as a PNG." },
+    { "do": "Open File > New Window again and click Blank canvas, then Custom, and type 360 by 240." }
+  ],
+  "evaluate": [
+    "Blank canvas sits last in the card, under Paste an image. Should starting from nothing be the first thing offered instead?",
+    "The card's headline still says Drop a photo or screenshot here. Does that read wrong now that one of the rows is not about a photo at all?",
+    "Desktop, Phone, Tablet, Square, Custom: is that the right short list for building UI, or is one missing that you would reach for?",
+    "Desktop at 1440 by 1024 is what Return gives you. Is that the size you would want by default?",
+    "The canvas is opaque white. Would you rather it started transparent, with the checkerboard behind it?"
+  ],
+  "rough": [
+    "The white is a real pixel layer, born locked and named Background, exactly like an opened file. That means it exports as white and every pixel tool paints on it at full resolution, but it also means the picture is white and not transparent, and there is no way to ask for transparent yet.",
+    "Blank canvas is only reachable from an empty window. With a document already open there is no menu item for it: you go File > New Window first. Filed as a follow-up.",
+    "The row has no keyboard shortcut. Command N is New Layer, Shift Command N is New Window and Option Command N is New from Clipboard, so there was no N left to take and inventing an unrelated key seemed worse than leaving the column blank.",
+    "The canvas is created at 1 pixel per point. On a Retina screen a 1440 wide canvas is 1440 real pixels, so an export is not a 2x asset. Say if that matters and it becomes a size option.",
+    "Screen Recording was granted, so all three pictures here are real screen captures of the app, not offscreen renders."
+  ]
+}

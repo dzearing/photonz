@@ -324,6 +324,14 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measureModesFlag })
     }
 
+    @Test func startingFromABlankCanvasIsNextOnlyAndOnByDefault() {
+        // Starting from nothing is a Next idea: Current's empty window keeps
+        // offering open, capture and paste only, and never sees this flag.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.blankCanvasFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.blankCanvasFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.blankCanvasFlag })
+    }
+
     @Test func theDistanceDragIsAParameterOfMeasureModesAndStartsOff() {
         // Whether a Distance caliper lands when you let go of the drag, with
         // its number placed for you, is a switch inside Measure modes rather

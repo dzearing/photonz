@@ -1,0 +1,115 @@
+{
+  "out": "/tmp/photonz-playtest/blank-canvas",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1200,
+      "height": 860,
+      "card": "blank-canvas-0-card"
+    },
+    {
+      "do": "action",
+      "action": "newCanvasDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "blank-canvas-0b-sheet"
+    },
+    {
+      "do": "describe",
+      "stage": "1-created",
+      "note": "a blank canvas straight from an empty window"
+    },
+    {
+      "do": "snapshot",
+      "name": "blank-canvas-1-empty"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        240
+      ],
+      "to": [
+        900,
+        640
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-drawn",
+      "note": "a rectangle drawn on the blank canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "blank-canvas-2-drawn"
+    },
+    {
+      "do": "render",
+      "name": "blank-canvas-2-drawn-doc"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "describe",
+      "stage": "3-undone",
+      "note": "undo takes the rectangle back to the bare canvas"
+    },
+    {
+      "do": "render",
+      "name": "blank-canvas-3-undone-doc"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        780
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "describe",
+      "stage": "4-typed",
+      "note": "text lands on the blank canvas too"
+    },
+    {
+      "do": "snapshot",
+      "name": "blank-canvas-4-built"
+    },
+    {
+      "do": "render",
+      "name": "blank-canvas-4-built-doc"
+    }
+  ]
+}

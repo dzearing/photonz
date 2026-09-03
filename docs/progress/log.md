@@ -5236,3 +5236,47 @@ window to `.readOnly` once every display has been shot, so the overlay is
 invisible to any other capture tool for as long as the whole freeze takes,
 which is longer than the diag's 600 ms sleep. Filed as "The screen dim shows up
 in other recording tools half a second late".
+
+## 2026-09-03 — A new window can start as a blank canvas
+
+The empty window's card gets a fourth row, **Blank canvas**, behind
+`next-blank-canvas` (Next only, on by default). It opens a small **New Canvas**
+sheet: Desktop 1440×1024, Phone 390×844, Tablet 1024×768, Square 1000×1000 and
+Custom, with Desktop preselected so Return alone makes a canvas. This is the
+front door for the ui-building focus, which needs somewhere to draw that is not
+a screenshot.
+
+The canvas is a **real full-size white bitmap** installed through
+`withBaseImage`, so downstream it is indistinguishable from an opened file:
+locked Background layer, window sized to the canvas, clean undo baseline, save
+and export unchanged. It is deliberately not the 8×8 solid the fill tool
+stretches — `RegionOps` redraws a layer at its own bitmap resolution, so a
+marquee fill on a thumbnail-sized background would paint blocky.
+
+New pieces: `BlankCanvas` (PhotonzCore, presets + size clamping, tested),
+`SolidImage` (PhotonzRender, a flat color at a real size, tested),
+`NewCanvasDialog`, `EditorState.newBlankCanvas(size:)`.
+
+The playtest harness gained what it needed to check this without a person:
+
+- `blank` step — opens a new EMPTY window and hands it a blank canvas, so a
+  walk can start from nothing. Its optional `card` field photographs the empty
+  window first, which is the only way to picture the onboarding card at all: it
+  stops existing the moment a document arrives.
+- `snapshot` now photographs an attached **sheet** when one is up, since that
+  is what a person is looking at.
+- `action: newCanvasDialog` opens the New Canvas sheet.
+- `Scripts/playtest/blank-canvas-walk.json` is the walk: card, sheet, canvas,
+  rectangle, undo, redo, text, composite.
+
+Verified live on the probe with Screen Recording granted: the card with the row,
+the sheet, a rectangle drawn on the white, undo returning the render to pure
+opaque white at every sampled pixel (255,255,255,255), and — with the flag
+written off in the probe's own defaults — the card back to exactly its three
+original rows.
+
+Audit: `queue/audits/2026-09-03-blank-canvas.json`. Next: the audit asks whether
+Blank canvas should lead the card rather than close it, whether the headline
+still reads right, and whether the canvas should be able to start transparent.
+A follow-up is filed for reaching a blank canvas from the File menu with a
+document already open.

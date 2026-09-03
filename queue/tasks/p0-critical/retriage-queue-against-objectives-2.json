@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T23:48:09.131Z",
-  "updated": "2026-09-03T00:09:17.577Z",
+  "updated": "2026-09-03T00:09:48.654Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user updated queue/objectives.json and asked for a retriage. Read the objectives tree (order is priority, nesting is sub-epics) and every open task, then make the queue reflect it: reprioritize (queue.mjs priority), resequence to clean steps of 10 per priority (queue.mjs seq), dedupe, and groom notes so each task names the objective it serves. Do NOT write a digest. Record one history event: queue.mjs event triage with a summary of what moved.",
@@ -66,6 +66,6 @@
     }
   ],
   "started": "2026-09-03T00:02:41.897Z",
-  "failures": 1,
+  "failures": 0,
   "completed": "2026-09-03T00:09:17.577Z"
 }

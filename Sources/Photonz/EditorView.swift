@@ -196,6 +196,9 @@ struct EditorView: View {
         .sheet(isPresented: $editorState.isExportDialogPresented) {
             ExportDialog()
         }
+        .sheet(isPresented: $editorState.isBlankCanvasDialogPresented) {
+            NewCanvasDialog()
+        }
     }
 
     @ViewBuilder
@@ -420,6 +423,14 @@ struct EditorView: View {
                     onboardingRow("doc.on.clipboard", "Paste an image", "⌘V") {
                         editorState.paste()
                     }
+                    // Last on purpose: capture-and-redline is the daily use, so
+                    // starting from nothing joins the card without moving the
+                    // rows already under the pointer.
+                    if Experiments.shared.blankCanvasEnabled {
+                        onboardingRow("rectangle.badge.plus", "Blank canvas", "") {
+                            editorState.isBlankCanvasDialogPresented = true
+                        }
+                    }
                 }
                 .padding(8)
                 .glassEffect(.regular, in: .rect(cornerRadius: 16))
@@ -439,9 +450,13 @@ struct EditorView: View {
                 Text(title)
                     .font(.callout)
                 Spacer(minLength: 24)
-                Text(shortcut)
-                    .font(.callout.monospaced())
-                    .foregroundStyle(.tertiary)
+                // An action with no key of its own leaves the column empty
+                // rather than inventing a shortcut to fill it.
+                if !shortcut.isEmpty {
+                    Text(shortcut)
+                        .font(.callout.monospaced())
+                        .foregroundStyle(.tertiary)
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

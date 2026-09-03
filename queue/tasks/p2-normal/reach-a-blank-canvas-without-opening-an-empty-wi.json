@@ -1,0 +1,27 @@
+{
+  "id": "reach-a-blank-canvas-without-opening-an-empty-wi",
+  "title": "Reach a blank canvas without opening an empty window first",
+  "goal": "Today the only way to start a picture from nothing is to open a new window and click Blank canvas in the card. With a document already open there is no way to ask for one. Give it a home in the File menu so it is one step from anywhere.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 630,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T00:29:10.117Z",
+  "updated": "2026-09-03T00:29:10.118Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from queue/audits/2026-09-03-blank-canvas.json. The sheet is NewCanvasDialog and the entry point is EditorState.isBlankCanvasDialogPresented, which is per-editor today; a File-menu route needs to open a fresh window and present the sheet there (AppCoordinator.newDocumentWindow + a pending-blank-canvas flag), or present the sheet first and pass the size to the new window. No key is free in the N family (Cmd N New Layer, Shift Cmd N New Window, Opt Cmd N New from Clipboard), so no shortcut. Behind next-blank-canvas, Next only.",
+  "acceptance": [
+    "File menu has a New Blank Canvas item that opens the size sheet from any window",
+    "Choosing a size opens the blank canvas in a new window, leaving the current document alone",
+    "The empty window card keeps its Blank canvas row and both routes open the same sheet"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T00:29:10.118Z",
+      "note": "created (manual)"
+    }
+  ]
+}

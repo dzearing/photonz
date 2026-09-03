@@ -58,6 +58,8 @@ public enum FeatureCatalog {
 
     public static let toolTipsFlag = "next-tool-tips"
 
+    public static let blankCanvasFlag = "next-blank-canvas"
+
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
@@ -248,6 +250,15 @@ public enum FeatureCatalog {
                     name: toolTipsFlag,
                     title: "Tools explain themselves with a tooltip",
                     description: "Resting the pointer on a tool in the floating tool bar shows a small label with the tool's name and the key that picks it, in the app's own tooltip style: it appears once the pointer has been still for a moment, follows the pointer from tool to tool without flicker, and never gets in the way of a click. Off means the buttons show the plain system help tag, which may not appear at all.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: blankCanvasFlag,
+                    title: "Start from a blank canvas",
+                    description: "A new window can start as an empty picture instead of only offering to open, paste or capture one. The card adds Blank canvas: pick a size (Desktop, Phone, Tablet, Square, or type your own), and you land on a white canvas every tool draws on right away. Off means a new window offers open, capture and paste only.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

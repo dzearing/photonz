@@ -14,6 +14,38 @@ struct PlaytestScriptTests {
         try PlaytestScript.decode(Data(json.utf8))
     }
 
+    @Test("A blank step starts a walk from an empty canvas instead of a file")
+    func blankStartsFromNothing() throws {
+        let script = try decode("""
+        {
+          "out": "/tmp/walk/out",
+          "steps": [
+            { "do": "blank", "canvasWidth": 800, "canvasHeight": 600, "width": 1200, "height": 900, "card": "empty-card" }
+          ]
+        }
+        """)
+        guard case .blank(let canvas, let window, let card) = script.steps[0] else { Issue.record("blank"); return }
+        #expect(canvas == CGSize(width: 800, height: 600))
+        #expect(window == CGSize(width: 1200, height: 900))
+        #expect(card == "empty-card")
+    }
+
+    @Test("A blank step with no size takes the default preset")
+    func blankDefaultsToThePreset() throws {
+        let script = try decode("""
+        { "out": "/tmp/walk/out", "steps": [{ "do": "blank" }] }
+        """)
+        guard case .blank(let canvas, let window, let card) = script.steps[0] else { Issue.record("blank"); return }
+        #expect(canvas == BlankCanvas.defaultPreset.size)
+        #expect(window == nil)
+        #expect(card == nil)
+    }
+
+    @Test("blank is listed among the step names the error text offers")
+    func blankIsANamedStep() {
+        #expect(PlaytestStep.names.contains("blank"))
+    }
+
     @Test func aScriptIsAnOutputFolderAndAListOfSteps() throws {
         let script = try decode("""
         {

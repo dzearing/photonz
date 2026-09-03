@@ -223,6 +223,12 @@ extension Experiments {
     /// reads false and keeps `.help`.
     var toolTipsEnabled: Bool { isEnabled(FeatureCatalog.toolTipsFlag) }
 
+    /// `next-blank-canvas`: whether an empty window offers Blank canvas
+    /// alongside open, capture and paste. Exists only in the Next release's
+    /// catalog, so Current always reads false and its empty window is
+    /// unchanged.
+    var blankCanvasEnabled: Bool { isEnabled(FeatureCatalog.blankCanvasFlag) }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its

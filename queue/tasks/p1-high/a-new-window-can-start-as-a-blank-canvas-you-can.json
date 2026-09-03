@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:00:37.150Z",
-  "updated": "2026-09-03T00:08:21.262Z",
+  "updated": "2026-09-03T00:30:20.198Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Flag: next-blank-canvas, Next only, on by default (FeatureCatalog.swift). Today: EditorView.swift:402 emptyState offers three rows through onboardingRow (Open a file, Capture a rectangle, Paste an image); EditorState.swift:288 leaves `document` nil for a .fresh window, so there is nothing to draw on. CanvasSizeDialog.swift already asks for a canvas size and PhotonzDocument(canvasSize:) already exists, so most of the parts are there. Pick one background for the new picture (white is the simple answer), say which you picked in the audit, and file a follow-up if a transparent canvas turns out to matter for building UI. This is the front door for the ui-building focus: components, groups and screens all need somewhere to be drawn that is not a screenshot.\n\nObjective: ui-building (the current focus). Building UI needs somewhere to start from nothing; today every picture begins as a capture, a file or a paste.",
@@ -28,6 +28,28 @@
     {
       "t": "2026-09-03T00:08:21.261Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-09-03T00:09:54.506Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T00:12:20.238Z",
+      "note": "Adversarial review before building. (1) The size question is the only speed bump on a 'start from nothing' flow, so the sheet must be answerable with one Return: presets listed, one preselected, Create is the default button. (2) Presets should be UI-shaped, not photo-shaped, because this serves ui-building: desktop, phone, tablet, square, plus custom. (3) Row order: the app's daily use is capture-and-redline, so Blank canvas goes LAST in the card and does not displace the rows the user already clicks by habit. Flagged as an evaluate question in the audit. (4) Background: a real white pixel layer, not an empty document. RegionOps redraws at the layer bitmap's own resolution, so the existing 8x8 stretched solid (EditorState.solidImage) would make a rectangular-marquee fill on the background come out blocky. The blank canvas gets a full-size white bitmap so every pixel tool is honest from the first stroke. (5) No new keyboard shortcut: Cmd N is New Layer, Shift Cmd N is New Window, Opt Cmd N is New from Clipboard (user decision 2026-07-05), so the row shows no shortcut rather than stealing one. (6) Shortest version: reuse withBaseImage so the blank canvas is indistinguishable from an opened file downstream (locked Background, window sizing, undo baseline, save, export all already work)."
+    },
+    {
+      "t": "2026-09-03T00:12:20.263Z",
+      "note": "Scope check: epic ui-building is staged now and is the current focus. Proceeding."
+    },
+    {
+      "t": "2026-09-03T00:29:30.887Z",
+      "note": "Review of the built thing, on the probe. Two changes from the first cut. (1) The row's icon was square.dashed, which is the same dashed rectangle Capture a rectangle already wears: two rows in one card reading as the same thing. Now rectangle.badge.plus. (2) The custom size fields fought the presets: an onChange that flipped the selection to Custom fired when picking a preset set the width, so every preset click landed on Custom. Removed; the fields only exist while Custom is selected, so nothing else can touch them. Left alone on purpose: the card headline still says Drop a photo or screenshot here, and Blank canvas sits last rather than first. Both are the user's call, so they are evaluate questions in the audit rather than guesses."
+    },
+    {
+      "t": "2026-09-03T00:30:20.197Z",
+      "note": "Blank canvas shipped in Next behind next-blank-canvas (on by default). Card gets a Blank canvas row, New Canvas sheet offers Desktop/Phone/Tablet/Square/Custom with Desktop preselected, and Create installs a full-size opaque white Background layer so every tool, undo and export work from the first click. New: BlankCanvas (PhotonzCore) and SolidImage (PhotonzRender), both tested; NewCanvasDialog; EditorState.newBlankCanvas. Playtest harness gained a blank step (with a card snapshot of the empty window), sheet-aware snapshots and a newCanvasDialog action, plus Scripts/playtest/blank-canvas-walk.json. Verified live on the probe with Screen Recording: card, sheet, rectangle drawn, undo back to pure white 255,255,255,255, and the card back to its three original rows with the flag written off. 1501 tests green. Audit: queue/audits/2026-09-03-blank-canvas.json. Follow-up filed: reach-a-blank-canvas-without-opening-an-empty-wi."
     }
-  ]
+  ],
+  "started": "2026-09-03T00:09:54.506Z",
+  "completed": "2026-09-03T00:30:20.198Z"
 }
