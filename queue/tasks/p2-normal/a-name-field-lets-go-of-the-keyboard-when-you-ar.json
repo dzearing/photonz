@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 790,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:13:03.353Z",
-  "updated": "2026-09-03T06:13:03.354Z",
+  "updated": "2026-09-03T11:51:30.523003Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The number fields go through NumberFieldEntry (PhotonzCore) plus the numberFieldKeys modifier and KeyboardHandback.toCanvas() in Sources/Photonz/KeyboardHandback.swift. Candidates: ComponentPanel.swift:702 (the override field, seen keeping the keyboard in component-end-to-end-walk step 5), ComponentPanel.swift:557, ColorStylePanel name fields, ColorPickerPopover hex field. Careful: the Layers and Measurements rename fields already disappear on commit, so they need nothing; a name is not a number, so decide whether Escape reverting is right for each.",
@@ -23,6 +23,51 @@
     {
       "t": "2026-09-03T06:13:03.354Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T11:29:30.566Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "review before building: walked it as a first-time user. The trap has two shapes, not one. In a dock field that stays on screen (a component's name, a knob, a copy's label, a style's name) the next tool letter becomes a letter of the name, which is the loud version. In a field that VANISHES on commit (the Layers and Measurements row renames) the keyboard falls to the window instead, so the tool letter does nothing at all: quieter, and easier to mistake for the app being wedged. The task notes said those two needed nothing; they needed the same thing."
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "review before building: Escape does not mean one thing across word fields. Renaming puts the old name back; naming something NEW abandons the making of it (the style-naming field); a search box empties itself. All three are 'back to before you started typing', so they share one rule with three meanings of before, rather than three rules."
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "review before building: cut from scope, with reasons. The color picker's hex box lives in a popover, and pushing the keyboard out to the canvas from inside one fights the popover. The New Canvas / Resize / Export dialogs have no picture behind them. The on-canvas caption field an arrow opens already has its own rule (ArrowCaptionEntry) and the frame-name field on the canvas already hands back by itself."
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "built: NameFieldEntry in PhotonzCore (Return lands and releases, Escape reverts and releases, everything else types, no stepping because a name has no next value) with 7 tests, and a nameFieldKeys view modifier next to numberFieldKeys in Sources/Photonz/KeyboardHandback.swift. Wired into 10 fields: component name, knob name, a copy's wording override, style naming, style rename, layers row rename, measurements row rename, measurement Name in Properties, the arrow Caption field in Properties, and the Library search box."
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "built: EditorState.layerAwaitingRename + beginRenamingLayer(id:), and a beginRenameSelectedLayer playtest action, so a walk can open a row's rename field. Without it that field only exists while you are renaming and no walk could ever type into one."
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "review of the built thing: Return in the search box with nothing matching used to be about to drop the keyboard for no gain, leaving a typo on screen and the box out of reach. Added canCommit to the modifier: with no hit to take, Return does nothing and the field keeps the keyboard. Verified as stage 18b of the walk."
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "verified: Scripts/playtest/name-field-handback.json (component name, knob name, a copy's label, layers row rename, style naming, style rename, search) and Scripts/playtest/name-field-handback-redline.json (measurement Name, arrow Caption). Both green. Every stage reads firstResponder=CanvasNSView after Return and after Escape, and the next tool letter changes the tool in hand. Escape landed nothing: the copy still renders Cancel, the row is still Middle copy, the style is still Brand red."
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "verified: Scripts/test.sh green (2083 tests). Regression walks green: component-end-to-end, component-override, component-instance, styles, multi-style, library, redline, measure-handback, number-field-handback, arrow-caption-pill, arrow-caption-anchor, frame-name-rename, starter-components."
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "known, not caused here: library-walk fails whenever the probe last ran a walk that left the Library on the Components scope, because it asks for the 'Search media' field without setting the scope first. Passes as soon as the scope is put back. Filed as its own task."
+    },
+    {
+      "t": "2026-09-03T11:51:30.523003Z",
+      "note": "audit: queue/audits/2026-09-03-name-fields.json with three real screen captures (Screen Recording was granted)."
     }
-  ]
+  ],
+  "started": "2026-09-03T11:29:30.566Z"
 }

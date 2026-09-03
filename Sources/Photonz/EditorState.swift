@@ -3163,6 +3163,18 @@ final class EditorState {
     /// editable is a row nobody knows they can type in.
     var componentAwaitingName: UUID?
 
+    /// A layer whose row in the Layers or Measurements list should open its
+    /// rename field, set by the Rename command. Whichever list is showing that
+    /// row consumes it and puts it back to nil, so it fires once rather than
+    /// every redraw. Same idiom as `componentAwaitingName` above, and the way a
+    /// walk reaches a field that only exists while you are renaming.
+    var layerAwaitingRename: UUID?
+
+    /// Opens the rename field on a row, the way double-clicking the name does.
+    func beginRenamingLayer(id: UUID) {
+        layerAwaitingRename = id
+    }
+
     /// Whether Make Component, the canvas mark and the Components shelf exist
     /// at all.
     var componentsEnabled: Bool { Experiments.shared.componentsEnabled }

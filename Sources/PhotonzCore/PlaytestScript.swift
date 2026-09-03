@@ -204,6 +204,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// a walk proves a name can be changed after the fact and that undo puts
     /// the old one back.
     case renameSelectedLayer
+    /// OPEN the selected layer's rename field in the dock, the way
+    /// double-clicking its name does, and leave it holding the keyboard. The
+    /// row only becomes a field while you are renaming, so this is the only way
+    /// a walk can type into one and watch what Return does with the keyboard
+    /// afterwards.
+    case beginRenameSelectedLayer
     /// Layer ▸ Duplicate Layer. ⌘J is a menu chord, so a walk that checks what
     /// a duplicate keeps asks for it here.
     case duplicateLayer

@@ -563,6 +563,8 @@ private final class Run {
                 if let id = editor.selectedLayerID {
                     editor.renameLayer(id: id, to: "Renamed Layer")
                 }
+            case .beginRenameSelectedLayer:
+                if let id = editor.selectedLayerID { editor.beginRenamingLayer(id: id) }
             case .alignLeft: editor.alignSelection(.left)
             case .alignHorizontalCenter: editor.alignSelection(.horizontalCenter)
             case .alignRight: editor.alignSelection(.right)

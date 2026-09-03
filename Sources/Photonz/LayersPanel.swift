@@ -724,6 +724,15 @@ struct LayersListView: View {
             multiSelectionCount
             resizeHandle
         }
+        // The Rename command asks for a row's field. Only rows this list shows
+        // answer, so the Measurements list next door does not open a second
+        // field on the same layer.
+        .onChange(of: editorState.layerAwaitingRename) { _, id in
+            guard let id, editorState.panelRows.contains(where: { $0.id == id }),
+                  let layer = editorState.document?.layer(id: id) else { return }
+            editorState.layerAwaitingRename = nil
+            beginRename(layer)
+        }
     }
 
     /// The inspector shows no per-layer sections for a multi-selection, so
@@ -859,6 +868,11 @@ struct LayersListView: View {
                     .font(.callout)
                     .focused($renameFieldFocused)
                     .onSubmit { commitRename(layer) }
+                    // The field does not just close on Return, it hands the
+                    // keyboard to the picture. Closing alone leaves the
+                    // keyboard on the window, where a tool letter does nothing
+                    // at all — a quieter version of the same trap.
+                    .nameFieldKeys(commit: { commitRename(layer) }, revert: cancelRename)
                     .onChange(of: renameFieldFocused) { _, focused in
                         if !focused { commitRename(layer) }
                     }
@@ -1021,6 +1035,12 @@ struct LayersListView: View {
         guard renamingLayerID == layer.id else { return }
         renamingLayerID = nil
         editorState.renameLayer(id: layer.id, to: renameText)
+    }
+
+    /// Escape: the row keeps the name it had and nothing reaches history, the
+    /// same thing Escape does to a frame's name on the canvas.
+    private func cancelRename() {
+        renamingLayerID = nil
     }
 }
 
@@ -1254,6 +1274,14 @@ struct MeasurementsListView: View {
             }
         }
         .padding(.horizontal, 8)
+        // The Rename command asks for a row's field; only measurement rows this
+        // list shows answer it.
+        .onChange(of: editorState.layerAwaitingRename) { _, id in
+            guard let id, let layer = editorState.measurePanelLayers.first(where: { $0.id == id })
+            else { return }
+            editorState.layerAwaitingRename = nil
+            beginRename(layer)
+        }
     }
 
     private var pixelScale: CGFloat { editorState.document?.pixelScale ?? 1 }
@@ -1269,6 +1297,7 @@ struct MeasurementsListView: View {
                     .font(.callout)
                     .focused($renameFieldFocused)
                     .onSubmit { commitRename(layer) }
+                    .nameFieldKeys(commit: { commitRename(layer) }, revert: cancelRename)
                     .onChange(of: renameFieldFocused) { _, focused in
                         if !focused { commitRename(layer) }
                     }
@@ -1351,6 +1380,12 @@ struct MeasurementsListView: View {
         guard renamingLayerID == layer.id else { return }
         renamingLayerID = nil
         editorState.renameLayer(id: layer.id, to: renameText)
+    }
+
+    /// Escape: the row keeps the name it had and nothing reaches history, the
+    /// same thing Escape does to a frame's name on the canvas.
+    private func cancelRename() {
+        renamingLayerID = nil
     }
 }
 
@@ -1640,13 +1675,22 @@ struct AnnotationInspector: View {
                             .onSubmit {
                                 editorState.setAnnotationCaption(layerID: layer.id, captionDraft)
                             }
-                            // Esc drops the draft: the field shows the arrow's
-                            // caption again and gives the keyboard back.
-                            .onExitCommand {
-                                captionDraft = a.caption ?? ""
-                                captionEditing = false
-                                captionFocused = false
-                            }
+                            // Return lands the caption, Esc drops the draft and
+                            // shows the arrow's caption again, and both hand the
+                            // keyboard to the picture. Clearing `captionEditing`
+                            // first is what stops the focus loss that follows
+                            // from landing the same words a second time.
+                            // (The field the canvas opens on a new arrow has its
+                            // own rule, in `ArrowCaptionEntry`.)
+                            .nameFieldKeys(
+                                commit: {
+                                    captionEditing = false
+                                    editorState.setAnnotationCaption(layerID: layer.id, captionDraft)
+                                },
+                                revert: {
+                                    captionDraft = a.caption ?? ""
+                                    captionEditing = false
+                                })
                             // Like every Mac text field, clicking away commits
                             // what you typed (one undo step; none if unchanged).
                             // Not when the canvas has just opened its own editor
@@ -1883,6 +1927,8 @@ struct MeasureInspector: View {
                             .controlSize(.small)
                             .focused($nameFocused)
                             .onSubmit { commitName() }
+                            .nameFieldKeys(commit: { commitName() },
+                                           revert: { nameDraft = displayName })
                             .onChange(of: nameFocused) { _, focused in
                                 if !focused { commitName() }
                             }

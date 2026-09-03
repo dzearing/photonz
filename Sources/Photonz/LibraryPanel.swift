@@ -81,8 +81,16 @@ struct LibraryPanel: View {
                 .textFieldStyle(.plain)
                 .font(.caption)
                 // Type to narrow, Return to take the top hit, which is the
-                // flow every search field on the Mac already has.
+                // flow every search field on the Mac already has. Escape empties
+                // the box, so the shelf shows everything again. Both are the end
+                // of searching, so both hand the keyboard to the picture and the
+                // next tool letter picks a tool.
                 .onSubmit { selectFirstTile() }
+                // With nothing matching, Return has no top hit to take, so it
+                // leaves the keyboard where the fixing happens.
+                .nameFieldKeys(canCommit: !isEmpty,
+                               commit: selectFirstTile,
+                               revert: { query = "" })
             if !query.isEmpty {
                 Button { query = "" } label: {
                     Image(systemName: "xmark.circle.fill")

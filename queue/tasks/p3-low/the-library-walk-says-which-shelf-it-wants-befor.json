@@ -1,0 +1,26 @@
+{
+  "id": "the-library-walk-says-which-shelf-it-wants-befor",
+  "title": "The Library walk says which shelf it wants before it looks for the search box",
+  "goal": "A scripted playtest that opens the Library and types in its search box fails whenever the previous run left the shelf on a different tab, because the probe remembers the tab between runs. The walk should say which tab it wants first, so it passes whatever ran before it.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 600,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T11:51:30.554Z",
+  "updated": "2026-09-03T11:51:30.555Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Scripts/playtest/library-walk.json step 9 focuses \"Search media\" after a plain showLibrary action, which does not set LibraryPanel.scopeKey. showComponentShelf sets it to components; there is no equivalent for media or styles. Either add a scope field to the showLibrary action or add showMediaShelf/showStyleShelf alongside showComponentShelf in PlaytestAction.",
+  "acceptance": [
+    "Running the Library walk twice in a row, with a components walk in between, passes both times",
+    "No walk depends on a shelf tab left behind by an earlier run"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T11:51:30.555Z",
+      "note": "created (manual)"
+    }
+  ]
+}

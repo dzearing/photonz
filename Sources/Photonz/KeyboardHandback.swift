@@ -5,11 +5,12 @@ import SwiftUI
 /// Giving the keyboard back to the picture.
 ///
 /// A text field that keeps the keyboard after you are finished with it is a
-/// trap: every tool letter becomes a character in the number, and clicking the
+/// trap: every tool letter becomes a character in the box, and clicking the
 /// canvas is the only way out. So every field that can be finished (Return,
 /// Escape) asks for this the moment it is done, and the canvas answers the
 /// next key the way it always does — tool letters pick tools, arrows nudge the
-/// layer.
+/// layer. Numbers and words alike: `numberFieldKeys` and `nameFieldKeys` below
+/// are the two doors into it.
 enum KeyboardHandback {
 
     /// Hand the keyboard to the canvas of the window that has it.
@@ -88,6 +89,49 @@ extension View {
             case .type: return .ignored
             }
             if NumberFieldEntry.releasesKeyboard(action) { KeyboardHandback.toCanvas() }
+            return .handled
+        }
+    }
+
+    /// The keys of a typed WORD field — a name, a label, a caption, a search
+    /// box — in one place: Return lands it, Escape puts things back, and both
+    /// hand the keyboard to the picture so the next tool letter picks a tool.
+    /// The rule itself lives in `NameFieldEntry`, next door to the number
+    /// fields' `NumberFieldEntry`, so the two kinds of field finish the same
+    /// way.
+    ///
+    /// Every other key is left alone, arrows included: there is no next name to
+    /// step to, so up and down stay caret movement.
+    ///
+    /// `commit` and `revert` run before the keyboard moves, so a field that
+    /// also commits when it loses focus is already showing what the document
+    /// really holds by then and cannot land the same draft twice.
+    /// `canCommit` is false when there is nothing for Return to land — an empty
+    /// search, say. Return then does nothing and the field KEEPS the keyboard,
+    /// so a typo is one backspace away instead of a hunt for the box again.
+    /// Escape still works: giving up is always available.
+    func nameFieldKeys(isEditable: Bool = true,
+                       canCommit: Bool = true,
+                       commit: @escaping () -> Void,
+                       revert: @escaping () -> Void) -> some View {
+        onKeyPress(phases: .down) { press in
+            guard isEditable else { return .ignored }
+            let key: NameFieldEntry.Key
+            switch press.key {
+            // ⏎ and the keypad's Enter. Tab still walks to the next field, the
+            // way it does in every Mac dialog, and goes through `onSubmit`.
+            case .return, KeyEquivalent("\u{3}"): key = .return
+            case .escape: key = .escape
+            default: return .ignored
+            }
+            guard canCommit || key != .return else { return .ignored }
+            let action = NameFieldEntry.action(for: key)
+            switch action {
+            case .commitAndRelease: commit()
+            case .revertAndRelease: revert()
+            case .type: return .ignored
+            }
+            if NameFieldEntry.releasesKeyboard(action) { KeyboardHandback.toCanvas() }
             return .handled
         }
     }

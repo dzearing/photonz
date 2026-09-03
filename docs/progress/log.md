@@ -6349,3 +6349,44 @@ original and on all three copies, right beside five starters that looked crisp.
 Next: text typed straight onto a Frame still wears the halo — same complaint one
 level up, filed as its own task rather than widened into this one. The audit asks
 whether a component is the right line to draw, or whether any group should do it.
+
+## 2026-09-03 — a word field lets go of the keyboard too
+
+The number fields learned this yesterday; the word fields had not. Type a new
+label on a copy of a component, press Return, press R for the rectangle tool, and
+you got an R in the label.
+
+- The trap has two shapes. A dock field that stays on screen (a component's name,
+  a knob, a copy's label, a style's name) turns the tool letter into a letter of
+  the name. A field that VANISHES on commit (the Layers and Measurements row
+  renames) drops the keyboard on the window instead, so the tool letter does
+  nothing at all — quieter, and easier to read as the app being wedged. The task
+  notes said the vanishing ones needed nothing; they needed the same thing.
+- `NameFieldEntry` (PhotonzCore, 7 tests) states the rule beside
+  `NumberFieldEntry`: Return lands and releases, Escape reverts and releases,
+  everything else types. No stepping — a name has no next value, so up and down
+  stay caret movement.
+- `nameFieldKeys` in `Sources/Photonz/KeyboardHandback.swift` is the one door in,
+  wired to 10 fields: component name, knob name, a copy's wording override, style
+  naming, style rename, the Layers and Measurements row renames, the measurement
+  Name field, the arrow Caption field in Properties, and the Library search box.
+- Escape means three things and they are all "back to before you started typing":
+  a rename puts the old name back, the style-naming field abandons the making of
+  the style, the search box empties itself.
+- `canCommit`: with nothing matching, Return in the search box does nothing and
+  the box KEEPS the keyboard, so a typo is one backspace away.
+- Left alone on purpose: the color picker's hex box (inside a popover, where
+  pushing the keyboard out to the canvas fights the popover), the dialogs (no
+  picture behind them), and the on-canvas caption and frame-name fields, which
+  already have their own rules.
+- New: `EditorState.layerAwaitingRename` + a `beginRenameSelectedLayer` playtest
+  action, so a walk can open a row's rename field at all.
+- Walks: `Scripts/playtest/name-field-handback.json` and
+  `name-field-handback-redline.json`, both green, plus 13 regression walks. 2083
+  tests green. Audit: `queue/audits/2026-09-03-name-fields.json`, three real
+  captures.
+
+Next: the audit asks whether the Library search box changing (Return now lets go,
+Escape now empties) is wanted — that is the line most likely to be wrong.
+`library-walk` needs to say which shelf tab it wants before it looks for the
+search box; filed as its own task.

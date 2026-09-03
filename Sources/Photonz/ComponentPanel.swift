@@ -151,7 +151,12 @@ struct ComponentInspector: View {
                     .textFieldStyle(.roundedBorder)
                     .font(.callout)
                     .focused($nameFocused)
+                    // Tab still lands the name and walks on; Return and Escape
+                    // go through the name-field rule so they can hand the
+                    // keyboard back to the picture as well.
                     .onSubmit(commit)
+                    .nameFieldKeys(commit: commit,
+                                   revert: { draft = live?.name ?? layer.name })
                     .onChange(of: nameFocused) { _, focused in if !focused { commit() } }
             }
             HStack(spacing: 6) {
@@ -668,6 +673,7 @@ private struct ComponentPropertyRow: View {
                 .font(.caption)
                 .focused($focused)
                 .onSubmit(commit)
+                .nameFieldKeys(commit: commit, revert: { draft = property.name })
                 .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
             Text(property.kind.chip)
                 .font(.caption2)
@@ -832,6 +838,10 @@ private struct InstanceTextKnob: View {
             .font(.caption)
             .focused($focused)
             .onSubmit(commit)
+            // Naming a copy's wording is a moment, not a mode: Return lands it
+            // and hands the keyboard back, so the next tool letter picks a tool
+            // instead of landing in the label.
+            .nameFieldKeys(commit: commit, revert: { draft = live })
             .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
             .onAppear { draft = live }
             .onChange(of: live) { _, value in if !focused { draft = value } }

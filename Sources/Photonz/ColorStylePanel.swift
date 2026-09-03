@@ -264,8 +264,11 @@ struct ColorStyleRow<Well: View>: View {
                 .focused($nameFocused)
                 .onSubmit(save)
                 // Escape drops it: nothing was made, so there is nothing to
-                // undo either.
-                .onExitCommand { editorState.endNamingColorStyle() }
+                // undo either. Both keys hand the keyboard back to the picture,
+                // so the next tool letter picks a tool rather than vanishing
+                // into a field that has just closed.
+                .nameFieldKeys(commit: save,
+                               revert: { editorState.endNamingColorStyle() })
             Button("Save", action: save)
                 .controlSize(.small)
                 .help("Saves this color under that name")
@@ -398,6 +401,8 @@ struct LibraryStyleInspector: View {
                         .font(.callout)
                         .focused($nameFocused)
                         .onSubmit { commit(style) }
+                        .nameFieldKeys(commit: { commit(style) },
+                                       revert: { draft = style.name })
                         .onChange(of: nameFocused) { _, focused in if !focused { commit(style) } }
                 }
                 HStack(spacing: 8) {

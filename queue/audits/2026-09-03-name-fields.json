@@ -1,0 +1,29 @@
+{
+  "feature": "A word field lets go of the keyboard when you are done with it",
+  "epic": "ui-components",
+  "summary": "Every box you type WORDS into now finishes the way the number boxes already did: Return lands what you typed, Escape puts back what was there, and both hand the keyboard to the picture, so the next tool letter picks a tool instead of landing in the box.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components and the Library shelf are on by default. Nothing new to switch on.",
+  "try": [
+    { "do": "Draw a box, put a word on it, select both, and press ⌥⌘K to make it a component." },
+    { "do": "Type a name in the field that opens, press Return, then press R.", "shot": "2026-09-03-name-fields-1-label-typed.png" },
+    { "do": "Drag a copy off the Library shelf onto the canvas and click it." },
+    { "do": "Type a new word in the Label field in the Component section, press Return, then press R.", "shot": "2026-09-03-name-fields-2-tool-key-lands.png" },
+    { "do": "Click the Label field again, type something else, and press Escape." },
+    { "do": "Double-click a name in the Layers list, type a new one, press Return, then press A." },
+    { "do": "Type a few letters in the Library's search box and press Escape.", "shot": "2026-09-03-name-fields-3-search-cleared.png" }
+  ],
+  "evaluate": [
+    "After Return, does the next tool letter land where you expected, or do you still find yourself reaching for the canvas with the mouse first?",
+    "Does Escape putting the old name back feel like a rescue, or do you ever want Escape to keep what you typed and just let go?",
+    "In the Library search box, is Escape emptying the box what you wanted, or did you expect Escape to leave the search alone?",
+    "Renaming in the Layers list: does the row settle the way it used to, with nothing lost?",
+    "Is there a box you type words into that still holds on to the keyboard? Name it."
+  ],
+  "rough": [
+    "The Library search box changed more than the name fields did: Return still takes the top hit, but now it also lets go of the keyboard, and Escape empties the box instead of doing nothing. Both felt right walking it, but this is a habit change and it is the line most likely to be wrong.",
+    "A search that matches nothing keeps the keyboard on Return, on purpose: there is no top hit to take and a typo should be one backspace away, not a hunt for the box.",
+    "The color picker's hex box was left alone. It lives inside a popover, and pushing the keyboard out to the picture from in there fights the popover rather than helping.",
+    "The dialogs (New Canvas, Resize, Export) were left alone too. There is no picture behind them to hand the keyboard to.",
+    "Screen Recording was granted for this run, so the pictures here are real screenshots of the window, not offscreen renders."
+  ]
+}

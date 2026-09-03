@@ -1,0 +1,639 @@
+{
+  "out": "/tmp/photonz-playtest/name-field-handback",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        220
+      ],
+      "to": [
+        520,
+        320
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        250,
+        250
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Save"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        170
+      ],
+      "to": [
+        640,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "type",
+      "text": "Save button"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "1-component-named",
+      "note": "Return landed the name AND handed the keyboard back: firstResponder must read CanvasNSView"
+    },
+    {
+      "do": "snapshot",
+      "name": "name-1-component-named"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-tool-key-after-component-name",
+      "note": "the very next key picks a tool: R must make rectangle the tool in hand"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        270
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "exposeWording"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Knob name"
+    },
+    {
+      "do": "type",
+      "text": "Label"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "3-knob-named",
+      "note": "the knob is called Label and the keyboard is back on the picture"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-tool-key-after-knob-name",
+      "note": "R picks the rectangle tool"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        950,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        950,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "focus",
+      "field": "Label"
+    },
+    {
+      "do": "type",
+      "text": "Cancel"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "5-override-typed",
+      "note": "the copy alone says Cancel and the keyboard is back on the picture"
+    },
+    {
+      "do": "render",
+      "name": "name-5-override-doc"
+    },
+    {
+      "do": "snapshot",
+      "name": "name-5-override-typed"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-tool-key-after-override",
+      "note": "THE TASK: R picks the rectangle tool instead of landing in the label"
+    },
+    {
+      "do": "snapshot",
+      "name": "name-6-tool-key-lands"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        950,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "focus",
+      "field": "Label"
+    },
+    {
+      "do": "type",
+      "text": "Zzz"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-escape-on-name",
+      "note": "Escape puts Cancel back, lands nothing, and hands the keyboard over"
+    },
+    {
+      "do": "render",
+      "name": "name-7-escape-doc"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "8-tool-key-after-escape",
+      "note": "A picks the arrow tool, so Escape lets go as completely as Return does"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        950,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Layer name"
+    },
+    {
+      "do": "type",
+      "text": "Middle copy"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "9-layer-renamed",
+      "note": "the layers row is called Middle copy and the keyboard is back on the picture"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "10-tool-key-after-layer-rename",
+      "note": "R picks the rectangle tool"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        950,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Layer name"
+    },
+    {
+      "do": "type",
+      "text": "Not this name"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "11-layer-rename-escaped",
+      "note": "the row is still called Middle copy and the keyboard is back on the picture"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "12-tool-key-after-layer-escape",
+      "note": "A picks the arrow tool"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "13-undone",
+      "note": "one undo takes the rename back off the copy"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        700
+      ],
+      "to": [
+        560,
+        820
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "saveColorStyle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "focus",
+      "field": "Style name"
+    },
+    {
+      "do": "type",
+      "text": "Brand red"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "14-style-named",
+      "note": "naming a new style lands it and hands the keyboard back"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "15-tool-key-after-style-name",
+      "note": "R picks the rectangle tool"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstColorStyle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Style name"
+    },
+    {
+      "do": "type",
+      "text": "Brand"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "16-style-rename-escaped",
+      "note": "Escape puts Brand red back and hands the keyboard over"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "17-tool-key-after-style-escape",
+      "note": "A picks the arrow tool"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Search components"
+    },
+    {
+      "do": "type",
+      "text": "Nav"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "18-searched",
+      "note": "the shelf is narrowed to Nav Bar and the search box holds the keyboard"
+    },
+    {
+      "do": "snapshot",
+      "name": "name-18-searched"
+    },
+    {
+      "do": "type",
+      "text": "zzzz"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "18b-no-match",
+      "note": "Return with nothing matching keeps the keyboard in the box, so the typo is one backspace away"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "19-search-cleared",
+      "note": "Escape empties the box, the shelf shows everything again, and the keyboard is back on the picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "name-19-search-cleared"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "20-tool-key-after-search",
+      "note": "R picks the rectangle tool"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    }
+  ]
+}
