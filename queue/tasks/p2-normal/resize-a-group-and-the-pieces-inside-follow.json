@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 660,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T02:06:18.412Z",
-  "updated": "2026-09-03T08:11:18.682033Z",
+  "updated": "2026-09-03T08:11:41.705Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed out of group-and-ungroup-what-you-selected (2026-09-03), which deliberately left resize out. Where it stands today: Layer.allowsFrameResize returns false for .group, so CanvasView draws no frame handles and LayerGeometryEditing greys W and H with LayerGeometryEditing.groupSizeReason. CanvasGroups.offersRotation also keeps the rotate knob off a group. The model says groups translate and nothing else (docs/design/ui-building.md, \"Groups translate, they do not scale or rotate\"), so THIS TASK CHANGES THAT RULE and the design doc has to be updated in the same change, including what it means for a measured gap inside a group (12 px stays 12 px is the promise that scaling would break). Decide and write the scaling rule before touching code. EditorState.commitCanvasFrame currently routes a group through PhotonzDocument.moveLayer(id:toCanvasOrigin:), which is translation only; resize needs a new document mutation that walks the children.",
@@ -43,11 +43,11 @@
     },
     {
       "t": "2026-09-03T08:11:18.682033Z",
-      "note": "rule written into docs/design/ui-building.md BEFORE any code, as the task asked: new section 'Resizing a group scales the layout, not the type', plus the revised promise \u2014 grouping never changes a number; resizing a group changes what is measured, and a caliper inside it reports the new distance."
+      "note": "rule written into docs/design/ui-building.md BEFORE any code, as the task asked: new section 'Resizing a group scales the layout, not the type', plus the revised promise — grouping never changes a number; resizing a group changes what is measured, and a caliper inside it reports the new distance."
     },
     {
       "t": "2026-09-03T08:11:18.682033Z",
-      "note": "code: new Sources/PhotonzCore/LayerScaling.swift (the one place the scale is expressed); Layer.resized(to:) now routes a non-frame group through it, so every existing caller \u2014 canvas handles, typed W/H, whole-document resize \u2014 gets it with no new path. Layer.allowsFrameResize returns true for a group unless it is a copy. LayerGeometryEditing.groupSizeReason replaced by instanceSizeReason. EditorState lost both group special cases (previewCanvasFrame/commitCanvasFrame and the originOnly branch in commitGeometry). Previews compose cleanly because submit() renders without touching history, so a hundred mouse-moves are still one scale from the pre-drag document."
+      "note": "code: new Sources/PhotonzCore/LayerScaling.swift (the one place the scale is expressed); Layer.resized(to:) now routes a non-frame group through it, so every existing caller — canvas handles, typed W/H, whole-document resize — gets it with no new path. Layer.allowsFrameResize returns true for a group unless it is a copy. LayerGeometryEditing.groupSizeReason replaced by instanceSizeReason. EditorState lost both group special cases (previewCanvasFrame/commitCanvasFrame and the originOnly branch in commitGeometry). Previews compose cleanly because submit() renders without touching history, so a hundred mouse-moves are still one scale from the pre-drag document."
     },
     {
       "t": "2026-09-03T08:11:18.682033Z",
@@ -59,12 +59,17 @@
     },
     {
       "t": "2026-09-03T08:11:18.682033Z",
-      "note": "harness: PlaytestHarness describe() now emits a 'tree' key \u2014 the layer tree in canvas coordinates, indented by depth, with font size and stroke width. That is what proved the children scaled; every future group walk gets it free."
+      "note": "harness: PlaytestHarness describe() now emits a 'tree' key — the layer tree in canvas coordinates, indented by depth, with font size and stroke width. That is what proved the children scaled; every future group walk gets it free."
     },
     {
       "t": "2026-09-03T08:11:18.682033Z",
       "note": "all five acceptance items checked against the running app, not assumed. Audit: queue/audits/2026-09-03-group-resize.json with two real window captures."
+    },
+    {
+      "t": "2026-09-03T08:11:41.705Z",
+      "note": "Dragging any handle on a group now scales everything inside it in one undo step, and W and H take a typed number. Rule written into docs/design/ui-building.md first: the layout scales, the type does not, and a caliper inside reports the new distance. Copies of components keep their original's size and say so. New LayerScaling in PhotonzCore reached through Layer.resized(to:); both group special cases removed from EditorState. Scripts/test.sh green (1933 tests, 20 new); verified live in the probe app with Scripts/playtest/group-resize-walk.json, real window captures in queue/audits/2026-09-03-group-resize.json. Commit c8ae320, pushed to main."
     }
   ],
-  "started": "2026-09-03T07:54:24.054Z"
+  "started": "2026-09-03T07:54:24.054Z",
+  "completed": "2026-09-03T08:11:41.705Z"
 }
