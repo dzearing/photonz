@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 850,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T14:19:40.887Z",
-  "updated": "2026-09-03T20:15:28.150Z",
+  "updated": "2026-09-03T20:34:31.139Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from one-layer-lines-up-inside-the-frame-it-sits-in (2026-09-03), which deliberately stopped at frames. Today EditorState.arrangeReference takes the immediate parent and only when it isFrame, so a piece inside a group gets no row. The hard part is not the maths (LayerArrangement.aligned already takes a container box) but the group-of-one case: a group box is the union of its children, so with one child the reference IS the child and all six buttons are no-ops. Options: hide the row when the parent box equals the layer box on both axes; or dim per axis. Also decide whether aligning a child that currently defines the group edge should be allowed to shrink the group box, which it would today since the box is derived. See docs/design/ui-building.md, One layer lines up inside its screen.\n\nLanded 2026-09-03. The reference for a plain group is the union of the piece's SIBLINGS, not the group's own box, so it cannot move when the piece does. See docs/design/ui-building.md, 'A piece lines up inside the group that holds it'.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-03T20:33:21.053388Z",
       "note": "Acceptance 4 as written says lining up NEVER changes the group's size. True whenever the piece already sits inside the group. A piece that was hanging OUTSIDE it comes inside and the group tightens around the rest, which is the point of the press and is called out in the audit's rough list."
+    },
+    {
+      "t": "2026-09-03T20:34:31.139Z",
+      "note": "Shipped: a piece inside a plain group now gets the Arrange row, lining up inside everything else in the group (the button's background, for a word on a button). Group of one offers no row, an axis with no room dims and the caption says why, a stack or grid offers none at all. PhotonzCore ArrangeContainer + 12 tests, Scripts/test.sh green (2395), verified on the probe with Scripts/playtest/align-in-group-walk.json and real captures. Audit: queue/audits/2026-09-03-align-in-group.json"
     }
   ],
-  "started": "2026-09-03T20:15:28.149Z"
+  "started": "2026-09-03T20:15:28.149Z",
+  "completed": "2026-09-03T20:34:31.139Z"
 }
