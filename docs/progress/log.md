@@ -6853,3 +6853,38 @@ artifact, not a regression.
 somebody is logged in and read `/tmp/photonz-capture-diag.txt`. One command now
 answers all four acceptance items. Check the lock first; `open -a` needs the
 absolute path to the bundle, a bare `dist/...` fails to resolve.
+
+## 2026-09-03 — Arrow keys nudge everything you picked
+
+Queue task `arrow-keys-nudge-everything-you-picked` (epic `ui-components`).
+With several layers picked the arrow keys did nothing at all: the nudge branch
+in `CanvasView.keyDown` needs `selectedLayerID`, which is nil for every
+multi-selection. Reproduced on the probe app first
+(`Scripts/playtest/nudge-selection-walk.json`): one picked layer moved 120 → 121,
+two picked moved nothing, and the undos afterwards unwound the drawing, so no
+history entry had been made at all.
+
+`PhotonzCore` gained `MultiLayerDrag.origins(offsetBy:)` — the multi-drag move
+stated as a distance rather than a destination — with tests written first.
+`CanvasView.keyDown` runs a multi branch ahead of the single-layer one, keyed on
+`pickedLayerIDs.count > 1`, and commits through `onMoveSelectionCommit`, so the
+whole selection lands in ONE undo step and locked layers and pieces inside a
+picked group are excluded by the same plan a drag uses.
+
+The review of the built thing found a second bug worth knowing about: a
+selection made by SWEEPING a rubber band left that band on screen after a
+nudge, outlining where the layers had been. A drag never showed it because
+`previewCanvasOrigins` drops the band on its first live update, and a keyboard
+nudge has no live update. `EditorState.commitCanvasOrigins` now drops it too,
+which covers both paths.
+
+`CanvasView` and `EditorState` are shared files (the canvas multi-drag this
+completes already was), so Current and Next both get this. No flag.
+
+Verified on the probe with the Screen Recording grant, so the audit carries
+real window captures. `Scripts/test.sh`: 2346 tests green. Audit:
+`queue/audits/2026-09-03-arrow-keys-nudge.json`.
+
+**Next**: still open from the previous session — run
+`open -a "$PWD/dist/Photonz Probe.app" --args --capture-diag` once somebody is
+logged in and read `/tmp/photonz-capture-diag.txt`.

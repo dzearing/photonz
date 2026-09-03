@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 810,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:28:44.298Z",
-  "updated": "2026-09-03T19:18:11.355669Z",
+  "updated": "2026-09-03T19:18:30.528Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CanvasView keyDown arrow branch requires selectedLayerID, which is nil whenever multiSelectedLayerIDs is non-empty, so the press falls through to nothing. Reuse PhotonzDocument.multiLayerDrag(moving:) + EditorState.commitCanvasOrigins, the pair the canvas multi-drag added on 2026-09-03: build the plan, offset its bounds by the nudge, commit the origins. Noticed while building the canvas multi-drag.\n\nShipped: Sources/PhotonzCore/MultiLayerDrag.swift (origins(offsetBy:)), Sources/Photonz/CanvasView.swift (keyDown multi branch), Sources/Photonz/EditorState.swift (commitCanvasOrigins drops a stale marquee). Walk: Scripts/playtest/nudge-selection-walk.json. Audit: queue/audits/2026-09-03-arrow-keys-nudge.json.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-03T19:18:11.355669Z",
       "note": "CanvasView and EditorState are shared files, as the canvas multi-drag this completes already was, so Current and Next both get it. No flag."
+    },
+    {
+      "t": "2026-09-03T19:18:30.527Z",
+      "note": "Arrow keys now move a whole multi-selection: 1pt a press, 10 with Shift, one undo step. PhotonzCore MultiLayerDrag.origins(offsetBy:) (tests first), a multi branch in CanvasView.keyDown, and commitCanvasOrigins now drops the sweep band a nudge used to leave behind. Reproduced then verified on the probe app (Scripts/playtest/nudge-selection-walk.json, real screenshots); 2346 tests green; pushed as 0a803f4. Audit: queue/audits/2026-09-03-arrow-keys-nudge.json"
     }
   ],
-  "started": "2026-09-03T19:10:14.988Z"
+  "started": "2026-09-03T19:10:14.988Z",
+  "completed": "2026-09-03T19:18:30.528Z"
 }
