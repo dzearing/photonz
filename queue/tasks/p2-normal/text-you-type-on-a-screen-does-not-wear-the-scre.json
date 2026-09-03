@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T11:27:35.947Z",
-  "updated": "2026-09-03T12:08:26.973Z",
+  "updated": "2026-09-03T14:54:26.536650Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-on from the component halo task (2026-09-03). The rule is already built: Layer.drawnShadow(insideComponent:) plus an insideComponent flag threaded through DocumentRenderer.compositeLayers/groupImage. Widening it means deciding whether a frame counts the same way a component does, and whether a plain group nested inside a frame counts. A frame is group.isFrame with a backgroundHex, so the predicate is one clause; the question is a UX one, because a caption deliberately laid over a screenshot placed inside a frame would lose its halo too. Consider whether the trigger should be the frame having a painted surface rather than being a frame at all.",
@@ -27,6 +27,49 @@
     {
       "t": "2026-09-03T12:08:26.972Z",
       "note": "seq 890 -> 30"
+    },
+    {
+      "t": "2026-09-03T14:21:14.850Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T14:24:33.480Z",
+      "note": "runner failed (exit 1, attempt 1): API Error: 529 Overloaded. This is a server-side issue, usually temporary \u2014 try again in a moment. If it persists, check https://status.claude.com."
+    },
+    {
+      "t": "2026-09-03T14:25:04.176Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T14:54:26.536650Z",
+      "note": "adversarial review, before building: the task's own acceptance says \"inside a frame\", and building that literally would have been wrong. Frame Selection puts a frame around work that already exists and deliberately paints NO surface (Frames.swift: \"a white sheet appearing behind a screenshot would be a surprise\"), so a redliner who wraps a capture in a boundary would have lost the halo on every caption on it, which is the one case the halo exists for. The trigger is therefore a screen that PAINTS a surface. The frame tool paints white by default, so a screen made to design on counts; a boundary drawn around a capture does not. No decision card needed: the codebase already draws this line."
+    },
+    {
+      "t": "2026-09-03T14:54:26.536650Z",
+      "note": "shortest version: one predicate. Layer.paintsSurface (frame + backgroundHex) joins isComponentRoot in Layer.startsDesignedSurface; the flag already threaded through DocumentRenderer.compositeLayers/groupImage carries it. Renamed drawnShadow(insideComponent:) -> drawnShadow(onDesignedSurface:) and isInsideComponent -> isOnDesignedSurface so the names stay true. A plain group in between inherits, since a group moves no pixels."
+    },
+    {
+      "t": "2026-09-03T14:54:26.536650Z",
+      "note": "TDD: TextHaloTests (was ComponentTextHaloTests) +7 cases, TextHaloRenderTests (was ComponentTextHaloRenderTests) +4 pixel cases. Scripts/test.sh green, 2179 tests."
+    },
+    {
+      "t": "2026-09-03T14:54:26.536650Z",
+      "note": "adversarial review, after building: on a WHITE screen the change is invisible, because a white halo behind dark text cannot be seen against white. So the complaint only bites once a screen has a surface colour, and the walk paints one. Added the probe-only paintScreenSurface playtest action for that (the Background swatch lives in the dock, out of a walk's reach). Second rough edge: the rule reads the container, not what sits under each word, so a caption laid over a screenshot placed INSIDE a painted screen comes out clean; the Shadow switch gives it a real shadow but nothing says so. Both are in the audit's rough."
+    },
+    {
+      "t": "2026-09-03T14:54:26.536650Z",
+      "note": "before/after: Scripts/playtest/screen-text-halo-walk.json run twice, once on this code and once on a scratch build with startsDesignedSurface narrowed back to components. Same words, same blue behind them; before, both were haloed, after only the one on the picture is. Crops of the real window captures are in queue/audits/."
+    },
+    {
+      "t": "2026-09-03T14:54:26.536650Z",
+      "note": "the Shadow switch reading off for text on a screen follows from ShadowInspector using isOnDesignedSurface; that path is the one already shipped and photographed for components, and the dock section sits below the fold in the walk, so it is verified by code path here, not by picture."
     }
-  ]
+  ],
+  "started": "2026-09-03T14:25:04.175Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-03T14:24:33.480Z",
+    "exit": 1,
+    "message": "API Error: 529 Overloaded. This is a server-side issue, usually temporary \u2014 try again in a moment. If it persists, check https://status.claude.com."
+  }
 }

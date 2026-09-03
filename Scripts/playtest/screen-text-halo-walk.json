@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/screen-text-halo",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1300, "height": 860 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [237, 766] },
+    { "do": "type", "text": "Gap 16" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-caption", "note": "a caption typed onto the screenshot, over the blue button: it wears the contrast halo, which is what keeps it readable over a picture" },
+    { "do": "snapshot", "name": "screen-halo-1-caption" },
+    { "do": "render", "name": "screen-halo-1-caption-doc" },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [390, 590] , "to": [790, 760] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "paintScreenSurface" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-screen", "note": "a screen drawn beside the capture, its surface painted so a white halo would show against it" },
+    { "do": "snapshot", "name": "screen-halo-2-screen" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [420, 648] },
+    { "do": "type", "text": "Gap 16" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-typed", "note": "the same words typed onto the screen: drawn clean, while the caption on the capture beside it keeps its halo" },
+    { "do": "snapshot", "name": "screen-halo-3-typed" },
+    { "do": "render", "name": "screen-halo-3-typed-doc" },
+
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-close", "note": "the two side by side, close up: caption on the picture smudged by its halo, heading on the screen clean" },
+    { "do": "snapshot", "name": "screen-halo-4-close" },
+
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [420, 648] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "stepIntoSelection" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-heading-picked", "note": "the heading itself picked: the Shadow switch reads off, because off is what is drawn" },
+    { "do": "snapshot", "name": "screen-halo-5-heading-picked" }
+  ]
+}

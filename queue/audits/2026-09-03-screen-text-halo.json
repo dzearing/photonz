@@ -1,0 +1,28 @@
+{
+  "feature": "Text typed on a screen is drawn clean",
+  "epic": "ui-components",
+  "summary": "Words typed onto a screen you are designing no longer get the soft white glow that keeps a caption readable over a photo. Captions on the open canvas, and on a boundary drawn around a screenshot, still get it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. The difference only shows on a screen whose surface is not white, so paint one first.",
+  "try": [
+    { "do": "Open a screenshot." },
+    { "do": "Press T, click on a dark part of the picture, and type Gap 16. Look at the soft light edge around the words." },
+    { "do": "Press F and drag out a screen beside it." },
+    { "do": "With the screen picked, set Background in the Frame section to a strong colour." },
+    { "do": "Press T, click on the screen, and type Gap 16 again.", "shot": "2026-09-03-screen-halo-after-sc.png" },
+    { "do": "Compare the two: same words, same colour behind them, only the one on the picture is haloed. Before this change both were.", "shot": "2026-09-03-screen-halo-before-sc.png" },
+    { "do": "Double click the heading on the screen and look at Enable Shadow in the dock: it reads off, because off is what is drawn." },
+    { "do": "Drag the heading off the screen onto the canvas. The halo comes back. Drag it back on and it goes again." }
+  ],
+  "evaluate": [
+    "Does the heading on the screen look like type on a screen now, rather than type on a photo?",
+    "Is keeping the halo on a caption over a screenshot still the right default?",
+    "A screen only counts once it paints a background, so a boundary drawn with Frame Selection around a capture leaves captions alone. Is that the line you would draw?",
+    "The Shadow switch reads off for text on a screen, and turning it on gives real shadow. Is off the honest reading, or would you rather see the halo listed and switchable?",
+    "If you put a screenshot inside a screen and caption it, the caption comes out clean. Is that wrong enough to fix?"
+  ],
+  "rough": [
+    "On a white screen, which is what the frame tool makes by default, this change is invisible: a white halo behind dark text cannot be seen against white. The complaint only bites once a screen has a colour, so the pictures here paint one.",
+    "The rule reads the container, not what is under each word. A caption laid over a screenshot that sits inside a painted screen loses its halo. Turning the Shadow switch on gives it a real shadow, but nothing tells you that is the way back.",
+    "The two pictures are crops of real window captures from Scripts/playtest/screen-text-halo-walk.json, the before taken with the rule switched off in a scratch build. Full window shot: 2026-09-03-screen-halo-window-sc.png."
+  ]
+}

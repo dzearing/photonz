@@ -28,20 +28,33 @@ extension Layer {
     /// Whether this layer draws text.
     public var isText: Bool { if case .text = content { return true } else { return false } }
 
+    /// Whether this layer paints a surface of its own: a frame with a
+    /// background, which is what a screen you are designing on actually is.
+    /// A frame drawn around work that already exists paints nothing, so it is
+    /// not one of these.
+    public var paintsSurface: Bool {
+        guard let group, group.isFrame else { return false }
+        return group.backgroundHex != nil
+    }
+
+    /// Whether what this layer holds sits on a surface somebody designed: a
+    /// component, or a screen with a painted background.
+    public var startsDesignedSurface: Bool { isComponentRoot || paintsSurface }
+
     /// The shadow this layer actually draws with (step E9).
     ///
     /// Every text layer is born wearing a soft contrast halo so a caption stays
-    /// readable over a screenshot. Inside a component that halo reads as a
-    /// printing error: the label on a button you drew looks smudged, and the
-    /// app's own components have never had one. So the automatic halo is not
-    /// drawn there. A shadow somebody chose is still drawn, because a title on
-    /// a card is allowed to cast one.
+    /// readable over a screenshot. On a surface somebody designed that halo
+    /// reads as a printing error: the label on a button you drew looks
+    /// smudged, and a heading typed onto a screen looks like a smudge on the
+    /// screen. So the automatic halo is not drawn there. A shadow somebody
+    /// chose is still drawn, because a title on a card is allowed to cast one.
     ///
     /// This is read at draw time and erases nothing: the halo stays on the
-    /// layer, so taking the text back out of the component brings it back, and
-    /// no pixels are ever baked.
-    public func drawnShadow(insideComponent: Bool) -> ShadowStyle? {
-        guard insideComponent, case .text(let text) = content,
+    /// layer, so taking the text back off the surface brings it back, and no
+    /// pixels are ever baked.
+    public func drawnShadow(onDesignedSurface: Bool) -> ShadowStyle? {
+        guard onDesignedSurface, case .text(let text) = content,
               style.shadow == TextBuilder.autoContrastShadow(forColorHex: text.colorHex)
         else { return style.shadow }
         return nil
@@ -85,6 +98,22 @@ extension PhotonzDocument {
         var parent = parentID(of: id)
         while let current = parent {
             if layer(id: current)?.isComponentRoot == true { return true }
+            parent = parentID(of: current)
+        }
+        return false
+    }
+
+    /// Whether this layer sits on a surface somebody designed: a component, or
+    /// a screen that paints a background, anywhere between it and the canvas.
+    /// Plain groups in between change nothing — they move no pixels, so they
+    /// do not change what the text is sitting on.
+    ///
+    /// A layer that IS the component or the screen is not on it; only what it
+    /// holds is.
+    public func isOnDesignedSurface(_ id: UUID) -> Bool {
+        var parent = parentID(of: id)
+        while let current = parent {
+            if layer(id: current)?.startsDesignedSurface == true { return true }
             parent = parentID(of: current)
         }
         return false

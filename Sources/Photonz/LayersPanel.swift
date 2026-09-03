@@ -1496,15 +1496,15 @@ struct ShadowInspector: View {
     let layer: Layer
 
     /// The style the panel describes, carrying the shadow the layer actually
-    /// DRAWS. Text inside a component leaves its contrast halo undrawn, so a
+    /// DRAWS. Text on a designed surface leaves its contrast halo undrawn, so a
     /// switch reading "on" there would be describing a shadow nobody can see;
     /// off is the truth, and turning it on gives that label a real shadow.
     private var style: LayerStyle {
         var style = editorState.previewedStyle(of: layer.id) ?? layer.style
-        guard editorState.document?.isInsideComponent(layer.id) == true else { return style }
+        guard editorState.document?.isOnDesignedSurface(layer.id) == true else { return style }
         var probe = layer
         probe.style = style
-        style.shadow = probe.drawnShadow(insideComponent: true)
+        style.shadow = probe.drawnShadow(onDesignedSurface: true)
         return style
     }
 

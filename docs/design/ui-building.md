@@ -1117,7 +1117,9 @@ What the sitting found, each filed as its own task rather than fixed here:
 - The Library opens below the fold. ⌥⌘K opens the shelf and picks the new
   component, and on a 900 pt window the shelf is off the bottom of the dock.
 - Text typed by hand keeps the screenshot contrast halo inside a component, so
-  a button label reads smudged. `StarterComponents` already strips it.
+  a button label reads smudged. `StarterComponents` already strips it. (Fixed:
+  "text inside a component is drawn clean", and again for screens in "text
+  typed on a screen is drawn clean", below.)
 
 ## Landed: layers line up with each other (Next, `next-align-layers`, 2026-09-03)
 
@@ -1364,9 +1366,9 @@ crisp beside them.
   that what is inside is a piece of UI, and a label on a control is not a
   caption over a screenshot. Copies count too: a copy is a group carrying
   `instanceOf`, so `Layer.isComponentRoot` covers the original and the copies.
-- **It is read at draw time and erases nothing.** `Layer.drawnShadow(insideComponent:)`
-  is the whole rule, and `DocumentRenderer` carries an `insideComponent` flag down
-  the tree. Make Component never edits your text, so taking it back out draws the
+- **It is read at draw time and erases nothing.** `Layer.drawnShadow(onDesignedSurface:)`
+  is the whole rule, and `DocumentRenderer` carries an `onDesignedSurface` flag
+  down the tree. Make Component never edits your text, so taking it back out draws the
   halo again with no undo history and no re-derived values. Nothing bakes into
   pixels.
 - **A shadow somebody chose still draws.** Only the automatic halo steps aside,
@@ -1378,11 +1380,10 @@ crisp beside them.
   rule, so a label never sprouts a halo in a thumbnail the canvas does not show.
 - Nothing in Current changes: components only exist in Next.
 
-Deliberately left: text typed straight onto a Frame — a screen rather than a
-component — still wears the halo, which is the same complaint one level up and
-is filed on its own. And a halo somebody had already tuned by hand before
-promoting keeps drawing inside the component, because by then it is a shadow
-they chose.
+Deliberately left: a halo somebody had already tuned by hand before promoting
+keeps drawing inside the component, because by then it is a shadow they chose.
+Text typed straight onto a screen was left out of this slice and picked up by
+"text typed on a screen is drawn clean" below.
 
 Walked by `Scripts/playtest/component-text-halo-walk.json`.
 
@@ -1434,3 +1435,42 @@ to hold a component in the air and photograph what the canvas draws.
 
 Not in this slice: style tiles, which do not drag at all — a named color has
 nothing to land on, it paints what is already selected.
+
+## Landed: text typed on a screen is drawn clean (Next, `next-frames`, 2026-09-03)
+
+The halo rule, widened one level up. Text inside a component was already drawn
+without the automatic contrast halo; a heading typed straight onto a screen you
+are designing still wore it, and on any surface that is not white it read as a
+smudge behind the words.
+
+- **The trigger is a painted surface, not a frame.** A frame counts when it
+  paints a background, which is what a screen made with the frame tool does.
+  Frame Selection deliberately paints nothing — it draws a boundary around work
+  that already exists — so a caption on a screenshot somebody wrapped in a
+  frame keeps its halo, which is the whole reason the halo exists. Making the
+  trigger "is a frame" would have taken the halo off exactly the captions that
+  need it.
+- **One predicate, one flag.** `Layer.paintsSurface` (a frame with a
+  `backgroundHex`) joins `isComponentRoot` in `Layer.startsDesignedSurface`, and
+  `PhotonzDocument.isOnDesignedSurface(_:)` answers for a layer anywhere in the
+  tree. The renderer's flag and `Layer.drawnShadow(…)` were renamed from
+  `insideComponent` to `onDesignedSurface` so the name still tells the truth.
+- **Plain groups in between change nothing.** A group moves no pixels, so text
+  in a row inside a screen is still on that screen.
+- **Still read at draw time, still erases nothing.** Dragging text onto a screen
+  drops the halo, dragging it back off puts it back, and clearing a screen's
+  surface puts it back too, with no undo history and no baked pixels. A shadow
+  somebody chose still draws, and the Shadow switch keeps reading what is
+  actually drawn.
+
+**Where it lives.** `Components.swift` in `PhotonzCore`;
+`DocumentRenderer.swift`; `LayersPanel.swift` (the Shadow switch). Tested in
+`TextHaloTests` and `TextHaloRenderTests`. Walked by
+`Scripts/playtest/screen-text-halo-walk.json`, which paints a screen a strong
+colour first — on a white screen a white halo behind dark text cannot be seen
+at all, which is why the complaint only bites once a screen has a surface.
+
+Deliberately left: a screenshot placed inside a painted screen with a caption
+laid over it loses that caption's halo, because the rule reads the container,
+not what is under each word. Turning the Shadow switch on gives that caption a
+real shadow, which is the way back.

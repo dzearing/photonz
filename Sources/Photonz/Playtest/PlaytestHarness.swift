@@ -498,6 +498,10 @@ private final class Run {
             case .ungroup: editor.ungroupSelection()
             case .copyLayer: editor.copySelectedLayer()
             case .pasteLayer: editor.paste()
+            case .paintScreenSurface:
+                if let id = editor.selectedLayerID, editor.document?.layer(id: id)?.isFrame == true {
+                    editor.setFrameBackground(id: id, hex: "#3B82F6")
+                }
             case .newFrameDialog: editor.isNewFrameDialogPresented = true
             case .frameSelection: editor.frameSelection()
             case .makeComponent: editor.makeComponent()

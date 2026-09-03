@@ -8,8 +8,8 @@ import PhotonzCore
 /// white, so any pixel inside the button that is lighter than the fill can only
 /// have come from it. Antialiasing between black glyphs and red fill never
 /// raises green or blue, so the test cannot mistake a soft edge for a smudge.
-@Suite("Component text halo, drawn")
-struct ComponentTextHaloRenderTests {
+@Suite("Text halo, drawn")
+struct TextHaloRenderTests {
 
     private let renderer = DocumentRenderer()
 
@@ -100,6 +100,57 @@ struct ComponentTextHaloRenderTests {
         #expect(lightPixels(try #require(renderer.render(doc, store: ImageStore()))) == 0)
 
         _ = doc.ungroupLayers(ids: [group])
+        #expect(lightPixels(try #require(renderer.render(doc, store: ImageStore()))) > 0)
+    }
+
+    // MARK: - Screens
+
+    /// A phone-sized screen painted pure red with a black heading typed onto
+    /// it: the same trick as the button, one level up.
+    private func screenDocument(background: String?) -> PhotonzDocument {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 200, height: 100))
+        let made = doc.addFrame(name: "Screen", origin: CGPoint(x: 20, y: 20),
+                                size: CGSize(width: 160, height: 60),
+                                backgroundHex: background)
+        if background == nil {
+            // Nothing painted, so give the text something red to sit on, the
+            // way a screenshot dropped inside a boundary would.
+            _ = doc.addLayer(button(CGRect(x: 0, y: 0, width: 160, height: 60)), toGroup: made.id)
+        }
+        _ = doc.addLayer(label("Settings", at: CGPoint(x: 40, y: 18)), toGroup: made.id)
+        return doc
+    }
+
+    @Test func textTypedOnAScreenDrawsClean() throws {
+        let image = try #require(renderer.render(screenDocument(background: "#FF0000"),
+                                                 store: ImageStore()))
+        #expect(lightPixels(image) == 0)
+    }
+
+    @Test func aBoundaryThatPaintsNothingLeavesTheHaloAlone() throws {
+        let image = try #require(renderer.render(screenDocument(background: nil),
+                                                 store: ImageStore()))
+        #expect(lightPixels(image) > 0)
+    }
+
+    @Test func aGroupInsideAScreenIsStillOnTheScreen() throws {
+        var doc = screenDocument(background: "#FF0000")
+        let labelID = try #require(doc.frames.first?.children.first(where: \.isText)?.id)
+        _ = doc.groupLayers(ids: [labelID], name: "Row")
+        #expect(lightPixels(try #require(renderer.render(doc, store: ImageStore()))) == 0)
+    }
+
+    @Test func clearingTheScreensSurfaceBringsTheHaloBack() throws {
+        var doc = screenDocument(background: "#FF0000")
+        let frameID = try #require(doc.frames.first?.id)
+        #expect(lightPixels(try #require(renderer.render(doc, store: ImageStore()))) == 0)
+
+        // No surface, so the screen is a boundary again and the text is a
+        // caption over whatever shows through. Painted red first so the halo
+        // has something to be lighter than.
+        _ = doc.addLayer(button(CGRect(x: 0, y: 0, width: 160, height: 60)),
+                         toGroup: frameID, at: 0)
+        doc.setFrameBackground(id: frameID, hex: nil)
         #expect(lightPixels(try #require(renderer.render(doc, store: ImageStore()))) > 0)
     }
 }

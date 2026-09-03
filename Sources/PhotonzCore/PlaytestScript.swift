@@ -284,6 +284,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// cannot reach with the pointer, so this is how a walk proves a rule set
     /// by hand survives the next resize.
     case stretchSelectionAcross
+    /// Paint the selected screen's surface a strong colour, which is what the
+    /// Frame section's Background swatch does. The swatch is in the dock,
+    /// which a walk cannot reach with the pointer, and a white screen is the
+    /// one surface a white halo behind dark text cannot be seen against, so
+    /// this is how a walk photographs the halo rule at all.
+    case paintScreenSurface
     /// Put every sheet away. Escape reaches the window, not the sheet in front
     /// of it, so a walk that photographs a sheet needs a way back out.
     case closeSheets

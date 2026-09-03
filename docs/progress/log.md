@@ -6503,3 +6503,42 @@ and `ShapeSettingsNamingTests`); `shape-settings-walk.json` on the probe with
 Screen Recording granted, run against both the old and new code for before and
 after pictures; `styles-walk`, `multi-style-walk` and `starter-components-walk`
 still pass. Audit: `queue/audits/2026-09-03-shape-settings.json`.
+
+## 2026-09-03 — text typed on a screen is drawn clean
+
+The halo rule, widened one level up (queue task
+`text-you-type-on-a-screen-does-not-wear-the-scre`). Text inside a component
+was already drawn without the automatic contrast halo every text layer is born
+wearing; a heading typed straight onto a screen still wore it, and on any
+surface that is not white it read as a smudge behind the words.
+
+The task noted the open question, and the answer was already sitting in the
+code: the trigger is a screen that PAINTS a surface, not a frame. The frame tool
+paints white by default, while Frame Selection deliberately paints nothing,
+because it draws a boundary around work that already exists and "a white sheet
+appearing behind a screenshot would be a surprise". So a caption on a screenshot
+somebody wrapped in a frame keeps its halo, which is the whole reason the halo
+exists, and making the trigger "is a frame" would have taken it off exactly the
+captions that need it. No decision card was needed.
+
+`Layer.paintsSurface` joins `isComponentRoot` in `Layer.startsDesignedSurface`;
+`PhotonzDocument.isOnDesignedSurface(_:)` answers for a layer anywhere in the
+tree; the renderer's flag and `Layer.drawnShadow(…)` were renamed from
+`insideComponent` to `onDesignedSurface` so the name still tells the truth. A
+plain group in between changes nothing. Still read at draw time and still erases
+nothing: dragging text onto a screen drops the halo, dragging it back off puts
+it back, and clearing a screen's surface puts it back too.
+
+Next: nothing here is blocked. Two things left rough and named in the audit — on
+a white screen the change is invisible, because a white halo behind dark text
+cannot be seen against white, so the complaint only bites once a screen has a
+colour; and the rule reads the container rather than what is under each word, so
+a caption laid over a screenshot placed INSIDE a painted screen comes out clean
+(the Shadow switch is the way back, and nothing says so).
+
+Verified: `Scripts/test.sh` green (2179 tests, 11 new across `TextHaloTests` and
+`TextHaloRenderTests`, both renamed from their component-only versions);
+`screen-text-halo-walk.json` on the probe with Screen Recording granted, run
+against both the new code and a scratch build with the rule switched off, for
+real before and after pictures. Audit:
+`queue/audits/2026-09-03-screen-text-halo.json`.
