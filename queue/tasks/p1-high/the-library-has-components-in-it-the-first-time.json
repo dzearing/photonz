@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 140,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T00:04:07.298Z",
-  "updated": "2026-09-03T05:29:27.592634Z",
+  "updated": "2026-09-03T05:42:22.594Z",
   "deps": [
     "an-instance-can-be-changed-without-leaving-the-f",
     "a-color-can-be-saved-as-a-named-style-and-reused"
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-03T05:29:27.592634Z",
       "note": "visual direction decided rather than blocked: a neutral kit, obviously a starting point, not a convincing macOS control. A believable macOS button invites people to expect real macOS behavior we do not have. It is one table of colors and sizes to change, so the question goes to the user as an audit line rather than holding the whole feature behind a card."
+    },
+    {
+      "t": "2026-09-03T05:42:22.593Z",
+      "note": "Five starter components ship on the Library's Components shelf (Button, Text Field, Card, Nav Bar, Badge), behind next-starter-components, on by default in Next. Model in PhotonzCore/StarterComponents.swift; shelf, tile and picked-starter section in LibraryPanel/ComponentPanel; one placeComponent path for drag, double click and the Layer menu. A starter's id is its component id, so the first drop brings the original in and every later drop is a copy; the drop adopts the named styles it paints from, matching by id then by name. Verified: 20 StarterComponentTests + 5 StarterComponentRenderTests written first, full suite green at 1852, and Scripts/playtest/starter-components-walk.json driven on the probe with real screenshots (Screen Recording granted). Audit at queue/audits/2026-09-03-starter-components.json."
     }
   ],
-  "started": "2026-09-03T05:22:52.975Z"
+  "started": "2026-09-03T05:22:52.975Z",
+  "completed": "2026-09-03T05:42:22.594Z"
 }
