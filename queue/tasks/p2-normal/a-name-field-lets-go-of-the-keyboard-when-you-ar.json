@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 790,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:13:03.353Z",
-  "updated": "2026-09-03T11:51:30.523003Z",
+  "updated": "2026-09-03T11:52:13.643Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The number fields go through NumberFieldEntry (PhotonzCore) plus the numberFieldKeys modifier and KeyboardHandback.toCanvas() in Sources/Photonz/KeyboardHandback.swift. Candidates: ComponentPanel.swift:702 (the override field, seen keeping the keyboard in component-end-to-end-walk step 5), ComponentPanel.swift:557, ColorStylePanel name fields, ColorPickerPopover hex field. Careful: the Layers and Measurements rename fields already disappear on commit, so they need nothing; a name is not a number, so decide whether Escape reverting is right for each.",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-03T11:51:30.523003Z",
       "note": "audit: queue/audits/2026-09-03-name-fields.json with three real screen captures (Screen Recording was granted)."
+    },
+    {
+      "t": "2026-09-03T11:52:13.642Z",
+      "note": "Every word field now finishes like a number field: Return lands it, Escape puts back what was there, both hand the keyboard to the picture. NameFieldEntry (PhotonzCore, 7 tests) plus a nameFieldKeys modifier wired into ten fields, from a copy's label to the Library search box. Verified with Scripts/playtest/name-field-handback.json and name-field-handback-redline.json (every stage reads firstResponder=CanvasNSView and the next tool letter changes the tool), 13 regression walks and 2083 tests green. Audit: queue/audits/2026-09-03-name-fields.json. Committed as b4e804d."
     }
   ],
-  "started": "2026-09-03T11:29:30.566Z"
+  "started": "2026-09-03T11:29:30.566Z",
+  "completed": "2026-09-03T11:52:13.643Z"
 }
