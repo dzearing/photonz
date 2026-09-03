@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 7,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:39:20.843Z",
-  "updated": "2026-09-03T14:03:12.513Z",
+  "updated": "2026-09-03T14:03:46.422Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-03 with a screenshot of a selected rectangle: what is annotation, is this Rectangle properties, there are swatches without labels and I do not know what they mean, presets are not scoped to the type of thing (a foreground colour should only offer foreground presets, a surface colour only surface ones), and the layout looks janky. What the code actually does, verified by reading: the section title comes from LayersPanel.swift line 448 which returns the literal Annotation for the .annotation case, an internal content-kind name rather than the shape. The two words the user read as labels, Border and Surface, are the NAMES OF SAVED COLOUR STYLES the user made: ColorStyleRow deliberately replaces a row label with the bound style name (LayersPanel.swift around 1620 and ColorStylePanel.swift ColorStyleRow, comment: a raw colour keeps its well, a colour wearing a style says the style name instead). That is the confusion: the slot loses its name exactly when a style is applied. The menu lists every style regardless of slot: ColorStylePanel.swift ColorStyleControl reads editorState.colorStyles and ForEach over all of them with no filter, so a fill style can be bound to a stroke. Scoping needs a notion of what a style is FOR; decide whether that is a kind stored on the style, or inferred from where it was first saved, and open a decision card if the answer changes what the user has to do when saving one. The janky look comes from the HStack with a Spacer and top alignment around line 1633 rather than a shared label column. Ships behind next-styles. Check the same title bug for measure, text and callout sections while there.\n\nDONE 2026-09-03. Roles are two, not three: ColorStyleRole.ink covers stroke and text, .surface covers fill. Stored as an optional list on ColorStyle so an old style writes no key; effectiveColorStyleRoles derives an answer for one that has none (starter id first, then the slots already binding it, then everywhere) so nothing migrates on open. ColorPartLayout / ColorPartRow in ColorStylePanel.swift are the shared grid every color row now uses; the switch column must stay present-but-blank or the swatches misalign. Section naming is in LayersPanel.sectionTitle, gated on colorStylesEnabled purely to keep Current byte-identical.",
@@ -66,6 +66,10 @@
     {
       "t": "2026-09-03T14:03:12.513Z",
       "note": "verified: Scripts/test.sh green (2163 tests). shape-settings-walk.json on the probe with Screen Recording granted, run twice — once on this code and once with the change stashed — for real before and after pictures of the section for a rectangle, an ellipse and an arrow. styles-walk, multi-style-walk and starter-components-walk all still pass; useFirstColorStyle in the harness was taught to pick a slot and style that actually go together. Audit: queue/audits/2026-09-03-shape-settings.json with nine captures."
+    },
+    {
+      "t": "2026-09-03T14:03:46.421Z",
+      "note": "Section is named after the picked shape; every color carries a permanent part label on a shared label/switch/color/menu grid; a saved color's name wears a palette mark; menus are scoped to ink vs surface with Use it for in the style's own section. Core in PhotonzCore (ColorStyleRole, ShapeSettingsNaming), app in ColorStylePanel/LayersPanel/FrameInspector, gated on next-styles so Current is untouched. Verified: 2163 tests green, shape-settings-walk on the probe run against old and new code for real before/after captures, three existing style walks still pass. Audit queue/audits/2026-09-03-shape-settings.json"
     }
   ],
   "started": "2026-09-03T13:32:23.981Z",
@@ -74,5 +78,6 @@
     "at": "2026-09-03T13:31:53.219Z",
     "exit": 1,
     "message": "API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com."
-  }
+  },
+  "completed": "2026-09-03T14:03:46.422Z"
 }
