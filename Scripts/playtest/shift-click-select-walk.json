@@ -1,0 +1,73 @@
+{
+  "out": "/tmp/photonz-playtest/shift-click-select",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 100], "to": [280, 160], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [150, 220], "to": [370, 280], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [100, 340], "to": [200, 400], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-drew", "note": "three rectangles: top, middle, bottom" },
+
+    { "do": "click", "at": [200, 130] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-one", "note": "a plain click on the top rectangle: selection should be that one layer and canGroup false" },
+
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-two", "note": "shift-click on the middle rectangle: selection should now be BOTH rectangles, canGroup true, and both should be outlined on the canvas" },
+    { "do": "snapshot", "name": "shift-3-two" },
+
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "4-dropped", "note": "shift-click the same rectangle again: it should drop out, leaving only the top one" },
+
+    { "do": "click", "at": [200, 130], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-empty", "note": "shift-click the last selected rectangle: nothing should be selected at all" },
+    { "do": "snapshot", "name": "shift-5-empty" },
+
+    { "do": "click", "at": [200, 130] },
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "menus", "stage": "6-layer-menu", "menu": "Layer" },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-grouped", "note": "Group over the two shift-clicked rectangles: the group should hold exactly those two and the bottom rectangle should still be loose" },
+    { "do": "snapshot", "name": "shift-7-grouped" },
+
+    { "do": "click", "at": [200, 130], "count": 2 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "8-inside", "note": "double click went inside the group: insideGroup should name it and the top rectangle alone should be selected" },
+
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "9-inside-two", "note": "shift-click inside the group adds its sibling: both group members selected, still insideGroup" },
+    { "do": "snapshot", "name": "shift-9-inside-two" },
+
+    { "do": "click", "at": [150, 370], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "10-stays-inside", "note": "shift-click the loose rectangle out on the canvas while inside the group: nothing should change, selection still the two group members and insideGroup still the group" },
+    { "do": "snapshot", "name": "shift-10-stays-inside" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "key", "key": "escape" },
+    { "do": "drag", "from": [600, 500], "to": [860, 640], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "11-swept", "note": "a marquee around nothing clears up; now sweep the lot" },
+    { "do": "drag", "from": [60, 60], "to": [860, 620], "steps": 12 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "12-swept", "note": "the sweep should hold the group and the loose rectangle" },
+    { "do": "snapshot", "name": "shift-12-swept" },
+
+    { "do": "click", "at": [150, 370], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "13-swept-drop", "note": "shift-click drops the loose rectangle out of the swept selection: the group alone should stay selected and outlined, and the rubber band should be gone" },
+    { "do": "snapshot", "name": "shift-13-swept-drop" }
+  ]
+}

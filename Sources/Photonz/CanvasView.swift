@@ -100,6 +100,7 @@ struct CanvasView: NSViewRepresentable {
     /// A click that resolved through the group walk: the layer it picked and
     /// the group it picked it inside.
     let onSelectLayerInGroup: (UUID?, UUID?) -> Void
+    let onExtendSelection: (UUID) -> Void
     /// Escape while inside a group: step out one level, leaving that group
     /// selected. Returns false at the top level, where Escape means what it
     /// always meant.
@@ -197,6 +198,7 @@ struct CanvasView: NSViewRepresentable {
         view.onCropCommit = onCropCommit
         view.onSelectLayer = onSelectLayer
         view.onSelectLayerInGroup = onSelectLayerInGroup
+        view.onExtendSelection = onExtendSelection
         view.onClickedNothing = onClickedNothing
         view.onExitGroup = onExitGroup
         view.onDragBegin = onDragBegin
@@ -258,6 +260,7 @@ final class CanvasNSView: NSView {
     var onCropCommit: (() -> Void) = {}
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
     var onSelectLayerInGroup: ((UUID?, UUID?) -> Void) = { _, _ in }
+    var onExtendSelection: ((UUID) -> Void) = { _ in }
     var onClickedNothing: (() -> Void) = {}
     var onExitGroup: (() -> Bool) = { false }
     var onDragBegin: ((UUID) -> Void) = { _ in }
@@ -1396,6 +1399,21 @@ final class CanvasNSView: NSView {
         }
         if let pick = groupAwarePick(at: p, zoom: viewport.zoom),
            let hit = document?.canvasLayer(id: pick.id) {
+            // ⇧-click adds what you clicked to the selection, or drops it when
+            // it is already in — the Layers list gesture, on the picture. It
+            // resolves through the same walk a plain click does, so at the top
+            // level you add whole groups and inside a group you add its own
+            // pieces. The press is swallowed either way: it is about what is
+            // selected, and starting a move here would drag one member of a
+            // selection out from under the rest.
+            if tool == .select, event.clickCount == 1,
+               event.modifierFlags.contains(.shift) {
+                if let extend = groupAwareExtend(at: p, zoom: viewport.zoom) {
+                    onExtendSelection(extend)
+                }
+                refreshOverlays()
+                return
+            }
             onSelectLayerInGroup(pick.id, pick.context)
             onDragBegin(hit.id)
             selectedLayerFrame = hit.frame
@@ -2482,38 +2500,50 @@ final class CanvasNSView: NSView {
         } else {
             antsDocPath = selection?.path
         }
-        guard let viewport, let docPath = antsDocPath else {
+        if let viewport, let docPath = antsDocPath {
+            // Document space → view space is a pure scale + translate (the view
+            // is flipped, so no y-inversion).
+            let docOrigin = viewport.viewPoint(fromDocument: .zero)
+            var docToView = CGAffineTransform(translationX: docOrigin.x, y: docOrigin.y)
+                .scaledBy(x: viewport.zoom, y: viewport.zoom)
+            let path = docPath.copy(using: &docToView) ?? docPath
+            selectionBaseLayer.path = path
+            selectionAntsLayer.path = path
+            selectionBaseLayer.isHidden = false
+            selectionAntsLayer.isHidden = false
+        } else {
             selectionBaseLayer.isHidden = true
             selectionAntsLayer.isHidden = true
+        }
+        refreshMultiSelectOutlines(marqueeRect: marqueeRect)
+    }
+
+    /// An outline around every layer in the multi-selection, so what is picked
+    /// is obvious on the picture and not just in the Layers list.
+    ///
+    /// Mid-sweep the set is derived live from the marquee rect; the rest of the
+    /// time it is the echoed selection state, whatever put it there — a
+    /// committed sweep, a ⇧-click on the canvas, a row click in the list. It
+    /// does NOT hang off the rubber band: a ⇧-click selection has no band, and
+    /// before this it drew nothing at all.
+    private func refreshMultiSelectOutlines(marqueeRect: CGRect?) {
+        // The region tools select pixels rather than layers, so their in-flight
+        // shape never outlines anything.
+        guard let viewport, let document, regionDrag == nil else {
             multiSelectOutlineLayer.isHidden = true
             return
         }
-        // Document space → view space is a pure scale + translate (the view
-        // is flipped, so no y-inversion).
-        let docOrigin = viewport.viewPoint(fromDocument: .zero)
-        var docToView = CGAffineTransform(translationX: docOrigin.x, y: docOrigin.y)
-            .scaledBy(x: viewport.zoom, y: viewport.zoom)
-        let path = docPath.copy(using: &docToView) ?? docPath
-        selectionBaseLayer.path = path
-        selectionAntsLayer.path = path
-        selectionBaseLayer.isHidden = false
-        selectionAntsLayer.isHidden = false
-
-        // Rubber-band capture (arrow marquee only — the region tools select
-        // pixels, not layers): outline every captured layer so it's obvious
-        // what the marquee holds. Mid-drag the capture is derived live from
-        // the rect; once committed it's the echoed selection state, which
-        // survives rect-independent edits (a hidden member stays outlined).
+        let captured = marquee != nil
+            ? marqueeRect.map { Set(document.layerIDs(fullyInside: $0)) } ?? []
+            : multiSelectedLayerIDs
         let outlines = CGMutablePath()
-        if let document, regionDrag == nil {
-            let captured = marquee != nil
-                ? marqueeRect.map { Set(document.layerIDs(fullyInside: $0)) } ?? []
-                : multiSelectedLayerIDs
-            for layer in document.layers where captured.contains(layer.id) {
-                let corners = layer.transformedCorners.map { viewport.viewPoint(fromDocument: $0) }
-                outlines.addLines(between: corners)
-                outlines.closeSubpath()
-            }
+        // Canvas coordinates, so a member that lives inside a group is outlined
+        // where it draws rather than where it is stored.
+        for id in captured.sorted(by: { $0.uuidString < $1.uuidString }) {
+            guard let layer = document.canvasLayer(id: id) else { continue }
+            let corners = layer.transformedCorners.map { viewport.viewPoint(fromDocument: $0) }
+            outlines.addLines(between: corners)
+            outlines.closeSubpath()
         }
         multiSelectOutlineLayer.path = outlines
         multiSelectOutlineLayer.isHidden = outlines.isEmpty

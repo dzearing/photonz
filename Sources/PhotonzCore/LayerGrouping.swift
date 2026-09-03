@@ -114,6 +114,25 @@ extension PhotonzDocument {
         return (outermost.id, nil)
     }
 
+    /// What a ⇧-click adds to the selection, or drops from it.
+    ///
+    /// A ⇧-click extends the selection at the level you are already on, and
+    /// only there: at the top level it picks whole groups, the way a plain
+    /// click does, and inside a group it picks that group's own pieces. A
+    /// ⇧-click that lands anywhere else — out on the canvas while you are
+    /// inside a group — returns nil and does nothing, because the alternative
+    /// is a selection made of layers from two different lists and a silent
+    /// step back out of the group you were working in. Nil too when nothing
+    /// was hit.
+    public func extendTarget(at point: CGPoint, zoom: CGFloat = 1,
+                             inside context: UUID?) -> UUID? {
+        // A context whose group has since gone means the top level.
+        let level = context.flatMap { layer(id: $0) != nil ? $0 : nil }
+        guard let pick = selectionTarget(at: point, zoom: zoom, inside: level),
+              pick.context == level else { return nil }
+        return pick.id
+    }
+
     /// What a double click selects: one level deeper than a plain click would
     /// go. Returns the layer that becomes selected and the group that becomes
     /// the new context, or nil when there is nothing deeper under the pointer —

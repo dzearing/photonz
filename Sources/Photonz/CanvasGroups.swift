@@ -26,6 +26,15 @@ extension CanvasNSView {
         return document.selectionTarget(at: point, zoom: zoom, inside: groupContext)
     }
 
+    /// The layer a ⇧-click adds to the selection, or drops from it. Nil when
+    /// the click cannot join the selection where you already are — nothing
+    /// under the pointer, or the canvas outside the group you are inside.
+    func groupAwareExtend(at point: CGPoint, zoom: CGFloat) -> UUID? {
+        guard let document else { return nil }
+        guard groupSelectionEnabled else { return document.hitTest(point, zoom: zoom)?.id }
+        return document.extendTarget(at: point, zoom: zoom, inside: groupContext)
+    }
+
     /// The layer a DOUBLE click selects: one level deeper than a plain click.
     /// Nil when there is nothing left to go into, which is when a double click
     /// keeps meaning what it always meant — opening a text layer to type, or an

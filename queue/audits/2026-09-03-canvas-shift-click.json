@@ -1,0 +1,28 @@
+{
+  "feature": "Shift-click to pick more than one thing on the canvas",
+  "epic": "ui-components",
+  "summary": "Shift-clicking a layer on the picture adds it to what is already picked, and shift-clicking a picked one drops it. Picking exactly two things to group is now two clicks instead of a marquee sweep that takes in whatever else was nearby.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing new to turn on; it rides the same layer groups flag that Group and Ungroup do.",
+  "try": [
+    { "do": "Draw three rectangles on a blank canvas, spread apart." },
+    { "do": "Click the top one, then shift-click the middle one.", "shot": "2026-09-03-canvas-shift-click-1.png" },
+    { "do": "Press Command G, then Command Z to put it back." },
+    { "do": "Shift-click the middle one again to drop it, then shift-click the top one to end up with nothing picked." },
+    { "do": "Pick two, group them, then double-click into the group and shift-click its other piece.", "shot": "2026-09-03-canvas-shift-click-2.png" },
+    { "do": "Still inside the group, shift-click the loose rectangle out on the canvas." },
+    { "do": "Escape twice, sweep a marquee around everything, then shift-click one layer to drop it out of the sweep." }
+  ],
+  "evaluate": [
+    "Is the dashed outline enough to tell what is picked, or do you want the same handles a single selection gets?",
+    "Shift-clicking out on the canvas while you are inside a group does nothing at all. Is that the right answer, or should it pull you out of the group and pick that layer?",
+    "When you drop back to one picked layer the handles reappear on it. Does that feel like the right landing point?",
+    "Does the last step (dropping one layer out of a marquee sweep) read correctly, with the rubber band coming down as the selection changes?",
+    "Would you reach for shift-click before the marquee now, or does the marquee still feel faster for a cluster?"
+  ],
+  "rough": [
+    "You still cannot DRAG a multi-selection on the canvas: pressing on any picked layer throws the rest away and moves that one alone. That was already true of a marquee selection, but shift-click makes it much easier to walk into. Filed as its own task (drag-a-multi-selection-on-the-canvas-and-everyth).",
+    "A shift-click that lands on empty canvas still clears everything, because shift over empty space means constrain-the-band-to-a-square. So a shift-click a few pixels off a layer's edge loses the picking you just did. Filed as its own task (shift-dragging-a-marquee-adds-what-it-sweeps-to).",
+    "Fixed along the way: a multi-selection made anywhere but a marquee drew NO outlines on the canvas at all. Shift-clicking in the Layers list highlighted rows and lit up the menus while the picture showed nothing. The outlines used to hang off the marquee's rubber band; now they hang off the selection.",
+    "Screen Recording was granted for this run, so both shots above are real window captures, not offscreen renders."
+  ]
+}

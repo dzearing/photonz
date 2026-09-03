@@ -1120,6 +1120,21 @@ private final class Run {
             "measures": measures,
             "arrows": arrows,
             "selected": editor.selectedLayerID?.uuidString ?? "nil",
+            // Everything the Layers menu would act on, by name and in draw
+            // order: one layer clicked, several ⇧-clicked, or a whole sweep.
+            // This is what a walk reads to prove a ⇧-click added rather than
+            // replaced.
+            "selection": {
+                let picked = editor.actionableLayerIDs
+                return (editor.document?.allLayers ?? [])
+                    .filter { picked.contains($0.id) }.map(\.name)
+            }(),
+            // The group you are inside, nil out on the canvas.
+            "insideGroup": editor.groupContextID
+                .flatMap { editor.document?.layer(id: $0)?.name } ?? "nil",
+            // Whether Layer ▸ Group would do anything, which is exactly what
+            // that menu row dims itself on.
+            "canGroup": editor.canGroupSelection,
             "legend": editor.measureLegendEntries.map(\.label),
             "legendAnchor": editor.measureLegendAnchor.rawValue,
             "legendTopInset": editor.measureLegendTopInset,

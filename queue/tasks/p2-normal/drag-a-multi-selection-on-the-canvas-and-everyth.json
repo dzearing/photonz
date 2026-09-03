@@ -1,0 +1,28 @@
+{
+  "id": "drag-a-multi-selection-on-the-canvas-and-everyth",
+  "title": "Drag a multi-selection on the canvas and everything picked moves",
+  "goal": "With several layers picked you can line them up and resize them from the panel, but dragging any one of them on the picture throws the rest away and moves that one alone. Dragging should move everything you picked, together, in one undo step.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 840,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T08:21:42.624Z",
+  "updated": "2026-09-03T08:21:42.624Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CanvasView.mouseDown falls through to onSelectLayerInGroup + a single-layer MoveDrag whenever the pick hits a layer, so a press on a member of EditorState.multiSelectedLayerIDs collapses the selection. Needs a multi-layer move drag: one grab offset, every member offset by the same delta, committed through one History.perform (see EditorState.setLayerGeometry for the fold-into-one-perform pattern). Snapping peers should exclude every member. Noticed while building canvas shift-click (2026-09-03).",
+  "acceptance": [
+    "Pressing on any picked layer and dragging moves every picked layer by the same amount",
+    "The press keeps the selection instead of replacing it with the layer under the pointer",
+    "Undo puts all of them back in one step",
+    "Dragging a layer that is NOT picked still selects and moves just that one"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T08:21:42.624Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -226,6 +226,47 @@ struct LayerGroupingTests {
         #expect(hit?.context == nil)
     }
 
+    // MARK: - ⇧-click adds to the selection at the level you are on
+
+    @Test func shiftClickAddsTheOutermostThingYouAreNotInside() {
+        let doc = makeTree()
+        #expect(doc.extendTarget(at: CGPoint(x: 150, y: 150), inside: nil) == id(doc, "Card"))
+        #expect(doc.extendTarget(at: CGPoint(x: 350, y: 350), inside: nil) == id(doc, "Back"))
+    }
+
+    @Test func shiftClickOnEmptyCanvasAddsNothing() {
+        var doc = makeTree()
+        doc.removeLayer(id: id(doc, "Back"))
+        #expect(doc.extendTarget(at: CGPoint(x: 350, y: 350), inside: nil) == nil)
+    }
+
+    @Test func insideAGroupShiftClickAddsThatGroupsOwnPieces() {
+        let doc = makeTree()
+        let card = id(doc, "Card")
+        #expect(doc.extendTarget(at: CGPoint(x: 150, y: 150), inside: card) == id(doc, "Box"))
+        // Two levels down still resolves to the piece Card holds, exactly as a
+        // plain click does.
+        #expect(doc.extendTarget(at: CGPoint(x: 115, y: 115), inside: card) == id(doc, "Badge"))
+    }
+
+    @Test func insideAGroupShiftClickNeverReachesBackOutToTheCanvas() {
+        let doc = makeTree()
+        // A plain click out here would leave the group; a ⇧-click cannot,
+        // because the selection it is extending lives inside Card.
+        #expect(doc.selectionTarget(at: CGPoint(x: 350, y: 350), inside: id(doc, "Card"))?.id
+                == id(doc, "Back"))
+        #expect(doc.extendTarget(at: CGPoint(x: 350, y: 350), inside: id(doc, "Card")) == nil)
+    }
+
+    @Test func shiftClickForgetsAStaleContext() {
+        var doc = makeTree()
+        let card = id(doc, "Card")
+        doc.ungroupLayers(ids: [card])
+        // The group is gone, so "inside Card" means the top level now, and the
+        // click extends there rather than going dead.
+        #expect(doc.extendTarget(at: CGPoint(x: 150, y: 150), inside: card) == id(doc, "Box"))
+    }
+
     // MARK: - Double click goes one level deeper
 
     @Test func doubleClickOnAGroupSelectsThePieceUnderThePointer() {

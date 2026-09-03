@@ -6088,3 +6088,50 @@ code. `EditorCommands.swift` is untouched.
 
 **Next.** The audit asks whether an opt-in foreground playtest mode is worth
 building, or whether walks should simply never claim to check window shortcuts.
+
+## 2026-09-03 — Shift-click picks more than one thing on the canvas
+
+**Why.** The marquee was the only way to pick two layers on the picture, and a
+band takes in whatever else is nearby, so reaching ⌘G meant tidying up first.
+The Layers list has had the gesture all along.
+
+**Before building.** Shift on the canvas is already busy — square-constrain a
+band, snap a rotation, keep aspect on a resize, constrain an endpoint — but
+every one of those gestures starts on a handle, a knob or empty space, so a
+shift-press on a LAYER was free. The branch sits after the handle checks, and it
+swallows the press rather than starting a drag: the canvas has no multi-layer
+move yet, so dragging after a shift-click would pull one member out from under
+the rest.
+
+The review also turned up the real blocker. A multi-selection made anywhere but
+a marquee drew NOTHING on the canvas: the outlines hung off the marching-ants
+path, so a shift-click in the Layers list lit up rows and menus while the
+picture showed nothing at all.
+
+**What shipped.** `PhotonzDocument.extendTarget` (test-first, five cases in
+`LayerGroupingTests`) resolves a ⇧-click at the level you are already on: whole
+groups at the top, a group's own pieces inside it, and nil anywhere else, so a
+⇧-click out on the canvas while you are inside a group does nothing instead of
+building a selection out of two different lists. `CanvasGroups.groupAwareExtend`
+is the flag-aware wrapper, `CanvasView.mouseDown` gains the branch, and
+`EditorState.extendSelection(toLayer:)` runs the same `ListSelection` toggle a
+row click runs — anchor and all, so the list carries on where the canvas left
+off — and takes down a rubber band that no longer describes the selection. The
+multi-select outlines now follow the selection rather than the band, and read
+canvas coordinates, so a member inside a group is outlined where it draws.
+`describe()` in the playtest harness gained `selection`, `insideGroup` and
+`canGroup`, which is what a walk reads to prove a ⇧-click added rather than
+replaced.
+
+**Verified.** `Scripts/playtest/shift-click-select-walk.json` on the probe with
+real window captures: two picked and Group live after a ⇧-click, dropping one
+leaves one, dropping the last leaves nothing, ⌘G makes a group of exactly those
+two with the third still loose, inside a group a ⇧-click adds the sibling and
+one out on the canvas changes nothing, and dropping a layer out of a marquee
+sweep leaves the rest outlined with the band gone. `Scripts/test.sh` green,
+1938 tests. Audit: `queue/audits/2026-09-03-canvas-shift-click.json`.
+
+**Next.** Two gaps filed rather than fixed here: a multi-selection still cannot
+be dragged on the canvas (a press on any member collapses the selection), and a
+⇧-click that lands on empty canvas still clears everything, because ⇧ over empty
+space means constrain-the-band-to-a-square.

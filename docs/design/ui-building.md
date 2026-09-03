@@ -331,6 +331,17 @@ Nesting needs a way in and a way out, and both keys are already busy.
   to the top level, so there is always a second way out besides Escape. Clicking
   a sibling of the piece you have selected keeps you at that level rather than
   throwing you to the top.
+- **⇧-click adds what you clicked to the selection**, or drops it when it is
+  already in (2026-09-03). Before this the only way to pick two things on the
+  canvas was to sweep a marquee around them, which takes in whatever else is
+  nearby, so reaching ⌘G meant tidying up first. The gesture is the Layers
+  list's, on the picture: it resolves through the same walk a plain click does,
+  so at the top level you add whole groups and inside a group you add its own
+  pieces. It extends the selection at the level you are on and only there: a
+  ⇧-click out on the canvas while you are inside a group does nothing, because
+  the alternative is a selection made of layers from two different lists and a
+  silent step back out of the group you were working in. And it never starts a
+  drag — the press is about what is selected.
 
 ## The flag each step ships behind
 

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 670,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T02:06:28.199Z",
-  "updated": "2026-09-03T02:06:28.199Z",
+  "updated": "2026-09-03T08:22:22.919055Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed out of group-and-ungroup-what-you-selected (2026-09-03): the marquee is currently the only canvas path to a multi-selection, which makes reaching Command G clumsier than it should be. CanvasView.mouseDown resolves a plain click through CanvasGroups.groupAwarePick and calls onSelectLayerInGroup; the modifier flags are already on the event and are ignored there. EditorState.multiSelectedLayerIDs is the store, and ListSelection already has the toggle behaviour the Layers list uses. Keep the group walk: a shift-click resolves through the same selectionTarget so it picks whole groups at the top level and siblings inside one.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-03T02:06:28.199Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T08:12:26.877Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T08:22:22.919055Z",
+      "note": "review before building: shift on the canvas is already busy (square-constrain a band, snap a rotation, keep aspect on a resize, constrain an endpoint) but every one of those starts on a handle, a knob or empty space, so a shift-press on a LAYER was free. Put the branch after the handle checks so shift-resize still works."
+    },
+    {
+      "t": "2026-09-03T08:22:22.919055Z",
+      "note": "review before building: a shift-click must NOT start a move drag. The canvas has no multi-layer drag yet, so dragging after one would pull a single member out from under the rest. The press is swallowed."
+    },
+    {
+      "t": "2026-09-03T08:22:22.919055Z",
+      "note": "review before building: found the real blocker. A multi-selection made anywhere but a marquee drew nothing on the canvas: the outlines hung off the marching-ants path, so with no rubber band there were no outlines. Shift-clicking in the Layers list already had this bug. Split the outlines out so they follow the selection."
+    },
+    {
+      "t": "2026-09-03T08:22:22.919055Z",
+      "note": "built: PhotonzDocument.extendTarget (test-first, 5 cases in LayerGroupingTests) resolves a shift-click at the level you are on and returns nil anywhere else; CanvasGroups.groupAwareExtend is the flag-aware wrapper; CanvasView.mouseDown gains the branch + onExtendSelection; EditorState.extendSelection runs the same ListSelection toggle a row click runs and takes down a rubber band that no longer describes the selection."
+    },
+    {
+      "t": "2026-09-03T08:22:22.919055Z",
+      "note": "verified on the probe with Scripts/playtest/shift-click-select-walk.json (real window captures, Screen Recording granted): 2 picked and canGroup true after a shift-click; dropping one leaves one; dropping the last leaves nothing; Group makes a group of exactly those two with the third still loose; inside a group shift-click adds the sibling and a shift-click out on the canvas changes nothing; dropping a layer out of a marquee sweep leaves the rest outlined with the band gone."
+    },
+    {
+      "t": "2026-09-03T08:22:22.919055Z",
+      "note": "review of the built thing: two gaps I could not close in scope, both filed - a multi-selection still cannot be dragged on the canvas, and a shift-click that lands on empty canvas still clears everything. Scripts/test.sh green, 1938 tests."
     }
-  ]
+  ],
+  "started": "2026-09-03T08:12:26.876Z"
 }

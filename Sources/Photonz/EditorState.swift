@@ -3775,6 +3775,23 @@ final class EditorState {
         if id == nil { multiSelectedLayerIDs = [] }
     }
 
+    /// A ⇧-click on the canvas: adds the layer to the selection, or drops it
+    /// when it is already in. The canvas gesture the Layers list has always
+    /// had, so picking exactly two things to group is two clicks instead of a
+    /// sweep that takes in whatever else was nearby.
+    ///
+    /// The caller has already resolved the click at the level you are on
+    /// (`PhotonzDocument.extendTarget`), so this runs the same toggle a
+    /// ⌘-click on a row runs, anchor and all: carry on in the list and it
+    /// picks up where the canvas left off.
+    func extendSelection(toLayer id: UUID) {
+        clickRow(id, .toggle, in: [])
+        // Any rubber band on screen described the OLD selection. It does not
+        // describe this one, so it comes down rather than lying. A pixel
+        // region belongs to the region tools, not to layers: that one stays.
+        if selection != nil, !selectionTargetsPixels { setSelection(nil, captureLayers: false) }
+    }
+
     /// Escape, one level: leaves the group you are in with that group selected.
     /// Returns false when you are already at the top, which is when Escape
     /// means what it always meant (clear the selection).

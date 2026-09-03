@@ -249,6 +249,7 @@ struct EditorView: View {
                        onCropCommit: { editorState.commitCrop() },
                        onSelectLayer: { editorState.selectLayer($0) },
                        onSelectLayerInGroup: { editorState.selectLayer($0, inGroup: $1) },
+                       onExtendSelection: { editorState.extendSelection(toLayer: $0) },
                        onExitGroup: { editorState.exitGroupContext() },
                        onClickedNothing: { editorState.clearLibraryPick() },
                        onDragBegin: { editorState.beginLayerDrag(id: $0) },

@@ -1,0 +1,28 @@
+{
+  "id": "shift-dragging-a-marquee-adds-what-it-sweeps-to",
+  "title": "Shift-dragging a marquee adds what it sweeps to the selection",
+  "goal": "Sweeping a marquee always starts the selection over, and a shift-click on empty space throws the whole selection away, so one slightly-off click undoes careful picking. Holding shift while you sweep should add what the band takes in to what is already picked, and a shift-click that lands on nothing should leave the selection alone.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 850,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T08:21:50.865Z",
+  "updated": "2026-09-03T08:21:50.865Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Today shift over an empty press means constrain-the-band-to-a-square (CanvasView.mouseUp reads .shift for that), so the square constraint needs a new home or has to go. mouseDown else-branch calls onClickedNothing()/onSelectLayer(nil) before starting the MarqueeDrag, and mouseUp commits a click as commitSelection(nil, capture: true) which is what wipes the selection. EditorState.setSelection(_:captureLayers:) would need an additive mode that unions with multiSelectedLayerIDs. Noticed while building canvas shift-click (2026-09-03).",
+  "acceptance": [
+    "Shift-dragging a band on the canvas adds every layer it fully contains to the existing selection",
+    "A shift-click that lands on empty canvas leaves the selection exactly as it was",
+    "A plain sweep still replaces the selection the way it does today",
+    "The outlines after a shift-sweep show every picked layer, swept or clicked"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T08:21:50.865Z",
+      "note": "created (manual)"
+    }
+  ]
+}
