@@ -1,0 +1,27 @@
+{
+  "id": "duplicating-twice-does-not-make-two-rectangle-co",
+  "title": "Duplicating twice does not make two Rectangle copy",
+  "goal": "Duplicating a layer twice leaves two layers with exactly the same name, so the layers list shows the same row twice and you have to click each one to tell them apart. A copy should take a free name the way a newly drawn layer now does.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 970,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-03T22:02:21.768Z",
+  "updated": "2026-09-03T22:02:21.769Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of a-second-rectangle-is-not-called-rectangle (2026-09-03). New layers are numbered in PhotonzDocument.uniquelyNamed, called from addLayer/addLayerOnFrame. Duplicate does not go through those: Document.duplicateLayers, duplicateLayers(movingCopiesTo:) and duplicateLayer insert copies straight into the sibling list inside a walk, so the taken-name set is mid-flight and the rename has to happen in a pass after the walk. Layer.duplicated mints the name (name + \" copy\"), so the policy question is whether the second copy reads \"Rectangle copy 2\" or takes the next plain number.",
+  "acceptance": [
+    "Duplicating one layer twice gives two differently named copies",
+    "A copy of a layer a person named keeps that person name as its base",
+    "Undo puts the names back as they were"
+  ],
+  "log": [
+    {
+      "t": "2026-09-03T22:02:21.769Z",
+      "note": "created (manual)"
+    }
+  ]
+}

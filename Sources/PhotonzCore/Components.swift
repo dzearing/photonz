@@ -228,10 +228,9 @@ public enum ComponentNaming {
         isAutoGroupName(name) || isAutoName(name, stem: TextBuilder.defaultLayerName)
     }
 
-    /// "Stem", "Stem 2", "Stem 17": the shape every automatic name takes.
+    /// "Stem", "Stem 2", "Stem 17": the shape every automatic name takes, the
+    /// same shape `LayerNaming` mints them in.
     private static func isAutoName(_ name: String, stem: String) -> Bool {
-        guard name.hasPrefix(stem) else { return false }
-        let tail = name.dropFirst(stem.count).trimmingCharacters(in: .whitespaces)
-        return tail.isEmpty || Int(tail) != nil
+        LayerNaming.matches(name, stem: stem)
     }
 }

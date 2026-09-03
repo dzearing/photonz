@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 930,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T19:43:03.824Z",
-  "updated": "2026-09-03T21:51:09.478828Z",
+  "updated": "2026-09-03T21:51:25.036Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-03 during the stretched-words walk (Scripts/playtest/stretched-words-walk.json, stage 3-wider). The live snapshot words-3-wider-sc.png shows the frame background still 620x340 while the inspector reads 880x500 and the child text has already moved; the offscreen render words-3-wider-doc.png taken at the same step is correct, so the model and the renderer are right and the canvas view is serving something stale. Suspect the frame surface raster or the incremental RenderDiff path in DocumentRenderer/CanvasView rather than the frame model. Reproduce first: it may be a snapshot-timing artefact rather than a bug.",
@@ -37,12 +37,17 @@
     },
     {
       "t": "2026-09-03T21:51:09.478828Z",
-      "note": "Fix: RenderDiff.containerDrawsTheSame \u2014 the group fast path now also requires, for a frame, the same box size, the same surface colour and the same clip setting. Tests: 4 in RenderDiffTests, 3 in IncrementalRenderTests (cold-render oracle). Both resize tests fail with delta 161 when the fix is reverted, so they hold the line."
+      "note": "Fix: RenderDiff.containerDrawsTheSame — the group fast path now also requires, for a frame, the same box size, the same surface colour and the same clip setting. Tests: 4 in RenderDiffTests, 3 in IncrementalRenderTests (cold-render oracle). Both resize tests fail with delta 161 when the fix is reverted, so they hold the line."
     },
     {
       "t": "2026-09-03T21:51:09.478828Z",
       "note": "Verified live: Scripts/playtest.sh on a resize walk, real screen captures (Screen Recording granted). Widened to 880x500 and shrunk to 500x240, colour fills the outline exactly in both. Full suite 2464 tests green; interactive edit inside a plain group still 6.4ms median, so the fast path is intact. Audit at queue/audits/2026-09-03-screen-resize-repaint.json."
+    },
+    {
+      "t": "2026-09-03T21:51:25.035Z",
+      "note": "RenderDiff's group fast path now checks a frame's box size, surface colour and clip, so a corner resize repaints the screen's surface. 7 new tests (4 RenderDiff, 3 incremental-vs-cold-render); both resize tests fail with delta 161 when reverted. Verified live with a playtest and real screen captures at 880x500 and 500x240. Full suite 2464 green, perf unchanged. Audit: queue/audits/2026-09-03-screen-resize-repaint.json. Pushed as d1796a3."
     }
   ],
-  "started": "2026-09-03T21:44:46.170Z"
+  "started": "2026-09-03T21:44:46.170Z",
+  "completed": "2026-09-03T21:51:25.036Z"
 }

@@ -284,8 +284,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
 
     // MARK: - Layer mutation
 
+    /// Adds a layer to the canvas. A layer arriving under a name the app wrote
+    /// itself is numbered if that name is taken (`uniquelyNamed`), so a second
+    /// rectangle is called "Rectangle 2" rather than "Rectangle" again.
     public mutating func addLayer(_ layer: Layer, at index: Int? = nil) {
-        layers.insert(layer, at: index.map { min(max(0, $0), layers.count) } ?? layers.count)
+        layers.insert(uniquelyNamed(layer), at: index.map { min(max(0, $0), layers.count) } ?? layers.count)
     }
 
     /// Puts a layer inside a group, at `index` among the group's own children
@@ -295,8 +298,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     public mutating func addLayer(_ layer: Layer, toGroup groupID: UUID, at index: Int? = nil) -> Bool {
         guard let path = path(of: groupID), self.layer(atPath: path)?.isGroup == true,
               !layer.selfAndDescendants.contains(where: { $0.id == groupID }) else { return false }
+        let child = uniquelyNamed(layer)
         withChildren(atPath: path) { children in
-            children.insert(layer, at: index.map { min(max(0, $0), children.count) } ?? children.count)
+            children.insert(child, at: index.map { min(max(0, $0), children.count) } ?? children.count)
         }
         return true
     }

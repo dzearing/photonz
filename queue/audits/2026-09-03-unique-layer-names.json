@@ -1,0 +1,26 @@
+{
+  "feature": "Every new layer gets a name of its own",
+  "epic": "ui-components",
+  "summary": "New layers no longer share a name: the second rectangle you draw is called Rectangle 2, so the layers list, a component's choice menu and a pasted copy all read as different things without clicking each one.",
+  "setup": "Photonz Dev, any release. Nothing to turn on.",
+  "try": [
+    { "do": "Open a blank canvas (File > New Canvas, Return)." },
+    { "do": "Press R and drag out a box, then drag out a second one." },
+    { "do": "Look at the Layers list: they read Rectangle and Rectangle 2.", "shot": "2026-09-03-unique-layer-names-1.png" },
+    { "do": "Press O and drag an ellipse, then R and drag a third box: Ellipse, then Rectangle 3." },
+    { "do": "Double click the first row's name and type Hero, then press Return." },
+    { "do": "Draw one more box and watch the Hero row: it keeps its name.", "shot": "2026-09-03-unique-layer-names-2.png" },
+    { "do": "Select a box, press Command C then Command V: the pasted copy comes in under a free number, not the same name." }
+  ],
+  "evaluate": [
+    "Is Rectangle then Rectangle 2 what you expected, or would you rather the first one was Rectangle 1?",
+    "After renaming a box to Hero, the next box takes the freed name Rectangle rather than Rectangle 4. Does the list still read clearly, or should numbers only ever go up?",
+    "Should a pasted copy keep the name it was copied from instead of taking the next number?",
+    "Measurements are left alone, because a caliper row already reads as Width or Gap. Does that hold up when you have several on a capture?"
+  ],
+  "rough": [
+    "Duplicating with Command D still names both copies Rectangle copy. That path builds copies differently from every other new layer, so it is filed as its own task rather than half-done here.",
+    "Numbers are the lowest free one, not a running count, so deleting Rectangle and drawing another gives you Rectangle again above Rectangle 2. It keeps names short and never runs away, but the list order and the numbers do not agree.",
+    "Component copies deliberately keep the original's name: several copies of Button are all Button, which is how a copy is meant to read. Say so if that reads wrong in a busy list."
+  ]
+}

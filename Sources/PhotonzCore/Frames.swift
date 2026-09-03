@@ -146,7 +146,7 @@ extension PhotonzDocument {
             addLayer(layer)
             return nil
         }
-        var child = layer
+        var child = uniquelyNamed(layer)
         let origin = canvasBounds(of: frameID)?.origin ?? .zero
         child.frame = child.frame.offsetBy(dx: -origin.x, dy: -origin.y)
         updateLayer(id: frameID) { $0.children.append(child) }

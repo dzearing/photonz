@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 940,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T19:57:00.193Z",
-  "updated": "2026-09-03T19:57:00.194Z",
+  "updated": "2026-09-03T21:52:07.950Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the group override list (2026-09-03): the list named two pieces Rectangle and Rectangle and there was no way to tell which was which without clicking. Layer naming happens where new layers are made in EditorState; the Layers list has the same problem.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-03T19:57:00.194Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-03T21:52:07.950Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-03T22:02:34.567607Z",
+      "note": "Adversarial review before building: numbering everything would have broken two things. Measurements use their stock name (\"Measure\", \"Alignment\") as the signal that nobody renamed them, so a numbered caliper would have lost its derived row name (\"Width\", \"Gap\") \u2014 measurements are left out, and their rows already read as what they measure. Component copies deliberately share the original's name, so component and starter names are left out too. Only names the app writes are numbered, and only once, as the layer is filed."
+    },
+    {
+      "t": "2026-09-03T22:02:34.567607Z",
+      "note": "Built: LayerNaming (stems the app mints, and the \"Stem N\" shape) plus PhotonzDocument.uniquelyNamed, called from addLayer, addLayer(toGroup:) and addLayerOnFrame, so drawing, pasting, dropping a picture and every other new layer share one rule. ComponentNaming's private auto-name check now delegates to LayerNaming so there is one definition. 13 new tests in LayerNamingTests; whole suite 2477 tests green."
+    },
+    {
+      "t": "2026-09-03T22:02:34.567607Z",
+      "note": "Verified in the probe app (Scripts/playtest/unique-layer-names-walk.json): four shapes came out Rectangle, Rectangle 2, Ellipse, Rectangle 3; renaming the first to \"Renamed Layer\" survived the next draw; Command C / Command V gave \"Rectangle 4\" instead of a second \"Rectangle\". Screen Recording was granted, so the audit carries real captures."
+    },
+    {
+      "t": "2026-09-03T22:02:34.567607Z",
+      "note": "Review of the built thing: numbers are the lowest FREE one, not a running count, so after a rename the next box reuses \"Rectangle\" and sits above \"Rectangle 2\" in the list. Kept (names stay short and never run away) and raised in the audit. Duplicate (Command D) still makes two \"Rectangle copy\": that path inserts copies inside a tree walk rather than through addLayer, so it is filed as duplicating-twice-does-not-make-two-rectangle-co rather than half-done here."
     }
-  ]
+  ],
+  "started": "2026-09-03T21:52:07.950Z"
 }
