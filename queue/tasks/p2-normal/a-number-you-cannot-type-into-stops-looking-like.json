@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:31.741Z",
-  "updated": "2026-09-04T13:24:17.164174Z",
+  "updated": "2026-09-04T13:24:34.281Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Straight from the audit that shipped the readout: queue/audits/2026-09-04-text-height-readout.json rough 1 (\"H still wears the same rounded box as the fields you can type in. Only the grey tells you apart, and a box that looks like an input but refuses the keyboard is the clumsiest part of this. Losing its border would say it louder, but that is a visual call worth your eye first\") and rough 2 (\"Clicking a read-only field gives no feedback at all. The tip explains it, but only after a hover delay\"). The same audit notes a locked layer and a stacked layer produce more read-only fields, so this is not one field. Losing the border is a look change, so open a decision card with two shots rather than guessing. docs/design/mocks/shared/UX-PATTERNS.md has no read-only field treatment at all; add it once the call is made. Related: one-rule-for-a-control-that-cannot-do-anything is the general version of this.",
@@ -62,6 +62,10 @@
     {
       "t": "2026-09-04T13:24:17.164174Z",
       "note": "Audit: queue/audits/2026-09-04-readout-fields.json, two real captures. Related: one-rule-for-a-control-that-cannot-do-anything (p3-low) is the general version and should follow whatever this decides."
+    },
+    {
+      "t": "2026-09-04T13:24:34.280Z",
+      "note": "Click answer shipped: clicking a number you cannot type says why straight away in the line under the fields, no hover. Both looks built and photographed; which one the panel should wear is a decision card with four real captures, so the box change is behind next-readout-fields (off) until it is answered. Audit: queue/audits/2026-09-04-readout-fields.json"
     }
   ],
   "started": "2026-09-04T13:03:26.858Z"
