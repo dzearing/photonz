@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1070,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T06:23:02.580Z",
-  "updated": "2026-09-04T06:23:02.581Z",
+  "updated": "2026-09-04T06:35:10.678393Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-09-04 while verifying the colour-section task. CanvasView.mouseDown (around Sources/Photonz/CanvasView.swift:1780) deliberately swallows a press on a member of a multi-selection so the group can travel with the pointer, and starts a MultiMoveDrag. The mouseUp branch for multiMove (around :2251) commits a move when liveOrigins is non-nil and otherwise does nothing, so a press that never moved leaves the selection untouched. The fix is the standard press-keeps/click-narrows split: in that mouseUp branch, when the drag never moved, select the layer that was pressed. Reproduced with Scripts/playtest/multi-style-walk.json before it was taught to deselect first: its stage 4 unlinked the style from all three boxes instead of the one it had clicked.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-04T06:23:02.581Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T06:25:17.396Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T06:35:10.678393Z",
+      "note": "Adversarial review before building: the mock is not involved, this is a platform convention. Checked what could break \u2014 shift-click drops a member and returns on the press, so it never reaches this path; Escape mid-drag still means never mind and does not narrow; the canvas has no right-click menu, so a context menu on a multi-selection cannot be affected; a 2 point jitter is a click by the same 4 point tolerance single layers use. Shortest version: remember which layer the press landed on, and narrow to it on release when the drag never moved."
+    },
+    {
+      "t": "2026-09-04T06:35:10.678393Z",
+      "note": "TDD: added PickedMemberPress to PhotonzCore (Sources/PhotonzCore/MultiLayerDrag.swift) with tests in Tests/PhotonzCoreTests/MultiLayerDragTests.swift, red first, then green. CanvasView.MultiMoveDrag now carries the pick (id + group context); the mouseUp multiMove branch narrows via onSelectLayerInGroup when the drag never moved, and sets selectedLayerFrame first so the handles land in the same beat."
+    },
+    {
+      "t": "2026-09-04T06:35:10.678393Z",
+      "note": "Proved on the probe app with Scripts/playtest/click-narrows-walk.json: three picked, click the middle -> selection ['Rectangle 2'] and no frame moved; three picked, drag from the middle -> all three moved by 60,40 and all three still picked; shift-click a picked one -> drops it; a 2 point press -> narrows and nothing moved."
+    },
+    {
+      "t": "2026-09-04T06:35:10.678393Z",
+      "note": "Scripts/playtest/multi-drag-walk.json stage 6 asserted the old behavior (a tiny press keeps both picked). Rewrote its note to the new rule and re-picked both rectangles before stage 7, which depended on stage 6 leaving the pair selected. Reran that walk: stages 7, 8, 9 all still hold."
+    },
+    {
+      "t": "2026-09-04T06:35:10.678393Z",
+      "note": "Scripts/test.sh green (2756 tests). Audit at queue/audits/2026-09-04-click-narrows.json with two real window captures (Screen Recording granted)."
     }
-  ]
+  ],
+  "started": "2026-09-04T06:25:17.396Z"
 }

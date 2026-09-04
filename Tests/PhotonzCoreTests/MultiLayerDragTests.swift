@@ -213,3 +213,46 @@ struct MultiLayerDragTests {
                 drag.origins(movingBoundsTo: drag.bounds.origin))
     }
 }
+
+/// What a press on one of several picked layers means. The press keeps the
+/// whole selection so the group can travel with the pointer; letting go is
+/// what decides, and a press that never travelled was a plain click on one of
+/// several things — which everywhere else on the Mac narrows the selection to
+/// the thing you clicked.
+@Suite("Clicking one of several picked layers")
+struct PickedMemberPressTests {
+
+    @Test func aPressThatNeverTravelledIsAClick() {
+        #expect(PickedMemberPress(moved: false) == .click)
+    }
+
+    @Test func aPressThatTravelledIsAMove() {
+        #expect(PickedMemberPress(moved: true) == .moved)
+    }
+
+    @Test func aClickNarrowsToTheLayerUnderIt() {
+        #expect(PickedMemberPress.click.narrowsSelection)
+    }
+
+    @Test func aMoveLeavesTheWholeSelectionPicked() {
+        #expect(!PickedMemberPress.moved.narrowsSelection)
+    }
+
+    @Test func aClickLeavesOnlyTheLayerItLandedOn() {
+        let a = UUID(), b = UUID(), c = UUID()
+        #expect(PickedMemberPress.click.selection(afterPressing: b,
+                                                  startingFrom: [a, b, c]) == [b])
+    }
+
+    @Test func aMoveHandsBackEveryLayerThatTravelled() {
+        let a = UUID(), b = UUID(), c = UUID()
+        #expect(PickedMemberPress.moved.selection(afterPressing: b,
+                                                  startingFrom: [a, b, c]) == [a, b, c])
+    }
+
+    @Test func clickingTheOnlyPickedLayerChangesNothing() {
+        let a = UUID()
+        #expect(PickedMemberPress.click.selection(afterPressing: a,
+                                                  startingFrom: [a]) == [a])
+    }
+}

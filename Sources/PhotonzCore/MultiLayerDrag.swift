@@ -81,3 +81,34 @@ public extension PhotonzDocument {
         return MultiLayerDrag(members: members)
     }
 }
+
+/// What a press that lands on a layer already in a multi-selection means.
+///
+/// The press itself never changes what is picked: the whole selection has to
+/// survive it so the group can travel with the pointer as one object. Letting
+/// go is what decides. A press that travelled was a move, and everything that
+/// moved stays picked. A press that never travelled was a plain click on one
+/// of several things, and clicking one of several things narrows to it
+/// everywhere else on the Mac — so it narrows here too, instead of asking you
+/// to click bare canvas first and then click the layer.
+///
+/// ⇧ never reaches this: a ⇧-click on a picked layer drops it from the
+/// selection, which is its own rule, decided on the press.
+public enum PickedMemberPress: Equatable, Sendable {
+    /// The pointer travelled past the click tolerance: this was a move.
+    case moved
+    /// The pointer never travelled: this was a click on one of several.
+    case click
+
+    public init(moved: Bool) { self = moved ? .moved : .click }
+
+    /// Whether letting go narrows the selection to the layer that was pressed.
+    public var narrowsSelection: Bool { self == .click }
+
+    /// What is picked once the press lets go: just the layer it landed on for
+    /// a click, everything that travelled for a move.
+    public func selection(afterPressing id: UUID,
+                          startingFrom existing: Set<UUID>) -> Set<UUID> {
+        narrowsSelection ? [id] : existing
+    }
+}

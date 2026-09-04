@@ -783,6 +783,10 @@ final class CanvasNSView: NSView {
     /// rather than by whichever piece happens to be under the pointer.
     private struct MultiMoveDrag {
         let plan: MultiLayerDrag
+        /// The layer the press landed on, and the group it was resolved in.
+        /// A press that never travels is a click on that one layer, and a
+        /// click on one of several picked things narrows the selection to it.
+        let pick: (id: UUID, context: UUID?)
         /// Pointer offset from the selection box's origin at grab time.
         let grabOffset: CGPoint
         /// The boxes this drag can line itself up with, in canvas coordinates,
@@ -1787,6 +1791,7 @@ final class CanvasNSView: NSView {
                plan.members.count > 1, plan.members.contains(where: { $0.id == pick.id }) {
                 multiMove = MultiMoveDrag(
                     plan: plan,
+                    pick: pick,
                     grabOffset: CGPoint(x: p.x - plan.bounds.origin.x,
                                         y: p.y - plan.bounds.origin.y),
                     peers: Experiments.shared.alignLayersEnabled
@@ -2255,6 +2260,17 @@ final class CanvasNSView: NSView {
                 else { onCopyDragCancel() }
             } else if let origins = drag.liveOrigins {
                 onMoveSelectionCommit(origins, true)
+            }
+            // The press kept the whole selection so the group could travel.
+            // If it never travelled it was a click on one layer, so now it
+            // narrows to that layer — the press-keeps/click-narrows rule every
+            // other Mac app follows. ⌥ makes no difference: an ⌥ press that
+            // never moved made no copy, so it is a plain click too.
+            if PickedMemberPress(moved: drag.moved).narrowsSelection {
+                // The frame goes in first so the handles land on the layer in
+                // the same beat as the click, rather than a refresh later.
+                selectedLayerFrame = document?.canvasLayer(id: drag.pick.id)?.frame
+                onSelectLayerInGroup(drag.pick.id, drag.pick.context)
             }
             adoptionHost = nil
             refreshOverlays()

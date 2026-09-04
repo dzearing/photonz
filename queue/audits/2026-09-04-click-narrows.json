@@ -1,0 +1,26 @@
+{
+  "feature": "Clicking one of several picked layers narrows to it",
+  "epic": "ui-components",
+  "summary": "With several layers picked, clicking one of them now leaves just that one picked, the way every other Mac app behaves. Pressing and dragging one of them still moves the whole selection.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Draw three rectangles with the Rectangle tool, then press V for Select." },
+    { "do": "Click the first, then shift-click the other two so all three are picked." },
+    { "do": "Click the middle one and let go without moving.", "shot": "2026-09-04-click-narrows-1.png" },
+    { "do": "Check the Layers list and the inspector: only the middle rectangle should be picked." },
+    { "do": "Pick all three again, then press on the middle one and drag it across the canvas.", "shot": "2026-09-04-click-narrows-2.png" },
+    { "do": "Check that all three moved together and all three are still picked." },
+    { "do": "Shift-click one of the three picked rectangles: it should drop out of the selection, not become the selection." }
+  ],
+  "evaluate": [
+    "Does clicking one of several picked layers now do what your hand expected it to do?",
+    "When the click narrows, do the handles land on the layer fast enough that it feels instant?",
+    "Does pressing and dragging one of a picked group still feel like moving one object?",
+    "Is there anywhere you still want the old behavior, where a click on a picked layer changed nothing?"
+  ],
+  "rough": [
+    "Press-and-hold on a picked layer without moving now narrows on release. There is no way to press a picked layer just to look at the cursor and keep the group, but that was not a gesture anyone was using on purpose.",
+    "The 4 point click tolerance is what tells a click from a move, the same number used for single layers, so a shaky hand under 4 points still narrows rather than nudging.",
+    "Screenshots are real window captures from the probe app, not offscreen renders."
+  ]
+}

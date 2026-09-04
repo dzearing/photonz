@@ -41,8 +41,11 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "drag", "from": [260, 250], "to": [262, 252], "steps": 4 },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "6-tiny-press", "note": "a press on a picked layer that barely moves: the selection should still name both rectangles and nothing should have moved" },
+    { "do": "describe", "stage": "6-tiny-press", "note": "a press on a picked layer that barely moves is a click, not a move: nothing should have moved, and the selection should narrow to the middle rectangle alone (see click-narrows-walk.json)" },
 
+    { "do": "click", "at": [200, 130] },
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
     { "do": "drag", "from": [200, 130], "to": [186, 300], "steps": 10, "hold": "multi-drag-7-mid" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "7-snapped", "note": "the same drag WITHOUT command and 14 points to the left: the SELECTION box, not the rectangle under the pointer, should line its left edge up with the bottom rectangle at x 100, so the top rectangle lands at 100 and the middle one at 130" },

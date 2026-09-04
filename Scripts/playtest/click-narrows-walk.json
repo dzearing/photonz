@@ -1,0 +1,50 @@
+{
+  "out": "/tmp/photonz-playtest/click-narrows",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 100], "to": [280, 160], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [150, 220], "to": [370, 280], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [100, 340], "to": [200, 400], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-drew", "note": "three rectangles: top, middle, bottom" },
+
+    { "do": "click", "at": [200, 130] },
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "click", "at": [150, 370], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-three-picked", "note": "all three rectangles picked" },
+    { "do": "snapshot", "name": "click-narrows-1-three-picked" },
+
+    { "do": "click", "at": [260, 250] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-clicked-one", "note": "clicked the MIDDLE rectangle, one of the three: the selection should now name that rectangle alone, and nothing should have moved" },
+    { "do": "snapshot", "name": "click-narrows-2-narrowed" },
+
+    { "do": "click", "at": [200, 130] },
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "click", "at": [150, 370], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [260, 250], "to": [320, 290], "steps": 10, "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-dragged", "note": "pressed the MIDDLE rectangle and dragged 60 by 40: all three should have moved by that amount and all three should still be picked" },
+    { "do": "snapshot", "name": "click-narrows-3-dragged" },
+
+    { "do": "click", "at": [320, 290], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-shift-drops", "note": "shift-clicking the middle rectangle while it is one of three picked should DROP it, leaving the top and bottom picked, not narrow to it" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "click", "at": [260, 170] },
+    { "do": "click", "at": [320, 290], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [320, 290], "to": [322, 292], "steps": 4 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-jitter", "note": "a press on a picked rectangle that travels two points is still a click: it should narrow to that rectangle and nothing should have moved" }
+  ]
+}

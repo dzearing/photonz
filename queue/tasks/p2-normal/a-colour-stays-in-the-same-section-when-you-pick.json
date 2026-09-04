@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1060,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T06:13:36.706Z",
-  "updated": "2026-09-04T06:24:03.065018Z",
+  "updated": "2026-09-04T06:24:27.418Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed 2026-09-04 by the UX-PATTERNS scrub task. UX-PATTERNS.md section 4 now states the rule: a property keeps its home whatever the count, and a multi-select-only section is reserved for properties with no single-layer home (Arrange). The app violates it: InspectorSectionID.color (Sources/Photonz/LayersPanel.swift) is present only while several layers are picked and is documented in place as being on screen INSTEAD of the per-kind sections; SelectionColorInspector lives in Sources/Photonz/ColorStylePanel.swift, landed by commit 0af62a5. Audit queue/audits/2026-09-03-multi-style.json flags the same thing in its own rough: \"the colour you were just editing moves to a different section when you shift-click a second layer\". Likely shape of the fix: keep the per-kind section (Annotation/Text/Frame) on screen for a homogeneous multi-selection and make its colour rows answer for all of them, falling back to the whole-selection section only when the picked layers span kinds. Multi-layer colour logic already exists in core and should be reused, not rewritten.",
@@ -60,7 +60,12 @@
     {
       "t": "2026-09-04T06:24:03.065018Z",
       "note": "Scripts/test.sh green: 2749 tests in 249 suites. Audit at queue/audits/2026-09-04-color-one-home.json with four real captures."
+    },
+    {
+      "t": "2026-09-04T06:24:27.417Z",
+      "note": "The behaviour was already right (fc66980); this run proved it on the running app with real captures, added the missing Mixed and one-undo coverage to color-one-home-walk, fixed multi-style-walk which had been testing nothing after its unlink stage, and cleared the stale claim from UX-PATTERNS section 4 and the section-order comment. Tests green (2749). Audit: queue/audits/2026-09-04-color-one-home.json. Filed clicking-one-of-several-picked-layers-narrows-th for the selection defect found on the way."
     }
   ],
-  "started": "2026-09-04T06:15:37.973Z"
+  "started": "2026-09-04T06:15:37.973Z",
+  "completed": "2026-09-04T06:24:27.418Z"
 }
