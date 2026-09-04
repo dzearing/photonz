@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 1120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T08:22:23.510Z",
-  "updated": "2026-09-04T08:22:23.510Z",
+  "updated": "2026-09-04T09:59:45.847469Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up to the crisp-zoom work of 2026-09-04. DocumentRenderer.renderTile already magnifies the document and rasterizes text at the tile scale; MeasureRasterizer, AnnotationRasterizer and CollageRasterizer are still called with the document-point box and magnified afterwards (see the boxInPoints branch in ciImage(for:)). Each one needs the same treatment TextRasterizer got: a scale parameter that scales the CGContext, leaving the geometry in document points. Watch the raster cache keys.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-04T08:22:23.510Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T09:45:11.444Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T09:59:45.847469Z",
+      "note": "pre-build review: the mock is not in play here, this is a defect in the primary redlining motion (zoom in to read a number, the number goes soft). Kept the shortest version: no new surface, no new setting, the same crisp path text already takes."
+    },
+    {
+      "t": "2026-09-04T09:59:45.847469Z",
+      "note": "found while reading: PillRasterizer made its glyph bitmap at document size and blitted it into whatever context it was handed, so scaling the caliper/annotation context alone would have sharpened the capsule and left the WORDS in it soft, which is the actual complaint. It now reads the context's CTM and rasterizes the glyphs at that scale; the shadow gets the same treatment because Core Graphics measures setShadow offset and blur in device pixels, not user space."
+    },
+    {
+      "t": "2026-09-04T09:59:45.847469Z",
+      "note": "added a cap: an annotation whose frame is the whole canvas (the perf benchmark has three) would ask for a 3 GB bitmap at 8x. crispScale walks the scale back to fit 16 megapixels and returns 1 when crisping would buy less than 2x, so such a layer draws exactly as it does today."
+    },
+    {
+      "t": "2026-09-04T09:59:45.847469Z",
+      "note": "verified: 3 new tile tests fail on the pre-change renderer and pass after; 8 rasterizer tests; full suite 2900 tests green."
+    },
+    {
+      "t": "2026-09-04T09:59:45.847469Z",
+      "note": "perf: 12MP/10-layer crisp tile 8.8/9.9/10.5ms at 200/400/800% (was 9.4/9.5/9.9) - unchanged, because that document's shapes hit the cap. Added crispTileOnARedlinedCaptureMeetsBudget, a 12MP capture with 12 realistically sized calipers and captioned arrows, which is where crisping actually costs: 6.9ms median at 400%."
+    },
+    {
+      "t": "2026-09-04T09:59:45.847469Z",
+      "note": "post-build review on the probe (Screen Recording granted, real -sc.png captures): before/after of the same walk at ~316% shows the chip and the caption going from visibly blurry to sharp. Left as-is: the ~90ms delay before the sharp copy lands (pre-existing), and the capped canvas-sized shape. Both are in the audit's rough."
     }
-  ]
+  ],
+  "started": "2026-09-04T09:45:11.444Z"
 }

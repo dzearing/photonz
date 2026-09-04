@@ -1,0 +1,29 @@
+{
+  "feature": "Measurement chips, arrow captions and shape strokes stay crisp when you zoom in",
+  "epic": "measure-redline",
+  "summary": "Zooming past 100 percent used to sharpen the words you had placed but leave everything else behind: the number on a measurement, the caption on an arrow and the stroke of a shape were still a document-sized picture blown up. Now they are drawn at the size you are looking at them, so a readout you zoom in to read is as sharp as the label beside it.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: the Experiments flag \"Words stay sharp when you zoom in\" is on by default.",
+  "try": [
+    { "do": "Open a screenshot." },
+    { "do": "Press I for Measure and drag a distance measurement across something." },
+    { "do": "Press A for Arrow, drag an arrow at something, type a caption and press Return." },
+    { "do": "Press Escape to drop the selection." },
+    { "do": "Zoom to about 300 percent with Command + and wait about a second." },
+    { "do": "Read the number in the measurement chip and the words in the arrow's caption.", "shot": "2026-09-04-crisp-shapes-1.png" },
+    { "do": "Keep going to 800 percent and look at the caliper's rounded corners and the arrowhead." }
+  ],
+  "evaluate": [
+    "At 300 percent, does the number in the chip read as sharp as the app's own panel text on the right?",
+    "Does the sharp copy arrive fast enough after you stop zooming, or do you notice the soft moment first?",
+    "The screenshot underneath still goes square and blocky past 2x while the chips and arrows are now smooth. Does that mix read as deliberate or as two different pictures?",
+    "At 800 percent a 1px caliper line is now a smooth 8 pixel line rather than a hard block. Does it still read as one image pixel to you?",
+    "Is there anything else on the canvas that still goes soft when you zoom that should not?"
+  ],
+  "rough": [
+    "The sharp copy is drawn about 90 milliseconds after you stop zooming, so there is still a brief soft frame. That delay was already there for labels and this change does not touch it.",
+    "A shape stretched across a whole 12 megapixel capture is left alone: redrawing it at 8x would ask for a bitmap tens of times the size of the document, so it falls back to the old blown-up look. A shape drawn at the size of the thing it points at, which is every normal one, is redrawn.",
+    "Gradient fills inside a shape are still painted small and stretched. A gradient has no hard edges to lose, so nothing looks softer for it.",
+    "Shot 1 is a real screen capture from a scripted probe run at about 316 percent. Shots 2 and 3 are two real captures of the same walk, before and after the change, cropped and placed side by side so the difference is visible at a glance.",
+    "The layer border a style draws was already sharp: Core Image draws it around the magnified box. It now has a test guarding that."
+  ]
+}

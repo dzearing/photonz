@@ -228,6 +228,51 @@ struct RenderPerfTests {
         #expect(at800 < 100, "crisp tile at 800% regressed badly: \(at800)ms")
     }
 
+    /// The benchmark document's shapes span the whole canvas, so they are the
+    /// case that CANNOT be crisped. A real redline is the opposite: a capture
+    /// with a dozen calipers and captioned arrows the size of what they point
+    /// at, every one of them now baked at the zoom's resolution. That is where
+    /// crisping actually costs something, so that is where it gets a budget.
+    @Test func crispTileOnARedlinedCaptureMeetsBudget() {
+        let store = ImageStore()
+        let capture = store.register(solidImage(width: 4000, height: 3000, r: 240, g: 240, b: 245))
+        var doc = PhotonzDocument.withBaseImage(capture)
+        for i in 0..<6 {
+            let x = CGFloat(300 + i * 560), y = CGFloat(700)
+            let measure = MeasureContent(start: .zero, end: CGPoint(x: 220, y: 0), mode: .horizontal)
+            doc.addLayer(MeasureBuilder.layer(content: measure,
+                                              from: CGPoint(x: x, y: y),
+                                              to: CGPoint(x: x + 220, y: y)))
+            var arrow = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
+            arrow.caption = "Gap \(i * 4 + 8)"
+            doc.addLayer(AnnotationBuilder.layer(content: arrow,
+                                                 from: CGPoint(x: x + 260, y: y + 400),
+                                                 to: CGPoint(x: x + 40, y: y + 120)))
+        }
+        let renderer = DocumentRenderer()
+
+        // A 1600x1000-point window on a 2x display at 400%.
+        let region = CGRect(x: 200, y: 500, width: 400, height: 250)
+        #expect(renderer.renderTile(doc, store: store, region: region, scale: 8) != nil)
+        var samples: [Double] = []
+        let clock = ContinuousClock()
+        for step in 0..<10 {
+            let moved = region.offsetBy(dx: CGFloat(step), dy: CGFloat(step))
+            let duration = clock.measure {
+                #expect(renderer.renderTile(doc, store: store, region: moved, scale: 8) != nil)
+            }
+            samples.append(Double(duration.components.seconds) * 1000
+                           + Double(duration.components.attoseconds) / 1e15)
+        }
+        samples.sort()
+        let median = samples[samples.count / 2]
+        print("[perf] 12MP capture with 12 redline marks, crisp tile at 400% zoom — " +
+              "median \(String(format: "%.1f", median))ms, " +
+              "min \(String(format: "%.1f", samples[0]))ms, " +
+              "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
+        #expect(median < 100, "crisp tile over a redlined capture regressed badly: \(median)ms")
+    }
+
     /// The 16ms budget applies to *re-renders during editing* — that's what
     /// the user feels on every drag tick and slider tweak. The interactive
     /// path patches dirty regions, so measure it the way the app uses it:

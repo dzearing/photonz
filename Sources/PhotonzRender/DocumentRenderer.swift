@@ -43,6 +43,13 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// picture; drawing a sweep at the size of a 12-megapixel screen is a
     /// second and a half of asking every pixel what angle it sits at.
     private static let surfaceRasterCap: CGFloat = 1024
+    /// The most pixels one layer's raster may be baked with when the canvas is
+    /// zoomed in. Crisping costs area — a layer drawn at 8x is 64 times the
+    /// bitmap — and a layer bigger than the screen can never be seen whole
+    /// anyway, so past this the scale is walked back and whatever is left of
+    /// the magnification happens the old way. 16 megapixels is comfortably
+    /// more than a 6K display shows at once.
+    private static let crispRasterCap: CGFloat = 16_000_000
     /// Per-cache cap; the two caches together stay within 64 entries.
     private static let cacheCapacity = 32
     private var rasterCache: [RasterKey: CIImage] = [:]
@@ -95,6 +102,26 @@ public final class DocumentRenderer: @unchecked Sendable {
 
     /// The cached rasterization of value-typed content at `size`, produced by
     /// `rasterize` on a miss (returning nil caches nothing).
+    /// How much of a zoomed-in canvas's `scale` a layer whose box is `box`
+    /// document points can afford to bake into its own raster.
+    ///
+    /// Everything drawn from shapes and type — words, strokes, a measurement's
+    /// number, an arrow's caption — is sharp when it is drawn with the pixels
+    /// it is about to be shown with, and soft when a document-sized picture of
+    /// it is blown up instead. That is worth paying for, but not at any price:
+    /// a shape whose box is the whole canvas would ask for a bitmap tens of
+    /// times the size of the document. Such a layer is walked back to 1, which
+    /// is exactly what it does today, and only layers where crisping buys
+    /// something real (2x or better) take the scaled path.
+    private func crispScale(_ scale: CGFloat, box: CGSize) -> CGFloat {
+        guard scale > 1, scale.isFinite else { return 1 }
+        let area = box.width * box.height
+        guard area > 0 else { return 1 }
+        let affordable = (Self.crispRasterCap / area).squareRoot()
+        guard affordable >= 2 else { return 1 }
+        return min(scale, affordable)
+    }
+
     private func raster(for content: LayerContent, size: CGSize, variant: String = "",
                         rasterize: () -> CGImage?) -> CIImage? {
         let key = RasterKey(content: content,
@@ -595,31 +622,41 @@ public final class DocumentRenderer: @unchecked Sendable {
             let textBorderHex = layer.style.borderColorHex
             var variant = textBorder > 0 ? "outline:\(textBorder):\(textBorderHex)" : ""
             if contentScale != 1 { variant += "|crisp" }
+            let bake = crispScale(contentScale, box: boxInPoints)
             guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
                 TextRasterizer.rasterize(text, size: boxInPoints,
                                          borderWidth: textBorder, borderColorHex: textBorderHex,
-                                         scale: contentScale)
+                                         scale: bake)
             }) else { return nil }
-            image = raster
+            image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .annotation(let annotation):
-            guard let raster = raster(for: layer.content, size: boxInPoints, rasterize: {
-                AnnotationRasterizer.rasterize(annotation, size: boxInPoints)
+            // Baked at the resolution it will be SHOWN at, like the text above:
+            // a stroke, an arrowhead and a caption pill all come from shapes and
+            // type, so all three can be as sharp as the words beside them.
+            let bake = crispScale(contentScale, box: boxInPoints)
+            guard let raster = raster(for: layer.content, size: layer.frame.size,
+                                      variant: contentScale == 1 ? "" : "crisp", rasterize: {
+                AnnotationRasterizer.rasterize(annotation, size: boxInPoints, scale: bake)
             }) else { return nil }
-            image = magnified(raster, nearest: magnifyNearest, scale: contentScale)
+            image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .measure(let measure):
             // The label text depends on the document's pixelScale (points
             // readout), which isn't part of the cache key's content.
-            let variant = "scale:\(document.pixelScale)"
-            guard let raster = raster(for: layer.content, size: boxInPoints, variant: variant, rasterize: {
+            var variant = "scale:\(document.pixelScale)"
+            if contentScale != 1 { variant += "|crisp" }
+            let bake = crispScale(contentScale, box: boxInPoints)
+            guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
                 MeasureRasterizer.rasterize(measure, size: boxInPoints,
-                                            pixelScale: document.pixelScale)
+                                            pixelScale: document.pixelScale, scale: bake)
             }) else { return nil }
-            image = magnified(raster, nearest: magnifyNearest, scale: contentScale)
+            image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .collage(let collage):
-            guard let raster = raster(for: layer.content, size: boxInPoints, rasterize: {
-                CollageRasterizer.rasterize(collage, size: boxInPoints, store: store)
+            let bake = crispScale(contentScale, box: boxInPoints)
+            guard let raster = raster(for: layer.content, size: layer.frame.size,
+                                      variant: contentScale == 1 ? "" : "crisp", rasterize: {
+                CollageRasterizer.rasterize(collage, size: boxInPoints, store: store, scale: bake)
             }) else { return nil }
-            image = magnified(raster, nearest: magnifyNearest, scale: contentScale)
+            image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .zoomCallout(let callout):
             let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
             let source = callout.sourceRect.standardized.intersection(canvasRect)

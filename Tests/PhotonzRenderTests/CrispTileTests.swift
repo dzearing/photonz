@@ -154,4 +154,81 @@ struct CrispTileTests {
         // edges and its white label swing from pixel to pixel.
         #expect(hardEdges(crisp.image) > hardEdges(soft) * 2)
     }
+
+    /// How much sharper a tile is than the same patch of the composite blown
+    /// up: the ratio the crisp path exists to move.
+    private func sharpening(_ doc: PhotonzDocument, region: CGRect, scale: CGFloat,
+                            store: ImageStore = ImageStore()) throws -> Double {
+        let renderer = DocumentRenderer()
+        let crisp = try #require(renderer.renderTile(doc, store: store, region: region, scale: scale))
+        let full = try #require(renderer.render(doc, store: store))
+        let cut = try #require(full.cropping(to: region))
+        let blown = CIImage(cgImage: cut).transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let soft = try #require(CIContext().createCGImage(blown, from: blown.extent))
+        return hardEdges(crisp.image) / max(hardEdges(soft), 0.000001)
+    }
+
+    /// The number on a measurement is the thing a redliner zooms in to READ,
+    /// so it is the last thing that should go soft when they do.
+    @Test func aMeasurementChipStaysSharpWhenYouZoomIn() throws {
+        let content = MeasureContent(start: .zero, end: CGPoint(x: 160, y: 0), mode: .horizontal)
+        let caliper = MeasureBuilder.layer(content: content,
+                                           from: CGPoint(x: 60, y: 120), to: CGPoint(x: 220, y: 120))
+        let doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 200), layers: [caliper])
+        #expect(try sharpening(doc, region: caliper.frame.insetBy(dx: -4, dy: -4), scale: 4) > 2)
+    }
+
+    /// And so is the caption you hung off an arrow to say what it points at.
+    @Test func anArrowCaptionStaysSharpWhenYouZoomIn() throws {
+        var content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
+        content.caption = "Save"
+        let arrow = AnnotationBuilder.layer(content: content,
+                                            from: CGPoint(x: 260, y: 90), to: CGPoint(x: 100, y: 90))
+        let doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 200), layers: [arrow])
+        #expect(try sharpening(doc, region: arrow.frame.insetBy(dx: -4, dy: -4), scale: 4) > 2)
+    }
+
+    /// A shape's own stroke comes from geometry too, so it can be drawn at the
+    /// zoom's resolution rather than blown up to it.
+    @Test func aShapeStrokeStaysSharpWhenYouZoomIn() throws {
+        let doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 200),
+                                  layers: [strokedBox()])
+        let region = strokedBox().frame.insetBy(dx: -4, dy: -4)
+        #expect(try sharpening(doc, region: region, scale: 4) > 2)
+    }
+
+    /// The border the layer's STYLE draws is a different thing from the shape's
+    /// own stroke: Core Image draws it around the already-magnified box, so it
+    /// was sharp before this and has to stay sharp after it.
+    @Test func aLayerBorderStaysSharpWhenYouZoomIn() throws {
+        var box = strokedBox()
+        box.style.borderWidth = 2
+        box.style.borderColorHex = "#101014"
+        let doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 200), layers: [box])
+        #expect(try sharpening(doc, region: box.frame.insetBy(dx: -4, dy: -4), scale: 4) > 2)
+    }
+
+    private func strokedBox() -> Layer {
+        var content = AnnotationContent(shape: .rectangle, strokeWidth: 3, colorHex: "#34C759")
+        content.cornerRadius = 6
+        return AnnotationBuilder.layer(content: content,
+                                       from: CGPoint(x: 40, y: 40), to: CGPoint(x: 240, y: 140))
+    }
+
+    /// A shape so big it fills the canvas would ask for a bitmap tens of times
+    /// the size of the document. It falls back to the way it draws today rather
+    /// than spending that, and the tile still comes back.
+    @Test func aCanvasSizedShapeDoesNotAskForAnEnormousRaster() throws {
+        let content = AnnotationContent(shape: .arrow, strokeWidth: 16, colorHex: "#FF3B30",
+                                        start: CGPoint(x: 100, y: 100),
+                                        end: CGPoint(x: 3800, y: 2800))
+        let arrow = Layer(name: "Arrow", content: .annotation(content),
+                          frame: CGRect(x: 0, y: 0, width: 4000, height: 3000))
+        let doc = PhotonzDocument(canvasSize: CGSize(width: 4000, height: 3000), layers: [arrow])
+        let tile = try #require(DocumentRenderer().renderTile(
+            doc, store: ImageStore(),
+            region: CGRect(x: 500, y: 400, width: 200, height: 150), scale: 8))
+        #expect(tile.image.width == 1600)
+        #expect(tile.image.height == 1200)
+    }
 }

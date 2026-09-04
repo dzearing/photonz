@@ -24,6 +24,20 @@ enum PillRasterizer {
         return CGSize(width: size.width + 2 * padding, height: size.height + 2 * padding)
     }
 
+    /// How many pixels one point of `context` covers: 1 for a document-sized
+    /// raster, more when a zoomed-in canvas is baking the pill at the
+    /// resolution it is about to be shown at. The rasterizers scale their
+    /// context and go on drawing in document points, so everything here is
+    /// already the right SIZE — this is only for the two things that do not
+    /// follow the transform: a bitmap of glyphs, which has to be made with the
+    /// pixels it will be drawn with, and the shadow, whose offset and blur
+    /// Core Graphics measures in device pixels.
+    private static func pixelsPerPoint(of context: CGContext) -> CGFloat {
+        let ctm = context.ctm
+        let scale = (ctm.a * ctm.d - ctm.b * ctm.c).magnitude.squareRoot()
+        return scale > 0 && scale.isFinite ? scale : 1
+    }
+
     /// Draws the pill centered at `anchor`: the `fill`, a border in `border`,
     /// and text in `textColorHex` — each independently colorable. Glyphs come
     /// from `TextRasterizer` (the proven-upright path) and are blitted in —
@@ -34,17 +48,21 @@ enum PillRasterizer {
                      fontSize: CGFloat, borderWidth: CGFloat, fill: CGColor,
                      border: CGColor, textColorHex: String, shadow: Shadow? = nil,
                      in context: CGContext) {
+        let pixelsPerPoint = Self.pixelsPerPoint(of: context)
         let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
                           width: chipSize.width, height: chipSize.height)
         let radius = chipSize.height / 2
         let pill = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
         context.saveGState()
         if let shadow {
-            // Shadow offsets ignore the CTM, so the flip to top-left space
-            // negates the visual y direction.
-            context.setShadow(offset: CGSize(width: shadow.offset.width,
-                                             height: -shadow.offset.height),
-                              blur: shadow.blur, color: shadow.color)
+            // Shadow offsets ignore the CTM twice over: the flip to top-left
+            // space negates the visual y direction, and the numbers are read as
+            // device pixels, so a pill baked for a zoomed-in canvas has to ask
+            // for a proportionally bigger shadow or it arrives with a hairline
+            // of one.
+            context.setShadow(offset: CGSize(width: shadow.offset.width * pixelsPerPoint,
+                                             height: -shadow.offset.height * pixelsPerPoint),
+                              blur: shadow.blur * pixelsPerPoint, color: shadow.color)
         }
         context.setFillColor(fill)
         context.addPath(pill)
@@ -63,7 +81,11 @@ enum PillRasterizer {
         let text = TextContent(string: string, fontName: "SF Pro",
                                fontSize: fontSize, colorHex: textColorHex)
         let textSize = TextRasterizer.naturalSize(text)
-        guard let glyphs = TextRasterizer.rasterize(text, size: textSize) else { return }
+        // Made with the pixels it is about to be drawn with: a document-sized
+        // bitmap stretched over a zoomed-in pill is exactly the soft readout
+        // this whole path exists to avoid.
+        guard let glyphs = TextRasterizer.rasterize(text, size: textSize,
+                                                    scale: pixelsPerPoint) else { return }
         let textRect = CGRect(x: anchor.x - textSize.width / 2, y: anchor.y - textSize.height / 2,
                               width: textSize.width, height: textSize.height)
         context.saveGState()

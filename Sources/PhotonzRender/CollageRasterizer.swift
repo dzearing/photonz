@@ -10,9 +10,18 @@ import PhotonzCore
 /// `CGContext.draw(_:in:)` would invert photos in a flipped context.
 public enum CollageRasterizer {
 
-    public static func rasterize(_ collage: CollageContent, size: CGSize, store: ImageStore) -> CGImage? {
-        let width = Int(size.width.rounded())
-        let height = Int(size.height.rounded())
+    /// Draws `collage` inside `size` (the layer's box, in document points).
+    ///
+    /// `scale` is how many pixels the result gets per document point: a
+    /// zoomed-in canvas bakes the cells at the resolution they are about to be
+    /// seen at, so a photo with pixels to spare shows them instead of being
+    /// squeezed into a document-sized picture and blown back up. Cell
+    /// geometry stays in document points at every scale.
+    public static func rasterize(_ collage: CollageContent, size: CGSize, store: ImageStore,
+                                 scale: CGFloat = 1) -> CGImage? {
+        guard scale > 0, scale.isFinite else { return nil }
+        let width = Int((size.width * scale).rounded())
+        let height = Int((size.height * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
 
         guard let context = CGContext(data: nil, width: width, height: height,
@@ -21,10 +30,13 @@ public enum CollageRasterizer {
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
             return nil
         }
+        // Everything below lays out in document points; the context turns them
+        // into however many pixels `scale` asked for.
+        context.scaleBy(x: scale, y: scale)
 
         if let hex = collage.backdropColorHex, let rgba = RGBA(hex: hex) {
             context.setFillColor(CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a))
-            context.fill(CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height)))
+            context.fill(CGRect(origin: .zero, size: size))
         }
 
         let cells = Collage.slotFrames(for: collage, in: size)

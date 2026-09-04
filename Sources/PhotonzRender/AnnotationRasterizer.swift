@@ -7,9 +7,20 @@ import PhotonzCore
 /// space `AnnotationContent.start`/`end` are stored in).
 public enum AnnotationRasterizer {
 
-    public static func rasterize(_ annotation: AnnotationContent, size: CGSize) -> CGImage? {
-        let width = Int(size.width.rounded())
-        let height = Int(size.height.rounded())
+    /// Draws `annotation` inside `size` (the layer's box, in document points).
+    ///
+    /// `scale` is how many pixels the result gets per document point, so a
+    /// zoomed-in canvas can bake a stroke, an arrowhead and a caption pill at
+    /// the resolution they are about to be seen at instead of blowing a
+    /// document-sized picture of them up afterwards. It scales the DRAWING,
+    /// never the geometry: the stroke width, the arrowhead and the pill are
+    /// stated in the same points at every scale, so a shape does not move or
+    /// change weight when a sharper copy of it arrives.
+    public static func rasterize(_ annotation: AnnotationContent, size: CGSize,
+                                 scale: CGFloat = 1) -> CGImage? {
+        guard scale > 0, scale.isFinite else { return nil }
+        let width = Int((size.width * scale).rounded())
+        let height = Int((size.height * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
 
         guard let context = CGContext(data: nil, width: width, height: height,
@@ -19,9 +30,10 @@ public enum AnnotationRasterizer {
             return nil
         }
 
-        // Flip so the drawing code below works in top-left coordinates.
+        // Flip so the drawing code below works in top-left coordinates, and
+        // scale so it can go on stating everything in document points.
         context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
+        context.scaleBy(x: scale, y: -scale)
 
         // The ink's flat stand-in: what a caption pill is toned from, and what
         // a paint that is not a gradient draws with.

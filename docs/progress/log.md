@@ -7797,3 +7797,44 @@ the tool being able to hold a style binding, filed as
 `the-tool-in-your-hand-can-hold-a-saved-colour-no`. A text block's ink arms
 nothing either, because the text tool has no colour of its own: new text takes
 the foreground swatch.
+
+## 2026-09-04 — Everything drawn from shapes and type is crisp when you zoom in
+
+Follow-up to the crisp-zoom tile of earlier today, which sharpened placed TEXT
+and left everything else blowing up from a document-sized picture. A caliper's
+readout, an arrow's caption and a shape's stroke are all drawn from geometry and
+type too, so they now take the same path: `AnnotationRasterizer`,
+`MeasureRasterizer` and `CollageRasterizer` each take a `scale`, scale their
+`CGContext` by it, and go on stating every coordinate in document points, the
+way `TextRasterizer` already did. `DocumentRenderer.ciImage` hands them that
+scale and keys the raster cache on the magnified frame plus a `crisp` marker.
+
+The piece that mattered most was not the three signatures. `PillRasterizer`
+draws the shared capsule for both the measure chip and the arrow caption, and it
+made its glyph bitmap at document size and blitted it into whatever context it
+was given: scaling the context alone would have sharpened the capsule and left
+the words inside it exactly as soft as before, which is the whole complaint. It
+now reads the context's CTM and rasterizes the glyphs at that scale, and scales
+the pill's shadow the same way, because Core Graphics reads `setShadow`'s offset
+and blur in device pixels rather than user space.
+
+Crisping costs area, so `DocumentRenderer.crispScale` caps it: a layer that
+would need more than 16 megapixels of raster is walked back, and anything that
+could not reach 2x is left at 1 and draws exactly as it does today. That matters
+because an annotation's frame can be the whole canvas — the perf benchmark has
+three — and at 8x that is a multi-gigabyte bitmap. Real shapes are the size of
+what they point at and are redrawn in full.
+
+Perf: the 12MP/10-layer crisp tile is unchanged (8.8/9.9/10.5ms at
+200/400/800%), because that document's shapes are the capped case. Added
+`crispTileOnARedlinedCaptureMeetsBudget` — a 12MP capture carrying twelve
+realistically sized calipers and captioned arrows, which is where crisping
+actually costs — at 6.9ms median at 400%.
+
+Verified on the probe with real screen captures: the same walk before and after
+at about 316% zoom, chip and caption going from visibly blurry to sharp
+(`queue/audits/2026-09-04-crisp-shapes.json`).
+
+Next / open: the sharp copy still arrives about 90ms after you stop zooming, so
+there is a soft frame first. That delay predates this and is a separate question
+about how eagerly the tile should be drawn.
