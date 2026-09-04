@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:26.798Z",
-  "updated": "2026-09-04T22:43:48.218Z",
+  "updated": "2026-09-04T23:17:16.185Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from the rough list of queue/audits/2026-09-04-ui-hug.json: \"There is no minimum width, so a button with one letter in it is as narrow as one letter plus its room.\" Model lives in Sources/PhotonzCore/GroupLayout.swift, which today holds kind, direction, columns, gap, rowGap, padding, width and height and nothing else; usedWidth/usedHeight and hugsWidth/hugsHeight are the clamp points. Layout runs in GroupFlow.swift and the panel rows are in Sources/Photonz/LayersPanel.swift. Keep the maths in the core, out of the view. Codable needs the new keys optional so old files decode.",
@@ -35,6 +35,20 @@
     {
       "t": "2026-09-04T22:43:48.217Z",
       "note": "seq 20 -> 2"
+    },
+    {
+      "t": "2026-09-04T23:10:49.407Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T23:15:33.718100Z",
+      "note": "Adversarial review before building. (1) Discoverability: the Layout section already runs Arrangement/Direction/Width/Height/Gap/Padding, and Padding can open four more rows. Four more always-on rows for smallest/largest would be the section telling you it has run out of room, so the limits sit behind the same chevron idiom Padding already uses, on the Width and Height rows, and open themselves once a number is set. (2) The ui-autolayout mock does not draw min/max at all; this comes from a real audit line (a one-letter button is one letter wide), so there is nothing to copy and nothing to argue with. (3) Cut: no separate on/off switch, no per-child limits, no shrink-to-fit and no wrapping. Shortest version that delivers the value: four optional numbers on the model, one clamp, one extra layout pass only when a limit actually bites. (4) Collision found: a limit and a dragged handle. Dragging pins a size, so the ceiling has to stop the handle or the number and the box would disagree; tested. (5) Collision found: min above max. CSS's rule (the smallest wins) is the one people already carry, and typing 96 over a 9 passes through that state anyway. (6) Judgement call, no decision needed because it has no visible consequence a user would weigh: along the axis a stack FLOWS, spare room made by a smallest size packs at the near edge, exactly as a stack given a fixed width already does today. Spreading it would be the distribution control that was deliberately cut. (7) The button case is Free, not Stack, and a Free group leaves its contents where they were put, so a one-letter button held at 96 would have had its word jammed against the left padding. Fixed: on an axis a limit is holding open, the whole block of contents moves by the rule its contents agree on, so a centred label centres in the room the floor made."
+    },
+    {
+      "t": "2026-09-04T23:17:16.184Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
     }
-  ]
+  ],
+  "started": "2026-09-04T23:10:49.406Z",
+  "failures": 1
 }
