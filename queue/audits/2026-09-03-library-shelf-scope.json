@@ -1,0 +1,25 @@
+{
+  "feature": "The Library shelf follows the tab you pick",
+  "epic": "ui-building",
+  "summary": "Clicking a different tab in the Library (Media, Comps, Styles, Systems) now actually changes the tiles. Until today the tab, the header and the search box moved but the tiles stayed on whatever the shelf drew first, so the Components tab showed your screenshots. Typing in the search box did not narrow the tiles either.",
+  "setup": "Photonz Dev, Experiments window, release Next, Library on. View > Show Library if the shelf is not in the right dock.",
+  "try": [
+    { "do": "Open the Library and pick the Media tab.", "shot": "2026-09-03-shelf-scope-media.png" },
+    { "do": "Pick the Comps tab. The tiles should become Button, Text Field, Card, Nav Bar, Badge.", "shot": "2026-09-03-shelf-scope-components.png" },
+    { "do": "Type \"but\" in the search box. Only Button should be left." },
+    { "do": "Press Escape to clear it. All five come back." },
+    { "do": "Pick Media again. Your captures come back." },
+    { "do": "Drag a component tile onto the canvas, then pick Media and drag a capture on. Both should land." }
+  ],
+  "evaluate": [
+    "Does the shelf change fast enough that the tab click feels like the tiles moved with it, not after it?",
+    "Does the search box emptying itself when you switch tabs feel right, or would you rather it kept what you typed?",
+    "With four tabs across a narrow dock, is Comps a name you would guess, or should it be Components?",
+    "Does clicking a layer in the list still feel instant with the Library open?"
+  ],
+  "rough": [
+    "The cause was a speed shortcut added yesterday that told the app one Library shelf is the same as any other, so it stopped redrawing the tiles. That shortcut is gone. Measured on the click-a-layer walk before and after: 51 to 91ms of main thread per click either way, so it was not buying anything.",
+    "Screenshots here are real window captures from the probe, not offscreen renders.",
+    "Styles and Systems tabs have no scripted coverage yet: the harness can only ask for the Media and Components shelves by name."
+  ]
+}

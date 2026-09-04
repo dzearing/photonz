@@ -18,7 +18,7 @@ import SwiftUI
 /// Selection is the app's one selection: picking a tile clears the layer and
 /// canvas selection and opens the item's section in this same dock, exactly
 /// the way picking a layer opens its sections.
-struct LibraryPanel: View, Equatable {
+struct LibraryPanel: View {
     @Environment(EditorState.self) private var editorState
     @Environment(AppCoordinator.self) private var coordinator
     /// The scope you were last in, remembered across launches (and read by the
@@ -53,14 +53,6 @@ struct LibraryPanel: View, Equatable {
     fileprivate nonisolated static let shelfSpace = "library.shelf"
 
     private var scope: LibraryScope { LibraryScope(rawValue: scopeRaw) ?? .media }
-
-    /// Two shelves are the same shelf: everything this panel draws comes from
-    /// the editor state, the app's capture store and its own `@State` and
-    /// `@AppStorage`, all of which wake it on their own. Without this SwiftUI
-    /// cannot tell (`@self changed`) and re-runs the whole shelf, tiles and
-    /// segmented control included, every time the dock above it redraws for
-    /// a selection change (measured 2026-09-03). Used with `.equatable()`.
-    nonisolated static func == (lhs: LibraryPanel, rhs: LibraryPanel) -> Bool { true }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

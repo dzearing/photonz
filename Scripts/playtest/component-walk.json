@@ -10,7 +10,7 @@
     },
     {
       "do": "action",
-      "action": "showLibrary"
+      "action": "showComponentShelf"
     },
     {
       "do": "wait",

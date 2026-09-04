@@ -22,7 +22,7 @@
     },
     {
       "do": "action",
-      "action": "showLibrary"
+      "action": "showMediaShelf"
     },
     {
       "do": "wait",
@@ -31,7 +31,7 @@
     {
       "do": "describe",
       "stage": "2-library-open",
-      "note": "View > Show Library: the shelf joins the dock under the property sections, scope Media, holding the captures the app already keeps"
+      "note": "View > Show Library, on the Media shelf: it joins the dock under the property sections, holding the captures the app already keeps"
     },
     {
       "do": "snapshot",

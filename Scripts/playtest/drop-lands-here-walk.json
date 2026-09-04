@@ -3,7 +3,7 @@
   "seed": "The shelf tile comes from the Screenshots folder, so before running: cp \"Scripts/playtest/fixtures/Photonz drop probe.png\" ~/Pictures/Screenshots/ (and delete it again afterwards).",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
-    { "do": "action", "action": "showLibrary" },
+    { "do": "action", "action": "showMediaShelf" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "focus", "field": "Search media" },
     { "do": "type", "text": "Photonz drop probe" },

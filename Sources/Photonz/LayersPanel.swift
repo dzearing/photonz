@@ -402,9 +402,15 @@ struct InspectorPanel: View {
         case .shadow:
             ShadowInspector()
         case .library:
-            // The shelf does not change with the selection, so it is spared
-            // the re-run every other section takes (see its `==`).
-            LibraryPanel().equatable()
+            // Deliberately NOT `.equatable()`. A shelf saying it is the same
+            // as any other shelf was true of the value and false of what it
+            // draws: the panel's own scope and search box live in `@State` and
+            // `@AppStorage`, so an always-true `==` let SwiftUI keep the tile
+            // grid it built first. Switching from Media to Components moved
+            // the tab, the header and the search box and left the old tiles
+            // sitting under them (2026-09-03). Sparing the shelf a re-run has
+            // to start from what the shelf is actually made of.
+            LibraryPanel()
         case .libraryItem:
             // The picked tile's section, named and filled by the scope it came
             // from: a capture's details, or a component's.

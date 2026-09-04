@@ -1,0 +1,40 @@
+{
+  "out": "/tmp/photonz-playtest/shelf-scope-switch",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "action", "action": "showMediaShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-media", "note": "the shelf on Media: the tiles are captures, dated" },
+    { "do": "panel", "stage": "1-media" },
+    { "do": "snapshot", "name": "1-media" },
+
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "2-components", "note": "the SAME shelf switched to Components: the tab, the header, the search box AND the tiles all have to move together. Before 2026-09-03 the tiles stayed on the captures" },
+    { "do": "panel", "stage": "2-components" },
+    { "do": "snapshot", "name": "2-components" },
+
+    { "do": "dragTile", "tile": "Button", "to": [500, 400] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2b-dragged", "note": "the Button tile could be picked up off the shelf, which is the assertion: this step FAILS outright when the shelf is still showing captures" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "focus", "field": "Search components" },
+    { "do": "type", "text": "but" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-searched", "note": "typing narrows the tiles as well as the box: Button stays, the rest go" },
+    { "do": "panel", "stage": "3-searched" },
+    { "do": "snapshot", "name": "3-searched" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "showMediaShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "4-back-to-media", "note": "and back the other way: the captures return" },
+    { "do": "panel", "stage": "4-back-to-media" },
+    { "do": "snapshot", "name": "4-back-to-media" }
+  ]
+}

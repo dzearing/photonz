@@ -12,7 +12,7 @@
       "note": "a file dragged in from the Finder: the layer is called Hero banner, the file without its extension, not Pasted Image" },
     { "do": "snapshot", "name": "1-dropped-from-finder" },
 
-    { "do": "action", "action": "showLibrary" },
+    { "do": "action", "action": "showMediaShelf" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "focus", "field": "Search media" },
     { "do": "type", "text": "screenshot" },

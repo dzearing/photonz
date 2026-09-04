@@ -195,6 +195,18 @@ selection latency (numbers from 2026-09-03 in its commit).
 - **The probe remembers its settings between runs** (the last Measure mode,
   the style popover, flags). Say what you want (`measureMode`) instead of
   assuming a fresh state, or the walk changes with whoever ran last.
+- **The Library shelf remembers its tab, so a walk says which shelf it wants.**
+  `showLibrary` opens the Library on whatever scope it was last left on, which
+  is what a person wants and what a walk cannot rely on: the search box is
+  labelled per scope ("Search media", "Search components"), so a walk that
+  opens the Library and then focuses one of those passes or fails depending on
+  what ran before it. Use `showMediaShelf` or `showComponentShelf` instead,
+  which open the Library AND put it on that shelf. `PlaytestWalkShelfTests`
+  reads every walk in this folder and fails the suite when one reaches for a
+  scope's search box without asking for that shelf first, so this cannot come
+  back. Keep `showLibrary` for walks that only care that the shelf is on
+  screen, or that make a component or save a style first (both move the shelf
+  to their own scope on their own).
 - **Which shortcuts a walk can press, and why the rest cannot.** Two kinds,
   and the line between them is sharp:
 

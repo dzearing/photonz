@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T11:51:30.554Z",
-  "updated": "2026-09-03T12:08:27.415Z",
+  "updated": "2026-09-04T06:01:48.753432Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Scripts/playtest/library-walk.json step 9 focuses \"Search media\" after a plain showLibrary action, which does not set LibraryPanel.scopeKey. showComponentShelf sets it to components; there is no equivalent for media or styles. Either add a scope field to the showLibrary action or add showMediaShelf/showStyleShelf alongside showComponentShelf in PlaytestAction.",
@@ -25,6 +25,55 @@
     {
       "t": "2026-09-03T12:08:27.414Z",
       "note": "seq 600 -> 70"
+    },
+    {
+      "t": "2026-09-04T05:34:24.005Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Adversarial review before building: a global 'reset the probe's settings before every walk' would fix this class of problem in one stroke, but it is wrong here. Walks like open-groups-remembered-walk and the dragThicknessThin action exist precisely to prove remembered state, so per-walk explicitness is the right shape. Kept showLibrary meaning 'open it, whatever tab', and made walks that care say the tab."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Reproduced first: ran panel-reach-walk (leaves the shelf on Components), then the old library-walk. Failed at step 9 with 'no editable field labelled \"Search media\" is on screen; the ones that are: Search components'. Exactly the reported bug."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Fixed four walks to say their shelf: library-walk, drop-lands-here-walk, placed-image-name-walk (showLibrary -> showMediaShelf) and component-walk (-> showComponentShelf, its describe already claimed the Components scope). showMediaShelf already existed."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Added Tests/PhotonzCoreTests/PlaytestWalkShelfTests.swift: reads every walk in Scripts/playtest and fails when one focuses a scope's search box without asking for that shelf first. It caught exactly the three Search media walks before the fix and passes after."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Then acceptance item 2 turned up a much bigger problem: with library-walk left on Media, panel-reach-walk failed the other way round. Its showComponentShelf moved the tab, the header and the search placeholder but the shelf kept showing captures."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Instrumented LibraryPanel with two temporary playtest markers, one in body and one inside the grid. body saw scope=components while the grid stayed at scope=media. So the body ran and the tile subtree did not."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Cause: LibraryPanel conformed to Equatable with `== { true }` (added 2026-09-03 as a speed shortcut, used via .equatable()). Removing only .equatable() did not help; removing the conformance did. SwiftUI was honouring the always-true equality and keeping the first tile grid it built. Search narrowing was broken by the same thing."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Fix: dropped the Equatable conformance and the .equatable() call, with a comment at the call site saying why. Perf checked with select-click-perf-walk before and after: 51-91ms mainBusy per click either way, longest pass 38-55ms either way. The shortcut was buying nothing measurable."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Added Scripts/playtest/shelf-scope-switch-walk.json as the regression guard. It is self-asserting: after switching to Components it drags the Button tile off the shelf, which fails outright when the shelf is still on captures. Verified it fails on the pre-fix build and passes on the fixed one."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Acceptance verified on the probe: library-walk, panel-reach-walk, library-walk, panel-reach-walk all pass in that order. component-walk, placed-image-name-walk, library-shelf-height-walk and drop-lands-here-walk (with its fixture seeded, then removed) all pass. Scripts/test.sh green: 2744 tests in 249 suites."
+    },
+    {
+      "t": "2026-09-04T06:01:48.753432Z",
+      "note": "Audit: queue/audits/2026-09-03-library-shelf-scope.json, with two real window captures (Screen Recording was granted this run)."
     }
-  ]
+  ],
+  "started": "2026-09-04T05:34:24.004Z"
 }
