@@ -21,8 +21,8 @@ struct DesignedColorPicker: View {
     /// from the environment because a popover's content is built by whoever
     /// presents it, and every caller already has this.
     let editorState: EditorState
-    /// The color the picker opens on.
-    let initialHex: String
+    /// What the picker opens on: a flat color, or the gradient already there.
+    let initialPaint: Paint
     /// What this color paints, in the words the row beside it uses: "Fill",
     /// "Shadow", "Backdrop". It is the picker's title.
     let name: String
@@ -33,14 +33,18 @@ struct DesignedColorPicker: View {
     /// cannot are not offered an opacity slider, because a number with nowhere
     /// to be kept is a lie.
     var supportsOpacity: Bool = false
+    /// Whether this slot can hold a gradient. A slot that can only take a flat
+    /// color — a drop shadow, a text block's ink — never sees the type row at
+    /// all, because four tiles that quietly do nothing are worse than no tiles.
+    var supportsGradient: Bool = false
     /// When this sits inside another popover beside sibling controls, drop the
     /// outer padding so it lines up with them.
     var embedded: Bool = false
     /// Closes the popover from the picker's own close button.
     var onClose: (() -> Void)?
-    /// Called with the hex the color landed on. `#RRGGBB`, or `#RRGGBBAA` once
-    /// opacity is in play and the slot takes it.
-    let onCommit: (String) -> Void
+    /// Called with the paint it landed on. A flat one still carries the hex it
+    /// always did, in `hex`.
+    let onCommit: (Paint) -> Void
 
     /// Which swatch row is showing. One row, four answers to the same
     /// question, rather than four grids stacked into a scroll.
@@ -66,6 +70,17 @@ struct DesignedColorPicker: View {
 
     @State private var color = PickerColor()
     @State private var openedOn = PickerColor()
+    /// What is being painted, ramp and all. `color` is always one color OUT of
+    /// this: the flat color while it is solid, the selected stop once it is a
+    /// gradient, which is what makes the square below mean one thing.
+    @State private var paint = Paint(hex: "#FFFFFF")
+    @State private var stopIndex = 0
+    /// The last paint this picker sent out. Painting the document sends the
+    /// row's own reading of it straight back in, and reopening on that would
+    /// hand the ramp's selection back to the first stop and forget the colour
+    /// the header is comparing against — so an echo of our own change is
+    /// ignored, and only a genuinely different paint reopens the picker.
+    @State private var lastSent: Paint?
     @State private var format: ColorFormat = .hsl
     @AppStorage("colorPickerScope") private var scopeName = Scope.shades.rawValue
     @State private var hexField = ""
@@ -80,6 +95,13 @@ struct DesignedColorPicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             header
+            if supportsGradient {
+                PaintTypeRow(paint: paint, onPick: setKind)
+                if paint.isGradient {
+                    GradientGeometryRow(paint: $paint, stopIndex: $stopIndex,
+                                        onCommit: commitGeometry)
+                }
+            }
             SaturationValueField(color: $color, onCommit: commit)
                 .frame(height: Self.squareHeight)
             formatSwitch
@@ -91,7 +113,10 @@ struct DesignedColorPicker: View {
         .frame(width: Self.width)
         .padding(embedded ? 0 : 14)
         .onAppear { start() }
-        .onChange(of: initialHex) { _, hex in start(hex: hex) }
+        .onChange(of: initialPaint) { _, incoming in
+            guard incoming != lastSent else { return }
+            start(incoming)
+        }
     }
 
     // MARK: - 1 · What you are painting, before and after
@@ -110,7 +135,7 @@ struct DesignedColorPicker: View {
             .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.2), lineWidth: 1))
             .help("Was \(openedOn.hex), now \(color.hex)")
 
-            Text(name)
+            Text(headerTitle)
                 .font(.callout.weight(.medium))
                 .lineLimit(1)
             Spacer(minLength: 0)
@@ -373,11 +398,30 @@ struct DesignedColorPicker: View {
         supportsOpacity ? color.hexWithAlpha : color.hex
     }
 
-    private func start(hex: String? = nil) {
-        let seed = PickerColor(hex: hex ?? initialHex) ?? PickerColor(RGBA(r: 1, g: 1, b: 1))
+    /// What the header says. While a gradient is being edited it names the stop
+    /// the square is pointed at, because otherwise the biggest control in the
+    /// picker would be quietly editing one colour out of several with nothing
+    /// saying which.
+    private var headerTitle: String {
+        guard supportsGradient, paint.isGradient else { return name }
+        return "\(name) · stop \(stopIndex + 1)"
+    }
+
+    private func start(_ incoming: Paint? = nil) {
+        paint = incoming ?? initialPaint
+        lastSent = nil
+        stopIndex = 0
+        let seed = PickerColor(hex: activeHex) ?? PickerColor(RGBA(r: 1, g: 1, b: 1))
         color = seed
         openedOn = seed
         hexField = supportsOpacity ? seed.hexWithAlpha : seed.hex
+    }
+
+    /// The one colour the square, the sliders and the swatch row are editing:
+    /// the flat colour, or the stop that is selected.
+    private var activeHex: String {
+        guard paint.isGradient, paint.stops.indices.contains(stopIndex) else { return paint.hex }
+        return paint.stops[stopIndex].hex
     }
 
     private func pick(_ hex: String) {
@@ -388,7 +432,43 @@ struct DesignedColorPicker: View {
 
     private func commit() {
         hexField = displayHex
-        onCommit(displayHex)
+        if paint.isGradient, paint.stops.indices.contains(stopIndex) {
+            paint.stops[stopIndex].hex = displayHex
+        } else {
+            paint.hex = displayHex
+        }
+        send()
+    }
+
+    /// A change to the ramp or the aim, already made in `paint`. The square
+    /// follows whichever stop is now selected, so clicking a key hands the
+    /// square over to that colour.
+    private func commitGeometry() {
+        if let seed = PickerColor(hex: activeHex) { color = seed }
+        hexField = displayHex
+        send()
+    }
+
+    /// Switching what kind of paint this is. Turning a flat colour into a
+    /// gradient starts the ramp from the colour you already had, so the first
+    /// thing you see is YOUR colour running somewhere; turning one back hands
+    /// you that same flat colour rather than a stop out of the ramp.
+    private func setKind(_ kind: Paint.Kind) {
+        guard kind != paint.kind else { return }
+        let wasFlat = !paint.isGradient
+        if kind != .solid, wasFlat { paint.stops = Paint.seededStops(from: paint.hex) }
+        paint.kind = kind
+        stopIndex = min(max(stopIndex, 0), max(paint.stops.count - 1, 0))
+        if let seed = PickerColor(hex: activeHex) { color = seed }
+        hexField = displayHex
+        send()
+    }
+
+    /// Hands the paint out, remembering it so the reading that comes straight
+    /// back does not reopen the picker on top of the person using it.
+    private func send() {
+        lastSent = paint
+        onCommit(paint)
     }
 
     /// The system screen sampler. Its own magnified loupe follows the pointer

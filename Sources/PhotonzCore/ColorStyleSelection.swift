@@ -316,6 +316,37 @@ extension PhotonzDocument {
         return targets.count
     }
 
+    /// Paints a slot across a selection with a whole paint — flat color or
+    /// gradient — the same way and for the same layers `setColorHex` does.
+    /// Returns how many took it.
+    ///
+    /// A slot that can only hold a flat color takes the paint's flat color
+    /// rather than refusing, so a gradient dragged somewhere it cannot go
+    /// still leaves the color behind rather than nothing.
+    @discardableResult
+    public mutating func setPaint(layerIDs: [UUID], slot: ColorSlot, paint: Paint) -> Int {
+        let targets = colorStyleSelection(layerIDs: layerIDs, slot: slot).layerIDs
+        for id in targets {
+            updateLayer(id: id) {
+                $0.unbindColorStyle(for: slot)
+                $0.setPaint(paint, for: slot)
+            }
+        }
+        return targets.count
+    }
+
+    /// What every layer this row speaks for is painted with, when they all
+    /// agree — the picker opens on this, so opening a gradient shows you the
+    /// gradient rather than a flat colour you never chose. Nil when they
+    /// disagree, which is the Mixed the row already shows.
+    public func sharedPaint(layerIDs: [UUID], slot: ColorSlot) -> Paint? {
+        let targets = colorStyleSelection(layerIDs: layerIDs, slot: slot).layerIDs
+        let paints = targets.compactMap { layer(id: $0)?.paint(for: slot) }
+        guard let first = paints.first, paints.count == targets.count,
+              paints.allSatisfy({ $0 == first }) else { return nil }
+        return first
+    }
+
     /// Lets several layers' slot go back to being a color of its own. Nothing
     /// is repainted: each layer keeps exactly what it is wearing.
     public mutating func unbindColorStyle(layerIDs: [UUID], slot: ColorSlot) {

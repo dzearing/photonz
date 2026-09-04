@@ -650,6 +650,10 @@ private final class Run {
                 if let id = editor.selectedLayerID {
                     editor.clearInstanceStyleOverrides(instance: id)
                 }
+            case .paintSelectionGradient:
+                paintGradient(editor, kind: .linear)
+            case .paintSelectionAngularGradient:
+                paintGradient(editor, kind: .angular)
             case .openColorPicker:
                 if let slot = editor.colorStyleSlots
                     .first(where: { editor.colorStyleSelection(slot: $0).members.first != nil }) {
@@ -1374,6 +1378,20 @@ private final class Run {
     /// A style slider dragged over the whole selection, the way a person drags
     /// it: several live frames and then a release, so one undo step lands for
     /// the whole gesture however many layers it reached.
+    /// Turns the picked layers' first gradient-taking colour into a gradient,
+    /// starting from the colour they already have — exactly what pressing a
+    /// tile in the picker's type row does.
+    private func paintGradient(_ editor: EditorState, kind: Paint.Kind) {
+        guard let slot = editor.colorStyleSlots.first(where: {
+            $0.acceptsGradient && editor.colorStyleSelection(slot: $0).members.first != nil
+        }) else { return }
+        var paint = editor.selectionPaint(slot: slot)
+            ?? Paint(hex: editor.colorStyleSelection(slot: slot).savableColorHex ?? "#3366FF")
+        paint.stops = Paint.seededStops(from: paint.hex)
+        paint.kind = kind
+        editor.setSelectionPaint(slot: slot, paint: paint)
+    }
+
     /// The one Corner Radius row, dragged and let go: the same path the panel
     /// takes, so a walk proves the row a person pulls rather than a field.
     private func dragCornerRadius(_ editor: EditorState, through values: [CGFloat]) {

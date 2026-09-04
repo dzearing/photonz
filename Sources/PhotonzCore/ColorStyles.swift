@@ -43,6 +43,21 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         }
     }
 
+    /// Whether this slot can hold a gradient, or only a flat color.
+    ///
+    /// A shape's inside, a frame's surface and a shape's outline are areas and
+    /// runs the shape rasterizer draws itself, so a ramp fits them. A text
+    /// block's ink is laid down glyph by glyph and the Border is a ring drawn
+    /// over the finished layer; both take one color today. Nothing that cannot
+    /// hold a ramp is ever offered the choice, because a row of gradient tiles
+    /// that quietly does nothing is worse than no row.
+    public var acceptsGradient: Bool {
+        switch self {
+        case .fill, .stroke: return true
+        case .text, .border: return false
+        }
+    }
+
     /// The kind of paint this slot takes, which is what decides whether a
     /// saved color is offered here. An outline and a letter are both ink; a
     /// box's inside and a frame's surface are both surface.
@@ -182,6 +197,48 @@ extension Layer {
             return hasBorderColor ? style.borderColorHex : nil
         default:
             return nil
+        }
+    }
+
+    /// What is painting a slot right now — flat color or gradient — or nil
+    /// when the slot is empty or this layer has no such slot. The gradient
+    /// counterpart of `colorHex(for:)`, which stays the way to ask for the one
+    /// flat color a slot stands for.
+    public func paint(for slot: ColorSlot) -> Paint? {
+        switch (slot, content) {
+        case (.fill, .annotation(let annotation)):
+            guard annotation.shape == .rectangle || annotation.shape == .ellipse else { return nil }
+            return annotation.fill
+        case (.fill, .group(let group)):
+            return group.isFrame ? group.background : nil
+        case (.stroke, .annotation(let annotation)):
+            return annotation.paint
+        default:
+            return colorHex(for: slot).map { Paint(hex: $0) }
+        }
+    }
+
+    /// Paints a slot with a whole paint. A slot that cannot hold a gradient
+    /// takes the flat color out of it rather than refusing, so a paint arriving
+    /// from anywhere always lands as something.
+    public mutating func setPaint(_ paint: Paint, for slot: ColorSlot) {
+        guard colorSlots.contains(slot) else { return }
+        guard slot.acceptsGradient else {
+            setColorHex(paint.hex, for: slot)
+            return
+        }
+        switch (slot, content) {
+        case (.fill, .annotation(var annotation)):
+            annotation.fill = paint
+            content = .annotation(annotation)
+        case (.fill, .group(var group)):
+            group.background = paint
+            content = .group(group)
+        case (.stroke, .annotation(var annotation)):
+            annotation.paint = paint
+            content = .annotation(annotation)
+        default:
+            setColorHex(paint.hex, for: slot)
         }
     }
 

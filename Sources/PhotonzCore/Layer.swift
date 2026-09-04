@@ -76,7 +76,17 @@ public struct TextContent: Hashable, Codable, Sendable {
 public struct AnnotationContent: Hashable, Codable, Sendable {
     public var shape: AnnotationShape
     public var strokeWidth: CGFloat
-    public var colorHex: String
+    /// What the outline is drawn in — and the whole of a line, arrow or
+    /// highlight. Flat by default; it holds a gradient once one is chosen.
+    public var paint: Paint
+    /// The flat color of the outline. Everything that can only draw one color
+    /// reads this: the caption pill's tone, a swatch, a contrast reading.
+    /// Setting it makes the outline flat, which is what painting a shape a
+    /// color means.
+    public var colorHex: String {
+        get { paint.hex }
+        set { paint.hex = newValue; paint.kind = .solid }
+    }
     /// For arrows/lines: start and end in layer-local coordinates.
     public var start: CGPoint
     public var end: CGPoint
@@ -86,9 +96,16 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// rasterizer draws a rounded-rect stroke, so the border follows the corners
     /// instead of being clipped away by a layer-level rounded mask.
     public var cornerRadius: CGFloat
-    /// Rectangle/ellipse-only: interior fill color. Nil = no fill (the classic
-    /// outline-only redline). Highlight ignores it (its color IS the fill).
-    public var fillColorHex: String?
+    /// Rectangle/ellipse-only: what the inside is painted with. Nil = no fill
+    /// (the classic outline-only redline). Highlight ignores it (its color IS
+    /// the fill).
+    public var fill: Paint?
+    /// The fill's flat color, for everything that can only read one. Setting
+    /// it makes the fill flat.
+    public var fillColorHex: String? {
+        get { fill?.hex }
+        set { fill = newValue.map { Paint(hex: $0) } }
+    }
     /// Arrow-only: label text rendered as a pill at the arrow's tail, matching
     /// the measure tool's readout treatment. Nil = plain arrow.
     public var caption: String?
@@ -117,12 +134,12 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
                 caption: String? = nil, captionFontSize: CGFloat = Self.captionFontSizeDefault) {
         self.shape = shape
         self.strokeWidth = strokeWidth
-        self.colorHex = colorHex
+        self.paint = Paint(hex: colorHex)
         self.start = start
         self.end = end
         self.arrowheadScale = arrowheadScale
         self.cornerRadius = cornerRadius
-        self.fillColorHex = fillColorHex
+        self.fill = fillColorHex.map { Paint(hex: $0) }
         self.caption = caption
         self.captionFontSize = captionFontSize
         self.captionOffset = nil
@@ -130,11 +147,25 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         self.captionPinned = false
     }
 
+    /// `paint` and `fill` keep the key names their flat ancestors wrote —
+    /// `colorHex`, `fillColorHex` — because a flat paint still writes a bare
+    /// hex string there. Only a gradient writes an object, so a document with
+    /// none in it is byte for byte what it always was.
+    private enum CodingKeys: String, CodingKey {
+        case shape, strokeWidth
+        case paint = "colorHex"
+        case start, end, arrowheadScale, cornerRadius
+        case fill = "fillColorHex"
+        case caption, captionFontSize, captionOffset, captionGrowth, captionPinned
+    }
+
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         shape = try c.decode(AnnotationShape.self, forKey: .shape)
         strokeWidth = try c.decode(CGFloat.self, forKey: .strokeWidth)
-        colorHex = try c.decode(String.self, forKey: .colorHex)
+        // A bare hex string is what this key has always held; a gradient
+        // writes an object under the same key, so old documents are untouched.
+        paint = try c.decode(Paint.self, forKey: .paint)
         start = try c.decode(CGPoint.self, forKey: .start)
         end = try c.decode(CGPoint.self, forKey: .end)
         // `arrowheadScale` postdates AnnotationContent; old payloads omit it.
@@ -142,7 +173,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         // `cornerRadius` postdates AnnotationContent too.
         cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
         // `fillColorHex` postdates both; legacy shapes are outline-only.
-        fillColorHex = try c.decodeIfPresent(String.self, forKey: .fillColorHex)
+        fill = try c.decodeIfPresent(Paint.self, forKey: .fill)
         // Captions postdate everything above; legacy arrows are caption-free.
         caption = try c.decodeIfPresent(String.self, forKey: .caption)
         captionFontSize = try c.decodeIfPresent(CGFloat.self, forKey: .captionFontSize)
@@ -360,8 +391,15 @@ public struct GroupContent: Hashable, Codable, Sendable {
     public var clipsContents: Bool
     /// The surface a frame paints behind its contents ("#FFFFFF" for a white
     /// screen), or nil for a frame you can see straight through. Ordinary
-    /// groups never paint one.
-    public var backgroundHex: String?
+    /// groups never paint one. Flat by default; it holds a gradient once one
+    /// is chosen.
+    public var background: Paint?
+    /// The surface's flat color, for everything that can only read one.
+    /// Setting it makes the surface flat.
+    public var backgroundHex: String? {
+        get { background?.hex }
+        set { background = newValue.map { Paint(hex: $0) } }
+    }
     /// Set on a **main component**: the identity every future instance points
     /// at, and what the Library lists (`docs/design/ui-building.md`, step C4).
     /// It is not the layer's own id, because a copy of a main is its own
@@ -409,7 +447,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         self.children = children
         self.isFrame = isFrame
         self.clipsContents = clipsContents
-        self.backgroundHex = backgroundHex
+        self.background = backgroundHex.map { Paint(hex: $0) }
         self.componentID = componentID
         self.instanceOf = instanceOf
         self.properties = properties
@@ -448,7 +486,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         guard isFrame else { return }
         try c.encode(true, forKey: .isFrame)
         try c.encode(clipsContents, forKey: .clipsContents)
-        try c.encodeIfPresent(backgroundHex, forKey: .backgroundHex)
+        try c.encodeIfPresent(background, forKey: .backgroundHex)
     }
 
     public init(from decoder: Decoder) throws {
@@ -456,7 +494,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
         children = try c.decode([Layer].self, forKey: .children)
         isFrame = try c.decodeIfPresent(Bool.self, forKey: .isFrame) ?? false
         clipsContents = try c.decodeIfPresent(Bool.self, forKey: .clipsContents) ?? true
-        backgroundHex = try c.decodeIfPresent(String.self, forKey: .backgroundHex)
+        // A bare hex string is what this key has always held; a gradient
+        // writes an object under the same key.
+        background = try c.decodeIfPresent(Paint.self, forKey: .backgroundHex)
         componentID = try c.decodeIfPresent(UUID.self, forKey: .componentID)
         instanceOf = try c.decodeIfPresent(UUID.self, forKey: .instanceOf)
         properties = try c.decodeIfPresent([ComponentProperty].self, forKey: .properties) ?? []

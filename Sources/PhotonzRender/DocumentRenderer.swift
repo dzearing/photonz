@@ -27,6 +27,22 @@ public final class DocumentRenderer: @unchecked Sendable {
         /// layer's border). Empty for content whose pixels depend only on itself.
         let variant: String
     }
+    /// A frame's surface gradient, drawn once and reused. Keyed by the paint
+    /// and the size it was drawn at, neither of which changes while a screen
+    /// is merely being worked in, so re-rendering a screen with a gradient
+    /// behind it costs what re-rendering a flat one costs.
+    private struct SurfaceKey: Hashable {
+        let paint: Paint
+        let pixelWidth: Int
+        let pixelHeight: Int
+    }
+    private var surfaceCache: [SurfaceKey: CIImage] = [:]
+    private var surfaceOrder: [SurfaceKey] = []
+    /// How big a surface gradient is ever drawn, on its longer side. A
+    /// gradient is smooth, so drawing it small and stretching it is the same
+    /// picture; drawing a sweep at the size of a 12-megapixel screen is a
+    /// second and a half of asking every pixel what angle it sits at.
+    private static let surfaceRasterCap: CGFloat = 1024
     /// Per-cache cap; the two caches together stay within 64 entries.
     private static let cacheCapacity = 32
     private var rasterCache: [RasterKey: CIImage] = [:]
@@ -106,6 +122,44 @@ public final class DocumentRenderer: @unchecked Sendable {
         }
         cacheLock.unlock()
         return image
+    }
+
+    /// A frame's surface gradient, sized to its own box, drawn at most
+    /// `surfaceRasterCap` across and stretched back up. Nil for a flat paint,
+    /// which has a cheaper way to be a color.
+    private func surface(_ paint: Paint, size: CGSize) -> CIImage? {
+        guard paint.isGradient, size.width >= 1, size.height >= 1 else { return nil }
+        let shrink = min(1, Self.surfaceRasterCap / max(size.width, size.height))
+        let rasterSize = CGSize(width: max((size.width * shrink).rounded(), 1),
+                                height: max((size.height * shrink).rounded(), 1))
+        let key = SurfaceKey(paint: paint,
+                             pixelWidth: Int(rasterSize.width), pixelHeight: Int(rasterSize.height))
+        cacheLock.lock()
+        if let hit = surfaceCache[key] {
+            cacheLock.unlock()
+            return stretched(hit, to: size)
+        }
+        cacheLock.unlock()
+        // Draw outside the lock — it's the expensive part.
+        guard let cg = GradientPainter.image(paint, size: rasterSize) else { return nil }
+        let image = CIImage(cgImage: cg)
+        cacheLock.lock()
+        if surfaceCache[key] == nil {
+            surfaceCache[key] = image
+            surfaceOrder.append(key)
+            if surfaceOrder.count > Self.cacheCapacity {
+                surfaceCache[surfaceOrder.removeFirst()] = nil
+            }
+        }
+        cacheLock.unlock()
+        return stretched(image, to: size)
+    }
+
+    private func stretched(_ image: CIImage, to size: CGSize) -> CIImage {
+        let extent = image.extent
+        guard extent.width > 0, extent.height > 0 else { return image }
+        return image.transformed(by: CGAffineTransform(scaleX: size.width / extent.width,
+                                                       y: size.height / extent.height))
     }
 
     public func render(_ document: PhotonzDocument, store: ImageStore) -> CGImage? {
@@ -340,8 +394,18 @@ public final class DocumentRenderer: @unchecked Sendable {
         // A frame's surface: the screen its contents sit on, painted first so
         // everything inside lands on top of it.
         let surface: CIImage
-        if group.isFrame, let hex = group.backgroundHex {
-            surface = CIImage(color: ciColor(hex: hex)).cropped(to: box.intersection(buffer))
+        if group.isFrame, let background = group.background {
+            let area = box.intersection(buffer)
+            // A ramp is aimed at the SCREEN, so it is drawn across the frame's
+            // whole box and then cropped to whatever of it is in the picture:
+            // a screen half off the canvas is not a differently aimed screen.
+            if let gradient = self.surface(background, size: box.size) {
+                surface = gradient
+                    .transformed(by: CGAffineTransform(translationX: box.minX, y: box.minY))
+                    .cropped(to: area)
+            } else {
+                surface = CIImage(color: ciColor(hex: background.hex)).cropped(to: area)
+            }
         } else {
             surface = CIImage(color: .clear).cropped(to: buffer)
         }

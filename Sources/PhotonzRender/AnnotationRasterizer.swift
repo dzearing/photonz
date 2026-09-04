@@ -23,8 +23,11 @@ public enum AnnotationRasterizer {
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: 1, y: -1)
 
+        // The ink's flat stand-in: what a caption pill is toned from, and what
+        // a paint that is not a gradient draws with.
         let rgba = RGBA(hex: annotation.colorHex) ?? RGBA(r: 1, g: 0, b: 0)
         let color = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        let ink = annotation.paint
         context.setStrokeColor(color)
         context.setFillColor(color)
         context.setLineWidth(annotation.strokeWidth)
@@ -32,7 +35,19 @@ public enum AnnotationRasterizer {
         // Rectangles join with miters so a thick stroke doesn't fake a corner
         // radius the inspector doesn't show — `cornerRadius` alone rounds them
         // (it curves the path itself). Open strokes keep soft round joins.
-        context.setLineJoin(annotation.shape == .rectangle ? .miter : .round)
+        let join: CGLineJoin = annotation.shape == .rectangle ? .miter : .round
+        context.setLineJoin(join)
+
+        /// Every outline in here goes through one call, so a gradient reaches
+        /// a line, an arrow's shaft and a box's border by the same route.
+        func strokeInk(_ path: CGPath, cap: CGLineCap = .round) {
+            GradientPainter.stroke(path: path, with: ink, width: annotation.strokeWidth,
+                                   lineJoin: join, lineCap: cap, in: context)
+        }
+        /// And so does every solid piece of ink: an arrowhead, a highlight.
+        func fillInk(_ path: CGPath) {
+            GradientPainter.fill(path: path, with: ink, in: context)
+        }
 
         let box = CGRect(x: min(annotation.start.x, annotation.end.x),
                          y: min(annotation.start.y, annotation.end.y),
@@ -41,9 +56,10 @@ public enum AnnotationRasterizer {
 
         switch annotation.shape {
         case .line:
-            context.move(to: annotation.start)
-            context.addLine(to: annotation.end)
-            context.strokePath()
+            let path = CGMutablePath()
+            path.move(to: annotation.start)
+            path.addLine(to: annotation.end)
+            strokeInk(path)
 
         case .arrow:
             let head = Geometry.arrowhead(start: annotation.start, end: annotation.end,
@@ -53,13 +69,14 @@ public enum AnnotationRasterizer {
             let shaftEnd = Geometry.arrowShaftEnd(start: annotation.start, end: annotation.end,
                                                   strokeWidth: annotation.strokeWidth,
                                                   scale: annotation.arrowheadScale)
-            context.move(to: annotation.start)
-            context.addLine(to: shaftEnd)
-            context.strokePath()
-            context.beginPath()
-            context.addLines(between: head)
-            context.closePath()
-            context.fillPath()
+            let shaft = CGMutablePath()
+            shaft.move(to: annotation.start)
+            shaft.addLine(to: shaftEnd)
+            strokeInk(shaft)
+            let tip = CGMutablePath()
+            tip.addLines(between: head)
+            tip.closeSubpath()
+            fillInk(tip)
             if annotation.hasCaption {
                 drawCaption(annotation, border: color, in: context)
             }
@@ -67,40 +84,32 @@ public enum AnnotationRasterizer {
         case .rectangle:
             // Inset by half the stroke so the outline stays inside start..end.
             let inset = box.insetBy(dx: annotation.strokeWidth / 2, dy: annotation.strokeWidth / 2)
+            let path: CGPath
             if annotation.cornerRadius > 0, !inset.isEmpty {
                 // Round the stroke itself (clamped to a capsule at most), so the
                 // border follows the corners rather than being clipped off.
                 let radius = min(annotation.cornerRadius, min(inset.width, inset.height) / 2)
-                let path = CGPath(roundedRect: inset, cornerWidth: radius,
-                                  cornerHeight: radius, transform: nil)
-                if let fill = fillColor(annotation) {
-                    context.setFillColor(fill)
-                    context.addPath(path)
-                    context.fillPath()
-                }
-                if annotation.strokeWidth > 0 {   // 0 = no border (fill only)
-                    context.addPath(path)
-                    context.strokePath()
-                }
+                path = CGPath(roundedRect: inset, cornerWidth: radius,
+                              cornerHeight: radius, transform: nil)
             } else {
-                if let fill = fillColor(annotation) {
-                    context.setFillColor(fill)
-                    context.fill(inset)
-                }
-                if annotation.strokeWidth > 0 { context.stroke(inset) }
+                path = CGPath(rect: inset, transform: nil)
             }
+            if let fill = annotation.fill {
+                GradientPainter.fill(path: path, with: fill, in: context)
+            }
+            if annotation.strokeWidth > 0 { strokeInk(path) }   // 0 = no border (fill only)
 
         case .ellipse:
             let inset = box.insetBy(dx: annotation.strokeWidth / 2, dy: annotation.strokeWidth / 2)
-            if let fill = fillColor(annotation) {
-                context.setFillColor(fill)
-                context.fillEllipse(in: inset)
+            let path = CGPath(ellipseIn: inset, transform: nil)
+            if let fill = annotation.fill {
+                GradientPainter.fill(path: path, with: fill, in: context)
             }
-            if annotation.strokeWidth > 0 { context.strokeEllipse(in: inset) }  // 0 = no border
+            if annotation.strokeWidth > 0 { strokeInk(path) }   // 0 = no border
 
         case .highlight:
             // A filled box; the renderer composites it with multiply blend.
-            context.fill(box)
+            fillInk(CGPath(rect: box, transform: nil))
         }
 
         return context.makeImage()
@@ -131,11 +140,5 @@ public enum AnnotationRasterizer {
                             fill: fill, border: border,
                             textColorHex: AnnotationContent.captionTextColorHex,
                             shadow: PillRasterizer.Shadow(), in: context)
-    }
-
-    /// The interior fill for box shapes, nil when the shape is outline-only.
-    private static func fillColor(_ annotation: AnnotationContent) -> CGColor? {
-        guard let hex = annotation.fillColorHex, let rgba = RGBA(hex: hex) else { return nil }
-        return CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
     }
 }

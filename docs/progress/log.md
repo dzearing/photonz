@@ -7362,3 +7362,80 @@ stack reports no height for rows it has not made
 
 Verified: `Scripts/test.sh` green (2633 tests), four walks on the probe with
 real screen captures. Audit: `queue/audits/2026-09-04-layers-row-count.json`.
+
+## 2026-09-04 — A color slot can hold a gradient (Next, `next-color-picker`)
+
+Every color in the document was one flat hex string, so a box could only ever be
+one color. A shape's fill, its outline and a screen's surface can now hold a
+gradient instead: straight, spreading out from a point, or sweeping around one.
+
+**The model.** `Paint` (PhotonzCore, `Paint.swift`) is a kind, a flat hex, a
+ramp of stops, an angle and a centre. Two things about it are deliberate:
+
+- The flat color never goes away. `hex` is what a solid paints AND what
+  everything that can only draw one color reads: an arrow's caption pill tone, a
+  swatch in a list, a contrast reading. So Solid to Linear and back gives you the
+  color you started with, and nothing that only understands hexes had to be
+  taught about ramps first.
+- A flat paint writes the plain string it always wrote. `Paint.encode` drops to a
+  single-value container while it is solid, so `"#FF3B30"` on disk stays
+  `"#FF3B30"` on disk. `AnnotationContent.paint` and `.fill` and
+  `GroupContent.background` keep the wire keys their flat ancestors used
+  (`colorHex`, `fillColorHex`, `backgroundHex`) with `colorHex`-shaped computed
+  shims over them, so a document saved before gradients existed opens unchanged,
+  one with no gradient in it is byte for byte what it was, and the sixty-odd
+  existing call sites kept working.
+
+**The pixels.** One `GradientPainter` (PhotonzRender) fills a path, strokes a
+path and makes an image. `AnnotationRasterizer` now builds `CGPath`s and hands
+every stroke and fill through it, which is what lets an outline take a ramp: the
+pen stroke is turned into an outline with `replacePathWithStrokedPath` and the
+ramp poured through it. `DocumentRenderer` paints a frame's surface from the
+same painter. Canvas, export and layer thumbnails all go through that composite,
+so all three came for free.
+
+Core Graphics has no sweep. A fan of thin wedges was tried first and left faint
+rings across the shape, plainly visible at full size in the first walk, so the
+sweep is worked out a pixel at a time from a 1024-entry ramp table instead.
+
+**The picker.** `GradientPaintControls.swift` adds the type row (four tiles, each
+drawn with YOUR color as if it were that kind), the ramp with its stop keys, the
+add/remove/reverse bar, and the 64pt aim pad. `DesignedColorPicker` keeps ONE
+saturation square: it edits the flat color while the paint is solid and the
+selected stop once it is a gradient, and the header says which
+("Fill · stop 1"). Only `ColorSlot.acceptsGradient` slots see any of it, so the
+Shadow row's picker has no type row at all.
+
+Two defects found by using the built thing and fixed:
+
+- The aim pad drew a handle at the centre for a straight run, which cannot move
+  its origin. Nothing in the pad is drawn like a handle now unless it can be
+  picked up.
+- Painting the document sends the row's own reading of it straight back into the
+  picker, and reopening on that handed the ramp's selection back to stop 1 mid
+  edit. The picker now ignores an echo of its own change (`lastSent`).
+
+**Left flat, on purpose.** Text ink (drawn glyph by glyph) and the Effects
+Border ring (a Core Image pass over the finished layer) are not painted by the
+shape rasterizer, so they take one color still. So does the toolbar swatch that
+arms the next shape, and Save style. All four are in the audit's `rough`.
+
+Verified: `Scripts/test.sh` green (2669 tests), `gradient-paint-walk.json` on the
+probe with real screen captures. Audit:
+`queue/audits/2026-09-04-gradient-paint.json`.
+
+**Measured, because this touches the composite path.** A 12-megapixel canvas, a
+screen filling it, ten boxes on top, best of five re-renders on a warm renderer:
+
+| | flat | linear | radial/angular |
+| --- | --- | --- | --- |
+| gradient boxes only | 14ms | 12ms | 11ms |
+| screen's surface too, first written | 14ms | 41ms | **1515ms** |
+| screen's surface too, as shipped | 14ms | 11ms | 11ms |
+
+The sweep asks every pixel what angle it sits at, so painting one across a
+12-megapixel surface was a second and a half. A surface gradient is now drawn at
+most 1024 across, stretched, and kept in the renderer keyed by paint and size,
+which is right because a gradient is smooth and a screen's surface does not
+change while you work inside it. Cold, the first angular surface costs 174ms
+once. `GradientPerfTests` holds the settled numbers to three times flat.

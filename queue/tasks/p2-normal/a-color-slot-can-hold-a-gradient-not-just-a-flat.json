@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1010,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T02:04:00.051Z",
-  "updated": "2026-09-04T02:04:00.052Z",
+  "updated": "2026-09-04T03:19:56.587303Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Named in the picker task (one-colour-picker-the-designed-one-everywhere-a) as the deliberate follow-up. The picker's header and its VStack already leave room for the type row; nothing is stubbed, so this adds it. The mock is docs/design/mocks/pages/color.html (cp-types, cp-geo, the stop strip) and docs/design/mocks/shared/components/colorpicker.js has the whole interaction worked out including the aim pad and the callout bubble. Model side: LayerContent colour fields are String hexes today, so a Paint type has to arrive in PhotonzCore with Codable back-compat (a plain hex string stays a hex string), and every rasterizer that reads a hex needs the gradient path.",
@@ -24,6 +24,27 @@
     {
       "t": "2026-09-04T02:04:00.052Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T02:48:40.739Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T02:51:45.315553Z",
+      "note": "Adversarial review, before building. (1) First-time walk: click a Fill swatch, the picker opens, a new top row offers four tiles. Clicking Linear must NOT throw away the flat colour you had, and the big square below must visibly become 'the colour of the selected stop' or people will paint the wrong thing. Fix: Paint keeps its flat hex alongside the stops, so Solid<->Linear round-trips losslessly, and the selected stop key is drawn selected on the ramp with the square wired to it. (2) The goal sentence says 'aiming it on the canvas', but acceptance only asks for an aim pad in the picker, and the mock only has one (cp-geo). Canvas gradient handles are a separate, bigger feature; NOT building them, noted in the audit. (3) Cut as decorative: the mock's callout bubble on the aim pad, and the per-stop hex field (the shared square/sliders already edit the selected stop). (4) Slots: fill (box interior + frame surface) and stroke (shape outline) get gradients. Text ink and the layer-style Border ring stay flat this pass, because they render through TextRasterizer and a Core Image border pass rather than the shape rasterizer; drop shadow stays flat forever. That satisfies 'a flat-only slot never shows the row'."
+    },
+    {
+      "t": "2026-09-04T02:51:45.315553Z",
+      "note": "Plan. Core: new Paint value (kind solid/linear/radial/angular, flat hex, stops, angle, centre) that encodes as a BARE STRING while solid, so every existing document keeps writing the hexes it always wrote and old documents decode untouched. AnnotationContent.fillColorHex/colorHex and GroupContent.backgroundHex become Paint behind the same wire keys, with hex shims so the 60-odd existing call sites keep working. Render: one GradientPainter in PhotonzRender used by AnnotationRasterizer (fill + stroke, clipped to the path) and by DocumentRenderer's frame surface; canvas, export and layer thumbnails all go through that composite, so they come for free. UI: DesignedColorPicker gains the type row, the stop ramp and the aim pad; ColorPartRow passes the slot's Paint in and takes one back."
+    },
+    {
+      "t": "2026-09-04T03:19:56.587303Z",
+      "note": "Built. Core: Paint (kind, flat hex, stops, angle, centre) encoding as a bare string while solid, so old documents open unchanged and a document with no gradient is byte for byte what it was. Render: one GradientPainter for fills, outlines (via replacePathWithStrokedPath) and frame surfaces; canvas, export and layer thumbnails share the composite so all three came for free. UI: type row, stop ramp with add/remove/reverse, 64pt aim pad, gated on ColorSlot.acceptsGradient so the Shadow row shows nothing."
+    },
+    {
+      "t": "2026-09-04T03:19:56.587303Z",
+      "note": "Adversarial review of the built thing, on the probe with real screen captures (Screen Recording granted). Three defects found and fixed: (1) the angular sweep, drawn as a fan of wedges, left faint rings across the shape at full size, so it is worked out a pixel at a time now; (2) the aim pad drew a grabbable-looking handle at the centre of a straight run, which has no origin to move; (3) painting the document sent the row's reading straight back into the open picker, which handed the ramp's selection back to stop 1 in the middle of an edit. Left honest in the audit: dragging inside the popover cannot be driven by a walk, so that one behaviour was checked by reading the commit path rather than by using it."
     }
-  ]
+  ],
+  "started": "2026-09-04T02:48:40.738Z"
 }

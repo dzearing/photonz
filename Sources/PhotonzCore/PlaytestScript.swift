@@ -295,6 +295,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// on that row does. The field takes typing like any other, and Return
     /// saves the border color under that name.
     case saveBorderColorStyle
+    /// Paint every picked layer's first gradient-taking slot with a straight
+    /// gradient running out of the colour it already has, which is what
+    /// choosing Linear in the picker's type row does. The type row is inside a
+    /// popover a walk cannot reach with a pointer, so this is the way in.
+    case paintSelectionGradient
+    /// The same, sweeping around the middle instead, so a walk can show more
+    /// than one kind of gradient without four separate actions.
+    case paintSelectionAngularGradient
     /// Open the color picker on the Color section's first painted row, which
     /// is what clicking that row's swatch does. The dock is out of a walk's
     /// pointer reach, so this is how the picker itself gets photographed.

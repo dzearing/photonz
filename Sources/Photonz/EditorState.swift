@@ -4220,6 +4220,24 @@ final class EditorState {
         recordRecentColor(hex: hex)
     }
 
+    /// Paints a slot across the selection with a whole paint — flat colour or
+    /// gradient. The gradient counterpart of `setSelectionColor`, and the only
+    /// way a gradient reaches the document.
+    func setSelectionPaint(slot: ColorSlot, paint: Paint) {
+        let targets = colorStyleSelection(slot: slot).layerIDs
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { _ = $0.setPaint(layerIDs: targets, slot: slot, paint: paint) }
+        // The recents row is a row of colours, so a gradient leaves its flat
+        // colour there rather than nothing.
+        recordRecentColor(hex: paint.hex)
+    }
+
+    /// What the picked layers are painted with in a slot, when they agree.
+    func selectionPaint(slot: ColorSlot) -> Paint? {
+        document?.sharedPaint(layerIDs: colorStyleTargetIDs, slot: slot)
+    }
+
     /// Repaints a style and everything wearing it, as one undo step.
     func setColorStyleHex(styleID: UUID, hex: String) {
         guard colorStylesEnabled else { return }

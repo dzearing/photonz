@@ -59,7 +59,7 @@ public enum RenderDiff {
               old.isFrame == new.isFrame else { return false }
         guard old.isFrame else { return true }
         return old.frame.standardized.size == new.frame.standardized.size
-            && old.group?.backgroundHex == new.group?.backgroundHex
+            && old.group?.background == new.group?.background
             && old.group?.clipsContents == new.group?.clipsContents
     }
 

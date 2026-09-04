@@ -484,20 +484,24 @@ struct SelectionColorWell: View {
             .accessibilityLabel("\(part) of \(selection.count) selected layers")
             .popover(isPresented: editorState.colorWellBinding(wellKey), arrowEdge: .top) {
                 ColorPickerContent(editorState: editorState,
-                                   hex: openingHex(selection),
+                                   paint: openingPaint(selection),
                                    name: part,
                                    slot: slot,
                                    supportsOpacity: true,
-                                   onClose: { editorState.openColorWell = nil }) { hex in
-                    editorState.setSelectionColor(slot: slot, hex: hex)
+                                   supportsGradient: slot.acceptsGradient,
+                                   onClose: { editorState.openColorWell = nil }) { paint in
+                    editorState.setSelectionPaint(slot: slot, paint: paint)
                 }
             }
     }
 
     @ViewBuilder private func label(_ selection: ColorStyleSelection) -> some View {
         if case .color(let hex) = selection.reading {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(hex: hex))
+            // The swatch shows the PAINT, so a row holding a gradient looks
+            // like the gradient rather than like the one flat colour it stands
+            // for. Everything else about the chip is what it always was.
+            PaintFill(paint: editorState.selectionPaint(slot: slot) ?? Paint(hex: hex))
+                .clipShape(RoundedRectangle(cornerRadius: 4))
                 // Under a color that can be see-through, so a translucent fill
                 // reads as translucent rather than as a paler one.
                 .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
@@ -524,6 +528,13 @@ struct SelectionColorWell: View {
     /// rather than on white.
     private func openingHex(_ selection: ColorStyleSelection) -> String {
         selection.savableColorHex ?? selection.members.first?.colorHex ?? "#FFFFFF"
+    }
+
+    /// And the paint it opens on: the gradient they all share when there is
+    /// one, so opening a gradient shows you the gradient instead of quietly
+    /// flattening it the moment you click.
+    private func openingPaint(_ selection: ColorStyleSelection) -> Paint {
+        editorState.selectionPaint(slot: slot) ?? Paint(hex: openingHex(selection))
     }
 
     private func help(_ selection: ColorStyleSelection) -> String {

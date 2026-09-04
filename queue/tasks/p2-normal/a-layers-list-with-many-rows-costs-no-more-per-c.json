@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T01:26:57.451Z",
-  "updated": "2026-09-04T02:46:16.820365Z",
+  "updated": "2026-09-04T02:47:27.266Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the selection latency work merged 2026-09-04. Every LayersPanel row re-runs its body per click, O(rows). Small at todays row counts, but it scales with the users documents, and components and groups make documents deeper. The Library panel was fixed the same way in that work: conform the view to Equatable and give it an equatable() so SwiftUI can skip it. Measure with Scripts/playtest/select-click-perf-walk.json.",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-04T02:46:16.820365Z",
       "note": "Scripts/test.sh green, 2633 tests. Audit queue/audits/2026-09-04-layers-row-count.json with two real screen captures."
+    },
+    {
+      "t": "2026-09-04T02:47:27.266Z",
+      "note": "The layers list draws each row as an equatable view over plain values, and the document hands back what every row draws in one walk of the tree (PhotonzCore layerRows, 7 new tests). Measured on the probe with a new walk, two runs each side: the dock's share of a click was 36-38ms at 4 layers and 45-46ms at 121, and is now 29ms at both. Behaviour A/B against the old build with panel-reach-walk and name-field-handback matched. Scripts/test.sh green (2633). Audit queue/audits/2026-09-04-layers-row-count.json. Pushed as f5c86a1."
     }
   ],
-  "started": "2026-09-04T02:20:24.240Z"
+  "started": "2026-09-04T02:20:24.240Z",
+  "completed": "2026-09-04T02:47:27.266Z"
 }

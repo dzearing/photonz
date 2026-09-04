@@ -10,8 +10,8 @@ import SwiftUI
 /// everywhere" a fact rather than an intention.
 struct ColorPickerContent: View {
     let editorState: EditorState
-    /// The color to open on.
-    let hex: String
+    /// What to open on: a flat color, or the gradient already in the slot.
+    let paint: Paint
     /// What this color paints, in the row's own words: "Fill", "Shadow".
     let name: String
     /// The layer slot, when the color is one, so a saved color knows what it
@@ -19,26 +19,58 @@ struct ColorPickerContent: View {
     var slot: ColorSlot?
     /// Whether the thing being painted can keep a transparency.
     var supportsOpacity: Bool = false
+    /// Whether the slot can hold a gradient. Off by default, so a row that has
+    /// never had one to offer is exactly what it was.
+    var supportsGradient: Bool = false
     /// Drops the outer padding when this sits inside another popover.
     var embedded: Bool = false
     var onClose: (() -> Void)?
-    let onCommit: (String) -> Void
+    let onCommit: (Paint) -> Void
+
+    /// The flat-color way in, which is every row that only ever holds one.
+    init(editorState: EditorState, hex: String, name: String, slot: ColorSlot? = nil,
+         supportsOpacity: Bool = false, embedded: Bool = false,
+         onClose: (() -> Void)? = nil, onCommit: @escaping (String) -> Void) {
+        self.init(editorState: editorState, paint: Paint(hex: hex), name: name, slot: slot,
+                  supportsOpacity: supportsOpacity, supportsGradient: false,
+                  embedded: embedded, onClose: onClose,
+                  onCommit: { onCommit($0.hex) })
+    }
+
+    /// The way in for a slot that can hold a gradient.
+    init(editorState: EditorState, paint: Paint, name: String, slot: ColorSlot? = nil,
+         supportsOpacity: Bool = false, supportsGradient: Bool = false,
+         embedded: Bool = false, onClose: (() -> Void)? = nil,
+         onCommit: @escaping (Paint) -> Void) {
+        self.editorState = editorState
+        self.paint = paint
+        self.name = name
+        self.slot = slot
+        self.supportsOpacity = supportsOpacity
+        self.supportsGradient = supportsGradient
+        self.embedded = embedded
+        self.onClose = onClose
+        self.onCommit = onCommit
+    }
 
     var body: some View {
         if editorState.designedColorPickerEnabled {
             DesignedColorPicker(editorState: editorState,
-                                initialHex: hex,
+                                initialPaint: paint,
                                 name: name,
                                 slot: slot,
                                 supportsOpacity: supportsOpacity,
+                                supportsGradient: supportsGradient,
                                 embedded: embedded,
                                 onClose: embedded ? nil : onClose,
                                 onCommit: onCommit)
         } else {
-            ColorPickerPopover(initialHex: hex,
+            // The picker that shipped before the designed one knows nothing
+            // about ramps, so it hands back the flat color it always did.
+            ColorPickerPopover(initialHex: paint.hex,
                                recents: editorState.recentColors.colors,
                                embedded: embedded,
-                               onCommit: onCommit)
+                               onCommit: { onCommit(Paint(hex: $0)) })
         }
     }
 }

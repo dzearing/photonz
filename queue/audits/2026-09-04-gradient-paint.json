@@ -1,0 +1,51 @@
+{
+  "feature": "A color slot can hold a gradient",
+  "epic": "ui-components",
+  "summary": "A shape's fill, its outline and a screen's surface can now be a gradient instead of one flat color. The same swatch you already click opens the same picker, with a new top row offering Solid, Linear, Radial and Angular drawn with the colors you are already using.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is One color picker, everywhere a color is chosen, on by default.",
+  "try": [
+    {
+      "do": "Draw a rectangle with R, then press V and click it."
+    },
+    {
+      "do": "In the Color section on the right, click the Fill swatch."
+    },
+    {
+      "do": "Look at the four tiles across the top: each one is YOUR color drawn that way. Click Linear.",
+      "shot": "2026-09-04-gradient-paint-1-picker.png"
+    },
+    {
+      "do": "Drag the white handle on the little square at the left to aim the gradient."
+    },
+    {
+      "do": "Click the yellow key at the right end of the ramp, then drag in the big square to recolor that end."
+    },
+    {
+      "do": "Press + on the ramp bar to add a third stop, then the double arrow to reverse the whole ramp."
+    },
+    {
+      "do": "Draw a frame with F, click it, and give its Fill a Radial gradient."
+    },
+    {
+      "do": "Open the Shadow section's color swatch and confirm there is no type row there at all.",
+      "shot": "2026-09-04-gradient-paint-2-shadow-no-row.png"
+    }
+  ],
+  "evaluate": [
+    "Do the four tiles tell you what each one would do without reading the words under them?",
+    "When you click Linear, is it obvious that the big square below now edits ONE END of the ramp rather than the whole fill?",
+    "Is the 64pt aim pad big enough to aim with, or does it want to be the width of the picker?",
+    "Is dragging a stop key on a 130pt ramp precise enough, or do you want to type a position?",
+    "Is it right that Text and Border only ever take a flat color, or did you expect a gradient there too?"
+  ],
+  "rough": [
+    "The toolbar's own color swatch, the one that sets what the NEXT shape is drawn with, is still flat only. You make a gradient by drawing the shape and then painting it, not by arming the tool with one. Making tool defaults gradient-capable is a separate piece of work.",
+    "Text ink and the Effects section's Border ring stay flat. They are drawn glyph by glyph and as a ring over the finished layer respectively, neither of which the shape rasterizer paints, so they were left out of this pass rather than half-done.",
+    "Save style still saves the flat color only, so a gradient cannot be put in the Library under a name yet.",
+    "Choosing Angular for a whole screen's surface pauses for about a sixth of a second the first time, on a 12-megapixel canvas. The sweep is worked out a pixel at a time, so it is drawn once at up to 1024 across, stretched, and kept; every render after that costs what a flat surface costs. Painting one at full size, which is what it did before this was measured, took a second and a half.",
+    "The goal sentence said you would aim a gradient ON THE CANVAS. That is not what shipped and it is not what the mock drew: the aim pad lives in the picker. Handles on the shape itself are a bigger, separate feature.",
+    "Cut from the mock: the beaked callout bubble over the selected stop key and its Position field. The header says which stop the square is editing and the bar under the ramp reads its position, which is the same three facts without a floating overlay to keep aligned.",
+    "The angular gradient is worked out a pixel at a time because Core Graphics has no sweep. A fan of wedges was tried first and left faint rings across the shape, visible at full size.",
+    "One thing could not be driven by a scripted walk and so was checked by reading the code rather than by using it: dragging a stop key or the aim pad inside the popover. A walk cannot reach into the panel with a pointer. The screenshots are real captures of the picker in place; the drag behaviour inside it is not photographed."
+  ]
+}
