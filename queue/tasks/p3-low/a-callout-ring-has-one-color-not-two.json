@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 630,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T20:50:14.751Z",
-  "updated": "2026-09-04T07:13:41.682Z",
+  "updated": "2026-09-04T07:27:36.122Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fallout from a-border-color-sits-with-the-other-colors: ColorSlot.border is on any layer with style.borderWidth > 0, and a callout defaults to a 3pt ring (ZoomCalloutBuilder.defaultStyle), so a picked callout now gets a Color section holding just Border. The toolbar path is EditorState.setCalloutBorderColor / EditorView.activeToolColorHex; the new path is setSelectionColor(slot: .border). Both perform one undo step and both write style.borderColorHex, so they agree on the value; what they do not share is any wording saying they are the same thing. Cheapest honest answer is probably to let the Color section be the home and have the toolbar swatch keep working as the tool default.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-04T08:55:00.000Z",
       "note": "Verified live: Scripts/playtest/callout-ring-color-walk.json, probe with Screen Recording granted. Section shows Magnification 2.0x and Shape Rectangle|Circle; pulling to 4x grew the frame to 880x560 around its centre; Circle rounded the ring on canvas; the Color section's Border row repainted the ring crimson and read back; three undos put colour, shape and size back one step each. Scripts/test.sh green (2789 tests). Audit: queue/audits/2026-09-04-callout-one-home.json with three real screen captures."
+    },
+    {
+      "t": "2026-09-04T07:27:36.122Z",
+      "note": "The ring colour already had one home, the Border row in the Color section: the tool bar rival the task described was unreachable code (that popover belongs to the tool in your hand, and picking one up clears the layer selection). Deleted it, and gave the two controls it was hiding, Magnification and Shape, a real home: a new Zoom Callout section in the dock (Sources/Photonz/CalloutInspector.swift). setCalloutBorderColor and setCalloutBorderWidth are gone, so a callout's ring is set exactly where every other layer's border is. Verified live in the probe with Screen Recording (Scripts/playtest/callout-ring-color-walk.json): 4x, Circle, repaint, three undos. Scripts/test.sh green (2789). Audit: queue/audits/2026-09-04-callout-one-home.json. Pushed as 5d61e29."
     }
   ],
-  "started": "2026-09-04T07:13:41.682Z"
+  "started": "2026-09-04T07:13:41.682Z",
+  "completed": "2026-09-04T07:27:36.122Z"
 }

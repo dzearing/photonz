@@ -1,0 +1,27 @@
+{
+  "id": "a-callout-should-be-round-or-square-while-you-dr",
+  "title": "A callout should be round or square while you draw it",
+  "goal": "Drawing a zoom callout always gives you a rectangle, and the only way to get a circle is to draw one and then change it in the right hand panel. If circles are something people reach for, the choice should be there while the tool is in hand rather than a step afterwards.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T07:27:44.952Z",
+  "updated": "2026-09-04T07:27:44.952Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Fallout from a-callout-ring-has-one-color-not-two. Shape now lives only in CalloutInspector (Sources/Photonz/CalloutInspector.swift), which needs a callout picked. The other tools keep their defaults in AnnotationStyles/UserDefaults; a callout has no equivalent, ZoomCalloutBuilder.layer always takes the default ZoomCalloutContent shape (.rectangle). Worth asking whether anyone wants circles at all before building the remembered-default plumbing.",
+  "acceptance": [
+    "The Zoom Callout tool remembers the shape you last drew, the way the other tools remember their settings",
+    "The choice is reachable without drawing something first",
+    "A callout already on the canvas can still be switched between the two"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T07:27:44.952Z",
+      "note": "created (manual)"
+    }
+  ]
+}
