@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 15,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T01:26:57.419Z",
-  "updated": "2026-09-04T02:08:34.198Z",
+  "updated": "2026-09-04T02:19:54.827Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the selection latency work merged 2026-09-04, which took the common click from 63ms of main thread work to 46ms but left this one at a 53ms run loop pass. Cause is section creation: Position and Size, Effects, Shadow and Component all mount at once. Two options the runner should weigh and record: keep those sections mounted and hidden, or hand the dock its update one run loop pass after the canvas so handles land first. Measure with Scripts/playtest/select-click-perf-walk.json, which reports mainBusy and the longest pass per click.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-04T02:19:22.202471Z",
       "note": "Scripts/test.sh green: 2626 tests in 234 suites."
+    },
+    {
+      "t": "2026-09-04T02:19:54.826Z",
+      "note": "The dock now holds back only its brand new sections one run-loop pass, so the canvas draws first and the panel follows. Measured on the probe with select-click-perf-walk: the come-back click's longest pass went 63/60/66ms to 44/44/43ms, the same as a click that only moves the selection (unchanged at 44/44/45ms). Total main-thread time is unchanged, which the audit says plainly. PanelSectionArrival in PhotonzCore (10 tests), DockArrivals in LayersPanel. Scripts/test.sh green (2626). Audit queue/audits/2026-09-04-panel-arrival.json with two real screen captures. Pushed as 0dd61bc."
     }
   ],
-  "started": "2026-09-04T02:08:34.198Z"
+  "started": "2026-09-04T02:08:34.198Z",
+  "completed": "2026-09-04T02:19:54.827Z"
 }
