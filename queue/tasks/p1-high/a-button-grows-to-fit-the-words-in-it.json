@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T15:25:54.789Z",
-  "updated": "2026-09-04T17:02:16.880Z",
+  "updated": "2026-09-04T17:02:39.696Z",
   "deps": [
     "you-change-a-copy-through-its-knobs-and-nothing"
   ],
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-04T17:02:16.879Z",
       "note": "Adversarial pass on the built thing, in the probe app (Scripts/playtest/button-hug-walk.json, Screen Recording granted so the audit carries real captures). Found a real break: typing a padding bigger than the height the group was given squashed the pill to nothing, and a shape squashed to no height can never be given one back, so the button and its copy vanished. Fixed twice over: the surface is placed once from the box rather than being squeezed into the room inside the edges first, and nothing that has a size is ever handed a box with none. Covered by a test. Two papercuts I could not fix inside this task, both filed: double clicking a copy's words puts the caret at the end so typing appends (the walk's button reads 'ButtonSave all the changes'), and a copy still offers a Layout section whose numbers are thrown away at the next sync. Also filed: the card, nav bar and text field still hold the size they were drawn at."
+    },
+    {
+      "t": "2026-09-04T17:02:39.696Z",
+      "note": "Every group can be told to be the size of what is inside it, with room on all four sides, and a piece set to Stretch both ways is the surface behind the rest rather than something that sets the size. The starter Button and Badge are built on it, so a longer label makes a wider button with nothing to drag. Core in GroupFlow/GroupLayout/Layer (PhotonzCore), rows in ArrangementInspector. TDD in Tests/PhotonzCoreTests/GroupHugTests.swift; 3050 tests green; walked in the probe app with Scripts/playtest/button-hug-walk.json, which found and fixed a break where room bigger than a fixed height squashed the fill away. Audit queue/audits/2026-09-04-ui-hug.json with two real captures. Three follow-ups filed."
     }
   ],
-  "started": "2026-09-04T16:24:56.769Z"
+  "started": "2026-09-04T16:24:56.769Z",
+  "completed": "2026-09-04T17:02:39.696Z"
 }
