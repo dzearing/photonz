@@ -1,0 +1,27 @@
+{
+  "id": "exporting-at-2x-draws-the-text-sharp-instead-of",
+  "title": "Exporting at 2x draws the text sharp instead of blowing the picture up",
+  "goal": "Exporting a redline at 2x makes a bigger file but not a sharper one: the app finishes the picture at the document size and then enlarges it, so the words come out just as soft as they were. A 2x export should have letters with hard edges.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 1130,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T08:22:23.542Z",
+  "updated": "2026-09-04T08:22:23.543Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "DocumentRenderer.render(_:store:scale:) still composites at 1x and applies CILanczosScaleTransform. The machinery to do it properly landed on 2026-09-04: composite document.magnified(by: scale) with contentScale: scale, the way renderTile does. Left out of that task because it changes the pixels every existing export test pins.",
+  "acceptance": [
+    "A label exported at 2x has visibly sharper edges than the same label exported at 1x and scaled up",
+    "Exporting at 1x produces exactly the pixels it does today",
+    "Export timing for a 12 megapixel document does not get worse"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T08:22:23.543Z",
+      "note": "created (manual)"
+    }
+  ]
+}

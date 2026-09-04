@@ -18,6 +18,8 @@ multiply highlight). One warm-up render, then median of 10 timed runs. Re-run wi
 | 2026-09-03 | same | 35.0ms | 34.3ms | 37.1ms | same machine | Same drag with the group STYLED (opacity + shadow). A styled group is one object: its fade and shadow are computed from all of it, so any edit inside repaints the whole group, and in this benchmark the group covers most of a 4000×3000 canvas — i.e. a full render. The budget still holds for edits outside it, and a styled group over a small area repaints only its own area. |
 | 2026-09-03 | same | 27.0ms | 26.0ms | 28.3ms | same machine | `renders12MPDocumentWithAGroupOfFiveWithinBudget`: cold full render of the same document with five layers in one styled group, versus 36.3ms ungrouped on the same run. Grouping does not cost extra on the full-render path. |
 
+| 2026-09-04 | Crisp tile at zoom (`renderTile`) | **9.2 / 9.5 / 10.2ms** | 7.5ms | 11.3ms | same machine | `crispTileWhileZoomedInMeetsBudget` at 200% / 400% / 800% zoom on the 12MP/10-layer doc, in a 1600×1000-point window on a 2x display. The tile covers only what is on screen, so its cost is tied to the size of the WINDOW, not the picture: zooming from 200% to 800% costs a flat ~1ms more, because you can see sixteen times less of the document. Added on top of the interactive composite (5.4ms), and only after a 90ms settle, so a drag or a burst of typing never pays for it. **Meets the <16ms budget.** |
+
 The interactive benchmark (`[perf] … interactive edit`) is the budget-bearing
 number: it is what every drag tick and slider tweak pays. The full-render
 number still matters for document open and export, where ~35ms is fine.

@@ -179,6 +179,55 @@ struct RenderPerfTests {
         #expect(styled < 200, "interactive re-render inside a styled group regressed badly: \(styled)ms")
     }
 
+    /// Zoomed in, the canvas asks for a crisp tile of just the part of the
+    /// document it can see, at the resolution it is about to show it at. That
+    /// keeps the cost tied to the size of the WINDOW rather than the size of
+    /// the picture: the same 12-megapixel document costs the same whether you
+    /// are at 200% or 800%, because you can see proportionally less of it.
+    @Test func crispTileWhileZoomedInMeetsBudget() {
+        let store = ImageStore()
+        let doc = makeBenchmarkDocument(store: store)
+        let renderer = DocumentRenderer()
+
+        /// A 1600x1000-point editor window on a 2x display, at `zoom`.
+        func median(zoom: CGFloat) -> Double {
+            let scale = zoom * 2
+            let region = CGRect(x: 1200, y: 900,
+                                width: 1600 / zoom, height: 1000 / zoom)
+            #expect(renderer.renderTile(doc, store: store, region: region, scale: scale,
+                                        magnifyNearest: zoom >= 2) != nil)
+            var samples: [Double] = []
+            let clock = ContinuousClock()
+            for step in 0..<10 {
+                // Panning a little, so no frame is served straight from a cache
+                // that the real thing would also be missing.
+                let moved = region.offsetBy(dx: CGFloat(step), dy: CGFloat(step))
+                let duration = clock.measure {
+                    #expect(renderer.renderTile(doc, store: store, region: moved, scale: scale,
+                                                magnifyNearest: zoom >= 2) != nil)
+                }
+                samples.append(Double(duration.components.seconds) * 1000
+                               + Double(duration.components.attoseconds) / 1e15)
+            }
+            samples.sort()
+            let median = samples[samples.count / 2]
+            print("[perf] 12MP/10-layer crisp tile at \(Int(zoom * 100))% zoom — " +
+                  "median \(String(format: "%.1f", median))ms, " +
+                  "min \(String(format: "%.1f", samples[0]))ms, " +
+                  "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
+            return median
+        }
+
+        let at200 = median(zoom: 2)
+        let at400 = median(zoom: 4)
+        let at800 = median(zoom: 8)
+        // Loose CI bound; the real numbers land in docs/progress/perf.md. What
+        // matters is that zooming further in does not cost more.
+        #expect(at200 < 100, "crisp tile at 200% regressed badly: \(at200)ms")
+        #expect(at400 < 100, "crisp tile at 400% regressed badly: \(at400)ms")
+        #expect(at800 < 100, "crisp tile at 800% regressed badly: \(at800)ms")
+    }
+
     /// The 16ms budget applies to *re-renders during editing* — that's what
     /// the user feels on every drag tick and slider tweak. The interactive
     /// path patches dirty regions, so measure it the way the app uses it:

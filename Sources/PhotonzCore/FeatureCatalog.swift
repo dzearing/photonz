@@ -85,6 +85,8 @@ public enum FeatureCatalog {
 
     public static let colorPickerFlag = "next-color-picker"
 
+    public static let crispZoomFlag = "next-crisp-zoom"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -371,6 +373,15 @@ public enum FeatureCatalog {
                     name: placementFlag,
                     title: "Say where the pieces sit when something is resized",
                     description: "The inspector gains a Layout section. A group says how its contents line up \u{2014} left, centre, right or stretch across, top, middle, bottom or stretch down \u{2014} and any one piece inside can say something different for itself, so a button dragged wider keeps its label in the middle while the fill behind it grows. A row that has not been set says which setting it is following from the group it sits in. Text gains an Align control in the Text section for where its words sit inside their own box, and telling text to stretch moves its words to the middle of the box it now fills, so the choice does something you can see. The five Library components arrive already set up this way whether this is on or off. Off means the section is gone and a resize multiplies everything proportionally, which is what a layer with nothing set does anyway.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: crispZoomFlag,
+                    title: "Words stay sharp when you zoom in",
+                    description: "Zoom past 100% and the labels, captions, measurement readouts and borders you have placed are drawn again at the size you are looking at them, instead of the whole picture being blown up. A label you place reads exactly as crisply as the one you are still typing, at any zoom. The picture underneath is untouched: a screenshot still goes square and blocky past 2x, which is what you want when you are counting pixels. Only the part of the canvas you can see is redrawn, so it costs the same at 800% as at 200%. Off means the whole canvas is stretched from one picture the way it always was, and placed text goes soft as you zoom in.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

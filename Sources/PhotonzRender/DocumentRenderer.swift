@@ -282,7 +282,55 @@ public final class DocumentRenderer: @unchecked Sendable {
         return context.createCGImage(scaled.cropped(to: extent), from: extent)
     }
 
-    private func compositeImage(_ document: PhotonzDocument, store: ImageStore) -> CIImage? {
+    /// A patch of the composite drawn at `scale` output pixels per document
+    /// point, for a canvas that is zoomed in.
+    ///
+    /// The canvas normally shows one document-sized picture stretched over
+    /// however many screen pixels the zoom asks for, which is why a label you
+    /// placed goes soft past 100% while the one you are still typing stays
+    /// sharp. A tile is the same picture with the pixels to spare: the words,
+    /// the measure chips' boxes, the borders and the shadows are all drawn at
+    /// the size they are about to be seen at, while the photo underneath is
+    /// blown up exactly the way the canvas blows it up today.
+    ///
+    /// `region` is in document points and is clamped to the canvas; the tile
+    /// comes back saying which region it actually covers, since it settles on
+    /// whole pixels. `magnifyNearest` mirrors the canvas rule that past 2x the
+    /// user is inspecting pixels and wants to see them squarely.
+    public func renderTile(_ document: PhotonzDocument, store: ImageStore,
+                           region: CGRect, scale: CGFloat,
+                           magnifyNearest: Bool = false) -> CrispTile? {
+        guard scale > 0, scale.isFinite else { return nil }
+        let canvas = CGRect(origin: .zero, size: document.canvasSize)
+        let wanted = region.standardized.intersection(canvas)
+        guard !wanted.isNull, wanted.width >= 1, wanted.height >= 1 else { return nil }
+
+        let magnified = document.magnified(by: scale)
+        let magnifiedCanvas = CGRect(origin: .zero, size: magnified.canvasSize)
+        let patch = wanted.magnified(by: scale).integral.intersection(magnifiedCanvas)
+        guard !patch.isNull, patch.width >= 1, patch.height >= 1 else { return nil }
+
+        guard let output = compositeImage(magnified, store: store,
+                                          contentScale: scale,
+                                          magnifyNearest: magnifyNearest) else { return nil }
+        // Model space is top-left, Core Image's is bottom-left.
+        let ciPatch = CGRect(x: patch.minX, y: magnified.canvasSize.height - patch.maxY,
+                             width: patch.width, height: patch.height)
+        guard let image = context.createCGImage(output, from: ciPatch) else { return nil }
+        return CrispTile(image: image, region: patch.magnified(by: 1 / scale), scale: scale)
+    }
+
+    /// How a raster drawn in document points is blown up into an output whose
+    /// unit is bigger: squarely when the canvas would show it squarely (past
+    /// 2x, where somebody is inspecting pixels), smoothly otherwise.
+    private func magnified(_ image: CIImage, nearest: Bool, scale: CGFloat) -> CIImage {
+        guard nearest, scale > 1 else { return image }
+        return image.samplingNearest()
+    }
+
+    private func compositeImage(_ document: PhotonzDocument, store: ImageStore,
+                                contentScale: CGFloat = 1,
+                                magnifyNearest: Bool = false) -> CIImage? {
         let canvas = document.canvasSize
         guard canvas.width >= 1, canvas.height >= 1 else { return nil }
         let extent = CGRect(origin: .zero, size: canvas)
@@ -290,7 +338,8 @@ public final class DocumentRenderer: @unchecked Sendable {
         let output = compositeLayers(document.layers, origin: .zero,
                                      onto: CIImage(color: .clear).cropped(to: extent),
                                      underlay: nil, in: document, store: store, clip: extent,
-                                     onDesignedSurface: false)
+                                     onDesignedSurface: false,
+                                     contentScale: contentScale, magnifyNearest: magnifyNearest)
 
         // The canvas defines the document's bounds: layers hanging outside it
         // (e.g. after a canvas-size change) must not grow the rendered frame.
@@ -311,7 +360,8 @@ public final class DocumentRenderer: @unchecked Sendable {
     private func compositeLayers(_ layers: [Layer], origin: CGPoint, onto base: CIImage,
                                  underlay: CIImage?, in document: PhotonzDocument,
                                  store: ImageStore, clip: CGRect,
-                                 onDesignedSurface: Bool) -> CIImage {
+                                 onDesignedSurface: Bool,
+                                 contentScale: CGFloat, magnifyNearest: Bool) -> CIImage {
         var output = base
         for layer in layers where layer.isVisible {
             let frame = layer.frame.offsetBy(dx: origin.x, dy: origin.y)
@@ -328,7 +378,8 @@ public final class DocumentRenderer: @unchecked Sendable {
             if let group = layer.group, !group.isFrame, layer.style.isPlain {
                 output = compositeLayers(group.children, origin: frame.origin, onto: output,
                                          underlay: underlay, in: document, store: store, clip: clip,
-                                         onDesignedSurface: holdsInside)
+                                         onDesignedSurface: holdsInside,
+                                         contentScale: contentScale, magnifyNearest: magnifyNearest)
                 continue
             }
 
@@ -341,21 +392,36 @@ public final class DocumentRenderer: @unchecked Sendable {
             }
             guard let layerImage = ciImage(for: layer, origin: origin, in: document, store: store,
                                            backdrop: backdrop,
-                                           onDesignedSurface: onDesignedSurface) else { continue }
+                                           onDesignedSurface: onDesignedSurface,
+                                           contentScale: contentScale,
+                                           magnifyNearest: magnifyNearest) else { continue }
             // Zoom callouts carry canvas-space chrome (source outline + leader
             // lines) that lives outside the layer frame; composite it beneath
             // the magnified box.
-            if case .zoomCallout(let callout) = layer.content,
-               let overlay = ZoomCalloutOverlayRasterizer.rasterize(
-                   source: callout.sourceRect.standardized
-                       .intersection(CGRect(origin: .zero, size: document.canvasSize)),
-                   callout: frame, style: layer.style, magnification: callout.magnification,
-                   shape: callout.shape) {
-                let height = CGFloat(overlay.image.height)
-                let positioned = CIImage(cgImage: overlay.image)
-                    .transformed(by: CGAffineTransform(translationX: overlay.origin.x,
-                                                       y: document.canvasSize.height - overlay.origin.y - height))
-                output = positioned.composited(over: output).cropped(to: clip)
+            if case .zoomCallout(let callout) = layer.content {
+                // Drawn in document points and magnified afterwards, so the
+                // leader lines and the source outline keep exactly the weight
+                // they have at 100% instead of thinning out as you zoom in.
+                let shrink = 1 / contentScale
+                if let overlay = ZoomCalloutOverlayRasterizer.rasterize(
+                    source: callout.sourceRect.standardized
+                        .intersection(CGRect(origin: .zero, size: document.canvasSize))
+                        .magnified(by: shrink),
+                    callout: frame.magnified(by: shrink),
+                    style: layer.style.magnified(by: shrink),
+                    magnification: callout.magnification,
+                    shape: callout.shape) {
+                    let height = CGFloat(overlay.image.height) * contentScale
+                    var positioned = CIImage(cgImage: overlay.image)
+                    if contentScale != 1 {
+                        positioned = positioned
+                            .transformed(by: CGAffineTransform(scaleX: contentScale, y: contentScale))
+                    }
+                    positioned = positioned.transformed(
+                        by: CGAffineTransform(translationX: overlay.origin.x * contentScale,
+                                              y: document.canvasSize.height - overlay.origin.y * contentScale - height))
+                    output = positioned.composited(over: output).cropped(to: clip)
+                }
             }
             output = composite(layerImage, over: output, mode: layer.effectiveBlendMode, extent: clip)
         }
@@ -377,7 +443,8 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// object, and it is why a group with no styling passes through instead.
     private func groupImage(_ layer: Layer, group: GroupContent, origin: CGPoint,
                             in document: PhotonzDocument, store: ImageStore,
-                            backdrop: CIImage, onDesignedSurface: Bool) -> CIImage? {
+                            backdrop: CIImage, onDesignedSurface: Bool,
+                            contentScale: CGFloat, magnifyNearest: Bool) -> CIImage? {
         let height = document.canvasSize.height
         let box = flipped(layer.localBounds.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
         // A clipping frame's buffer IS its box: everything drawn into it that
@@ -412,7 +479,8 @@ public final class DocumentRenderer: @unchecked Sendable {
         var image = compositeLayers(group.children, origin: childOrigin,
                                     onto: surface,
                                     underlay: backdrop, in: document, store: store, clip: buffer,
-                                    onDesignedSurface: onDesignedSurface || layer.startsDesignedSurface)
+                                    onDesignedSurface: onDesignedSurface || layer.startsDesignedSurface,
+                                    contentScale: contentScale, magnifyNearest: magnifyNearest)
             .cropped(to: buffer)
 
         image = blurred(image, radius: layer.style.blurRadius)
@@ -495,51 +563,63 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// they reference the canvas, never a baked copy.
     private func ciImage(for layer: Layer, origin: CGPoint, in document: PhotonzDocument,
                          store: ImageStore, backdrop: CIImage,
-                         onDesignedSurface: Bool) -> CIImage? {
+                         onDesignedSurface: Bool,
+                         contentScale: CGFloat, magnifyNearest: Bool) -> CIImage? {
         if let group = layer.group {
             return groupImage(layer, group: group, origin: origin, in: document,
                               store: store, backdrop: backdrop,
-                              onDesignedSurface: onDesignedSurface)
+                              onDesignedSurface: onDesignedSurface,
+                              contentScale: contentScale, magnifyNearest: magnifyNearest)
         }
         // The layer's frame in canvas coordinates: identical to its own frame
         // at the top level, shifted by its parents' origins inside a group.
         let frame = layer.frame.offsetBy(dx: origin.x, dy: origin.y)
+        // The layer's box in DOCUMENT points. It is the frame itself for an
+        // ordinary render; on a magnified one the frame is already stated in
+        // output pixels, so the rasterizers that draw from a box get theirs
+        // back and are told how much to magnify it by.
+        let boxInPoints = contentScale == 1
+            ? layer.frame.size
+            : CGSize(width: layer.frame.width / contentScale, height: layer.frame.height / contentScale)
         var image: CIImage
         switch layer.content {
         case .image(let ref):
             guard let cg = store.image(for: ref) else { return nil }
-            image = wrapped(cg)
+            image = magnified(wrapped(cg), nearest: magnifyNearest, scale: contentScale)
         case .text(let text):
-            // Rasterized at the frame's size so the scale-to-frame step below is
-            // 1:1. A border outlines the GLYPHS (inside the rasterizer); the box
-            // border below is suppressed for text.
-            let textBorder = layer.style.borderWidth
+            // Baked at the resolution it will be SHOWN at, so the scale-to-frame
+            // step below is 1:1 and the words stay sharp however far in you are
+            // zoomed. A border outlines the GLYPHS (inside the rasterizer); the
+            // box border below is suppressed for text.
+            let textBorder = layer.style.borderWidth / contentScale
             let textBorderHex = layer.style.borderColorHex
-            let variant = textBorder > 0 ? "outline:\(textBorder):\(textBorderHex)" : ""
+            var variant = textBorder > 0 ? "outline:\(textBorder):\(textBorderHex)" : ""
+            if contentScale != 1 { variant += "|crisp" }
             guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
-                TextRasterizer.rasterize(text, size: layer.frame.size,
-                                         borderWidth: textBorder, borderColorHex: textBorderHex)
+                TextRasterizer.rasterize(text, size: boxInPoints,
+                                         borderWidth: textBorder, borderColorHex: textBorderHex,
+                                         scale: contentScale)
             }) else { return nil }
             image = raster
         case .annotation(let annotation):
-            guard let raster = raster(for: layer.content, size: layer.frame.size, rasterize: {
-                AnnotationRasterizer.rasterize(annotation, size: layer.frame.size)
+            guard let raster = raster(for: layer.content, size: boxInPoints, rasterize: {
+                AnnotationRasterizer.rasterize(annotation, size: boxInPoints)
             }) else { return nil }
-            image = raster
+            image = magnified(raster, nearest: magnifyNearest, scale: contentScale)
         case .measure(let measure):
             // The label text depends on the document's pixelScale (points
             // readout), which isn't part of the cache key's content.
             let variant = "scale:\(document.pixelScale)"
-            guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
-                MeasureRasterizer.rasterize(measure, size: layer.frame.size,
+            guard let raster = raster(for: layer.content, size: boxInPoints, variant: variant, rasterize: {
+                MeasureRasterizer.rasterize(measure, size: boxInPoints,
                                             pixelScale: document.pixelScale)
             }) else { return nil }
-            image = raster
+            image = magnified(raster, nearest: magnifyNearest, scale: contentScale)
         case .collage(let collage):
-            guard let raster = raster(for: layer.content, size: layer.frame.size, rasterize: {
-                CollageRasterizer.rasterize(collage, size: layer.frame.size, store: store)
+            guard let raster = raster(for: layer.content, size: boxInPoints, rasterize: {
+                CollageRasterizer.rasterize(collage, size: boxInPoints, store: store)
             }) else { return nil }
-            image = raster
+            image = magnified(raster, nearest: magnifyNearest, scale: contentScale)
         case .zoomCallout(let callout):
             let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
             let source = callout.sourceRect.standardized.intersection(canvasRect)
@@ -555,8 +635,13 @@ public final class DocumentRenderer: @unchecked Sendable {
             return nil
         }
 
-        // Layer-local crop.
-        if let crop = layer.crop {
+        // Layer-local crop. The crop is in the same unit as the frame, and the
+        // raster it cuts may have been drawn in document points, so bring it
+        // back to the raster's own unit first.
+        if var crop = layer.crop {
+            if contentScale != 1, image.extent.width > 0, layer.frame.width > 0 {
+                crop = crop.magnified(by: image.extent.width / layer.frame.width)
+            }
             let flipped = CGRect(x: crop.origin.x,
                                  y: image.extent.height - crop.maxY,
                                  width: crop.width, height: crop.height)

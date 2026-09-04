@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 670,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T23:58:22.377Z",
-  "updated": "2026-09-03T23:58:22.377Z",
+  "updated": "2026-09-04T08:22:43.514Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing the draft/commit parity task on 2026-09-03. Text layers rasterize through TextRasterizer at document size into ImageStore, and DocumentRenderer scales that bitmap by the zoom. Compare queue/audits/2026-09-03-text-draft-parity-placed.png (crisp draft) with the same words after commit at 126 percent. Likely wants the text raster keyed on (content, renderScale) so it is baked at the zoom it will be shown at, with the store keeping the scaled variant.",
@@ -22,6 +22,48 @@
     {
       "t": "2026-09-03T23:58:22.377Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T07:55:02.440Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T08:22:43.481448Z",
+      "note": "Reproduced first: a label rasterized at document size and blown up 4x has 6x the smeared-edge pixels of the same words drawn at 4x. Test dump confirmed it by eye."
+    },
+    {
+      "t": "2026-09-04T08:22:43.481448Z",
+      "note": "Adversarial review before building. The mock-free question was WHERE the extra pixels come from. Rejected: (a) supersampling the text raster into a document-sized composite, which throws the detail away again; (b) a full-canvas composite at the zoom, which is zoom-squared pixels and cannot meet the 16ms budget on a 12MP capture; (c) floating committed text in a Core Animation overlay like the draft editor does, which breaks the moment anything sits above the text or the text is inside a styled frame, and that is most of the ui-building work. Chose the shortest thing that is also uniform: draw only the part of the document you can see, at the resolution it is being shown at."
+    },
+    {
+      "t": "2026-09-04T08:22:43.481448Z",
+      "note": "Cut from scope deliberately: measures, annotations and collages still rasterize at document size inside the tile and are magnified exactly as today, so this run changes nothing about them. Same for 2x export. Both filed as follow-ups rather than smuggled in."
+    },
+    {
+      "t": "2026-09-04T08:22:43.481448Z",
+      "note": "PhotonzCore: PhotonzDocument.magnified(by:) (8 tests). PhotonzRender: TextRasterizer.rasterize(scale:) scales the context, never the type, so nothing re-wraps (6 tests); DocumentRenderer.renderTile (6 tests, including a label inside a styled frame)."
+    },
+    {
+      "t": "2026-09-04T08:22:43.481448Z",
+      "note": "App: EditorState.refreshCrispTile draws the visible rect after a 90ms settle on its own renderer; CanvasView.crispLayer lays it over the composite and shows it only while it is still a picture of the current camera and document. Behind next-crisp-zoom, on by default in Next."
+    },
+    {
+      "t": "2026-09-04T08:22:43.481448Z",
+      "note": "Perf: crisp tile at 200/400/800% on the 12MP 10-layer benchmark is 9.2/9.5/10.2ms median, flat across zoom because the cost is tied to the window, not the picture. Full suite 2821 tests green."
+    },
+    {
+      "t": "2026-09-04T08:22:43.481448Z",
+      "note": "Verified live in the probe with the Screen Recording grant. A/B by building with the flag defaulted off and running the same walk: at 512% the label is badly blurred with it off and razor sharp with it on. Screenshots in queue/audits/2026-09-04-crisp-zoom-*.png."
+    },
+    {
+      "t": "2026-09-04T08:22:43.481448Z",
+      "note": "Review of the built thing: the base capture still goes square past 2x (nearest sampling carried into the tile); at a fitted zoom on a 2x capture the tile is already active (0.67 zoom x 2 backing) and the picture differs from before only by sub-pixel resampling. Two roughnesses recorded in the audit: the sharp copy is gone while dragging, and it takes ~a tenth of a second to come back after a zoom."
+    },
+    {
+      "t": "2026-09-04T08:22:43.513Z",
+      "note": "Placed text is drawn at the zoom it is shown at, so it stays as sharp as the draft. New PhotonzDocument.magnified(by:), TextRasterizer.rasterize(scale:) and DocumentRenderer.renderTile (20 new tests); EditorState/CanvasView draw the visible rect over the composite behind next-crisp-zoom. Verified live in the probe at 512 percent, A/B against a flag-off build; tile costs 9-10ms flat at 200/400/800 percent on the 12MP/10-layer benchmark. Audit: queue/audits/2026-09-04-crisp-zoom.json"
     }
-  ]
+  ],
+  "started": "2026-09-04T07:55:02.440Z",
+  "completed": "2026-09-04T08:22:43.514Z"
 }

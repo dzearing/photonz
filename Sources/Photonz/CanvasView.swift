@@ -22,6 +22,13 @@ struct DragPreview {
 /// (PhotonzCore, tested); this view only mirrors them into Core Animation.
 struct CanvasView: NSViewRepresentable {
     let image: CGImage?
+    /// What you can see, redrawn at the zoom you are seeing it through, so
+    /// placed words stay as sharp as the ones being typed. Nil at or below 1:1,
+    /// where the composite already has a pixel for every pixel.
+    var crispTile: CrispTile?
+    /// The camera `crispTile` was drawn for; it only shows while that is still
+    /// where the camera is.
+    var crispTileViewport: Viewport?
     let viewport: Viewport?
     let document: PhotonzDocument?
     let selection: SelectionRegion?
@@ -203,6 +210,7 @@ struct CanvasView: NSViewRepresentable {
                    measureCandidateLevel: measureCandidateLevel,
                    measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
                    lumaField: lumaField, isCanvasSelected: isCanvasSelected)
+        view.applyCrispTile(crispTile, viewport: crispTileViewport)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -360,6 +368,11 @@ final class CanvasNSView: NSView {
     var onWindowChange: ((NSWindow?) -> Void) = { _ in }
 
     private let contentLayer = CALayer()
+    /// The visible part of the document redrawn at the zoom, laid exactly over
+    /// the stretched composite underneath it. Same picture, more pixels.
+    private let crispLayer = CALayer()
+    private var crispTile: CrispTile?
+    private var crispTileViewport: Viewport?
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
     /// drags — positioned in pure Core Animation, no per-move rendering.
     private let previewSpriteLayer = CALayer()
@@ -914,6 +927,11 @@ final class CanvasNSView: NSView {
         contentLayer.shadowRadius = 24
         contentLayer.shadowOffset = .zero
         layer?.addSublayer(contentLayer)
+
+        crispLayer.contentsGravity = .resize
+        crispLayer.minificationFilter = .linear
+        crispLayer.isHidden = true
+        layer?.addSublayer(crispLayer)
 
         previewSpriteLayer.contentsGravity = .resize
         previewSpriteLayer.isHidden = true
@@ -2812,6 +2830,7 @@ final class CanvasNSView: NSView {
         guard let image, let viewport else {
             endCalloutFlight()
             contentLayer.isHidden = true
+            crispLayer.isHidden = true
             previewSpriteLayer.isHidden = true
             selectionBaseLayer.isHidden = true
             selectionAntsLayer.isHidden = true
@@ -2845,6 +2864,42 @@ final class CanvasNSView: NSView {
         refreshOverlaysInsideTransaction()
     }
 
+    /// Takes delivery of a redrawn patch of what you can see.
+    func applyCrispTile(_ tile: CrispTile?, viewport tileViewport: Viewport?) {
+        guard crispTile?.image !== tile?.image || crispTileViewport != tileViewport else { return }
+        crispTile = tile
+        crispTileViewport = tileViewport
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        refreshCrispDisplay()
+        CATransaction.commit()
+    }
+
+    /// Lays the redrawn patch over the composite, or takes it away.
+    ///
+    /// It only goes up while it is still a picture of THIS moment: the camera
+    /// where it was drawn, the composite it was drawn from. A drag floats a
+    /// sprite over a held-back composite and a callout flight holds the frame
+    /// from before the callout landed, so both of those hide it rather than
+    /// let a sharp copy of the settled document contradict what is on screen.
+    private func refreshCrispDisplay() {
+        guard let viewport, let tile = crispTile, crispTileViewport == viewport,
+              !contentLayer.isHidden, dragPreview == nil, calloutHoldImage == nil else {
+            if !crispLayer.isHidden {
+                crispLayer.isHidden = true
+                crispLayer.contents = nil
+            }
+            return
+        }
+        crispLayer.contents = tile.image
+        crispLayer.frame = viewRect(forDocRect: tile.region, in: viewport)
+        crispLayer.contentsScale = window?.backingScaleFactor ?? 2
+        // At 1:1 with the screen this never resamples; the filter only matters
+        // if a fractional zoom leaves it a hair off.
+        crispLayer.magnificationFilter = viewport.zoom >= 2 ? .nearest : .linear
+        crispLayer.isHidden = false
+    }
+
     func refreshOverlays() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -2853,6 +2908,7 @@ final class CanvasNSView: NSView {
     }
 
     private func refreshOverlaysInsideTransaction() {
+        refreshCrispDisplay()
         refreshMarqueeDisplay()
         refreshLayerSelectionDisplay()
         refreshCropDisplay()

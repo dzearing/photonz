@@ -1,0 +1,29 @@
+{
+  "feature": "Placed text stays sharp when you zoom in",
+  "epic": "measure-redline",
+  "summary": "Zoom past 100% and the label you placed is now redrawn at the size you are looking at it, so it reads exactly as crisply as the one you are still typing. The screenshot underneath is untouched: it still goes square and blocky past 2x, which is what you want when you are counting pixels.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Words stay sharp when you zoom in\", on by default.",
+  "try": [
+    { "do": "Open any screenshot." },
+    { "do": "Press T, click on the picture, type Padding 16, then press Command Return to place it.", "shot": "2026-09-04-crisp-zoom-2.png" },
+    { "do": "Press Command + a few times until the zoom readout says about 500%.", "shot": "2026-09-04-crisp-zoom-1.png" },
+    { "do": "Look at the label: the letters should have hard edges, not a soft grey fringe." },
+    { "do": "Look at the screenshot behind it: its pixels should still be square blocks." },
+    { "do": "Press Command 0 to fit, then zoom back in, and check the label is no softer than the first time." },
+    { "do": "Turn the flag off in the Experiments window, relaunch, and repeat: the label goes soft again." }
+  ],
+  "evaluate": [
+    "At 500%, does the label read as sharply as one you are part way through typing?",
+    "Does the sharp copy arrive fast enough after you stop zooming, or do you notice it snap into focus?",
+    "Does the screenshot underneath still look the way you want it at high zoom, square rather than smeared?",
+    "Does anything jump, shift or re-wrap by a pixel at the moment the sharp copy lands?",
+    "At a fitted zoom on a 2x capture, is the whole picture better or is it just different?"
+  ],
+  "rough": [
+    "Only the part of the canvas you can see is redrawn, so the sharp copy is taken away the instant you pan or zoom and comes back about a tenth of a second after you stop. That settle is deliberate: drawing it on every frame of a zoom would spend a windowful of pixels on a picture nobody looks at, but it does mean fast repeated zooming shows the soft version most of the time.",
+    "It is also taken away while you drag a layer, because the canvas is floating a sprite over a held-back composite during a drag and a sharp copy of the settled document would contradict it. So a label is soft for as long as you are dragging it.",
+    "This run only makes TEXT sharper. Measurement chips, arrow captions and annotation strokes are still drawn at the document's own size and magnified, exactly as before. They are the obvious next step and a task is filed.",
+    "Exporting at 2x still upscales the finished picture rather than drawing it at 2x, so exported text is as soft as it always was. Also filed.",
+    "Verified live: the probe had the Screen Recording grant, so the screenshots here are the real window. The before/after was measured by building the app with the flag defaulted off and running the same walk (Scripts/playtest/crisp-zoom-walk.json)."
+  ]
+}

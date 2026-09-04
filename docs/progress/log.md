@@ -7714,3 +7714,56 @@ pointer. `Scripts/test.sh` green (2794). Audit:
 `queue/audits/2026-09-04-crop-handle-cue.json`, two real screen captures.
 
 Next: back to the queue.
+
+## 2026-09-04 — A placed label stays crisp when you zoom in
+
+Text you place used to go soft the instant you committed it: the draft is drawn
+live by CoreText at screen resolution, while the committed label is part of one
+document-sized composite that the canvas stretches over however many screen
+pixels the zoom asks for. Reproduced it first — the same words rasterized at
+document size and blown up 4x carry six times the smeared-edge pixels of the
+same words drawn at 4x — before touching anything.
+
+The question was where the extra pixels come from. Supersampling the text raster
+throws the detail away again when it lands in a document-sized composite.
+Compositing the whole canvas at the zoom is zoom-squared pixels and cannot meet
+the 16ms budget on a 12-megapixel capture. Floating committed text in a Core
+Animation overlay, the way the draft editor does, breaks the moment anything
+sits above the text or the text is inside a styled frame — which is most of the
+ui-building work. So: draw only the part of the document you can see, at the
+resolution it is being shown at.
+
+`PhotonzDocument.magnified(by:)` (PhotonzCore) states a document in a bigger
+unit — every frame, crop, border, corner, blur and shadow multiplied, content
+payloads untouched. `TextRasterizer.rasterize(…, scale:)` scales the CONTEXT and
+never the type, so the point size, the line breaks and the box are identical at
+every scale and a label never shifts or re-wraps when its sharper copy arrives.
+`DocumentRenderer.renderTile(…, region:, scale:, magnifyNearest:)` puts the two
+together: text is baked at the tile's resolution, everything else is drawn in
+document points and magnified exactly the way the canvas magnifies the composite
+today — nearest sampling included, so a screenshot still goes square and blocky
+past 2x, which is what somebody counting pixels wants. Zoom-callout chrome is
+drawn at document scale and magnified after, so its leader lines keep their
+weight.
+
+App side: `EditorState.refreshCrispTile` redraws the visible rect on its own
+renderer after a 90ms settle, and `CanvasView.crispLayer` lays it over the
+composite, showing it only while it is still a picture of the current camera and
+the current document. Behind `next-crisp-zoom`, on by default in Next.
+
+Perf: the tile is 9.2 / 9.5 / 10.2ms at 200 / 400 / 800% on the 12MP ten-layer
+benchmark — flat, because the cost is tied to the size of the window rather than
+the size of the picture. Recorded in `docs/progress/perf.md`.
+
+Deliberately out of scope: measurement chips, arrow captions, annotation strokes
+and collages still rasterize at document size inside the tile and are magnified
+as before, and 2x export still enlarges the finished picture. Both filed as
+their own tasks rather than smuggled in here.
+
+Verified live in the probe with the Screen Recording grant, A/B against a build
+with the flag defaulted off: at 512% the label is badly blurred with it off and
+razor sharp with it on. `Scripts/playtest/crisp-zoom-walk.json`.
+`Scripts/test.sh` green (2821). Audit:
+`queue/audits/2026-09-04-crisp-zoom.json`, two real screen captures.
+
+Next: back to the queue.

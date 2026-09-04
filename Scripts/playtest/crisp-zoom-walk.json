@@ -1,0 +1,44 @@
+{
+  "out": "/tmp/photonz-playtest/crisp-zoom",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "describe", "stage": "1-open", "note": "a real 2x capture, fitted" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [420, 300], "space": "view" },
+    { "do": "type", "text": "Padding 16" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "1-draft" },
+    { "do": "describe", "stage": "1-draft", "note": "the label still being typed: this is the sharpness to match" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "2-placed-fit" },
+    { "do": "describe", "stage": "2-placed", "note": "committed at fit zoom" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "snapshot", "name": "3-zoom-a" },
+    { "do": "describe", "stage": "3-zoom-a", "note": "zoomed in twice" },
+
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "snapshot", "name": "4-zoom-b" },
+    { "do": "describe", "stage": "4-zoom-b", "note": "zoomed in four times" },
+
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "snapshot", "name": "5-zoom-c" },
+    { "do": "describe", "stage": "5-zoom-c", "note": "zoomed in six times" },
+
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "snapshot", "name": "6-back-out" },
+    { "do": "describe", "stage": "6-back-out", "note": "back where we started; the label must not be softer than it was" }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 660,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T23:36:42.187Z",
-  "updated": "2026-09-04T07:44:13.255Z",
+  "updated": "2026-09-04T07:54:37.737Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-03 while giving every handle a pointer cue. CanvasView.mouseDown guards the caption-pill press with !layer.isLocked but the frame-handle branch, the endpoint branch and the rotate-knob branch carry no lock check, while CanvasGrab.hit does. The chrome in refreshSelectionChrome also draws handles for a locked layer. The pointer cue deliberately mirrors the press today (CanvasPointer.cue), so fixing the press is what makes the pointer go quiet too, and CanvasPointerCueTests.aLockedLayerStillCuesTheHandlesItStillResizesFrom encodes the current behaviour and should be flipped with it.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-04T08:38:00.000Z",
       "note": "Left out and filed instead: the Position and Size caption still says a locked layer can be arrow-stepped (task the-position-and-size-panel-stops-telling-a-lock). Audit: queue/audits/2026-09-04-locked-layer-handles.json."
+    },
+    {
+      "t": "2026-09-04T07:54:37.737Z",
+      "note": "A locked layer now draws no resize handles, no rotate knob and no endpoint dots, and the pointer stays a plain arrow over all of them; one core predicate (Layer.offersHandles) feeds the chrome, the press and the cue. Verified on the probe with Scripts/playtest/locked-layer-walk.json (cue none at every handle spot, frame unchanged, composite byte-identical) plus 2800 tests green. Audit: queue/audits/2026-09-04-locked-layer-handles.json. Commit b8c69de, pushed."
     }
   ],
-  "started": "2026-09-04T07:44:13.254Z"
+  "started": "2026-09-04T07:44:13.254Z",
+  "completed": "2026-09-04T07:54:37.737Z"
 }

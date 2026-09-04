@@ -286,6 +286,10 @@ extension Experiments {
     /// turns naming off still wants one picker rather than three.
     var designedColorPickerEnabled: Bool { isEnabled(FeatureCatalog.colorPickerFlag) }
 
+    /// Whether the canvas redraws what you can see at the zoom you are looking
+    /// at it through, so placed words stay as sharp as the ones being typed.
+    var crispZoomEnabled: Bool { isEnabled(FeatureCatalog.crispZoomFlag) }
+
     /// `next-starter-components`: whether the Components shelf arrives with the
     /// app's own five on it. They are components, so this needs components:
     /// with them off there is no shelf to stock and the switch reads as off.

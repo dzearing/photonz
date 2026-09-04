@@ -22,17 +22,26 @@ public enum TextRasterizer {
     /// the width you drag does.
     public static let minimumTextWidth: CGFloat = TextMeasurement.minimumWidth
 
-    /// Renders `text` word-wrapped inside `size` (in pixels), sitting where its
-    /// `alignment` and `verticalAlignment` say — top left for text that has
-    /// never been given a place, which is every document written before those
-    /// existed. A `borderWidth > 0` strokes the glyph OUTLINES in
-    /// `borderColorHex` (a text outline), not a box — the layer's box border is
-    /// suppressed for text.
+    /// Renders `text` word-wrapped inside `size` (the layer's box, in document
+    /// points), sitting where its `alignment` and `verticalAlignment` say — top
+    /// left for text that has never been given a place, which is every document
+    /// written before those existed. A `borderWidth > 0` strokes the glyph
+    /// OUTLINES in `borderColorHex` (a text outline), not a box — the layer's
+    /// box border is suppressed for text.
+    ///
+    /// `scale` is how many pixels the result gets per document point, so the
+    /// canvas can bake a label at the resolution the zoom is about to show it
+    /// at and the words stay sharp instead of being blown up afterwards. It
+    /// scales the drawing, never the type: the point size, the line breaks and
+    /// the box the words sit in are identical at every scale, so a label does
+    /// not shift or re-wrap when a sharper copy of it arrives.
     public static func rasterize(_ text: TextContent, size: CGSize,
                                  borderWidth: CGFloat = 0,
-                                 borderColorHex: String = "#000000") -> CGImage? {
-        let width = Int(size.width.rounded())
-        let height = Int(size.height.rounded())
+                                 borderColorHex: String = "#000000",
+                                 scale: CGFloat = 1) -> CGImage? {
+        guard scale > 0, scale.isFinite else { return nil }
+        let width = Int((size.width * scale).rounded())
+        let height = Int((size.height * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
 
         guard let context = CGContext(data: nil, width: width, height: height,
@@ -41,8 +50,12 @@ public enum TextRasterizer {
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
             return nil
         }
+        // Everything below lays out in document points; the context turns them
+        // into however many pixels `scale` asked for.
+        context.scaleBy(x: scale, y: scale)
 
-        let box = CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height))
+        let box = CGRect(x: 0, y: 0,
+                         width: CGFloat(width) / scale, height: CGFloat(height) / scale)
         let path = CGPath(rect: laidOutBox(text, in: box), transform: nil)
         func draw(_ attributed: NSAttributedString) {
             let framesetter = CTFramesetterCreateWithAttributedString(attributed)

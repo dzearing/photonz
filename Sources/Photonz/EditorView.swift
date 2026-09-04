@@ -216,6 +216,8 @@ struct EditorView: View {
     private var canvas: some View {
         if editorState.document != nil {
             CanvasView(image: editorState.renderedImage,
+                       crispTile: editorState.crispTile,
+                       crispTileViewport: editorState.crispTileViewport,
                        viewport: editorState.viewport,
                        document: editorState.document,
                        selection: editorState.selection,

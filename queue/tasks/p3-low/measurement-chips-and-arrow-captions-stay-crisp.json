@@ -1,0 +1,28 @@
+{
+  "id": "measurement-chips-and-arrow-captions-stay-crisp",
+  "title": "Measurement chips and arrow captions stay crisp when you zoom in",
+  "goal": "When you zoom past 100 percent the labels you place are now drawn sharp, but the numbers on a measurement, the caption on an arrow and the strokes of a shape are still blown up from a document-sized picture, so they go soft next to sharp text. Everything drawn from shapes and type should be as sharp as the text is.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 1120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T08:22:23.510Z",
+  "updated": "2026-09-04T08:22:23.510Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up to the crisp-zoom work of 2026-09-04. DocumentRenderer.renderTile already magnifies the document and rasterizes text at the tile scale; MeasureRasterizer, AnnotationRasterizer and CollageRasterizer are still called with the document-point box and magnified afterwards (see the boxInPoints branch in ciImage(for:)). Each one needs the same treatment TextRasterizer got: a scale parameter that scales the CGContext, leaving the geometry in document points. Watch the raster cache keys.",
+  "acceptance": [
+    "A measurement chip placed at 100 percent is still sharp at 400 percent zoom",
+    "An arrow caption pill is still sharp at 400 percent zoom",
+    "A shape stroke and its layer border are still crisp at 400 percent zoom",
+    "The 12 megapixel ten layer crisp tile benchmark stays under 16ms"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T08:22:23.510Z",
+      "note": "created (manual)"
+    }
+  ]
+}

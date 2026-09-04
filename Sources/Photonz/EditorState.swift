@@ -25,6 +25,21 @@ final class EditorState {
     /// The composited document, refreshed asynchronously after every edit
     /// (latest-wins: rapid edits coalesce instead of queueing renders).
     private(set) var renderedImage: CGImage?
+
+    /// Zoomed in, the canvas would be stretching one document-sized picture
+    /// over four or sixteen screen pixels each, which is what makes a label you
+    /// placed go soft while the one you are typing stays sharp. This is the
+    /// part of the document you can see, drawn again at the resolution it is
+    /// being shown at, laid over the stretched picture.
+    private(set) var crispTile: CrispTile?
+    /// The camera the tile was drawn for. It only goes on screen while that is
+    /// still where the camera is, so a pan or a zoom never leaves a sharp copy
+    /// of the old framing sitting in the wrong place.
+    private(set) var crispTileViewport: Viewport?
+    /// Its own renderer, so redrawing what you can see never competes for the
+    /// content caches the interactive composite depends on.
+    @ObservationIgnored private let tileRenderer = DocumentRenderer()
+    @ObservationIgnored private var crispTileTask: Task<Void, Never>?
     var isImporterPresented = false
     var isResizeDialogPresented = false
     var isCanvasSizeDialogPresented = false
@@ -138,7 +153,13 @@ final class EditorState {
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
-    private(set) var viewport: Viewport?
+    private(set) var viewport: Viewport? {
+        didSet {
+            // Move the camera and the sharp copy of what you were looking at is
+            // about the wrong place; draw the new framing.
+            if viewport != oldValue { refreshCrispTile() }
+        }
+    }
     /// The selected REGION (Photoshop-style) in document coordinates: any
     /// path — marquee rect, ellipse, wand blob, or boolean combinations.
     /// Nil = no selection. Distinct from layer selection; while a region
@@ -6226,10 +6247,11 @@ final class EditorState {
         submit(document)
     }
 
-    /// Hands a document (committed or move-preview) to the render scheduler.
-    private func submit(_ document: PhotonzDocument) {
-        // The measure Show filter shapes the INTERACTIVE render only; export
-        // paths rasterize the document directly and never pass through here.
+    /// What the CANVAS shows, which is not quite the document: the measure Show
+    /// filter, the layer standing behind an open inline editor, and the pill
+    /// behind an open caption field are all editing state rather than content.
+    /// Export paths rasterize the document itself and never come through here.
+    private func displayDocument(_ document: PhotonzDocument) -> PhotonzDocument {
         var document = displayFiltered(document)
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {
@@ -6244,6 +6266,73 @@ final class EditorState {
                 }
             }
         }
+        return document
+    }
+
+    /// Redraws the part of the document you can see at the resolution it is
+    /// being shown at, so placed words stay as sharp as the ones being typed.
+    ///
+    /// Only worth doing when the canvas is showing the picture bigger than it
+    /// is: at or below 1:1 the stretched composite already has a pixel for
+    /// every pixel and a second copy of it would buy nothing. Skipped mid-drag
+    /// too, where the canvas is floating a sprite over a held-back composite
+    /// and a sharp copy of the settled document would contradict it.
+    private func refreshCrispTile() {
+        crispTileTask?.cancel()
+        crispTileTask = nil
+        // Anything on screen was drawn for a different moment than this one.
+        crispTile = nil
+        crispTileViewport = nil
+
+        guard Experiments.shared.crispZoomEnabled,
+              dragPreview == nil,
+              let viewport,
+              let document = history?.current else { return }
+        let scale = viewport.zoom * (hostWindow?.backingScaleFactor ?? 2)
+        guard scale > 1.01, let region = visibleDocumentRect(viewport) else { return }
+
+        let display = displayDocument(document)
+        let renderer = tileRenderer
+        let store = self.store
+        // Past 2x somebody is inspecting pixels and wants to see them squarely,
+        // which is the rule the canvas already follows for the whole composite.
+        let nearest = viewport.zoom >= 2
+        crispTileTask = Task { [weak self] in
+            // Let the edit or the gesture settle first. The composite lands
+            // immediately either way; this only decides how soon the sharp copy
+            // follows it, and drawing one per keystroke would spend a whole
+            // window's worth of pixels on a frame nobody looks at.
+            try? await Task.sleep(for: .milliseconds(90))
+            guard !Task.isCancelled else { return }
+            let tile = await Task.detached(priority: .userInitiated) {
+                renderer.renderTile(display, store: store, region: region,
+                                    scale: scale, magnifyNearest: nearest)
+            }.value
+            guard !Task.isCancelled, let self else { return }
+            // The camera or the document may have moved on while this drew.
+            guard self.viewport == viewport, self.history?.current == document else { return }
+            self.crispTile = tile
+            self.crispTileViewport = viewport
+        }
+    }
+
+    /// The part of the document inside the window, in document points.
+    private func visibleDocumentRect(_ viewport: Viewport) -> CGRect? {
+        guard viewport.zoom > 0 else { return nil }
+        let visible = CGRect(x: -viewport.origin.x / viewport.zoom,
+                             y: -viewport.origin.y / viewport.zoom,
+                             width: viewport.viewSize.width / viewport.zoom,
+                             height: viewport.viewSize.height / viewport.zoom)
+        let canvas = CGRect(origin: .zero, size: viewport.documentSize)
+        let inside = visible.intersection(canvas)
+        guard !inside.isNull, inside.width >= 1, inside.height >= 1 else { return nil }
+        return inside
+    }
+
+    /// Hands a document (committed or move-preview) to the render scheduler.
+    private func submit(_ document: PhotonzDocument) {
+        let document = displayDocument(document)
+        defer { refreshCrispTile() }
         if scheduler == nil {
             scheduler = RenderScheduler(store: store) { [weak self] image in
                 await MainActor.run {
