@@ -21,6 +21,9 @@ extension PhotonzDocument {
     /// to hand every text box's height back: a label still at the height of the
     /// row it used to fill has no handle and no field that could shrink it.
     public mutating func setContentPlacement(id: UUID, vertical: VerticalPlacement?) {
+        // A copy's contents are its original's, down to where they sit, so
+        // nothing is released either: the answer never lands.
+        guard ownsContentRules(id: id) else { return }
         let released = vertical == .stretch ? [] : textsReleasedFromFill(in: id)
         setContentPlacement(id: id) { $0.vertical = vertical }
         for (child, box) in released { updateLayer(id: child) { $0.frame = box } }
@@ -42,7 +45,11 @@ extension PhotonzDocument {
 
     private mutating func setContentPlacement(id: UUID,
                                               _ change: (inout LayerPlacement) -> Void) {
-        guard let group = layer(id: id)?.group else { return }
+        // A copy is refilled from its original after every edit, and that
+        // includes what it tells its contents to do, so an answer typed here
+        // would be gone by the next redraw. It is refused instead, and the
+        // Layout section says who owns it.
+        guard let group = layer(id: id)?.group, ownsContentRules(id: id) else { return }
         var placement = group.contentPlacement ?? LayerPlacement()
         change(&placement)
         updateLayer(id: id) { layer in

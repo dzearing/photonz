@@ -3847,7 +3847,9 @@ final class EditorState {
     /// moves at the moment it lands — the layout is read off where the contents
     /// already are.
     func setArrangement(id: UUID, kind: GroupLayoutKind?) {
-        guard document?.layer(id: id)?.isGroup == true else { return }
+        // A copy arranges its contents the way its original does, so there is
+        // nothing to discard a drag preview for either.
+        guard document?.ownsContentRules(id: id) == true else { return }
         discardDragPreview()
         perform { $0.setGroupLayout(id: id, kind: kind) }
     }
@@ -3858,7 +3860,7 @@ final class EditorState {
         // A group that has never been given a layout gets one on the first
         // number typed into it, keeping the room its contents already have, so
         // nothing moves at the moment the section starts meaning something.
-        guard document?.layer(id: id)?.isGroup == true else { return }
+        guard document?.ownsContentRules(id: id) == true else { return }
         perform { $0.updateGroupLayout(id: id, change) }
     }
 

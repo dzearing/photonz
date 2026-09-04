@@ -1,0 +1,28 @@
+{
+  "feature": "A copy is not asked to decide what its original decides",
+  "epic": "ui-components",
+  "summary": "The Layout section on a copy of a component now reads out how it arranges its contents instead of offering fields for it, and says to change it on the original. Before this, padding or a gap typed into a copy was accepted and then thrown away by the next edit anywhere in the document.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs the Components, Placement and Auto Layout flags, which are on by default.",
+  "try": [
+    { "do": "Draw two rectangles, select both, and press Layer > Stack Selection." },
+    { "do": "Type 16 into Padding in the Layout section." },
+    { "do": "Press Layer > Make Component.", "shot": "2026-09-04-copy-layout-1-original-sc.png" },
+    { "do": "Open the Library, switch it to Comps, and drag the new tile onto empty canvas." },
+    { "do": "Read the Layout section of the copy that lands selected.", "shot": "2026-09-04-copy-layout-2-copy-sc.png" },
+    { "do": "Press Edit Original in the Component section, then type 32 into Padding." },
+    { "do": "Click the copy again and read its Layout section: it says 32." }
+  ],
+  "evaluate": [
+    "When you pick the copy, is it obvious within a second that Layout is being reported to you rather than asked of you?",
+    "Does the last line of the section tell you where to go, or do you still hunt for the original?",
+    "Is the arrangement in a sentence better than the same numbers in fields you cannot type in?",
+    "Do you ever want a single copy to have its OWN padding, or is a copy that always matches its original what you expect?",
+    "On the original, does the Layout section feel unchanged?"
+  ],
+  "rough": [
+    "There is no way to give one copy its own padding. Refusing is honest, but if you want per copy overrides that is a separate feature and I did not build it.",
+    "The copy's sentence keeps the app's existing phrasing, so a column stack reads 'lines up down', which is a little awkward. It matches what the original's own caption says, so I left both alone rather than changing one of them.",
+    "The section header still reads 'Contents of <copy name>', though the contents are the original's. Naming the selected thing seemed better than naming a layer that is somewhere else on the canvas.",
+    "Screenshots are real window captures from Scripts/playtest/copy-layout-walk.json, taken with the probe's Screen Recording grant."
+  ]
+}

@@ -10,12 +10,27 @@ import Foundation
 /// contents come out in order.
 extension PhotonzDocument {
 
+    /// Why a copy is not asked how it arranges its contents: the answer is its
+    /// original's, and a copy is rebuilt from the original after every edit, so
+    /// an answer given here would be gone by the next redraw.
+    public static let instanceArrangementReason = "A copy arranges its contents the way its original does. Use Edit Original in the Component section to change it for every copy."
+
     /// Whether "Stack" or "Grid" would do anything: exactly one unlocked group
-    /// is picked. A photo has no contents to arrange, and a locked group is
-    /// locked.
+    /// is picked, and it is not a copy. A photo has no contents to arrange, a
+    /// locked group is locked, and a copy's contents belong to its original.
     public func canSetGroupLayout(ids: Set<UUID>) -> Bool {
         guard ids.count == 1, let id = ids.first, let layer = layer(id: id) else { return false }
-        return layer.isGroup && !layer.isLocked
+        return layer.isGroup && !layer.isLocked && !layer.isComponentInstance
+    }
+
+    /// Whether this group's rules about its own contents, the arrangement and
+    /// where the contents sit, are its to set. A copy's are not: every one of
+    /// them is refilled from the original by `syncComponentInstances`, so the
+    /// only honest thing the Layout section can do with a copy is show them and
+    /// say who owns them.
+    public func ownsContentRules(id: UUID) -> Bool {
+        guard let layer = layer(id: id), layer.isGroup else { return false }
+        return !layer.isComponentInstance
     }
 
     /// Makes a group arrange itself, or stops it. Nothing moves at the moment
@@ -30,7 +45,8 @@ extension PhotonzDocument {
     /// to the corner and the group's own anchor moves the same amount — the
     /// same sum grouping already does, and nothing on the canvas shifts.
     public mutating func setGroupLayout(id: UUID, kind: GroupLayoutKind?) {
-        guard let layer = layer(id: id), let group = layer.group else { return }
+        guard let layer = layer(id: id), let group = layer.group,
+              ownsContentRules(id: id) else { return }
         let container = group.isFrame ? CGRect(origin: .zero, size: layer.frame.standardized.size)
                                       : nil
         // Free: it arranges nothing, so there is nothing to read off but the
@@ -78,7 +94,8 @@ extension PhotonzDocument {
     /// plain group is the moment it starts closing around them — and the group
     /// does not move while that happens.
     public mutating func updateGroupLayout(id: UUID, _ change: (inout GroupLayout) -> Void) {
-        guard let layer = layer(id: id), let group = layer.group else { return }
+        guard let layer = layer(id: id), let group = layer.group,
+              ownsContentRules(id: id) else { return }
         if group.layout == nil { setGroupLayout(id: id, kind: nil) }
         guard let existing = self.layer(id: id)?.group?.layout else { return }
         var next = existing

@@ -2050,6 +2050,44 @@ the box you drew, and something hanging off its edge must never resize it. Nor
 a minimum or maximum size, so a hugging button with one letter in it is as
 narrow as one letter plus its room.
 
+## Landed: a copy is not asked to decide what its original decides (Next, `next-auto-layout` + `next-components`, 2026-09-04)
+
+Picking a copy showed the whole Layout section: Arrangement, Gap, Padding, and
+the rows saying where its contents sit. Every one of those is refilled from the
+original by `syncComponentInstances`, so 24 typed into a copy's Padding read
+back as 24 until the next edit anywhere in the document, and then it was 0
+again. The section was offering something it could not keep.
+
+- **The model refuses it, not the panel.** `canSetGroupLayout` says no to a
+  copy, and `setGroupLayout`, `updateGroupLayout` and `setContentPlacement` all
+  guard on the new `ownsContentRules(id:)`. A rule the interface enforces is a
+  rule a keystroke, a script or a menu can walk around, and this one is about
+  data that is going to be overwritten.
+- **A copy is SHOWN its arrangement and refused the typing of it**, which is the
+  answer the W and H fields already give a copy. The numbers move into a
+  sentence rather than into greyed-out fields, because a field you cannot type
+  in still looks like a field and eight of them reads as broken rather than as
+  owned by somebody else: "Everything in this copy lines up down, 30 apart. It
+  keeps 16 clear inside its edges."
+- **Who owns it is said once, at the foot of the section**, under the Horizontal
+  and Vertical rows it hands over as well: "A copy arranges its contents the way
+  its original does. Use Edit Original in the Component section to change it for
+  every copy." That button is three rows below, in view in the same panel.
+- **An axis the arrangement decides says so in the same words on both**: a copy
+  reads "Set by the stack" where the original does, rather than reading back the
+  answer underneath that the stack is overriding.
+- Everything a copy really does own is untouched: where it sits, its size, its
+  knobs, its own placement rule inside whatever holds it.
+
+`PhotonzDocument.instanceArrangementReason` is the one sentence, shared by the
+rows' tooltips and the caption. Tested in `ComponentInstanceLayoutTests`, walked
+by `Scripts/playtest/copy-layout-walk.json`.
+
+Not in this slice: a per-copy layout override. Padding that one copy may set for
+itself is a real feature (Figma has it), but it needs an override that survives
+the sync and a way to reset it, which is the same machinery as C6's knobs. Until
+then, refusing is honest and losing it silently was not.
+
 ## Landed: dragging onto a screen puts it in the screen (Next, `next-frames`, 2026-09-03)
 
 Drawing a shape on a screen already put the shape on that screen, and dropping

@@ -188,7 +188,23 @@ struct PlacementInspector: View {
             // The axis a stack runs along is the stack's answer, not a menu:
             // a live control that changes nothing is worse than a row that
             // says who owns it.
-            if !flow.canSetHorizontal {
+            if current.isComponentInstance {
+                // A copy's contents are its original's, down to where they
+                // sit: these are refilled from the original after every edit,
+                // so a menu here would take an answer and lose it by the next
+                // redraw (found 2026-09-04).
+                //
+                // An axis the arrangement decides says so in the SAME words
+                // the original says it in, rather than reading back the answer
+                // underneath that the flow is overriding: the two sections
+                // describe one fact, so they had better agree.
+                followedRow("Horizontal", flow.canSetHorizontal
+                            ? effective.horizontal.title
+                            : (flow.setByTheFlow ?? effective.horizontal.title))
+                followedRow("Vertical", flow.canSetVertical
+                            ? effective.vertical.title
+                            : (flow.setByTheFlow ?? effective.vertical.title))
+            } else if !flow.canSetHorizontal {
                 ownedByTheFlow("Horizontal", flow, clearing: contentsInertRule(flow)) {
                     editorState.setContentPlacement(id: current.id, horizontal: nil)
                 }
@@ -207,7 +223,9 @@ struct PlacementInspector: View {
                     .fixedSize()
                 }
             }
-            if !flow.canSetVertical {
+            if current.isComponentInstance {
+                EmptyView()
+            } else if !flow.canSetVertical {
                 ownedByTheFlow("Vertical", flow, clearing: contentsInertRule(flow)) {
                     editorState.setContentPlacement(id: current.id, vertical: nil)
                 }
@@ -226,9 +244,18 @@ struct PlacementInspector: View {
                     .fixedSize()
                 }
             }
+            // A copy says who owns all of this ONCE, here at the foot, so the
+            // one sentence covers the arrangement above it and the two rows
+            // right above it rather than stopping halfway down the section.
+            if current.isComponentInstance {
+                Text(PhotonzDocument.instanceArrangementReason)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             // With an arrangement on, the Arrangement rows say what happens in
             // words already, so this would be the second caption in a row.
-            if arrangement == nil {
+            if arrangement == nil, !current.isComponentInstance {
                 Text(current.isFrame
                      ? "Everything on this screen follows this when the screen is resized, "
                        + "unless a layer says otherwise for itself."
@@ -308,6 +335,19 @@ struct PlacementInspector: View {
         .onHover { hoveredContentID = $0 ? exception.id : nil }
         .help("Select \(exception.name)")
         .playtestControl(exception.name, detail: "Layout, a layer with a rule of its own")
+    }
+
+    /// The row for something a COPY is shown rather than asked: the answer in
+    /// the same column a menu would put it, greyed, with the reason on hover.
+    /// The Layout section's own line above already says where it is set, so
+    /// this row carries no second sentence.
+    private func followedRow(_ title: String, _ value: String) -> some View {
+        row(title) {
+            Text(value)
+                .font(.callout)
+                .foregroundStyle(.tertiary)
+        }
+        .help(PhotonzDocument.instanceArrangementReason)
     }
 
     /// The row for an axis the stack decides. It stays in place, with the same

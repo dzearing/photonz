@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/copy-layout",
+  "seed": "A stack made into a component, and a copy of it. The copy's Layout section must not offer numbers it cannot keep: how a copy arranges its contents is the original's answer, and typing into it used to be accepted and then thrown away by the next edit anywhere in the document.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 120], "to": [420, 180], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 210], "to": [420, 270], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [120, 80], "to": [520, 320], "steps": 10 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "16" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "makeComponent" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-original", "note": "the original: a stack with 16 of padding, and its whole Layout section is typeable" },
+    { "do": "snapshot", "name": "copylayout-1-original" },
+    { "do": "panel", "stage": "1-original" },
+
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "dragTile", "tile": "Component", "to": [640, 520] },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "2-copy", "note": "THE TEST: the copy is selected, and its Layout section reads out the arrangement in words with no fields to type into. It says the original owns it and where to change it." },
+    { "do": "snapshot", "name": "copylayout-2-copy" },
+    { "do": "panel", "stage": "2-copy" },
+
+    { "do": "action", "action": "selectComponentOriginal" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "32" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-original-changed", "note": "changing the ORIGINAL's padding to 32 is where it is changed, and the copy follows it" },
+    { "do": "snapshot", "name": "copylayout-3-original-32" },
+    { "do": "render", "name": "copylayout-3-original-32-doc" },
+
+    { "do": "click", "at": [640, 520] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-copy-followed", "note": "the copy again: its readout now says 32, which it got from the original" },
+    { "do": "snapshot", "name": "copylayout-4-copy-followed" },
+    { "do": "panel", "stage": "4-copy-followed" }
+  ]
+}

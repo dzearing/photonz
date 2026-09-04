@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:00:57.651Z",
-  "updated": "2026-09-04T17:00:57.652Z",
+  "updated": "2026-09-04T17:29:38.687606Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-04 while auditing the container-hug work. ComponentInstances refill copies the original main group layout onto every copy (group.layout = main.group?.layout), so a copy padding edit is overwritten by the next syncComponentInstances. Same family as the lost-typing bug fixed on 2026-09-04. Simplest answer: EditorState.arrangingGroupID excludes an instance root, the way handles already do.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-04T17:00:57.652Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T17:14:19.073Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T17:29:38.687606Z",
+      "note": "Reproduced first, both halves: a test set 24 padding and .center content placement on a copy, and syncComponentInstances put both back to the original's (padding 0, placement nil). So the Layout section was taking answers it could not keep."
+    },
+    {
+      "t": "2026-09-04T17:29:38.687606Z",
+      "note": "Adversarial review before building. The two answers the task allowed were hide the section or make it stick. Making it stick means a per copy layout override that survives the sync plus a way to reset it, which is C6 knob machinery and a feature the user has not asked for. Hiding it outright is worse than it sounds: the original HAS a Layout section, so a copy with none reads as a bug, and a copy's padding is worth reading while redlining. So neither literally: the app already has a third idiom for exactly this, the one the W and H fields give a copy (show the number, refuse the typing, say who owns it), and the placement rows already say 'Set by the stack' rather than offering a dead menu. Built that."
+    },
+    {
+      "t": "2026-09-04T17:29:38.687606Z",
+      "note": "Core, TDD: canSetGroupLayout says no to a copy; new ownsContentRules(id:) guards setGroupLayout, updateGroupLayout and setContentPlacement, so a keystroke, a script or a menu cannot walk around the panel. Seven tests in ComponentInstanceLayoutTests, written failing first. Also covers what a copy still owns (its position and its own placement rule survive a sync) and that the original still takes the whole section."
+    },
+    {
+      "t": "2026-09-04T17:29:38.687606Z",
+      "note": "UI: ArrangementInspector shows a copy its arrangement as one read only row plus a sentence carrying the numbers; PlacementInspector shows the contents rows read only and says who owns all of it once, at the foot of the section, pointing at Edit Original which is three rows below in the same panel."
+    },
+    {
+      "t": "2026-09-04T17:29:38.687606Z",
+      "note": "Reviewed the built thing on the real app (Scripts/playtest/copy-layout-walk.json, probe with Screen Recording granted). Two fixes came out of reading the capture: the ownership sentence started life in the middle of the section and stopped halfway down, so it moved to the foot under the rows it also covers; and the copy read 'Vertical: Top' where the original reads 'Vertical: Set by the stack' for the same fact, so the copy now uses the same words. Verified the copy shows 16 then 32 after the original changed."
+    },
+    {
+      "t": "2026-09-04T17:29:38.687606Z",
+      "note": "Verified: 3061 tests pass, real captures show the copy with no typeable Layout controls (panel capture lists zero) and the original with all of them."
     }
-  ]
+  ],
+  "started": "2026-09-04T17:14:19.072Z"
 }

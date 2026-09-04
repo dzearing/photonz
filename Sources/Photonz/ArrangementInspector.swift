@@ -40,26 +40,94 @@ struct ArrangementInspector: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            row("Arrangement") {
-                Picker("", selection: Binding(get: { layout.kind },
-                                              set: { editorState.setArrangement(id: layer.id,
-                                                                                kind: $0) })) {
-                    Text("Free").tag(GroupLayoutKind?.none)
-                    ForEach(GroupLayoutKind.allCases, id: \.self) { kind in
-                        Text(kind.title).tag(GroupLayoutKind?.some(kind))
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: 152)
+            // A copy is SHOWN how it arranges its contents and refused the
+            // typing of it: every one of these numbers is refilled from the
+            // original after each edit, so a field here would take a number
+            // and lose it by the next redraw (found 2026-09-04). The same
+            // answer the W and H fields already give a copy.
+            if current.isComponentInstance {
+                followedRows(layout)
+            } else {
+                ownRows(layout)
             }
-            numbers(layout)
-            Text(caption(layout) + (sizeSentence(layout).map { " " + $0 } ?? ""))
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .onChange(of: layer.id) { sidesOpen = nil }
+    }
+
+    /// The whole section as the group that owns it sees it.
+    @ViewBuilder
+    private func ownRows(_ layout: GroupLayout) -> some View {
+        row("Arrangement") {
+            Picker("", selection: Binding(get: { layout.kind },
+                                          set: { editorState.setArrangement(id: layer.id,
+                                                                            kind: $0) })) {
+                Text("Free").tag(GroupLayoutKind?.none)
+                ForEach(GroupLayoutKind.allCases, id: \.self) { kind in
+                    Text(kind.title).tag(GroupLayoutKind?.some(kind))
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: 152)
+        }
+        numbers(layout)
+        Text(caption(layout) + (sizeSentence(layout).map { " " + $0 } ?? ""))
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    // MARK: - A copy, which follows its original
+
+    /// What a copy arranges to, readable and not typeable. The numbers move
+    /// into the sentence rather than into greyed-out fields: a field you cannot
+    /// type in still looks like a field, and eight of them is a section that
+    /// reads as broken rather than as owned by somebody else.
+    ///
+    /// Who owns them is said once, at the FOOT of the whole section, under the
+    /// Horizontal and Vertical rows this hands over as well, so one sentence
+    /// covers everything above it instead of stopping halfway down.
+    @ViewBuilder
+    private func followedRows(_ layout: GroupLayout) -> some View {
+        row("Arrangement") {
+            Text(layout.kind?.title ?? "Free")
+                .font(.callout)
+                .foregroundStyle(.tertiary)
+        }
+        .help(PhotonzDocument.instanceArrangementReason)
+        Text(followedSentence(layout))
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// A copy's arrangement in one sentence, numbers and all, because a number
+    /// you cannot change is still a number worth reading off a copy.
+    private func followedSentence(_ layout: GroupLayout) -> String {
+        var parts: [String] = []
+        switch layout.kind {
+        case nil:
+            parts.append("Everything in this copy stays where the original put it.")
+        case .stack:
+            parts.append("Everything in this copy lines up "
+                         + "\(layout.direction.isHorizontal ? "across" : "down"), "
+                         + "\(Int(layout.usedGap)) apart.")
+        case .grid:
+            parts.append("Everything in this copy fills \(layout.usedColumns) "
+                         + "\(layout.usedColumns == 1 ? "column" : "columns"), a row at a time.")
+        }
+        let room = layout.usedPadding
+        if room != .none {
+            parts.append(room.isUniform
+                ? "It keeps \(Int(room.uniform ?? 0)) clear inside its edges."
+                : "It keeps \(sides(room)) clear inside its edges.")
+        }
+        let fixed = [layout.width.map { "\(Int($0.rounded())) wide" },
+                     layout.height.map { "\(Int($0.rounded())) tall" }].compactMap { $0 }
+        if !current.isFrame, !fixed.isEmpty {
+            parts.append("It is \(fixed.joined(separator: " and ")).")
+        }
+        return parts.joined(separator: " ")
     }
 
     @ViewBuilder
