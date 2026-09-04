@@ -173,6 +173,20 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// Why nothing on a locked layer can be typed.
     public static let lockedReason = "This layer is locked. Unlock it in the Layers list to change its position or size."
 
+    /// The same, for a locked layer whose position was never its own anyway:
+    /// a stack, a grid, or a group that closes around what is inside it
+    /// already decides where its contents sit.
+    ///
+    /// Two reasons land on the same field here, and naming only the lock is
+    /// the one that misleads: it promises that unlocking hands the position
+    /// back, and the container would take it again on the very next pass. So
+    /// the sentence says both, and says which half unlocking actually returns.
+    public static func lockedInsideReason(_ kind: GroupLayoutKind?) -> String {
+        let noun = kind?.title.lowercased() ?? "group"
+        return "This layer is locked, and the \(noun) it is in decides where it sits. "
+            + "Unlocking it in the Layers list gives back its size, not its position."
+    }
+
     /// Why a shape drawn end to end has no typeable size.
     public static let endpointReason = "Drag this shape's ends on the canvas to change its size."
 
@@ -201,6 +215,12 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     public let canMove: Bool
     public let canSetWidth: Bool
     public let canSetHeight: Bool
+
+    /// Whether the group holding this layer is what decides where it sits, so
+    /// no lock and no unlock changes that. The panel needs it apart from the
+    /// reason strings because a caption speaking for several locked layers has
+    /// to say the same thing in the plural.
+    public let containerOwnsPosition: Bool
 
     /// Whether a lock is what is stopping this layer. It is the one state that
     /// takes all four numbers away at once and for a single reason, which is
@@ -239,22 +259,27 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         minimumHeight = LayerGeometry.minimumSide
         frameIsTheShape = !layer.hasEndpointHandles
         isLocked = layer.isLocked
+        // A container that arranges its contents, or that closes around them,
+        // owns where they sit; one that was given a size on both axes and
+        // arranges nothing leaves them exactly where you put them.
+        let owningLayout = (container?.group?.layout).flatMap {
+            $0.arranges || $0.hugsWidth || $0.hugsHeight ? $0 : nil
+        }
+        containerOwnsPosition = owningLayout != nil
         if layer.isLocked {
             canMove = false
             canSetWidth = false
             canSetHeight = false
+            // Size really does come back on unlocking, so those two fields
+            // still name the lock and nothing else.
             widthReason = Self.lockedReason
             heightReason = Self.lockedReason
-            moveReason = Self.lockedReason
+            moveReason = owningLayout.map { Self.lockedInsideReason($0.kind) } ?? Self.lockedReason
             return
         }
-        // A container that arranges its contents, or that closes around them,
-        // owns where they sit; one that was given a size on both axes and
-        // arranges nothing leaves them exactly where you put them.
-        if let layout = container?.group?.layout,
-           layout.arranges || layout.hugsWidth || layout.hugsHeight {
+        if let owningLayout {
             canMove = false
-            moveReason = switch layout.kind {
+            moveReason = switch owningLayout.kind {
             case .grid: Self.griddedReason
             case .stack: Self.stackedReason
             case nil: Self.huggedReason

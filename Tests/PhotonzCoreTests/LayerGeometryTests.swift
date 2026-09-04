@@ -246,6 +246,73 @@ struct LayerGeometryTests {
         }
     }
 
+    // MARK: A lock on top of a container that already owns where things sit
+
+    private func holder(_ children: [Layer], _ layout: GroupLayout) -> Layer {
+        var content = GroupContent(children: children)
+        content.layout = layout
+        return Layer(name: "Holder", content: .group(content), frame: .zero)
+    }
+
+    private func row(locked: Bool) -> Layer {
+        rectangle(frame: CGRect(x: 0, y: 0, width: 100, height: 40), locked: locked)
+    }
+
+    @Test("A locked row in a stack does not promise that unlocking gives its position back")
+    func lockedRowInAStackNamesTheStackToo() {
+        let container = holder([row(locked: true)], GroupLayout(kind: .stack, gap: 8))
+        let locked = LayerGeometryEditing(layer: row(locked: true), in: container)
+        let unlocked = LayerGeometryEditing(layer: row(locked: false), in: container)
+        // Unlocking really does not hand the position back: the stack takes it
+        // again on the next pass, which is why naming only the lock misleads.
+        #expect(!unlocked.allows(.x))
+        #expect(!unlocked.allows(.y))
+        #expect(unlocked.allows(.width))
+        #expect(locked.fixedReason(for: .x) == LayerGeometryEditing.lockedInsideReason(.stack))
+        #expect(locked.fixedReason(for: .y) == LayerGeometryEditing.lockedInsideReason(.stack))
+        #expect(locked.fixedReason(for: .x) != LayerGeometryEditing.lockedReason)
+        // Size DOES come back, so those two fields still name the lock alone.
+        #expect(locked.fixedReason(for: .width) == LayerGeometryEditing.lockedReason)
+        #expect(locked.fixedReason(for: .height) == LayerGeometryEditing.lockedReason)
+        #expect(locked.containerOwnsPosition)
+    }
+
+    @Test("A locked cell in a grid says grid, and a locked piece in a hugging group says group")
+    func lockedPieceNamesWhicheverContainerHoldsIt() {
+        let grid = holder([row(locked: true)], GroupLayout(kind: .grid, columns: 2))
+        #expect(LayerGeometryEditing(layer: row(locked: true), in: grid).fixedReason(for: .x)
+                == LayerGeometryEditing.lockedInsideReason(.grid))
+        let hugging = holder([row(locked: true)], GroupLayout.free())
+        #expect(LayerGeometryEditing(layer: row(locked: true), in: hugging).fixedReason(for: .x)
+                == LayerGeometryEditing.lockedInsideReason(nil))
+    }
+
+    @Test("A locked layer nothing arranges still says only that it is locked")
+    func aPlainLockedLayerKeepsThePlainReason() {
+        let alone = LayerGeometryEditing(layer: row(locked: true))
+        #expect(alone.fixedReason(for: .x) == LayerGeometryEditing.lockedReason)
+        #expect(!alone.containerOwnsPosition)
+        // A group given a size on both axes that arranges nothing leaves its
+        // contents exactly where they were put, so unlocking DOES give the
+        // position back and the plain sentence is the true one.
+        let fixedBox = holder([row(locked: true)], GroupLayout.free(width: 300, height: 300))
+        let inside = LayerGeometryEditing(layer: row(locked: true), in: fixedBox)
+        #expect(inside.fixedReason(for: .x) == LayerGeometryEditing.lockedReason)
+        #expect(!inside.containerOwnsPosition)
+    }
+
+    @Test("The stacked lock sentences read as plain language too")
+    func stackedLockReasonsArePlainLanguage() {
+        for reason in [LayerGeometryEditing.lockedInsideReason(.stack),
+                       LayerGeometryEditing.lockedInsideReason(.grid),
+                       LayerGeometryEditing.lockedInsideReason(nil)] {
+            #expect(!reason.isEmpty)
+            #expect(reason.first!.isUppercase)
+            #expect(!reason.contains("—"))
+            #expect(reason.contains("Layers list"))
+        }
+    }
+
     // MARK: Labels
 
     @Test("The fields are labelled the way every design tool labels them")

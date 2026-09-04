@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/locked-in-stack",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [100, 60], "to": [300, 120], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [100, 160], "to": [300, 220], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [100, 260], "to": [300, 320], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [200, 90] },
+    { "do": "click", "at": [200, 190], "modifiers": ["shift"] },
+    { "do": "click", "at": [200, 290], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "stepIntoSelection" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "0-rows", "note": "three rows now in a stack; note their names for the steps below" },
+    { "do": "panel", "stage": "0-rows" },
+
+    { "do": "click", "at": [200, 190] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-unlocked-row", "note": "control: an UNLOCKED row inside the stack. Caption should say the numbers and the arrow keys." },
+    { "do": "snapshot", "name": "1-unlocked-row" },
+
+    { "do": "press", "control": "Lock", "in": "Rectangle 2" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "selectRow", "row": "Rectangle 2" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-locked-row", "note": "the SAME row, locked. Caption must not promise that unlocking gives its position back: the stack still owns that." },
+    { "do": "panel", "stage": "2-locked-row" },
+    { "do": "snapshot", "name": "2-locked-row" },
+
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "deleteLayer" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-after-delete", "note": "the first row is gone. Today the stack still moves the locked row up; this is the open design question." },
+    { "do": "snapshot", "name": "3-after-delete" }
+  ]
+}

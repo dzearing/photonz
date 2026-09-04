@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:10:10.682Z",
-  "updated": "2026-09-04T12:10:10.683Z",
+  "updated": "2026-09-04T21:38:29.878Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Evidence: queue/audits/2026-09-03-auto-layout.json rough 6 (\"A locked layer inside a stack is still moved by the stack. Lock stops you dragging it; it does not opt out of the arrangement\"). Lock was the theme of 2026-09-04: locked layers stopped drawing resize handles (2026-09-04-locked-layer-handles.json) and the Position and Size caption stopped claiming a locked layer can be nudged (2026-09-04-locked-caption.json), which leaves the stack as the last place lock does not hold. There is a real design question inside this one: a locked layer that leaves the flow may need to be treated as an obstacle rather than a member, so read those two audits before choosing. Related: one-rule-for-a-control-that-cannot-do-anything.",
@@ -26,6 +26,27 @@
     {
       "t": "2026-09-04T12:10:10.683Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T21:27:23.806Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T21:38:29.878Z",
+      "note": "Adversarial review before building. Reproduced the bug first in the probe (Scripts/playtest/locked-in-stack-walk.json): stack three rows, lock the middle, delete the first, and the locked row slides up. Real. But the fix the acceptance describes is not obviously right: locking a row out of the flow leaves a visible empty band in the stack where the deleted row was, and a row that grows too tall to fit above the locked one has to jump BELOW it to avoid overlapping. Both read as broken to anyone who does not remember locking that row. Other design tools keep locked layers in auto layout. So the behaviour is a UX call, not an engineering one."
+    },
+    {
+      "t": "2026-09-04T21:38:29.878Z",
+      "note": "Found a second, undisputed bug on the way, and fixed it. A locked row inside a stack said \"This layer is locked. Unlock it in the Layers list to change its position or size\" - a promise the stack takes straight back, because unlocking leaves X and Y untypeable. It now reads \"This layer is locked, and the stack it is in decides where it sits. Unlocking it in the Layers list gives back its size, not its position.\" Grid and hugging-group wordings too, plus the plural for several locked rows. TDD: 7 new tests in LayerGeometryTests and LayerGeometrySelectionTests; full suite 3122 green. Verified live in the probe with Screen Recording granted (real window captures)."
+    },
+    {
+      "t": "2026-09-04T21:38:29.878Z",
+      "note": "Opened decision a-locked-layer-inside-a-stack-is-left-where-it-i-you-lock-a-row-inside-a-stack-sh with a brief, recommending that the stack keeps arranging a locked row (marked declines, since picking it retires this task). Options B (lock pins it) and C (a separate Leave where it is switch) both come back here to be built."
+    },
+    {
+      "t": "2026-09-04T21:38:29.878Z",
+      "note": "Acceptance status: items 1-3 and 5 wait on the decision. Item 4 is half done - the Layout rows now say who owns the position; the Layers list is unchanged and is noted in the audit as rough. Item 7 done: queue/audits/2026-09-04-locked-in-stack.json with two real screenshots."
     }
-  ]
+  ],
+  "started": "2026-09-04T21:27:23.805Z"
 }

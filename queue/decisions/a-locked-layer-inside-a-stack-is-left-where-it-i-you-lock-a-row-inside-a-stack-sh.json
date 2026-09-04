@@ -1,0 +1,55 @@
+{
+  "id": "a-locked-layer-inside-a-stack-is-left-where-it-i-you-lock-a-row-inside-a-stack-sh",
+  "taskId": "a-locked-layer-inside-a-stack-is-left-where-it-i",
+  "question": "You lock a row inside a stack. Should the stack still be allowed to move it?",
+  "context": "Today a stack keeps arranging a locked row: delete the row above it and it slides up like everything else. The rest of lock was tightened this week (no handles, no typed numbers, and as of today the panel says the stack owns the position), so this is the last place lock and the stack disagree. Pinning the row is buildable, but a pinned row leaves a visible empty space in the stack where the deleted row was, which is the part worth your eye.",
+  "options": [
+    {
+      "id": "a",
+      "label": "The stack keeps arranging it",
+      "summary": "Locking a row protects it from you, not from the stack. It stops taking handles, drags and typed numbers, and the panel now says in words that the stack decides where it sits. Delete the row above it and it slides up with everything else, so a stack never has a hole in it.",
+      "pros": [
+        "A stack always looks like a stack: even spacing, no gaps, nothing overlapping",
+        "Nothing new to learn, and it is how other design tools behave",
+        "Already true today, and the panel already explains it as of this change"
+      ],
+      "cons": [
+        "Inside a stack, lock does not mean leave this exactly where it is"
+      ],
+      "mitigation": "The Position and Size panel now spells out that the stack owns the position and that unlocking gives back the size only, so nobody has to work it out from watching things move.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Locking pins the row where it is",
+      "summary": "A locked row stops moving at all. The other rows flow around it: delete the row above and the locked one stays exactly where it was, leaving an empty space where the deleted row used to be. Unlock it and it drops back into the flow in one undo step.",
+      "pros": [
+        "Lock means one thing everywhere in the app",
+        "You can hold one row against a screenshot while you rearrange the rest"
+      ],
+      "cons": [
+        "A stack with a locked row can show an empty gap, or a row that jumped below the locked one to avoid landing on it, which reads as broken",
+        "There is no way back to even spacing without unlocking"
+      ],
+      "mitigation": "The Layers list and the Layout section would mark the row as sitting out the arrangement, so the gap reads as a choice rather than a bug."
+    },
+    {
+      "id": "c",
+      "label": "A separate Leave where it is switch",
+      "summary": "Lock keeps meaning do not let me edit this. Taking a row out of the arrangement becomes its own switch in the Layout section, next to the rows that already say who owns each axis. You can pin a row without locking it, and lock one without pinning it.",
+      "pros": [
+        "Two different intentions get two different controls, so neither is overloaded",
+        "Matches how other tools let one item sit outside an auto layout",
+        "You can still edit a pinned row, which lock would not let you do"
+      ],
+      "cons": [
+        "One more control to learn, and more to build than either other option",
+        "The same empty gaps as option B, just reached deliberately"
+      ],
+      "mitigation": "The switch only appears for a row inside a stack or a grid, so it never adds a control to a layer it means nothing for."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-04T21:37:50.917Z"
+}

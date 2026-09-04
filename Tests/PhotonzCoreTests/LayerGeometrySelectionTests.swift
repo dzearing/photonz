@@ -425,6 +425,39 @@ struct LayerGeometrySelectionTests {
                 == "2 locked layers. Unlock them in the Layers list to change their position or size.")
     }
 
+    @Test("A locked row in a stack says both reasons in the caption, so unlocking is not oversold")
+    func aLockedRowInAStackSaysTheStackToo() {
+        let frame = CGRect(x: 0, y: 0, width: 120, height: 32)
+        let layer = rectangle(frame, locked: true)
+        var content = GroupContent(children: [layer])
+        content.layout = GroupLayout(kind: .stack, gap: 8)
+        let stack = Layer(name: "Stack", content: .group(content), frame: .zero)
+        let sel = LayerGeometrySelection([
+            LayerGeometrySelection.Member(id: layer.id, frame: frame,
+                                          editing: LayerGeometryEditing(layer: layer, in: stack))])
+        #expect(sel.isLocked)
+        #expect(sel.caption == LayerGeometryEditing.lockedInsideReason(.stack))
+        #expect(sel.caption != LayerGeometryEditing.lockedReason)
+    }
+
+    @Test("Two locked rows a stack owns say it once, in the plural")
+    func twoLockedRowsInAStackSayItOnce() {
+        let frames = [CGRect(x: 0, y: 0, width: 120, height: 32),
+                      CGRect(x: 0, y: 40, width: 120, height: 32)]
+        let rows = frames.map { rectangle($0, locked: true) }
+        var content = GroupContent(children: rows)
+        content.layout = GroupLayout(kind: .stack, gap: 8)
+        let stack = Layer(name: "Stack", content: .group(content), frame: .zero)
+        let sel = LayerGeometrySelection(zip(rows, frames).map { layer, frame in
+            LayerGeometrySelection.Member(id: layer.id, frame: frame,
+                                          editing: LayerGeometryEditing(layer: layer, in: stack))
+        })
+        #expect(sel.isLocked)
+        #expect(sel.caption.hasPrefix("2 locked layers,"))
+        #expect(sel.caption.contains("decides where they sit"))
+        #expect(sel.caption.contains("not their position"))
+    }
+
     @Test("One locked layer among unlocked ones leaves the caption alone, because the fields still work")
     func aPartlyLockedSelectionKeepsTheOrdinaryCaption() {
         let a = CGRect(x: 0, y: 0, width: 120, height: 32)

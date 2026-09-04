@@ -107,7 +107,17 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     /// the eye already is rather than one hover away.
     public var caption: String {
         if isLocked {
-            guard count > 1 else { return LayerGeometryEditing.lockedReason }
+            // The hover tip for X already says everything a locked layer has to
+            // say, including the half a stack or a grid owns rather than the
+            // lock, so the caption is that same sentence rather than a second
+            // wording of it.
+            guard count > 1 else {
+                return members[0].editing.fixedReason(for: .x) ?? LayerGeometryEditing.lockedReason
+            }
+            guard !members.allSatisfy(\.editing.containerOwnsPosition) else {
+                return "\(count) locked layers, all inside something that decides where they sit. "
+                    + "Unlocking them in the Layers list gives back their size, not their position."
+            }
             return "\(count) locked layers. Unlock them in the Layers list to "
                 + "change their position or size."
         }

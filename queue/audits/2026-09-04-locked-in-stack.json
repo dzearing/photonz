@@ -1,0 +1,29 @@
+{
+  "feature": "A locked row in a stack says who really owns its position",
+  "epic": "ui-layout",
+  "summary": "Lock a row inside a stack or a grid and the Position and Size panel now says the whole truth: the layer is locked, the stack decides where it sits, and unlocking gives back its size but not its position. It used to say only \"Unlock it in the Layers list to change its position or size\", which is a promise the stack takes straight back.",
+  "setup": "Photonz Dev, release Next. \"Groups that arrange their own contents\" is on by default. Nothing else to turn on.",
+  "try": [
+    { "do": "On a blank canvas draw three rectangles roughly in a column." },
+    { "do": "Rubber-band all three and press ⌃⌘G to stack them." },
+    { "do": "Double-click into the stack and click the middle row. Read the line under X, Y, W and H: the ordinary arrow key wording." },
+    { "do": "Click the padlock on that row in the Layers list, then click the row again.", "shot": "2026-09-04-locked-in-stack-1.png" },
+    { "do": "Read the same line. It should name the lock AND the stack, and say unlocking returns the size, not the position." },
+    { "do": "Hover X. The tip says the same sentence, so the panel says one thing." },
+    { "do": "Select the top row and press Delete.", "shot": "2026-09-04-locked-in-stack-2.png" },
+    { "do": "Watch the locked row slide up with the rest. That part has not changed, and it is the open question below." }
+  ],
+  "evaluate": [
+    "With the row locked, do you now find out that the stack still owns its position without hovering anything?",
+    "Three lines of caption is the longest this line has ever been. Does it still read, or is it too much to put under four fields?",
+    "\"Unlocking it in the Layers list gives back its size, not its position\" is the load-bearing half. Is that the sentence you would want, or would you rather it just said the stack owns it?",
+    "When you deleted the top row and the locked row moved up with it, did that feel wrong, or did it feel like the stack doing its job?",
+    "Two locked rows picked together read \"2 locked layers, all inside something that decides where they sit.\" Is \"something\" too vague when they are both in the same stack?"
+  ],
+  "rough": [
+    "The behaviour did not change: a locked row is still arranged by the stack. Whether it should be pinned in place instead is a UX call, so it is a decision card on the task rather than a guess, and this run only made the app stop misdescribing what it does.",
+    "The plural caption says \"something that decides where they sit\" rather than naming the stack, because two locked layers can be in two different containers. Naming the container when they share one would be better and is not built.",
+    "The Layers list is unchanged: the padlock is the only mark a locked row carries. Nothing there hints that a stack still moves it.",
+    "Screen Recording was granted, so both pictures are real window captures of the running probe, taken by Scripts/playtest/locked-in-stack-walk.json."
+  ]
+}
