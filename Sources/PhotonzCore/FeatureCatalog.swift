@@ -178,7 +178,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: grabCueFlag,
                     title: "Every handle says what it does",
-                    description: "Rest the pointer on any handle around a selected object and it says what a press would do before you press it. An open hand over the parts that drag on their own (an arrow\'s caption, either end of a line, a measurement\'s number and its two feet), and a closed hand while you drag one. The matching resize arrows over the eight handles round a layer or the canvas. A curved arrow over the knob that turns it.",
+                    description: "Rest the pointer on any handle around a selected object and it says what a press would do before you press it. An open hand over the parts that drag on their own (an arrow\'s caption, either end of a line, a measurement\'s number and its two feet), and a closed hand while you drag one. The matching resize arrows over the eight handles round a layer, round the canvas, or round the crop box. A curved arrow over the knob that turns it.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

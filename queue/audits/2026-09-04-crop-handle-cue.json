@@ -1,0 +1,27 @@
+{
+  "feature": "The Crop tool tells you which corner you are about to drag",
+  "epic": "measure-redline",
+  "summary": "Rest the pointer on one of the crop box's eight handles and it turns into the matching resize arrows, the same ones a layer or the canvas already shows. Everywhere else in crop, the crosshair stays exactly as it was.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Every handle says what it does\", on by default.",
+  "try": [
+    { "do": "Open any screenshot, then press C for Crop.", "shot": "2026-09-04-crop-handle-cue-1.png" },
+    { "do": "Rest the pointer on the crop box's top-left corner without pressing." },
+    { "do": "Slide along the top edge to the little square at its middle." },
+    { "do": "Rest on the left edge's square, then the right edge's square." },
+    { "do": "Move into the middle of the crop box and rest there.", "shot": "2026-09-04-crop-handle-cue-2.png" },
+    { "do": "Move out into the dimmed surround and rest there." },
+    { "do": "Drag a corner in, let go, and leave the pointer where it landed." }
+  ],
+  "evaluate": [
+    "On a corner, do the arrows point the way that corner actually moves?",
+    "Do the crop arrows look like the same family as the ones round a selected layer, or does crop feel like a different app for a second?",
+    "Inside the box a press moves it, but the pointer stays a crosshair. Does that feel like a gap, or is the crosshair enough?",
+    "The handles answer within eight points. Does that reach feel right, or do you keep sliding past them?",
+    "After a corner drag, the arrows are still there under the pointer. Does that read as settled or as stuck?"
+  ],
+  "rough": [
+    "Only the eight squares answer. Photoshop lets you grab anywhere along a crop edge; here the press does not, so the pointer does not pretend it does. Widening the press itself is a separate call, not made here.",
+    "Inside the box was deliberately left as a crosshair rather than an open hand. A layer's body does not get a hand in Select either, and a second pointer in crop would make the crosshair look like it meant nothing.",
+    "The screenshots show the crop box and its handles but not the pointer: a window capture does not include the cursor. The proof that the pointer picture actually changed is the playtest log, which records the real NSCursor at each stop. Scripts/playtest/crop-cue-walk.json, stages 4 through 13."
+  ]
+}

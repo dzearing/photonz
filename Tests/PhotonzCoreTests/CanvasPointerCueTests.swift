@@ -194,6 +194,47 @@ struct CanvasPointerCueTests {
         #expect(cue(drawn, layer) == .resize(.topLeft))
     }
 
+    // MARK: The crop box's own eight handles
+
+    @Test func everyCropHandleReadsAsItsOwnResize() {
+        let rect = CGRect(x: 40, y: 60, width: 300, height: 200)
+        for handle in ResizeHandle.allCases {
+            let p = Handles.point(for: handle, in: rect)
+            #expect(CanvasPointer.cropCue(at: p, cropRect: rect, zoom: 1) == .resize(handle),
+                    "\(handle)")
+        }
+    }
+
+    @Test func insideTheCropBoxKeepsTheCropCrosshair() {
+        // A press inside the box moves it, but the crosshair already says the
+        // Crop tool is drawing and dragging. Nil hands the pointer back to it.
+        let rect = CGRect(x: 40, y: 60, width: 300, height: 200)
+        #expect(CanvasPointer.cropCue(at: CGPoint(x: rect.midX, y: rect.midY),
+                                      cropRect: rect, zoom: 1) == nil)
+    }
+
+    @Test func outsideTheCropBoxKeepsTheCropCrosshair() {
+        let rect = CGRect(x: 40, y: 60, width: 300, height: 200)
+        #expect(CanvasPointer.cropCue(at: CGPoint(x: 800, y: 800),
+                                      cropRect: rect, zoom: 1) == nil)
+    }
+
+    @Test func aCropHandleIsReachableWithinTheSameSlopThePressUses() {
+        // The crop press finds a handle up to eight SCREEN points away, wider
+        // than a layer's six, so the cue has to be just as generous or it
+        // would go quiet on presses that do resize.
+        let rect = CGRect(x: 40, y: 60, width: 300, height: 200)
+        let justOff = CGPoint(x: rect.minX - 7, y: rect.minY)
+        #expect(CanvasPointer.cropCue(at: justOff, cropRect: rect, zoom: 1) == .resize(.topLeft))
+        // Zoomed in, the same document point is 28 screen points out: past the
+        // slop, so it stops promising a resize.
+        #expect(CanvasPointer.cropCue(at: justOff, cropRect: rect, zoom: 4) == nil)
+    }
+
+    @Test func noCropRectMeansNoCropCue() {
+        #expect(CanvasPointer.cropCue(at: CGPoint(x: 40, y: 60), cropRect: nil, zoom: 1) == nil)
+    }
+
     // MARK: Locked layers behave as the press does
 
     @Test func aLockedLayerStillCuesTheHandlesItStillResizesFrom() {

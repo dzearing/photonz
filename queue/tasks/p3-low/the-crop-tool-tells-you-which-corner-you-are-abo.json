@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 650,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T23:36:42.155Z",
-  "updated": "2026-09-03T23:36:42.156Z",
+  "updated": "2026-09-04T07:43:06.839Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The cue is decided in CanvasPointer.cue (PhotonzCore, pure) and applied in CanvasView.pointerCue / refreshGrabCursor, which currently guard on tool == .select. The crop press is CanvasView.mouseDown, the branch that builds CropDrag from Handles.hit(at:frame:cropRect:zoom:screenTolerance:8). Cursor images come from CanvasCursor.cursor(for:transform:). Left out of the every-handle pass on 2026-09-03 because Crop is its own mode with its own pointer, so whether the crosshair should give way is a judgement of its own.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-03T23:36:42.156Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T07:35:46.349Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T07:37:44.594Z",
+      "note": "Pre-build adversarial review. (1) The crop press already has exactly three outcomes: a handle resizes, inside moves, outside draws a fresh rect. Only the first is invisible before you press, because a handle is a 8pt target sitting on top of the box itself. So the cue is one line: handles get the platform resize arrows, everything else keeps the Crop crosshair, which already says draw and drag. (2) Rejected giving the inside of the box an open hand. Select mode does not do it for a layer body either, and a second pointer in crop would make the crosshair look like it means nothing. (3) The press only hits the eight points, not the whole edge (Photoshop does the edge). The cue must mirror that or it lies, so it does; widening the press itself is a separate question, not this task. (4) Shortest version is exactly this: reuse Handles.hit against cropRect at the same 8pt slop the press uses, and reuse CanvasCursor so crop arrows are the same pictures as layer arrows."
+    },
+    {
+      "t": "2026-09-04T07:43:06.838Z",
+      "note": "Built. CanvasPointer.cropCue (PhotonzCore, pure) answers a resize cue on the crop box’s eight handles at the same 8pt slop the press uses, and nil everywhere else; five tests cover the eight handles, inside, outside, the slop at two zooms, and no rect. CanvasView.pointerCue now takes a crop branch before the select guard and hands the box’s transform as identity; refreshGrabCursor bails while a crop drag is in flight and runs again when it lands; the crop resize press sets the arrows itself so a click straight onto a handle holds them too. The crop press now reads its tolerance from CanvasPointer.cropTolerance instead of a loose 8. Flag text updated to say crop box."
+    },
+    {
+      "t": "2026-09-04T07:43:06.839Z",
+      "note": "Verified on the probe with Scripts/playtest/crop-cue-walk.json (Screen Recording granted, so the shots are real captures). All eight handles read the right axis on both the cue and the real pointer: top-left/bottom-right up-left-down-right, top-right/bottom-left up-right-down-left, top/bottom up-down, left/right left-right. Inside the box and out in the dimmed surround both read cue none, cursor crosshair. All three handle drags logged ‘cursor while down’ as the resize arrows, so nothing switches mid-drag, and the pointer settles back onto the corner after the drop. Scripts/test.sh green, 2794 tests."
+    },
+    {
+      "t": "2026-09-04T07:43:06.839Z",
+      "note": "Post-build review. The one thing that still reads as a gap: inside the box a press moves it and the pointer says nothing, so the crosshair is now doing two jobs (draw a new box, move this one). Left as is on purpose and written into the audit as a question for the user, because adding a hand there is a look decision, not a bug. Also left alone: the press only takes the eight squares, not the whole crop edge the way Photoshop does. The cue mirrors the press rather than over-promising; widening the press is its own task."
     }
-  ]
+  ],
+  "started": "2026-09-04T07:35:46.348Z"
 }

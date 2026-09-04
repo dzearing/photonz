@@ -1313,7 +1313,17 @@ final class CanvasNSView: NSView {
     /// `CanvasPointer`'s order. A cue that ran ahead of the press would be
     /// confidently wrong about the one thing it exists to answer.
     private func pointerCue(at p: CGPoint) -> (cue: CanvasPointerCue, transform: LayerTransform)? {
-        guard Experiments.shared.grabCueEnabled, tool == .select, let viewport else { return nil }
+        guard Experiments.shared.grabCueEnabled, let viewport else { return nil }
+        // Crop is its own mode with its own pointer, and its crosshair keeps
+        // every spot the crosshair is still true of: inside the box, where a
+        // press moves it, and outside, where a press draws a fresh one. It
+        // gives way only on the eight handles, which are the one press you
+        // cannot see coming. The box is axis-aligned, so no transform.
+        if tool == .crop {
+            return CanvasPointer.cropCue(at: p, cropRect: cropRect, zoom: viewport.zoom)
+                .map { ($0, .identity) }
+        }
+        guard tool == .select else { return nil }
         if isCanvasSelected,
            let handle = Handles.hit(at: p, frame: CGRect(origin: .zero, size: viewport.documentSize),
                                     zoom: viewport.zoom, screenTolerance: 8) {
@@ -1363,7 +1373,8 @@ final class CanvasNSView: NSView {
     /// every drag session bails out here rather than re-reading the pointer.
     private func refreshGrabCursor(at viewPoint: CGPoint? = nil) {
         guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil,
-              endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil else { return }
+              endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil,
+              cropDrag == nil else { return }
         let point = viewPoint ?? window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) }
         guard let viewport, let point, bounds.contains(point) else { return applyGrabCursor(nil) }
         let doc = viewport.documentPoint(fromView: point)
@@ -1494,8 +1505,15 @@ final class CanvasNSView: NSView {
                 return
             }
             if let rect = cropRect,
-               let handle = Handles.hit(at: p, frame: rect, zoom: viewport.zoom, screenTolerance: 8) {
+               let handle = Handles.hit(at: p, frame: rect, zoom: viewport.zoom,
+                                        screenTolerance: CanvasPointer.cropTolerance) {
                 cropDrag = CropDrag(kind: .resize(handle), startRect: rect, lastPoint: p)
+                // The hover cue already put these arrows up, but a press that
+                // arrived without one (a click straight onto a handle) still
+                // has to hold them for the drag.
+                if Experiments.shared.grabCueEnabled {
+                    applyGrabCursor(CanvasCursor.cursor(for: .resize(handle), transform: .identity))
+                }
             } else if let rect = cropRect, rect.contains(p) {
                 cropDrag = CropDrag(kind: .move, startRect: rect, lastPoint: p)
             } else {
@@ -2128,6 +2146,9 @@ final class CanvasNSView: NSView {
         if cropDrag != nil {
             cropDrag = nil
             if let rect = cropRect { onCropRectChange(rect) }
+            // The box just moved under the resting pointer (a fresh rect drawn,
+            // a corner dragged), so the pointer has to say what is under it NOW.
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let drag = annotationDrag {
             annotationDrag = nil

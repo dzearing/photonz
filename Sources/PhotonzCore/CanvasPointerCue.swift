@@ -59,6 +59,30 @@ public enum CanvasPointer {
         return Handles.hit(at: local, frame: frame, zoom: zoom).map { .resize($0) }
     }
 
+    /// Screen-point slop around a crop handle, matching the crop press, which
+    /// is more generous than a layer's because the crop box has no body to
+    /// pick up by: missing a handle there starts drawing a whole new rect.
+    public static let cropTolerance: CGFloat = 8
+
+    /// What the pointer should show at `p` (document coordinates) while the
+    /// Crop tool holds the canvas.
+    ///
+    /// The crop press has three outcomes: a handle resizes the box, a press
+    /// inside moves it, and a press outside draws a fresh one. Only the first
+    /// is invisible beforehand, because a handle is a few points of target
+    /// sitting on top of the whole box, so only the first gets a cue. Inside
+    /// and outside answer nil and keep the Crop crosshair, which already says
+    /// this tool draws and drags.
+    ///
+    /// The crop box is axis-aligned in document space, so unlike a layer there
+    /// is no transform to read the handles through.
+    public static func cropCue(at p: CGPoint, cropRect: CGRect?,
+                               zoom: CGFloat) -> CanvasPointerCue? {
+        guard let cropRect else { return nil }
+        return Handles.hit(at: p, frame: cropRect, zoom: zoom,
+                           screenTolerance: cropTolerance).map { .resize($0) }
+    }
+
     /// Maps a document point into `layer`'s untransformed frame space, the
     /// same conversion frame-handle hit-testing and resizing use.
     public static func handleSpacePoint(_ p: CGPoint, layer: Layer) -> CGPoint {

@@ -1,0 +1,68 @@
+{
+  "out": "/tmp/photonz-playtest/crop-cue",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "c" },
+    { "do": "waitFor", "condition": "tool", "value": "crop" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "move", "at": [720, 480] },
+    { "do": "describe", "stage": "1-inside-the-full-box", "note": "pointer in the middle of the crop box that opens over the whole picture; expect cue none and cursor crosshair" },
+    { "do": "snapshot", "name": "1-inside-the-full-box" },
+
+    { "do": "move", "at": [0, 0] },
+    { "do": "describe", "stage": "2-full-box-top-left", "note": "pointer on the crop box's top-left handle; expect cue resize-up-left-down-right" },
+
+    { "do": "drag", "from": [0, 0], "to": [300, 200], "steps": 8 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "drag", "from": [1440, 960], "to": [900, 600], "steps": 8 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "3-box-pulled-in", "note": "the crop box pulled in to 300,200 - 900,600 by its two opposite corners" },
+
+    { "do": "move", "at": [300, 200] },
+    { "do": "describe", "stage": "4-handle-top-left", "note": "pointer on the crop box's top-left handle; expect cue resize-up-left-down-right" },
+    { "do": "snapshot", "name": "4-handle-top-left" },
+
+    { "do": "move", "at": [600, 200] },
+    { "do": "describe", "stage": "5-handle-top", "note": "pointer on the crop box's top handle; expect cue resize-up-down" },
+
+    { "do": "move", "at": [900, 200] },
+    { "do": "describe", "stage": "6-handle-top-right", "note": "pointer on the crop box's top-right handle; expect cue resize-up-right-down-left" },
+
+    { "do": "move", "at": [300, 400] },
+    { "do": "describe", "stage": "7-handle-left", "note": "pointer on the crop box's left handle; expect cue resize-left-right" },
+
+    { "do": "move", "at": [900, 400] },
+    { "do": "describe", "stage": "8-handle-right", "note": "pointer on the crop box's right handle; expect cue resize-left-right (the same picture as the left handle: the platform draws one pointer per axis)" },
+
+    { "do": "move", "at": [300, 600] },
+    { "do": "describe", "stage": "9-handle-bottom-left", "note": "pointer on the crop box's bottom-left handle; expect cue resize-up-right-down-left" },
+
+    { "do": "move", "at": [600, 600] },
+    { "do": "describe", "stage": "10-handle-bottom", "note": "pointer on the crop box's bottom handle; expect cue resize-up-down" },
+
+    { "do": "move", "at": [900, 600] },
+    { "do": "describe", "stage": "11-handle-bottom-right", "note": "pointer on the crop box's bottom-right handle; expect cue resize-up-left-down-right" },
+    { "do": "snapshot", "name": "11-handle-bottom-right" },
+
+    { "do": "move", "at": [600, 400] },
+    { "do": "describe", "stage": "12-inside-the-box", "note": "pointer inside the crop box, where a press moves it; expect cue none and cursor crosshair" },
+
+    { "do": "move", "at": [1200, 800] },
+    { "do": "describe", "stage": "13-outside-the-box", "note": "pointer in the dimmed surround, where a press draws a fresh box; expect cue none and cursor crosshair" },
+    { "do": "snapshot", "name": "13-outside-the-box" },
+
+    { "do": "drag", "from": [900, 600], "to": [1000, 700], "steps": 8 },
+    { "do": "describe", "stage": "14-corner-dragged", "note": "the bottom-right corner dragged out; the drag line above should read cursor while down resize-up-left-down-right (this state line reads the real pointer, not the synthesized one)" },
+
+    { "do": "move", "at": [1000, 700] },
+    { "do": "describe", "stage": "15-corner-after-drop", "note": "pointer still on the corner after the drop; expect cue resize-up-left-down-right" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "move", "at": [1000, 700] },
+    { "do": "describe", "stage": "16-crop-put-down", "note": "the same spot with Crop put down and the box gone; expect cue none" }
+  ]
+}
