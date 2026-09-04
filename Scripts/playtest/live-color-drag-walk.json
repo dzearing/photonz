@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/live-color-drag",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1500, "height": 950 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 160], "to": [420, 340], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [470, 160], "to": [750, 340], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 400], "to": [420, 580], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [470, 400], "to": [750, 580], "steps": 8 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [280, 250] },
+    { "do": "click", "at": [610, 250], "modifiers": ["shift"] },
+    { "do": "click", "at": [280, 490], "modifiers": ["shift"] },
+    { "do": "click", "at": [610, 490], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-before", "note": "four shapes picked and painted crimson in one step. This is the colour one undo has to come back to." },
+    { "do": "render", "name": "live-color-drag-1-before" },
+
+    { "do": "action", "action": "openColorPicker" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "live-color-drag-2-picker-open" },
+
+    { "do": "action", "action": "holdColorDrag" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-mid-drag", "note": "the drag is STILL DOWN. The canvas should be green under the picker, the row's chip should be green too, and canUndo/recentColors should not have moved: nothing has been recorded." },
+    { "do": "snapshot", "name": "live-color-drag-3-mid-drag" },
+
+    { "do": "action", "action": "releaseColorDrag" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-released", "note": "let go: the colour is on the document, recentColors has gained ONE entry for the whole gesture." },
+    { "do": "snapshot", "name": "live-color-drag-4-released" },
+    { "do": "render", "name": "live-color-drag-4-released" },
+
+    { "do": "action", "action": "closeColorPicker" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-one-undo", "note": "ONE undo. All four shapes should read crimson again, not one frame back up the drag." },
+    { "do": "render", "name": "live-color-drag-5-one-undo" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-redo", "note": "and one redo puts the whole drag back." }
+
+  ]
+}

@@ -552,4 +552,23 @@ struct PlaytestScriptTests {
         #expect(stage == "shelf")
         #expect(script.steps[0].name == "panel")
     }
+
+    @Test func aColourDragIsHeldAndThenLetGoOfAsTwoSteps() throws {
+        // The whole point of the pair: a walk can stop in the middle of a
+        // colour drag, photograph the canvas following it, and only then let
+        // go — which is how "live while you drag, one step when you release"
+        // is proved rather than asserted.
+        let script = try decode("""
+        {
+          "steps": [
+            { "do": "action", "action": "holdColorDrag" },
+            { "do": "action", "action": "releaseColorDrag" }
+          ]
+        }
+        """)
+        guard case .action(let held) = script.steps[0] else { Issue.record("hold"); return }
+        #expect(held == .holdColorDrag)
+        guard case .action(let released) = script.steps[1] else { Issue.record("release"); return }
+        #expect(released == .releaseColorDrag)
+    }
 }

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1020,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T02:04:00.083Z",
-  "updated": "2026-09-04T02:04:00.084Z",
+  "updated": "2026-09-04T03:53:52.018Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Named in the picker audit (queue/audits/2026-09-04-one-color-picker.json) as the thing that still feels clumsy. The picker (Sources/Photonz/DesignedColorPicker.swift) already has the split: SaturationValueField and ChannelSlider call onCommit only on drag end. What is missing is a coalescing path in EditorState like the one dragCornerRadius and dragOpacity already use for the Effects sliders (see PlaytestHarness .dragOpacity) so the live frames preview and the release commits once. Reuse that rather than inventing a second one.",
@@ -24,6 +24,35 @@
     {
       "t": "2026-09-04T02:04:00.084Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T03:27:25.407Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T03:31:39.426Z",
+      "note": "Adversarial review before building. (1) Nothing new to learn: the drag simply follows, so there is no first-time-user cliff. (2) The real risk is the row swatch BEHIND the popover lagging a whole gesture while the canvas repaints live, which would read as a bug; answered with a previewed reading the row chip uses. (3) Second risk is an echo loop: the picker reopens itself when the paint it is handed changes, so the live reading must not feed initialPaint. Kept the opening paint on the document and gave the chip its own preview-aware reading, so there is no echo at all. (4) Recents flooding is avoided by recording only on release. (5) Widened past the mock/task wording by one thing: the gradient aim pad and the ramp keys are drags in the SAME picker with the SAME problem (you aim a gradient blind), so they take the live path too. (6) Cut from scope: the tool colour popover, the collage backdrop and the measure chip rows. None of them has a preview path today and none is what the audit complained about; they keep landing on release and that is written into rough."
+    },
+    {
+      "t": "2026-09-04T03:31:39.426Z",
+      "note": "Plan: EditorState gains previewSelectionPaint/commitSelectionPaint mirroring previewLayerStyle/commitLayerStyle (render-only submit, history untouched, one perform on release). Picker gains an optional onPreview handed to the square, the channel sliders, the aim pad and the ramp. Shadow colour well reuses previewLayerStyle/commitLayerStyle. Verified by two new playtest actions, holdColorDrag and releaseColorDrag, so a walk can photograph the canvas mid-drag and read canUndo/recents from the log."
+    },
+    {
+      "t": "2026-09-04T03:53:52.017Z",
+      "note": "Built. EditorState.previewSelectionPaint renders a frame and records nothing; commitSelectionPaint performs ONE edit from the untouched document, so undo lands before the drag and recents gains one entry. previewedPaint(slot:) is what the row chip reads, deliberately not what the picker opens on, because feeding live frames into initialPaint would reopen the picker on itself mid-pull. The picker hands an optional onPreview to the square, every channel slider, the gradient aim pad and the ramp keys; callers without a live path are unchanged. Shadow colour reuses previewLayerStyle/commitLayerStyle."
+    },
+    {
+      "t": "2026-09-04T03:53:52.018Z",
+      "note": "Second adversarial pass, on the built thing. Found one real hazard: a picker dismissed with the pointer still down never gets its release, which would leave the canvas showing a colour the document does not have until the next edit. Fixed with discardPickerPreview() on the picker disappearing. Left alone on purpose: layer thumbnails keep the old colour for the length of the drag, because redrawing every thumbnail per frame is exactly the cost that would make the drag stutter."
+    },
+    {
+      "t": "2026-09-04T03:53:52.018Z",
+      "note": "Verification. Scripts/test.sh green, 2673 tests. New walk Scripts/playtest/live-color-drag-walk.json on the probe with real screen captures (Screen Recording granted): four shapes painted crimson, then a drag held down reads fill #B0184A with canUndo and recentColors unmoved while the capture shows the canvas and the row chip green; release reads #00A870 with exactly ONE new recents entry and none of the three in-between drag colours; one undo returns to #B0184A. Main thread cost of a run of live frames over four layers: under 5ms. Two new playtest actions, holdColorDrag and releaseColorDrag, are what let a walk stand in the middle of a drag."
+    },
+    {
+      "t": "2026-09-04T03:53:52.018Z",
+      "note": "What is NOT proved by a walk, and why: the picker gestures calling the live path. A walk cannot put a pointer inside a popover. Tried three ways, mouse events to the popover window, to its hosting view, and through the app event queue, and none reaches SwiftUI while the probe is not the active app; the diagnostic showed the hit view is PopoverHostingView with no gesture recognizers on it. That scaffolding was removed rather than left in as a step that silently does nothing. The wiring itself is three onDrag() calls added to existing onChanged handlers and the closure is non-optional in every subview, so the compiler carries most of it."
     }
-  ]
+  ],
+  "started": "2026-09-04T03:27:25.407Z"
 }

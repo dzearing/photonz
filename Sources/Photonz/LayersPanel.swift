@@ -1838,8 +1838,15 @@ struct ShadowInspector: View {
         // one that would fight with it.
         ColorWellButton(hex: shadowColorReading.value ?? "#000000",
                         name: "Shadow",
-                        supportsOpacity: false) { hex in
-            editorState.setLayerStyle(ids: ids) { $0.shadow?.colorHex = hex }
+                        supportsOpacity: false,
+                        // The same preview-and-commit path the Blur and Size
+                        // sliders in this section already take, so a shadow
+                        // recolours under the drag and lands in one step.
+                        onPreview: { hex in
+            editorState.previewLayerStyle(ids: ids) { $0.shadow?.colorHex = hex }
+        }) { hex in
+            editorState.previewLayerStyle(ids: ids) { $0.shadow?.colorHex = hex }
+            editorState.commitLayerStyle(ids: ids)
             editorState.recordRecentColor(hex: hex)
         }
     }

@@ -13,9 +13,12 @@ import SwiftUI
 /// answers "near this one" four ways, and a reading of whether the color can be
 /// read on white.
 ///
-/// A color lands on a DELIBERATE action — a swatch, a slider let go of, a
-/// number typed, a sample taken — never on a drag tick, so one blue is one undo
-/// step and the recents list is not a transcript of the drag.
+/// A color LANDS on a deliberate action — a swatch, a slider let go of, a
+/// number typed, a sample taken — so one blue is one undo step and the recents
+/// list is not a transcript of the drag. While a drag is still down the picture
+/// follows it frame by frame through `onPreview`, which paints and records
+/// nothing; a caller with no live path simply sees the colour on release, the
+/// way every row did before.
 struct DesignedColorPicker: View {
     /// The editor this picker is changing something in. Held rather than read
     /// from the environment because a popover's content is built by whoever
@@ -42,6 +45,12 @@ struct DesignedColorPicker: View {
     var embedded: Bool = false
     /// Closes the popover from the picker's own close button.
     var onClose: (() -> Void)?
+    /// Called on every frame of a drag with the paint under the pointer right
+    /// now, so the picture follows the pull. Nothing here is recorded: the
+    /// gesture is one undo step and one recents entry, both written by
+    /// `onCommit` when the drag is let go of. Nil where the caller has nothing
+    /// it can paint live, and then the colour simply lands on release.
+    var onPreview: ((Paint) -> Void)?
     /// Called with the paint it landed on. A flat one still carries the hex it
     /// always did, in `hex`.
     let onCommit: (Paint) -> Void
@@ -99,10 +108,11 @@ struct DesignedColorPicker: View {
                 PaintTypeRow(paint: paint, onPick: setKind)
                 if paint.isGradient {
                     GradientGeometryRow(paint: $paint, stopIndex: $stopIndex,
+                                        onDrag: previewGeometry,
                                         onCommit: commitGeometry)
                 }
             }
-            SaturationValueField(color: $color, onCommit: commit)
+            SaturationValueField(color: $color, onDrag: preview, onCommit: commit)
                 .frame(height: Self.squareHeight)
             formatSwitch
             sliders
@@ -113,6 +123,10 @@ struct DesignedColorPicker: View {
         .frame(width: Self.width)
         .padding(embedded ? 0 : 14)
         .onAppear { start() }
+        // Dismissed with the pointer still down: the release that would have
+        // committed never comes, so the live frames are put back rather than
+        // left on the canvas as a colour nothing in the document has.
+        .onDisappear { editorState.discardPickerPreview() }
         .onChange(of: initialPaint) { _, incoming in
             guard incoming != lastSent else { return }
             start(incoming)
@@ -190,6 +204,7 @@ struct DesignedColorPicker: View {
                               color: $color,
                               track: trackColors(channel),
                               showsChecker: channel == .alpha,
+                              onDrag: preview,
                               onCommit: commit)
             }
         }
@@ -431,13 +446,28 @@ struct DesignedColorPicker: View {
     }
 
     private func commit() {
+        writeActiveColor()
+        send()
+    }
+
+    /// One frame of a drag on the square or a channel: the same paint the
+    /// release would send, handed out live and recorded nowhere.
+    private func preview() {
+        guard let onPreview else { return }
+        writeActiveColor()
+        lastSent = paint
+        onPreview(paint)
+    }
+
+    /// The colour the square and the sliders are editing, written back into
+    /// whatever it stands for: the flat colour, or the selected stop.
+    private func writeActiveColor() {
         hexField = displayHex
         if paint.isGradient, paint.stops.indices.contains(stopIndex) {
             paint.stops[stopIndex].hex = displayHex
         } else {
             paint.hex = displayHex
         }
-        send()
     }
 
     /// A change to the ramp or the aim, already made in `paint`. The square
@@ -447,6 +477,16 @@ struct DesignedColorPicker: View {
         if let seed = PickerColor(hex: activeHex) { color = seed }
         hexField = displayHex
         send()
+    }
+
+    /// The same, live: aiming a gradient or sliding a key along the ramp is a
+    /// drag like any other, and aiming one you cannot see land is guesswork.
+    private func previewGeometry() {
+        guard let onPreview else { return }
+        if let seed = PickerColor(hex: activeHex) { color = seed }
+        hexField = displayHex
+        lastSent = paint
+        onPreview(paint)
     }
 
     /// Switching what kind of paint this is. Turning a flat colour into a
@@ -496,6 +536,8 @@ struct DesignedColorPicker: View {
 /// how a color already on screen gets matched without reading a number.
 private struct SaturationValueField: View {
     @Binding var color: PickerColor
+    /// Every frame while the pointer is down, so the picture follows the pull.
+    let onDrag: () -> Void
     let onCommit: () -> Void
 
     var body: some View {
@@ -525,7 +567,7 @@ private struct SaturationValueField: View {
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
-                    .onChanged { move($0.location, in: size) }
+                    .onChanged { move($0.location, in: size); onDrag() }
                     .onEnded { value in
                         move(value.location, in: size)
                         onCommit()
@@ -568,6 +610,8 @@ private struct ChannelSlider: View {
     @Binding var color: PickerColor
     let track: [Color]
     var showsChecker: Bool = false
+    /// Every frame while the pointer is down, so the picture follows the pull.
+    let onDrag: () -> Void
     let onCommit: () -> Void
 
     @State private var field = ""
@@ -603,7 +647,7 @@ private struct ChannelSlider: View {
                 .contentShape(Rectangle())
                 .gesture(
                     DragGesture(minimumDistance: 0)
-                        .onChanged { move($0.location.x, width: width) }
+                        .onChanged { move($0.location.x, width: width); onDrag() }
                         .onEnded { value in
                             move(value.location.x, width: width)
                             onCommit()

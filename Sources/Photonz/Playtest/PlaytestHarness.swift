@@ -73,6 +73,11 @@ private final class Run {
     private var canvas: CanvasNSView?
     /// The control the last `hover` rested on, so the next one can leave it.
     private var hovered: HintAnchorView?
+    /// A colour drag left down by `holdColorDrag`, waiting for the release that
+    /// turns its live frames into one recorded step.
+    private var heldColorDrag: (slot: ColorSlot, paint: Paint)?
+    /// Anything the action that just ran wants said in the log beside its name.
+    private var actionDetail: String?
 
     init(scriptURL: URL, coordinator: AppCoordinator) {
         self.scriptURL = scriptURL
@@ -606,6 +611,10 @@ private final class Run {
                         $0.borderColorHex = "#2B5BFF"
                     }
                 }
+            case .holdColorDrag:
+                holdColorDrag(editor, through: ["#E0483C", "#C9A227", "#3F8F4F", "#00A870"])
+            case .releaseColorDrag:
+                releaseColorDrag(editor)
             case .dragCornerRadius:
                 dragCornerRadius(editor, through: [4, 10, 16, 22])
             case .dragOpacity:
@@ -793,7 +802,9 @@ private final class Run {
                 editor.isCanvasSizeDialogPresented = false
             }
             await sleep(0.2)
-            note(number, step.name, action.rawValue, state: describe())
+            let detail = actionDetail.map { "\(action.rawValue) · \($0)" } ?? action.rawValue
+            actionDetail = nil
+            note(number, step.name, detail, state: describe())
         }
     }
 
@@ -1392,6 +1403,46 @@ private final class Run {
         editor.setSelectionPaint(slot: slot, paint: paint)
     }
 
+    /// A colour drag in the picker, still down. Pushes a few live frames at the
+    /// first colour row the picked layers have, the same way sliding the
+    /// square or a channel does, and STOPS THERE: nothing is recorded, so a
+    /// snapshot taken now shows the canvas following a drag that has not
+    /// landed. `releaseColorDrag` is the other half.
+    ///
+    /// Reported with the main-thread cost of the whole run of frames, so a
+    /// walk over a big selection can say whether the pull stayed smooth.
+    private func holdColorDrag(_ editor: EditorState, through hexes: [String]) {
+        guard let slot = editor.colorStyleSlots.first else { return }
+        heldColorDrag = nil
+        MainThreadMeter.shared.install()
+        MainThreadMeter.shared.reset()
+        var last: Paint?
+        for hex in hexes {
+            var paint = editor.previewedPaint(slot: slot) ?? Paint(hex: hex)
+            if paint.isGradient, !paint.stops.isEmpty {
+                paint.stops[0].hex = hex
+            } else {
+                paint.hex = hex
+            }
+            editor.previewSelectionPaint(slot: slot, paint: paint)
+            last = paint
+        }
+        guard let last else { return }
+        heldColorDrag = (slot, last)
+        actionDetail = "\(hexes.count) live frames on \(slot.rawValue) over "
+            + "\(editor.colorStyleSelection(slot: slot).count) layers, ending #\(last.hex.dropFirst()); "
+            + MainThreadMeter.shared.report
+    }
+
+    /// Letting the same drag go: ONE undo step and ONE recents entry for every
+    /// frame `holdColorDrag` pushed.
+    private func releaseColorDrag(_ editor: EditorState) {
+        guard let held = heldColorDrag else { return }
+        heldColorDrag = nil
+        editor.commitSelectionPaint(slot: held.slot, paint: held.paint)
+        actionDetail = "let go on #\(held.paint.hex.dropFirst())"
+    }
+
     /// The one Corner Radius row, dragged and let go: the same path the panel
     /// takes, so a walk proves the row a person pulls rather than a field.
     private func dragCornerRadius(_ editor: EditorState, through values: [CGFloat]) {
@@ -1788,6 +1839,10 @@ private final class Run {
             // Edit menu dims itself on and what a shortcut walk checks.
             "canUndo": editor.canUndo,
             "canRedo": editor.canRedo,
+            // The picker's Recent row, newest first. A colour drag must leave
+            // ONE entry here for the whole gesture rather than one per frame,
+            // and this is what a walk reads to prove it.
+            "recentColors": editor.recentColors.colors,
             // Whether this process has focus at all. It never does in a walk,
             // and that one fact is why most menu shortcuts cannot be pressed
             // in one. See `frozenMenuBar`.

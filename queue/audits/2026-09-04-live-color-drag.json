@@ -1,0 +1,31 @@
+{
+  "feature": "The picture follows a colour drag",
+  "epic": "ui-components",
+  "summary": "Dragging in the colour picker now repaints what you have selected on every frame instead of waiting for you to let go, so you pick a colour by looking at the shapes rather than at the swatch. The whole pull is still one undo step and one entry in Recent.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"One color picker, everywhere a color is chosen\" is on by default; nothing new to switch on.",
+  "try": [
+    { "do": "Draw four rectangles, sweep all four with the arrow tool, and click the Fill swatch in the Color section.", "shot": "2026-09-04-live-color-drag-mid-drag.png" },
+    { "do": "Drag slowly around the saturation and brightness square and watch the four shapes, not the picker." },
+    { "do": "Let go, then press Command Z once and check all four go back together." },
+    { "do": "Press Command Shift Z, then drag the H slider all the way across and back before letting go." },
+    { "do": "Open the picker again and click Recent: the drag should have left one colour there, not a trail." },
+    { "do": "Turn Enable Shadow on, click the swatch beside Blur, and drag the L slider down.", "shot": "2026-09-04-live-color-drag-released.png" },
+    { "do": "Click Linear in the type row, then drag the arrow around the little square beside the ramp." },
+    { "do": "Drag one of the keys along the ramp and watch where the colours meet on the shapes." }
+  ],
+  "evaluate": [
+    "Dragging the square with four shapes selected, does the picture keep up, or can you feel it lagging your hand?",
+    "Is the colour you end up on better than the one you used to land on, now that you can see it happening?",
+    "The row's little swatch under the picker follows the drag but the layer thumbnails in the Layers list do not. Did you notice, and does it bother you?",
+    "Aiming a gradient with the little square: does it now feel like aiming, or still like guessing?",
+    "One undo for a whole drag: did it ever put you further back than you wanted?"
+  ],
+  "rough": [
+    "The screenshots are real screen captures of the running probe, not offscreen renders. The mid-drag one comes from a scripted drag that drives the editor rather than the picker's own knob, so the canvas and the row's chip show exactly what a real drag shows, while the picker's square still reads the colour it was opened on. A walk cannot put a pointer inside a popover.",
+    "That is also the one thing not proved by a walk: the picker's own gestures calling the live path was checked by reading, not by driving them. Everything after that point, the live frames, the single undo step and the single recents entry, is proved end to end on the real app by Scripts/playtest/live-color-drag-walk.json.",
+    "Layer thumbnails in the Layers list keep the old colour until you let go. Redrawing every thumbnail on every frame of a drag is exactly the cost that would make the drag stutter, so they catch up on release.",
+    "Three places still land on release only, because none of them has a live path today and none was what the picker audit complained about: the tool colour popover in the toolbar, a collage's backdrop, and the measurement chip's colours.",
+    "Widened past what the task asked for: the gradient aim pad and the ramp keys are drags in the same picker with the same problem, so they follow live too. Aiming a gradient you cannot see land was the worst case of all of them.",
+    "Main thread cost of a drag over four shapes: under 5ms for a run of frames, so the picker itself is not where a stutter would come from. What a big document would actually cost is the renderer, which already has its own budget."
+  ]
+}

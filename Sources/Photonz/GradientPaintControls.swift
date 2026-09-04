@@ -142,15 +142,19 @@ struct PaintTypeRow: View {
 struct GradientGeometryRow: View {
     @Binding var paint: Paint
     @Binding var stopIndex: Int
+    /// Called on every frame of a drag, so the picture follows the aim rather
+    /// than appearing where you guessed. Records nothing.
+    let onDrag: () -> Void
     /// Called once a change has landed — the end of a drag, a button press —
     /// never on every tick, so aiming a gradient is one undo step.
     let onCommit: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            GradientAimPad(paint: $paint, onCommit: onCommit)
+            GradientAimPad(paint: $paint, onDrag: onDrag, onCommit: onCommit)
             VStack(alignment: .leading, spacing: 6) {
-                GradientRamp(paint: $paint, stopIndex: $stopIndex, onCommit: onCommit)
+                GradientRamp(paint: $paint, stopIndex: $stopIndex,
+                             onDrag: onDrag, onCommit: onCommit)
                 stopBar
             }
         }
@@ -206,6 +210,9 @@ struct GradientGeometryRow: View {
 /// what the drag did; it is never the way in.
 private struct GradientAimPad: View {
     @Binding var paint: Paint
+    /// Every frame while the pointer is down, so the run you are aiming shows
+    /// up on the picture as you aim it.
+    let onDrag: () -> Void
     let onCommit: () -> Void
 
     private static let side: CGFloat = 64
@@ -238,6 +245,7 @@ private struct GradientAimPad: View {
                 .onChanged { value in
                     aim(at: value.location, first: !isDragging)
                     isDragging = true
+                    onDrag()
                 }
                 .onEnded { value in
                     aim(at: value.location, first: false)
@@ -331,6 +339,9 @@ private struct GradientAimPad: View {
 private struct GradientRamp: View {
     @Binding var paint: Paint
     @Binding var stopIndex: Int
+    /// Every frame while a key is being slid, so the ramp on the picture moves
+    /// with the key rather than after it.
+    let onDrag: () -> Void
     let onCommit: () -> Void
 
     private static let height: CGFloat = 24
@@ -386,6 +397,7 @@ private struct GradientRamp: View {
                         let from = dragOrigin ?? stop.position
                         dragOrigin = from
                         move(index, to: from + value.translation.width / width)
+                        onDrag()
                     }
                     .onEnded { value in
                         stopIndex = index

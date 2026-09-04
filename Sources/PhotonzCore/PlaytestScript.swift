@@ -344,6 +344,16 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// same preview-and-commit path the panel does rather than a shortcut past
     /// it. One undo step lands per drag, however many layers it reached.
     case dragCornerRadius, dragOpacity
+    /// A colour drag in the picker, taken in two halves so a walk can stand in
+    /// the middle of one. `holdColorDrag` pushes a few live frames at the
+    /// picked layers' first colour row and STAYS DOWN, which is the moment
+    /// worth photographing: the canvas has followed the drag and nothing has
+    /// reached history yet. `releaseColorDrag` lets go, which is the one undo
+    /// step and the one recents entry for the whole gesture.
+    ///
+    /// The picker is a popover a walk cannot reach with the pointer, so this
+    /// is how the same preview-and-commit path it takes gets exercised.
+    case holdColorDrag, releaseColorDrag
     /// The type rows over the whole selection (`ui-building`, step D9): the
     /// Size menu set to 14pt, and the Weight menu set to Bold. Both are menus
     /// in the dock, which a walk cannot reach with the pointer, so this is how

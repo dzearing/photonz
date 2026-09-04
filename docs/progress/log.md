@@ -7439,3 +7439,40 @@ most 1024 across, stretched, and kept in the renderer keyed by paint and size,
 which is right because a gradient is smooth and a screen's surface does not
 change while you work inside it. Cold, the first angular surface costs 174ms
 once. `GradientPerfTests` holds the settled numbers to three times flat.
+
+## 2026-09-04 — The picture follows a colour drag
+
+Dragging in the colour picker painted nothing until you let go, which the picker
+audit named as the thing that still felt clumsy: you were choosing a colour by
+looking at a swatch instead of at your shapes. Now the drag paints live and the
+release is still one undo step.
+
+`EditorState` gained the colour twin of the style-slider pair it already had:
+`previewSelectionPaint` renders a frame and records nothing, `commitSelectionPaint`
+performs ONE edit from the untouched document, so undo goes back to before the
+drag rather than one frame up it, and the recents row gains one entry rather than
+a transcript. `previewedPaint(slot:)` is what the row's chip reads, deliberately
+NOT what the picker is opened on — feeding live frames back into `initialPaint`
+would reopen the picker on itself halfway through a pull.
+
+The picker hands out an optional `onPreview` to the square, every channel slider,
+the gradient aim pad and the ramp keys. A caller with no live path leaves it out
+and its colour lands on release exactly as before, which is what the toolbar's
+tool colour, a collage backdrop and the measure chip still do. The Shadow colour
+well reuses `previewLayerStyle`/`commitLayerStyle` rather than a second scheme.
+
+A picker dismissed with the pointer down would strand a preview on the canvas
+forever, so `discardPickerPreview()` on the picker's disappear puts it back.
+
+Verified: `Scripts/test.sh` green (2673 tests) and
+`Scripts/playtest/live-color-drag-walk.json` on the probe with real screen
+captures — mid-drag the canvas is green while the document still reads crimson
+and `canUndo`/`recentColors` have not moved; one undo goes the whole way back.
+New playtest actions `holdColorDrag` and `releaseColorDrag` are what let a walk
+stand in the middle of a drag. Audit: `queue/audits/2026-09-04-live-color-drag.json`.
+
+Not proved by a walk: the picker's own gestures calling the live path. A walk
+cannot put a pointer inside a popover — synthesized events into a popover window
+are dropped while the probe is not the active app, tried three ways (the window,
+the hosting view, the app's event queue) before giving up on it. That wiring was
+checked by reading.

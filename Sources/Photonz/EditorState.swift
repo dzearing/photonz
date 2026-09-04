@@ -536,6 +536,7 @@ final class EditorState {
         editingTextLayerID = nil
         editingCaptionLayerID = nil
         stylePreview = nil
+        paintPreview = nil
         thumbnailCache = [:]
         shelfThumbnails = [:]
         dragPreviewGeneration += 1
@@ -4238,6 +4239,64 @@ final class EditorState {
         document?.sharedPaint(layerIDs: colorStyleTargetIDs, slot: slot)
     }
 
+    /// A colour drag in flight: the paint being pushed at the canvas frame by
+    /// frame, held out of history until the drag is let go of.
+    ///
+    /// Deliberately NOT what `selectionPaint` reads. That reading is what the
+    /// picker is opened on, and a picker reopened on its own live frames would
+    /// hand the ramp's selection back to the first stop halfway through a pull.
+    /// The document stays the opening colour for the whole gesture; only the
+    /// canvas and the row's chip follow.
+    private var paintPreview: (slot: ColorSlot, ids: [UUID], paint: Paint)?
+
+    /// What a colour row's chip shows: the paint in flight while a drag is
+    /// happening, the document's otherwise. Without it the little swatch under
+    /// the picker would sit on the old colour for a whole pull and then jump on
+    /// release, while the canvas beside it had been following all along.
+    func previewedPaint(slot: ColorSlot) -> Paint? {
+        if let preview = paintPreview, preview.slot == slot { return preview.paint }
+        return selectionPaint(slot: slot)
+    }
+
+    /// One frame of a colour drag: paints the slot across everything picked and
+    /// renders it, recording nothing. Same shape as `previewLayerStyle`, and
+    /// for the same reason — a live tick per frame in history would make one
+    /// pull a hundred undo steps and the recents row a transcript of it.
+    func previewSelectionPaint(slot: ColorSlot, paint: Paint) {
+        let targets = colorStyleSelection(slot: slot).layerIDs
+        guard !targets.isEmpty, var doc = document else { return }
+        // A drag that has moved to a different row or a different selection is
+        // a new gesture: nothing of the old one carries over, and a held drag
+        // sprite would be showing the old colour.
+        if paintPreview?.slot != slot || paintPreview?.ids != targets {
+            stylePreview = nil
+            discardDragPreview()
+        }
+        paintPreview = (slot, targets, paint)
+        _ = doc.setPaint(layerIDs: targets, slot: slot, paint: paint)
+        submit(doc)
+    }
+
+    /// Puts the canvas back on the document if a colour drag is somehow still
+    /// in flight — the picker was dismissed with the pointer down, so the
+    /// release that would have committed never came. Without this the canvas
+    /// would keep showing a colour the document does not have until the next
+    /// edit. A no-op the rest of the time, which is nearly always.
+    func discardPickerPreview() {
+        guard paintPreview != nil || stylePreview != nil else { return }
+        paintPreview = nil
+        stylePreview = nil
+        rerender()
+    }
+
+    /// Letting go of a colour drag: ONE undo step from the colour the slot had
+    /// before the drag started to the one it ended on, however many layers it
+    /// reached, and ONE entry in the recents row for the whole gesture.
+    func commitSelectionPaint(slot: ColorSlot, paint: Paint) {
+        paintPreview = nil
+        setSelectionPaint(slot: slot, paint: paint)
+    }
+
     /// Repaints a style and everything wearing it, as one undo step.
     func setColorStyleHex(styleID: UUID, hex: String) {
         guard colorStylesEnabled else { return }
@@ -5874,6 +5933,9 @@ final class EditorState {
     /// notice there is the app repeating your own command back at you.
     func perform(announcing: Bool = true, reportingLinkBreaks: Bool = true,
                  _ mutate: (inout PhotonzDocument) -> Void) {
+        // Anything recorded supersedes a colour drag's live frames, including
+        // the release that ends one.
+        paintPreview = nil
         let report = history?.perform(mutate) ?? EditReport()
         rerender()
         if announcing { announceComponentSync(report.componentSync) }
@@ -5919,6 +5981,7 @@ final class EditorState {
     func undo() {
         discardDragPreview() // undone edits may invalidate a held sprite
         stylePreview = nil
+        paintPreview = nil
         dropStaleBreakNotice()
         history?.undo()
         rerender()
@@ -5927,6 +5990,7 @@ final class EditorState {
     func redo() {
         discardDragPreview()
         stylePreview = nil
+        paintPreview = nil
         dropStaleBreakNotice()
         history?.redo()
         rerender()
@@ -5954,6 +6018,7 @@ final class EditorState {
             editingTextLayerID = nil
             editingCaptionLayerID = nil
             stylePreview = nil
+            paintPreview = nil
             thumbnailCache = [:]
             shelfThumbnails = [:]
             return

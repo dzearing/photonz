@@ -25,15 +25,22 @@ struct ColorPickerContent: View {
     /// Drops the outer padding when this sits inside another popover.
     var embedded: Bool = false
     var onClose: (() -> Void)?
+    /// What to paint on every frame of a drag, so the picture follows the pull
+    /// instead of appearing when you let go. Nothing here is recorded — the
+    /// gesture is one undo step, written by `onCommit` on release. A row with
+    /// no live path leaves this out and the colour lands on release, as before.
+    var onPreview: ((Paint) -> Void)?
     let onCommit: (Paint) -> Void
 
     /// The flat-color way in, which is every row that only ever holds one.
     init(editorState: EditorState, hex: String, name: String, slot: ColorSlot? = nil,
          supportsOpacity: Bool = false, embedded: Bool = false,
-         onClose: (() -> Void)? = nil, onCommit: @escaping (String) -> Void) {
+         onClose: (() -> Void)? = nil, onPreview: ((String) -> Void)? = nil,
+         onCommit: @escaping (String) -> Void) {
         self.init(editorState: editorState, paint: Paint(hex: hex), name: name, slot: slot,
                   supportsOpacity: supportsOpacity, supportsGradient: false,
                   embedded: embedded, onClose: onClose,
+                  onPreview: onPreview.map { live in { live($0.hex) } },
                   onCommit: { onCommit($0.hex) })
     }
 
@@ -41,6 +48,7 @@ struct ColorPickerContent: View {
     init(editorState: EditorState, paint: Paint, name: String, slot: ColorSlot? = nil,
          supportsOpacity: Bool = false, supportsGradient: Bool = false,
          embedded: Bool = false, onClose: (() -> Void)? = nil,
+         onPreview: ((Paint) -> Void)? = nil,
          onCommit: @escaping (Paint) -> Void) {
         self.editorState = editorState
         self.paint = paint
@@ -50,6 +58,7 @@ struct ColorPickerContent: View {
         self.supportsGradient = supportsGradient
         self.embedded = embedded
         self.onClose = onClose
+        self.onPreview = onPreview
         self.onCommit = onCommit
     }
 
@@ -63,6 +72,7 @@ struct ColorPickerContent: View {
                                 supportsGradient: supportsGradient,
                                 embedded: embedded,
                                 onClose: embedded ? nil : onClose,
+                                onPreview: onPreview,
                                 onCommit: onCommit)
         } else {
             // The picker that shipped before the designed one knows nothing
@@ -93,6 +103,9 @@ struct ColorWellButton: View {
     /// What this well answers to, so only one picker is ever open and a walk
     /// can open this one without a pointer. Defaults to the row's own name.
     var wellKey: String?
+    /// What to paint on every frame of a drag inside the picker this opens.
+    /// Left out where there is nothing to paint live.
+    var onPreview: ((String) -> Void)?
     let onCommit: (String) -> Void
 
     @State private var isHovering = false
@@ -113,6 +126,7 @@ struct ColorWellButton: View {
                                        slot: slot,
                                        supportsOpacity: supportsOpacity,
                                        onClose: { editorState.openColorWell = nil },
+                                       onPreview: onPreview,
                                        onCommit: onCommit)
                 }
         } else {

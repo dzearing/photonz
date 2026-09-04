@@ -489,8 +489,14 @@ struct SelectionColorWell: View {
                                    slot: slot,
                                    supportsOpacity: true,
                                    supportsGradient: slot.acceptsGradient,
-                                   onClose: { editorState.openColorWell = nil }) { paint in
-                    editorState.setSelectionPaint(slot: slot, paint: paint)
+                                   onClose: { editorState.openColorWell = nil },
+                                   // Live while the pointer is down, so the
+                                   // shapes follow the drag; ONE step, and one
+                                   // recents entry, when it is let go of.
+                                   onPreview: { paint in
+                    editorState.previewSelectionPaint(slot: slot, paint: paint)
+                }) { paint in
+                    editorState.commitSelectionPaint(slot: slot, paint: paint)
                 }
             }
     }
@@ -500,7 +506,10 @@ struct SelectionColorWell: View {
             // The swatch shows the PAINT, so a row holding a gradient looks
             // like the gradient rather than like the one flat colour it stands
             // for. Everything else about the chip is what it always was.
-            PaintFill(paint: editorState.selectionPaint(slot: slot) ?? Paint(hex: hex))
+            // The paint in flight while a colour drag is happening, so the
+            // chip under the picker keeps up with the canvas rather than
+            // sitting on the old colour for a whole pull and jumping.
+            PaintFill(paint: editorState.previewedPaint(slot: slot) ?? Paint(hex: hex))
                 .clipShape(RoundedRectangle(cornerRadius: 4))
                 // Under a color that can be see-through, so a translucent fill
                 // reads as translucent rather than as a paler one.
