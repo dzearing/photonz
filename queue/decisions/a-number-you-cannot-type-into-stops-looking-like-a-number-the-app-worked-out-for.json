@@ -1,0 +1,41 @@
+{
+  "id": "a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for",
+  "taskId": "a-number-you-cannot-type-into-stops-looking-like",
+  "question": "A number the app worked out for you sits in the same rounded box as a number you can type. Should it lose the box?",
+  "context": "Both looks are built and running. The plain look is behind an Experiments switch called \"Numbers you cannot type stop looking like ones you can\", off until you choose. Two pictures of each are in the brief.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Plain number, no box",
+      "summary": "A number you cannot type sits as plain grey text where its box used to be: same letter in front, same column, same height. So on a piece of text W keeps its box and H does not, and on a locked layer all four numbers read as a plain summary of where it is.",
+      "pros": [
+        "You can tell which numbers you can change at a glance, without clicking or hovering anything",
+        "A locked layer reads as a statement of where it sits, instead of four boxes that refuse the keyboard",
+        "The letters and the digits stay in the same columns, so the section still reads as four numbers"
+      ],
+      "cons": [
+        "A row with a box on the left and a bare number on the right is less even than two matching boxes",
+        "On an arrow, where there is no width to show at all, W becomes a lone letter with empty space after it"
+      ],
+      "mitigation": "The bare number keeps the exact height and right edge of the box it replaced, so nothing shifts when a layer is locked or picked, and clicking it says in words why it takes nothing."
+    },
+    {
+      "id": "b",
+      "label": "Keep the box",
+      "summary": "Leave the look exactly as it is. Every number keeps its rounded box and slightly greyer text is the only thing separating one you can type from one you cannot. Clicking one still answers now, so at least the reason no longer waits for a hover.",
+      "pros": [
+        "The section stays an even grid of four matching boxes",
+        "Nothing about the panel changes, so there is nothing to relearn"
+      ],
+      "cons": [
+        "A box is the panel promising the keyboard will land there, and on these numbers it does not",
+        "On a locked layer all four boxes look typeable and none of them are"
+      ],
+      "mitigation": "Clicking one now answers straight away in the line under the fields, which takes the worst of the silence away even with the box left on.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-04T13:22:41.298Z"
+}

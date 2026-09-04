@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/readout-fields",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [420, 300] },
+    { "do": "type", "text": "Sign in to continue to your account" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-text-picked", "note": "a label picked: W takes typing, H is worked out. The two must not look like the same kind of thing" },
+    { "do": "snapshot", "name": "1-text-picked" },
+
+    { "do": "panel", "stage": "controls" },
+    { "do": "press", "control": "H" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-h-clicked", "note": "H just took a click: the line under the fields must have swapped the caption for the reason H takes nothing" },
+    { "do": "snapshot", "name": "2-h-clicked" },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-locked", "note": "a locked layer: all four numbers are worked out, so the whole block must read as a readout and the caption must be back to saying it is locked" },
+    { "do": "snapshot", "name": "3-locked" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [420, 560], "to": [640, 640] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-arrow", "note": "an arrow: X and Y take typing, W and H have no number at all. The blank pair must not look like two empty boxes waiting for a number" },
+    { "do": "snapshot", "name": "4-arrow" },
+
+    { "do": "press", "control": "W" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-blank-clicked", "note": "the blank W took a click: it must answer too, not just the ones with a number in them" },
+    { "do": "snapshot", "name": "5-blank-clicked" }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:31.741Z",
-  "updated": "2026-09-04T12:09:31.741Z",
+  "updated": "2026-09-04T13:24:17.164174Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Straight from the audit that shipped the readout: queue/audits/2026-09-04-text-height-readout.json rough 1 (\"H still wears the same rounded box as the fields you can type in. Only the grey tells you apart, and a box that looks like an input but refuses the keyboard is the clumsiest part of this. Losing its border would say it louder, but that is a visual call worth your eye first\") and rough 2 (\"Clicking a read-only field gives no feedback at all. The tip explains it, but only after a hover delay\"). The same audit notes a locked layer and a stacked layer produce more read-only fields, so this is not one field. Losing the border is a look change, so open a decision card with two shots rather than guessing. docs/design/mocks/shared/UX-PATTERNS.md has no read-only field treatment at all; add it once the call is made. Related: one-rule-for-a-control-that-cannot-do-anything is the general version of this.",
@@ -26,6 +26,43 @@
     {
       "t": "2026-09-04T12:09:31.741Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T13:03:26.858Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T13:24:17.164174Z",
+      "note": "Adversarial review, before building. Walked it cold: the greyer number is the only signal, and it does not arrive until you have hovered a second. UX-PATTERNS.md has no read-only treatment at all, so there was no mock to build literally and nothing to argue with. Cut as decoration: a lock glyph, an auto badge, a tinted fill. The shortest version that delivers the value is one branch in the section plus one sentence swapped into the line that is already under the fields, so no new surface and no new control. Nothing here needed state the app did not have: LayerGeometryEditing already knows which fields take typing and why not. One thing the mock would have missed: a field can be read-only AND blank (an arrow has no width to show), so the treatment has to cover blanks or the panel grows a third look."
+    },
+    {
+      "t": "2026-09-04T13:24:17.164174Z",
+      "note": "Core, tests first: LayerGeometrySelection.isReadOnly(_:) and explanation(for:) in PhotonzCore, six new tests in LayerGeometrySelectionTests. isReadOnly covers blanks, and is false for an empty selection because nothing selected is an empty panel and not a panel full of dead fields."
+    },
+    {
+      "t": "2026-09-04T13:24:17.164174Z",
+      "note": "App: GeometryInspector now renders a read-only number as GeometryReadout instead of a disabled field, and the disabled path is gone from GeometryNumberField entirely. Clicking a readout puts LayerGeometrySelection.explanation into the caption line for six seconds; it clears on a new selection. Not flagged: it is right in either look."
+    },
+    {
+      "t": "2026-09-04T13:24:17.164174Z",
+      "note": "Look change behind next-readout-fields, OFF by default pending the decision. On, a read-only number drops the rounded box and sits as plain grey text at the same height (21pt) and the same right inset (5pt), so the digits stay in the same column and the section does not change height when a layer is locked."
+    },
+    {
+      "t": "2026-09-04T13:24:17.164174Z",
+      "note": "Adversarial review, on the built thing. The first build answered a click on H with the same silence it was meant to fix: a dimmed box swallows the mouse before a tap gesture on the row around it can see it. Caught by the walk, not by reading the code; the readout is now a real plain-styled Button with the number set to allowsHitTesting(false). Row height had to be matched by hand or the section lost 2pt when a layer was locked. Left rough: in the old look an arrow's blank W box carries a faint W placeholder, so the letter appears twice on one row."
+    },
+    {
+      "t": "2026-09-04T13:24:17.164174Z",
+      "note": "Verified live in the probe with Screen Recording granted. Scripts/playtest/readout-fields-walk.json presses H on a text layer, presses a blank W on an arrow, and photographs a locked layer, in both looks. Shipped default: clicking H swaps the caption to \"Height follows the text...\", clicking a blank W to \"Drag this shape's ends...\". Scripts/test.sh green, 2980 tests."
+    },
+    {
+      "t": "2026-09-04T13:24:17.164174Z",
+      "note": "Blocked on the look. Decision a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for, with a brief and four real captures (a piece of text and a locked layer, in each look). The declining option is \"Keep the box\", which is a real no to the rest of this task since the click answer has already shipped. UX-PATTERNS.md gets its read-only entry once the call is made, per the task notes, not before."
+    },
+    {
+      "t": "2026-09-04T13:24:17.164174Z",
+      "note": "Audit: queue/audits/2026-09-04-readout-fields.json, two real captures. Related: one-rule-for-a-control-that-cannot-do-anything (p3-low) is the general version and should follow whatever this decides."
     }
-  ]
+  ],
+  "started": "2026-09-04T13:03:26.858Z"
 }

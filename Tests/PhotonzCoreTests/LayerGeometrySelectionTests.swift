@@ -294,6 +294,58 @@ struct LayerGeometrySelectionTests {
         #expect(sel.reading(.height) == .empty)
     }
 
+    @Test("A number worked out for you is read only, and the one beside it you type is not")
+    func aWorkedOutNumberIsReadOnly() {
+        let words = CGRect(x: 0, y: 0, width: 200, height: 74)
+        let sel = LayerGeometrySelection([member(text(words), words)])
+        #expect(sel.isReadOnly(.height))
+        #expect(!sel.isReadOnly(.width))
+        #expect(!sel.isReadOnly(.x))
+    }
+
+    @Test("Every number on a locked layer is read only, not just its size")
+    func aLockedLayerIsReadOnlyAllTheWayThrough() {
+        let frame = CGRect(x: 5, y: 6, width: 50, height: 60)
+        let sel = LayerGeometrySelection([member(rectangle(frame, locked: true), frame)])
+        #expect(LayerGeometryField.allCases.allSatisfy { sel.isReadOnly($0) })
+    }
+
+    @Test("A field with no number to show is still read only, so it does not look like one you can type into")
+    func aBlankFieldIsStillReadOnly() {
+        let box = CGRect(x: 0, y: 0, width: 100, height: 40)
+        let sel = LayerGeometrySelection([member(arrow(box), box)])
+        #expect(sel.reading(.width) == .empty)
+        #expect(sel.isReadOnly(.width))
+    }
+
+    @Test("Nothing selected is an empty panel, not a panel full of fields you cannot type into")
+    func nothingSelectedIsNotReadOnly() {
+        let sel = LayerGeometrySelection([])
+        #expect(LayerGeometryField.allCases.allSatisfy { !sel.isReadOnly($0) })
+        #expect(LayerGeometryField.allCases.allSatisfy { sel.explanation(for: $0) == nil })
+    }
+
+    @Test("Clicking a number you cannot type answers with the sentence the hover tip carries")
+    func aReadOnlyFieldAnswersAClick() {
+        let words = CGRect(x: 0, y: 0, width: 200, height: 74)
+        let sel = LayerGeometrySelection([member(text(words), words)])
+        #expect(sel.explanation(for: .height) == LayerGeometryEditing.textHeightReason)
+        #expect(sel.explanation(for: .width) == nil)
+    }
+
+    @Test("Every field that takes no typing has an answer ready, whatever took it away")
+    func everyReadOnlyFieldHasAnAnswer() {
+        let frame = CGRect(x: 5, y: 6, width: 50, height: 60)
+        let locked = LayerGeometrySelection([member(rectangle(frame, locked: true), frame)])
+        for field in LayerGeometryField.allCases {
+            #expect(locked.explanation(for: field) == LayerGeometryEditing.lockedReason)
+        }
+        let box = CGRect(x: 0, y: 0, width: 100, height: 40)
+        let ends = LayerGeometrySelection([member(arrow(box), box)])
+        #expect(ends.explanation(for: .width) == LayerGeometryEditing.endpointReason)
+        #expect(ends.explanation(for: .x) == nil)
+    }
+
     @Test("A field some layer takes still reads over just those layers, not the ones sitting out")
     func typeableFieldsIgnoreTheReadOnlyOnes() {
         let box = CGRect(x: 0, y: 0, width: 120, height: 40)

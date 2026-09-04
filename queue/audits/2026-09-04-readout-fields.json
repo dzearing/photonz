@@ -1,0 +1,31 @@
+{
+  "feature": "Clicking a number you cannot type says why",
+  "epic": "ui-building",
+  "summary": "In Position and Size, clicking a number the app worked out for you now answers in the line under the fields straight away, instead of leaving you to hover for a tip. Whether those numbers should also lose their rounded box is a decision card with both pictures on it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on for the click answer. The look change is behind a switch called \"Numbers you cannot type stop looking like ones you can\", off until the decision card is answered.",
+  "try": [
+    { "do": "Pick the text tool and click on a picture." },
+    { "do": "Type \"Sign in to continue to your account\" and press Command-Return." },
+    { "do": "Click H in the Position and Size section.", "shot": "2026-09-04-readout-fields-h-clicked-sc.png" },
+    { "do": "Read the line under the four numbers: it says why H takes nothing, with no hover." },
+    { "do": "Wait six seconds and read it again: the ordinary caption is back." },
+    { "do": "Click the locked Background row in the Layers list, then click any one of its four numbers.", "shot": "2026-09-04-readout-fields-locked-sc.png" },
+    { "do": "Open Experiments and turn on \"Numbers you cannot type stop looking like ones you can\"." },
+    { "do": "Look at that locked layer again: the four boxes are gone and the numbers read as plain text." }
+  ],
+  "evaluate": [
+    "Does the answer land where your eye already is, or did you miss it under the fields?",
+    "Is six seconds long enough to read the answer, and short enough to stay out of the way?",
+    "With the switch on, can you tell which numbers you can type without clicking or hovering anything?",
+    "On an arrow, W becomes a lone letter with nothing after it. Does that read as \"there is no width here\", or as something missing?",
+    "Should clicking a number you CAN type do anything special, or is leaving that alone right?"
+  ],
+  "rough": [
+    "The look change is not on by default. Which of the two looks the app should wear is a UX call, so it is a decision card with a picture of each, and only the click answer ships on.",
+    "The answer replaces the caption rather than sitting beside it, so while it is up the panel is not saying what the numbers mean. Six seconds felt right in use, but that is a guess worth checking.",
+    "A number you cannot type is now a button, so under full keyboard access it can take focus where before it was skipped. Pressing Space on it gives the same answer a click does.",
+    "In the old look, an arrow's blank W box still shows a faint W inside it, so the letter appears twice on the same row. The new look has no box and no placeholder, so it does not.",
+    "The first build answered a click on H with the same silence it was meant to fix: a dimmed box swallows the mouse before a tap gesture on the row can see it. Caught by the walk, not by reading the code.",
+    "Screen Recording was granted for this run, so both pictures are real captures of the window rather than offscreen renders."
+  ]
+}

@@ -65,6 +65,8 @@ public enum FeatureCatalog {
 
     public static let geometryFieldsFlag = "next-geometry-fields"
 
+    public static let readoutFieldsFlag = "next-readout-fields"
+
     public static let layerGroupsFlag = "next-layer-groups"
 
     public static let alignLayersFlag = "next-align-layers"
@@ -253,6 +255,15 @@ public enum FeatureCatalog {
                     parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: readoutFieldsFlag,
+                    title: "Numbers you cannot type stop looking like ones you can",
+                    description: "In Position and Size, a number the app worked out for you loses the rounded box the numbers you type wear and sits as plain text in the same place. That covers how tall a paragraph came out, where a stack put a row, and every number on a locked layer. Off means it keeps the box, and only the grey tells it apart. Either way, clicking one of them now answers straight away in the line under the fields instead of making you wait for a hover tip.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: []),
             Definition(
                 flag: FeatureFlag(
                     name: alignLayersFlag,

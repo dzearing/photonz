@@ -148,6 +148,33 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         return .agreed(value)
     }
 
+    /// Whether this field takes no typing at all: the number in it, if it has
+    /// one, was worked out for you.
+    ///
+    /// The panel draws these differently, because a number you cannot type
+    /// should not wear the box a number you can type wears. That question is
+    /// answered here, beside the rules that decide it, rather than in the view
+    /// re-deriving it and drifting.
+    ///
+    /// A field with nothing to show still counts: an arrow's width is blank
+    /// AND untypeable, and an empty box you can click into is the same lie as
+    /// a full one. Nothing selected is neither, it is an empty panel.
+    public func isReadOnly(_ field: LayerGeometryField) -> Bool {
+        !isEmpty && !allows(field)
+    }
+
+    /// What to say the moment someone clicks a number they cannot type.
+    ///
+    /// The same sentence the hover tip carries, put where a click can reach
+    /// it. A tip arrives only after a hover delay, so until now a click on one
+    /// of these was answered by silence, and silence reads as broken rather
+    /// than as fixed. Nil for a field that does take typing, because a click
+    /// there already means something.
+    public func explanation(for field: LayerGeometryField) -> String? {
+        guard isReadOnly(field) else { return nil }
+        return fixedReason(for: field) ?? field.title
+    }
+
     /// A plain sentence explaining why a field takes nothing, for the hover
     /// tip. Nil when it takes something. With several layers picked the first
     /// reason in the selection stands for all of them: they are all sitting
