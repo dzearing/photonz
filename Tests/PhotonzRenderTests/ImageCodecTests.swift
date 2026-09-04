@@ -44,4 +44,38 @@ struct ImageCodecTests {
     @Test func decodeOfGarbageReturnsNil() {
         #expect(ImageCodec.decode(Data([0xDE, 0xAD, 0xBE, 0xEF])) == nil)
     }
+
+    @Test func pixelSizeReadsAFileWithoutDecodingIt() throws {
+        let image = solidImage(width: 320, height: 200, r: 1, g: 2, b: 3)
+        let data = try #require(ImageCodec.encode(image, format: .png))
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-pixel-size-\(UUID().uuidString).png")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        #expect(ImageCodec.pixelSize(ofFileAt: url) == CGSize(width: 320, height: 200))
+    }
+
+    @Test func pixelSizeMatchesWhatDecodingTheSameFileGives() throws {
+        // The landing outline a drag draws is sized from the metadata while the
+        // drop itself decodes the file. If the two ever disagreed the preview
+        // would be a lie, so they are checked against each other.
+        let image = solidImage(width: 97, height: 41, r: 9, g: 9, b: 9)
+        let data = try #require(ImageCodec.encode(image, format: .jpeg))
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-pixel-size-\(UUID().uuidString).jpg")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let decoded = try #require(ImageCodec.decode(try Data(contentsOf: url)))
+        #expect(ImageCodec.pixelSize(ofFileAt: url)
+                == CGSize(width: decoded.width, height: decoded.height))
+    }
+
+    @Test func pixelSizeOfSomethingThatIsNotAPictureIsNil() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-not-a-picture-\(UUID().uuidString).txt")
+        try Data("hello".utf8).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        #expect(ImageCodec.pixelSize(ofFileAt: url) == nil)
+        #expect(ImageCodec.pixelSize(ofFileAt: URL(fileURLWithPath: "/no/such/file.png")) == nil)
+    }
 }

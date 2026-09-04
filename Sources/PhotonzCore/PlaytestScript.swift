@@ -445,8 +445,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// and the frame it would join. The log line says what the canvas answered.
     case dragComponent(at: PlaytestPoint)
     /// A file let go over the canvas, the way one arrives from the Finder.
-    /// `file` is relative to the script, like `open`.
-    case dropImage(file: String, at: PlaytestPoint)
+    /// `file` is relative to the script, like `open`. `hold` names a picture
+    /// taken while the file is still in the air over the point, which is the
+    /// only moment the landing outline exists.
+    case dropImage(file: String, at: PlaytestPoint, hold: String?)
     /// Render the window's content offscreen to `<out>/<name>.png`.
     case snapshot(name: String)
     /// Composite the document itself to `<out>/<name>.png`.
@@ -615,7 +617,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "dragComponent":
             self = .dragComponent(at: try f.point("at"))
         case "dropImage":
-            self = .dropImage(file: try f.string("file"), at: try f.point("at"))
+            self = .dropImage(file: try f.string("file"), at: try f.point("at"),
+                              hold: try f.optionalString("hold"))
         case "render":
             self = .render(name: try f.string("name"))
         case "panelMenu":

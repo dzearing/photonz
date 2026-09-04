@@ -1,0 +1,27 @@
+{
+  "id": "a-file-the-canvas-cannot-place-says-no-while-you",
+  "title": "A file the canvas cannot place says no while you drag it",
+  "goal": "Dragging a text file, an archive or anything else that is not a picture over the canvas shows the copy pointer, as if letting go would put something there, and then nothing happens. The pointer should say no from the moment the file is over the canvas, the way an impossible component drop already does.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 680,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T01:00:02.794Z",
+  "updated": "2026-09-04T01:00:02.795Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CanvasView.trackImageDrag currently returns .copy for any file URL and only skips the landing outline when ImageCodec.pixelSize(ofFileAt:) is nil. Returning [] in that case is nearly the whole fix, but keep .photonz and the no-document-open case accepted since both open a window rather than landing on the canvas. Found while building the drop landing preview on 2026-09-03.",
+  "acceptance": [
+    "Dragging a non-picture file over the canvas shows the no-entry pointer, not the copy pointer",
+    "Dragging a picture or a .photonz file over the canvas is unchanged",
+    "A scripted walk records the refusal for a non-picture file"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T01:00:02.795Z",
+      "note": "created (manual)"
+    }
+  ]
+}

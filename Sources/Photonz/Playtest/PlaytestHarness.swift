@@ -381,7 +381,7 @@ private final class Run {
             let p = try viewPoint(at)
             let operation = canvas.trackComponentDrag(componentID, atViewPoint: p)
             await sleep(0.15)
-            let landing = canvas.componentLandingDescription
+            let landing = canvas.dropLandingDescription
             let answer = operation.contains(.copy) ? "would place a copy" : "refused"
             let where_ = landing.map { "box \(short($0.rect.origin)) \(short(CGPoint(x: $0.rect.width, y: $0.rect.height)))"
                                        + ($0.host == nil ? ", loose on the canvas" : ", joining a frame") } ?? "nothing shown"
@@ -413,7 +413,7 @@ private final class Run {
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p))",
                  state: describe())
 
-        case .dropImage(let file, let at):
+        case .dropImage(let file, let at, let hold):
             // Through the canvas's own drag destination, carrying the file the
             // way the Finder carries it, so a walk lands a Finder drop on the
             // very calls a pointer makes — the same ones a tile off the Library
@@ -437,13 +437,29 @@ private final class Run {
             guard canvas.draggingEntered(info) != [] else {
                 throw Failure(description: "the canvas refused the file \(url.lastPathComponent)")
             }
-            _ = canvas.draggingUpdated(info)
+            // A few frames of hovering, so the landing outline the canvas
+            // draws while the file is in the air is on screen and settled
+            // before the picture.
+            for _ in 0..<3 {
+                _ = canvas.draggingUpdated(info)
+                await sleep(0.05)
+            }
+            var held = ""
+            if let hold, let content = window.contentView {
+                try snapshot(content, name: hold)
+                await screenCapture(window, name: hold)
+                let landing = canvas.dropLandingDescription
+                held = ", held \(hold).png showing "
+                    + (landing.map { "box \(short($0.rect.origin)) \(short(CGPoint(x: $0.rect.width, y: $0.rect.height)))"
+                                     + ($0.host == nil ? ", loose on the canvas" : ", joining a frame") }
+                       ?? "no landing box")
+            }
             guard canvas.performDragOperation(info) else {
                 throw Failure(description: "the canvas would not take the file \(url.lastPathComponent)")
             }
             await sleep(0.3)
             note(number, step.name,
-                 "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))",
+                 "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
                  state: describe())
 
         case .snapshot(let name):
@@ -934,7 +950,11 @@ private final class Run {
         if let hold, let content = window.contentView {
             try snapshot(content, name: hold)
             await screenCapture(window, name: hold)
-            held = ", held \(hold).png"
+            let landing = canvas.dropLandingDescription
+            held = ", held \(hold).png showing "
+                + (landing.map { "box \(short($0.rect.origin)) \(short(CGPoint(x: $0.rect.width, y: $0.rect.height)))"
+                                 + ($0.host == nil ? ", loose on the canvas" : ", joining a frame") }
+                   ?? "no landing box")
         }
         guard updated != [] else {
             canvas.draggingExited(info)

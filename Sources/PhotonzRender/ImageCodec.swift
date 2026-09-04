@@ -44,4 +44,23 @@ public enum ImageCodec {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         return CGImageSourceCreateImageAtIndex(source, 0, nil)
     }
+
+    /// How big the picture in a file is, read from its header without decoding
+    /// a single pixel. Nil for anything that is not a picture.
+    ///
+    /// This is what lets a drag say where a file would land before it lands:
+    /// the answer is needed on every mouse move, and decoding a 12 megapixel
+    /// screenshot to find out it is 4032 wide would stutter the drag.
+    ///
+    /// The numbers are the stored pixel counts, which is exactly what `decode`
+    /// hands back for the same file, so a preview sized from here and the layer
+    /// that follows it can never disagree.
+    public static func pixelSize(ofFileAt url: URL) -> CGSize? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? Double,
+              let height = properties[kCGImagePropertyPixelHeight] as? Double,
+              width > 0, height > 0 else { return nil }
+        return CGSize(width: width, height: height)
+    }
 }

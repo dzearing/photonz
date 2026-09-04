@@ -1,0 +1,29 @@
+{
+  "feature": "See where a dragged picture will land",
+  "epic": "ui-building",
+  "summary": "Drag a screenshot over the picture and the exact box it will fill is drawn under the pointer before you let go, so its size and its spot stop being a surprise. If it would join a screen, that screen lights up dashed too.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. Have a screenshot file in the Finder, or a capture on the Library shelf.",
+  "try": [
+    { "do": "Open a picture, then draw a screen with the Frame tool." },
+    { "do": "Drag a screenshot file from the Finder over the middle of that screen and stop, without letting go.", "shot": "2026-09-03-drop-preview-held-over-screen.png" },
+    { "do": "Move the pointer around inside the screen and watch the box follow it." },
+    { "do": "Move the pointer out onto bare canvas and watch the box change size to fit the canvas instead.", "shot": "2026-09-03-drop-preview-held-over-canvas.png" },
+    { "do": "Drag the pointer near a corner of the canvas: the box stops at the edge rather than hanging off it." },
+    { "do": "Let go.", "shot": "2026-09-03-drop-preview-landed.png" },
+    { "do": "Do the same again with a capture dragged off the Library shelf, which draws the same box." }
+  ],
+  "evaluate": [
+    "Does the box tell you what you wanted to know before you let go, or do you still end up undoing the drop?",
+    "Is the filled blue box the right weight, or does it hide too much of what is underneath while you aim?",
+    "When the picture is fitted down to a screen, is it obvious that the shrinking is deliberate rather than a mistake?",
+    "Does the dashed outline around the screen read as \"this joins that screen\", or as noise next to the landing box?",
+    "Would you want the size in numbers on the box (for example 400 x 267), or is seeing the shape enough?"
+  ],
+  "rough": [
+    "The box carries no size readout. The shape says how big, but not in numbers, and for a redline handoff numbers may matter more.",
+    "The box has softly rounded corners because that is what a component being dragged draws. A picture lands with square corners, so the preview is very slightly rounder than the result.",
+    "Dragging several files at once still draws one box and still places only the first file. That was already true before this change; it is now more visible.",
+    "A file the canvas cannot place (a text file, an archive) still shows the copy pointer and draws no box, then nothing happens when you let go. Filed as its own task.",
+    "The preview lives in the canvas both releases share, so Current shows it too. Forking the whole canvas to hold one drag affordance back from Current would cost far more than it protects."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1000,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T00:48:48.875Z",
-  "updated": "2026-09-04T00:48:48.876Z",
+  "updated": "2026-09-04T01:00:20.053429Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The placement rule is PhotonzDocument.placementForIncomingImage (Sources/PhotonzCore/Clipboard.swift), so the preview and the drop can share one call. CanvasView already has the machinery for a component drag: componentLanding + trackComponentDrag + refreshOverlays (Sources/Photonz/CanvasView.swift ~1129). The missing piece is the image size during draggingUpdated: read it off the file URL with CGImageSourceCopyPropertiesAtIndex (kCGImagePropertyPixelWidth/Height), no decode needed, cached per draggingSequenceNumber. Found while auditing the drop-placement task on 2026-09-03; the hold shot Scripts/playtest/drop-lands-here-walk.json takes (1-tile-in-the-air) shows the empty canvas this would fill.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-04T00:48:48.876Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T00:50:49.833Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T01:00:20.053429Z",
+      "note": "adversarial review before building: the mock here is the component drag, and it is right, but three things it does had to be decided separately for a picture. (1) A picture is FITTED to the box it lands in, so unlike a component the outline is not the file's own size, which is exactly why the preview is worth having. (2) Over a collage slot the drop fills the slot instead, and the slot already lights up; a second box there would promise something else, so the outline is suppressed. (3) A .photonz file, or any file when no picture is open, opens a window rather than landing, so it draws nothing. Shortest version that delivers the value: no new overlay, no size readout, no new drawing code, just the existing landing layers pointed at placementForIncomingImage."
+    },
+    {
+      "t": "2026-09-04T01:00:20.053429Z",
+      "note": "built: ImageCodec.pixelSize(ofFileAt:) reads the header only (TDD, 3 new tests, one of which pins it against what decode gives for the same file so the preview can never promise a size the drop does not deliver). CanvasView.trackImageDrag drives draggingEntered/draggingUpdated, measures the file once per drag session, and calls the very placement call the drop makes. componentLanding renamed dropLanding across the file: it is now what any drag in the air is promising, components and pictures both."
+    },
+    {
+      "t": "2026-09-04T01:00:20.053429Z",
+      "note": "playtest: Scripts/playtest/drop-preview-walk.json, run on the probe, Screen Recording granted so the shots are real captures. Held over a 400x580 screen the outline reads box (160,493) 400x267 joining a frame and the layer lands at exactly (160,493,400,267) indented under Frame; held over bare canvas at 1200,880 it reads (1040,780) 320x200 and lands there; held 30 points inside the corner it is already nudged to (0,0). The shelf-tile walk drop-lands-here-walk.json now photographs the same box at (480,100) 320x200. Outline gone in every landed shot."
+    },
+    {
+      "t": "2026-09-04T01:00:20.053429Z",
+      "note": "adversarial review of the built thing: a non-picture file still shows the copy pointer and lands nothing (pre-existing, filed as a-file-the-canvas-cannot-place-says-no-while-you). Multi-file drags still preview and place only the first file (pre-existing, raised in the audit's rough). No size readout on the box; left out deliberately as the shortest version, raised as an evaluate question."
+    },
+    {
+      "t": "2026-09-04T01:00:20.053429Z",
+      "note": "release note: CanvasView is shared by Current and Next, so both get this. Forking the whole canvas to hold one drag affordance back from Current would cost far more than it protects, and Current already draws this same box for a component."
+    },
+    {
+      "t": "2026-09-04T01:00:20.053429Z",
+      "note": "audit: queue/audits/2026-09-03-drop-preview.json with three real captures."
     }
-  ]
+  ],
+  "started": "2026-09-04T00:50:49.832Z"
 }

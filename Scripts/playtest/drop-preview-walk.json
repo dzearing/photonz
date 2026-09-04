@@ -1,0 +1,37 @@
+{
+  "out": "/tmp/photonz-playtest/drop-preview",
+  "seed": "Nothing to set up: both files dropped here live in the repo.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [160, 180], "to": [560, 760] },
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "0-empty-screen" },
+
+    { "do": "dropImage", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [360, 700], "hold": "1-held-over-screen" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-landed-on-screen", "note": "held low over the 400x580 screen, the outline is the box the 1440x960 capture would fill: fitted to the screen's 400 width, nudged wholly inside it, with the screen itself dashed. Letting go puts the layer in exactly that box." },
+    { "do": "snapshot", "name": "1-landed-on-screen" },
+    { "do": "render", "name": "1-landed-on-screen-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [1200, 880], "hold": "2-held-over-canvas" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-landed-on-canvas", "note": "a 320x200 capture held over bare canvas at 1200,880 outlines X 1040 Y 780 W 320 H 200, no dashed screen, and lands there" },
+    { "do": "snapshot", "name": "2-landed-on-canvas" },
+    { "do": "render", "name": "2-landed-on-canvas-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [30, 30], "hold": "3-held-at-the-corner" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-landed-at-the-corner", "note": "held 30 points inside the top left corner the outline is already nudged wholly onto the canvas at X 0 Y 0, so the drop holds no surprise" },
+    { "do": "snapshot", "name": "3-landed-at-the-corner" }
+  ]
+}

@@ -2,6 +2,49 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-03 — You can see where a dragged picture will land (go loop)
+
+Queue task `you-can-see-where-a-dragged-picture-will-land-be` (epic
+`ui-building`).
+
+**A picture dragged over the canvas now draws the box it will fill, before you
+let go.** A capture arriving from outside is fitted to the screen under the
+pointer, or to the canvas when there is no screen there, and nudged wholly
+inside it, so how big it lands was not something anyone could work out by
+looking at the file. The outline is the real answer: it follows the pointer,
+resizes when the pointer crosses onto a screen, and the screen it would join is
+outlined dashed around it. Letting go puts the layer in exactly that box.
+
+**The preview and the drop are the same call.** `trackImageDrag` asks
+`placementForIncomingImage`, which is what `performDragOperation` ends in, so
+the promise and the result cannot drift apart. The size comes from
+`ImageCodec.pixelSize(ofFileAt:)`, a header read with no decode (a test pins it
+against what `decode` returns for the same file), measured once per drag session
+because `draggingUpdated` fires on every mouse move.
+
+**`componentLanding` is now `dropLanding`.** It was already the right machinery;
+it just had a component's name on it. It is now what any drag in the air is
+promising, and a picture off the Finder and a component off the Library shelf
+write to the same two layers.
+
+Two cases deliberately draw nothing: over a collage slot, where the slot already
+lights up to say the drop fills it, and for a `.photonz` file or any file with no
+picture open, both of which open a window rather than landing on this canvas.
+
+Verified on the probe with the new `Scripts/playtest/drop-preview-walk.json`
+(Screen Recording granted, so the shots are real captures): held over a 400x580
+screen the outline reads box (160,493) 400x267 joining a frame, and the layer
+lands at exactly that, indented under the frame; over bare canvas at 1200,880 it
+reads (1040,780) 320x200; held 30 points inside the corner it is already nudged
+to (0,0). `dropImage` grew a `hold` option and both it and `dragTile` now log the
+box they photographed, so a walk proves the outline existed rather than just
+taking a picture of it. Full suite green, 2578 tests.
+
+**Next:** a file the canvas cannot place (a text file, an archive) still shows
+the copy pointer and then lands nothing, filed as
+`a-file-the-canvas-cannot-place-says-no-while-you`. Open question in the audit:
+whether the landing box should carry its size in numbers.
+
 ## 2026-09-03 — A screen is renamed by clicking its name on the canvas (go loop)
 
 Queue task `rename-a-screen-by-clicking-its-name-on-the-canv` (epic
