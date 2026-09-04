@@ -168,10 +168,13 @@ struct ToolGroupButton: View {
 /// button, and again for a group that has slid into the overflow menu, so the
 /// keys work at every window width.
 ///
-/// Each letter is registered exactly ONCE, with shift read at action time
-/// (`KeyModifierTracker`): SwiftUI matches a letter shortcut with its
-/// modifiers ignored, so a second registration for the shifted letter would
-/// not add a chord, it would add a coin toss.
+/// Each letter is registered twice, plain and shifted, because that is how
+/// SwiftUI tells the two presses apart: a letter shortcut is matched against
+/// the character the keyboard really typed, so ⇧M arrives as "M" and lands on
+/// the shifted registration. (An earlier reading, that SwiftUI ignores the
+/// modifiers and would pick a coin-toss winner among duplicates, came from
+/// scripted presses that carried the unshifted letter; real presses do not.
+/// Corrected 2026-09-03 along with the playtest harness that told the fib.)
 struct ToolGroupShortcuts: View {
     let group: ToolGroup
     let activate: (Tool) -> Void
@@ -195,10 +198,10 @@ struct ToolGroupShortcuts: View {
     var body: some View {
         ZStack {
             ForEach(letters, id: \.key) { row in
-                Button("") {
-                    if KeyModifierTracker.isShiftDown { cycle() } else { row.plain() }
-                }
-                .keyboardShortcut(KeyEquivalent(row.key), modifiers: [])
+                Button("") { row.plain() }
+                    .keyboardShortcut(KeyEquivalent(row.key), modifiers: [])
+                Button("") { cycle() }
+                    .keyboardShortcut(KeyEquivalent(row.key), modifiers: .shift)
             }
         }
         .opacity(0)

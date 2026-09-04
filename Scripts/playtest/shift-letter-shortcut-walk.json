@@ -1,0 +1,16 @@
+{
+  "out": "/tmp/photonz-playtest/shift-letter-shortcut",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "0-open", "note": "the selection slot remembers a tool between runs, so this walk starts by putting a known one in hand" },
+    { "do": "key", "key": "w" },
+    { "do": "waitFor", "condition": "tool", "value": "wand" },
+    { "do": "key", "key": "m", "modifiers": ["shift"] },
+    { "do": "waitFor", "condition": "tool", "value": "rectSelect" },
+    { "do": "key", "key": "m", "modifiers": ["shift"] },
+    { "do": "waitFor", "condition": "tool", "value": "ellipseSelect" },
+    { "do": "describe", "stage": "1-shift-m", "note": "shift M walked the selection slot wand, rectangle, ellipse: a shifted letter really reaches its shortcut" },
+    { "do": "snapshot", "name": "shift-m-ellipse-select" }
+  ]
+}

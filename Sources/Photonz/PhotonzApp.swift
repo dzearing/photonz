@@ -65,7 +65,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor static var coordinator: AppCoordinator?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        KeyModifierTracker.install()
         MainActor.assumeIsolated {
             AppDelegate.coordinator?.start()
             #if PHOTONZ_PLAYTEST

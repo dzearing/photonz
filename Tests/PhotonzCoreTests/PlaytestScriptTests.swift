@@ -309,6 +309,29 @@ struct PlaytestScriptTests {
         #expect(PlaytestKey("") == nil)
     }
 
+    /// A synthesized press has to carry what the keyboard would really type,
+    /// because that is what AppKit matches shortcuts against: hold shift and
+    /// M types "M", 4 types "$". A press that carried the unshifted character
+    /// would tell the app ⇧M was a plain m.
+    @Test func shiftTypesWhatTheKeyboardWouldReallyType() {
+        #expect(PlaytestKey("m")?.characters(with: []) == "m")
+        #expect(PlaytestKey("m")?.characters(with: [.shift]) == "M")
+        #expect(PlaytestKey("m")?.characters(with: [.command, .shift]) == "M")
+        #expect(PlaytestKey("m")?.characters(with: [.command, .option]) == "m")
+        #expect(PlaytestKey("M")?.characters(with: [.shift]) == "M")
+        // The number and punctuation rows type their upper glyph.
+        #expect(PlaytestKey("4")?.characters(with: [.shift]) == "$")
+        #expect(PlaytestKey("/")?.characters(with: [.shift]) == "?")
+        #expect(PlaytestKey("[")?.characters(with: [.shift]) == "{")
+        #expect(PlaytestKey("-")?.characters(with: [.shift]) == "_")
+        // The keys with no shifted form stay exactly as they are, so ⇧↑ and
+        // ⇧⌫ keep working.
+        #expect(PlaytestKey("up")?.characters(with: [.shift]) == "\u{F700}")
+        #expect(PlaytestKey("return")?.characters(with: [.shift]) == "\r")
+        #expect(PlaytestKey("delete")?.characters(with: [.shift]) == "\u{7F}")
+        #expect(PlaytestKey("space")?.characters(with: [.shift]) == " ")
+    }
+
     @Test func modifiersDecodeByTheirMacNames() throws {
         let script = try decode("""
         { "steps": [ { "do": "key", "key": "c", "modifiers": ["shift", "option", "control", "command"] } ] }

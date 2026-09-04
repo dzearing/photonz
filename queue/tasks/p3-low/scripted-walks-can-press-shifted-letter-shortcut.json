@@ -33,6 +33,34 @@
     {
       "t": "2026-09-04T01:02:51.148Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T02:20:00.000Z",
+      "note": "reproduced first: with the probe on Current, a walk step \"key m + shift\" logged \"taken by window\" but the selection slot never moved, exactly as reported. Under Next the same step passed, which is why nobody caught it."
+    },
+    {
+      "t": "2026-09-04T02:20:00.000Z",
+      "note": "root cause was not charactersIgnoringModifiers as the notes guessed. The harness built its key events by hand and told them what they typed: a shifted M said it had typed \"m\". SwiftUI matches a letter shortcut against the character the keyboard really produced, so \u21e7M landed on the plain M command. Hand-built events with the shifted character fixed the matching but broke ordinary typing (no window number, so a text field ignores them); CoreGraphics-built events type nothing but match exactly. The harness now builds both: a system event to ask \"is this a shortcut\", a window-addressed one to deliver the press."
+    },
+    {
+      "t": "2026-09-04T02:20:00.000Z",
+      "note": "the fake presses had also produced a false finding, written into ToolGroupButton on 2026-09-02: that SwiftUI ignores modifiers and duplicate letter registrations fight. With real presses they do not. Next therefore had \u21e7M, \u21e7R, \u21e7O, \u21e7L doing nothing at all for a person while the tool family walk called them proven. ToolGroupShortcuts now registers each letter plain and shifted, and KeyModifierTracker (which existed only to work around the false finding) is gone."
+    },
+    {
+      "t": "2026-09-04T02:20:00.000Z",
+      "note": "acceptance 1 verified: Scripts/playtest/shift-letter-shortcut-walk.json presses \u21e7M twice and the tool changes each time, green in both releases. acceptance 2 verified: the same walk fails at its first \u21e7M against the pre-fix binary, and tool-bar-families.json (80 steps, five shifted letters) is green."
+    },
+    {
+      "t": "2026-09-04T02:20:00.000Z",
+      "note": "regression: 20 key and typing walks green, including redline (\u21e7\u2318C), undo-shortcut (\u21e7\u2318N menu chord), geometry and number field typing, nudge (\u21e7arrows), shift-click and shift-sweep selection. Scripts/test.sh green (2579 tests)."
+    },
+    {
+      "t": "2026-09-04T02:20:00.000Z",
+      "note": "staging note: this task serves unmanned-loop, staged next rather than now. Done because it was blocking any shifted shortcut from being provable, and it turned out to be hiding a live Next bug in the tool bar."
+    },
+    {
+      "t": "2026-09-04T02:20:00.000Z",
+      "note": "left for later: walks leak settings into each other (tool-bar-families hides the inspector, the next walk starts with it hidden and its focus steps fail). Cost an hour of false leads today. Recorded in the audit, not filed, since unmanned-loop is not staged now."
     }
   ],
   "started": "2026-09-04T01:02:51.147Z"

@@ -98,6 +98,30 @@ public struct PlaytestKey: Hashable, Sendable {
         self.keyCode = keyCode
     }
 
+    /// What this key really types with those modifiers held down: a capital
+    /// letter under shift, the upper glyph of a number or punctuation key,
+    /// and the same character as ever for keys with no shifted form.
+    ///
+    /// A synthesized press has to carry this, because it is what AppKit reads
+    /// when it matches a shortcut: an event that said ⇧M was a plain "m"
+    /// would be telling the app something no keyboard ever sends, and any
+    /// shortcut written with a capital letter would silently never fire.
+    /// Shift is the only modifier that changes what a key types; ⌘ and ⌥ do
+    /// not, and are ignored here on purpose.
+    public func characters(with modifiers: [PlaytestModifier]) -> String {
+        guard modifiers.contains(.shift) else { return characters }
+        return Self.shiftedGlyphs[characters] ?? characters.uppercased()
+    }
+
+    /// The upper glyph of every key on the US layout that has one. Letters
+    /// are not here: uppercasing covers them.
+    private static let shiftedGlyphs: [String: String] = [
+        "1": "!", "2": "@", "3": "#", "4": "$", "5": "%", "6": "^",
+        "7": "&", "8": "*", "9": "(", "0": ")", "-": "_", "=": "+",
+        "[": "{", "]": "}", "\\": "|", ";": ":", "'": "\"",
+        ",": "<", ".": ">", "/": "?", "`": "~",
+    ]
+
     private static let glyphCodes: [String: UInt16] = [
         "a": 0, "s": 1, "d": 2, "f": 3, "h": 4, "g": 5, "z": 6, "x": 7, "c": 8, "v": 9,
         "b": 11, "q": 12, "w": 13, "e": 14, "r": 15, "y": 16, "t": 17,

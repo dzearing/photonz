@@ -1,0 +1,27 @@
+{
+  "feature": "Shift plus a tool letter walks the family",
+  "epic": "unmanned-loop",
+  "summary": "Holding shift with a tool letter now really steps through that family of tools (shift M walks rectangle, ellipse, magic wand). It had stopped working in Next, and the automated walks could not see it because the presses they sent were not the presses a keyboard sends.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to turn on.",
+  "try": [
+    { "do": "Open any screenshot." },
+    { "do": "Press W to put the magic wand in hand." },
+    { "do": "Press Shift M once. The selection button should turn into the rectangle marquee." },
+    { "do": "Press Shift M again. It should turn into the ellipse marquee.", "shot": "2026-09-03-shift-letter-shortcuts-1.png" },
+    { "do": "Press M on its own. It should stay on the ellipse marquee rather than stepping on." },
+    { "do": "Press R, then Shift R twice, to walk the shapes family the same way." },
+    { "do": "Hold the pointer over the selection button and read the tip, which says shift plus a letter cycles." }
+  ],
+  "evaluate": [
+    "Does shift plus a letter feel like the same gesture Photoshop trained you to expect?",
+    "When the family steps on, is it obvious from the button alone which tool you landed on?",
+    "Is stepping through three tools with one hand faster than opening the button's menu, or would you rather see the list?",
+    "Does the plain letter picking the remembered tool, rather than stepping, match what you expect?"
+  ],
+  "rough": [
+    "The screenshot is a real capture of the probe window, taken by a scripted walk.",
+    "This was reported as a limitation of the scripted walks, but it was a real bug in the app: Next registered each tool letter once and guessed at shift, on the belief that two registrations for one letter fight. That belief came from measuring with fake key presses. With real ones the two registrations are distinguishable, so Next now registers the plain and shifted letters separately, the way Current already did.",
+    "Anything a walk proved about a shifted shortcut before today was proved with a press no keyboard sends, so it was worth nothing. The tool family walk was passing while shift M did nothing for a person.",
+    "Walks still leak settings into each other: one walk hides the inspector and the next walk starts with it hidden, which reads as a broken feature until you notice. Not fixed here."
+  ]
+}

@@ -1426,32 +1426,89 @@ private final class Run {
         let flags = eventFlags(modifiers)
         var takenBy = flags.isEmpty ? "window" : "nobody"
         for type in [NSEvent.EventType.keyDown, .keyUp] {
-            guard let event = NSEvent.keyEvent(
-                with: type, location: .zero, modifierFlags: flags,
-                timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
-                context: nil, characters: key.characters, charactersIgnoringModifiers: key.characters,
-                isARepeat: false, keyCode: key.keyCode) else { continue }
-            // Straight to the window, so no event monitor sees this press;
-            // tell the tracker what a monitor would have.
-            KeyModifierTracker.record(event)
-            if flags.isEmpty || type == .keyUp {
+            let down = type == .keyDown
+            guard let event = keyEvent(key, flags: flags, down: down, in: window) else { continue }
+            // The same press as the system builds it, for asking "is this a
+            // shortcut?" See `matchingEvent` for why it takes two.
+            let matcher = Self.matchingEvent(key, flags: flags, down: down) ?? event
+            if type == .keyUp {
                 window.sendEvent(event)
-            } else if window.performKeyEquivalent(with: event) {
+            } else if window.performKeyEquivalent(with: matcher) {
                 takenBy = "window"
-            } else if NSApp.mainMenu?.performKeyEquivalent(with: event) == true {
+            } else if NSApp.mainMenu?.performKeyEquivalent(with: matcher) == true {
                 takenBy = "menu"
             } else {
-                // Nothing claimed it as a shortcut, so it is an ordinary press
-                // that happens to carry a modifier: ⇧↑ stepping a number field,
-                // ⇧⌫, ⌥ plus a letter. AppKit walks the responder chain with
-                // those after the key equivalents miss, and so must this, or the
-                // press would silently vanish and a walk would "prove" a feature
-                // broken that works by hand.
+                // Nothing claimed it as a shortcut, so it is ordinary typing,
+                // or a press that happens to carry a modifier: ⇧↑ stepping a
+                // number field, ⇧⌫, ⌥ plus a letter. AppKit walks the responder
+                // chain with those after the key equivalents miss, and so must
+                // this, or the press would silently vanish and a walk would
+                // "prove" a feature broken that works by hand.
                 window.sendEvent(event)
-                takenBy = "responder chain"
+                takenBy = flags.isEmpty ? "window" : "responder chain"
             }
         }
         return takenBy
+    }
+
+    /// One key press, carrying what the keyboard would really have typed.
+    ///
+    /// The characters are not made up: CoreGraphics builds a real key event
+    /// for this key and these modifiers, and the system fills in what the
+    /// current layout types (⇧M types "M", ⇧4 types "$", and with ⌘ held the
+    /// unshifted letter comes back while the shortcut-matching string stays
+    /// shifted). That pair is then copied onto an event addressed to this
+    /// window, because an event straight out of CoreGraphics belongs to no
+    /// window and a text field will not type it.
+    ///
+    /// Both halves matter. Get the characters wrong and SwiftUI matches the
+    /// wrong shortcut: a ⇧M that says it typed "m" fires the plain M command,
+    /// which is how a walk came to "prove" the selection slot cycling that a
+    /// person's keyboard could not (2026-09-03). Get the window wrong and
+    /// ordinary typing stops landing in the inspector's fields.
+    private func keyEvent(_ key: PlaytestKey, flags: NSEvent.ModifierFlags,
+                          down: Bool, in window: NSWindow) -> NSEvent? {
+        let typed = Self.typedCharacters(key, flags: flags, down: down)
+        return NSEvent.keyEvent(
+            with: down ? .keyDown : .keyUp, location: .zero, modifierFlags: flags,
+            timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+            context: nil, characters: typed.characters,
+            charactersIgnoringModifiers: typed.ignoringModifiers,
+            isARepeat: false, keyCode: key.keyCode)
+    }
+
+    /// The same press as the system builds it, used only to ask the window and
+    /// the menu bar whether this is a shortcut.
+    ///
+    /// It takes two events because neither one can do both jobs. A press built
+    /// by hand is addressed to a window, so a text field will type it, but
+    /// AppKit and SwiftUI will not match a chord against it properly: they
+    /// read the key underneath the modifiers off the real event, and a
+    /// hand-built one has no such thing, so ⇧M either misses every shortcut or
+    /// lands on the plain M one. A press built by CoreGraphics carries the
+    /// layout with it and matches exactly as a keyboard does, but it belongs
+    /// to no window, so typing it puts nothing in a field.
+    private static func matchingEvent(_ key: PlaytestKey, flags: NSEvent.ModifierFlags,
+                                      down: Bool) -> NSEvent? {
+        guard let source = CGEventSource(stateID: .privateState),
+              let cg = CGEvent(keyboardEventSource: source, virtualKey: key.keyCode, keyDown: down)
+        else { return nil }
+        cg.flags = CGEventFlags(rawValue: UInt64(flags.rawValue))
+        return NSEvent(cgEvent: cg)
+    }
+
+    /// What the keyboard layout says this key and these modifiers type, asked
+    /// of the system rather than guessed. Falls back to the layout table in
+    /// `PlaytestKey` if CoreGraphics will not make an event.
+    private static func typedCharacters(_ key: PlaytestKey, flags: NSEvent.ModifierFlags,
+                                        down: Bool) -> (characters: String, ignoringModifiers: String) {
+        if let real = matchingEvent(key, flags: flags, down: down),
+           let characters = real.characters, let ignoring = real.charactersIgnoringModifiers,
+           !characters.isEmpty, !ignoring.isEmpty {
+            return (characters, ignoring)
+        }
+        let shifted = key.characters(with: flags.contains(.shift) ? [.shift] : [])
+        return (shifted, shifted)
     }
 
     private func mouseEvent(_ type: NSEvent.EventType, at viewPoint: CGPoint, on view: NSView,
