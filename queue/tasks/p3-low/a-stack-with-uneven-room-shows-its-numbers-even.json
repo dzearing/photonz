@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 1200,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T13:51:38.166Z",
-  "updated": "2026-09-04T21:39:49.990Z",
+  "updated": "2026-09-04T21:49:31.719Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/ArrangementInspector.swift, the padding(_:) row. Today the single LayoutNumberField shows room.uniform and falls back to a Mixed placeholder with the four numbers in .help. Options: a compact 16 / 16 / 24 / 16 read-only summary in place of the field, or keep the field and put the summary in the caption under the section. Named in queue/audits/2026-09-04-stack-padding.json rough 1.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-04T21:49:17.000Z",
       "note": "shipped: GroupPadding.shorthand and .inWords in PhotonzCore (tested), ArrangementInspector standIn/fieldWidth. Audit queue/audits/2026-09-04-stack-padding-closed.json."
+    },
+    {
+      "t": "2026-09-04T21:49:31.718Z",
+      "note": "The closed Padding row reads 16/16/24/16 instead of the word Mixed, with each side named in the tooltip; typing one number over it still flattens all four. GroupPadding.shorthand/.inWords in PhotonzCore (tested), ArrangementInspector standIn/fieldWidth. Verified on the running probe with real captures at every stage; Scripts/test.sh green. Audit: queue/audits/2026-09-04-stack-padding-closed.json"
     }
   ],
-  "started": "2026-09-04T21:39:49.989Z"
+  "started": "2026-09-04T21:39:49.989Z",
+  "completed": "2026-09-04T21:49:31.719Z"
 }

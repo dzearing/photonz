@@ -8529,3 +8529,27 @@ captures).
 
 **Next:** the decision answer. B or C both come back to this task to be built;
 A retires it.
+
+## 2026-09-04 — a closed Padding row shows its four numbers
+
+Closing the four side fields on a stack whose room differs left one box reading
+Mixed, so room typed on one side was unreadable until the sides were opened
+again (rough 1 of `queue/audits/2026-09-04-stack-padding.json`). Reproduced with
+a new walk (`Scripts/playtest/stack-padding-closed-walk.json`) before touching
+anything.
+
+The closed row now reads `16/16/24/16`, clockwise from the top, with the sides
+named in words in the tooltip. `GroupPadding.shorthand` and `.inWords` carry the
+wording in PhotonzCore so the field and a copy's sentence cannot drift apart.
+The box grows leftwards to fit and stays pinned by its trailing edge, so the
+column of right edges is unchanged. Typing one number over the four still gives
+every side the same room; the same walk proves it.
+
+Rejected: replacing the field with a read-only summary (it would have cost the
+type-one-number-to-flatten edit, which the reproduction showed still works) and
+putting the summary in the section caption (three rows away from the row it
+belongs to). With the sides open the box still says Mixed, per `MixedLook.swift`.
+
+Next: nothing outstanding on this thread. `evaluate` in
+`queue/audits/2026-09-04-stack-padding-closed.json` asks whether the slashes and
+the bare clockwise order read fast enough without side labels.
