@@ -318,6 +318,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// a walk cannot reach with the pointer, so this is how the shelf the app
     /// arrives stocked with gets photographed.
     case showComponentShelf
+    /// ...and the Media shelf, which is where the captures the app already
+    /// keeps are. Which scope the shelf opens on is remembered between runs, so
+    /// a walk that wants one says so rather than hoping.
+    case showMediaShelf
     /// Layer ▸ Align and Layer ▸ Space Evenly (Next, `next-align-layers`).
     /// The buttons are in the dock, which a walk cannot reach with the
     /// pointer, and the menu chords do nothing while the probe is not the
@@ -369,6 +373,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
 }
 
 /// What a `hover` step rests the pointer on.
+/// Where a row being dragged in the layers list would land: on the line above
+/// the row under the pointer, on the line below it, or inside it when that row
+/// is a group. It is what the drop line on screen is saying.
+public enum PlaytestDropZone: String, CaseIterable, Hashable, Codable, Sendable {
+    case above, inside, below
+}
+
 public enum PlaytestHoverTarget: Sendable, Equatable {
     /// The control whose tooltip begins with this text ("Arrow", "Measure").
     case label(String)
@@ -440,6 +451,31 @@ public enum PlaytestStep: Sendable, Equatable {
     case snapshot(name: String)
     /// Composite the document itself to `<out>/<name>.png`.
     case render(name: String)
+    /// Open a menu that lives INSIDE the window — the Add menu on a
+    /// component's Adjustable list, the ellipsis on the Measurements header —
+    /// write its rows to the log, photograph it if `shot` names a picture, and
+    /// either pick one of its rows (`choose`) or close it having chosen
+    /// nothing.
+    ///
+    /// A menu is a window of its own that takes the app hostage while it is
+    /// open, which is why a walk could not do this before: clicking the button
+    /// never returns until the menu closes, and nothing was left running to
+    /// close it. The driver arranges its own way out first.
+    case panelMenu(menu: String, shot: String?, choose: String?)
+    /// Pick a tile up off the Library shelf by its name, hold it over a point
+    /// on the picture, and let go there. `hold` names a picture taken while it
+    /// is still in hand, which is the only moment the landing outline exists.
+    case dragTile(tile: String, to: PlaytestPoint, hold: String?)
+    /// Pick a row up in the layers list by its name and let go of it on
+    /// another row: above it, below it, or inside it when that row is a group.
+    /// `hold` names a picture taken before letting go, which is the only
+    /// moment the line that says what will happen is on screen.
+    case dragRow(row: String, onto: String, zone: PlaytestDropZone, hold: String?)
+    /// Write what the right hand panel is showing to the log and to
+    /// `panel-<stage>.json`: every tile on the shelf, every row in the layers
+    /// list, and every menu in the dock, by the names a walk has to use for
+    /// them. The `menus` step for the panel.
+    case panel(stage: String)
     /// Write the editor's state (tool, mode, layers, hint, clipboard note) to
     /// the log under `stage`.
     case describe(stage: String, note: String?)
@@ -462,8 +498,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
         "action", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
-        "dropComponent",
+        "dragRow", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
+        "panel", "panelMenu",
         "readClipboard", "render", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
 
@@ -489,6 +526,10 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dropImage: "dropImage"
         case .snapshot: "snapshot"
         case .render: "render"
+        case .panelMenu: "panelMenu"
+        case .dragTile: "dragTile"
+        case .dragRow: "dragRow"
+        case .panel: "panel"
         case .describe: "describe"
         case .clearClipboard: "clearClipboard"
         case .readClipboard: "readClipboard"
@@ -577,6 +618,23 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .dropImage(file: try f.string("file"), at: try f.point("at"))
         case "render":
             self = .render(name: try f.string("name"))
+        case "panelMenu":
+            self = .panelMenu(menu: try f.string("menu"),
+                              shot: try f.optionalString("shot"),
+                              choose: try f.optionalString("choose"))
+        case "dragTile":
+            self = .dragTile(tile: try f.string("tile"), to: try f.point("to"),
+                             hold: try f.optionalString("hold"))
+        case "dragRow":
+            let zone: PlaytestDropZone = if fields["zone"] == nil {
+                .above
+            } else {
+                try f.enumValue("zone", PlaytestDropZone.self)
+            }
+            self = .dragRow(row: try f.string("row"), onto: try f.string("onto"),
+                            zone: zone, hold: try f.optionalString("hold"))
+        case "panel":
+            self = .panel(stage: try f.string("stage"))
         case "describe":
             self = .describe(stage: try f.string("stage"), note: fields["note"] as? String)
         case "clearClipboard":

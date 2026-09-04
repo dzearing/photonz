@@ -1,0 +1,30 @@
+{
+  "feature": "A scripted walk can reach into the right hand panel",
+  "epic": "unmanned-loop",
+  "summary": "The automated walks that prove a feature works could only drive the picture. They can now open a menu in the panel and photograph its rows, drag a tile off the Library onto the picture, and drag a row in the layers list onto another row and photograph the line that says what will happen.",
+  "setup": "Nothing to turn on. This is the walk harness itself: Scripts/playtest.sh Scripts/playtest/panel-reach-walk.json runs everything below in the probe app and leaves the pictures in /tmp/photonz-playtest/panel-reach.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/panel-reach-walk.json." },
+    { "do": "Open 3-add-menu-sc.png: the Add menu on a component's Adjustable list, open, with Background and Label on it.", "shot": "2026-09-03-panel-reach-menu.png" },
+    { "do": "Open 1-tile-in-the-air-sc.png: the Button tile off the shelf, still in the air, with the outline showing where it would land.", "shot": "2026-09-03-panel-reach-tile-in-the-air.png" },
+    { "do": "Open 4-drop-line-above-sc.png: the blue line above Background during a live row drag.", "shot": "2026-09-03-panel-reach-drop-above.png" },
+    { "do": "Open 4-drop-line-inside-sc.png: the blue ring round the Group row, meaning the layer would go inside it.", "shot": "2026-09-03-panel-reach-drop-inside.png" },
+    { "do": "Read the log's `panel` lines: they list every tile, row and menu by the name a walk has to use." },
+    { "do": "Read docs/design/playtest-harness.md, the four new rows in the step table and the section under them." }
+  ],
+  "evaluate": [
+    "Is a picture of a menu open over the panel the picture you wanted, or would you rather see the menu on its own, big?",
+    "Do the two drop line pictures tell you apart what 'above' and 'inside' mean, without the log line beside them?",
+    "The walk's own log now says what is on the shelf and in the layers list by name. Is that enough to write a walk from, or does it need the frames too?",
+    "A capture tile can be named by its caption or by its file name. Is naming it by the file the right steadier choice?",
+    "Is one menu picture per audit enough, or should a walk be able to photograph a menu and then photograph what picking a row did?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real capture of the running probe, not an offscreen render. A menu HAS to be one: menus are drawn outside the app's own process, so rendering the menu's window offscreen gives a blank white plate.",
+    "While a menu is open in a walk it is a real menu on the real screen, so it flashes over whatever is in front of you for about half a second. There is no way to open one that does not.",
+    "A walk still cannot see the picture that follows the pointer during a drag. That belongs to a drag session only a real device can start; everything the destination draws is real, but the thing in your hand is not there.",
+    "Dragging a capture off the Media shelf works, and it exposed something else: on a bare canvas the picture lands centred and fitted rather than where it was let go. That is how every file drop has always behaved, not something this added, and it is filed separately.",
+    "Four capture tiles can all read 'yesterday'. A walk that names one that way gets the first of them, which is why a tile can also be named by its file.",
+    "The Library search field was reported to hang a walk on 2026-09-03. It does not any more, and the walk now focuses it and types into it every run so it cannot come back quietly."
+  ]
+}

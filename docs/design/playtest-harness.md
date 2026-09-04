@@ -127,8 +127,47 @@ read coordinates straight off the fixture.
 | `describe` | `stage`, optional `note` | Logs the editor's state under `stage`. |
 | `clearClipboard` | | Empties the clipboard. |
 | `readClipboard` | `stage` | Logs the clipboard's types and text. |
+| `panel` | `stage` | Writes what the RIGHT HAND PANEL is showing to the log and to `panel-<stage>.json`: every tile on the Library shelf, every row in the layers list, and every menu in the dock, by the names the steps below use for them. The `menus` step for the panel, and the first step to write when a walk cannot find something. |
+| `panelMenu` | `menu`, optional `shot` `choose` | Opens a menu INSIDE the window by the words on its button ("Add"), writes its rows to the log, and closes it. `shot` names a real screen capture of the menu in place over the panel, written to `<shot>-sc.png` — the only kind of picture of a menu there is, since a menu is drawn outside this process and renders blank offscreen. `choose` picks one of its rows by title instead of closing with nothing chosen. Needs the Screen Recording grant for the picture; the rows reach the log either way. |
+| `dragTile` | `tile`, `to`, optional `space` `hold` | Picks a tile up off the Library shelf by its name and lets it go on the picture, through the canvas's own drag destination — the same calls a drop from the Finder makes, carrying the very payload the tile's own drag hands over. A capture tile can be named by the caption it shows ("10 hours ago") or, better for a walk that has to keep working, by its file name. `hold` names a picture taken while it is still in the air, which is the only moment the landing outline exists. |
+| `dragRow` | `row`, `onto`, optional `zone` `hold` | Picks a row up in the layers list by its name and lets go of it on another row: `above` it (the default), `below` it, or `inside` it when that row is a group. `hold` names a picture taken before letting go, which is the only moment the line that says what will happen is on screen. |
 | `menus` | `stage`, optional `menu` | Writes the app's own menu bar to the log and to `menus-<stage>.json` (plus a `.txt` you can read): every menu, item, shortcut, submenu and enabled state, plus the windows that are open. `menu` narrows it to one top-level menu by title ("Capture"). This is how a runner names a real menu item instead of one guessed from the source, and it needs no privacy grant of any kind. See below for what the dimming is worth. |
 | `action` | `action` | Calls the editor directly: `copySpecList`, `copyImage`, `hideAllMeasurements`, `showAllMeasurements`, `hideInspector`, `showInspector`, `zoomIn`, `zoomOut`, `zoomToFit`, `undo`, `redo`, `newCanvasDialog`, `selectCanvas`, and more (`PlaytestAction` is the full list). The inspector toggle is a button, the zoom commands are menu chords, and the Canvas row is in the dock where a walk cannot click, so this is how a walk gets a wide canvas or a big picture. |
+
+## Reaching into the right hand panel
+
+The canvas is one AppKit view, so a point in it means something and `click` and
+`drag` work. The dock is not: it is SwiftUI, a walk has no way to say which tile
+or which row it means, and AppKit will not start a real drag from a synthesized
+press at all. That is why five audits written on one day in September 2026 each
+had to admit the same hole — a menu in the dock covered by a test instead of a
+picture, a drop line photographed from a one-off build, a tile drag taken on
+trust.
+
+Three steps close it, and one more makes them writable:
+
+- `panel` lists what is there. Start here: it prints the tiles, the rows and the
+  menus by the exact names the other three take, so a walk is written from what
+  the app is actually showing rather than from the source.
+- `panelMenu` opens a menu and photographs it. A menu takes the app hostage
+  while it is up — the click that opens one does not return until it closes, and
+  nothing on the main queue runs meanwhile, which is why a walk that clicked one
+  simply stopped. The driver arranges its way out first, from a thread that
+  reaches the main one in the tracking run loop mode by hand.
+- `dragTile` and `dragRow` carry out a real drop. They build the pasteboard from
+  the very closure the view's own `onDrag` uses and hand it to the destination
+  as a dragging info, so `draggingEntered`, `draggingUpdated` and
+  `performDragOperation` run exactly as they do under a pointer. Everything
+  drawn while the drag is in the air is real and can be photographed with
+  `hold`.
+
+What they do NOT do is synthesize the picture that follows the pointer during a
+drag. That lives in the window server and belongs to a session only a real
+device can start, so it is the one part of a panel drag a walk cannot see.
+
+Tiles and rows say their own names: each hangs an invisible marker behind itself
+(`PanelTarget.swift`) carrying the name a person reads and the same drag closure
+the pointer uses, so a walk can never pick up something a person could not.
 
 ## Things to know
 

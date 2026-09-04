@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:07:11.208Z",
-  "updated": "2026-09-03T12:08:27.298Z",
+  "updated": "2026-09-04T00:00:21.411Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review finding, 2026-09-03: five audits in one day admit the same blind spot. queue/audits/2026-09-03-knob-naming.json and 2026-09-03-component-choice-one-step.json (a menu inside the dock cannot be opened by a walk, so its rows are covered by a test rather than a picture), 2026-09-03-layers-tree.json (the harness drives the canvas, not the inspector, and cannot synthesise a panel drag, so the drop indicator picture came from a one-off), 2026-09-03-library.json (dragging a tile and double clicking a tile are both hand paths). 2026-09-03-readable-component-tiles.json also reports that focusing the Library search field hangs the app in a walk; the name field work later the same day (commit b4e804d) touched that box, so check whether it still hangs before assuming it does. The harness is Sources/Photonz/Playtest/PlaytestHarness.swift with its script model in PhotonzCore (PlaytestScript); actions are added in pairs, a pure step in the model and a driver in the harness.",
@@ -28,6 +28,35 @@
     {
       "t": "2026-09-03T12:08:27.297Z",
       "note": "seq 630 -> 30"
+    },
+    {
+      "t": "2026-09-04T00:00:21.411Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T00:38:33.888147Z",
+      "note": "Adversarial review before building. The task asks for two moves; walking them as a first-time walk author, a third was missing: nothing tells a walk what the tiles and rows are CALLED, so both moves would be unwritable. Added a `panel` step (the `menus` step for the dock) and made it the first thing the doc tells you to reach for. Rejected doing the drags by synthesizing mouse presses: AppKit will not start a drag session from a synthesized event, so nothing would have happened. Rejected lifting the layers list's drag state out of @State to drive it directly: it would have proved our own state machine rather than the drag."
+    },
+    {
+      "t": "2026-09-04T00:38:33.888147Z",
+      "note": "Reproduced the reported Library search hang first, before assuming it. It does NOT hang any more: focus + type into \"Search components\" narrows the shelf to one tile and the walk finishes. Fixed by the name field work of the same day. The walk now does it every run so it cannot come back quietly."
+    },
+    {
+      "t": "2026-09-04T00:38:33.888147Z",
+      "note": "Proved by experiment, not assumption, that clicking a SwiftUI Menu in the dock hangs the app: the click blocks in the menu's tracking loop and nothing on the main queue runs, so a deferred close never fires. The way out is perform(_:on:with:waitUntilDone:modes:) naming eventTracking by hand, which IS serviced. From in there the rows read, a screen capture can be started, and cancelTracking releases the click."
+    },
+    {
+      "t": "2026-09-04T00:38:33.888147Z",
+      "note": "Also proved the menu cannot be rendered offscreen: cacheDisplay of the NSPopupMenuWindow gives a blank white plate, because menu contents are drawn outside the process. It has to be a screen capture, and the capture has to be taken while the menu is still up (a first attempt photographed the window after it had closed)."
+    },
+    {
+      "t": "2026-09-04T00:38:33.888147Z",
+      "note": "Shipped. New steps: panel, panelMenu, dragTile, dragRow (+ a showMediaShelf action, since which scope the shelf opens on is remembered between runs and a walk needs to say). Core model + 9 tests in PhotonzCore; drivers in Sources/Photonz/Playtest (PanelTarget.swift, PlaytestPanelDrag.swift, PlaytestPanelMenu.swift, PlaytestHarness.swift). Tiles and rows carry an invisible marker holding the SAME onDrag closure the pointer uses. Walk: Scripts/playtest/panel-reach-walk.json. Audit: queue/audits/2026-09-03-panel-reach.json."
+    },
+    {
+      "t": "2026-09-04T00:38:33.888147Z",
+      "note": "Review of the built thing on the real app. Rough edges kept, not hidden: a menu opened in a walk flashes on the real screen for about half a second (unavoidable, menus are real windows); the picture that follows the pointer during a drag still does not exist in a walk; four capture tiles can all read \"yesterday\", so a tile can also be named by its file. Found while testing: a capture dropped on bare canvas ignores where you let go and lands centred. Pre-existing (Clipboard.swift placementForIncomingImage), filed as a-capture-dropped-on-the-picture-lands-where-you."
     }
-  ]
+  ],
+  "started": "2026-09-04T00:00:21.410Z"
 }

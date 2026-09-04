@@ -427,4 +427,106 @@ struct PlaytestScriptTests {
         guard case .drag(_, _, _, _, let hold) = script.steps[0] else { Issue.record("drag"); return }
         #expect(hold == nil)
     }
+
+    // MARK: - Reaching into the dock
+
+    @Test func aWalkCanOpenAMenuInsideThePanelAndPhotographIt() throws {
+        // Five audits in one day said the same thing: the words on a dock
+        // menu's rows could only be covered by a test, never shown.
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "Add", "shot": "add-menu" } ] }
+        """)
+        guard case .panelMenu(let menu, let shot, let choose) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(menu == "Add")
+        #expect(shot == "add-menu")
+        #expect(choose == nil)
+        #expect(script.steps[0].name == "panelMenu")
+    }
+
+    @Test func aPanelMenuStepCanPickOneOfItsRows() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "Add", "choose": "Label" } ] }
+        """)
+        guard case .panelMenu(_, let shot, let choose) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(shot == nil)
+        #expect(choose == "Label")
+    }
+
+    @Test func aPanelMenuStepMustNameTheMenu() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "panelMenu", "shot": "add-menu" } ] }
+            """)
+        }
+    }
+
+    @Test func aWalkCanDragATileOffTheLibraryOntoThePicture() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragTile", "tile": "Button", "to": [400, 300], "hold": "over-canvas" } ] }
+        """)
+        guard case .dragTile(let tile, let to, let hold) = script.steps[0] else {
+            Issue.record("dragTile"); return
+        }
+        #expect(tile == "Button")
+        #expect(to.point == CGPoint(x: 400, y: 300))
+        #expect(to.space == .document)
+        #expect(hold == "over-canvas")
+        #expect(script.steps[0].name == "dragTile")
+    }
+
+    @Test func aTileDragTakesTheSameViewSpaceEveryOtherPointDoes() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragTile", "tile": "Button", "to": [40, 30], "space": "view" } ] }
+        """)
+        guard case .dragTile(_, let to, let hold) = script.steps[0] else {
+            Issue.record("dragTile"); return
+        }
+        #expect(to.space == .view)
+        #expect(hold == nil)
+    }
+
+    @Test func aWalkCanDragOneLayerRowOntoAnother() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragRow", "row": "Label", "onto": "Card", "zone": "inside", "hold": "drop-line" } ] }
+        """)
+        guard case .dragRow(let row, let onto, let zone, let hold) = script.steps[0] else {
+            Issue.record("dragRow"); return
+        }
+        #expect(row == "Label")
+        #expect(onto == "Card")
+        #expect(zone == .inside)
+        #expect(hold == "drop-line")
+        #expect(script.steps[0].name == "dragRow")
+    }
+
+    @Test func aRowDragLandsAboveTheRowByDefault() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragRow", "row": "Label", "onto": "Card" } ] }
+        """)
+        guard case .dragRow(_, _, let zone, _) = script.steps[0] else { Issue.record("dragRow"); return }
+        #expect(zone == .above)
+    }
+
+    @Test func aRowDragRefusesAZoneThatIsNotOne() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dragRow", "row": "Label", "onto": "Card", "zone": "beside" } ] }
+            """)
+        }
+    }
+
+    @Test func aWalkCanListWhatThePanelIsShowing() throws {
+        // Naming a tile or a row is only possible when a walk can find out
+        // what they are called, the way `menus` does for the menu bar.
+        let script = try decode("""
+        { "steps": [ { "do": "panel", "stage": "shelf" } ] }
+        """)
+        guard case .panel(let stage) = script.steps[0] else { Issue.record("panel"); return }
+        #expect(stage == "shelf")
+        #expect(script.steps[0].name == "panel")
+    }
 }

@@ -447,6 +447,20 @@ private final class Run {
             try writePNG(image, name: name)
             note(number, step.name, "\(name).png \(image.width)x\(image.height) px")
 
+        case .panelMenu(let menu, let shot, let choose):
+            try await openPanelMenu(menu, shot: shot, choose: choose, number: number)
+
+        case .dragTile(let tile, let to, let hold):
+            try await dragTile(tile, to: to, hold: hold, number: number)
+
+        case .dragRow(let row, let onto, let zone, let hold):
+            try await dragRow(row, onto: onto, zone: zone, hold: hold, number: number)
+
+        case .panel(let stage):
+            let inventory = try readPanel()
+            write(json: inventory, to: "panel-\(stage).json")
+            note(number, step.name, Self.outlinePanel(inventory), state: inventory)
+
         case .describe(let stage, let text):
             note(number, stage, text ?? "", state: describe())
 
@@ -644,6 +658,10 @@ private final class Run {
                 editor.setLibraryVisible(true)
                 UserDefaults.standard.set(LibraryScope.components.rawValue,
                                           forKey: LibraryPanel.scopeKey)
+            case .showMediaShelf:
+                editor.setLibraryVisible(true)
+                UserDefaults.standard.set(LibraryScope.media.rawValue,
+                                          forKey: LibraryPanel.scopeKey)
             case .hideLibrary: editor.setLibraryVisible(false)
             case .placeLibraryPick: editor.placeLibraryPick()
             case .insertPickedComponent: editor.insertPickedComponent()
@@ -702,6 +720,268 @@ private final class Run {
             await sleep(0.2)
             note(number, step.name, action.rawValue, state: describe())
         }
+    }
+
+    // MARK: - The right hand panel
+
+    /// Every named thing the panel is showing right now, read fresh.
+    private func panelTargets() throws -> [PanelTargetView] {
+        guard let content = try requireWindow().contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        return Self.findAll(PanelTargetView.self, in: content)
+            .filter { $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
+    }
+
+    private func panelTarget(_ name: String, kind: PanelTargetKind) throws -> PanelTargetView {
+        let all = try panelTargets()
+        let ofKind = all.filter { $0.kind == kind }
+        // The name on screen first, then the steadier one beside it: a capture
+        // tile reads "10 hours ago" today and "yesterday" tomorrow, so a walk
+        // that has to keep working names it by its file instead.
+        guard let match = ofKind.first(where: { $0.name == name })
+                ?? ofKind.first(where: { $0.detail == name })
+                ?? ofKind.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
+            let seen = ofKind.map { $0.detail.isEmpty ? $0.name : "\($0.name) / \($0.detail)" }
+                .joined(separator: ", ")
+            throw Failure(description: "no \(kind.rawValue) called \"\(name)\" is in the panel; the ones that are: "
+                + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
+        }
+        return match
+    }
+
+    /// What the panel is showing, in the names a walk has to use.
+    private func readPanel() throws -> [String: Any] {
+        guard let content = try requireWindow().contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        func describe(_ target: PanelTargetView) -> [String: Any] {
+            let frame = target.convert(target.bounds, to: nil)
+            return ["name": target.name, "detail": target.detail,
+                    "canBeDragged": target.payload != nil,
+                    "x": Int(frame.midX.rounded()), "y": Int(frame.midY.rounded())]
+        }
+        let targets = try panelTargets()
+        return [
+            "tiles": targets.filter { $0.kind == .tile }.map(describe),
+            "rows": targets.filter { $0.kind == .row }.map(describe),
+            "menus": PlaytestPanelMenu.buttons(in: content)
+                .map { PlaytestPanelMenu.title(of: $0) }.filter { !$0.isEmpty },
+        ]
+    }
+
+    private static func outlinePanel(_ inventory: [String: Any]) -> String {
+        func names(_ key: String) -> String {
+            let list = (inventory[key] as? [[String: Any]] ?? []).map { entry -> String in
+                let name = entry["name"] as? String ?? "?"
+                let detail = entry["detail"] as? String ?? ""
+                return detail.isEmpty ? name : "\(name) (\(detail))"
+            }
+            return list.isEmpty ? "none" : list.joined(separator: ", ")
+        }
+        let menus = (inventory["menus"] as? [String] ?? [])
+        return "shelf tiles: \(names("tiles"))\nlayer rows: \(names("rows"))"
+            + "\nmenus: \(menus.isEmpty ? "none" : menus.joined(separator: ", "))"
+    }
+
+    /// A window's frame in the coordinates the screen recorder reads: the same
+    /// rectangle, measured from the TOP of the primary screen rather than the
+    /// bottom, which is the one place AppKit and the recorder disagree.
+    private static func screenFrame(of window: NSWindow) -> CGRect {
+        let frame = window.frame
+        let top = NSScreen.screens.first?.frame.maxY ?? frame.maxY
+        return CGRect(x: frame.minX, y: top - frame.maxY, width: frame.width, height: frame.height)
+    }
+
+    /// Opens a menu inside the window, photographs it, and closes it.
+    ///
+    /// The click never returns until the menu is closed, so the way out is
+    /// arranged before the click: a hop onto the main thread that names the
+    /// tracking run loop mode by hand, which is the one thing that still runs
+    /// while a menu is up.
+    private func openPanelMenu(_ name: String, shot: String?, choose: String?, number: Int) async throws {
+        let host = try requireWindow()
+        guard let content = host.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let buttons = PlaytestPanelMenu.buttons(in: content)
+        guard let button = buttons.first(where: { PlaytestPanelMenu.title(of: $0) == name })
+                ?? buttons.first(where: { PlaytestPanelMenu.title(of: $0).hasPrefix(name) }) else {
+            let seen = buttons.map { PlaytestPanelMenu.title(of: $0) }.filter { !$0.isEmpty }
+            throw Failure(description: "no menu called \"\(name)\" is in the window; the ones that are: "
+                + (seen.isEmpty ? "none" : seen.joined(separator: ", ")))
+        }
+        guard button.isEnabled else {
+            throw Failure(description: "the \"\(name)\" menu is dimmed, so it has nothing to open")
+        }
+        let shotURL = shot.map { out.appendingPathComponent("\($0)-sc.png") }
+        let noteURL = out.appendingPathComponent("panel-menu-shot.txt")
+        try? FileManager.default.removeItem(at: noteURL)
+        var reading = PlaytestMenuReading()
+
+        // Everything below runs INSIDE the menu's own event loop.
+        let hop = PlaytestTrackingHop {
+            let menu = button.menu
+            reading.rows = menu?.items.map(\.title) ?? []
+            reading.dimmed = menu?.items.filter { !$0.isEnabled }.map(\.title) ?? []
+            if let shotURL, let menuWindow = PlaytestPanelMenu.openMenuWindow() {
+                // The menu has to STAY up while its picture is taken, so the
+                // main thread waits here rather than letting the walk carry on
+                // and photograph a menu that has already gone. The screen
+                // recorder answers on its own queue, so nothing it needs is
+                // being held; the wait is bounded so a walk can never stall.
+                let finished = DispatchSemaphore(value: 0)
+                PlaytestPanelMenu.capture(menuWindow: menuWindow.windowNumber,
+                                          over: host.windowNumber,
+                                          host: Self.screenFrame(of: host),
+                                          to: shotURL) { outcome in
+                    try? Data(outcome.utf8).write(to: noteURL)
+                    finished.signal()
+                }
+                _ = finished.wait(timeout: .now() + 3)
+                reading.shot = shotURL.lastPathComponent
+            } else if shotURL != nil {
+                reading.problem = "the menu opened but showed in no window this app can see, so there is no picture"
+            }
+            if let choose {
+                if let index = menu?.items.firstIndex(where: { $0.title == choose }) {
+                    if menu?.items[index].isEnabled == true {
+                        menu?.performActionForItem(at: index)
+                        reading.chose = choose
+                    } else {
+                        reading.problem = "the row \"\(choose)\" is dimmed, so picking it would do nothing"
+                    }
+                } else {
+                    reading.problem = "no row called \"\(choose)\"; the rows are: "
+                        + reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", ")
+                }
+            }
+            menu?.cancelTracking()
+        }
+        // Long enough for the menu to be up and drawn, short enough that it is
+        // not sitting over whatever the person at this machine is looking at.
+        hop.schedule(after: 0.55)
+        button.performClick(nil)
+        await sleep(0.25)
+
+        // The picture is written on a background queue, so wait for its note.
+        var outcome = "no picture asked for"
+        if shot != nil {
+            outcome = "the picture never finished"
+            for _ in 0..<40 {
+                if let data = try? Data(contentsOf: noteURL), let text = String(data: data, encoding: .utf8) {
+                    outcome = text
+                    break
+                }
+                await sleep(0.1)
+            }
+            try? FileManager.default.removeItem(at: noteURL)
+        }
+        if let problem = reading.problem {
+            throw Failure(description: "the \"\(name)\" menu opened but \(problem)")
+        }
+        let rows = reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: " | ")
+        let dimmed = reading.dimmed.filter { !$0.isEmpty }
+        var detail = "\"\(name)\" opened with \(reading.rows.count) rows: \(rows)"
+        if !dimmed.isEmpty { detail += "; dimmed: \(dimmed.joined(separator: ", "))" }
+        if let chose = reading.chose { detail += "; picked \"\(chose)\"" }
+        detail += "; picture: \(outcome)"
+        note(number, "panelMenu", detail,
+             state: ["rows": reading.rows, "dimmed": reading.dimmed,
+                     "chose": reading.chose ?? NSNull(), "shot": reading.shot ?? NSNull()])
+    }
+
+    /// Picks a tile up off the Library shelf and lets it go on the picture,
+    /// through the canvas's own drag destination — the same calls a drag from
+    /// the Finder makes, pasteboard and all.
+    private func dragTile(_ name: String, to at: PlaytestPoint, hold: String?, number: Int) async throws {
+        let canvas = try requireCanvas()
+        let window = try requireWindow()
+        let target = try panelTarget(name, kind: .tile)
+        guard let payload = target.payload else {
+            throw Failure(description: "the tile \"\(name)\" cannot be picked up")
+        }
+        let board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "tile")
+        let viewPoint = try self.viewPoint(at)
+        let windowPoint = canvas.convert(viewPoint, to: nil)
+        let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
+        let entered = canvas.draggingEntered(info)
+        var updated = entered
+        // A few frames of hovering, so whatever the canvas draws while a drag
+        // is in the air is on screen and settled before the picture.
+        for _ in 0..<3 {
+            updated = canvas.draggingUpdated(info)
+            await sleep(0.05)
+        }
+        var held = ""
+        if let hold, let content = window.contentView {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        guard updated != [] else {
+            canvas.draggingExited(info)
+            throw Failure(description: "the canvas refused the tile \"\(name)\" at \(short(at.point)) \(at.space.rawValue)")
+        }
+        guard canvas.performDragOperation(info) else {
+            throw Failure(description: "the canvas would not take the tile \"\(name)\"")
+        }
+        await sleep(0.4)
+        let types = (board.types ?? []).map(\.rawValue).joined(separator: ", ")
+        note(number, "dragTile",
+             "\"\(name)\" carrying \(types) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
+             state: describe())
+    }
+
+    /// Picks a row up in the layers list and holds it over another row, then
+    /// lets go. The line that says what will happen is drawn by the same drop
+    /// delegate a pointer drives, so `hold` photographs the real thing.
+    private func dragRow(_ name: String, onto: String, zone: PlaytestDropZone,
+                         hold: String?, number: Int) async throws {
+        let window = try requireWindow()
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let source = try panelTarget(name, kind: .row)
+        let destination = try panelTarget(onto, kind: .row)
+        guard let payload = source.payload else {
+            throw Failure(description: "the row \"\(name)\" cannot be picked up")
+        }
+        let board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "row")
+        // Where in the row to aim: the list reads the pointer's height in the
+        // row, a third of it for each of above, inside and below.
+        let frame = destination.convert(destination.bounds, to: nil)
+        let fromTop: CGFloat = switch zone {
+        case .above: 0.15
+        case .inside: 0.5
+        case .below: 0.85
+        }
+        // The window's coordinates run bottom up, the row's reading runs top
+        // down, so the share is measured from the row's top edge.
+        let windowPoint = CGPoint(x: frame.midX, y: frame.maxY - frame.height * fromTop)
+        guard let dropView = PlaytestPanelDrag.destination(at: windowPoint, in: content) else {
+            throw Failure(description: "nothing at the row \"\(onto)\" takes drops")
+        }
+        let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
+        _ = dropView.draggingEntered(info)
+        var operation: NSDragOperation = []
+        for _ in 0..<3 {
+            operation = dropView.draggingUpdated(info)
+            await sleep(0.06)
+        }
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        let answered = operation == [] ? "refused" : "would take it"
+        let landed = dropView.performDragOperation(info)
+        await sleep(0.4)
+        note(number, "dragRow",
+             "\"\(name)\" let go \(zone.rawValue) \"\(onto)\": the list \(answered)"
+                + ", drop \(landed ? "landed" : "did not land")\(held)",
+             state: describe())
     }
 
     // MARK: - Opening

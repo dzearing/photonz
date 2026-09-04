@@ -386,13 +386,25 @@ private struct LibraryTile: View {
         // tile are picked up the same way. Nothing in here touches the app's
         // state: a change made while the drag is being handed over redraws the
         // tile and SwiftUI asks for the item all over again.
-        .onDrag {
-            NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
-        } preview: {
+        .onDrag(dragItem, preview: {
             thumbnail.frame(width: LibraryShelfLayout.tileMinimumWidth,
                             height: LibraryShelfLayout.thumbnailHeight)
-        }
+        })
         .help("\(item.name) • \(item.detail). Double click to place it.")
+        // The same closure a walk picks the tile up with, so an unmanned run
+        // can never drag something the pointer would not.
+        // The caption a person reads is "10 hours ago", which is no use to a
+        // walk written yesterday, so the file name goes alongside it and a walk
+        // may name the tile either way.
+        .playtestTarget(item.name, kind: .tile, detail: item.detail, payload: dragItem)
+    }
+
+    /// What dragging this tile hands over: the capture as the file it is, which
+    /// is the drop the canvas already takes from the Finder. Nothing in here
+    /// touches the app's state, so a change made while the drag is being handed
+    /// over redraws the tile and SwiftUI asks for the item all over again.
+    private func dragItem() -> NSItemProvider {
+        NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
     }
 
     /// The picture, filling a fixed 44pt-tall well and cropped to it. The

@@ -837,15 +837,23 @@ struct LayersListView: View {
         return VStack(spacing: 2) {
             ForEach(panelRows) { panelRow in
                 if let layer = editorState.document?.layer(id: panelRow.id) {
+                    // One closure for picking this row up, so a scripted walk
+                    // and a pointer start the very same drag.
+                    let pickUp: @MainActor () -> NSItemProvider = {
+                        draggingLayerID = panelRow.id
+                        dropTarget = nil
+                        return NSItemProvider(object: panelRow.id.uuidString as NSString)
+                    }
                     row(panelRow, layer, showsTwist: showsTwist)
-                        .onDrag {
-                            draggingLayerID = panelRow.id
-                            dropTarget = nil
-                            return NSItemProvider(object: panelRow.id.uuidString as NSString)
-                        }
+                        .onDrag(pickUp)
                         .onDrop(of: [.text], delegate: LayerRowDropDelegate(
                             row: panelRow, dragging: $draggingLayerID, target: $dropTarget,
                             rowHeight: rowHeight, editorState: editorState))
+                        .playtestTarget(layer.name, kind: .row,
+                                        detail: panelRow.isGroup
+                                            ? (panelRow.isExpanded ? "group, open" : "group, shut")
+                                            : "layer",
+                                        payload: pickUp)
                 }
             }
             // The Canvas pseudo-layer: pinned at the very bottom (beneath the

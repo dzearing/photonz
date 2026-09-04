@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/panel-reach",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "panel", "stage": "1-shelf" },
+
+    { "do": "focus", "field": "Search components" },
+    { "do": "type", "text": "but" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "2-searched" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "dragTile", "tile": "Button", "to": [420, 300], "hold": "1-tile-in-the-air" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2-tile-landed" },
+    { "do": "describe", "stage": "2-tile-landed", "note": "the Button tile was dragged off the shelf and let go at 420,300" },
+
+    { "do": "action", "action": "selectComponentOriginal" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelMenu", "menu": "Add", "shot": "3-add-menu" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-menu-closed", "note": "the Add menu opened, was photographed, and closed with nothing chosen" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [800, 200], "to": [1000, 340] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [800, 400], "to": [1000, 540] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [900, 270] },
+    { "do": "click", "at": [900, 470], "modifiers": ["shift"] },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [500, 700], "to": [660, 800] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "panel", "stage": "4-rows" },
+    { "do": "describe", "stage": "4-before-row-drag", "note": "a group of two rectangles, plus a loose one to drag into it" },
+
+    { "do": "dragRow", "row": "Rectangle 3", "onto": "Background", "zone": "above", "hold": "4-drop-line-above" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "dragRow", "row": "Rectangle 3", "onto": "Group", "zone": "inside", "hold": "4-drop-line-inside" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "5-row-landed" },
+    { "do": "describe", "stage": "5-row-landed", "note": "Rectangle 3 was dragged onto the Group row and let go inside it" },
+    { "do": "panel", "stage": "5-rows-after" }
+  ]
+}

@@ -666,6 +666,8 @@ struct LibraryStyleTile: View {
         .contentShape(Rectangle())
         .onTapGesture { editorState.selectLibraryItem(entry.id) }
         .help("\(entry.name) • \(style.colorHex) • \(entry.detail)")
+        // Named for a walk, with no payload: a style tile is not picked up.
+        .playtestTarget(entry.name, kind: .tile, detail: "Styles")
     }
 }
 

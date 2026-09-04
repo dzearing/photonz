@@ -1,0 +1,28 @@
+{
+  "id": "a-capture-dropped-on-the-picture-lands-where-you",
+  "title": "A capture dropped on the picture lands where you let go of it",
+  "goal": "Drag a screenshot from the Library shelf onto the canvas and it does not land under the pointer: it jumps to the middle of the picture, scaled to fit. Anywhere else in the app, letting go of something puts it where you let go. Make a dropped capture behave the same way.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 990,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T00:38:16.399Z",
+  "updated": "2026-09-04T00:38:16.399Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the panel-reach walk on 2026-09-03. PhotonzDocument.placementForIncomingImage (Sources/PhotonzCore/Clipboard.swift:73) ignores the drop point entirely when there is no frame under it: it returns PastePlacement.frame(forImageOf:canvas:), which centres and fits. With a frame under the point it DOES honour the point (clamped to the frame). So the fix is the no-frame branch. Reproduce: Scripts/playtest.sh with a dragTile step onto a blank canvas; the layer reads X 412 Y 0 W 617 H 1024 for a drop aimed at 500,400.",
+  "acceptance": [
+    "Dragging a capture from the shelf onto bare canvas leaves it centred on the point it was let go of",
+    "A capture bigger than the canvas is still scaled down to fit, but around the drop point rather than the canvas centre",
+    "Dropping a file from the Finder behaves the same way as dropping a tile",
+    "A scripted walk proves it with a picture"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T00:38:16.399Z",
+      "note": "created (manual)"
+    }
+  ]
+}

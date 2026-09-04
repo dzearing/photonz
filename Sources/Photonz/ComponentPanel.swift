@@ -365,14 +365,23 @@ struct LibraryComponentTile: View {
         // tile up looks like picking anything up on a Mac. Nothing in here
         // touches the app's state: a change made while the drag is being handed
         // over redraws the tile and SwiftUI asks for the item all over again.
-        .onDrag {
-            guard let componentID = layer.componentID else { return NSItemProvider() }
-            return ComponentDrag.itemProvider(componentID: componentID)
-        } preview: {
+        .onDrag(dragItem, preview: {
             thumbnail.frame(width: max(wellWidth, LibraryShelfLayout.tileMinimumWidth),
                             height: LibraryShelfLayout.thumbnailHeight)
-        }
+        })
         .help(helpText)
+        // The same closure a walk picks the tile up with, so an unmanned run
+        // can never drag something the pointer would not.
+        .playtestTarget(entry.name, kind: .tile, detail: "Components", payload: dragItem)
+    }
+
+    /// What dragging this tile hands over: the component itself, so the canvas
+    /// places a copy where it lands. Nothing in here touches the app's state, so
+    /// a change made while the drag is being handed over redraws the tile and
+    /// SwiftUI asks for the item all over again.
+    private func dragItem() -> NSItemProvider {
+        guard let componentID = layer.componentID else { return NSItemProvider() }
+        return ComponentDrag.itemProvider(componentID: componentID)
     }
 
     /// The picture of the component itself.
