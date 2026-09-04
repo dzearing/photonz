@@ -1,0 +1,29 @@
+{
+  "feature": "The panel comes back with the selection, not instead of it",
+  "epic": "ui-components",
+  "summary": "Clicking a layer after nothing was selected used to be the slowest click in the app, because the whole right hand panel had to be built inside that click. The panel's brand new sections now wait a beat and the picture goes first, so the worst frame of that click is the same as any other click's.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flag: this is how the dock schedules itself. Open any document and draw a few shapes, then group two of them.",
+  "try": [
+    { "do": "Click a shape, then click empty canvas so nothing is selected. The panel drops to Layers and Library.", "shot": "2026-09-04-panel-arrival-deselected.png" },
+    { "do": "Click the shape again. Handles and the highlight land, then Position & Size, Layout, Effects and Shadow fill in behind them.", "shot": "2026-09-04-panel-arrival-reselected.png" },
+    { "do": "Do that five or six times in a row, at speed. Watch whether the click ever feels like it stopped to think." },
+    { "do": "Now click straight from one shape to another without deselecting. That click was already the fast one; check it did not get slower." },
+    { "do": "Click empty canvas again. The sections should go the instant you click, not a beat later." },
+    { "do": "Type a number into X in Position & Size, then click away and back. The field should come back with the value you typed and nothing blank." },
+    { "do": "Press M for the Measure tool with nothing selected. Its section arrives the same way." }
+  ],
+  "evaluate": [
+    "Does the click that brings the panel back still feel heavier than a click that only moves the selection, or do they feel the same now?",
+    "Did you ever catch the panel arriving a beat behind the handles, or is it invisible?",
+    "Sections leaving is instant and sections arriving is a beat late. Does that asymmetry read as wrong anywhere?",
+    "Clicking a layer is still slower than it should be in absolute terms. Is what is left annoying enough to be worth another pass at it?"
+  ],
+  "rough": [
+    "Measured on the probe with Scripts/playtest/select-click-perf-walk.json, same walk before and after. Come-back click: longest run-loop pass 62.9, 59.7, 65.9ms before, 44.5, 43.9, 42.9ms after. A click that only moves the selection: 44.3, 42.3, 45.3ms before, 43.9, 43.7, 45.4ms after, so it was not slowed down. The longest pass is the one that drops frames, and the two clicks now cost the same.",
+    "Total main-thread time per come-back click did NOT drop: about 86ms before, about 81ms after. The panel's five sections still cost about 22ms to build, that work just happens in the pass after the click instead of inside it. The task asked for parity and this is parity on the frame that gets dropped, not on the total.",
+    "The handles do not literally land in the first frame after the click. The click's own pass is still about 44ms because the whole dock re-runs for the Layers list, which is the separate queued task 'a layers list with many rows costs no more per click'. What this change bought is roughly 20ms off the front of that.",
+    "Considered and rejected: keeping the sections mounted and hidden while nothing is selected. It would leave Position & Size, Effects and Shadow standing over nothing, which is exactly the sort of panel describing something that is not there that got reported before, and it moves the cost onto every click instead of one.",
+    "Screen Recording was granted, so both shots are real window captures.",
+    "If the second pass is ever delayed, the panel would be visibly short for that moment. Nothing in the walk showed it, but it is the failure mode to watch for."
+  ]
+}

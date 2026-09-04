@@ -55,12 +55,25 @@ struct InspectorPanel: View {
     /// Scratch measurements for the Library reveal. A reference on purpose:
     /// see the note at the geometry reader.
     @State private var reveal = DockRevealScratch()
+    /// Which sections have been built, so a new one can arrive a pass after
+    /// the click rather than inside it. See `PanelSectionArrival`.
+    @State private var arrivals = DockArrivals()
+    /// Bumped to draw the pass that mounts the sections held back above. The
+    /// value means nothing; changing it is the whole point.
+    @State private var arrivalPass = 0
 
     var body: some View {
+        // The sections the selection asks for, and the ones the dock may draw
+        // this pass. They are the same list except in the pass right after a
+        // click that brings new sections in, when the canvas gets the frame to
+        // itself and the panel follows in the next one.
+        let wanted = orderedAvailableSections
+        let sections = arrivals.showing(wanted)
+        let _ = arrivalPass // the catch-up pass reads its own trigger
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(orderedAvailableSections, id: \.self) { id in
+                    ForEach(sections, id: \.self) { id in
                         CollapsibleSection(
                             title: sectionTitle(id),
                             isCollapsed: isCollapsed(id),
@@ -107,7 +120,19 @@ struct InspectorPanel: View {
                 reveal.viewportHeight = $0
                 recordInspectorViewportHeight($0)
             }
-            .inspectorLayoutProbe(sections: orderedAvailableSections)
+            .inspectorLayoutProbe(sections: sections)
+            // A section the selection asked for that has not been built yet
+            // gets the next pass to itself. Departures are already on screen by
+            // now (they leave in the click's own pass), so this only ever fires
+            // for arrivals, and a click that keeps the same sections — moving
+            // the selection from one group to another — never reaches it at all.
+            .onChange(of: wanted) { _, latest in
+                guard arrivals.isWaiting(for: latest) else { return }
+                DispatchQueue.main.async {
+                    arrivals.allow(latest)
+                    arrivalPass &+= 1
+                }
+            }
             // The app opened the Library for you: put it where you can see it.
             // On appear too, because showing the shelf opens the dock as well,
             // and then this panel is born with the request already waiting.
@@ -453,6 +478,41 @@ struct InspectorPanel: View {
     var libraryFrame: CGRect?
     var viewportHeight: CGFloat = 0
     var isPending = false
+}
+
+/// Which dock sections have actually been built, so a brand new one can wait a
+/// beat before it is. The rule and the reason are in
+/// `PanelSectionArrival`; this is only the bookkeeping the panel needs to
+/// apply it.
+///
+/// Deliberately NOT observed state. The list has to be recorded on every body
+/// pass, and re-drawing the whole dock to write down what it has just drawn
+/// would cost more than the pass this exists to save. The one moment it needs
+/// to force a re-draw — the pass that mounts the sections it held back — the
+/// panel does with its own `@State` counter.
+@MainActor private final class DockArrivals {
+    private var mounted: [InspectorSectionID] = []
+
+    /// The sections the dock may draw this pass, and a note of them for the
+    /// next one. Safe to call more than once per pass: the answer does not
+    /// change until `allow` opens the gate.
+    func showing(_ target: [InspectorSectionID]) -> [InspectorSectionID] {
+        let raw = PanelSectionArrival.showing(target: target.map(\.rawValue),
+                                              mounted: mounted.map(\.rawValue))
+        let sections = raw.compactMap(InspectorSectionID.init(rawValue:))
+        mounted = sections
+        return sections
+    }
+
+    /// True when `target` asks for a section that has not been built, so the
+    /// panel owes it one more pass.
+    func isWaiting(for target: [InspectorSectionID]) -> Bool {
+        PanelSectionArrival.isWaiting(target: target.map(\.rawValue),
+                                      mounted: mounted.map(\.rawValue))
+    }
+
+    /// Let everything the selection asked for be built on the next pass.
+    func allow(_ target: [InspectorSectionID]) { mounted = target }
 }
 
 /// The dock's scrolling area as a coordinate space, so a section can say where

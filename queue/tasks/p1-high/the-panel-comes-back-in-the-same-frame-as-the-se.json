@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 15,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T01:26:57.419Z",
-  "updated": "2026-09-04T01:26:57.481Z",
+  "updated": "2026-09-04T02:08:34.198Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the selection latency work merged 2026-09-04, which took the common click from 63ms of main thread work to 46ms but left this one at a 53ms run loop pass. Cause is section creation: Position and Size, Effects, Shadow and Component all mount at once. Two options the runner should weigh and record: keep those sections mounted and hidden, or hand the dock its update one run loop pass after the canvas so handles land first. Measure with Scripts/playtest/select-click-perf-walk.json, which reports mainBusy and the longest pass per click.",
@@ -27,6 +27,39 @@
     {
       "t": "2026-09-04T01:26:57.480Z",
       "note": "seq 170 -> 15"
+    },
+    {
+      "t": "2026-09-04T02:08:34.198Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T02:19:22.202471Z",
+      "note": "Adversarial review before building. Option A from the notes (keep the sections mounted and hidden) was rejected on UX grounds, not perf: Position & Size, Effects and Shadow standing over nothing is a panel describing something that is not there, which the user has already reported once, and it moves the build cost onto every click instead of one. Option B (hand the dock its new sections one run-loop pass after the canvas) is the shortest version that delivers the value, so that is what was built. Departures are deliberately NOT deferred: a Shadow section left standing over an empty selection for a frame is worse than a briefly shorter panel."
+    },
+    {
+      "t": "2026-09-04T02:19:22.202471Z",
+      "note": "Baseline on the probe with Scripts/playtest/select-click-perf-walk.json. Come-back click (300,270) after a deselect: mainBusy 85.8/85.2/91.1ms, longest pass 62.9/59.7/65.9ms, 3 passes. A click that only moves the selection (950,520): mainBusy 60.3/57.0/61.6ms, longest 44.3/42.3/45.3ms. Dock goes from 2 sections (Layers, Library) to 7, so five sections mount inside the click."
+    },
+    {
+      "t": "2026-09-04T02:19:22.202471Z",
+      "note": "Built: PhotonzCore/PanelSectionArrival.swift (pure, 10 tests) decides what the dock may draw this pass; DockArrivals in LayersPanel.swift keeps the bookkeeping outside observed state so recording it costs no re-draw; InspectorPanel draws PanelSectionArrival.showing(...) and bumps a @State counter one main-queue hop later to draw the pass that mounts what it held back. A click that keeps the same section list never reaches any of it."
+    },
+    {
+      "t": "2026-09-04T02:19:22.202471Z",
+      "note": "After, same walk: come-back click mainBusy 87.5/89.0/66.4ms, longest pass 44.5/43.9/42.9ms over 6/6/4 passes. Move-selection click unchanged at longest 43.9/43.7/45.4ms. So the frame-dropping pass is now identical between the two clicks; total main-thread time is unchanged because the five sections still genuinely cost about 22ms to build, they just build after the canvas has drawn."
+    },
+    {
+      "t": "2026-09-04T02:19:22.202471Z",
+      "note": "Acceptance, honestly: (1) met on the longest run-loop pass, which is the frame that gets dropped, NOT met on total main-thread time; the audit says so in plain words. (2) partly: the handles land about 20ms earlier and before the panel finishes, but not inside one frame, because the click's own pass still re-runs the whole dock for the Layers list, which is the already-queued task a-layers-list-with-many-rows-costs-no-more-per-c. (3) verified with a second walk: no animation on the section set, so nothing slides or jumps, and the dock settles at Layers, Position & Size, Layout, Effects, Shadow, Library with every field filled (screenshot in the audit). (4) numbers before and after are in queue/audits/2026-09-04-panel-arrival.json."
+    },
+    {
+      "t": "2026-09-04T02:19:22.202471Z",
+      "note": "InspectorPanel is shared between Current and Next rather than forked. This is scheduling, not behavior, and forking the whole dock to change when a section mounts would be a large duplication for no visible difference; the same shared files were changed by the selection latency work on 2026-09-04. Both releases get it."
+    },
+    {
+      "t": "2026-09-04T02:19:22.202471Z",
+      "note": "Scripts/test.sh green: 2626 tests in 234 suites."
     }
-  ]
+  ],
+  "started": "2026-09-04T02:08:34.198Z"
 }

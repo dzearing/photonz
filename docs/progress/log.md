@@ -7260,3 +7260,44 @@ undo step per frame; coalescing is queued), and gradients in a slot are queued.
 Verified: `Scripts/test.sh` green (2616 tests), three walks on the probe with
 real screen captures in light and dark from the Fill row and the Shadow row.
 Audit: `queue/audits/2026-09-04-one-color-picker.json`.
+
+## 2026-09-04 — The panel comes back with the selection, not instead of it
+
+Follow-up to the selection latency work earlier the same day. That left one
+click still stalling: the one that brings the whole right dock back after a
+deselect. Five sections (Position & Size, Layout, Component, Effects, Shadow)
+were being built from nothing inside the click, and the click waited for all of
+them.
+
+Rule now: **a section the dock already has answers in the click's own pass; a
+section that has to be made from nothing waits one run-loop pass.** Departures
+are not deferred — a Shadow section standing over an empty selection for a frame
+would be describing something that is not there.
+
+`PhotonzCore/PanelSectionArrival.swift` is the pure decision (10 tests).
+`DockArrivals` in `LayersPanel.swift` keeps the "what is mounted" bookkeeping
+OUTSIDE observed state, because recording it on every body pass must not itself
+re-draw the dock; the one moment it needs a re-draw — the pass that mounts what
+it held back — the panel forces with its own `@State` counter. A click that
+keeps the same section list never reaches any of this.
+
+Measured on the probe, `Scripts/playtest/select-click-perf-walk.json`, same walk
+both sides. Come-back click: longest run-loop pass 62.9/59.7/65.9ms → 
+44.5/43.9/42.9ms. A click that only moves the selection: 44.3/42.3/45.3ms →
+43.9/43.7/45.4ms, i.e. untouched. The two clicks now cost the same on the frame
+that gets dropped.
+
+Total main-thread time per come-back click is unchanged (~86ms → ~81ms): the
+five sections still genuinely cost ~22ms to build, that work just happens after
+the canvas has drawn. The click's own pass is still ~44ms because the whole dock
+re-runs for the Layers list, which is the separate queued task "a layers list
+with many rows costs no more per click".
+
+Rejected: keeping the sections mounted and hidden. It puts dead controls over
+nothing and moves the cost onto every click instead of one.
+
+Shared between Current and Next rather than forked — this is scheduling, not
+behavior.
+
+Verified: `Scripts/test.sh` green (2626 tests), two walks on the probe with real
+screen captures. Audit: `queue/audits/2026-09-04-panel-arrival.json`.
