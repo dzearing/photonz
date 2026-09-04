@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T07:27:44.952Z",
-  "updated": "2026-09-04T09:25:22.752Z",
+  "updated": "2026-09-04T09:37:28.002Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fallout from a-callout-ring-has-one-color-not-two. Shape now lives only in CalloutInspector (Sources/Photonz/CalloutInspector.swift), which needs a callout picked. The other tools keep their defaults in AnnotationStyles/UserDefaults; a callout has no equivalent, ZoomCalloutBuilder.layer always takes the default ZoomCalloutContent shape (.rectangle). Worth asking whether anyone wants circles at all before building the remembered-default plumbing.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-04T09:37:08.455Z",
       "note": "Acceptance: (1) the tool remembers the shape, proved across two drags and persisted to UserDefaults; (2) the choice is reachable with nothing drawn, the Zoom Callout Tool section; (3) a placed callout still switches in its own Zoom Callout section, unchanged. Full suite green, 2879 tests. Audit at queue/audits/2026-09-04-callout-shape.json with two window captures."
+    },
+    {
+      "t": "2026-09-04T09:37:28.001Z",
+      "note": "The Zoom Callout tool carries a Shape row (Rectangle/Circle) in the inspector while it is in hand, remembers the choice across callouts and relaunches, and the drag preview plus the landing animation follow it. Behind next-callout-shape, on by default in Next. Verified live in the probe (Scripts/playtest/callout-shape-walk.json, real window captures); 2879 tests green; audit at queue/audits/2026-09-04-callout-shape.json; pushed as b3bc50a."
     }
   ],
-  "started": "2026-09-04T09:25:22.752Z"
+  "started": "2026-09-04T09:25:22.752Z",
+  "completed": "2026-09-04T09:37:28.002Z"
 }

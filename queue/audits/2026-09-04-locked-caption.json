@@ -1,0 +1,27 @@
+{
+  "feature": "The Position and Size panel says when a layer is locked",
+  "epic": "ui-building",
+  "summary": "Select a locked layer and the line under the Position and Size fields now says the layer is locked and how to unlock it, instead of describing arrow keys that step nothing. Unlocked layers read exactly as before.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. Any capture you open has a locked Background row already.",
+  "try": [
+    { "do": "Open a screenshot, draw a rectangle on it, and read the line under the X, Y, W and H fields." },
+    { "do": "Click the Background row in the Layers list, which carries a lock." },
+    { "do": "Read the same line again: it should say the layer is locked and where to unlock it.", "shot": "2026-09-04-locked-caption-1.png" },
+    { "do": "Click the lock on the Background row to unlock it, and watch the line go back to the arrow key wording." },
+    { "do": "Lock it again, then Command click the Rectangle row so both are picked.", "shot": "2026-09-04-locked-caption-2.png" },
+    { "do": "Read the line: with one layer still typeable it goes back to the ordinary two layer wording." },
+    { "do": "Lock the Rectangle too, pick both, and read the line once more." }
+  ],
+  "evaluate": [
+    "With a locked layer picked, do you now find out it is locked without hovering a field?",
+    "The line repeats the words the hover tip uses. Does saying it twice help, or does it read as clutter?",
+    "The numbers stay on screen and stay readable for a locked layer. Is that the right call, or would you rather they emptied?",
+    "One locked layer among unlocked ones keeps the ordinary wording, because the fields still work. Is that what you would expect?"
+  ],
+  "rough": [
+    "Two locked layers picked together say \"2 locked layers. Unlock them in the Layers list to change their position or size.\" The task only asked for the single layer case, but leaving the multi selection saying \"Arrow steps them all by 1\" would have been the same untruth one click away.",
+    "A layer a stack or a grid owns still gets the ordinary wording even though X and Y take nothing, because W and H still do and the arrow keys still step them. Its reason stays on hover.",
+    "The sentence wraps to two lines in the panel, which is the widest the caption has ever been. It sits fine at the default panel width.",
+    "Verified in the probe app with a scripted walk (Scripts/playtest/locked-caption-walk.json); both screenshots are real window captures, not offscreen renders."
+  ]
+}

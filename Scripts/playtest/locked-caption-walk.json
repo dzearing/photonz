@@ -1,0 +1,23 @@
+{
+  "out": "/tmp/photonz-playtest/locked-caption",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "panel", "stage": "rows" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [400, 300], "to": [700, 500] },
+    { "do": "tool", "tool": "select" },
+    { "do": "describe", "stage": "unlocked", "note": "control: an ordinary shape, caption should explain the numbers and the arrow keys" },
+    { "do": "snapshot", "name": "unlocked-caption" },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "describe", "stage": "locked", "note": "the locked background: the caption should say it is locked" },
+    { "do": "snapshot", "name": "locked-caption" },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "selectRow", "row": "Rectangle", "modifiers": ["command"] },
+    { "do": "describe", "stage": "mixed", "note": "one locked and one not: the fields still work, so the caption is the ordinary one" },
+    { "do": "snapshot", "name": "mixed-caption" }
+  ]
+}

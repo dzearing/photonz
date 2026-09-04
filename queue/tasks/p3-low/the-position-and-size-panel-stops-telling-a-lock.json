@@ -5,24 +5,50 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T07:54:00.144Z",
-  "updated": "2026-09-04T07:54:00.144Z",
+  "updated": "2026-09-04T09:44:33.665Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-04 finishing the locked-layer handles task. GeometryInspector.caption() ignores the selection entirely for a single layer; LayerGeometry already has lockedReason and fixedReason(for:), which is what the hover tip reads. The caption is the place to surface it. LayerGeometrySelection is in PhotonzCore and tested, so the wording choice belongs there behind a test.",
   "acceptance": [
     "With a locked layer selected, the caption under the Position and Size fields says the layer is locked instead of describing arrow key stepping.",
     "The caption goes back to the normal wording as soon as the selection is not locked.",
-    "Nothing changes for an unlocked layer, a multi-selection, or a layer inside a stack or grid, which already have their own wording.",
+    "Nothing changes for an unlocked layer, a selection where at least one layer still takes a number, or a layer a stack or grid owns, which keeps its own wording on hover.",
     "Scripts/test.sh green."
   ],
   "log": [
     {
       "t": "2026-09-04T07:54:00.144Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T09:37:50.729Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T09:44:29.610178Z",
+      "note": "Adversarial pass before building: the caption is the only line in the section that is not selection-aware, and for a locked layer both of its claims are false (nothing takes a number, no arrow steps anything). Shortest right rule: the caption reports the lock when a lock is what is stopping the WHOLE panel. A stack-owned layer is deliberately left alone: X and Y are fixed but W and H still type and still step, so the arrow wording is true and the stack's reason belongs on hover where it already is."
+    },
+    {
+      "t": "2026-09-04T09:44:29.610178Z",
+      "note": "Widened acceptance item 3 by one case: a multi-selection where EVERY layer is locked now says so too. Leaving it would have kept the same untruth (\"Arrow steps them all by 1\") one Command-click away, for three lines of code. A partly locked selection is untouched, which is what the item was protecting."
+    },
+    {
+      "t": "2026-09-04T09:44:29.610178Z",
+      "note": "Built: LayerGeometryEditing.isLocked, LayerGeometrySelection.isLocked and .caption (the whole caption moved into PhotonzCore so the wording is tested next to the behaviour); GeometryInspector now reads selection.caption. Single locked layer gets the same sentence the hover tip gives, so the panel says one thing."
+    },
+    {
+      "t": "2026-09-04T09:44:29.610178Z",
+      "note": "Verified: 8 new tests in LayerGeometrySelectionTests, Scripts/test.sh green (2887 tests). Live in the probe app via Scripts/playtest/locked-caption-walk.json with Screen Recording granted: locked layer reads \"This layer is locked. Unlock it in the Layers list to change its position or size.\", unlocked reads \"px from the top left. Up or down arrow steps by 1, Shift by 10.\", mixed selection keeps the two-layer wording. Audit: queue/audits/2026-09-04-locked-caption.json."
+    },
+    {
+      "t": "2026-09-04T09:44:33.665Z",
+      "note": "The Position and Size caption now says a locked layer is locked, in the same words the hover tip uses, instead of describing arrow keys that step nothing. Caption logic moved into LayerGeometrySelection (PhotonzCore) behind 8 new tests; Scripts/test.sh green (2887 tests); verified live in the probe app with a real window capture (Scripts/playtest/locked-caption-walk.json). Audit: queue/audits/2026-09-04-locked-caption.json."
     }
-  ]
+  ],
+  "started": "2026-09-04T09:37:50.728Z",
+  "completed": "2026-09-04T09:44:33.665Z"
 }

@@ -71,6 +71,37 @@ public struct LayerGeometrySelection: Hashable, Sendable {
 
     public var isEmpty: Bool { members.isEmpty }
 
+    /// Whether a lock is what is stopping the whole panel. True only when
+    /// every picked layer is locked, because a lock on one of four layers
+    /// still leaves a field that takes a number.
+    public var isLocked: Bool {
+        !members.isEmpty && members.allSatisfy(\.editing.isLocked)
+    }
+
+    /// The line under the fields: what the numbers mean, in words.
+    ///
+    /// With one layer picked that is where the layer sits on the picture; with
+    /// several it has to say that a number lands on every one of them, and
+    /// which edge each letter is, or "type 24 into X" reads as a guess.
+    ///
+    /// A locked selection gets neither, because both would be a lie: nothing
+    /// here takes a number and no arrow key steps anything. It says the lock
+    /// instead, in the same words the hover tip uses, so the reason is where
+    /// the eye already is rather than one hover away.
+    public var caption: String {
+        if isLocked {
+            guard count > 1 else { return LayerGeometryEditing.lockedReason }
+            return "\(count) locked layers. Unlock them in the Layers list to "
+                + "change their position or size."
+        }
+        guard count > 1 else {
+            return "\(LayerGeometry.unitSuffix) from the top left. "
+                + "Up or down arrow steps by 1, Shift by 10."
+        }
+        return "\(count) layers, all at once. X sets every left edge, Y every top edge, "
+            + "W and H each layer's own size. Arrow steps them all by 1, Shift by 10."
+    }
+
     /// The layers a given field actually changes.
     public func members(taking field: LayerGeometryField) -> [Member] {
         members.filter { $0.editing.allows(field) }

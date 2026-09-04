@@ -22,6 +22,10 @@ import SwiftUI
 /// four accept typing is `LayerGeometryEditing`'s call: a field is typeable
 /// exactly where the canvas already lets you drag the same thing, and one that
 /// is not says why on hover rather than sitting there dead.
+///
+/// The line under the fields is `LayerGeometrySelection.caption`, so what the
+/// panel says is decided and tested next to what it does. A locked layer says
+/// it is locked there rather than describing arrow keys that step nothing.
 struct GeometryInspector: View {
     @Environment(EditorState.self) private var editorState
 
@@ -41,25 +45,13 @@ struct GeometryInspector: View {
                 field(.width, selection)
                 field(.height, selection)
             }
-            Text(caption(selection))
+            Text(selection.caption)
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-    }
-
-    /// What the numbers mean, in words. With one layer picked that is where
-    /// the layer sits on the picture; with several it has to say that a number
-    /// lands on every one of them, and which edge each letter is, or "type 24
-    /// into X" reads as a guess.
-    private func caption(_ selection: LayerGeometrySelection) -> String {
-        guard selection.count > 1 else {
-            return "\(LayerGeometry.unitSuffix) from the top left. Up or down arrow steps by 1, Shift by 10."
-        }
-        return "\(selection.count) layers, all at once. X sets every left edge, Y every top edge, "
-            + "W and H each layer's own size. Arrow steps them all by 1, Shift by 10."
     }
 
     private func field(_ field: LayerGeometryField,

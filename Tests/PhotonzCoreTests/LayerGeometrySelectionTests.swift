@@ -312,4 +312,85 @@ struct LayerGeometrySelectionTests {
         let box = CGRect(x: 0, y: 0, width: 200, height: 40)
         #expect(LayerGeometrySelection([member(rectangle(box), box)]).note(for: .width) == nil)
     }
+
+    // MARK: The line under the fields
+
+    @Test("One layer's caption says what the numbers mean and how to step them")
+    func oneLayerCaptionExplainsTheNumbers() {
+        let frame = CGRect(x: 12, y: 34, width: 296, height: 118)
+        #expect(selection([frame]).caption
+                == "\(LayerGeometry.unitSuffix) from the top left. Up or down arrow steps by 1, Shift by 10.")
+    }
+
+    @Test("A locked layer's caption says it is locked, where you are already looking")
+    func aLockedLayerSaysSoInTheCaption() {
+        let frame = CGRect(x: 12, y: 34, width: 296, height: 118)
+        let sel = LayerGeometrySelection([member(rectangle(frame, locked: true), frame)])
+        #expect(sel.isLocked)
+        // The same sentence the hover tip gives, so the panel says one thing.
+        #expect(sel.caption == LayerGeometryEditing.lockedReason)
+    }
+
+    @Test("Unlocking the layer puts the ordinary caption straight back")
+    func unlockingRestoresTheOrdinaryCaption() {
+        let frame = CGRect(x: 12, y: 34, width: 296, height: 118)
+        var layer = rectangle(frame, locked: true)
+        #expect(LayerGeometrySelection([member(layer, frame)]).isLocked)
+        layer.isLocked = false
+        let sel = LayerGeometrySelection([member(layer, frame)])
+        #expect(!sel.isLocked)
+        #expect(sel.caption == selection([frame]).caption)
+    }
+
+    @Test("Several layers still say that one number lands on all of them")
+    func manyLayersKeepTheirOwnCaption() {
+        let sel = selection([CGRect(x: 0, y: 0, width: 120, height: 32),
+                             CGRect(x: 0, y: 40, width: 120, height: 32)])
+        #expect(!sel.isLocked)
+        #expect(sel.caption.hasPrefix("2 layers, all at once."))
+        #expect(sel.caption.contains("Shift by 10"))
+    }
+
+    @Test("A selection that is locked all the way through says so once, not per layer")
+    func everyLayerLockedSaysSoOnce() {
+        let a = CGRect(x: 0, y: 0, width: 120, height: 32)
+        let b = CGRect(x: 0, y: 40, width: 120, height: 32)
+        let sel = LayerGeometrySelection([member(rectangle(a, locked: true), a),
+                                          member(rectangle(b, locked: true), b)])
+        #expect(sel.isLocked)
+        #expect(sel.caption
+                == "2 locked layers. Unlock them in the Layers list to change their position or size.")
+    }
+
+    @Test("One locked layer among unlocked ones leaves the caption alone, because the fields still work")
+    func aPartlyLockedSelectionKeepsTheOrdinaryCaption() {
+        let a = CGRect(x: 0, y: 0, width: 120, height: 32)
+        let b = CGRect(x: 0, y: 40, width: 120, height: 32)
+        let sel = LayerGeometrySelection([member(rectangle(a, locked: true), a),
+                                          member(rectangle(b), b)])
+        #expect(!sel.isLocked)
+        #expect(sel.caption.hasPrefix("2 layers, all at once."))
+    }
+
+    @Test("A layer a stack owns is not locked, so its caption is the ordinary one")
+    func aStackedLayerIsNotLocked() {
+        let frame = CGRect(x: 0, y: 0, width: 40, height: 20)
+        let child = rectangle(frame)
+        var content = GroupContent(children: [child])
+        content.layout = GroupLayout(kind: .stack)
+        let stack = Layer(name: "Group", content: .group(content), frame: .zero)
+        let editing = LayerGeometryEditing(layer: child, in: stack)
+        let sel = LayerGeometrySelection([
+            LayerGeometrySelection.Member(id: child.id, frame: frame, editing: editing)])
+        #expect(!editing.allows(.x))
+        #expect(!sel.isLocked)
+        #expect(sel.caption == selection([frame]).caption)
+    }
+
+    @Test("Nothing selected reads as nothing, and the caption stays the plain one")
+    func anEmptySelectionIsNotLocked() {
+        let sel = LayerGeometrySelection([])
+        #expect(!sel.isLocked)
+        #expect(sel.caption == selection([CGRect(x: 0, y: 0, width: 1, height: 1)]).caption)
+    }
 }

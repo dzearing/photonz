@@ -198,6 +198,12 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     public let canSetWidth: Bool
     public let canSetHeight: Bool
 
+    /// Whether a lock is what is stopping this layer. It is the one state that
+    /// takes all four numbers away at once and for a single reason, which is
+    /// why the panel can say it in one line under the fields instead of making
+    /// you hover a dead box to find out.
+    public let isLocked: Bool
+
     /// Whether the layer's box is the thing you see. It is for nearly
     /// everything, and it is not for a line, an arrow or a caliper: those are
     /// drawn between two points and their box is padding around the stroke, so
@@ -227,6 +233,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
                                              : LayerGeometry.minimumSide
         minimumHeight = LayerGeometry.minimumSide
         frameIsTheShape = !layer.hasEndpointHandles
+        isLocked = layer.isLocked
         if layer.isLocked {
             canMove = false
             canSetWidth = false
