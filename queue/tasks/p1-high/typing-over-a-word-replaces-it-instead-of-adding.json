@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 170,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:00:57.617Z",
-  "updated": "2026-09-04T17:03:14.669Z",
+  "updated": "2026-09-04T17:13:52.270Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while walking the container-hug task on 2026-09-04 (Scripts/playtest/button-hug-walk.json): the walk typed \"Save all the changes\" into a copy of the starter Button and got \"ButtonSave all the changes\". The inline editor is in CanvasView (beginTextEdit / commitTextEdit, EditorState); select-all on entry, and let a subsequent click place the caret.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-04T17:13:24.871892Z",
       "note": "Review of the built thing: the one rough edge is that the capture can only ever show the BACKGROUND selection color (macOS will not focus a script-launched app), so accent-blue words on a blue button is the case the user has to judge in the dev app. Recorded in the audit."
+    },
+    {
+      "t": "2026-09-04T17:13:52.269Z",
+      "note": "Opening words for typing offers them ready to be replaced. Rule in PhotonzCore TextEntry (tested), read by both inline fields in CanvasView; walk Scripts/playtest/retype-label-walk.json proves all three acceptance items on the probe (Hello->Goodbye, click places the caret, one undo restores) plus the reported button-copy case. 3054 tests green. Audit queue/audits/2026-09-04-retype-label.json with real captures."
     }
   ],
-  "started": "2026-09-04T17:03:14.668Z"
+  "started": "2026-09-04T17:03:14.668Z",
+  "completed": "2026-09-04T17:13:52.270Z"
 }
