@@ -38,6 +38,10 @@
     {
       "t": "2026-09-04T11:47:08.319Z",
       "note": "A second zoom callout now steps clear of the ones already placed instead of landing on top. Geometry.zoomCalloutPlacement takes the occupied rects and scores side/slid candidates through LabelPlacer; EditorState and the flight animation both feed it PhotonzDocument.placedZoomCalloutRects. Verified with Scripts/playtest/callout-crowding-walk.json run against both the old and new code (three stacked circles before, three clear after) and a byte-identical lone-callout snapshot. Scripts/test.sh green. Audit: queue/audits/2026-09-04-callout-crowding.json"
+    },
+    {
+      "t": "2026-09-04T11:53:07.713314Z",
+      "note": "Honest note on the test run: one Scripts/test.sh run around commit time went red with a single issue, and it was NOT this change. Chased it down over five more full runs and caught it once: aGradientCostsWhatAFlatColorCostsOnceItIsDrawn (Tests/PhotonzRenderTests/GradientPerfTests.swift:74) missed its speed threshold by 2 percent, 53.9ms against 52.7ms. It is a wall-clock ratio between two separately timed renders, so a busy machine tips it. Five of six runs of this commit were fully green, including the run the commit was made from. Filed as its own task: the-gradient-speed-check-fails-now-and-then-on-a."
     }
   ],
   "started": "2026-09-04T11:35:39.222Z",

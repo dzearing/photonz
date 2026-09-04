@@ -1,0 +1,27 @@
+{
+  "id": "the-gradient-speed-check-fails-now-and-then-on-a",
+  "title": "The gradient speed check fails now and then on a busy machine",
+  "goal": "One of the automated speed checks says a gradient must not cost much more to draw than a plain colour. On a busy machine it sometimes fails by a hair, which makes the whole test run go red for a reason that has nothing to do with what changed. The check should be measured in a way that does not depend on how loaded the machine is.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 1210,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T11:52:59.433Z",
+  "updated": "2026-09-04T11:52:59.434Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Tests/PhotonzRenderTests/GradientPerfTests.swift:74, aGradientCostsWhatAFlatColorCostsOnceItIsDrawn. Seen 2026-09-04: cost 53.9ms against a threshold of flat*3+10 = 52.7ms, so it missed by 2 percent; four other runs of the same commit passed. Both sides are best-of-5 wall clock on the same machine, so a scheduling hiccup during the gradient half alone tips it. Options: take the best of more rounds, interleave the flat and gradient measurements so both see the same load, or measure CPU time the way ElementBounds perf tests do.",
+  "acceptance": [
+    "Ten runs of Scripts/test.sh in a row all pass on a machine that is also building something else",
+    "The check still fails if a gradient really does cost many times what a plain colour costs",
+    "The failure message still says what it measured and against what"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T11:52:59.434Z",
+      "note": "created (manual)"
+    }
+  ]
+}
