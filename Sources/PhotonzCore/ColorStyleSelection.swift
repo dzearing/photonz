@@ -38,13 +38,22 @@ public struct ColorStyleSelection: Hashable, Sendable {
     /// style painting it when a style is.
     public struct Member: Hashable, Sendable {
         public let id: UUID
-        public let colorHex: String
+        /// The whole of what is painting this slot, ramp and all.
+        public let paint: Paint
         public let styleID: UUID?
 
-        public init(id: UUID, colorHex: String, styleID: UUID? = nil) {
+        /// The one flat color it stands for, which is what a row that can only
+        /// print one color says.
+        public var colorHex: String { paint.hex }
+
+        public init(id: UUID, paint: Paint, styleID: UUID? = nil) {
             self.id = id
-            self.colorHex = colorHex
+            self.paint = paint
             self.styleID = styleID
+        }
+
+        public init(id: UUID, colorHex: String, styleID: UUID? = nil) {
+            self.init(id: id, paint: Paint(hex: colorHex), styleID: styleID)
         }
     }
 
@@ -85,8 +94,11 @@ public struct ColorStyleSelection: Hashable, Sendable {
             return .style(styleID)
         }
         for member in members.dropFirst() where member.styleID != nil { return .mixed }
+        // Paint-deep: two boxes with the same base color and different ramps
+        // do NOT agree, and a row saying they do would show one flat swatch
+        // over two different gradients.
         for member in members.dropFirst()
-        where !ColorStyleSelection.sameColor(member.colorHex, first.colorHex) {
+        where !member.paint.draws(sameAs: first.paint) {
             return .mixed
         }
         return .color(first.colorHex)
@@ -108,6 +120,14 @@ public struct ColorStyleSelection: Hashable, Sendable {
     public var savableColorHex: String? {
         if case .color(let hex) = reading { return hex }
         return nil
+    }
+
+    /// The whole paint "Save as Style" would keep: the ramp they all wear, or
+    /// the flat color when that is what it is. Nil for the same reason
+    /// `savableColorHex` is nil — there is no one thing to give a name to.
+    public var savablePaint: Paint? {
+        guard case .color = reading else { return nil }
+        return members.first?.paint
     }
 
     /// What the row says out loud when it is leaving a layer out that it could
@@ -138,12 +158,6 @@ public struct ColorStyleSelection: Hashable, Sendable {
         return "A color picked here takes \(styled) of them off their style."
     }
 
-    /// Hex is written uppercase everywhere the app makes one, but a document
-    /// read from disk or a pasted color can arrive either way, and two rows
-    /// saying Mixed over the identical blue would be a lie.
-    private static func sameColor(_ lhs: String, _ rhs: String) -> Bool {
-        lhs.caseInsensitiveCompare(rhs) == .orderedSame
-    }
 }
 
 /// What the switch on a color row reads and does.
@@ -205,8 +219,8 @@ extension PhotonzDocument {
     public func colorStyleSelection(layerIDs: [UUID], slot: ColorSlot) -> ColorStyleSelection {
         let members = layerIDs.compactMap { id -> ColorStyleSelection.Member? in
             guard let layer = layer(id: id), !layer.isLocked,
-                  let hex = layer.colorHex(for: slot) else { return nil }
-            return ColorStyleSelection.Member(id: id, colorHex: hex,
+                  let paint = layer.paint(for: slot) else { return nil }
+            return ColorStyleSelection.Member(id: id, paint: paint,
                                               styleID: layer.colorStyleID(for: slot))
         }
         let capable = layerIDs.filter { layer(id: $0)?.colorSlots.contains(slot) == true }
@@ -359,12 +373,14 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func saveColorStyle(from layerIDs: [UUID], slot: ColorSlot,
                                         name: String? = nil) -> UUID? {
-        guard let hex = colorStyleSelection(layerIDs: layerIDs, slot: slot).savableColorHex,
+        guard let paint = colorStyleSelection(layerIDs: layerIDs, slot: slot).savablePaint,
               !layerIDs.isEmpty else { return nil }
         // Saved FROM a slot, so it is saved FOR that kind of part: a color
         // kept off an outline is offered on outlines and on text, not as
         // something to fill a box with. The Library is where that is widened.
-        let styleID = addColorStyle(name: name, colorHex: hex, roles: [slot.styleRole])
+        // The whole paint goes with it, so a gradient somebody aimed is kept
+        // aimed rather than flattened to the color it starts on.
+        let styleID = addColorStyle(name: name, paint: paint, roles: [slot.styleRole])
         bindColorStyle(layerIDs: layerIDs, slot: slot, styleID: styleID)
         return styleID
     }

@@ -377,7 +377,7 @@ struct ColorStyleRow<Well: View>: View {
         // is typing and Return is enough.
         .onChange(of: isNaming, initial: true) { _, naming in
             guard naming else { return }
-            draft = editorState.suggestedColorStyleName
+            draft = editorState.suggestedColorStyleName(slot: slot)
             nameFocused = true
             DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
         }
@@ -387,7 +387,7 @@ struct ColorStyleRow<Well: View>: View {
         switch selection.reading {
         case .style(let id):
             if let style = editorState.colorStyles.first(where: { $0.id == id }) {
-                swatch(style.colorHex)
+                swatch(style.paint(for: slot))
                     .help("This color comes from the style \(style.name)")
             }
         case .mixed:
@@ -409,9 +409,9 @@ struct ColorStyleRow<Well: View>: View {
         }
     }
 
-    private func swatch(_ hex: String) -> some View {
-        RoundedRectangle(cornerRadius: 4)
-            .fill(Color(hex: hex))
+    private func swatch(_ paint: Paint) -> some View {
+        PaintFill(paint: paint)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
             .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
             .frame(width: 18, height: 18)
             .overlay(RoundedRectangle(cornerRadius: 4)
@@ -434,9 +434,15 @@ struct ColorStyleRow<Well: View>: View {
                                revert: { editorState.endNamingColorStyle() })
             Button("Save", action: save)
                 .controlSize(.small)
-                .help("Saves this color under that name")
+                .help("Saves this \(ColorStyleNaming.subject(savedPaint)) under that name")
         }
         .padding(.top, 2)
+    }
+
+    /// What Save would keep, so the button can say whether it is a colour or a
+    /// gradient without guessing.
+    private var savedPaint: Paint {
+        selection.savablePaint ?? Paint(hex: "#000000")
     }
 
     private func save() {
@@ -674,8 +680,14 @@ struct LibraryStyleTile: View {
 
     var body: some View {
         VStack(spacing: LibraryShelfLayout.captionSpacing) {
-            RoundedRectangle(cornerRadius: 5)
-                .fill(Color(hex: style.colorHex))
+            // The tile IS the style: a saved ramp is drawn as the ramp, aimed
+            // the way it was aimed, because a shelf of flat squares is a shelf
+            // you cannot pick a gradient off.
+            PaintFill(paint: style.paint)
+                .clipShape(RoundedRectangle(cornerRadius: 5))
+                // Under it, so a ramp that fades to nothing reads as fading
+                // rather than as a paler orange.
+                .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 5)))
                 .frame(height: LibraryShelfLayout.thumbnailHeight)
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.12)))
             Text(entry.name)
@@ -696,7 +708,7 @@ struct LibraryStyleTile: View {
         )
         .contentShape(Rectangle())
         .onTapGesture { editorState.selectLibraryItem(entry.id) }
-        .help("\(entry.name) • \(style.colorHex) • \(entry.detail)")
+        .help("\(entry.name) • \(ColorStyleNaming.paintText(style.paint)) • \(entry.detail)")
         // Named for a walk, with no payload: a style tile is not picked up.
         .playtestTarget(entry.name, kind: .tile, detail: "Styles")
     }
@@ -733,7 +745,7 @@ struct LibraryStyleInspector: View {
                         .onChange(of: nameFocused) { _, focused in if !focused { commit(style) } }
                 }
                 HStack(spacing: 8) {
-                    Text("Color")
+                    Text(ColorStyleNaming.rowTitle(style.paint))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                     Spacer(minLength: 8)
@@ -741,11 +753,16 @@ struct LibraryStyleInspector: View {
                         .buttonStyle(.plain)
                         .help("Changing this repaints every layer using this style")
                         .popover(isPresented: $isPickerShown, arrowEdge: .top) {
+                            // The whole paint, so a saved gradient is edited
+                            // where it lives: move a stop here and every shape
+                            // wearing it follows, in one step.
                             ColorPickerContent(editorState: editorState,
-                                               hex: style.colorHex,
+                                               paint: style.paint,
                                                name: style.name,
-                                               onClose: { isPickerShown = false }) { hex in
-                                editorState.setColorStyleHex(styleID: style.id, hex: hex)
+                                               supportsOpacity: true,
+                                               supportsGradient: true,
+                                               onClose: { isPickerShown = false }) { paint in
+                                editorState.setColorStylePaint(styleID: style.id, paint: paint)
                             }
                         }
                 }
@@ -762,6 +779,15 @@ struct LibraryStyleInspector: View {
                         Toggle(role.title, isOn: roleBinding(style, role))
                             .toggleStyle(.checkbox)
                             .font(.callout)
+                    }
+                    // Said only about a ramp, and said HERE, because this is
+                    // where somebody ticks "Outlines and text" and then goes
+                    // looking for it on a Text row.
+                    if let note = ColorStyleNaming.gradientReachNote(style.paint) {
+                        Text(note)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 Text(standing(style))
@@ -791,8 +817,9 @@ struct LibraryStyleInspector: View {
     }
 
     private func swatch(_ style: ColorStyle) -> some View {
-        RoundedRectangle(cornerRadius: 4)
-            .fill(Color(hex: style.colorHex))
+        PaintFill(paint: style.paint)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
             .frame(width: 18, height: 18)
             .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.primary.opacity(0.25), lineWidth: 1))
     }

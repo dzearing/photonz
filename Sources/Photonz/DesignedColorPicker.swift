@@ -350,7 +350,7 @@ struct DesignedColorPicker: View {
                             .font(.caption)
                     }
                     .controlSize(.small)
-                    .help("Keeps this color in the Library under a name")
+                    .help("Keeps this \(ColorStyleNaming.subject(paint)) in the Library under a name")
                 }
             }
             if isNaming { namingField }
@@ -398,12 +398,15 @@ struct DesignedColorPicker: View {
                 .nameFieldKeys(commit: saveStyle, revert: { isNaming = false })
             Button("Save", action: saveStyle)
                 .controlSize(.small)
-                .help("Saves this color under that name")
+                .help("Saves this \(ColorStyleNaming.subject(paint)) under that name")
         }
     }
 
+    /// Keeps the WHOLE paint, not the colour the square happens to be pointed
+    /// at. While a gradient is open the square is editing one stop, and saving
+    /// that stop would keep one orange out of a sunset somebody just aimed.
     private func saveStyle() {
-        editorState.saveColorStyle(hex: displayHex, name: styleName, slot: slot)
+        editorState.saveColorStyle(paint: paint, name: styleName, slot: slot)
         isNaming = false
     }
 

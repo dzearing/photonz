@@ -84,6 +84,32 @@ public struct Paint: Hashable, Sendable {
     /// nothing.
     public var isGradient: Bool { kind != .solid && stops.count >= 2 }
 
+    /// Whether two paints DRAW the same thing, which is not the same question
+    /// as whether they are the same value.
+    ///
+    /// A paint keeps its ramp while it is solid, so flipping a fill to a
+    /// gradient and back is free — which means a plain `==` would call two flat
+    /// oranges different because one of them used to be a sunset. And hex is
+    /// written uppercase everywhere the app makes one, but a document read from
+    /// disk or a pasted color can arrive either way.
+    ///
+    /// This is the comparison anything asking "is this still what it was
+    /// painted" wants: a style checking the layers wearing it, a row asking
+    /// whether the picked layers agree.
+    public func draws(sameAs other: Paint) -> Bool {
+        guard isGradient || other.isGradient else {
+            return hex.caseInsensitiveCompare(other.hex) == .orderedSame
+        }
+        guard isGradient, other.isGradient, kind == other.kind,
+              angle == other.angle, center == other.center else { return false }
+        let mine = orderedStops, theirs = other.orderedStops
+        guard mine.count == theirs.count else { return false }
+        return zip(mine, theirs).allSatisfy {
+            $0.position == $1.position
+                && $0.hex.caseInsensitiveCompare($1.hex) == .orderedSame
+        }
+    }
+
     /// The ramp read left to right, which is the only order that means
     /// anything. Stops are stored in the order they were made so that adding
     /// one does not renumber the one you are editing.

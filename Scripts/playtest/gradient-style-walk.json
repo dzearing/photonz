@@ -1,0 +1,66 @@
+{
+  "out": "/tmp/photonz-playtest/gradient-style",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1500, "height": 950 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 160], "to": [420, 340], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [470, 160], "to": [750, 340], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-drew", "note": "two boxes" },
+
+    { "do": "click", "at": [280, 250] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "paintSelectionGradient" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-gradient", "note": "the first box's fill is a straight ramp out of the colour it had" },
+
+    { "do": "action", "action": "openColorPicker" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-picker", "note": "the picker on the gradient, Save style in its footer" },
+    { "do": "snapshot", "name": "gradient-style-1-picker" },
+    { "do": "action", "action": "saveStyleFromPicker" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "closeColorPicker" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-saved", "note": "the ramp is on the Styles shelf under a name, drawn as the gradient it is" },
+    { "do": "snapshot", "name": "gradient-style-2-shelf" },
+
+    { "do": "click", "at": [610, 250] },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "5-flat", "note": "the second box is painted one flat crimson, so the ramp arriving is a change you can see" },
+    { "do": "render", "name": "gradient-style-3-flat" },
+
+    { "do": "action", "action": "useFirstColorStyle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-applied", "note": "the second box wears the saved gradient: the whole ramp and its aim, not one flat colour" },
+    { "do": "render", "name": "gradient-style-4-applied" },
+    { "do": "snapshot", "name": "gradient-style-5-applied" },
+
+    { "do": "click", "at": [280, 250] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "useFirstColorStyle" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "7-both-wear-it", "note": "the box it was saved from wears the name too, so the style has two users" },
+
+    { "do": "action", "action": "pickFirstColorStyle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-style-section", "note": "the style's own section: the swatch draws the ramp" },
+    { "do": "snapshot", "name": "gradient-style-6-section" },
+    { "do": "action", "action": "reaimPickedColorStyle" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "9-edited", "note": "re-aimed and cooled in one place: both boxes follow" },
+    { "do": "render", "name": "gradient-style-7-edited" },
+    { "do": "snapshot", "name": "gradient-style-8-edited" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "10-undone", "note": "one undo puts both boxes back: editing a style is one step, not one per shape" },
+    { "do": "render", "name": "gradient-style-9-undone" }
+  ]
+}

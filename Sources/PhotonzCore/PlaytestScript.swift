@@ -339,6 +339,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Style section's color well to a new color does: everything wearing it
     /// follows in one step.
     case recolorPickedColorStyle
+    /// Turn the picked style's ramp a quarter turn and cool its far end, which
+    /// is what re-aiming a saved gradient in the Style section's picker does:
+    /// every shape wearing it follows, in one step. A flat style becomes a
+    /// gradient, which is the other half of the same control.
+    case reaimPickedColorStyle
     /// Move the selected copy's first choice knob on to its next option, which
     /// is what picking the next row in that knob's menu does. A walk cannot
     /// open a menu in the dock, so this is how a swapped shape is photographed.

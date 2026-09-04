@@ -94,21 +94,59 @@ public enum ColorStyleRole: String, CaseIterable, Hashable, Codable, Sendable {
 
 /// A color saved under a name. `id` is what layers point at, so renaming one
 /// never loosens anything.
+///
+/// What it holds is a whole `Paint`, so the thing worth keeping most — a
+/// gradient somebody spent time aiming — can be kept at all. A flat style is a
+/// solid paint, which writes the same bare hex string on disk it always wrote,
+/// so a document saved before ramps existed opens unchanged.
 public struct ColorStyle: Identifiable, Hashable, Codable, Sendable {
     public let id: UUID
     public var name: String
-    public var colorHex: String
+    /// What this style paints: one flat color, or a ramp.
+    public var paint: Paint
     /// The parts of a layer this color is offered for. Nil means nobody has
     /// said yet — a style saved before this existed — and the document works
     /// out a sensible answer rather than hiding it from every row.
     public var roles: [ColorStyleRole]?
 
-    public init(id: UUID = UUID(), name: String, colorHex: String,
+    /// The one flat color this style stands for: what a solid style paints,
+    /// and what a ramp falls back to anywhere only one color can be drawn.
+    public var colorHex: String {
+        get { paint.hex }
+        set { paint.hex = newValue }
+    }
+
+    /// Whether this style is a ramp rather than one flat color.
+    public var isGradient: Bool { paint.isGradient }
+
+    public init(id: UUID = UUID(), name: String, paint: Paint,
                 roles: [ColorStyleRole]? = nil) {
         self.id = id
         self.name = name
-        self.colorHex = colorHex
+        self.paint = paint
         self.roles = ColorStyle.normalizedRoles(roles)
+    }
+
+    public init(id: UUID = UUID(), name: String, colorHex: String,
+                roles: [ColorStyleRole]? = nil) {
+        self.init(id: id, name: name, paint: Paint(hex: colorHex), roles: roles)
+    }
+
+    /// The wire keeps saying `colorHex`, because that is what every document
+    /// already on disk says and a solid paint writes exactly the string that
+    /// key has always held.
+    private enum CodingKeys: String, CodingKey {
+        case id, name, paint = "colorHex", roles
+    }
+
+    /// What this style paints IN a slot: the whole ramp where one fits, and
+    /// its flat color where one does not.
+    ///
+    /// So a gradient that also names an ink color still paints text something,
+    /// rather than the text quietly losing the name the moment somebody turns
+    /// the style into a ramp.
+    public func paint(for slot: ColorSlot) -> Paint {
+        slot.acceptsGradient ? paint : Paint(hex: paint.hex)
     }
 
     /// In one fixed order, without repeats, so the same two answers always
@@ -321,6 +359,16 @@ extension PhotonzDocument {
     /// The name a style takes when nobody has named it yet.
     public static let colorStyleNameBase = "Color"
 
+    /// ...and the one a saved ramp takes, because a shelf of tiles called
+    /// Color 2 and Color 3 where half of them are gradients is a shelf nobody
+    /// reads.
+    public static let gradientStyleNameBase = "Gradient"
+
+    /// What a style of this paint is called before anybody names it.
+    public static func colorStyleNameBase(for paint: Paint) -> String {
+        paint.isGradient ? gradientStyleNameBase : colorStyleNameBase
+    }
+
     /// The style behind an id.
     public func colorStyle(id: UUID) -> ColorStyle? {
         colorStyles.first { $0.id == id }
@@ -340,8 +388,17 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func addColorStyle(name: String? = nil, colorHex: String,
                                        roles: [ColorStyleRole]? = nil) -> UUID {
-        let style = ColorStyle(name: ComponentNaming.normalized(name) ?? freshColorStyleName(),
-                               colorHex: colorHex, roles: roles)
+        addColorStyle(name: name, paint: Paint(hex: colorHex), roles: roles)
+    }
+
+    /// The same, with a whole paint: this is how a gradient gets a name.
+    @discardableResult
+    public mutating func addColorStyle(name: String? = nil, paint: Paint,
+                                       roles: [ColorStyleRole]? = nil) -> UUID {
+        let base = PhotonzDocument.colorStyleNameBase(for: paint)
+        let style = ColorStyle(name: ComponentNaming.normalized(name)
+                                 ?? freshColorStyleName(base: base),
+                               paint: paint, roles: roles)
         colorStyles.append(style)
         return style.id
     }
@@ -375,8 +432,17 @@ extension PhotonzDocument {
     /// The saved colors one row offers: the ones meant for the part it paints,
     /// in the order the shelf lists them. This is what stops a color made for
     /// hairlines turning up as something to fill a box with.
+    ///
+    /// A saved ramp is offered only where a ramp can actually be drawn. One
+    /// blue really is both the fill of a button and the color of a link, so an
+    /// ink style turns up on the Text row — but a sunset listed there would
+    /// paint one flat orange, and a name that quietly means something else in
+    /// one row is worse than a shorter list.
     public func colorStyles(for slot: ColorSlot) -> [ColorStyle] {
-        colorStyles.filter { effectiveColorStyleRoles(id: $0.id).contains(slot.styleRole) }
+        colorStyles.filter { style in
+            guard !style.isGradient || slot.acceptsGradient else { return false }
+            return effectiveColorStyleRoles(id: style.id).contains(slot.styleRole)
+        }
     }
 
     /// Changes what a saved color is offered for. Ticking nothing is refused:
@@ -408,7 +474,7 @@ extension PhotonzDocument {
         guard let style = colorStyle(id: styleID),
               layer(id: layerID)?.colorSlots.contains(slot) == true else { return false }
         updateLayer(id: layerID) {
-            $0.setColorHex(style.colorHex, for: slot)
+            $0.setPaint(style.paint(for: slot), for: slot)
             $0.bindColorStyle(styleID, for: slot)
         }
         return true
@@ -427,12 +493,22 @@ extension PhotonzDocument {
     /// paints as a single undo step.
     @discardableResult
     public mutating func setColorStyleHex(styleID: UUID, hex: String) -> Int {
+        setColorStylePaint(styleID: styleID, paint: Paint(hex: hex))
+    }
+
+    /// Repaints a style with a whole paint, and with it every slot pointing at
+    /// it — which is how a saved gradient is edited in one place. A slot that
+    /// cannot hold a ramp takes the paint's flat color, so nothing wearing the
+    /// style is left behind when it becomes one.
+    @discardableResult
+    public mutating func setColorStylePaint(styleID: UUID, paint: Paint) -> Int {
         guard let index = colorStyles.firstIndex(where: { $0.id == styleID }) else { return 0 }
-        colorStyles[index].colorHex = hex
+        colorStyles[index].paint = paint
+        let style = colorStyles[index]
         var repainted = 0
         mapLayers { layer in
             for binding in layer.colorStyleBindings ?? [] where binding.styleID == styleID {
-                layer.setColorHex(hex, for: binding.slot)
+                layer.setPaint(style.paint(for: binding.slot), for: binding.slot)
                 repainted += 1
             }
         }
@@ -498,14 +574,23 @@ extension PhotonzDocument {
     /// seen a style allocates nothing here.
     @discardableResult
     public mutating func reconcileColorStyles() -> Int {
-        let styles = Dictionary(colorStyles.map { ($0.id, $0.colorHex) },
+        let styles = Dictionary(colorStyles.map { ($0.id, $0) },
                                 uniquingKeysWith: { first, _ in first })
         var broken = 0
         mapLayers { layer in
             guard let bindings = layer.colorStyleBindings else { return }
-            for binding in bindings where styles[binding.styleID] != layer.colorHex(for: binding.slot) {
-                layer.unbindColorStyle(for: binding.slot)
-                broken += 1
+            for binding in bindings {
+                // Paint-deep, and against what the style paints IN THAT SLOT:
+                // moving one stop of a gradient leaves its flat color alone, so
+                // a hex check would let the claim stand over a ramp nobody
+                // saved.
+                let wanted = styles[binding.styleID]?.paint(for: binding.slot)
+                let worn = layer.paint(for: binding.slot)
+                guard let wanted, let worn, wanted.draws(sameAs: worn) else {
+                    layer.unbindColorStyle(for: binding.slot)
+                    broken += 1
+                    continue
+                }
             }
         }
         return broken
@@ -530,6 +615,34 @@ extension PhotonzDocument {
 
 /// What a style's tile says under its swatch.
 public enum ColorStyleNaming {
+    /// What a style is, in the few words a hover tip has room for: the hex it
+    /// is, or the kind of ramp it runs.
+    public static func paintText(_ paint: Paint) -> String {
+        guard paint.isGradient else { return paint.hex }
+        return "\(paint.kind.title) gradient"
+    }
+
+    /// The word for what is being kept, so a button about a ramp does not call
+    /// it a color.
+    public static func subject(_ paint: Paint) -> String {
+        paint.isGradient ? "gradient" : "color"
+    }
+
+    /// What the Style section calls the row holding it. A section that says
+    /// Color over a ramp is a section arguing with the thing beside it.
+    public static func rowTitle(_ paint: Paint) -> String {
+        paint.isGradient ? "Gradient" : "Color"
+    }
+
+    /// The small print under "Use it for", said only about a ramp: text and
+    /// borders take one flat color, so a gradient does not turn up there even
+    /// when it is kept for outlines. Nil for a flat color, which goes
+    /// everywhere it is ticked for.
+    public static func gradientReachNote(_ paint: Paint) -> String? {
+        guard paint.isGradient else { return nil }
+        return "Text and borders take one flat color, so a gradient is not offered there."
+    }
+
     /// The detail line: how much of the document an edit to this style would
     /// repaint, which is the question a shelf full of styles raises.
     public static func detail(usageCount: Int) -> String {

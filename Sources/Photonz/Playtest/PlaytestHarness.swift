@@ -716,14 +716,17 @@ private final class Run {
                 if let key = editor.openColorWell,
                    let raw = key.split(separator: ".").last.map(String.init),
                    let slot = ColorSlot(rawValue: raw),
-                   let hex = editor.colorStyleSelection(slot: slot).savableColorHex {
-                    editor.saveColorStyle(hex: hex, name: "Brand", slot: slot)
+                   let paint = editor.colorStyleSelection(slot: slot).savablePaint {
+                    // The whole paint, so a walk that saves a gradient gets a
+                    // gradient rather than the colour it starts on.
+                    editor.saveColorStyle(paint: paint, name: paint.isGradient ? "Sunset" : "Brand",
+                                          slot: slot)
                 }
             case .saveColorStyle:
                 // The picked layers' first color that could carry a name: with
                 // several picked that is the first one they all share.
                 if let slot = editor.colorStyleSlots
-                    .first(where: { editor.colorStyleSelection(slot: $0).savableColorHex != nil }) {
+                    .first(where: { editor.colorStyleSelection(slot: $0).savablePaint != nil }) {
                     editor.beginNamingColorStyle(slot: slot)
                 }
             case .useFirstColorStyle:
@@ -769,6 +772,16 @@ private final class Run {
             case .recolorPickedColorStyle:
                 if let style = editor.selectedColorStyle {
                     editor.setColorStyleHex(styleID: style.id, hex: "#00A870")
+                }
+            case .reaimPickedColorStyle:
+                if let style = editor.selectedColorStyle {
+                    var paint = style.paint
+                    paint.becoming(.linear)
+                    paint.angle = (paint.angle + 90).truncatingRemainder(dividingBy: 360)
+                    if !paint.stops.isEmpty {
+                        paint.stops[paint.stops.count - 1].hex = "#5856D6"
+                    }
+                    editor.setColorStylePaint(styleID: style.id, paint: paint)
                 }
             case .pickFirstComponent:
                 if let first = editor.componentEntries.first {

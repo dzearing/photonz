@@ -1039,10 +1039,10 @@ Step D8, built before step 7 for the reason recorded there: the starter
 components are specified as painted from styles, and that cannot happen until
 styles exist.
 
-- **A style is a color with a name, and it lives in the document.** No gradients
-  (nothing in the app paints one), no text or effect styles yet, and no token
-  layer underneath, so a name still resolves to one color rather than one per
-  mode.
+- **A style is a paint with a name, and it lives in the document.** Since
+  2026-09-04 that paint can be a gradient (see the section below); no text or
+  effect styles yet, and no token layer underneath, so a name still resolves to
+  one paint rather than one per mode.
 - **The color stays ON the layer.** A layer wearing a style is painted exactly
   as a layer somebody colored by hand, and the binding is the extra fact that
   says where the color came from. So the renderer, export, thumbnails and the
@@ -1113,6 +1113,39 @@ Deliberately left: styles are per document, with no shared library across
 documents and no publishing; there is no way to make a style without a layer to
 save it from; a style cannot be applied to several selected layers at once; and
 there are no text or effect styles, only color.
+
+## Landed: a saved style can be a gradient (Next, `next-styles`, 2026-09-04)
+
+A color could be kept under a name from the day styles landed. A gradient could
+not, so the one paint worth keeping most — the ramp somebody spent time aiming —
+had to be rebuilt by hand on every shape that wanted it.
+
+- **A style holds a whole `Paint`, not a hex.** The wire key is still
+  `colorHex`, and a solid paint writes the same bare string it always wrote, so
+  every document already on disk opens unchanged and a document with no ramp in
+  it is byte-identical to what the old build wrote.
+- **Everywhere a style is drawn, it draws the paint**: the shelf tile, the
+  Style section's swatch, and the swatch on a color row wearing it. A shelf of
+  flat squares is a shelf you cannot pick a gradient off.
+- **Save style in the picker keeps the whole paint.** It used to keep
+  `displayHex`, which while a gradient is open is the stop the square is pointed
+  at — so saving a sunset kept one orange.
+- **A ramp is offered only where a ramp can be drawn.** One blue really is both
+  the fill of a button and the color of a link, so an ink style turns up on the
+  Text row; a sunset listed there would paint one flat orange. The Style section
+  says so in a line under "Use it for" rather than leaving somebody hunting.
+- **A binding that already exists stays honest rather than breaking.** A flat-only
+  slot wearing a gradient style takes the style's flat color and keeps following
+  it, so turning an ink style into a ramp does not silently unlink the text.
+- **Reconciliation is paint-deep.** Comparing hexes let a claim stand over a ramp
+  nobody saved: move one stop on the layer and the flat color never changes. The
+  comparison is `Paint.draws(sameAs:)`, which ignores the ramp a solid is no
+  longer using — a paint keeps its stops while it is solid, so `==` would call
+  two flat oranges different because one of them used to be a sunset.
+
+Deliberately left: text and borders still take one flat color, so a gradient
+cannot be poured into a letter; and the Style section edits the ramp through the
+same picker every color row uses rather than a shelf-sized gradient editor.
 
 ## Landed: the shape settings say what they are (Next, `next-styles`, 2026-09-03)
 

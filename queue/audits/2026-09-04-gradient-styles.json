@@ -1,0 +1,29 @@
+{
+  "feature": "A gradient can be saved in the Library under a name",
+  "epic": "ui-components",
+  "summary": "A gradient you have aimed can now be kept in the Library under a name, put on any other shape whole, and changed in one place so everything wearing it follows.",
+  "setup": "Photonz Dev, Experiments window, release Next. Saved styles and the designed color picker are on by default.",
+  "try": [
+    { "do": "Draw a rectangle, then open the Fill row's color swatch in the Color section." },
+    { "do": "Pick Linear in the picker's type row, drag the aim pad until you like where the ramp runs." },
+    { "do": "Press Save style in the picker's footer, type Sunset, press Return.", "shot": "2026-09-04-gradient-style-shelf-sc.png" },
+    { "do": "Draw a second rectangle and paint its fill any flat color." },
+    { "do": "Open the swatchpalette menu beside its Fill row and choose Sunset.", "shot": "2026-09-04-gradient-style-applied-sc.png" },
+    { "do": "Click the Sunset tile on the Library's Styles shelf." },
+    { "do": "Open its swatch in the Style section and drag the aim pad, or move a stop on the ramp.", "shot": "2026-09-04-gradient-style-edited-sc.png" },
+    { "do": "Press Command Z once." }
+  ],
+  "evaluate": [
+    "Does the Sunset tile on the shelf read as the gradient it is, or does it need to be bigger to tell two ramps apart?",
+    "When you put Sunset on the second shape, does it arrive aimed the way you aimed it, or do you expect it to fit the new shape's own direction?",
+    "Editing the style in the Library repaints every shape wearing it, and one undo puts them all back. Is one step right, or would you want to see what is about to change first?",
+    "The Style section calls the row Gradient rather than Color when it holds one. Is that the word you would look for?",
+    "A saved gradient is offered on fills and outlines but not on text or borders, and the Style section says so under Use it for. Is that clear enough where you meet it, which is a menu that simply does not list it?"
+  ],
+  "rough": [
+    "Text and borders still take one flat color. A gradient kept for outlines does not appear in a Text row at all, which is a shorter list rather than a message at the moment you look.",
+    "Save style in the picker shelves the gradient but does not put it on the shape you saved it from, so it lands saying not used yet. That is how the picker's button has always behaved; the Save as Style on the color row does bind. Two buttons with the same words and different results is worth deciding on.",
+    "The Style section edits the ramp through the same picker every color row opens. There is no bigger gradient editor for a style, which felt fine for two stops and might not for six.",
+    "Screen Recording was granted for the probe, so all three pictures are real window captures from Scripts/playtest/gradient-style-walk.json, not offscreen renders."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1050,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T03:26:35.299Z",
-  "updated": "2026-09-04T03:26:35.299Z",
+  "updated": "2026-09-04T04:54:14.158131Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from a-color-slot-can-hold-a-gradient-not-just-a-flat. ColorStyle holds colorHex: String today (PhotonzCore/ColorStyles.swift); widening it to Paint is the same trick Paint itself used: keep the wire key, encode a bare string while solid. The Library tile and every swatch that draws a style will want PaintFill rather than Color(hex:).",
@@ -23,6 +23,79 @@
     {
       "t": "2026-09-04T03:26:35.299Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T04:38:53.606Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T04:41:35.468723Z",
+      "note": "Adversarial review before building. Walked it as a first-time user: box with a gradient fill, Fill row menu, Save as Style, name it, find it on the Styles shelf, put it on a second box, edit it in the Library."
+    },
+    {
+      "t": "2026-09-04T04:41:35.468723Z",
+      "note": "Break 1: the picker's own Save style saves displayHex, which while a gradient is open is THE SELECTED STOP. Saving a sunset there today keeps one orange. Must save the whole paint."
+    },
+    {
+      "t": "2026-09-04T04:41:35.468723Z",
+      "note": "Break 2: a gradient saved from an outline gets role ink, and ink is also text and border, so a gradient would be offered on the Text row where it can only ever paint flat. The code's own rule (ColorSlot.acceptsGradient) says never offer a ramp where none can be drawn, so gradient styles are filtered out of flat-only rows."
+    },
+    {
+      "t": "2026-09-04T04:41:35.468723Z",
+      "note": "Break 3: reconcileColorStyles compares HEXES. Bind a gradient style, edit one of its stops on the layer, and the binding survives a lie because both flat hexes still match. It has to compare what the style resolves to in that slot against what the layer is actually painted."
+    },
+    {
+      "t": "2026-09-04T04:41:35.468723Z",
+      "note": "Break 4: two boxes with the same base hex and different ramps read as .color today, so the row shows one flat swatch claiming they agree and Save as Style would quietly keep one of the two. Reading has to be paint-aware."
+    },
+    {
+      "t": "2026-09-04T04:41:35.468723Z",
+      "note": "Break 5: comparing Paint by == is wrong for reconcile. A paint that was a gradient and went solid keeps its dormant stops, so a solid style would stop matching a solid layer. Needs a draws-the-same comparison."
+    },
+    {
+      "t": "2026-09-04T04:41:35.468723Z",
+      "note": "Decided without asking, because none of it is visible product direction: a style bound to a flat-only slot keeps working and takes the style's flat colour, so turning an ink style into a gradient does not silently unlink the text wearing it. Offering is narrowed, binding stays tolerant."
+    },
+    {
+      "t": "2026-09-04T04:41:35.468723Z",
+      "note": "Cut: nothing. Shortest version that delivers the value is exactly widening ColorStyle from a hex to a Paint and following it to the four places a style is drawn (shelf tile, Library swatch, bound-row swatch, picker)."
+    },
+    {
+      "t": "2026-09-04T04:41:35.468723Z",
+      "note": "Nicety kept: a saved ramp suggests the name Gradient rather than Color, because a shelf of things called Color 2 and Color 3 is a shelf nobody reads."
+    },
+    {
+      "t": "2026-09-04T04:54:14.158131Z",
+      "note": "Built. ColorStyle holds a Paint under the same colorHex wire key, so a solid style writes the bare string it always wrote and old documents open unchanged."
+    },
+    {
+      "t": "2026-09-04T04:54:14.158131Z",
+      "note": "Paint.draws(sameAs:) is the new comparison: case-insensitive on hex, ignores the ramp a solid is no longer using, deep on stops/angle/centre. reconcileColorStyles and the row's reading both use it."
+    },
+    {
+      "t": "2026-09-04T04:54:14.158131Z",
+      "note": "ColorStyle.paint(for:) resolves a style IN a slot, so a flat-only slot wearing a gradient style takes its flat colour and keeps following it instead of silently unlinking."
+    },
+    {
+      "t": "2026-09-04T04:54:14.158131Z",
+      "note": "App: shelf tile, Style section swatch and the bound-row swatch all draw through PaintFill; the picker's Save style keeps the whole paint; the Style section's picker edits the whole paint via setColorStylePaint."
+    },
+    {
+      "t": "2026-09-04T04:54:14.158131Z",
+      "note": "Second adversarial pass on the running app found three: the Style section still said Color over a ramp (now Gradient), nothing said why a gradient never appears on a Text row (now one line under Use it for), and the shelf tile had no checkerboard under a see-through ramp (now it does)."
+    },
+    {
+      "t": "2026-09-04T04:54:14.158131Z",
+      "note": "Verified on the probe with Scripts/playtest/gradient-style-walk.json: saved from the picker, applied to a second box (Fill row names Sunset and draws the ramp), re-aimed in the Library and both boxes plus both layer thumbnails followed, one undo put them back. Screen Recording granted, so the three audit pictures are real window captures."
+    },
+    {
+      "t": "2026-09-04T04:54:14.158131Z",
+      "note": "2721 tests pass. 14 new core tests in ColorStyleGradientTests.swift."
+    },
+    {
+      "t": "2026-09-04T04:54:14.158131Z",
+      "note": "Audit: queue/audits/2026-09-04-gradient-styles.json"
     }
-  ]
+  ],
+  "started": "2026-09-04T04:38:53.605Z"
 }

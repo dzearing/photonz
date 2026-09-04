@@ -3930,10 +3930,18 @@ final class EditorState {
     /// appears to do nothing.
     @discardableResult
     func saveColorStyle(hex: String, name: String? = nil, slot: ColorSlot? = nil) -> UUID? {
+        saveColorStyle(paint: Paint(hex: hex), name: name, slot: slot)
+    }
+
+    /// The same, with the whole paint the picker is holding, so a gradient
+    /// somebody has just aimed is kept aimed rather than saved as the one stop
+    /// they happened to be editing.
+    @discardableResult
+    func saveColorStyle(paint: Paint, name: String? = nil, slot: ColorSlot? = nil) -> UUID? {
         guard colorStylesEnabled else { return nil }
         discardDragPreview()
         var saved: UUID?
-        perform { saved = $0.addColorStyle(name: name, colorHex: hex,
+        perform { saved = $0.addColorStyle(name: name, paint: paint,
                                            roles: slot.map { [$0.styleRole] }) }
         guard let styleID = saved else { return nil }
         showColorStyleShelf()
@@ -4013,6 +4021,15 @@ final class EditorState {
     /// The name the Save as Style field opens on: one nobody is using yet.
     var suggestedColorStyleName: String {
         document?.freshColorStyleName() ?? PhotonzDocument.colorStyleNameBase
+    }
+
+    /// The name the field opens on for ONE row: a saved ramp is offered
+    /// "Gradient" rather than "Color 4", because a shelf where half the tiles
+    /// called Color are gradients is a shelf nobody reads.
+    func suggestedColorStyleName(slot: ColorSlot) -> String {
+        let paint = colorStyleSelection(slot: slot).savablePaint ?? Paint(hex: "#000000")
+        let base = PhotonzDocument.colorStyleNameBase(for: paint)
+        return document?.freshColorStyleName(base: base) ?? base
     }
 
     /// The layers a color row speaks for: the whole multi-selection when there
@@ -4319,10 +4336,18 @@ final class EditorState {
 
     /// Repaints a style and everything wearing it, as one undo step.
     func setColorStyleHex(styleID: UUID, hex: String) {
+        setColorStylePaint(styleID: styleID, paint: Paint(hex: hex))
+    }
+
+    /// Repaints a style with a whole paint — this is how a saved gradient is
+    /// edited — and everything wearing it follows, as one undo step.
+    func setColorStylePaint(styleID: UUID, paint: Paint) {
         guard colorStylesEnabled else { return }
         discardDragPreview()
-        perform { _ = $0.setColorStyleHex(styleID: styleID, hex: hex) }
-        recordRecentColor(hex: hex)
+        perform { _ = $0.setColorStylePaint(styleID: styleID, paint: paint) }
+        // The recents row is a row of colours, so a ramp leaves its flat colour
+        // there rather than nothing.
+        recordRecentColor(hex: paint.hex)
     }
 
     /// The Style section's Name field. One name in one place: the shelf tile
