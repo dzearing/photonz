@@ -5566,7 +5566,6 @@ final class EditorState {
 
     private func pasteLayer(_ transfer: LayerTransfer) {
         var layer = transfer.layer.duplicated(offsetBy: CGPoint(x: 16, y: 16))
-        layer.name = transfer.layer.name
         if case .image = transfer.layer.content {
             guard let data = transfer.imageData, let cg = ImageCodec.decode(data) else { return }
             // The payload's ImageRef belonged to the source window's store.
@@ -5577,7 +5576,14 @@ final class EditorState {
             openCapture(cg)
             return
         }
-        guard document != nil else { return }
+        guard let document else { return }
+        // Named the way duplicating this layer names it, so the two ways of
+        // making a copy agree and the pasted row can be told from the one it
+        // came from. A name nothing here is using is kept as it is, so a layer
+        // pasted into another document, or cut and pasted back, reads the same
+        // as it always did (`LayerNaming.pastedName`).
+        layer.name = LayerNaming.pastedName(of: transfer.layer.name,
+                                            taken: Set(document.allLayers.map(\.name)))
         discardDragPreview()
         // Pasted over a screen means pasted ONTO it: the layer keeps the spot
         // it looks like it landed on and becomes part of that screen, the same

@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/pasted-layer-name",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1340, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "dropImage", "file": "/tmp/photonz-placed-names/Hero banner.png", "at": [320, 300] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-placed",
+      "note": "one picture placed: the row reads Hero banner" },
+
+    { "do": "action", "action": "copyLayer" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "pasteLayer" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-pasted",
+      "note": "copied and pasted: the new row should read Hero banner copy, the old one still Hero banner" },
+    { "do": "snapshot", "name": "2-pasted" },
+
+    { "do": "action", "action": "pasteLayer" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-pasted-again",
+      "note": "pasting a second time counts on: Hero banner copy 2" },
+    { "do": "snapshot", "name": "3-pasted-again" },
+
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-duplicated",
+      "note": "duplicating the pasted row names it the same way a paste does: Hero banner copy 3" },
+    { "do": "snapshot", "name": "4-duplicated" },
+
+    { "do": "action", "action": "renameSelectedLayer" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "copyLayer" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "pasteLayer" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-typed-name",
+      "note": "a name typed by hand is kept on the layer that was already there; its copy reads Renamed Layer copy" },
+    { "do": "snapshot", "name": "5-typed-name" }
+  ]
+}

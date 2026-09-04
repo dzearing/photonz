@@ -1,0 +1,26 @@
+{
+  "feature": "A pasted layer gets its own name",
+  "epic": "ui-building",
+  "summary": "Copying a layer and pasting it now leaves two rows you can tell apart: the copy reads \"Hero banner copy\", exactly what duplicating that layer would have called it. A layer pasted somewhere that has no layer by that name keeps the name it arrived with.",
+  "setup": "Photonz Dev, release Next (Current gets the same fix, the code is shared). Nothing to turn on.",
+  "try": [
+    { "do": "Open any picture, then drag a second image file onto the canvas so a row reads its file name." },
+    { "do": "Select that row and press Command C, then Command V." },
+    { "do": "Read the layers list: the new row should read the same name with \"copy\" after it.", "shot": "2026-09-04-pasted-layer-name.png" },
+    { "do": "Press Command V again and read the third row." },
+    { "do": "Right click the newest row and choose Duplicate, and compare how it is named to how the paste was named." },
+    { "do": "Double click a row's name, type a name of your own, then copy and paste that layer." },
+    { "do": "Select a layer, press Command X then Command V, and check the name did not change." }
+  ],
+  "evaluate": [
+    "Reading the list after a paste, can you tell at a glance which row is the one you copied?",
+    "Does \"Hero banner copy\" read better here than a numbered \"Hero banner 2\" would?",
+    "Cut and paste keeps the name as it was, because nothing was copied. Does that feel right or surprising?",
+    "Pasting into a different document keeps the plain name. Is that what you expect, or should a paste always say copy?"
+  ],
+  "rough": [
+    "Every paste lands at the same spot, 16 by 16 down from the layer that was copied, so pasting twice stacks the second copy exactly on the first and only the layers list shows there are two. Filed as its own task rather than changed here, because where a repeated paste should land is a separate call.",
+    "Only the pasted layer's own name is worked out. Paste a group and the pieces inside it keep the names they had, which is also what duplicating a group does today.",
+    "Verified in the probe app with a scripted walk; the screenshot is a real window capture, not an offscreen render."
+  ]
+}

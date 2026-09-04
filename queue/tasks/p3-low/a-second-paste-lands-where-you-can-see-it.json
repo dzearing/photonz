@@ -1,0 +1,27 @@
+{
+  "id": "a-second-paste-lands-where-you-can-see-it",
+  "title": "A second paste lands where you can see it",
+  "goal": "Paste a copied layer twice and the two copies land in exactly the same place, one hidden under the other, so the picture looks unchanged and only the layers list shows anything happened. Each paste should step further along so you can see what you just made.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1160,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T09:12:08.878Z",
+  "updated": "2026-09-04T09:12:08.878Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "EditorState.pasteLayer offsets a fixed CGPoint(x: 16, y: 16) from transfer.layer.frame, so every paste of one clipboard payload lands identically. Duplicate cascades because each duplicate offsets from its own source. Options: cascade off the topmost layer that already carries the pasted name, or track a per-clipboard paste count. Found while fixing copying-a-layer-and-pasting-it-gives-the-copy-it (see queue/audits/2026-09-04-pasted-layer-name.json).",
+  "acceptance": [
+    "Pasting the same copied layer twice leaves two copies at different places on the canvas",
+    "The place a paste lands is still near the layer it came from, not across the picture",
+    "Undo puts the picture back one paste at a time"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T09:12:08.878Z",
+      "note": "created (manual)"
+    }
+  ]
+}

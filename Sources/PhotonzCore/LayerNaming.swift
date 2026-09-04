@@ -77,6 +77,21 @@ public enum LayerNaming {
         firstFree(base: stem(of: source) ?? "\(copyBase(of: source)) \(copyWord)", taken: taken)
     }
 
+    /// What to call a layer arriving from the clipboard, given every name
+    /// already spoken for where it lands.
+    ///
+    /// Copying a layer and pasting it lands a copy beside the original, so it
+    /// is named exactly as duplicating that layer names it: an app-written name
+    /// takes the next number, a name a person typed keeps their word and gains
+    /// "copy". Nothing is renamed until there is something to tell apart — a
+    /// layer pasted into another document, or cut and pasted back, keeps the
+    /// name it arrived with, and the layer that was already there is never
+    /// touched.
+    public static func pastedName(of source: String, taken: Set<String>) -> String {
+        guard taken.contains(source) else { return source }
+        return copyName(of: source, taken: taken)
+    }
+
     /// `base`, then "base 2", "base 3"… — the first one nobody is using.
     static func firstFree(base: String, taken: Set<String>) -> String {
         guard taken.contains(base) else { return base }

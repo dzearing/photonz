@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1080,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T06:09:02.343Z",
-  "updated": "2026-09-04T06:09:02.344Z",
+  "updated": "2026-09-04T09:14:35.841236Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Verified in the probe on 2026-09-03: drop Hero banner.png, copyLayer, pasteLayer, two rows both read \"Hero banner\". EditorState.pasteLayer sets layer.name = transfer.layer.name, which deliberately undoes the \" copy\" that Layer.duplicated appends, and PhotonzDocument.uniquelyNamed only numbers names built from LayerNaming.autoStems, which a file-derived name is not. The duplicate path (nameDuplicates -> LayerNaming.copyName) is the shape to match. Sibling of two-pictures-with-the-same-name-get-told-apart-i, which fixed the same defect for placing a file twice.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-04T06:09:02.344Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T09:06:55.627Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T09:14:35.841236Z",
+      "note": "Adversarial review before building: the mock-free question is what a paste should be called when it lands somewhere the original is not (another document, or after a cut). Always adding \"copy\" would rename a cut-and-pasted layer behind the user's back, so the rule is the one PlacedImageNaming already uses: nothing is renamed until there is something to tell it apart from. In the same-document case that is identical to what duplicate does, which is what the task asks for."
+    },
+    {
+      "t": "2026-09-04T09:14:35.841236Z",
+      "note": "TDD: Tests/PhotonzCoreTests/PastedLayerNamingTests.swift (8 tests) written first and red, then LayerNaming.pastedName(of:taken:) added. One test asserts paste and duplicateLayer agree name for name across app-written, person-typed and already-copied names."
+    },
+    {
+      "t": "2026-09-04T09:14:35.841236Z",
+      "note": "EditorState.pasteLayer no longer restores transfer.layer.name; it asks LayerNaming.pastedName against the names in the document it is landing in. Shared file, so Current and Next both have it."
+    },
+    {
+      "t": "2026-09-04T09:14:35.841236Z",
+      "note": "Verified live in the probe with Scripts/playtest/pasted-layer-name-walk.json: Hero banner, Hero banner copy, Hero banner copy 2, duplicate then gives Hero banner copy 3, and a hand-typed \"Renamed Layer\" is untouched while its copy reads \"Renamed Layer copy\". Screen Recording granted, real capture at queue/audits/2026-09-04-pasted-layer-name.png. Scripts/test.sh: 2870 tests pass."
+    },
+    {
+      "t": "2026-09-04T09:14:35.841236Z",
+      "note": "Review of the built thing: repeated pastes all land at the same 16,16 offset and stack invisibly. Left alone (naming was the task) and filed as a-second-paste-lands-where-you-can-see-it."
     }
-  ]
+  ],
+  "started": "2026-09-04T09:06:55.627Z"
 }
