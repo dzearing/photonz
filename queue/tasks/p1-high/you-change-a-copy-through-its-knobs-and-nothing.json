@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T15:25:54.756Z",
-  "updated": "2026-09-04T16:23:53.272091Z",
+  "updated": "2026-09-04T16:24:20.389Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-04: drag a button, click the text in it, press Enter, type, the text disappears when you click away. This is a known consequence nobody guarded: the audit 2026-09-03-component-instances.json says in its own rough list that a copys contents are its originals so any edit in there would be silently thrown away. The canvas does not stop it: CanvasView.swift around line 2457 begins a text session for any selected .text layer with no check for whether that layer is resolved from a component, and ComponentInstances.swift resolvedChildren rebuilds those children from the original on the next resolve. The model half already exists and is the users own proposal: ComponentPropertyKind in ComponentProperties.swift offers text (Wording), visible (Show or hide) and variant (Choice), and StarterComponents.addStarterKnobs hangs knobs on the starter pieces, so a starter button should already have a wording knob. What is missing is the way in: the panel section .component (LayersPanel.swift line 631) and a guard on the canvas. Decide and record: does typing over a piece that HAS a knob edit the knob in place (preferred, it is what a person expects) or refuse and point at the panel. Open a decision card only if the answer changes what the user has to do.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-04T16:23:53.272091Z",
       "note": "Audit: queue/audits/2026-09-04-copy-wording.json with three captures."
+    },
+    {
+      "t": "2026-09-04T16:24:20.388Z",
+      "note": "Typing in a button keeps its words: the real cause was the inline editor writing a canvas-space box into a group-relative frame (PhotonzDocument.commitTextEdit), which threw every label inside every group off the picture. Copies are now adjusted through their knobs: one double click on a copy's words types onto its own wording knob, a piece with no knob refuses in plain words and offers to expose one or detach, and a piece inside a copy has no handles and no panel rows of its own. Core: ComponentPieceEditing.swift + commitTextEdit, 20 tests written first, 3033 green. Verified in the probe app with Scripts/playtest/copy-wording-walk.json and copy-no-knob-walk.json. Audit: queue/audits/2026-09-04-copy-wording.json."
     }
   ],
-  "started": "2026-09-04T15:56:19.437Z"
+  "started": "2026-09-04T15:56:19.437Z",
+  "completed": "2026-09-04T16:24:20.389Z"
 }
