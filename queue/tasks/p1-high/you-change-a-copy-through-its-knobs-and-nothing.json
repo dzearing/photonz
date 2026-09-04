@@ -1,0 +1,35 @@
+{
+  "id": "you-change-a-copy-through-its-knobs-and-nothing",
+  "title": "You change a copy through its knobs, and nothing you type is ever thrown away",
+  "goal": "Clicking the words inside a placed button, pressing Enter and typing appears to work, then the words vanish the moment you click away. A copy takes its contents from its original, so anything typed in there is discarded on the next redraw. That must never happen: either the edit is refused with a plain reason, or it lands on the copys own Wording knob and stays. A copy should be adjusted through the knobs its original exposes, shown in the panel, rather than by reaching into its pieces.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T15:25:54.756Z",
+  "updated": "2026-09-04T15:25:54.822Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-04: drag a button, click the text in it, press Enter, type, the text disappears when you click away. This is a known consequence nobody guarded: the audit 2026-09-03-component-instances.json says in its own rough list that a copys contents are its originals so any edit in there would be silently thrown away. The canvas does not stop it: CanvasView.swift around line 2457 begins a text session for any selected .text layer with no check for whether that layer is resolved from a component, and ComponentInstances.swift resolvedChildren rebuilds those children from the original on the next resolve. The model half already exists and is the users own proposal: ComponentPropertyKind in ComponentProperties.swift offers text (Wording), visible (Show or hide) and variant (Choice), and StarterComponents.addStarterKnobs hangs knobs on the starter pieces, so a starter button should already have a wording knob. What is missing is the way in: the panel section .component (LayersPanel.swift line 631) and a guard on the canvas. Decide and record: does typing over a piece that HAS a knob edit the knob in place (preferred, it is what a person expects) or refuse and point at the panel. Open a decision card only if the answer changes what the user has to do.",
+  "acceptance": [
+    "No gesture inside a copy can start an edit that is later discarded: either it is refused with a short plain reason, or it is routed to the matching knob and survives clicking away, saving and reopening",
+    "Selecting a copy shows its knobs in the panel as ordinary rows, wording as a text field, show or hide as a checkbox, choice as a menu, with the copys own values not the originals",
+    "Typing over the words in a copy that has a wording knob for that piece edits that knob and stays; a piece with no knob says so and offers to expose one or to detach",
+    "A copy with no knobs at all says plainly that there is nothing to adjust yet and how to add a knob on the original",
+    "Editing the original still updates every copy, and a copy that has set a knob keeps its own value",
+    "Core logic covered by tests in PhotonzCore written before the implementation",
+    "Audit written under queue/audits/ with pictures of the panel for a starter button and after a wording change, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T15:25:54.756Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-04T15:25:54.822Z",
+      "note": "seq 170 -> 3"
+    }
+  ]
+}

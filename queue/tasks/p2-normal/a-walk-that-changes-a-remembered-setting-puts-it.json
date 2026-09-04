@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1110,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T14:46:32.315Z",
-  "updated": "2026-09-04T14:46:32.316Z",
+  "updated": "2026-09-04T15:11:06.048Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while regression-testing the colour picker walk work on 2026-09-04. type-menu-labels-walk step 17 is panelMenu {menu: 24 pt, choose: 48 pt}; the text size is remembered in the probe defaults, so on a second run the button reads 48 pt and the step fails with \"no menu called 24 pt\". drop-lands-here-walk has the same shape of problem from the other side: it carries a seed note saying to copy Scripts/playtest/fixtures/Photonz drop probe.png into ~/Pictures/Screenshots first, which nothing enforces, so it fails with \"no tile called Photonz drop probe\" unless a person read the note. Options: a reset step at the top of a walk, a walk-level setup block the runner performs, or the probe starting from clean defaults each launch.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-04T14:46:32.316Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T14:51:12.817Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T15:11:06.047Z",
+      "note": "Adversarial review before building. Three ways out were on the table: a reset step inside a walk, a setup block the runner performs, and the probe starting clean every launch. Clean every launch is wrong: the probe keeping its settings is what makes it the same app a person uses, and two walks (open-groups-remembered, open-groups-reopened) exist precisely to prove something is remembered. A reset STEP is wrong too, because it can only run after the window is already open, and the text size a new label is made in is read before that. So: a setup block, performed before step one."
+    },
+    {
+      "t": "2026-09-04T15:11:06.048Z",
+      "note": "Second finding, which changed the shape of the fix. type-menu-labels named the size menu \"24 pt\", which is its VALUE. The harness already has a rule against that for every other control (a control's name holds still; what changes about it goes in its detail), and menus were the one place it was not honoured. FrameInspector even carries a comment saying its menu is opened by the size it is showing. So a menu is now named by the row it sits on (Size, Vertical) with the value in the detail, and a panel step reads them \"Size (24 pt)\". Forgetting the setting alone would have left the walk fragile the moment anything else changed a size."
+    },
+    {
+      "t": "2026-09-04T15:11:06.048Z",
+      "note": "Built: PlaytestSetup in PhotonzCore (forget + captures, decoded with readable errors, 8 new tests); PlaytestSetupRunner in the probe performs it before step one and gives borrowed capture files back however the run ends; PlaytestPanelMenu.naming resolves a menu by its row; SelectionMenu and the Across/Down captions in TextInspector name their rows; Scripts/playtest-all.sh runs the whole folder; PlaytestWalkSetupTests holds every walk to the rule."
+    },
+    {
+      "t": "2026-09-04T15:11:06.048Z",
+      "note": "The static test found a third case at once: text-fills-height-walk opened \"Top\", chose \"Stretch\", then opened \"Stretch\". Both steps now say \"Vertical\". Running the panel walks found a fourth and fifth: picker-controls-walk and panel-controls-walk each draw a rectangle and open its Fill colour, which does not exist when the shape tool was last left holding no fill. Both now forget shapes and color first, and both pass."
     }
-  ]
+  ],
+  "started": "2026-09-04T14:51:12.817Z"
 }

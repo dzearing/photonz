@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T14:11:50.549Z",
-  "updated": "2026-09-04T14:24:31.531Z",
+  "updated": "2026-09-04T14:50:36.980Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The picker is a SwiftUI .popover, so it is a separate NSWindow: PlaytestHarness.panelTargets walks down from requireWindow().contentView and never reaches it. Either widen the search to the app's popover windows (NSApp.windows filtered to those owned by the editor window) or give the picker its own target search. Files: Sources/Photonz/ColorPickerPopover.swift, DesignedColorPicker.swift, Playtest/PlaytestHarness.swift (panelTargets, pressTargets, pressControl's in-window check, which also assumes the editor window's bounds). Raised by the 2026-09-04 panel-controls audit.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-04T14:50:15.275356Z",
       "note": "drop-lands-here-walk passes with its fixture copied into ~/Pictures/Screenshots: 31 steps, ok. So the regression set is 31 of 32 walks green, and the one that is not, type-menu-labels-walk, fails in openPanelMenu, which this task does not touch, because the walk sets the text size to 48 and the probe remembers it."
+    },
+    {
+      "t": "2026-09-04T14:50:36.979Z",
+      "note": "A scripted walk can now use the colour picker, not just photograph it: panel and press reach popover windows and address the click to them, and the picker names its tabs, swatches, format switch, ramp buttons, HEX box, Save style and Close. Shipped in c384a8a. Verified on the probe with Screen Recording granted (picker-controls-walk.json, 69 steps, ok), 3002 tests green, 31 of the 32 walks this can reach still finish. Audit: queue/audits/2026-09-04-picker-walkable.json."
     }
   ],
-  "started": "2026-09-04T14:24:31.530Z"
+  "started": "2026-09-04T14:24:31.530Z",
+  "completed": "2026-09-04T14:50:36.980Z"
 }

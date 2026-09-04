@@ -1,0 +1,36 @@
+{
+  "id": "a-button-grows-to-fit-the-words-in-it",
+  "title": "A button grows to fit the words in it",
+  "goal": "Giving a button a longer label leaves the button the same width, so the words spill out of it or sit cramped. A container should be able to size itself to what is inside, with padding around it, so a longer label makes the button wider and everything stays laid out.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T15:25:54.789Z",
+  "updated": "2026-09-04T15:25:54.855Z",
+  "deps": [
+    "you-change-a-copy-through-its-knobs-and-nothing"
+  ],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-04 alongside the lost text bug: the button does not grow with content like you would expect. Today a container has placement (LayerPlacement.swift, shipped 2026-09-03: Left, Center, Right, Stretch and the vertical pair, with Scale as the unset default) but no notion of sizing to contents. This is the hug half of the layout story the design study calls auto layout (docs/design/mocks/pages/ui-build-screen.html: direction, gap, padding, hug and fill); full auto layout with stacking and gaps stays deferred per docs/design/ui-building.md, but hug plus padding is the piece that makes a component usable and should land alone. Order it after the knobs task so a wording change is a real edit before it has to drive a resize. Watch the interaction with placement: a hugging container has no spare room, so Stretch on a child inside one needs a defined meaning; write it into the spec.",
+  "acceptance": [
+    "A group or frame can be set to size itself to its contents, on either axis independently, with padding on all four sides",
+    "Changing the wording of a starter button makes the button wider and keeps its padding, with no manual resizing",
+    "A container set to a fixed size behaves exactly as it does today, and existing documents are unchanged",
+    "The layout settles in one pass: nothing jitters or requires a second edit to look right",
+    "Core logic covered by tests in PhotonzCore written before the implementation",
+    "Audit written under queue/audits/ showing a starter button with a short and a long label, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T15:25:54.790Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-04T15:25:54.854Z",
+      "note": "seq 180 -> 4"
+    }
+  ]
+}
