@@ -7178,3 +7178,45 @@ three window captures are in `queue/audits/`.
 **Next:** nothing is drawn while a picture is in the air over the canvas, so
 its size is a surprise until you let go, where a component draws the box it
 will fill. Filed as `you-can-see-where-a-dragged-picture-will-land-be`.
+
+## 2026-09-03 — Clicking a layer stops stalling the main thread for three frames
+
+User report: selecting a layer felt sluggish on their MacBook in Next with
+components, frames and the Library on, in documents with nested groups and
+component copies. Reproduced and measured before touching anything, with a
+new playtest walk (`Scripts/playtest/select-click-perf-walk.json`: an original
+component, three copies grouped, a nested group of five rectangles, then
+clicks around the scene) and a main-thread meter added to the harness (every
+`click` and `wait` line now reports `mainBusy`, run-loop passes, and the
+longest pass; harness time is subtracted). The mouse-down handler itself was
+never the problem (about 1ms); the main thread then stayed busy 60-65ms per
+click with a single run-loop pass of 42-44ms, three dropped frames.
+
+Attribution (`sample` on the probe, `Self._printChanges()` in the dock's
+sections, and runs with the Library and then the whole inspector hidden):
+hiding the inspector cut the longest pass from 44ms to 11ms, so the dock was
+the cost, not the canvas or the tree walk. Inside it, the proven causes were
+(1) `GeometryInspector` giving its whole subtree a new `.id` per selection,
+which destroyed and re-created four `NSTextField`s and their accessibility
+nodes on every click; (2) the selection setter writing five unrelated
+`@Observable` properties even when unchanged, which re-ran every section that
+reads any of them; (3) `LibraryPanel` re-running on every click (SwiftUI
+reported `@self changed`) and walking the whole layer tree once per tile;
+(4) a plain click starting the drag-preview renders and their extra pass.
+
+Fixed all four (draft reset via `onChange(of: selectionKey)` instead of
+`.id`; guarded writes; `LibraryPanel: Equatable` + `.equatable()` and one
+tree walk; drag preview starts on the first real mouseDragged). Same walk,
+same meter, A/B with the app changes stashed: busy per click 63-65ms to
+46ms, longest pass median 42-44ms to 30ms; clicking from one group to
+another 44ms to 27-30ms; deselect 43ms to 30ms. Not there yet: the click that
+brings the Position & Size, Effects, Shadow and Component sections back after
+a deselect still costs a 53ms pass (section creation: sliders, text fields,
+a color well), and every Layers row re-runs its body per click. Queue: keep
+the per-layer sections mounted (or update the dock one pass after the canvas
+so the selection feedback lands first), and make Layers rows skip unchanged
+neighbours. Also seen three times in about fifteen probe runs, before and
+after the change: a walk stops mid-run with the probe gone or stuck; not
+reproduced under a watcher, not caused by this work.
+
+Verified: `Scripts/test.sh` green (2099 tests), walk on the probe.

@@ -18,7 +18,7 @@ import SwiftUI
 /// Selection is the app's one selection: picking a tile clears the layer and
 /// canvas selection and opens the item's section in this same dock, exactly
 /// the way picking a layer opens its sections.
-struct LibraryPanel: View {
+struct LibraryPanel: View, Equatable {
     @Environment(EditorState.self) private var editorState
     @Environment(AppCoordinator.self) private var coordinator
     /// The scope you were last in, remembered across launches (and read by the
@@ -46,9 +46,21 @@ struct LibraryPanel: View {
     static let maxTiles = 60
     /// The shelf's scrolling area as a coordinate space, so the grid can say
     /// how far it has been scrolled rather than where it is in the window.
-    fileprivate static let shelfSpace = "library.shelf"
+    // nonisolated: a plain name, read from the Sendable closure
+    // `onGeometryChange` hands its reader. Making the panel Equatable put that
+    // closure outside the main actor's isolation, and a constant string has no
+    // business being isolated in the first place.
+    fileprivate nonisolated static let shelfSpace = "library.shelf"
 
     private var scope: LibraryScope { LibraryScope(rawValue: scopeRaw) ?? .media }
+
+    /// Two shelves are the same shelf: everything this panel draws comes from
+    /// the editor state, the app's capture store and its own `@State` and
+    /// `@AppStorage`, all of which wake it on their own. Without this SwiftUI
+    /// cannot tell (`@self changed`) and re-runs the whole shelf, tiles and
+    /// segmented control included, every time the dock above it redraws for
+    /// a selection change (measured 2026-09-03). Used with `.equatable()`.
+    nonisolated static func == (lhs: LibraryPanel, rhs: LibraryPanel) -> Bool { true }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -148,10 +160,17 @@ struct LibraryPanel: View {
     private var visibleComponents: [(entry: LibraryEntry, layer: Layer, starter: StarterComponent?)] {
         guard scope == .components, let document = editorState.document else { return [] }
         let hits = LibrarySearch.filter(editorState.componentEntries, query: query)
+        // One walk of the tree for all the tiles, not one per tile: this runs
+        // on every draw of the shelf, and a lookup by id copies the whole
+        // layer tree on its way through.
+        let mains = Dictionary(document.mainComponents.compactMap { layer in
+            layer.componentID.map { ($0, layer) }
+        }, uniquingKeysWith: { first, _ in first })
         return hits.prefix(Self.maxTiles).compactMap { entry in
             guard let id = UUID(uuidString: entry.id) else { return nil }
-            if let layer = document.mainComponent(componentID: id) { return (entry, layer, nil) }
-            guard let starter = editorState.starterComponent(entryID: entry.id) else { return nil }
+            if let layer = mains[id] { return (entry, layer, nil) }
+            guard editorState.starterComponentsEnabled,
+                  let starter = StarterComponent(componentID: id) else { return nil }
             return (entry, editorState.starterPreviewLayer(starter), starter)
         }
     }

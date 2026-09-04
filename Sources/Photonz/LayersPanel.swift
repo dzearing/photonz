@@ -377,7 +377,9 @@ struct InspectorPanel: View {
         case .shadow:
             ShadowInspector()
         case .library:
-            LibraryPanel()
+            // The shelf does not change with the selection, so it is spared
+            // the re-run every other section takes (see its `==`).
+            LibraryPanel().equatable()
         case .libraryItem:
             // The picked tile's section, named and filled by the scope it came
             // from: a capture's details, or a component's.
@@ -2497,7 +2499,7 @@ struct MeasureInspector: View {
         HStack(spacing: 8) {
             Text(label).font(.caption).foregroundStyle(.secondary)
                 .frame(width: 44, alignment: .leading)
-            ColorPicker(label, selection: Binding(get: { color }, set: set),
+            ColorPicker(label, selection: Binding(get: { color }, set: { set($0) }),
                         supportsOpacity: supportsOpacity)
                 .labelsHidden().controlSize(.small)
             Spacer(minLength: 0)

@@ -112,7 +112,7 @@ read coordinates straight off the fixture.
 | `shortcut` | `key`, optional `modifiers` `menuItem` | Presses a chord and REQUIRES it to reach a menu item that actually runs. Fails, loudly and with the reason, when no menu item carries the chord, when the item is not the one `menuItem` names, when something else takes the press, or when the item has nothing behind it. Use it for app-level shortcuts (Capture, New Window, Open); a window-scoped one fails by design and tells you to use `action` instead. See "Which shortcuts a walk can press" below. |
 | `move` | `at` | Moves the pointer over the canvas (hover previews, snap dots). |
 | `hover` | `label` or `at` | Rests the pointer on a control until its tooltip shows: `label` is the text the tooltip starts with ("Arrow", "Measure"); `at` is a point, and one over no control leaves the tooltip behind. The log line says what showed and where, and a `snapshot` taken now includes it. |
-| `click` | `at`, optional `count`, `modifiers` | Mouse down and up on the canvas. |
+| `click` | `at`, optional `count`, `modifiers` | Mouse down and up on the canvas. The log line also says what the click cost: `handler` is the synchronous mouse-down and mouse-up time, and `mainBusy` is how long the main thread stayed busy afterwards, over how many run-loop passes, and the longest single pass (see "Reading the cost of a step" below). |
 | `drag` | `from`, `to`, optional `steps`, `modifiers`, `hold` | Mouse down, a run of drags, mouse up. `modifiers` are held for the whole gesture (Command drags free of every magnet). `hold` names a snapshot taken with the button still down, just before the release: the only way to photograph something that exists only mid-drag, like the yellow snap guide. |
 | `focus` | `field` | Gives the keyboard to a named text field in the inspector, by the label the field shows ("W", "H", "X"). Everything after it — `type`, `key` tab, an arrow key — then goes to that field, the way it would for a person who clicked it. Fails with the list of fields that ARE on screen, which is usually the fastest way to learn why a section is not showing. Needed because `click` goes to the canvas view and can never reach the inspector. |
 | `type` | `text` | Inserts text into whatever field has the keyboard. Fails when nothing does. Note this bypasses the keyboard entirely; to prove a field still takes ordinary typing, press the characters with `key`. |
@@ -168,6 +168,20 @@ device can start, so it is the one part of a panel drag a walk cannot see.
 Tiles and rows say their own names: each hangs an invisible marker behind itself
 (`PanelTarget.swift`) carrying the name a person reads and the same drag closure
 the pointer uses, so a walk can never pick up something a person could not.
+
+## Reading the cost of a step
+
+A `click` resets a meter on the main run loop; the click's own log line and
+every `wait` after it report `mainBusy <total>ms over <n> passes, longest
+<ms>`: how long the main thread has been busy since the click, in how many
+run-loop passes, and the longest single pass. The harness's own work
+(describing the editor, rewriting the log) is subtracted, so the numbers are
+the app's. The one to watch is **longest**: a pass over 16ms is a frame the
+app did not draw, which is what "sluggish" means to a person clicking. Read
+the `wait` line that follows the click, since the click line stops counting
+50ms in. `Scripts/playtest/select-click-perf-walk.json` builds a scene with
+nested groups and component copies and clicks through it; it is the guard on
+selection latency (numbers from 2026-09-03 in its commit).
 
 ## Things to know
 

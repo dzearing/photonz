@@ -197,10 +197,16 @@ final class EditorState {
     /// The layer targeted by click-to-select / drag-to-move. Nil = none.
     /// Any change to the primary selection dissolves a marquee multi-selection —
     /// the two never coexist.
+    ///
+    /// Every store this touches is written ONLY when it actually changes.
+    /// `@Observable` tells the views about a write whether or not the value
+    /// moved, and a click that set five unchanged properties re-ran every
+    /// section of the inspector that reads any of them (measured 2026-09-03:
+    /// part of a 40-60ms main-thread stall per click).
     private(set) var selectedLayerID: UUID? {
         didSet {
             if oldValue != selectedLayerID {
-                multiSelectedLayerIDs = []
+                if !multiSelectedLayerIDs.isEmpty { multiSelectedLayerIDs = [] }
                 // A fresh primary selection is what the next shift-click in
                 // a list ranges from, wherever it came from (canvas, panel,
                 // a new layer).
@@ -213,14 +219,14 @@ final class EditorState {
             }
             // Selecting anything (or explicitly deselecting) drops the Canvas
             // pseudo-selection; selectCanvas() re-raises the flag afterwards.
-            isCanvasSelected = false
+            if isCanvasSelected { isCanvasSelected = false }
             // ...and drops the Library tile, for the same reason: one thing is
             // selected in this window at a time, wherever it was picked.
             // selectLibraryItem() re-raises it afterwards.
-            selectedLibraryItemID = nil
+            if selectedLibraryItemID != nil { selectedLibraryItemID = nil }
             // A half-typed style name belongs to the row that opened it, and
             // that row is gone (Next, `next-styles`).
-            colorStyleNaming = nil
+            if colorStyleNaming != nil { colorStyleNaming = nil }
         }
     }
     /// The "Canvas" pseudo-layer selection: no layer is selected, the canvas
@@ -234,7 +240,7 @@ final class EditorState {
     private(set) var multiSelectedLayerIDs: Set<UUID> = [] {
         didSet {
             for id in multiSelectedLayerIDs where !oldValue.contains(id) { revealInLayersList(id) }
-            if !multiSelectedLayerIDs.isEmpty { selectedLibraryItemID = nil }
+            if !multiSelectedLayerIDs.isEmpty, selectedLibraryItemID != nil { selectedLibraryItemID = nil }
             // A half-typed style name belongs to the layers that were picked
             // when the field opened, and those are not the layers any more
             // (Next, `next-styles`).
@@ -3110,7 +3116,9 @@ final class EditorState {
     private func revealInLayersList(_ id: UUID) {
         guard let document else { return }
         let ancestors = document.ancestorIDs(of: id)
-        guard !ancestors.isEmpty else { return }
+        // Only a group that is not open yet is worth a write: the layers list
+        // animates on this set, so an unchanged write is a re-layout for nothing.
+        guard ancestors.contains(where: { !expandedGroupIDs.contains($0) }) else { return }
         expandedGroupIDs.formUnion(ancestors)
     }
 
@@ -4580,9 +4588,9 @@ final class EditorState {
     /// A canvas click that resolved through the group walk: the layer it
     /// picked and the group it picked it inside.
     func selectLayer(_ id: UUID?, inGroup context: UUID?) {
-        groupContextID = context
+        if groupContextID != context { groupContextID = context }
         selectedLayerID = id
-        if id == nil { multiSelectedLayerIDs = [] }
+        if id == nil, !multiSelectedLayerIDs.isEmpty { multiSelectedLayerIDs = [] }
     }
 
     /// A ⇧-click on the canvas: adds the layer to the selection, or drops it
@@ -5366,11 +5374,12 @@ final class EditorState {
         // Selecting from anywhere but the canvas walk (a panel row, a fresh
         // layer, a deselect) puts you back at the top level: the only thing
         // that puts you inside a group is deliberately going into it.
-        groupContextID = document?.parentID(of: id ?? UUID())
+        let context = id.flatMap { document?.parentID(of: $0) }
+        if groupContextID != context { groupContextID = context }
         selectedLayerID = id
         // Explicit deselection dissolves the multi-selection even when the
         // primary was already nil (didSet only fires on change).
-        if id == nil { multiSelectedLayerIDs = [] }
+        if id == nil, !multiSelectedLayerIDs.isEmpty { multiSelectedLayerIDs = [] }
     }
 
     /// A click on a Layers or Measurements row, with the modifier keys read
@@ -5387,7 +5396,8 @@ final class EditorState {
         next.click(id, click, in: order)
         // A row click puts you wherever the row lives, so picking a top-level
         // layer from the list steps you out of any group you were inside.
-        groupContextID = document?.parentID(of: id)
+        let context = document?.parentID(of: id)
+        if groupContextID != context { groupContextID = context }
         switch next.selected.count {
         case 0:
             selectLayer(nil)
@@ -5425,7 +5435,7 @@ final class EditorState {
     /// Lets go of the Library tile without touching the layer selection: what
     /// a click on the canvas that landed on nothing means.
     func clearLibraryPick() {
-        selectedLibraryItemID = nil
+        if selectedLibraryItemID != nil { selectedLibraryItemID = nil }
     }
 
     func selectCanvas() {

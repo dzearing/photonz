@@ -48,10 +48,6 @@ struct GeometryInspector: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-        // A different set of layers is a different set of numbers, so the
-        // fields start fresh rather than carrying the last selection's
-        // half-typed draft.
-        .id(selection.members.map(\.id))
     }
 
     /// What the numbers mean, in words. With one layer picked that is where
@@ -70,6 +66,7 @@ struct GeometryInspector: View {
                        _ selection: LayerGeometrySelection) -> some View {
         GeometryNumberField(
             field: field,
+            selectionKey: selection.members.map(\.id),
             reading: selection.reading(field),
             isEditable: selection.allows(field),
             help: help(field, selection),
@@ -106,6 +103,14 @@ struct GeometryInspector: View {
 /// that rule.
 private struct GeometryNumberField: View {
     let field: LayerGeometryField
+    /// Which layers the number stands for. A different set of layers is a
+    /// different set of numbers, so the draft starts fresh when this changes
+    /// rather than carrying the last selection's half-typed text. The FIELD
+    /// itself stays: the section used to take a new identity per selection,
+    /// which tore down and rebuilt four text fields on every click, the single
+    /// biggest cost of selecting a layer (measured 2026-09-03). Only the draft
+    /// ever had to be reset.
+    let selectionKey: [UUID]
     let reading: LayerGeometryReading
     let isEditable: Bool
     let help: String
@@ -157,6 +162,7 @@ private struct GeometryNumberField: View {
         .help(help)
         .onAppear { text = display() }
         .onChange(of: reading) { text = display() }
+        .onChange(of: selectionKey) { text = display() }
         .onChange(of: isFocused) { _, focused in
             if focused {
                 selectEverything()
