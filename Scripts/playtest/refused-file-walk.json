@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/refused-file",
+  "seed": "Nothing to set up: both files held over the canvas live in the repo.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1400, "canvasHeight": 1000, "width": 1180, "height": 860 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "0-empty-canvas" },
+
+    { "do": "dragFile", "file": "fixtures/Photonz drop probe.png", "at": [700, 500], "hold": "1-picture-accepted" },
+    { "do": "describe", "stage": "1-picture-accepted", "note": "a picture held over the middle of the canvas is still taken: the canvas answers with a copy and draws the box it would land in, unchanged by this task" },
+
+    { "do": "dragFile", "file": "fixtures/Redline notes.txt", "at": [700, 500], "hold": "2-text-file-refused" },
+    { "do": "describe", "stage": "2-text-file-refused", "note": "the same spot holding a text file: the canvas refuses it, the pointer shows the no-entry sign, and no landing box is drawn. Before this task it showed the copy pointer and then nothing happened on release" },
+
+    { "do": "dragFile", "file": "../../Package.swift", "at": [400, 300], "hold": "3-source-file-refused" },
+    { "do": "describe", "stage": "3-source-file-refused", "note": "any other file the canvas cannot place reads the same way: refused from the moment it is over the canvas" },
+
+    { "do": "dragFile", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [400, 300], "hold": "4-picture-still-accepted" },
+    { "do": "describe", "stage": "4-picture-still-accepted", "note": "and a picture straight after a refusal is taken normally, so one refused file does not poison the next drag" }
+  ]
+}

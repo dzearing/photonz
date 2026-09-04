@@ -93,6 +93,23 @@ enum PlaytestPanelDrag {
         return board
     }
 
+    /// Every view a drag at this point is offered to, in the order AppKit
+    /// offers them: the innermost destination first, then each of its
+    /// ancestors that takes drops. A destination that answers "none" does not
+    /// end the drag: the view holding it is asked next, and only when the whole
+    /// chain refuses does the pointer show the no-entry sign. A walk that asks
+    /// the innermost view alone cannot tell those two apart.
+    static func destinations(at windowPoint: CGPoint, in content: NSView) -> [NSView] {
+        guard let innermost = destination(at: windowPoint, in: content) else { return [] }
+        var chain = [innermost]
+        var view = innermost.superview
+        while let next = view {
+            if !next.isHidden, !next.registeredDraggedTypes.isEmpty { chain.append(next) }
+            view = next.superview
+        }
+        return chain
+    }
+
     /// The innermost view under a point in the window that takes drops. The
     /// smallest match wins, so a row is chosen over the list that holds it.
     static func destination(at windowPoint: CGPoint, in content: NSView) -> NSView? {

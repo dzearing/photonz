@@ -459,9 +459,9 @@ final class CanvasNSView: NSView {
     /// write here, because a person letting go wants the same answer either
     /// way: where does this land, and how big is it.
     private var dropLanding: (rect: CGRect, host: UUID?)?
-    /// The file the drag in flight is carrying and how big its picture is, kept
-    /// for the life of that one drag session. See `draggedImageSize`.
-    private var draggedImage: (sequence: Int, url: URL, size: CGSize?)?
+    /// The file the drag in flight is carrying and what the canvas can make of
+    /// it, kept for the life of that one drag session. See `draggedFile`.
+    private var draggedImage: (sequence: Int, url: URL, drop: CanvasFileDrop)?
 
     /// The screen a move drag in flight would drop what it carries INTO,
     /// outlined while the pointer is still down. Without it the drop changes
@@ -1121,8 +1121,13 @@ final class CanvasNSView: NSView {
         if let componentID = droppedComponent(sender) {
             return dropComponent(componentID, atViewPoint: convert(sender.draggingLocation, from: nil))
         }
+        // The same reading the pointer answered with: a file the canvas refused
+        // in the air is refused on the way down too, so nothing can slip past a
+        // no-entry pointer and land anyway.
         guard let url = droppedURL(sender) else { return false }
-        if url.pathExtension.lowercased() != "photonz", let target = dropTarget(for: sender) {
+        let file = CanvasFileDrop.of(url)
+        guard file.isAccepted else { return false }
+        if file != .package, let target = dropTarget(for: sender) {
             onDropImageURLIntoCollage(url, target.collageID, target.index)
         } else if let viewport {
             onDropImageURL(url, viewport.documentPoint(fromView: convert(sender.draggingLocation, from: nil)))
@@ -1214,10 +1219,16 @@ final class CanvasNSView: NSView {
     ///
     /// Two cases deliberately draw nothing. Over a collage slot the drop fills
     /// that slot instead, and the slot lights up to say so; a second box would
-    /// promise something else. And a `.photonz` file, or any file at all when
-    /// no picture is open, opens a window rather than landing on this canvas.
+    /// promise something else. And a `.photonz` file opens a window rather than
+    /// landing on this canvas.
+    ///
+    /// A file the canvas can do nothing with — a text file, an archive, a
+    /// folder — is refused from the moment it is over the canvas, so the
+    /// pointer shows the no-entry sign instead of a copy badge that promises a
+    /// layer and then leaves nothing behind.
     private func trackImageDrag(_ sender: NSDraggingInfo) -> NSDragOperation {
-        guard let url = droppedURL(sender) else {
+        guard let url = droppedURL(sender),
+              draggedFile(url, sequence: sender.draggingSequenceNumber).isAccepted else {
             dropLanding = nil
             hoverSlot = nil
             refreshOverlays()
@@ -1235,8 +1246,7 @@ final class CanvasNSView: NSView {
     /// coordinates, and the screen it would join.
     private func landingForFile(_ url: URL, sender: NSDraggingInfo) -> (rect: CGRect, host: UUID?)? {
         guard let viewport, let document,
-              url.pathExtension.lowercased() != "photonz",
-              let size = draggedImageSize(of: url, sequence: sender.draggingSequenceNumber)
+              let size = draggedFile(url, sequence: sender.draggingSequenceNumber).pictureSize
         else { return nil }
         let point = viewport.documentPoint(fromView: convert(sender.draggingLocation, from: nil))
         let rect = document.placementForIncomingImage(size: size, at: point)
@@ -1244,17 +1254,19 @@ final class CanvasNSView: NSView {
         return (rect, document.frameID(under: point))
     }
 
-    /// How big the picture on the pasteboard is, measured once per drag.
+    /// What the file on the pasteboard is, read once per drag.
     /// `draggingUpdated` fires on every mouse move and the file cannot change
     /// under it, so reading the header again on each one would be pure waste.
-    /// Nil is remembered too: a file that is not a picture stays not a picture.
-    private func draggedImageSize(of url: URL, sequence: Int) -> CGSize? {
+    /// A refusal is remembered too: a file that is not a picture stays not a
+    /// picture, and re-reading it on every move to be told so again is the
+    /// same waste.
+    private func draggedFile(_ url: URL, sequence: Int) -> CanvasFileDrop {
         if let measured = draggedImage, measured.sequence == sequence, measured.url == url {
-            return measured.size
+            return measured.drop
         }
-        let size = ImageCodec.pixelSize(ofFileAt: url)
-        draggedImage = (sequence, url, size)
-        return size
+        let drop = CanvasFileDrop.of(url)
+        draggedImage = (sequence, url, drop)
+        return drop
     }
 
     private func droppedURL(_ sender: NSDraggingInfo) -> URL? {

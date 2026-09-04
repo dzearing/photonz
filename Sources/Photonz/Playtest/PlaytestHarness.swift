@@ -492,6 +492,72 @@ private final class Run {
                  "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
                  state: describe())
 
+        case .dragFile(let file, let at, let hold):
+            // A file held over the canvas with the button still down, so the
+            // step can write down the answer the pointer is showing. It is the
+            // only way to record a refusal: letting go of a file the canvas
+            // will not take does nothing at all, so `dropImage` can never see
+            // one.
+            let canvas = try requireCanvas()
+            let window = try requireWindow()
+            let url = file.hasPrefix("/")
+                ? URL(fileURLWithPath: file)
+                : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                throw Failure(description: "there is no file at \(url.path) to drag")
+            }
+            guard let provider = NSItemProvider(contentsOf: url) else {
+                throw Failure(description: "\(url.lastPathComponent) cannot be carried on a drag")
+            }
+            let board = try await PlaytestPanelDrag.pasteboard(from: provider, named: "file")
+            let viewPoint = try self.viewPoint(at)
+            let windowPoint = canvas.convert(viewPoint, to: nil)
+            let info = PlaytestDraggingInfo(pasteboard: board,
+                                            location: windowPoint,
+                                            window: window)
+            // Every destination the pointer's drag is offered to, not just the
+            // canvas: a view that answers "none" hands the drag up to the view
+            // holding it, so the pointer only says no once they ALL do.
+            guard let content = window.contentView else {
+                throw Failure(description: "the window has no content view")
+            }
+            let chain = PlaytestPanelDrag.destinations(at: windowPoint, in: content)
+            var operation: NSDragOperation = []
+            var answered = "nothing under the pointer takes drops"
+            // A few frames of hovering, the way a pointer crossing the canvas
+            // keeps asking, so the answer is the settled one.
+            for round in 0..<4 {
+                operation = []
+                for view in chain {
+                    let reply = round == 0 ? view.draggingEntered(info) : view.draggingUpdated(info)
+                    if reply != [] {
+                        operation = reply
+                        answered = "\(type(of: view))"
+                        break
+                    }
+                }
+                await sleep(0.05)
+            }
+            let landing = canvas.dropLandingDescription
+            var held = ""
+            if let hold, let content = window.contentView {
+                try snapshot(content, name: hold)
+                await screenCapture(window, name: hold)
+                held = ", held \(hold).png"
+            }
+            for view in chain { view.draggingExited(info) }
+            await sleep(0.1)
+            let answer = operation.contains(.copy)
+                ? "would place a copy (\(answered) took it)"
+                : "refused: the pointer shows the no-entry sign"
+            let shown = landing.map { "box \(short($0.rect.origin)) \(short(CGPoint(x: $0.rect.width, y: $0.rect.height)))"
+                                      + ($0.host == nil ? ", loose on the canvas" : ", joining a frame") }
+                ?? "no landing box"
+            note(number, step.name,
+                 "\(url.lastPathComponent) held over \(short(at.point)) \(at.space.rawValue): \(answer), \(shown)"
+                    + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)",
+                 state: describe())
+
         case .snapshot(let name, let wanted):
             // A sheet is its own window on top of the editor's, so while one is
             // up it IS what a person is looking at, and it is what gets

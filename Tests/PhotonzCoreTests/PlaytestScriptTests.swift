@@ -121,6 +121,32 @@ struct PlaytestScriptTests {
         #expect(script.steps[0].name == "dragComponent")
     }
 
+    @Test("A dragFile step holds a file over a point and records what the canvas answered")
+    func dragFileStepHoldsAFileInTheAir() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [300, 200], "hold": "refused" } ] }
+        """)
+        guard case .dragFile(let file, let at, let hold) = script.steps[0] else {
+            Issue.record("dragFile"); return
+        }
+        #expect(file == "notes.txt")
+        #expect(at.point == CGPoint(x: 300, y: 200))
+        #expect(hold == "refused")
+        #expect(script.steps[0].name == "dragFile")
+        #expect(PlaytestStep.names.contains("dragFile"))
+    }
+
+    @Test("A dragFile step can hold a file without taking a picture of it")
+    func dragFileStepDoesNotNeedAHold() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [10, 10] } ] }
+        """)
+        guard case .dragFile(_, _, let hold) = script.steps[0] else {
+            Issue.record("dragFile"); return
+        }
+        #expect(hold == nil)
+    }
+
     @Test func aScriptIsAnOutputFolderAndAListOfSteps() throws {
         let script = try decode("""
         {

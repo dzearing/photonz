@@ -553,6 +553,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// taken while the file is still in the air over the point, which is the
     /// only moment the landing outline exists.
     case dropImage(file: String, at: PlaytestPoint, hold: String?)
+    /// A file held over the canvas WITHOUT letting go, the way one hovers on
+    /// the way in from the Finder. The log line says what the canvas answered:
+    /// that it would place a copy, or that it refuses the file outright, which
+    /// is the only way a walk can record the no-entry pointer a text file or an
+    /// archive gets. `file` is relative to the script, like `open`; `hold`
+    /// names a picture taken while it is still in the air.
+    case dragFile(file: String, at: PlaytestPoint, hold: String?)
     /// Render the window's content offscreen to `<out>/<name>.png`.
     ///
     /// `window` names another of the app's windows to photograph instead of the
@@ -630,7 +637,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
-        "dragRow", "dragTile", "dropComponent",
+        "dragFile", "dragRow", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
         "panel", "panelMenu",
         "readClipboard", "render", "scrollPanel", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
@@ -658,6 +665,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dropComponent: "dropComponent"
         case .dragComponent: "dragComponent"
         case .dropImage: "dropImage"
+        case .dragFile: "dragFile"
         case .snapshot: "snapshot"
         case .render: "render"
         case .panelMenu: "panelMenu"
@@ -759,6 +767,9 @@ public enum PlaytestStep: Sendable, Equatable {
         case "dropImage":
             self = .dropImage(file: try f.string("file"), at: try f.point("at"),
                               hold: try f.optionalString("hold"))
+        case "dragFile":
+            self = .dragFile(file: try f.string("file"), at: try f.point("at"),
+                             hold: try f.optionalString("hold"))
         case "render":
             self = .render(name: try f.string("name"))
         case "panelMenu":

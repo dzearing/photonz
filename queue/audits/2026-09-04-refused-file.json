@@ -1,0 +1,27 @@
+{
+  "feature": "A file the canvas cannot place says no while you drag it",
+  "epic": "ui-building",
+  "summary": "Dragging a text file, an archive, a folder or any other non-picture over the canvas now shows the no-entry pointer from the moment it is over the picture, instead of the copy pointer followed by nothing happening. Pictures and Photonz documents are taken exactly as before.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this is how the canvas answers every drag.",
+  "try": [
+    { "do": "Open any picture, or press Command N for a blank canvas." },
+    { "do": "Drag a .txt file from the Finder over the middle of the canvas and hold it there.", "shot": "2026-09-04-refused-file-1.png" },
+    { "do": "Watch the pointer: it should show the no-entry sign, and the canvas should draw no landing box." },
+    { "do": "Let go. Nothing lands, and the file springs back to the Finder." },
+    { "do": "Now drag a PNG over the same spot and hold it.", "shot": "2026-09-04-refused-file-2.png" },
+    { "do": "Watch the pointer show the copy badge and the canvas outline the box the picture would fill, then let go and see it land there." },
+    { "do": "Drag a folder over the canvas: it reads as refused too." }
+  ],
+  "evaluate": [
+    "Does the refusal read as the app being clear rather than the app being broken?",
+    "Is the no-entry pointer enough on its own, or did you want the app to say why the file cannot go there?",
+    "Did any file you would expect to land get refused?",
+    "Does a picture dragged straight after a refused file still feel instant?"
+  ],
+  "rough": [
+    "A screen capture cannot include the pointer, so the shots show what the canvas draws (a landing box for a picture, nothing for a text file) rather than the pointer glyph itself. The refusal is what the canvas answers the drag with, which is what makes macOS draw the no-entry sign.",
+    "Only the canvas refuses. Drop the same text file on the right hand panel or the chrome around the picture and the window still takes it and does nothing, because a window wide drop target sits behind the canvas. Filed as its own task.",
+    "A file is judged by its header, not its name: a .png full of text is refused, and a picture too corrupt to read its size is refused rather than accepted and then dropped on the floor.",
+    "A .photonz document is still accepted over the canvas even though it opens a window rather than landing, which is right, but it means the pointer promises a copy for something that is really an open."
+  ]
+}

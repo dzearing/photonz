@@ -1,0 +1,27 @@
+{
+  "id": "the-panel-takes-a-file-the-app-cannot-use-and-do",
+  "title": "The panel takes a file the app cannot use and does nothing with it",
+  "goal": "Dragging a text file, an archive or a folder onto the right hand panel or the chrome around the picture still shows the copy pointer, and letting go does nothing. Over the picture itself the pointer now says no, so the rest of the window should say no the same way.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1140,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T08:37:45.119Z",
+  "updated": "2026-09-04T08:37:45.120Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while fixing the canvas refusal on 2026-09-04. The canvas (CanvasNSView) is the innermost drag destination over the picture and now returns [] for a file CanvasFileDrop reads as .unsupported. Behind it sits SwiftUI's window wide _PlatformDraggingDestinationView from EditorView's .dropDestination(for: URL.self) (registered for public.data/public.item), which accepts anything and calls addImageLayerOrOpen, which silently does nothing for a non-picture. It is a sibling BEHIND the canvas, not an ancestor, so it never sees a drag over the picture (verified with a view tree dump in a probe walk). Fixing it means swapping .dropDestination for .onDrop(of:delegate:) with a validateDrop that checks hasItemsConforming(to: [.image, EditorState.photonzType]); check the history overlay thumbnail drag (CaptureThumbnailView uses NSItemProvider(contentsOf:), so it carries the image UTI) still lands. The new dragFile playtest step asks the whole destination chain and names the view that answered, so a walk can prove it.",
+  "acceptance": [
+    "Dragging a non-picture file over the right hand panel shows the no-entry pointer",
+    "Dragging a picture over the panel or the chrome still adds it, unchanged",
+    "A scripted walk records the refusal over the panel"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T08:37:45.120Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 680,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T01:00:02.794Z",
-  "updated": "2026-09-04T01:00:02.795Z",
+  "updated": "2026-09-04T08:38:03.731607Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CanvasView.trackImageDrag currently returns .copy for any file URL and only skips the landing outline when ImageCodec.pixelSize(ofFileAt:) is nil. Returning [] in that case is nearly the whole fix, but keep .photonz and the no-document-open case accepted since both open a window rather than landing on the canvas. Found while building the drop landing preview on 2026-09-03.",
@@ -22,6 +22,39 @@
     {
       "t": "2026-09-04T01:00:02.795Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T08:23:42.143Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T08:38:03.731607Z",
+      "note": "review before building: the mock-free version of this is one line of pointer feedback, and the shortest honest version is what shipped. Cut two temptations: a toast or a banner saying why the file was refused (noise on a gesture that is over in half a second, and macOS already has a vocabulary for no), and refusing by file extension (a .png full of text would have slipped through). A file is judged by its header instead."
+    },
+    {
+      "t": "2026-09-04T08:38:03.731607Z",
+      "note": "deviated from the task note in one place: the note said keep the no-document-open case accepted because it opens a window. It does not. With no document open a non-picture goes to openImage, which fails silently, so the same lie is told. The rule is now one rule with no state in it: a picture or a .photonz is taken, everything else is refused."
+    },
+    {
+      "t": "2026-09-04T08:38:03.731607Z",
+      "note": "adversarial pass on the built thing found a real hole and closed the question: SwiftUI's window wide drop target (EditorView's .dropDestination(for: URL.self)) accepts anything, so a refusal by the canvas could have been swallowed by it. Dumped the live view tree in a probe walk: that target is a SIBLING BEHIND CanvasNSView, not an ancestor, and hitTest over the picture returns the canvas, whose superview chain registers no drag types. So the canvas has the last word over the picture. Over the panel and the chrome it does not, which is now its own task (the-panel-takes-a-file-the-app-cannot-use-and-do)."
+    },
+    {
+      "t": "2026-09-04T08:38:03.731607Z",
+      "note": "shipped: CanvasFileDrop in PhotonzRender (picture/package/unsupported, read from the header, 9 tests); CanvasView.trackImageDrag returns [] for unsupported and performDragOperation refuses it too, so nothing can slip past a no-entry pointer; the per drag cache now remembers the reading, not just the size."
+    },
+    {
+      "t": "2026-09-04T08:38:03.731607Z",
+      "note": "playtest: new dragFile step (file, at, hold) holds a file over the canvas without letting go and writes down what the pointer is showing, which dropImage could never see because letting go of a refused file does nothing. It asks the whole destination chain and names the view that answered. Walk: Scripts/playtest/refused-file-walk.json, fixture Scripts/playtest/fixtures/Redline notes.txt."
+    },
+    {
+      "t": "2026-09-04T08:38:03.731607Z",
+      "note": "verified: Scripts/test.sh green (2832 tests). Probe walk log: 'Redline notes.txt ... refused: the pointer shows the no-entry sign, no landing box' and 'Package.swift ... refused', with 'Photonz drop probe.png ... would place a copy (CanvasNSView took it)' before and settings-pane-2x.png after, so one refusal does not poison the next drag. Real screen captures (Screen Recording granted) in queue/audits/2026-09-04-refused-file-{1,2}.png; a capture cannot include the pointer, so they show the landing box and its absence."
+    },
+    {
+      "t": "2026-09-04T08:38:03.731607Z",
+      "note": "acceptance 2 (.photonz unchanged) is covered by the unit tests and the extension path, not by the walk: there is no .photonz fixture in the repo and inventing a fake one would be a file that drags fine and cannot be opened."
     }
-  ]
+  ],
+  "started": "2026-09-04T08:23:42.142Z"
 }

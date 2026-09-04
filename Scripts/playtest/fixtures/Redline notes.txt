@@ -1,0 +1,6 @@
+Notes from the redline pass
+
+- The gap under the header reads 12, the spec says 16.
+- The avatar is 32 square, not 28.
+- Nothing here is a picture, which is the point of this file:
+  the canvas has nowhere to put it, so dragging it in must say no.
