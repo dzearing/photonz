@@ -120,7 +120,7 @@ struct ArrangementInspector: View {
         if room != .none {
             parts.append(room.isUniform
                 ? "It keeps \(Int(room.uniform ?? 0)) clear inside its edges."
-                : "It keeps \(sides(room)) clear inside its edges.")
+                : "It keeps \(room.inWords) clear inside its edges.")
         }
         let fixed = [layout.width.map { "\(Int($0.rounded())) wide" },
                      layout.height.map { "\(Int($0.rounded())) tall" }].compactMap { $0 }
@@ -221,10 +221,10 @@ struct ArrangementInspector: View {
             .playtestControl("Each side", detail: "Layout")
             Spacer(minLength: 8)
             LayoutNumberField(
-                title: "Padding", value: room.uniform, placeholder: "Mixed",
+                title: "Padding", value: room.uniform, placeholder: standIn(room),
                 help: room.isUniform
                     ? "The room kept clear inside the \(noun)'s edges, on all four sides."
-                    : "\(sides(room)). Type one number to give every side the same."
+                    : "\(room.inWords). Type one number to give every side the same."
             ) { value in
                 editorState.updateArrangement(id: layer.id) { $0.padding = GroupPadding(value) }
             }
@@ -248,11 +248,17 @@ struct ArrangementInspector: View {
         sidesOpen ?? !room.isUniform
     }
 
-    /// The four numbers in words, for the field that cannot show them.
-    private func sides(_ room: GroupPadding) -> String {
-        GroupPadding.Side.allCases
-            .map { "\(Int(room[$0].rounded())) \($0.rawValue)" }
-            .joined(separator: ", ")
+    /// What stands in the single field while the four sides disagree and it
+    /// has no one number to show.
+    ///
+    /// With the sides OPEN it is the house word for a value that is not one
+    /// value, because the four numbers are already on the rows underneath and
+    /// writing them twice is noise. With them CLOSED the field is the only
+    /// place left on screen where the 24 somebody typed at the bottom can be
+    /// read, so it holds the four numbers themselves. Typing over them still
+    /// gives every side the same number, exactly as typing over the word did.
+    private func standIn(_ room: GroupPadding) -> String {
+        showsSides(room) || room.isUniform ? MixedValue.text : room.shorthand
     }
 
     /// One axis' Hug-or-Fixed row. Choosing Fixed starts from the size the
@@ -395,6 +401,26 @@ private struct LayoutNumberField: View {
     /// True while the field is standing in for four sides that disagree.
     private var showsMixed: Bool { !placeholder.isEmpty && text == placeholder }
 
+    /// True where what stands in is the four numbers rather than the word
+    /// Mixed. Read off the stand-in itself rather than passed in beside it,
+    /// so there is no second flag that can disagree with the text.
+    private var standsInForNumbers: Bool { placeholder.contains(where: \.isNumber) }
+
+    /// How wide the box is.
+    ///
+    /// Every field in this panel is pinned by its TRAILING edge, so the one
+    /// holding four numbers grows leftwards into space that was empty anyway
+    /// and the column of right edges stays flush. The width comes off the
+    /// stand-in and not off what is being typed, so it is settled before the
+    /// keyboard arrives and does not twitch a point per keystroke.
+    private var fieldWidth: CGFloat {
+        guard standsInForNumbers else { return 62 }
+        let font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.smallSystemFontSize,
+                                                   weight: .regular)
+        let ink = (placeholder as NSString).size(withAttributes: [.font: font]).width
+        return min(148, max(62, (ink + 22).rounded(.up)))
+    }
+
     var body: some View {
         // The field wears its own word until there is no one number to show:
         // then the word Mixed sits where the number would be, which is what
@@ -406,12 +432,18 @@ private struct LayoutNumberField: View {
             .multilineTextAlignment(.trailing)
             .monospacedDigit()
             .foregroundStyle(MixedLook.style(showsMixed, otherwise: .primary))
-            .frame(width: 62)
+            .frame(width: fieldWidth)
             .focused($isFocused)
             .help(help)
             .accessibilityLabel(title)
             .onAppear { text = display(value) }
             .onChange(of: value) { if !isFocused { text = display(value) } }
+            // The stand-in can change while the number behind it does not: the
+            // four sides closing over room that disagrees swaps the word Mixed
+            // for the four numbers without the field ever having a value. The
+            // box has to be refilled for that too, or it goes on showing the
+            // word after the row it belonged to has gone.
+            .onChange(of: placeholder) { if !isFocused { text = display(value) } }
             .onChange(of: isFocused) { _, focused in
                 if focused {
                     isFinishing = false

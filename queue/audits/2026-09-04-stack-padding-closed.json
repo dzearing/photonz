@@ -1,0 +1,27 @@
+{
+  "feature": "A stack with uneven room reads its four numbers on one row",
+  "epic": "ui-layout",
+  "summary": "Closing the four side fields on a stack whose room differs no longer hides the numbers behind the word Mixed: the Padding row itself now reads 16/16/24/16. Typing one number over them still gives every side the same room, exactly as typing over the word did.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Groups that arrange their own contents\" is on by default.",
+  "try": [
+    { "do": "Draw three rectangles roughly in a column, rubber-band them, press ⌃⌘G." },
+    { "do": "Type 16 into Padding in the Layout section and press Return." },
+    { "do": "Click the chevron beside the word Padding, type 24 into Bottom, press Return." },
+    { "do": "Click the chevron again to close the four sides.", "shot": "2026-09-04-stack-padding-closed-1-sc.png" },
+    { "do": "Hover the Padding box and read the tooltip: it names each side in words." },
+    { "do": "Click into the Padding box: the whole reading is selected.", "shot": "2026-09-04-stack-padding-closed-2-sc.png" },
+    { "do": "Type 8 and press Return: all four sides go to 8 and the box narrows back to one number." }
+  ],
+  "evaluate": [
+    "Does 16/16/24/16 read as top, right, bottom, left without you having to think about it?",
+    "Are slashes the right separator, or would spaces, commas or little side letters read faster?",
+    "The box grows leftwards to fit the four numbers while its right edge stays in line with Gap and W. Does that widening look deliberate or accidental?",
+    "The four numbers are drawn one step quieter than a typed number, the same weight the word Mixed had. Is that right, or should numbers you can actually read be at full strength?",
+    "With the four sides OPEN the single box still says Mixed rather than the four numbers. Does that feel consistent or does it feel like two different answers?"
+  ],
+  "rough": [
+    "Nothing labels which number is which on the closed row. The order matches the Top, Right, Bottom, Left rows underneath and the CSS shorthand order, and the tooltip spells it out in words, but the row itself is four bare numbers.",
+    "The other rough notes on this feature still stand: the room cannot be dragged out on the canvas, and nothing links it to a spacing scale.",
+    "Screenshots here are real captures of the running app (Screen Recording was granted), taken by Scripts/playtest/stack-padding-closed-walk.json."
+  ]
+}

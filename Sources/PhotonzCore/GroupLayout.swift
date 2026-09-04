@@ -284,6 +284,25 @@ public struct GroupPadding: Hashable, Codable, Sendable {
         side.isFinite ? max(0, side) : 0
     }
 
+    /// The four numbers, clockwise from the top, the way a CSS shorthand
+    /// writes them: `16/16/24/16`.
+    ///
+    /// What the single Padding field shows when the four sides are CLOSED and
+    /// disagree. Closing them used to leave the word Mixed and nothing else,
+    /// so room typed on one side was unreadable until they were opened again.
+    public var shorthand: String {
+        Side.allCases.map { "\(Int(self[$0].rounded()))" }.joined(separator: "/")
+    }
+
+    /// The same four numbers with their sides named: `12 top, 16 right, 24
+    /// bottom, 16 left`. For anywhere there is room for words — a tooltip, and
+    /// the sentence a copy reads its original's room off — so nobody has to
+    /// already carry the clockwise order to know which number is which.
+    public var inWords: String {
+        Side.allCases.map { "\(Int(self[$0].rounded())) \($0.rawValue)" }
+            .joined(separator: ", ")
+    }
+
     /// The room taken out of the width, and out of the height.
     public var horizontal: CGFloat { left + right }
     public var vertical: CGFloat { top + bottom }

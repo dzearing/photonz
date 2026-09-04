@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/stack-padding-closed",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 120], "to": [420, 180], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 210], "to": [420, 270], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 300], "to": [420, 360], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "drag", "from": [120, 80], "to": [520, 420], "steps": 10 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "16" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-even", "note": "16 all round: one number in the Padding field, sides closed" },
+    { "do": "snapshot", "name": "closed-1-even-16" },
+
+    { "do": "press", "control": "Each side" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "focus", "field": "Bottom" },
+    { "do": "type", "text": "24" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-open-uneven", "note": "24 at the bottom, four sides open" },
+    { "do": "snapshot", "name": "closed-2-open-uneven" },
+
+    { "do": "press", "control": "Each side" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-closed-uneven", "note": "the four sides are closed again while they still differ. THE QUESTION: can the 24 be read anywhere on the Padding row?" },
+    { "do": "snapshot", "name": "closed-3-closed-uneven" },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3b-focused", "note": "clicking into the closed row selects the whole stand-in, so one number typed replaces all four" },
+    { "do": "snapshot", "name": "closed-3b-focused" },
+    { "do": "type", "text": "8" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-flattened", "note": "typing one number into the closed row still flattens all four sides to 8" },
+    { "do": "snapshot", "name": "closed-4-flattened" },
+    { "do": "render", "name": "closed-4-flattened-doc" },
+    { "do": "panel", "stage": "5-panel" }
+  ]
+}

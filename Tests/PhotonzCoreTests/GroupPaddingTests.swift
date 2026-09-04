@@ -286,4 +286,34 @@ struct GroupPaddingTests {
         doc.setGroupLayout(id: id, kind: .stack)
         #expect(doc.layers[0].group?.layout?.padding == GroupPadding.none)
     }
+
+    // MARK: - Saying the four numbers out loud
+
+    // Closing the four side fields while they disagree used to leave the word
+    // Mixed on screen and nothing else, so the 24 somebody had just typed at
+    // the bottom was not readable anywhere until they opened them again
+    // (`queue/audits/2026-09-04-stack-padding.json`, rough 1). The single row
+    // writes the four numbers itself now, and the wording lives here so the
+    // field and the sentence a copy shows cannot drift apart.
+
+    @Test("The four numbers read clockwise from the top, the way a shorthand does")
+    func shorthandReadsClockwiseFromTheTop() {
+        #expect(GroupPadding(top: 16, right: 16, bottom: 24, left: 16).shorthand == "16/16/24/16")
+    }
+
+    @Test("Room that is the same all round still writes all four")
+    func shorthandOfEvenRoomIsStillFour() {
+        #expect(GroupPadding(16).shorthand == "16/16/16/16")
+    }
+
+    @Test("Half points are written as the whole number the field shows")
+    func shorthandRoundsToWholeNumbers() {
+        #expect(GroupPadding(top: 16.4, right: 16.6, bottom: 0, left: 8).shorthand == "16/17/0/8")
+    }
+
+    @Test("The same four numbers in words, for the tooltip and for a copy's sentence")
+    func inWordsNamesEverySide() {
+        #expect(GroupPadding(top: 12, right: 16, bottom: 24, left: 16).inWords
+                == "12 top, 16 right, 24 bottom, 16 left")
+    }
 }

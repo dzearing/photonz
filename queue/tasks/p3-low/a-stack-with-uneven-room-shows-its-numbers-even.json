@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 1200,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T13:51:38.166Z",
-  "updated": "2026-09-04T13:51:38.167Z",
+  "updated": "2026-09-04T21:39:49.990Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/ArrangementInspector.swift, the padding(_:) row. Today the single LayoutNumberField shows room.uniform and falls back to a Mixed placeholder with the four numbers in .help. Options: a compact 16 / 16 / 24 / 16 read-only summary in place of the field, or keep the field and put the summary in the caption under the section. Named in queue/audits/2026-09-04-stack-padding.json rough 1.",
@@ -22,6 +22,47 @@
     {
       "t": "2026-09-04T13:51:38.167Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T21:39:49.990Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T21:49:17.000Z",
+      "note": "reproduced first: a walk that stacks three rows, sets 16, opens the sides, types 24 at the bottom and closes them again. The closed row read only Mixed and the 24 was nowhere on screen (Scripts/playtest/stack-padding-closed-walk.json)."
+    },
+    {
+      "t": "2026-09-04T21:49:17.000Z",
+      "note": "adversarial pass on the idea: typing one number into that CLOSED field still flattens all four sides to 8, verified in the same walk. So the notes' first option, a read-only summary in place of the field, would trade a hidden number for a lost edit. Ruled out."
+    },
+    {
+      "t": "2026-09-04T21:49:17.000Z",
+      "note": "second option, a summary in the section's caption, puts the numbers three rows below the row they belong to. Ruled out too."
+    },
+    {
+      "t": "2026-09-04T21:49:17.000Z",
+      "note": "built the shortest thing instead: the field's stand-in text becomes the four numbers rather than the word Mixed, so no new row and no new control, and the select-the-whole-word-on-focus machinery that was already there keeps typing-to-flatten working."
+    },
+    {
+      "t": "2026-09-04T21:49:17.000Z",
+      "note": "width: 62 points cannot hold 16/16/24/16. Every field in the panel is pinned by its trailing edge, so this one grows LEFTWARDS into about 120 points of empty row and the column of right edges stays flush. Measured off the real font, capped at 148; even 1200/1200/1200/1200 needs only 145."
+    },
+    {
+      "t": "2026-09-04T21:49:17.000Z",
+      "note": "with the sides OPEN the field still says Mixed: the four numbers are on the rows right below, and the house rule (MixedLook.swift) is that Mixed goes where a control shows its value."
+    },
+    {
+      "t": "2026-09-04T21:49:17.000Z",
+      "note": "found while building: the box was still showing Mixed after the chevron closed, because the text only refilled on a change of value and value is nil either side of that toggle. Added an onChange on the stand-in itself."
+    },
+    {
+      "t": "2026-09-04T21:49:17.000Z",
+      "note": "verified on the running probe with real screen captures at every stage: closed+uneven reads 16/16/24/16, focus selects all of it, 8 typed over it flattens to 8, sides open still type per side, uniform room still shows one number. Scripts/test.sh green, 3126 tests."
+    },
+    {
+      "t": "2026-09-04T21:49:17.000Z",
+      "note": "shipped: GroupPadding.shorthand and .inWords in PhotonzCore (tested), ArrangementInspector standIn/fieldWidth. Audit queue/audits/2026-09-04-stack-padding-closed.json."
     }
-  ]
+  ],
+  "started": "2026-09-04T21:39:49.989Z"
 }
