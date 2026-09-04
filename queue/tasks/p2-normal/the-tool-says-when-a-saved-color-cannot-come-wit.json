@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:06.433Z",
-  "updated": "2026-09-04T22:08:49.933Z",
+  "updated": "2026-09-04T22:43:48.442Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Two rough lines from queue/audits/2026-09-04-tool-holds-saved-colour.json: picking any color under the Using Accent line silently lets go of Accent, and a tool armed with a name in one document draws the plain color it remembers in a document that has no such name, with no message. Code: Sources/PhotonzCore/ToolArming.swift and ToolColorStyles.swift; ColorStyles.swift holds the named colors, which live per document. Reuse the existing link-break pill from the components and styles work rather than inventing a second way of saying a link broke.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-04T22:08:49.933Z",
       "note": "seq 1210 -> 7"
+    },
+    {
+      "t": "2026-09-04T22:43:48.441Z",
+      "note": "seq 7 -> 7"
     }
   ]
 }

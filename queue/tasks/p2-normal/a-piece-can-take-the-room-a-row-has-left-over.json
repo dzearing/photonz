@@ -1,0 +1,36 @@
+{
+  "id": "a-piece-can-take-the-room-a-row-has-left-over",
+  "title": "A piece can take the room a row has left over",
+  "goal": "Inside a stack, one piece can be told to take whatever room is left along the direction the stack runs, so the search field in the middle of a nav bar grows with the bar and a button spans the width of a toolbar. Today every piece in a stack keeps the size it was drawn at along that direction and only the gap between them can change.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:42:32.241Z",
+  "updated": "2026-09-04T22:43:48.284Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "GroupFlow.stacked() takes `along` straight from item.box on the flow axis and never reads that axis' placement rule, so today there is nothing to fill with. The cross axis already does this through span(size:start:extent:rule:) with .stretch, so the naming to reuse is there. The row that has to grow the choice is the 'owned by the flow' row in PlacementInspector.swift, which currently only says the stack decides it; childCaption is where the one line about a hugging stack goes. The pending task a-row-can-push-its-contents-to-its-two-ends edits the same function for the space between case: whichever lands first, the second reads it rather than re-deciding how leftover room is worked out. Watch the surface piece (stretch both ways), which is not one of the things being arranged and must not join the sharing.",
+  "acceptance": [
+    "On the axis a stack runs along, a piece is offered Fill as well as the sentence saying the stack decides where it sits, and picking it makes that piece take the room left after the other pieces, the gaps and the room at the edges have taken theirs",
+    "Two pieces set to Fill share what is left equally, and a piece set to Fill is never squeezed below nothing",
+    "A stack that closes around its contents has no room left over, so Fill is not offered there and one line says why rather than a dead menu item",
+    "Turning Fill off gives the piece back the size it had before",
+    "Ships behind next-auto-layout. To see it: open Photonz Next, draw three rectangles in a row, group them, set the group to Stack and give it a width of 800, pick the middle rectangle and set its horizontal rule to Fill, then drag the group wider and watch only the middle one grow",
+    "Tests in PhotonzCore cover one filler, two fillers, both directions, room at the edges and the hugging case, written before any app code",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:42:32.242Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:43:48.283Z",
+      "note": "seq 1200 -> 2"
+    }
+  ]
+}

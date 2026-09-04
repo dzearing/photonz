@@ -1,0 +1,36 @@
+{
+  "id": "a-copy-can-be-given-its-own-size",
+  "title": "A copy can be given its own size",
+  "goal": "A copy of a component can be made wider or taller on its own. Today the width and height boxes are greyed out on a copy, so the same nav bar cannot be 1200 wide on a desktop screen and 375 wide on a phone screen without breaking it away from the family it belongs to.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:42:17.784Z",
+  "updated": "2026-09-04T22:43:48.183Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: queue/manager/shots/2026-09-04-1543-starter-copy.png, a real window capture of a selected copy, shows X and Y typable and W 78 / H 36 greyed. The refusal is in the model, not the panel: GroupLayoutEditing.canSetGroupLayout and ownsContentRules both say no to isComponentInstance, and ComponentInstances.swift line ~439 does group.layout = main.group?.layout on every sync, so a stack copy's width and height come from the original every time. docs/design/ui-building.md, the 'Not in this slice' paragraph under 'a copy is not asked to decide what its original decides', names a per copy layout override as a real feature waiting on an override that survives the sync and a way to reset it. That machinery now exists: the colour knob landed on 2026-09-04 with per copy answers, saved colour links and unlink, in ComponentProperties.swift and ComponentColorKnob.swift. Keep the size override in the same shape so there is one story about what a copy owns. Padding is deliberately NOT in this slice: size is the one people hit daily. Flow maths is GroupFlow.swift; Bounds.of reads layout.usedWidth / usedHeight, so a per copy size has to reach it.",
+  "acceptance": [
+    "Picking a copy leaves the width and height boxes live: you can type a number and you can drag the copy's handles, and a copy nobody has resized still reads and follows the original's size",
+    "A copy that has been resized keeps its size when the original changes: recolour the original, retype its wording or change its spacing and the wide copy stays wide",
+    "What is inside a resized copy lines up in the new size the same way the original would if it were that size, so a stretched nav bar spreads and a hugging button refuses to be squeezed under its contents",
+    "There is one plain way to put a copy back to the original's size, said in the same words the rest of the Component section uses, and one undo puts a resize back",
+    "Ships behind next-components. To see it: open Photonz Next, show the Library, drop the starter nav bar twice, pick the second one, type 1200 into W, then pick the original and change its colour, and watch the wide copy keep its width and take the new colour",
+    "Tests in PhotonzCore cover a resize surviving a sync, the reset, an original that hugs and an original with a size, written before any app code",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:42:17.784Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:43:48.182Z",
+      "note": "seq 180 -> 1"
+    }
+  ]
+}

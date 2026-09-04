@@ -1,0 +1,54 @@
+{
+  "id": "a-component-can-hold-more-than-one-version-of-it-a-button-usually-has-a-normal-a",
+  "taskId": "a-component-can-hold-more-than-one-version-of-it",
+  "question": "A button usually has a normal, a hover and a disabled look. Should one component be able to hold all three under one name, with a copy picking which one it shows?",
+  "context": "Today a component is one drawing. Showing a disabled button beside a normal one means making a second component by hand, and the two drift apart the first time somebody edits one. The app already lets a component hold two shapes and lets a copy pick between them (Make Alternatives), which is the small version of this question.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Versions under one name",
+      "summary": "A component can hold several complete versions, each with a name like Normal, Hover or Disabled. A copy has a Version menu and you pick which one it shows. Each version is its own drawing, so a version can differ in any way at all.",
+      "pros": [
+        "The way designers already think about a button with states",
+        "A version can differ in any way: a different shape, an extra icon, a whole different arrangement",
+        "A copy keeps its own wording and colours when it switches version"
+      ],
+      "cons": [
+        "A change that should reach every version, like a corner radius, has to be made in each one"
+      ],
+      "mitigation": "Start with a duplicate: a new version is made by copying an existing one, so the versions are the same until you change one on purpose."
+    },
+    {
+      "id": "b",
+      "label": "One drawing, versions record only the differences",
+      "summary": "There is still one drawing. A version records only what changes: colours, wording, whether a part shows. A copy picks a version by name and the differences are applied on top.",
+      "pros": [
+        "A change to anything shared reaches every version by itself",
+        "Less to keep in your head: one drawing, a short list of differences"
+      ],
+      "cons": [
+        "A version cannot differ in shape or arrangement, so a disabled button with an extra lock icon is out",
+        "Two ways of saying the same thing: the difference list and the knobs a copy already has"
+      ],
+      "mitigation": "Offer to promote a version to a drawing of its own the first time somebody needs a structural difference."
+    },
+    {
+      "id": "c",
+      "label": "Leave it as Make Alternatives",
+      "summary": "Keep what is there: a component can hold two shapes and a copy picks between them. Anything bigger stays a second component made by hand.",
+      "pros": [
+        "Nothing new to learn",
+        "The time goes into auto layout, which is mid flight"
+      ],
+      "cons": [
+        "A button with three states is three components that drift apart",
+        "The objective for this epic names variants"
+      ],
+      "mitigation": "Revisit once auto layout is finished and there is a real screen to build with it.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-04T22:43:17.676Z"
+}

@@ -4,12 +4,12 @@
   "goal": "Pick two or more copies of the same component and set them together. Today picking a second copy makes the whole Component section disappear, so adjusting five buttons means adjusting them one at a time.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 1190,
+  "seq": 3,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:32:33.864Z",
-  "updated": "2026-09-04T22:32:33.865Z",
+  "updated": "2026-09-04T22:43:48.316Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The model side is already done and tested: PhotonzDocument.componentColorSelection(instances:property:) returns a ColorStyleSelection over several copies, and setInstanceColor/setInstanceColorStyle/unlinkInstanceColorStyle all take an array. What is missing is the app: LayersPanel.swift:426 gates the Component section on selectedLayer (one layer), and ComponentInstanceProperties takes a single instance UUID. InstanceColorKnob in ComponentPanel.swift already takes an array and already draws Mixed, so the colour row needs no new work. The open UX question is what Mixed looks like for a switch and for a choice menu; that is worth a decision card rather than a guess. Split out of a-copy-can-be-given-its-own-color on 2026-09-04.",
@@ -24,6 +24,10 @@
     {
       "t": "2026-09-04T22:32:33.865Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T22:43:48.315Z",
+      "note": "seq 1190 -> 3"
     }
   ]
 }

@@ -1,0 +1,36 @@
+{
+  "id": "a-container-with-a-size-of-its-own-can-cut-off-w",
+  "title": "A container with a size of its own can cut off what does not fit",
+  "goal": "A screen cuts off anything hanging over its edge. A card, a button or any other container given a size does not: a long title runs straight out the side of the card and is still there in the export. The same switch a screen already has belongs on any container that has been given a size.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:42:46.219Z",
+  "updated": "2026-09-04T22:43:48.349Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Most of this exists. GroupContent already stores clipsContents on EVERY group; only Layer.clipsToFrame (Layer.swift:769) narrows it to group?.isFrame == true, and Document.swift:251 plus ComponentPieceEditing.swift:173 gate hit testing on the same property. The renderer path is DocumentRenderer.swift:489, `layer.clipsToFrame ? layer.localBounds : layer.renderBounds`. The switch itself is in FrameInspector.swift; putting it on a sized group means the Layout section carries it, not the Frame section. Comes from queue/audits/2026-09-04-starter-sizing.json: 'A text field with a long placeholder wraps and gets taller instead of truncating with an ellipsis, because a text layer has nothing that clips it.' Truncating words with an ellipsis is a separate, later question: this task is only about the box cutting off what leaves it. Also the honest partner to the pending task a-container-can-be-told-the-smallest-and-largest, whose acceptance says a stack pinned at its largest size must not overflow quietly.",
+  "acceptance": [
+    "A group that has been given a width or a height offers the same Clip contents switch a screen offers, in the same words and the same place in the panel",
+    "With it on, anything past the edge is not drawn, not clicked and not exported, and rounded corners cut with the corner rather than the square box",
+    "It is off by default for a group, so nothing in an existing picture changes until somebody turns it on, and a group that closes around its contents is not offered it at all",
+    "A copy takes the setting from its original, the same way it takes the rest of the arrangement",
+    "Ships behind next-auto-layout. To see it: open Photonz Next, drop the starter card, give it a height of 120, watch the text run past the bottom, then turn Clip contents on and watch it stop at the edge",
+    "Tests in PhotonzCore cover drawing, hit testing and export with clipping on and off, written before any app code",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:42:46.220Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:43:48.348Z",
+      "note": "seq 1210 -> 4"
+    }
+  ]
+}

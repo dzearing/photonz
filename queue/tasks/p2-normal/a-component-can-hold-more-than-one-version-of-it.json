@@ -1,0 +1,37 @@
+{
+  "id": "a-component-can-hold-more-than-one-version-of-it",
+  "title": "A component can hold more than one version of itself",
+  "goal": "One button component can carry its normal, hover and disabled versions under one name, and a copy picks which one it is showing from a menu. Today a component is one drawing: to show a disabled button beside a normal one you make a second component, and the two drift apart the first time somebody edits one.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1220,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:43:02.752Z",
+  "updated": "2026-09-04T22:43:38.708Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Blocked on its decision card: the shape of versions is a product judgment, not an engineering one. What exists today: ComponentPropertyKind has text, visible, variant and color (ComponentProperties.swift:34), where `variant` is Make Alternatives, one layer swapped for another sibling inside the same original (ComponentChoice.swift). That is a shape swap, not a version of the whole component. docs/design/ui-building.md, 'What the first version deliberately does not do', defers states outright, while queue/objectives.json describes the ui-components epic as 'create, reuse, variants, overrides', so the plan and the objective disagree and the user settles it. If the answer is the full version set, this task is the model and the knob only, and the Library tile, the canvas marks and any bulk editing across versions get filed as follow-ups after it. Sync lives in ComponentInstances.swift; the per copy override machinery that landed with the colour knob on 2026-09-04 is the pattern to follow.",
+  "acceptance": [
+    "Written after the decision card on this task is answered: the checklist below is the shape of the recommended option and is rewritten to whatever the user picks",
+    "A component can be given a second version with a name, and the Library tile says how many versions it holds",
+    "A copy shows a Version knob listing the names, and picking one swaps what that copy shows without touching any other copy",
+    "Everything a copy already owns survives the swap: its wording, its colours, its position and anything else it has been given for itself",
+    "Editing a version changes every copy showing that version and no others, in one undo step",
+    "Ships behind next-components, with the try steps written into this task once the shape is decided",
+    "Tests in PhotonzCore cover adding a version, switching a copy, keeping a copy's own answers across a switch and deleting a version a copy is using, written before any app code",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:43:02.753Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:43:38.707Z",
+      "note": "Waiting on its decision card: whether a component holds full versions, difference lists, or stays as Make Alternatives."
+    }
+  ]
+}

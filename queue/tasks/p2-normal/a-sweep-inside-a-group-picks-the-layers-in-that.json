@@ -4,12 +4,12 @@
   "goal": "When you have gone inside a group to work on its pieces, dragging a band round three of them selects those three, instead of reaching past them and grabbing whole layers from the top of the document.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 6,
+  "seq": 5,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:56.839Z",
-  "updated": "2026-09-04T22:08:49.901Z",
+  "updated": "2026-09-04T22:43:48.379Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Open thread carried by the last two manager passes, now confirmed in code: Sources/PhotonzCore/Document.swift:277 layerIDs(fullyInside:) filters the top level layers array only and never descends. There is no notion of which group you are in anywhere in Sources/Photonz (no activeGroup or enteredGroup), so the cheapest honest reading is the parent of the current selection. Canvas side is CanvasView.swift around line 1483.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-04T22:08:49.900Z",
       "note": "seq 1200 -> 6"
+    },
+    {
+      "t": "2026-09-04T22:43:48.378Z",
+      "note": "seq 6 -> 5"
     }
   ]
 }
