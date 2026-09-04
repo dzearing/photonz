@@ -1,0 +1,26 @@
+{
+  "feature": "A locked layer holds still",
+  "epic": "ui-building",
+  "summary": "Locking a layer now takes its handles away. Before, a locked layer still drew its eight resize handles and its rotate knob, and dragging one still resized or turned it, so the lock only half meant what it said.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. Any screenshot you open starts with a locked Background layer, which is the fastest way to see this.",
+  "try": [
+    { "do": "Open a screenshot in Photonz." },
+    { "do": "Draw a rectangle on it with the Rectangle tool, then press V for Select.", "shot": "2026-09-04-locked-layer-handles-2.png" },
+    { "do": "Rest the pointer on the rectangle's top-left corner: eight handles, a rotate knob, and a diagonal resize pointer." },
+    { "do": "Click the Background row in the Layers list on the right.", "shot": "2026-09-04-locked-layer-handles-1.png" },
+    { "do": "Rest the pointer on the picture's top-left corner: a blue outline, no handles, no knob, and a plain arrow." },
+    { "do": "Drag from that corner. The picture does not resize; you get a selection sweep instead." },
+    { "do": "Click the open padlock on the rectangle's row to lock it, then click its row again. Same thing: outline, no handles." }
+  ],
+  "evaluate": [
+    "With the handles gone, is it clear enough WHY, or does a selected locked layer need to look different from an unlocked one?",
+    "Should the blue outline change (dashed, or another color) when what is selected is locked?",
+    "Locking a layer from its row still drops it out of the selection. Is that right, or should it stay selected and just go inert?",
+    "A press on a locked layer's body starts a selection sweep, as it always has. Does that still feel right now that the layer can be selected from the list?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures are real screen captures of the running probe, not offscreen renders.",
+    "The Position and Size fields already refuse to type into a locked layer, but the caption under them still reads 'Up or down arrow steps by 1, Shift by 10', which is not true for a locked layer, and the reason it refuses only shows on hover. Filed as its own task rather than fixed here.",
+    "The pointer does not re-read itself when the selection changes from the Layers list, so the arrow it shows is whatever the last canvas move decided until you move the pointer again. Every real path to this goes through the pointer being over the panel and then coming back, which recomputes it."
+  ]
+}

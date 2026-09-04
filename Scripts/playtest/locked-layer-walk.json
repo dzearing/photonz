@@ -1,0 +1,35 @@
+{
+  "out": "/tmp/photonz-playtest/locked-layer",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "panel", "stage": "rows" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [400, 300], "to": [700, 500] },
+    { "do": "tool", "tool": "select" },
+    { "do": "move", "at": [400, 300] },
+    { "do": "describe", "stage": "unlocked-corner", "note": "control: an unlocked shape cues a resize at its top-left handle" },
+    { "do": "snapshot", "name": "unlocked-handles" },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "snapshot", "name": "locked-selected" },
+    { "do": "render", "name": "before" },
+
+    { "do": "move", "at": [720, -18] },
+    { "do": "describe", "stage": "locked-knob", "note": "pointer where the rotate knob would float" },
+    { "do": "drag", "from": [720, -18], "to": [1000, 200] },
+    { "do": "describe", "stage": "after-knob-drag", "note": "dragging where the knob was must not turn it" },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "move", "at": [0, 0] },
+    { "do": "describe", "stage": "locked-topleft", "note": "pointer over the locked layer's top-left corner" },
+    { "do": "move", "at": [720, 0] },
+    { "do": "describe", "stage": "locked-topedge", "note": "pointer over the locked layer's top edge handle" },
+    { "do": "drag", "from": [0, 0], "to": [300, 260] },
+    { "do": "describe", "stage": "after-corner-drag", "note": "dragging the locked layer's corner must not resize it" },
+
+    { "do": "render", "name": "after" },
+    { "do": "snapshot", "name": "locked-after-drags" }
+  ]
+}

@@ -42,6 +42,19 @@ extension Layer {
         return CGPoint(x: frame.minX + local.x, y: frame.minY + local.y)
     }
 
+    /// Whether the selection chrome offers this layer's handles at all, and
+    /// whether a press on one starts a drag.
+    ///
+    /// A locked layer offers none. Locking says the thing holds still, so a
+    /// handle sitting on one would be an invitation the app then refuses:
+    /// worse than no handle, because the only way to find that out is to try
+    /// to drag it. The chrome, the press and the pointer cue all read this,
+    /// so they cannot disagree about whether a handle is there.
+    ///
+    /// The blue selection outline is NOT a handle: you can still pick a locked
+    /// layer out of the layers list and see which one it is.
+    public var offersHandles: Bool { !isLocked }
+
     /// Whether the selection chrome offers the eight frame-resize handles.
     /// Lines/arrows use endpoint handles instead. Text resizes width-only: the
     /// handles set the wrap width and the renderer re-wraps to it (see

@@ -35,7 +35,7 @@ public enum CanvasGrab: String, Hashable, Sendable, CaseIterable {
     /// handle, the bar between a caliper's grabs, or plain canvas.
     public static func hit(at p: CGPoint, layer: Layer, zoom: CGFloat,
                            captionsEnabled: Bool) -> CanvasGrab? {
-        guard !layer.isLocked else { return nil }
+        guard layer.offersHandles else { return nil }
         if layer.annotation != nil { return captionHit(at: p, layer: layer, zoom: zoom,
                                                        captionsEnabled: captionsEnabled) }
         if layer.measure != nil { return measureHit(at: p, layer: layer, zoom: zoom) }

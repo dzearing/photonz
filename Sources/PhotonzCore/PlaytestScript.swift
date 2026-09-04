@@ -581,6 +581,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `hold` names a picture taken before letting go, which is the only
     /// moment the line that says what will happen is on screen.
     case dragRow(row: String, onto: String, zone: PlaytestDropZone, hold: String?)
+    /// Click a row in the layers list by the name it shows, the way a person
+    /// picks a layer out of the list rather than off the picture. `modifiers`
+    /// read as they do under a pointer: shift ranges from the anchor row,
+    /// command adds or removes.
+    ///
+    /// This is the only way to select a layer the canvas will not give you: a
+    /// locked one, which a click on the picture falls straight through.
+    case selectRow(row: String, modifiers: [PlaytestModifier])
     /// Write what the right hand panel is showing to the log and to
     /// `panel-<stage>.json`: every tile on the shelf, every row in the layers
     /// list, and every menu in the dock, by the names a walk has to use for
@@ -655,6 +663,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panelMenu: "panelMenu"
         case .dragTile: "dragTile"
         case .dragRow: "dragRow"
+        case .selectRow: "selectRow"
         case .panel: "panel"
         case .scrollPanel: "scrollPanel"
         case .describe: "describe"
@@ -767,6 +776,8 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .dragRow(row: try f.string("row"), onto: try f.string("onto"),
                             zone: zone, hold: try f.optionalString("hold"))
+        case "selectRow":
+            self = .selectRow(row: try f.string("row"), modifiers: try f.modifiers())
         case "panel":
             self = .panel(stage: try f.string("stage"))
         case "scrollPanel":

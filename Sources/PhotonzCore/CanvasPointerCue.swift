@@ -37,9 +37,14 @@ public enum CanvasPointer {
     /// so it can lead the document during a drag); nil means no frame handles
     /// were offered, so none is cued. `offersRotation` is the same question the
     /// chrome asks before drawing the knob, so the cue and the knob can never
-    /// disagree about whether it is there.
+    /// disagree about whether it is there. A locked layer answers nil
+    /// everywhere: it offers no handles for a pointer to promise.
     public static func cue(at p: CGPoint, layer: Layer, frame: CGRect?, zoom: CGFloat,
                            captionsEnabled: Bool, offersRotation: Bool) -> CanvasPointerCue? {
+        // A locked layer has no handles to cue: the chrome draws none and the
+        // press starts nothing, so the pointer stays a plain arrow over all of
+        // it. See `Layer.offersHandles`.
+        guard layer.offersHandles else { return nil }
         // Endpoint handles come first, and only for annotations: a caliper's
         // feet look like endpoints but the press routes them to the measure
         // branch below, which is where their hand comes from.

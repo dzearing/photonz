@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 660,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T23:36:42.187Z",
-  "updated": "2026-09-03T23:36:42.188Z",
+  "updated": "2026-09-04T07:44:13.255Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-03 while giving every handle a pointer cue. CanvasView.mouseDown guards the caption-pill press with !layer.isLocked but the frame-handle branch, the endpoint branch and the rotate-knob branch carry no lock check, while CanvasGrab.hit does. The chrome in refreshSelectionChrome also draws handles for a locked layer. The pointer cue deliberately mirrors the press today (CanvasPointer.cue), so fixing the press is what makes the pointer go quiet too, and CanvasPointerCueTests.aLockedLayerStillCuesTheHandlesItStillResizesFrom encodes the current behaviour and should be flipped with it.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-03T23:36:42.188Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T07:44:13.255Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T08:35:00.000Z",
+      "note": "Adversarial review before building. Reproduced first: opening any screenshot gives a locked Background layer, a click on the picture falls through it (hitTestPath skips locked), but clicking its row in the Layers list selects it with no lock check, and the chrome then drew all eight handles plus the rotate knob. commitCanvasFrame carries no lock check either, so the drag landed. Two ways to fix it: hide the handles, or draw them and refuse the drag. Refusing a drag on a handle you can see is worse than no handle at all, because the only way to learn it is refused is to try it, so the handles go. The blue selection outline stays: you can still pick a locked layer out of the list and see which one it is, which is what Figma does. Nudging, moving, styling and the W/H fields already respected the lock, so this was the last hole."
+    },
+    {
+      "t": "2026-09-04T08:36:00.000Z",
+      "note": "Shipped. New Layer.offersHandles in PhotonzCore (false when locked) is read by CanvasPointer.cue, CanvasGrab.hit, offersRotation, all three press branches in CanvasView.mouseDown (endpoint, caliper, frame handles) and both handle branches in refreshSelectionChrome, so chrome, press and pointer cannot disagree. Tests: flipped CanvasPointerCueTests.aLockedLayerStillCuesTheHandlesItStillResizesFrom to aLockedLayerCuesNothingBecauseItReshapesFromNothing, added locked arrow / locked caliper / unlocked control cases and a Layer.offersHandles case. 2800 tests green."
+    },
+    {
+      "t": "2026-09-04T08:37:00.000Z",
+      "note": "Verified live on the probe, not by reading code. A walk needed a way to select a locked layer, which nothing could do, so the harness gained a selectRow step (click a layers list row by name, modifiers read as under a pointer): PlaytestScript case + two schema tests + harness + docs table. Scripts/playtest/locked-layer-walk.json: the unlocked rectangle cues resize-up-left-down-right at its corner (control), the locked Background cues none at its corner, its top edge handle and the knob spot, its frame is unchanged after dragging both, and the whole composite render is byte-identical before and after, so nothing turned either. Screen captures in queue/audits/2026-09-04-locked-layer-handles-{1,2}.png show the outline with no handles beside the unlocked layer with all eight and its knob."
+    },
+    {
+      "t": "2026-09-04T08:38:00.000Z",
+      "note": "Left out and filed instead: the Position and Size caption still says a locked layer can be arrow-stepped (task the-position-and-size-panel-stops-telling-a-lock). Audit: queue/audits/2026-09-04-locked-layer-handles.json."
     }
-  ]
+  ],
+  "started": "2026-09-04T07:44:13.254Z"
 }

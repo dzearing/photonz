@@ -237,10 +237,43 @@ struct CanvasPointerCueTests {
 
     // MARK: Locked layers behave as the press does
 
-    @Test func aLockedLayerStillCuesTheHandlesItStillResizesFrom() {
-        // The frame-handle press carries no lock check, so neither does the
-        // cue: a pointer that went quiet here would be lying about the press.
+    @Test func aLockedLayerCuesNothingBecauseItReshapesFromNothing() {
+        // A locked layer draws no handles and no knob, and a press where one
+        // used to be does nothing. The pointer says so: a plain arrow every-
+        // where over it, the same answer the chrome and the press give.
         let layer = box(locked: true)
-        #expect(cue(Handles.point(for: .topLeft, in: boxFrame), layer) == .resize(.topLeft))
+        for handle in ResizeHandle.allCases {
+            #expect(cue(Handles.point(for: handle, in: boxFrame), layer) == nil, "\(handle)")
+        }
+        if let knob = layer.rotateKnobPoint(zoom: 1) {
+            #expect(cue(knob, layer) == nil)
+        }
+        #expect(cue(CGPoint(x: boxFrame.midX, y: boxFrame.midY), layer) == nil)
+    }
+
+    @Test func aLockedArrowCuesNeitherItsEndsNorItsCaption() {
+        var locked = arrow(caption: "Save")
+        locked.isLocked = true
+        #expect(cue(CGPoint(x: 300, y: 300), locked) == nil)
+        #expect(cue(CGPoint(x: 460, y: 300), locked) == nil)
+        if let pill = CanvasGrab.captionPillRect(of: locked) {
+            #expect(cue(CGPoint(x: pill.midX, y: pill.midY), locked) == nil)
+        }
+    }
+
+    @Test func aLockedCaliperCuesNoneOfItsThreeHandles() {
+        var locked = caliper()
+        locked.isLocked = true
+        guard let m = MeasureBuilder.documentSpaceContent(of: locked) else { return }
+        let g = m.caliperGeometry()
+        for dot in [g.footA, g.footB, m.headHandle] {
+            #expect(cue(dot, locked) == nil)
+        }
+    }
+
+    @Test func lockingIsWhatSilencesIt() {
+        // The unlocked twin still answers, so the tests above are measuring the
+        // lock and not a point that was never a handle.
+        #expect(cue(Handles.point(for: .topLeft, in: boxFrame), box()) == .resize(.topLeft))
     }
 }

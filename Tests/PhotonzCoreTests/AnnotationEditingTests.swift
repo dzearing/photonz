@@ -60,6 +60,28 @@ struct AnnotationUpdatingTests {
         #expect(layer.resizeWidthOnly == true)
     }
 
+    @Test func aLockedLayerOffersNoHandlesWhateverItIs() {
+        // Locking means the thing holds still, so the chrome draws no handles
+        // for it and no press on one starts a drag. Whether the content would
+        // otherwise resize by its frame or by its ends does not come into it.
+        let image = Layer(name: "Image", content: .image(ImageRef(pixelSize: CGSize(width: 10, height: 10))),
+                          frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(image.offersHandles)
+        var locked = image
+        locked.isLocked = true
+        #expect(!locked.offersHandles)
+        // It still resizes IN PRINCIPLE — the W and H fields say why they are
+        // dim rather than pretending the content cannot be sized at all.
+        #expect(locked.allowsFrameResize)
+
+        var arrow = AnnotationBuilder.layer(
+            content: AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30"),
+            from: .zero, to: CGPoint(x: 50, y: 50))
+        #expect(arrow.offersHandles)
+        arrow.isLocked = true
+        #expect(!arrow.offersHandles)
+    }
+
     @Test func imageLayerResizesFreelyInBothAxes() {
         let layer = Layer(name: "Image", content: .image(ImageRef(pixelSize: CGSize(width: 10, height: 10))),
                           frame: CGRect(x: 0, y: 0, width: 10, height: 10))

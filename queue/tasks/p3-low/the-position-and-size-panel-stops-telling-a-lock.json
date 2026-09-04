@@ -1,0 +1,28 @@
+{
+  "id": "the-position-and-size-panel-stops-telling-a-lock",
+  "title": "The Position and Size panel stops telling a locked layer it can be nudged",
+  "goal": "Select a locked layer and the Position and Size fields refuse to take a number, which is right, but the line under them still reads \"Up or down arrow steps by 1, Shift by 10\" and the reason the fields are dead only appears if you hover one. Say plainly, where you are already looking, that this layer is locked.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T07:54:00.144Z",
+  "updated": "2026-09-04T07:54:00.144Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-04 finishing the locked-layer handles task. GeometryInspector.caption() ignores the selection entirely for a single layer; LayerGeometry already has lockedReason and fixedReason(for:), which is what the hover tip reads. The caption is the place to surface it. LayerGeometrySelection is in PhotonzCore and tested, so the wording choice belongs there behind a test.",
+  "acceptance": [
+    "With a locked layer selected, the caption under the Position and Size fields says the layer is locked instead of describing arrow key stepping.",
+    "The caption goes back to the normal wording as soon as the selection is not locked.",
+    "Nothing changes for an unlocked layer, a multi-selection, or a layer inside a stack or grid, which already have their own wording.",
+    "Scripts/test.sh green."
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T07:54:00.144Z",
+      "note": "created (manual)"
+    }
+  ]
+}

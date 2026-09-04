@@ -561,6 +561,31 @@ struct PlaytestScriptTests {
         #expect(zone == .above)
     }
 
+    /// The canvas cannot select a locked layer — a click on the picture falls
+    /// through it — so the layers list is the only way in.
+    @Test func aWalkCanPickALayerOutOfTheLayersList() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "selectRow", "row": "Background" },
+                     { "do": "selectRow", "row": "Label", "modifiers": ["shift"] } ] }
+        """)
+        guard case .selectRow(let row, let modifiers) = script.steps[0] else {
+            Issue.record("selectRow"); return
+        }
+        #expect(row == "Background")
+        #expect(modifiers.isEmpty)
+        #expect(script.steps[0].name == "selectRow")
+        guard case .selectRow(_, let held) = script.steps[1] else { Issue.record("selectRow"); return }
+        #expect(held == [.shift])
+    }
+
+    @Test func pickingARowNeedsToSayWhichRow() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "selectRow" } ] }
+            """)
+        }
+    }
+
     /// A list that builds only the rows you can see has to be scrolled for the
     /// rest to arrive, and no other step can turn a wheel.
     @Test func aScrollPanelStepNamesARowAndHowFarToGo() throws {

@@ -522,6 +522,25 @@ private final class Run {
         case .dragRow(let row, let onto, let zone, let hold):
             try await dragRow(row, onto: onto, zone: zone, hold: hold, number: number)
 
+        case .selectRow(let row, let modifiers):
+            let editor = try requireEditor()
+            let rows = editor.layerRows
+            guard let match = rows.first(where: { $0.name == row })
+                    ?? rows.first(where: { $0.name.caseInsensitiveCompare(row) == .orderedSame }) else {
+                let seen = rows.map(\.name).joined(separator: ", ")
+                throw Failure(description: "no row called \"\(row)\" is in the layers list; the ones that are: "
+                    + (seen.isEmpty ? "none" : seen))
+            }
+            let click: RowClick = if modifiers.contains(.shift) { .extend }
+                else if modifiers.contains(.command) { .toggle } else { .plain }
+            editor.clickRow(match.id, click, in: editor.panelRows.map(\.id))
+            await sleep(0.2)
+            note(number, step.name,
+                 "picked \"\(match.name)\" out of the layers list"
+                    + (match.isLocked ? " (locked)" : "")
+                    + " with a \(click) click",
+                 state: describe())
+
         case .panel(let stage):
             let inventory = try readPanel()
             write(json: inventory, to: "panel-\(stage).json")

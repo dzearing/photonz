@@ -1646,7 +1646,8 @@ final class CanvasNSView: NSView {
         // Lines/arrows expose their endpoints; everything else (that resizes)
         // gets the eight frame handles.
         let selectedLayer = selectedLayerID.flatMap { id in document?.canvasLayer(id: id) }
-        if let id = selectedLayerID, let layer = selectedLayer, let content = layer.annotation,
+        if let id = selectedLayerID, let layer = selectedLayer, layer.offersHandles,
+           let content = layer.annotation,
            let endpoint = AnnotationEndpoints.hit(at: p, layer: layer, zoom: viewport.zoom),
            let drag = AnnotationEndpointDrag(layer: layer, endpoint: endpoint),
            let start = layer.annotationEndpoint(.start), let end = layer.annotationEndpoint(.end) {
@@ -1681,7 +1682,8 @@ final class CanvasNSView: NSView {
         // two feet or the head); the others stay put and the value/label update
         // live. The readout pill is the head's grab too: dragging the number
         // moves it, and it is the only grab while it sits on the head dot.
-        if let id = selectedLayerID, let layer = selectedLayer, let m = layer.measure,
+        if let id = selectedLayerID, let layer = selectedLayer, layer.offersHandles,
+           let m = layer.measure,
            let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) {
             let tolerance = viewport.zoom > 0 ? 9 / viewport.zoom : 9
             var best: (handle: MeasureHandle, distance: CGFloat)?
@@ -1741,7 +1743,7 @@ final class CanvasNSView: NSView {
         // transform so handles on a rotated/skewed layer hit where they draw.
         // ⌥ on a corner skews instead of resizing.
         if let id = selectedLayerID, let frame = selectedLayerFrame,
-           selectedLayer?.allowsFrameResize ?? true,
+           selectedLayer?.offersHandles ?? true, selectedLayer?.allowsFrameResize ?? true,
            let handle = Handles.hit(at: handleSpacePoint(p, layer: selectedLayer),
                                     frame: frame, zoom: viewport.zoom) {
             if event.modifierFlags.contains(.option), handle.isCorner, let layer = selectedLayer {
@@ -3297,7 +3299,7 @@ final class CanvasNSView: NSView {
             // Lines/arrows/measures edit by their endpoints (round handles), not
             // the eight frame handles; no rotate knob.
             rotateKnobLayer.isHidden = true
-            if !dragInFlight {
+            if !dragInFlight, selectedLayer.offersHandles {
                 let handles = CGMutablePath()
                 // Calipers expose their three handles (two feet + head); lines/
                 // arrows their two ends.
@@ -3316,7 +3318,7 @@ final class CanvasNSView: NSView {
         } else {
             // Eight square frame handles, hidden mid-drag and for text (which
             // resizes width-only via its own affordance).
-            if !dragInFlight, selectedLayer.allowsFrameResize {
+            if !dragInFlight, selectedLayer.offersHandles, selectedLayer.allowsFrameResize {
                 let handles = CGMutablePath()
                 for handle in ResizeHandle.allCases {
                     let p = chromePoint(Handles.point(for: handle, in: frame))

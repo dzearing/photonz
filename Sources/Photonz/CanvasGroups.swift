@@ -46,9 +46,10 @@ extension CanvasNSView {
 
     /// Whether the selected layer offers the rotate knob. A group never does:
     /// groups translate and nothing else, so a knob that turned one would be a
-    /// control with nothing behind it.
+    /// control with nothing behind it. Neither does a locked layer, which
+    /// offers no handles of any kind (`Layer.offersHandles`).
     func offersRotation(_ layer: Layer) -> Bool {
-        !layer.hasEndpointHandles && !layer.isGroup
+        layer.offersHandles && !layer.hasEndpointHandles && !layer.isGroup
     }
 }
 
