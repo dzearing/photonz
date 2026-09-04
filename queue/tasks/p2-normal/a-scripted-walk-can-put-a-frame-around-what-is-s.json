@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1090,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T13:01:19.379Z",
-  "updated": "2026-09-04T14:23:22.706748Z",
+  "updated": "2026-09-04T14:23:59.802Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-09-04 while writing Scripts/playtest/panel-shows-landing-walk.json. A walk containing {\"do\":\"frameSelection\"} produces no log.json and no done.json at all: the run hangs inside the step, so Scripts/playtest.sh times out with an empty output folder. Bisected: the identical walk with that one step removed completes. Harness site: PlaytestHarness.swift case .frameSelection -> editor.frameSelection(). Suspect a sheet or an alert put up on the main actor that nothing dismisses, or a wait on something the harness never satisfies. Workaround in use: pick the frame tool and drag a rectangle in document space.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-04T14:23:22.706748Z",
       "note": "Verified: Scripts/playtest/frame-selection-walk.json, 31 steps, all complete. One layer framed, two layers framed into one frame, then a refusal reported out loud. Two real screen captures. Scripts/test.sh green, 3002 tests."
+    },
+    {
+      "t": "2026-09-04T14:23:59.801Z",
+      "note": "Framing the selection from a walk already worked; the real defect was that any walk with a typo wrote its error into the wrong folder, so the launcher timed out on an empty one and it looked like a hang. Output folder is now resolved from the raw file before parsing, the unknown-step error names the exact line to write for an action, and the frameSelection step logs what the frame holds or that it refused. New Scripts/playtest/frame-selection-walk.json, 31 steps, passes with two real window captures. Scripts/test.sh green (3002). Audit: queue/audits/2026-09-04-scripted-frame-selection.json"
     }
   ],
-  "started": "2026-09-04T14:13:09.660Z"
+  "started": "2026-09-04T14:13:09.660Z",
+  "completed": "2026-09-04T14:23:59.802Z"
 }
