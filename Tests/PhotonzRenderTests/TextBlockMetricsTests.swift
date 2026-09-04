@@ -76,13 +76,14 @@ import Testing
     }
 
     @MainActor
-    @Test func aDraftBreaksAtTheSameWordsAsThePlacedLabel() {
+    @Test(arguments: [false, true]) func aDraftBreaksAtTheSameWordsAsThePlacedLabel(hugging: Bool) {
         var failures: [String] = []
         for weight in TextWeight.allCases {
             for fontSize in [CGFloat(11), 14, 24, 48] {
                 for string in Self.samples where !string.isEmpty {
                     let text = TextContent(string: string, fontSize: fontSize, weight: weight)
-                    let frame = TextBlockMetrics.frameSize(for: text, maxWidth: 720)
+                    let frame = TextBlockMetrics.frameSize(for: text, maxWidth: 720,
+                                                          hugsShortWords: hugging)
                     let placed = rendered(text, in: frame)
                     for zoom in Self.zooms where drafted(text, frame: frame, zoom: zoom) != placed {
                         failures.append("\(weight)/\(fontSize)pt at \(zoom)x")
@@ -96,13 +97,14 @@ import Testing
 
     /// Nothing the measurement counted may fall out the bottom of the box it
     /// sized, at any font in the picker.
-    @Test func aMeasuredFrameHoldsEveryLineItNeeds() {
+    @Test(arguments: [false, true]) func aMeasuredFrameHoldsEveryLineItNeeds(hugging: Bool) {
         var failures: [String] = []
         for family in TextStyles.fonts {
             for fontSize in [CGFloat(11), 14, 24, 48] {
                 for string in Self.samples {
                     let text = TextContent(string: string, fontName: family, fontSize: fontSize)
-                    let frame = TextBlockMetrics.frameSize(for: text, maxWidth: 720)
+                    let frame = TextBlockMetrics.frameSize(for: text, maxWidth: 720,
+                                                          hugsShortWords: hugging)
                     let placed = rendered(text, in: frame)
                     let joined = placed.joined(separator: " ")
                     let wanted = string.split(separator: " ").joined(separator: " ")
@@ -140,6 +142,76 @@ import Testing
         // One number, in one place: the canvas drag and the W field both stop
         // here, so a width you type and a width you drag agree.
         #expect(TextRasterizer.minimumTextWidth == TextMeasurement.minimumWidth)
+    }
+
+    // MARK: A short label is as wide as its word
+
+    @Test func aShortLabelIsAsWideAsItsWord() {
+        let text = TextContent(string: "OK", fontSize: 14)
+        let box = TextBlockMetrics.frameSize(for: text, maxWidth: 600, hugsShortWords: true)
+        // Exactly the width the same word gets inside a starter component,
+        // which measures with no floor at all.
+        #expect(box.width == TextRasterizer.naturalSize(text).width)
+        #expect(box.width < TextRasterizer.minimumTextWidth)
+    }
+
+    @Test func withoutTheHuggingRuleAShortLabelStillGetsTheOldFloor() {
+        let text = TextContent(string: "OK", fontSize: 14)
+        #expect(TextBlockMetrics.frameSize(for: text, maxWidth: 600).width
+                == TextRasterizer.minimumTextWidth)
+    }
+
+    @Test func aLabelWiderThanTheFloorIsUnaffectedByTheRule() {
+        let text = TextContent(string: "Primary button", fontSize: 14)
+        #expect(TextBlockMetrics.frameSize(for: text, maxWidth: 600, hugsShortWords: true)
+                == TextBlockMetrics.frameSize(for: text, maxWidth: 600))
+    }
+
+    @Test func anEmptyFieldIsStillOneLineTall() {
+        let text = TextContent(string: "", fontSize: 14)
+        let hugging = TextBlockMetrics.frameSize(for: text, maxWidth: 600, hugsShortWords: true)
+        #expect(hugging.height == TextBlockMetrics.frameSize(for: text, maxWidth: 600).height)
+        #expect(hugging.width > 0)
+    }
+
+    @Test func aShortLabelThatHugsItsWordKeepsHuggingWhenItIsReworded() {
+        let word = TextContent(string: "OK", fontSize: 14)
+        let box = TextBlockMetrics.frameSize(for: word, maxWidth: 600, hugsShortWords: true)
+        let room = TextBlockMetrics.roomyBox(for: word,
+                                             frame: CGRect(origin: .zero, size: box))
+        #expect(room.width == nil)
+        #expect(room.height == nil)
+        // Re-worded, it is as wide as the new words and still on one line.
+        let longer = TextContent(string: "Save changes", fontSize: 14)
+        let reworded = TextBlockMetrics.frameSize(for: longer, maxWidth: 600,
+                                                  roomyWidth: room.width,
+                                                  roomyHeight: room.height,
+                                                  hugsShortWords: true)
+        #expect(reworded.width == TextRasterizer.naturalSize(longer).width)
+        #expect(reworded.height == box.height)
+    }
+
+    @Test func aShortLabelSomebodyMadeWiderKeepsTheWidthItWasGiven() {
+        let word = TextContent(string: "OK", fontSize: 14)
+        let frame = CGRect(x: 0, y: 0, width: TextRasterizer.minimumTextWidth, height: 22)
+        let room = TextBlockMetrics.roomyBox(for: word, frame: frame)
+        #expect(room.width == TextRasterizer.minimumTextWidth)
+        let reworded = TextBlockMetrics.frameSize(for: word, maxWidth: 600,
+                                                  roomyWidth: room.width,
+                                                  hugsShortWords: true)
+        #expect(reworded.width == TextRasterizer.minimumTextWidth)
+    }
+
+    @Test func aWrappedParagraphWhoseLongestLineNearlyFillsItIsStillRoomy() {
+        let text = TextContent(string: Self.samples[3], fontSize: 14)
+        let frame = CGRect(x: 0, y: 0, width: 240,
+                           height: TextBlockMetrics.laidOutHeight(TextContent(string: Self.samples[3],
+                                                                              fontSize: 14),
+                                                                  width: 240))
+        // The words need far more than 240 on one line, so this width was
+        // chosen: re-wording it re-wraps in place instead of snapping out to
+        // one long line.
+        #expect(TextBlockMetrics.roomyBox(for: text, frame: frame).width == 240)
     }
 
     // MARK: Boxes with room to spare

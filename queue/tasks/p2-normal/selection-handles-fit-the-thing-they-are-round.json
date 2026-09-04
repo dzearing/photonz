@@ -1,0 +1,27 @@
+{
+  "id": "selection-handles-fit-the-thing-they-are-round",
+  "title": "Selection handles fit the thing they are round",
+  "goal": "Picking a very small thing on the canvas, like a two letter label, gives you eight handles that cover the thing itself, so there is nowhere left to grab it and drag it. Handles should get out of the way when what they are round is smaller than they are.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1170,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T18:41:58.815Z",
+  "updated": "2026-09-04T18:41:58.816Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-04 finishing a-short-label-is-as-wide-as-its-word: a hugging OK label is 19x16 and gets the full handle set. Handles are drawn in CanvasView (Handles / ResizeHandle); the rule wants a size threshold below which corner handles shrink, move outside the outline, or drop to corners only.",
+  "acceptance": [
+    "A label two letters wide can be dragged by its middle without hitting a handle",
+    "The handles on a small selection do not overlap each other",
+    "A normal sized layer keeps exactly the handles it has today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T18:41:58.816Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -2914,51 +2914,30 @@ final class EditorState {
         return layer
     }
 
-    /// Restyles the selected text layer through `TextBuilder.restyled` and
-    /// re-measures its frame (the rasterizer needs CoreText, so it's done here),
-    /// keeping the wrap width so layout doesn't shift. One undo step.
-    private func restyleSelectedText(_ layer: Layer, fontName: String? = nil,
-                                     fontSize: CGFloat? = nil, weight: TextWeight? = nil,
-                                     colorHex: String? = nil) {
-        discardDragPreview()
-        let maxWidth = layer.frame.width
-        perform { document in
-            document.updateLayer(id: layer.id) { l in
-                l = TextBuilder.restyled(layer: l, fontName: fontName, fontSize: fontSize,
-                                         weight: weight, colorHex: colorHex)
-                if case .text(let content) = l.content {
-                    let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth,
-                                                          minWidth: TextRasterizer.minimumTextWidth)
-                    l.frame = CGRect(origin: l.frame.origin, size: size)
-                }
-            }
-        }
-    }
+    /// The picked text layer, as the list `setTextStyle` takes. Empty when the
+    /// pick is not text, which still remembers the choice as the new-text
+    /// default without touching the document.
+    private var restyleTargets: [UUID] { selectedTextLayer.map { [$0.id] } ?? [] }
 
+    /// The font popover and the docked inspector restyle through the ONE
+    /// path (`setTextStyle`), so a label re-measures the same way whichever
+    /// control you reach for. It also remembers the choice as the new-text
+    /// default.
     func setTextFont(_ name: String) {
-        if let layer = selectedTextLayer { restyleSelectedText(layer, fontName: name) }
-        textStyles.fontName = name
-        saveTextStyles()
+        setTextStyle(ids: restyleTargets, fontName: name)
     }
 
     func setTextFontSize(_ size: CGFloat) {
-        if let layer = selectedTextLayer { restyleSelectedText(layer, fontSize: size) }
-        textStyles.fontSize = size
-        saveTextStyles()
+        setTextStyle(ids: restyleTargets, fontSize: size)
     }
 
     func setTextWeight(_ weight: TextWeight) {
-        if let layer = selectedTextLayer { restyleSelectedText(layer, weight: weight) }
-        textStyles.weight = weight
-        saveTextStyles()
+        setTextStyle(ids: restyleTargets, weight: weight)
     }
 
     func setTextColor(_ hex: String) {
-        if let layer = selectedTextLayer { restyleSelectedText(layer, colorHex: hex) }
-        textStyles.colorHex = hex
+        setTextStyle(ids: restyleTargets, colorHex: hex)
         foregroundFillHex = hex // text color picks update the current color too
-        saveTextStyles()
-        recordRecentColor(hex: hex)
     }
 
     // MARK: - Docked text inspector (targets a specific layer, independent of
@@ -3000,34 +2979,43 @@ final class EditorState {
                                  weight: weight, colorHex: colorHex)
             return
         }
-        // How much room each label's words get at the new type. A box somebody
-        // made bigger than its words — a paragraph, or a label told to stretch
-        // — keeps the room it was given, so restyling re-wraps in place. A box
-        // still hugging its words re-hugs them, instead of wrapping the moment
-        // bold makes them a few points wider than the box they just fitted.
-        // (Current has no stretching, so it keeps its old rule untouched.)
-        let widths: [UUID: CGFloat] = targets.reduce(into: [:]) { widths, id in
-            guard let layer = document?.layer(id: id) else { return }
-            guard Experiments.shared.placementEnabled, let words = layer.text else {
-                widths[id] = layer.frame.width
+        // The box each label lands in at the new type. A box somebody made
+        // bigger than its words — a paragraph, or a label told to stretch —
+        // keeps the room it was given, so restyling re-wraps in place. A box
+        // still hugging its words re-hugs them, however short they are, instead
+        // of wrapping the moment bold makes them a few points wider than the
+        // box they just fitted. (Current has no stretching, so it keeps its old
+        // rule untouched: every box at least the minimum width.)
+        //
+        // Measured up front, outside the mutation, because it needs CoreText
+        // and `TextBuilder.restyled` is pure: the same restyling runs twice,
+        // once to measure and once to store.
+        let hugsShortWords = Experiments.shared.placementEnabled
+        let sizes: [UUID: CGSize] = targets.reduce(into: [:]) { sizes, id in
+            guard let layer = document?.layer(id: id), let was = layer.text else { return }
+            let restyled = TextBuilder.restyled(layer: layer, fontName: fontName,
+                                                fontSize: fontSize, weight: weight,
+                                                colorHex: colorHex)
+            guard let words = restyled.text else { return }
+            guard hugsShortWords else {
+                sizes[id] = TextRasterizer.naturalSize(words, maxWidth: layer.frame.width,
+                                                       minWidth: TextRasterizer.minimumTextWidth)
                 return
             }
-            let hugged = TextRasterizer.naturalSize(words, maxWidth: layer.frame.width,
-                                                    minWidth: TextRasterizer.minimumTextWidth)
-            widths[id] = layer.frame.width > hugged.width + 0.5
-                ? layer.frame.width : .greatestFiniteMagnitude
+            let room = TextBlockMetrics.roomyBox(for: was, frame: layer.frame)
+            // A box with no room to keep goes back on one line at the new type.
+            sizes[id] = TextBlockMetrics.frameSize(for: words, maxWidth: .greatestFiniteMagnitude,
+                                                   roomyWidth: room.width,
+                                                   roomyHeight: room.height,
+                                                   hugsShortWords: true)
         }
         discardDragPreview()
         perform { document in
             for id in targets {
-                guard let maxWidth = widths[id] else { continue }
                 document.updateLayer(id: id) { l in
                     l = TextBuilder.restyled(layer: l, fontName: fontName, fontSize: fontSize,
                                              weight: weight, colorHex: colorHex)
-                    if case .text(let content) = l.content {
-                        let size = TextRasterizer.naturalSize(
-                            content, maxWidth: maxWidth,
-                            minWidth: TextRasterizer.minimumTextWidth)
+                    if let size = sizes[id] {
                         l.frame = CGRect(origin: l.frame.origin, size: size)
                     }
                 }
@@ -3131,8 +3119,11 @@ final class EditorState {
         var roomyWidth: CGFloat?
         var roomyHeight: CGFloat?
         // Next only, with the rest of placement: Current has no Align, so no
-        // text in it can be pulled off centre by a box that re-hugs.
-        if Experiments.shared.placementEnabled, let layer = edited, let words = layer.text {
+        // text in it can be pulled off centre by a box that re-hugs. The same
+        // flag carries the rule that a box nobody has narrowed is as wide as
+        // its words, however short they are.
+        let hugsShortWords = Experiments.shared.placementEnabled
+        if hugsShortWords, let layer = edited, let words = layer.text {
             (roomyWidth, roomyHeight) = TextBlockMetrics.roomyBox(for: words, frame: layer.frame)
         }
         if let layerID {
@@ -3143,7 +3134,8 @@ final class EditorState {
                 // the words land in the box they were typed in.
                 let size = TextBlockMetrics.frameSize(for: content, maxWidth: maxWidth,
                                                       roomyWidth: roomyWidth,
-                                                      roomyHeight: roomyHeight)
+                                                      roomyHeight: roomyHeight,
+                                                      hugsShortWords: hugsShortWords)
                 // `origin` is where the editor sat on the CANVAS. A label
                 // inside a group stores its box relative to that group, so the
                 // document does the conversion: written straight in, the words
@@ -3160,7 +3152,8 @@ final class EditorState {
             // New text commits in the current foreground color (16.12).
             var content = content
             content.colorHex = foregroundFillHex
-            let size = TextBlockMetrics.frameSize(for: content, maxWidth: maxWidth)
+            let size = TextBlockMetrics.frameSize(for: content, maxWidth: maxWidth,
+                                                  hugsShortWords: hugsShortWords)
             let layer = TextBuilder.layer(content: content, at: origin, naturalSize: size)
             perform { $0.addLayerDrawnOnFrame(layer) }
             // Re-editing existing text already runs with Select active, so only

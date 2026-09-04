@@ -1,0 +1,217 @@
+{
+  "out": "/tmp/photonz-playtest/short-label",
+  "seed": "Typing a short label like OK on the canvas used to give a box eighty points wide with the word sitting in its left third, because every label typed on the canvas was given a minimum width. The same word inside a starter component hugged its letters. This walk checks that a label nobody has narrowed is now exactly as wide as what it says, and that a box somebody DID make wider keeps the width it was given.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "OK"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "0-typing",
+      "note": "THE FIRST TEST: the field being typed in is as wide as what has been typed. Two letters and a caret, no eighty point trough of empty field to their right."
+    },
+    {
+      "do": "snapshot",
+      "name": "short-label-0-typing"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-hugs",
+      "note": "THE TEST: the blue box round OK is as wide as the two letters. W reads about twenty, not eighty, and there is no empty room to the right of the K."
+    },
+    {
+      "do": "snapshot",
+      "name": "short-label-1-hugs"
+    },
+    {
+      "do": "panel",
+      "stage": "1-hugs"
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        203,
+        206
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Save changes"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-reworded",
+      "note": "THE SECOND TEST: re-wording a hugging label keeps it hugging. Save changes sits on ONE line and W is the width of those two words."
+    },
+    {
+      "do": "snapshot",
+      "name": "short-label-2-reworded"
+    },
+    {
+      "do": "panel",
+      "stage": "2-reworded"
+    },
+    {
+      "do": "click",
+      "at": [
+        210,
+        206
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "200"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-widened",
+      "note": "The box is now two hundred points wide with the words at its left: room somebody asked for."
+    },
+    {
+      "do": "snapshot",
+      "name": "short-label-3-widened"
+    },
+    {
+      "do": "panel",
+      "stage": "3-widened"
+    },
+    {
+      "do": "click",
+      "at": [
+        203,
+        206
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "OK"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-keeps-its-room",
+      "note": "THE THIRD TEST: a box somebody widened keeps its width when it is re-worded. It is still two hundred points wide even though the word is OK again."
+    },
+    {
+      "do": "snapshot",
+      "name": "short-label-4-keeps-its-room"
+    }
+  ]
+}

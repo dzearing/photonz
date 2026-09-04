@@ -8344,3 +8344,46 @@ given a minimum width, while the labels inside the starter components hug. Task:
 "A short label is as wide as its word".
 
 Next: the queue's next p2, or that short-label task.
+
+## 2026-09-04 — A short label is as wide as its word
+
+A label typed on the canvas is now exactly as wide as what it says. Typing OK
+gave a box eighty points wide with the word in its left third, because every
+committed text box was floored at the minimum width; the same word inside a
+starter component hugged its letters, which is the inconsistency the task
+named.
+
+The floor did not go away, it went back where it belongs: to the two places a
+width is CHOSEN. The wrap cap a new block gets never drops below it, and the
+narrowest a box can be dragged or typed down to is still eighty. What changed
+is that a box nobody has narrowed no longer inherits that number.
+
+`TextBlockMetrics.frameSize` takes `hugsShortWords`, passed from the three
+places a text box is measured in the app (the inline field, the commit, and a
+restyle). Next passes it on, behind `next-placement` like the rest of the "a
+text box is its words" family; Current keeps its floor, pinned by a test.
+
+Two things fell out on the way:
+
+- `roomyBox` decided whether a box hugs by comparing its width against its own
+  words measured AT that width, which is asking whether a box is wider than
+  itself. It only worked because the floor's `min(minWidth, maxWidth)` clamp
+  propped it up for narrow boxes. A paragraph whose longest line happened to
+  fill its box read as hugging and would snap out to one enormous line when
+  re-worded. It now compares against the words on ONE line, which is the one
+  width that hugs.
+- Restyling had its own copy of the measurement (`restyleSelectedText`) that
+  applied the floor, so changing a hugging label's font jumped it to eighty.
+  Deleted: the font popover and the docked inspector now restyle through
+  `setTextStyle`, which measures through `TextBlockMetrics` like everything
+  else.
+
+Verified in the probe with `Scripts/playtest/short-label-walk.json`: OK lands
+23 stored / 19 on screen, the field being typed in hugs the letters too,
+re-wording to Save changes gives 88 on one line, W typed as 200 still lands
+200, and re-wording that box back to OK keeps 200. `Scripts/test.sh` green at
+3099 tests.
+
+Next: the audit is `queue/audits/2026-09-04-short-label-width.json`. The one
+rough edge left is that a 19x16 selection gets the full eight handles and they
+cover the letters, filed as "Selection handles fit the thing they are round".

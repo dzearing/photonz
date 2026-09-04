@@ -34,20 +34,43 @@ public enum TextBlockMetrics {
     /// words there and should keep hugging them.
     public static func roomyBox(for text: TextContent,
                                 frame: CGRect) -> (width: CGFloat?, height: CGFloat?) {
-        let hugged = TextRasterizer.naturalSize(text, maxWidth: frame.width,
-                                                minWidth: TextRasterizer.minimumTextWidth)
-        return (frame.width > hugged.width + 0.5 ? frame.width : nil,
-                frame.height > hugged.height + 0.5 ? frame.height : nil)
+        // Across, there is exactly one box that hugs: the one as wide as the
+        // words on ONE line. Wider and somebody stretched it; narrower and
+        // somebody dragged it in to wrap. Either way the width was chosen and
+        // is kept. Comparing against the words wrapped at the box's own width
+        // instead asks whether the box is wider than itself, which said
+        // "hugging" for a paragraph whose longest line happened to fill it and
+        // snapped it out to one enormous line the moment it was re-worded.
+        let oneLine = TextRasterizer.naturalSize(text)
+        let hugs = abs(frame.width - oneLine.width) <= 0.5
+        // Down, the words are measured at the width the box HAS, because that
+        // is what decides how many lines they take.
+        let wrapped = TextRasterizer.naturalSize(text, maxWidth: frame.width)
+        return (hugs ? nil : frame.width,
+                frame.height > wrapped.height + 0.5 ? frame.height : nil)
     }
 
     /// The frame `text` lands in, in document points: it hugs the words,
     /// wrapping no wider than `maxWidth`, unless the box already has room it
     /// should keep (`roomyWidth` / `roomyHeight` from `roomyBox`).
+    ///
+    /// `hugsShortWords` decides what happens to words narrower than the
+    /// minimum width. The minimum is how narrow a box can be DRAGGED or typed
+    /// down to, and that is a fact about a paragraph: below it a block of text
+    /// is a sliver of a column many lines tall rather than something you can
+    /// read. A label nobody has narrowed is not a paragraph, so applying the
+    /// floor to it is what made typing OK on the canvas give an eighty point
+    /// box with the word sitting in its left third, while the same word inside
+    /// a starter component hugged its letters. With this on, a box that has
+    /// never been narrowed is exactly as wide as what it says; with it off,
+    /// every typed box is at least the minimum, as it always was.
     public static func frameSize(for text: TextContent, maxWidth: CGFloat,
                                  roomyWidth: CGFloat? = nil,
-                                 roomyHeight: CGFloat? = nil) -> CGSize {
-        var size = TextRasterizer.naturalSize(text, maxWidth: roomyWidth ?? maxWidth,
-                                              minWidth: TextRasterizer.minimumTextWidth)
+                                 roomyHeight: CGFloat? = nil,
+                                 hugsShortWords: Bool = false) -> CGSize {
+        var size = TextRasterizer.naturalSize(
+            text, maxWidth: roomyWidth ?? maxWidth,
+            minWidth: hugsShortWords ? 0 : TextRasterizer.minimumTextWidth)
         if let roomyWidth { size.width = roomyWidth }
         if let roomyHeight { size.height = max(size.height, roomyHeight) }
         return size

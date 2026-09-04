@@ -1,0 +1,29 @@
+{
+  "feature": "A short label is as wide as its word",
+  "epic": "ui-layout",
+  "summary": "Type a short label like OK on the canvas and the box round it is now as wide as the word, the way the labels inside the starter components already were. It used to be eighty points wide with the word sitting in its left third.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to change: this rides on Layout, which is on by default.",
+  "try": [
+    { "do": "Press T, then click on an empty part of the canvas.", "shot": "2026-09-04-short-label-0-typing.png" },
+    { "do": "Type OK and watch the field you are typing in." },
+    { "do": "Press Command Return.", "shot": "2026-09-04-short-label-1-hugs.png" },
+    { "do": "Read W in Position and Size. It says 19, not 80." },
+    { "do": "Double click the label, type Save changes, press Command Return. It stays on one line and W is the width of those two words." },
+    { "do": "With it selected, type 200 into W and press Return." },
+    { "do": "Double click it, type OK, press Command Return. It is still 200 wide.", "shot": "2026-09-04-short-label-4-keeps-its-room.png" },
+    { "do": "Drag the right edge of a label as far left as it goes. It still stops at 80, because a paragraph needs a floor to be readable." }
+  ],
+  "evaluate": [
+    "Is a two letter label with its box drawn tight around it easier to place next to something, or does it now feel too small to grab?",
+    "While you type a short label, does the field ending right after the last letter read as right, or do you miss having somewhere to type into?",
+    "Re-wording a label you never touched re-hugs it, and re-wording one you widened keeps its width. Is that the split you would expect, without being told?",
+    "Eighty is still the narrowest you can drag or type a box down to. Does that number feel right when you are making a paragraph?",
+    "Does anything about how the words themselves are drawn look different to you? Nothing should have moved."
+  ],
+  "rough": [
+    "A 19 by 16 box gets the same eight selection handles as a full size layer, and they crowd the two letters. That is true of any tiny layer, but a short label is the first one you meet every day. Filed as its own task rather than fixed here.",
+    "A label typed before this change is stored at 80 and there is no way to tell it apart from one somebody deliberately dragged to 80, so it keeps its width. Only newly typed labels hug. Re-typing an old one collapses it to its words only if you also make it hug first, which you cannot do directly: worth knowing if an old document looks inconsistent.",
+    "Current is untouched on purpose. Typing OK there still gives an eighty point box.",
+    "While reading the code I found the rule that decides hugging was asking whether a box is wider than itself. A paragraph whose longest line happened to fill its box read as hugging and would have snapped out to one long line when re-worded. Fixed on the way past, so re-wrapping a paragraph may behave better than you remember."
+  ]
+}

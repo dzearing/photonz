@@ -4126,7 +4126,8 @@ final class CanvasNSView: NSView {
         let room = roomyBox(session)
         let box = TextBlockMetrics.frameSize(for: draft,
                                              maxWidth: textWrapWidth(origin: session.origin),
-                                             roomyWidth: room.width, roomyHeight: room.height)
+                                             roomyWidth: room.width, roomyHeight: room.height,
+                                             hugsShortWords: Experiments.shared.placementEnabled)
         // Words that sit low in a roomy box are typed low in it too.
         editor.textContainerInset = NSSize(width: 0,
                                            height: TextBlockMetrics.topInset(for: draft, in: box) * zoom)

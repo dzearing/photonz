@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1160,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T18:24:58.442Z",
-  "updated": "2026-09-04T18:24:58.443Z",
+  "updated": "2026-09-04T18:28:00.546Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-04 while making a text box read as its words. The floor is TextMeasurement.minimumWidth (now 84 stored = 80 words) and it is applied as naturalSize(minWidth:) by every path that commits an inline text edit (EditorState 2931/3016/3030, CanvasView 4079, TextBlockMetrics). StarterComponents build labels with TextMeasurement.size(of:) and no floor, so they hug: that is the inconsistency. Layer.textHugsItsWords already names the distinction the fix needs - the floor belongs to a box someone has dragged narrower (a paragraph), not to one that hugs its words and never wraps.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-04T18:24:58.443Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T18:28:00.546Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T18:41:34.534207Z",
+      "note": "Adversarial review before building. The floor is right for a paragraph and wrong for a label, so it moves from the BOX to the two places a width is chosen: the wrap cap a new block gets (unchanged) and the narrowest a box can be dragged or typed down to (unchanged). Nothing else needed to change. Shortest version: one flag on the one measurer, TextBlockMetrics.frameSize."
+    },
+    {
+      "t": "2026-09-04T18:41:34.534207Z",
+      "note": "Found a second bug while reading roomyBox: it asked whether a box was wider than its own words measured AT that width, which is asking whether a box is wider than itself. A paragraph whose longest line happened to fill its box came back 'hugging' and would snap out to one enormous line when re-worded, and without the floor's min(minWidth,maxWidth) clamp propping it up every short label would have done the same. Rewritten to compare against the words on ONE line, which is the one width that hugs."
+    },
+    {
+      "t": "2026-09-04T18:41:34.534207Z",
+      "note": "Restyling had the same bug on its own path: a hugging label whose font changed was re-measured with the floor and jumped to 84. setTextStyle now measures through TextBlockMetrics like every other path, and the duplicate single-layer measurer (restyleSelectedText) is gone: the font popover and the docked inspector restyle through the one path."
+    },
+    {
+      "t": "2026-09-04T18:41:34.534207Z",
+      "note": "Next only, behind next-placement, the flag the rest of the 'a text box is its words' family already sits behind. Current keeps its floor untouched (a test pins it)."
+    },
+    {
+      "t": "2026-09-04T18:41:34.534207Z",
+      "note": "Verified live in the probe (Scripts/playtest/short-label-walk.json, Screen Recording granted so the shots are real captures). Typing OK gives a box 23 stored / 19 on screen, was 84/80. The field being typed in hugs the two letters too. Re-wording it to Save changes gives 88 on one line. Typing 200 into W still lands 204/200, and re-wording THAT box back to OK keeps 204. Starter buttons unchanged: retype-label walk still grows a button from 78 to 170 for longer words. Scripts/test.sh: 3099 tests green."
+    },
+    {
+      "t": "2026-09-04T18:41:34.534207Z",
+      "note": "Left rough: eight selection handles round a 19x16 box crowd the letters. That is true of any tiny layer, but a short label is the first common one. Filed separately."
     }
-  ]
+  ],
+  "started": "2026-09-04T18:28:00.546Z"
 }
