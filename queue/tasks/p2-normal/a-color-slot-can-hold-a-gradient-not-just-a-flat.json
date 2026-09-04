@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1010,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T02:04:00.051Z",
-  "updated": "2026-09-04T03:19:56.587303Z",
+  "updated": "2026-09-04T03:26:20.744Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Named in the picker task (one-colour-picker-the-designed-one-everywhere-a) as the deliberate follow-up. The picker's header and its VStack already leave room for the type row; nothing is stubbed, so this adds it. The mock is docs/design/mocks/pages/color.html (cp-types, cp-geo, the stop strip) and docs/design/mocks/shared/components/colorpicker.js has the whole interaction worked out including the aim pad and the callout bubble. Model side: LayerContent colour fields are String hexes today, so a Paint type has to arrive in PhotonzCore with Codable back-compat (a plain hex string stays a hex string), and every rasterizer that reads a hex needs the gradient path.",
@@ -44,7 +44,12 @@
     {
       "t": "2026-09-04T03:19:56.587303Z",
       "note": "Adversarial review of the built thing, on the probe with real screen captures (Screen Recording granted). Three defects found and fixed: (1) the angular sweep, drawn as a fan of wedges, left faint rings across the shape at full size, so it is worked out a pixel at a time now; (2) the aim pad drew a grabbable-looking handle at the centre of a straight run, which has no origin to move; (3) painting the document sent the row's reading straight back into the open picker, which handed the ramp's selection back to stop 1 in the middle of an edit. Left honest in the audit: dragging inside the popover cannot be driven by a walk, so that one behaviour was checked by reading the commit path rather than by using it."
+    },
+    {
+      "t": "2026-09-04T03:26:20.743Z",
+      "note": "Shipped in Next behind next-color-picker. Core: Paint (solid/linear/radial/angular) encoding as a bare hex string while flat, so old documents open unchanged. Render: one GradientPainter for shape fills, outlines and frame surfaces; canvas, export and layer thumbnails share the composite. UI: type row of four live tiles, stop ramp with add/remove/reverse, 64pt aim pad, hidden entirely on slots that can only be flat (drop shadow). Verified: Scripts/test.sh green (2672), gradient-paint-walk.json on the probe with real screen captures, and the composite measured at 11ms against 14ms flat on a 12-megapixel canvas. Audit: queue/audits/2026-09-04-gradient-paint.json"
     }
   ],
-  "started": "2026-09-04T02:48:40.738Z"
+  "started": "2026-09-04T02:48:40.738Z",
+  "completed": "2026-09-04T03:26:20.744Z"
 }

@@ -1,0 +1,28 @@
+{
+  "id": "the-tool-you-are-holding-can-be-armed-with-a-gra",
+  "title": "The tool you are holding can be armed with a gradient",
+  "goal": "When you pick a gradient today you have to draw the shape first and then paint it, because the color swatch in the toolbar (the one that decides what the NEXT shape comes out as) still only takes one flat color. Let that swatch hold a gradient too, so a run of shapes can all come out gradient without painting each one.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1040,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T03:26:35.267Z",
+  "updated": "2026-09-04T03:26:35.267Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from a-color-slot-can-hold-a-gradient-not-just-a-flat. The blocker is that tool defaults live as hex strings: EditorState.activeToolColorHex / activeToolFillHex and AnnotationStyles, plus the three ColorPickerContent call sites in EditorView.swift (1061, 1146, 1617) which use the hex-flavoured init. Paint already round-trips through settings-safe Codable, so the change is mostly widening those stores and the AnnotationBuilder seed.",
+  "acceptance": [
+    "The toolbar color swatch opens the same picker with the same four type tiles",
+    "A shape drawn while the tool holds a gradient comes out with that gradient",
+    "The tool remembers the gradient between shapes and between launches",
+    "A tool whose color can only be flat still shows no type row"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T03:26:35.267Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "a-gradient-can-be-saved-in-the-library-under-a-n",
+  "title": "A gradient can be saved in the Library under a name",
+  "goal": "A color you like can be kept in the Library under a name and reused, but only when it is one flat color. A gradient you spent time getting right cannot be kept at all, so the next shape that wants it has to be built again by hand. Let a gradient be saved and reused the same way a color is.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1050,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T03:26:35.299Z",
+  "updated": "2026-09-04T03:26:35.299Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from a-color-slot-can-hold-a-gradient-not-just-a-flat. ColorStyle holds colorHex: String today (PhotonzCore/ColorStyles.swift); widening it to Paint is the same trick Paint itself used: keep the wire key, encode a bare string while solid. The Library tile and every swatch that draws a style will want PaintFill rather than Color(hex:).",
+  "acceptance": [
+    "Save style inside the picker keeps a gradient, not just its flat color",
+    "A saved gradient appears on the Library shelf drawn as the gradient it is",
+    "Applying a saved gradient to another shape paints the whole ramp and its aim",
+    "Editing a saved gradient repaints everything wearing it, in one step"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T03:26:35.299Z",
+      "note": "created (manual)"
+    }
+  ]
+}
