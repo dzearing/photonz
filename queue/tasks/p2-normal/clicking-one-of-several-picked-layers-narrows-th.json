@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1070,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T06:23:02.580Z",
-  "updated": "2026-09-04T06:35:10.678393Z",
+  "updated": "2026-09-04T06:35:29.765Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-09-04 while verifying the colour-section task. CanvasView.mouseDown (around Sources/Photonz/CanvasView.swift:1780) deliberately swallows a press on a member of a multi-selection so the group can travel with the pointer, and starts a MultiMoveDrag. The mouseUp branch for multiMove (around :2251) commits a move when liveOrigins is non-nil and otherwise does nothing, so a press that never moved leaves the selection untouched. The fix is the standard press-keeps/click-narrows split: in that mouseUp branch, when the drag never moved, select the layer that was pressed. Reproduced with Scripts/playtest/multi-style-walk.json before it was taught to deselect first: its stage 4 unlinked the style from all three boxes instead of the one it had clicked.",
@@ -30,7 +30,7 @@
     },
     {
       "t": "2026-09-04T06:35:10.678393Z",
-      "note": "Adversarial review before building: the mock is not involved, this is a platform convention. Checked what could break \u2014 shift-click drops a member and returns on the press, so it never reaches this path; Escape mid-drag still means never mind and does not narrow; the canvas has no right-click menu, so a context menu on a multi-selection cannot be affected; a 2 point jitter is a click by the same 4 point tolerance single layers use. Shortest version: remember which layer the press landed on, and narrow to it on release when the drag never moved."
+      "note": "Adversarial review before building: the mock is not involved, this is a platform convention. Checked what could break — shift-click drops a member and returns on the press, so it never reaches this path; Escape mid-drag still means never mind and does not narrow; the canvas has no right-click menu, so a context menu on a multi-selection cannot be affected; a 2 point jitter is a click by the same 4 point tolerance single layers use. Shortest version: remember which layer the press landed on, and narrow to it on release when the drag never moved."
     },
     {
       "t": "2026-09-04T06:35:10.678393Z",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-04T06:35:10.678393Z",
       "note": "Scripts/test.sh green (2756 tests). Audit at queue/audits/2026-09-04-click-narrows.json with two real window captures (Screen Recording granted)."
+    },
+    {
+      "t": "2026-09-04T06:35:29.764Z",
+      "note": "Clicking one of several picked layers now narrows to it. PickedMemberPress in PhotonzCore (tested) plus the pick carried through CanvasView's multi-move drag; press-and-drag still moves the group, shift-click still drops. Verified with Scripts/playtest/click-narrows-walk.json on the probe app and Scripts/test.sh green (2756). Audit: queue/audits/2026-09-04-click-narrows.json"
     }
   ],
-  "started": "2026-09-04T06:25:17.396Z"
+  "started": "2026-09-04T06:25:17.396Z",
+  "completed": "2026-09-04T06:35:29.765Z"
 }
