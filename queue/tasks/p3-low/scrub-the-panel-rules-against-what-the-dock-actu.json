@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:07:01.600Z",
-  "updated": "2026-09-04T06:14:52.571743Z",
+  "updated": "2026-09-04T06:15:08.635Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review finding, 2026-09-03. The document is docs/design/mocks/shared/UX-PATTERNS.md. Three specific spots. Section 3 (Panels and surfaces taxonomy) defines each panel group as having its own bounded scroller, but says nothing about reveal: the Library reveal work now scrolls the DOCK to a group and re-opens a group the user had collapsed, which queue/audits/2026-09-03-library-reveal.json flags itself as overruling a deliberate collapse. Section 4 (Selection model) says multi-select shows shared properties only, and never says a property keeps its home, which is how colours ended up in a different section depending on the number of layers picked (queue/audits/2026-09-03-multi-style.json). Section 5 (Layers representation) says a component instance renders as a collapsed group expandable to show its overrides; LayerPanelTree.panelRows deliberately makes a copy non-openable and puts its knobs in the Component section instead.",
@@ -60,7 +60,12 @@
     {
       "t": "2026-09-04T06:14:52.571743Z",
       "note": "Scripts/test.sh green (2749 tests, 249 suites). Docs-only change, no code touched, so nothing to port to Next."
+    },
+    {
+      "t": "2026-09-04T06:15:08.634Z",
+      "note": "UX-PATTERNS.md v1.2 (commit 30feacb): section 3 gains the Reveal rule, section 4 gains 'a property keeps its home', section 5's component-copy row rewritten to what ships. Each names the audit or commit that overtook it. The one place the app is wrong rather than the rule (Fill moving section on multi-select) is filed as task a-colour-stays-in-the-same-section-when-you-pick instead of bending the rule. Verified against the real code (DockReveal, LibraryShelfLayout.tileReveal, InspectorSectionID.color, isOpenableGroup, ComponentInstanceInspector), not just the audits. Scripts/test.sh green."
     }
   ],
-  "started": "2026-09-04T06:10:09.122Z"
+  "started": "2026-09-04T06:10:09.122Z",
+  "completed": "2026-09-04T06:15:08.635Z"
 }
