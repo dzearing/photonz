@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:51.061Z",
-  "updated": "2026-09-04T12:09:51.062Z",
+  "updated": "2026-09-04T13:32:07.253Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Named as a house rule by the audit that added the newest one: queue/audits/2026-09-04-callout-shape.json rough 1 (\"With the inspector hidden there is no way to the choice at all. Every other tool setting has the same gap (the wands tolerance, crops aspect), so this follows the house rule rather than fixing it\"). queue/audits/2026-09-04-callout-one-home.json is the same story from the other side: the popover that used to hold tool settings was unreachable code, because picking up a drawing tool clears the layer selection, so the settings were moved into the panel with nowhere else to go. This is also a documented rule that reality has moved past: docs/design/mocks/shared/UX-PATTERNS.md section 6 says tool options are \"shown in the options bar or the top of the Inspector\", and there is no options bar in the app. Either build the strip the doc promises or change the doc; do not leave them disagreeing. Worth a decision card with shots before building, since it puts new chrome on screen.",
@@ -26,6 +26,43 @@
     {
       "t": "2026-09-04T12:09:51.062Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T13:25:10.136Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T13:29:45.339379Z",
+      "note": "Adversarial review, on the real app (probe, Next, Screen Recording granted). Walk: /tmp/pz/tool-settings-gap.json, shots in /tmp/photonz-playtest/tool-settings-gap."
+    },
+    {
+      "t": "2026-09-04T13:29:45.339379Z",
+      "note": "The premise is partly wrong, and the correction matters. Crop's aspect and Measure's mode are NOT panel-only: those tool buttons wear a small corner wedge and press-and-hold lists the choice, so they survive the panel being hidden. Confirmed on a real capture of the bar with the panel hidden."
+    },
+    {
+      "t": "2026-09-04T13:29:45.339379Z",
+      "note": "What is actually stranded when the panel is hidden: the Zoom Callout's Shape, the Magic Wand's Tolerance, and Measure's Snap and Show. The pattern is not tool-vs-panel, it is MODE-vs-SETTING: modes went into the tool button on 2026-08-23 (D15) and settings went to the panel, and only the settings half lost its way home."
+    },
+    {
+      "t": "2026-09-04T13:29:45.339379Z",
+      "note": "So the shortest fix is not new chrome at all: give the tool button's existing flyout a settings foot, which D15 already sanctions in writing (\"settings live in the Inspector ... or at the foot of the same flyout when they change how the next click behaves\"). The wedge then appears on the wand and the callout too, which is exactly the rule the wedge already states: there is more inside this button."
+    },
+    {
+      "t": "2026-09-04T13:29:45.339379Z",
+      "note": "Second finding: the panel does not only hide when you ask it to. EditorView.updateInspectorAutoCollapse hides it for you on a narrow window, so a person can lose the callout's Shape without ever having pressed anything."
+    },
+    {
+      "t": "2026-09-04T13:29:45.339379Z",
+      "note": "Third finding, against Option A: the flyout is a real NSMenu (Menu(primaryAction:)), which takes Picker, Toggle, Button and Divider but not a Slider. The wand's Tolerance would have to become stepped choices or +/- rows there, which is a downgrade from the slider it has in the panel. Called out in the decision card rather than hidden."
+    },
+    {
+      "t": "2026-09-04T13:29:45.339379Z",
+      "note": "Fourth finding: UX-PATTERNS section 6 line 291 still promises an \"options bar\", and D15 (line 1044) contradicts it. Whichever option wins, that line gets rewritten in the same change. Not fixed yet because the wording depends on the answer."
+    },
+    {
+      "t": "2026-09-04T13:32:07.252Z",
+      "note": "Waiting on the decision \"With the right hand panel hidden, where should the settings for the tool in your hand live?\" Four options with real shots of today's gap and sketches of each answer; recommended A (settings at the foot of the tool button's press-and-hold list, the gesture Crop and Measure already use). Nothing built, because every answer puts the controls somewhere different."
     }
-  ]
+  ],
+  "started": "2026-09-04T13:25:10.136Z"
 }

@@ -1,0 +1,73 @@
+{
+  "id": "the-settings-for-the-tool-in-your-hand-are-reach-with-the-right-hand-panel-hidden",
+  "taskId": "the-settings-for-the-tool-in-your-hand-are-reach",
+  "question": "With the right hand panel hidden, where should the settings for the tool in your hand live?",
+  "context": "Hide the panel and the Zoom Callout's Shape, the Magic Wand's Tolerance and Measure's Snap and Show have nowhere to be reached. Crop's aspect and Measure's mode do not have this problem: those tool buttons already open a list when you press and hold them. This picks which of the two halves the rest of the app follows.",
+  "options": [
+    {
+      "id": "a",
+      "label": "In the tool button",
+      "summary": "Press and hold the tool you are holding, or click the small corner wedge on it, and a short list opens above the tool bar with that tool's settings in it: Shape for the Zoom Callout, Tolerance for the Magic Wand, Snap and Show for Measure. This is the same press-and-hold the Crop and Measure buttons already answer to today, so nothing new appears on screen until you ask for it.",
+      "pros": [
+        "Nothing new is on screen. The window looks exactly as it does now until you press a tool.",
+        "It is the gesture Crop and Measure already use, so half the tool bar already behaves this way.",
+        "The settings sit on the tool you just clicked, which is where your hand already is.",
+        "Works the same on a narrow window, where the panel hides itself whether you asked or not."
+      ],
+      "cons": [
+        "You cannot see a tool's current setting without pressing and holding it first.",
+        "The Magic Wand's Tolerance is a slider today, and a slider does not fit in this kind of list. It would become a short list of steps, or plus and minus, until it has a better home."
+      ],
+      "mitigation": "The tool's tooltip names the live setting, so hovering tells you where you stand without opening anything, and the panel keeps its section unchanged for anyone who works with it open."
+    },
+    {
+      "id": "b",
+      "label": "In a strip across the top",
+      "summary": "A thin bar appears under the title bar showing the settings for whatever tool is in your hand, always open, no pressing required: the Zoom Callout's Shape, the wand's Tolerance slider, Measure's Snap and Show. This is how Photoshop and most editors do it. It is empty for a tool with nothing to set.",
+      "pros": [
+        "You can see and change a setting without opening anything.",
+        "Anyone coming from Photoshop already knows to look up there.",
+        "A real slider fits, so Tolerance keeps the control it has today."
+      ],
+      "cons": [
+        "It is permanent chrome across the top of the window, taking room from the picture even when the tool in hand has one setting or none.",
+        "It makes a third place tool information lives, alongside the tool bar and the panel.",
+        "It appears and disappears as you switch tools, so the picture shifts under you."
+      ],
+      "mitigation": "The strip only exists while the tool in hand actually has settings, and it floats over the picture as a glass bar rather than pushing the canvas down, so nothing jumps."
+    },
+    {
+      "id": "c",
+      "label": "In a capsule above the tool bar",
+      "summary": "The same always-open row as option B, but it rides just above the floating tool bar at the bottom, right over the tool you clicked, instead of at the top of the window.",
+      "pros": [
+        "Always visible, and right next to the button you just pressed.",
+        "Same floating glass language as the tool bar it sits on.",
+        "Nothing at the top of the window."
+      ],
+      "cons": [
+        "It sits over the bottom of the picture, which on a screenshot is often where the buttons you are redlining are.",
+        "A version of this was removed on purpose: tool settings used to sit inside the tool bar and made it 150 to 200 points wider the moment you picked up Measure or Crop, which pushed it off a narrow picture."
+      ],
+      "mitigation": "It is its own capsule on its own row rather than part of the tool bar, so the tool bar never changes width and the capsule can wrap on a narrow window."
+    },
+    {
+      "id": "d",
+      "label": "Leave it as it is",
+      "summary": "Tool settings stay in the right hand panel only. Hiding the panel means giving up the callout's Shape, the wand's Tolerance and Measure's Snap and Show until you show it again with Option Command L.",
+      "declines": true,
+      "pros": [
+        "No new behavior to learn, and no new chrome anywhere.",
+        "Every tool setting stays in exactly one place."
+      ],
+      "cons": [
+        "On a narrow window the panel hides itself, so these settings can vanish without you doing anything.",
+        "Half the tool bar already contradicts it: Crop's aspect and Measure's mode are reachable with the panel hidden."
+      ],
+      "mitigation": "Nothing changes, so nothing breaks; the gap is written down and can be picked up again later."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-04T13:31:32.716Z"
+}
