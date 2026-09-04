@@ -1,0 +1,28 @@
+{
+  "id": "a-rule-that-does-nothing-is-still-counted-as-a-r",
+  "title": "A rule that does nothing is still counted as a rule of its own",
+  "goal": "A group that arranges its contents lists the layers inside it that place themselves, so you can see who is not following the group. It still counts a layer whose only rule is on the direction the stack itself decides, which changes nothing on screen. The count and the name should only mention rules that actually do something, and there should be a way to clear a rule that has stopped mattering.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 1170,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T09:24:23.707Z",
+  "updated": "2026-09-04T09:24:23.708Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Layer.contentsWithTheirOwnPlacement (PhotonzCore/LayerPlacement.swift) reads child.placement without knowing the group layout; PlacementEditing(arrangement:) added 2026-09-04 answers which axis is dead. PlacementInspector.exceptions renders the list. The clearing half is the harder question: the childRows menu for the owned axis is gone now, which is what makes the stale rule unreachable.",
+  "acceptance": [
+    "A layer whose only rule is on the direction its stack decides is not listed under the group as having a rule of its own",
+    "A layer with a rule on the other direction is still listed, with the same wording as today",
+    "The summary beside a listed name never names a direction the stack decides",
+    "There is a way to clear a rule left on the direction the stack decides, so flipping a column to a row does not spring an old setting back to life"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T09:24:23.708Z",
+      "note": "created (manual)"
+    }
+  ]
+}

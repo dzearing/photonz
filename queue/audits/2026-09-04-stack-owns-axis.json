@@ -1,0 +1,27 @@
+{
+  "feature": "A stack says which way it decides, instead of offering a menu that does nothing",
+  "epic": "ui-layout",
+  "summary": "Pick a layer inside a stack and the Layout section no longer offers a menu for the direction the stack has already decided: a column stack reads \"Set by the stack\" beside Vertical, a row stack reads \"Set by the row\" beside Horizontal, and the other direction stays a live menu. It is the same wording the group's own rows have been using, now said for the layer inside it too.",
+  "setup": "Photonz Dev, release Next. Groups that arrange their own contents is on by default in Next; the Experiments window has it under \"Groups that arrange their own contents\".",
+  "try": [
+    { "do": "Draw two rectangles one above the other." },
+    { "do": "Select both and press Control Command G to stack them." },
+    { "do": "Double click one of them to select it inside the stack." },
+    { "do": "Read the Layout section: Vertical should be the words \"Set by the stack\", Horizontal a menu reading Left.", "shot": "2026-09-04-stack-owns-axis-1.png" },
+    { "do": "Hover the words \"Set by the stack\" and read the tip." },
+    { "do": "Draw two more rectangles side by side, select both, press Control Command G, and double click one." },
+    { "do": "Read the Layout section again: this time Horizontal should read \"Set by the row\" and Vertical should be a menu.", "shot": "2026-09-04-stack-owns-axis-2.png" },
+    { "do": "Do the same with Layer > Grid Selection and check both menus are still there." }
+  ],
+  "evaluate": [
+    "Reading \"Set by the stack\" where a menu used to be, is it obvious the stack is doing the deciding and nothing is broken?",
+    "Does the tip on hover point you somewhere useful, or would you rather it linked you to the group's own settings?",
+    "The row keeps its place in the same column as the menu above it. Does the section still read as a pair of settings, or does it read as one setting and one label?",
+    "\"Set by the stack\" for a column and \"Set by the row\" for a row: is that pair clear, or does calling a column a stack read oddly?"
+  ],
+  "rough": [
+    "A layer can still be carrying a rule on the direction the stack now decides, set before it was ever stacked. It changes nothing and it cannot be cleared from this section any more, and it comes back to life if the stack is later flipped from a column to a row. The group's own \"layers have rules of their own\" list still counts it, which is the one place you would notice; filed as its own task.",
+    "The caption under the two rows was also claiming that Stretch would fill the box for text sitting in a column stack, where a stretch down fills nothing. It now only speaks about the direction still being asked about.",
+    "Verified in the probe app with a scripted walk over a column stack, a row stack and a grid; both screenshots are real window captures, not offscreen renders."
+  ]
+}

@@ -200,6 +200,58 @@ extension Layer {
     }
 }
 
+/// Which of the two placement questions are still worth asking inside a
+/// container, and what to say where one is not.
+///
+/// A stack decides the axis it runs along: a column decides every Y, a row
+/// decides every X. On that axis a placement menu is a live control that
+/// changes nothing, which is worse than a line saying who owns it — so the
+/// inspector shows the answer instead, both for the group's own contents and
+/// for a single layer sitting inside it. A grid places into a cell and a plain
+/// group places into its box, so both of those keep both menus.
+///
+/// The same shape as `LayerGeometryEditing`, which is what stops a layer in a
+/// stack taking a typed X: same question, asked of a different control.
+public struct PlacementEditing: Hashable, Sendable {
+
+    /// What the row reads where the flow decides it.
+    public static let rowTitle = "Set by the row"
+    public static let stackTitle = "Set by the stack"
+
+    /// Why, for the tip that comes up on the row, pointing at the control that
+    /// owns it now.
+    public static let rowReason = "The row this is in lays its contents out left to right, so it decides where each one sits across. Change the group's Gap or Direction in the Layout section."
+    public static let stackReason = "The stack this is in lays its contents out top to bottom, so it decides where each one sits down the page. Change the group's Gap or Direction in the Layout section."
+
+    /// Whether that axis is still a question the placement rules answer.
+    public let canSetHorizontal: Bool
+    public let canSetVertical: Bool
+
+    /// The words for the axis the flow decided, or nil where it decided
+    /// neither. Only ever one axis, because a flow runs one way.
+    public let setByTheFlow: String?
+    public let reason: String?
+
+    /// `arrangement` is the layout of the group these placements apply inside:
+    /// the container's own layout when this is one layer's row, and the
+    /// group's own layout when it is the row for everything inside it. Nil for
+    /// a group that arranges nothing, so both axes stay live.
+    public init(arrangement: GroupLayout?) {
+        guard let arrangement, arrangement.kind == .stack else {
+            canSetHorizontal = true
+            canSetVertical = true
+            setByTheFlow = nil
+            reason = nil
+            return
+        }
+        let across = arrangement.flowsHorizontally
+        canSetHorizontal = !across
+        canSetVertical = across
+        setByTheFlow = across ? Self.rowTitle : Self.stackTitle
+        reason = across ? Self.rowReason : Self.stackReason
+    }
+}
+
 /// One piece inside a container that places itself rather than following what
 /// the container says, named so the container can list it.
 ///

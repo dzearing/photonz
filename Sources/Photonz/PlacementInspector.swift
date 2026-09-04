@@ -53,50 +53,68 @@ struct PlacementInspector: View {
         // set one, and a Follow row that reads back the override it is
         // offering to drop promises the very thing picking it takes away.
         let inherited = container.contentPlacementDefault
+        // The axis the container's own flow runs along is its answer, not this
+        // layer's, so that row says who owns it rather than offering a menu
+        // that changes nothing. The same rule the group's own rows use below.
+        let flow = PlacementEditing(arrangement: arrangement(of: container))
         VStack(alignment: .leading, spacing: 6) {
             Text(container.isFrame ? "This layer on \(container.name)"
                                    : "This layer in \(container.name)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            row("Horizontal") {
-                Menu {
-                    Button(followTitle(inherited.horizontal.title, isFrame: container.isFrame)) {
-                        editorState.setPlacement(id: current.id, horizontal: nil)
-                    }
-                    Divider()
-                    ForEach(container.horizontalPlacementChoices, id: \.self) { choice in
-                        Button(choice.title) {
-                            editorState.setPlacement(id: current.id, horizontal: choice)
+            if flow.canSetHorizontal {
+                row("Horizontal") {
+                    Menu {
+                        Button(followTitle(inherited.horizontal.title, isFrame: container.isFrame)) {
+                            editorState.setPlacement(id: current.id, horizontal: nil)
                         }
-                    }
-                } label: {
-                    menuLabel(resolved.horizontal.title, following: resolved.followsHorizontal)
-                }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
-            }
-            row("Vertical") {
-                Menu {
-                    Button(followTitle(inherited.vertical.title, isFrame: container.isFrame)) {
-                        editorState.setPlacement(id: current.id, vertical: nil)
-                    }
-                    Divider()
-                    ForEach(container.verticalPlacementChoices, id: \.self) { choice in
-                        Button(choice.title) {
-                            editorState.setPlacement(id: current.id, vertical: choice)
+                        Divider()
+                        ForEach(container.horizontalPlacementChoices, id: \.self) { choice in
+                            Button(choice.title) {
+                                editorState.setPlacement(id: current.id, horizontal: choice)
+                            }
                         }
+                    } label: {
+                        menuLabel(resolved.horizontal.title, following: resolved.followsHorizontal)
                     }
-                } label: {
-                    menuLabel(resolved.vertical.title, following: resolved.followsVertical)
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
                 }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
+            } else {
+                ownedByTheFlow("Horizontal", flow)
             }
-            Text(childCaption(resolved))
+            if flow.canSetVertical {
+                row("Vertical") {
+                    Menu {
+                        Button(followTitle(inherited.vertical.title, isFrame: container.isFrame)) {
+                            editorState.setPlacement(id: current.id, vertical: nil)
+                        }
+                        Divider()
+                        ForEach(container.verticalPlacementChoices, id: \.self) { choice in
+                            Button(choice.title) {
+                                editorState.setPlacement(id: current.id, vertical: choice)
+                            }
+                        }
+                    } label: {
+                        menuLabel(resolved.vertical.title, following: resolved.followsVertical)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                }
+            } else {
+                ownedByTheFlow("Vertical", flow)
+            }
+            Text(childCaption(resolved, flow))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// How a group arranges its contents, or nil where it arranges nothing —
+    /// which is every group while auto layout is switched off.
+    private func arrangement(of layer: Layer) -> GroupLayout? {
+        Experiments.shared.autoLayoutEnabled ? layer.group?.layout : nil
     }
 
     private func followTitle(_ inherited: String, isFrame: Bool) -> String {
@@ -105,14 +123,22 @@ struct PlacementInspector: View {
 
     private var isOnAScreen: Bool { container?.isFrame == true }
 
-    private func childCaption(_ resolved: ResolvedPlacement) -> String {
+    private func childCaption(_ resolved: ResolvedPlacement, _ flow: PlacementEditing) -> String {
         // Stretch means something different for words than it does for a box:
         // the box fills, and where the words sit in it is the Text section's
-        // Align. Said here because this is where the choice is made.
-        if current.text != nil, resolved.horizontal == .stretch || resolved.vertical == .stretch {
+        // Align. Said here because this is where the choice is made. Only on an
+        // axis still being asked about: a Stretch down a column stack fills
+        // nothing, so promising it would fill the box is a lie.
+        let stretches = (flow.canSetHorizontal && resolved.horizontal == .stretch)
+            || (flow.canSetVertical && resolved.vertical == .stretch)
+        if current.text != nil, stretches {
             return "Stretch fills the box with the words placed by Align, in Text."
         }
-        if resolved.followsHorizontal, resolved.followsVertical {
+        // Same again for who is following whom: a rule left on the axis the
+        // flow decides changes nothing, so it does not make this layer an
+        // exception to anything.
+        if (!flow.canSetHorizontal || resolved.followsHorizontal),
+           (!flow.canSetVertical || resolved.followsVertical) {
             return isOnAScreen
                 ? "Following the screen. Pick something here to give this one layer its own rule."
                 : "Following the group. Pick something here to give this one layer its own rule."
@@ -125,7 +151,8 @@ struct PlacementInspector: View {
 
     private var contentRows: some View {
         let effective = current.contentPlacementDefault
-        let arrangement = Experiments.shared.autoLayoutEnabled ? current.group?.layout : nil
+        let arrangement = arrangement(of: current)
+        let flow = PlacementEditing(arrangement: arrangement)
         return VStack(alignment: .leading, spacing: 6) {
             Text("Contents of \(current.name)")
                 .font(.caption)
@@ -139,8 +166,8 @@ struct PlacementInspector: View {
             // The axis a stack runs along is the stack's answer, not a menu:
             // a live control that changes nothing is worse than a row that
             // says who owns it.
-            if arrangement?.flowsHorizontally == true {
-                ownedByTheFlow("Horizontal", arrangement)
+            if !flow.canSetHorizontal {
+                ownedByTheFlow("Horizontal", flow)
             } else {
                 row("Horizontal") {
                     Menu {
@@ -156,8 +183,8 @@ struct PlacementInspector: View {
                     .fixedSize()
                 }
             }
-            if let arrangement, arrangement.kind == .stack, !arrangement.flowsHorizontally {
-                ownedByTheFlow("Vertical", arrangement)
+            if !flow.canSetVertical {
+                ownedByTheFlow("Vertical", flow)
             } else {
                 row("Vertical") {
                     Menu {
@@ -258,13 +285,16 @@ struct PlacementInspector: View {
 
     /// The row for an axis the stack decides. It stays in place, with the same
     /// label in the same column, so nothing shuffles under the pointer when a
-    /// group becomes a stack.
-    private func ownedByTheFlow(_ title: String, _ arrangement: GroupLayout?) -> some View {
-        row(title) {
-            Text(arrangement?.direction.isHorizontal == true ? "Set by the row"
-                                                             : "Set by the stack")
-                .font(.callout)
-                .foregroundStyle(.tertiary)
+    /// group becomes a stack, and hovering it says where the answer is set.
+    @ViewBuilder
+    private func ownedByTheFlow(_ title: String, _ flow: PlacementEditing) -> some View {
+        if let answer = flow.setByTheFlow {
+            row(title) {
+                Text(answer)
+                    .font(.callout)
+                    .foregroundStyle(.tertiary)
+            }
+            .help(flow.reason ?? "")
         }
     }
 

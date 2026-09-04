@@ -1,0 +1,270 @@
+{
+  "out": "/tmp/photonz-playtest/stack-owns-axis",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        60
+      ],
+      "to": [
+        300,
+        120
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        160
+      ],
+      "to": [
+        300,
+        220
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        300
+      ],
+      "to": [
+        220,
+        360
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        300
+      ],
+      "to": [
+        420,
+        360
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        550,
+        60
+      ],
+      "to": [
+        650,
+        140
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        60
+      ],
+      "to": [
+        800,
+        140
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        90
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        190
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-column-child",
+      "note": "a layer inside a COLUMN stack: Layout must show Horizontal as a menu and Vertical as the words Set by the stack"
+    },
+    {
+      "do": "panel",
+      "stage": "1-column-child"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-column-child"
+    },
+    {
+      "do": "click",
+      "at": [
+        160,
+        330
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        330
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-row-child",
+      "note": "a layer inside a ROW stack: Horizontal must read Set by the row, Vertical must still be a menu"
+    },
+    {
+      "do": "panel",
+      "stage": "2-row-child"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-row-child"
+    },
+    {
+      "do": "click",
+      "at": [
+        600,
+        100
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        750,
+        100
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "gridSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-grid-child",
+      "note": "a layer inside a GRID: both Horizontal and Vertical must still be live menus"
+    },
+    {
+      "do": "panel",
+      "stage": "3-grid-child"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-grid-child"
+    }
+  ]
+}

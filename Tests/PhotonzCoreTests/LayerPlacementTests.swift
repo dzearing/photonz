@@ -416,4 +416,58 @@ struct LayerPlacementTests {
         #expect(box("Plain", CGRect(x: 0, y: 0, width: 10, height: 10))
                     .contentsWithTheirOwnPlacement.isEmpty)
     }
+
+    // MARK: - The axis a stack has already decided is not a menu
+
+    @Test("A column stack decides down the page, so only the across menu is worth asking")
+    func aColumnStackOwnsTheVerticalRow() {
+        let flow = PlacementEditing(arrangement: GroupLayout(kind: .stack, direction: .column))
+        #expect(flow.canSetHorizontal)
+        #expect(!flow.canSetVertical)
+        #expect(flow.setByTheFlow == PlacementEditing.stackTitle)
+        #expect(flow.reason == PlacementEditing.stackReason)
+    }
+
+    @Test("A row stack decides across, so the down menu is the live one")
+    func aRowStackOwnsTheHorizontalRow() {
+        let flow = PlacementEditing(arrangement: GroupLayout(kind: .stack, direction: .row))
+        #expect(!flow.canSetHorizontal)
+        #expect(flow.canSetVertical)
+        #expect(flow.setByTheFlow == PlacementEditing.rowTitle)
+        #expect(flow.reason == PlacementEditing.rowReason)
+    }
+
+    @Test("A grid and a group that arranges nothing both still ask about both axes")
+    func gridsAndPlainGroupsKeepBothMenus() {
+        // A grid places into a cell, so where a thing sits in that cell is
+        // still a question on both axes; a plain group has never had a flow.
+        let arrangements: [GroupLayout?] = [GroupLayout(kind: .grid),
+                                            GroupLayout(kind: .grid, direction: .row), nil]
+        for arrangement in arrangements {
+            let flow = PlacementEditing(arrangement: arrangement)
+            #expect(flow.canSetHorizontal)
+            #expect(flow.canSetVertical)
+            #expect(flow.setByTheFlow == nil)
+            #expect(flow.reason == nil)
+        }
+    }
+
+    @Test("A rule left on the axis a stack decides moves nothing when the file is opened")
+    func aStaleRuleOnTheOwnedAxisIsInert() {
+        // Somebody set Bottom before this was ever stacked. The column decides
+        // every Y, so the row is not offered any more, and hiding it must not
+        // change where the layer already is.
+        func stacked(_ rule: LayerPlacement?) -> [CGRect] {
+            var narrow = box("Narrow", CGRect(x: 0, y: 40, width: 40, height: 20))
+            narrow.placement = rule
+            var content = GroupContent(children: [
+                box("Wide", CGRect(x: 0, y: 0, width: 100, height: 20)), narrow,
+            ])
+            content.layout = GroupLayout(kind: .stack, direction: .column, gap: 10)
+            let group = Layer(name: "Group", content: .group(content), frame: .zero)
+            return GroupFlow.flowing(group).children.map(\.frame)
+        }
+        #expect(stacked(LayerPlacement(vertical: .bottom)) == stacked(nil))
+        #expect(stacked(LayerPlacement(vertical: .stretch)) == stacked(nil))
+    }
 }

@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 1090,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T07:11:42.354Z",
-  "updated": "2026-09-04T07:11:42.355Z",
+  "updated": "2026-09-04T09:15:11.685Z",
   "deps": [],
   "blockedBy": [],
   "notes": "PlacementInspector.childRows always renders both axes as menus from container.horizontalPlacementChoices / verticalPlacementChoices. contentRows already handles this with ownedByTheFlow(_:_:) driven by GroupLayout.flowsHorizontally; the child rows need the same treatment (and GroupLayout.decidesHeight, added 2026-09-04, is the vertical half of that question). Found while making vertical Stretch mean something for text: the text case was one instance of this wider dead-choice family.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-04T07:11:42.355Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T09:15:11.685Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T09:40:00.000Z",
+      "note": "Adversarial review before building. Walked it as a first-time user: you pick a layer in a column stack, open the Vertical menu, choose Bottom, and nothing moves and nothing tells you why, so you either try again or decide the app is broken. The shortest fix is not a new idiom: the group's own rows already say 'Set by the stack' for the axis the flow owns, so the layer's row should say the same words in the same place, and the rule deciding which axis that is should be one thing both rows read. Cut from scope: a segmented control, and any new copy. Kept: a hover tip on the dead row, since a greyed line with no menu is exactly what somebody hovers."
+    },
+    {
+      "t": "2026-09-04T09:41:00.000Z",
+      "note": "Found while reading: the caption under the two rows also claimed a Stretch would fill the box for text in a column stack, where a stretch down fills nothing (GroupFlow only honours it where GroupLayout.decidesHeight). Same dead-choice family, fixed here."
+    },
+    {
+      "t": "2026-09-04T09:42:00.000Z",
+      "note": "TDD: added PlacementEditing(arrangement:) to PhotonzCore/LayerPlacement.swift, modelled on LayerGeometryEditing, with canSetHorizontal/canSetVertical, the words for the owned axis and a reason for the tip. Four tests in LayerPlacementTests first, red, then green: column owns vertical, row owns horizontal, grid and plain group keep both, and a stale rule on the owned axis moves nothing when the file is opened."
+    },
+    {
+      "t": "2026-09-04T09:43:00.000Z",
+      "note": "PlacementInspector.childRows and contentRows now both read PlacementEditing, so the group's rows and the layer's rows can never disagree again. ownedByTheFlow takes the same value and carries .help(reason). Full suite green: 2874 tests."
+    },
+    {
+      "t": "2026-09-04T09:44:00.000Z",
+      "note": "Verified live in the probe (Screen Recording granted, real window captures). Scripts/playtest/stack-owns-axis-walk.json builds a column stack, a row stack and a grid, steps into each and photographs the Layout section: column child = Horizontal 'Left' menu + Vertical 'Set by the stack'; row child = Horizontal 'Set by the row' + Vertical 'Top' menu; grid child = both menus. Acceptance 1, 2 and 3 confirmed on screen, 4 by test."
+    },
+    {
+      "t": "2026-09-04T09:45:00.000Z",
+      "note": "Review of the built thing: one wart left. A layer can carry a rule on the owned axis from before it was stacked; it is inert, it can no longer be cleared from this section, and it wakes up if the stack is flipped from column to row. The group's exceptions list still counts it. Filed as a-rule-that-does-nothing-is-still-counted-as-a-r rather than widening this task, since it is a different surface. Audit: queue/audits/2026-09-04-stack-owns-axis.json."
     }
-  ]
+  ],
+  "started": "2026-09-04T09:15:11.685Z"
 }
