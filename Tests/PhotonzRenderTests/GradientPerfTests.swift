@@ -43,20 +43,26 @@ struct GradientPerfTests {
         return doc
     }
 
-    /// The best of five re-renders on one renderer, which is the number a
-    /// person feels: the first render fills the caches, every one after it is
-    /// what happens while they work.
-    private func settledCost(_ doc: PhotonzDocument) -> Double {
+    /// One warmed-up renderer bound to its document, so a reading is a
+    /// re-render: the first render fills the caches, every one after it is
+    /// what happens while a person works.
+    ///
+    /// Timed through `PerfClock`, which explains why this is measured on the
+    /// thread's CPU clock rather than the wall: this check went red on a busy
+    /// machine on 2026-09-04 by two percent, for no reason to do with
+    /// gradients. A gradient surface is drawn on the CPU into a bitmap
+    /// (`GradientPainter`), so a real regression lands squarely on that clock:
+    /// measured cold, an angular surface redrawn every render reads 142ms
+    /// against 9ms warm.
+    private final class Settled {
         let renderer = DocumentRenderer()
         let store = ImageStore()
-        _ = renderer.render(doc, store: store)
-        var best = Double.infinity
-        for _ in 0..<5 {
-            let start = Date()
+        let doc: PhotonzDocument
+        init(_ doc: PhotonzDocument) {
+            self.doc = doc
             _ = renderer.render(doc, store: store)
-            best = min(best, Date().timeIntervalSince(start) * 1000)
         }
-        return best
+        func reRender() { _ = renderer.render(doc, store: store) }
     }
 
     private func gradient(_ kind: Paint.Kind) -> Paint {
@@ -66,13 +72,20 @@ struct GradientPerfTests {
     }
 
     @Test func aGradientCostsWhatAFlatColorCostsOnceItIsDrawn() {
-        let flat = settledCost(document(paint: nil, layers: 10, surface: false))
+        let plain = Settled(document(paint: nil, layers: 10, surface: false))
         for kind in [Paint.Kind.linear, .radial, .angular] {
-            let cost = settledCost(document(paint: gradient(kind), layers: 10, surface: true))
+            let hot = Settled(document(paint: gradient(kind), layers: 10, surface: true))
+            let reading = PerfClock.compare(kind.rawValue, rounds: 5,
+                                            subject: { hot.reRender() },
+                                            reference: { plain.reRender() })
             // Generous, because this runs on whatever machine is free: the
             // failure being guarded against was a hundredfold, not a fifth.
-            #expect(cost < flat * 3 + 10,
-                    "a \(kind.rawValue) surface re-renders in \(Int(cost))ms against \(Int(flat))ms flat")
+            // On this clock the three kinds all read within a few percent of
+            // flat, and the regression this guards reads fifteen times it.
+            let cost = String(format: "%.1f", reading.cost)
+            let flat = String(format: "%.1f", reading.baseline)
+            #expect(reading.cost < reading.baseline * 3 + 10,
+                    "a \(kind.rawValue) surface re-renders in \(cost)ms of cpu against \(flat)ms flat")
         }
     }
 }

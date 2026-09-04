@@ -5,14 +5,14 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1170,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T18:41:58.815Z",
-  "updated": "2026-09-04T18:41:58.816Z",
+  "updated": "2026-09-04T20:23:19.200Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found on 2026-09-04 finishing a-short-label-is-as-wide-as-its-word: a hugging OK label is 19x16 and gets the full handle set. Handles are drawn in CanvasView (Handles / ResizeHandle); the rule wants a size threshold below which corner handles shrink, move outside the outline, or drop to corners only.",
+  "notes": "Found on 2026-09-04 finishing a-short-label-is-as-wide-as-its-word: a hugging OK label is 19x16 and gets the full handle set. Handles are drawn in CanvasView (Handles / ResizeHandle); the rule wants a size threshold below which corner handles shrink, move outside the outline, or drop to corners only.\n\nShipped: PhotonzCore/Handles.swift (HandleLayout, Handles.layout, crampedSpan 40, crampedOutset 5); Handles.hit now only answers for handles the layout offers. CanvasView reads Handles.layout at all three places it drew ResizeHandle.allCases. Tests/PhotonzCoreTests/HandleLayoutTests.swift. Walk: Scripts/playtest/handles-fit-walk.json. Audit: queue/audits/2026-09-04-handles-fit-small-selections.json.",
   "acceptance": [
     "A label two letters wide can be dragged by its middle without hitting a handle",
     "The handles on a small selection do not overlap each other",
@@ -22,6 +22,88 @@
     {
       "t": "2026-09-04T18:41:58.816Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T18:43:01.824Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T18:46:08.327822Z",
+      "note": "Adversarial review before building. Measured the defect: an OK label is 19x16 doc units, so at 1x its eight 8pt handle squares sit 19 and 16 apart, and the 6pt hit slop round each one reaches the whole interior - there is no pixel of the label that is not a resize target, so it cannot be picked up at all. Reviewed three fixes. (1) Just cap the hit slop to a fraction of the box: fixes the press but still draws eight overlapping squares on top of a two letter word, so it fails the no-overlap bar. (2) Shrink the handles: the squares get illegible before they get out of the way. (3) Figma's rule, and the one taken: when a box is cramped on an axis its handles step OUTSIDE the outline on that axis, and the four edge midpoint handles - which sit between the corners and so are the ones that crowd - drop entirely, leaving corners only. Cut as decorative: edge handles on a tiny box; for a small text label every handle only sets wrap width anyway, so nothing is lost. Known trade: for a small selection a press in the 5pt ring just outside it now resizes rather than falling through to what is behind. That ring is where the handles are visibly drawn, it only exists round the already-selected layer, and it is the same bargain Figma strikes. Not a decision for the user: this is a defect with an established convention, not a visual direction."
+    },
+    {
+      "t": "2026-09-04T18:49:03.902Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-04T18:49:34.564Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T18:49:36.668Z",
+      "note": "runner failed (exit 1, attempt 2): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-04T18:51:37.409Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T18:51:39.504Z",
+      "note": "parked after 3 runner failures in a row; last error: You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-04T18:56:42.233Z",
+      "note": "unparked: runners are failing regardless of which task runs, so the earlier failures were not this task"
+    },
+    {
+      "t": "2026-09-04T19:11:43.071Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T19:11:45.332Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-04T19:41:46.080Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T19:41:48.187Z",
+      "note": "runner failed (exit 1, attempt 2): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-04T20:11:48.974Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T20:22:42.599683Z",
+      "note": "Built and verified. PhotonzCore gained Handles.layout / HandleLayout: below a threshold measured in SCREEN points the four edge midpoints drop and the corners step 5pt outside the outline. Drawing (CanvasView layer chrome, canvas pseudo-selection, crop box) and hit-testing (Handles.hit, and so CanvasPointerCue) both read the same layout, so every square drawn is a target and nothing else is."
+    },
+    {
+      "t": "2026-09-04T20:22:42.599683Z",
+      "note": "Adversarial review of the BUILT thing, on the real app. The first cut used a 24 point threshold, which passed every acceptance item but looked wrong: at 156 percent an OK label is 33x27 on screen, so all eight came back and formed a lattice over the word - grabbable, but not fitting. Raised crampedSpan to 40, the point where three 8pt squares along an edge have a whole handle's width of air either side of the middle one. At 156 percent the label now keeps corners only and the word is clear; the eight return further in with air round each. Two tests added to pin the boundary and the air."
+    },
+    {
+      "t": "2026-09-04T20:22:42.599683Z",
+      "note": "Verified live, not assumed. Scripts/playtest/handles-fit-walk.json drives the probe and reads the pointer cue at eight points. Tiny label: middle=none, old top-edge-handle spot=none, both far corners=resize. Dragged by its middle from X200 Y200 to X410 Y352 with W21 H17 unchanged. Ordinary 240x140 rectangle: top=resize-up-down, left=resize-left-right, bottom right=resize diagonal, middle=none, all on the outline. Screen Recording was granted, so the audit carries real window captures. Scripts/test.sh green, 3114 tests."
+    },
+    {
+      "t": "2026-09-04T20:22:42.599683Z",
+      "note": "Left alone on purpose: VideoCropOverlay draws its own eight handles with the same crowding problem. It is self-consistent between draw and press, it belongs to the video-editing epic which is staged later, and only epics staged now may hold open tasks - so it is recorded in the audit's rough rather than filed or half-fixed."
+    },
+    {
+      "t": "2026-09-04T20:23:04.144Z",
+      "note": "Small selections drop their four edge handles and step their corners outside the outline, so a two letter label is grabbable again. PhotonzCore Handles.layout/HandleLayout, read by both the drawing (layer chrome, canvas pseudo-selection, crop box) and the press. Threshold 40 screen points, raised from 24 after the built thing looked wrong at 156 percent. Verified live with Scripts/playtest/handles-fit-walk.json (pointer cue at 8 points, drag by the middle, no regression on a 240x140 rectangle) and Scripts/test.sh green at 3114 tests. Audit: queue/audits/2026-09-04-handles-fit-small-selections.json. Pushed as c64a20b."
     }
-  ]
+  ],
+  "started": "2026-09-04T20:11:48.973Z",
+  "failures": 0,
+  "lastError": {
+    "at": "2026-09-04T19:41:48.187Z",
+    "exit": 1,
+    "message": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 1am (America/Los_Angeles)"
+  },
+  "parked": false,
+  "parkReason": "",
+  "completed": "2026-09-04T20:23:04.144Z"
 }

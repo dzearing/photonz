@@ -2,6 +2,47 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-04 — A speed check reads the work, not the machine (go loop)
+
+Queue task `the-gradient-speed-check-fails-now-and-then-on-a` (epic
+`unmanned-loop`). The gradient cost guard had gone red on a busy machine at
+53.9ms against a threshold of 52.7ms, a miss of two percent, while four other
+runs of the same commit passed.
+
+**The check was reading the machine's mood, not the gradient.** It took the
+best of five re-renders on the wall clock, and it measured the flat baseline
+first and the gradient second, so load arriving in between decided the verdict.
+Measured directly: a warm re-render reads 10.9-13.8ms on an idle machine and
+24-29ms with one other test running, while the same render on the thread's own
+CPU clock holds at 9.0-9.5ms throughout. That gap is the whole flake.
+
+**Both halves now come off the thread's CPU clock, interleaved.** A new
+`Tests/PhotonzRenderTests/PerfClock.swift` takes a subject and the thing it is
+measured against, times one reading of each back to back inside every round so
+they share whatever core the round got, keeps the fastest of each because other
+work only ever slows a reading down, and prints the ratio with both spreads so a
+future red can be told from a regression at a glance.
+
+**Verifying it turned up a second check with the same disease.** Ten full suites
+under load caught `detectionCostsLittleMoreThanTheEdgeQueryItAlreadyMade` in
+`ElementDetectionFixtureTests` failing at 0.0160s against 0.0134s: same wall
+clock, same reference-then-subject order. It is fixed the same way rather than
+filed, because the acceptance item asked for ten green runs of the whole suite
+and that cannot be true while a sibling check flakes.
+
+Neither guard was weakened. Each was proved to still bite by breaking the thing
+it watches: with the surface cache lookup defeated, an angular surface reads
+106.0ms against 8.4ms flat and goes red; with detection doing five times the
+work, its ratio goes from 1.89 to 9.30 and goes red. Verified with ten runs of
+`Scripts/test.sh` back to back under eight CPU hogs and a rebuild loop, load
+average 19-27 on 16 cores: 10 passed, 0 failed, worst gradient ratio 1.12
+against a threshold of 3. Full suite green at 3114 tests.
+
+Open: neither guard can see work handed to another thread or the GPU, and the
+gradient guard only ever had teeth for the sweep, since Core Graphics draws
+linear and radial cheaply enough that a cache regression in those two would
+still read about 1.2x flat. Both are written down at the top of `PerfClock`.
+
 ## 2026-09-04 — Every starter says what it is the size of (go loop)
 
 Queue task `a-card-grows-to-fit-its-title-the-way-a-button-d` (epic

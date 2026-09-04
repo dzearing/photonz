@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T11:52:59.433Z",
-  "updated": "2026-09-04T12:08:54.694Z",
+  "updated": "2026-09-04T20:41:11.131643Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Tests/PhotonzRenderTests/GradientPerfTests.swift:74, aGradientCostsWhatAFlatColorCostsOnceItIsDrawn. Seen 2026-09-04: cost 53.9ms against a threshold of flat*3+10 = 52.7ms, so it missed by 2 percent; four other runs of the same commit passed. Both sides are best-of-5 wall clock on the same machine, so a scheduling hiccup during the gradient half alone tips it. Options: take the best of more rounds, interleave the flat and gradient measurements so both see the same load, or measure CPU time the way ElementBounds perf tests do.",
@@ -26,6 +26,81 @@
     {
       "t": "2026-09-04T12:08:54.693Z",
       "note": "seq 1210 -> 10"
+    },
+    {
+      "t": "2026-09-04T18:56:40.248Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T18:56:42.234Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-04T20:23:30.816Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T20:27:59.824262Z",
+      "note": "Scope check: epic unmanned-loop is staged next, not now, but a check that goes red at random turns the Scripts/test.sh gate red for every task in the ui-building focus. Fixing it unblocks the focus, so it is worth the run."
+    },
+    {
+      "t": "2026-09-04T20:27:59.824262Z",
+      "note": "Adversarial review before building. (1) Just raising the threshold hides regressions and leaves the cause in place, rejected. (2) Interleaving on wall clock alone is better but not enough: measured, warm re-renders read 12ms alone and 24-29ms with one other test running, so a hiccup inside one half of a round still tips it. (3) CPU clock alone would miss a core migration making the same work read slower. So both: this thread's CPU clock plus interleaving. (4) Risk that CPU clock hides the regression, since a CIContext hands work to the GPU. Measured it rather than assumed: the surface gradient is drawn on the CPU into a bitmap by GradientPainter, and an angular surface redrawn every render reads 142ms cold against 9ms warm on this clock, so it lands squarely on it. A future change that moved gradient painting to the GPU would need this test rethought."
+    },
+    {
+      "t": "2026-09-04T20:27:59.824262Z",
+      "note": "Measured baseline on an idle machine: wall best 10.9-13.8ms across flat and all three kinds, cpu best 8.6-9.0ms. Under load the wall figures moved to 12-29ms while the cpu figures stayed at 9.0-9.5ms, which is the whole argument in one line."
+    },
+    {
+      "t": "2026-09-04T20:27:59.824262Z",
+      "note": "Built: settledCosts() interleaves the flat and gradient re-renders inside every round and keeps the fastest of five of each, timed with clock_gettime(CLOCK_THREAD_CPUTIME_ID). Threshold left at flat*3+10 because on this clock the three kinds read within a few percent of flat, so the margin is now enormous rather than 2 percent. Spreads are printed each run so a future red can be told apart from a regression at a glance."
+    },
+    {
+      "t": "2026-09-04T20:27:59.824262Z",
+      "note": "Acceptance 2 verified by breaking the thing on purpose: with the surface cache lookup defeated in DocumentRenderer, angular reads 106.0ms against flat 8.4ms and the check fails. Restored afterwards. Note that linear and radial only read about 1.2x flat even with the cache defeated, because Core Graphics draws those kinds cheaply; the sweep is where this guard has teeth, and that was equally true of the old wall-clock version."
+    },
+    {
+      "t": "2026-09-04T20:27:59.824262Z",
+      "note": "Acceptance 3 verified: the failure message reads 'a angular surface re-renders in 106.0ms of cpu against 8.4ms flat'."
+    },
+    {
+      "t": "2026-09-04T20:27:59.824262Z",
+      "note": "Not done on purpose: the five-line CPU clock helper is duplicated from Tests/PhotonzCoreTests/ElementBoundsTests.swift rather than hoisted into a shared test-support target. They are separate test targets and there is no such target today; adding one to Package.swift is more churn than a p3 flake fix should carry."
+    },
+    {
+      "t": "2026-09-04T20:31:20.013534Z",
+      "note": "Verifying acceptance 1 turned up a second check with the same disease. Ten full suites under load (eight cpu hogs plus a rebuild loop, load average 24 on 16 cores): the gradient check held at ratio 1.00-1.05 every run, but run 2 went red on detectionCostsLittleMoreThanTheEdgeQueryItAlreadyMade in ElementDetectionFixtureTests.swift, at 0.0160s against a threshold of 0.0134s. Same shape exactly: wall clock, best-of-20, and the reference half measured before the subject half, so load arriving in between decides it."
+    },
+    {
+      "t": "2026-09-04T20:31:20.013534Z",
+      "note": "Fixed that one too rather than leave acceptance 1 unmet. It is the same defect in the same test target, and the acceptance item asks for ten green runs of the whole suite, which cannot be true while a sibling check flakes. Both now go through a new shared Tests/PhotonzRenderTests/PerfClock.swift: PerfClock.compare(name:rounds:callsPerRound:subject:reference:) interleaves the subject and its reference inside every round, times both on CLOCK_THREAD_CPUTIME_ID, keeps the fastest of each, and prints the ratio and both spreads. That also retires the duplicated helper I had left in GradientPerfTests."
+    },
+    {
+      "t": "2026-09-04T20:31:20.013534Z",
+      "note": "After the change, idle readings: gradient ratios 1.00 / 1.02 / 1.06 against a threshold of 3x+10ms, and detection 1.89 against a threshold of 4x. The detection reference shows what the min() is rejecting: fastest 2.96ms, slowest 10.97ms in the same run."
+    },
+    {
+      "t": "2026-09-04T20:41:11.131643Z",
+      "note": "Acceptance 1 verified on the fixed code: ten runs of Scripts/test.sh back to back, 10 passed 0 failed, each about 52s, with eight cpu hogs and a rebuild loop running throughout (load average 19-27 on 16 cores). Across those ten runs the worst gradient ratio was 1.12 against a threshold of 3x+10ms. The printed spreads show the load was really there and really rejected: one angular run read fastest 10.85ms and slowest 21.49ms in the same five rounds."
+    },
+    {
+      "t": "2026-09-04T20:41:11.131643Z",
+      "note": "The second guard was proved to still bite the same way the first was: making ElementBounds.detect do five times the work takes the ratio from 1.89 to 9.30 and the check fails with 'detection costs 9.30x the edge query it rides on'. Restored afterwards."
+    },
+    {
+      "t": "2026-09-04T20:41:11.131643Z",
+      "note": "Review of the built thing. The guards are now looser in wall-clock terms than they look, because a threshold of 3x on cpu time is a much tighter statement than 3x on wall time was, so this is a real tightening and not just noise suppression. Two limits worth writing down. First, neither guard can see work handed to another thread or the GPU; both currently do their work on the calling thread, and PerfClock says so at the top so a future change that moves gradient painting onto the GPU gets caught reading it. Second, the gradient guard only ever had teeth for the sweep: with the surface cache defeated, linear and radial read about 1.2x flat because Core Graphics draws those cheaply, so a cache regression affecting only those kinds would still slip through. That was equally true before this change and tightening the threshold far enough to catch it would reinvite the flakiness this task exists to remove."
+    },
+    {
+      "t": "2026-09-04T20:41:11.131643Z",
+      "note": "No audit written: this is test timing with no user-visible surface, so there is nothing for the user to try or judge. The value lands as the loop's test gate no longer going red at random."
     }
-  ]
+  ],
+  "started": "2026-09-04T20:23:30.815Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-04T18:56:42.234Z",
+    "exit": 1,
+    "message": "You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+  }
 }

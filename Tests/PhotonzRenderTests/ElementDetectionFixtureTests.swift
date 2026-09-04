@@ -230,28 +230,25 @@ struct ElementDetectionFixtureTests {
         // pixels to follow each boundary, and to read the words under the
         // pointer, must stay a small multiple of the query it rides on. That
         // catches the regression that matters — detection going back to
-        // scanning whole rows of the image — at any build setting. Each
-        // reading is the fastest of several rounds, so the rest of the suite
-        // running alongside does not decide the verdict.
-        func elapsed(_ body: () -> Void) -> Duration {
-            body()
-            var best = Duration.seconds(60)
-            for _ in 0..<20 {
-                let start = ContinuousClock.now
-                for _ in 0..<10 { body() }
-                let round = (ContinuousClock.now - start) / 10
-                if round < best { best = round }
-            }
-            return best
-        }
-        let query = elapsed {
-            _ = Self.analysis.edges.horizontalEdges(inXRange: 263...327)
-            _ = Self.analysis.edges.verticalEdges(inYRange: 754...818)
-        }
-        let detect = elapsed {
+        // scanning whole rows of the image — at any build setting.
+        //
+        // Timed through `PerfClock`: the fastest of many rounds, on this
+        // thread's CPU clock, with the query and the detection interleaved so
+        // both see the same machine. On wall clock this went red on a loaded
+        // machine on 2026-09-04, missing by a fifth, because the query half
+        // was measured before the detection half and the load arrived in
+        // between.
+        let reading = PerfClock.compare("detect against its edge query",
+                                        rounds: 20, callsPerRound: 10,
+                                        subject: {
             _ = ElementBounds.detect(at: CGPoint(x: 295, y: 786),
                                      in: Self.analysis.edges, luma: Self.analysis.luma)
-        }
-        #expect(detect < query * 4)
+        }, reference: {
+            _ = Self.analysis.edges.horizontalEdges(inXRange: 263...327)
+            _ = Self.analysis.edges.verticalEdges(inYRange: 754...818)
+        })
+        let ratio = String(format: "%.2f", reading.ratio)
+        #expect(reading.cost < reading.baseline * 4,
+                "detection costs \(ratio)x the edge query it rides on")
     }
 }
