@@ -149,6 +149,16 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         return layer.localBounds.offsetBy(dx: origin.x, dy: origin.y)
     }
 
+    /// The same box as a person SEES it: for a text layer the words, without
+    /// the empty room a measured text box carries on its far edges
+    /// (`Layer.withoutSlack`). What anything lining layers up, drawing chrome
+    /// or reporting a size works in, so a label centres on its letters and a
+    /// selection's box stops where the last one does.
+    public func canvasContentBounds(of id: UUID) -> CGRect? {
+        guard let layer = layer(id: id), let box = canvasBounds(of: id) else { return nil }
+        return layer.withoutSlack(box)
+    }
+
     /// Every layer in canvas coordinates with the groups dissolved away: the
     /// leaves only, bottom-up, each one's frame moved into canvas space and
     /// each one carrying the visibility, lock and opacity of the groups above
@@ -270,7 +280,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             guard layer.isVisible, !layer.isLocked else { return false }
             // A group is grabbed whole or not at all: sweeping across half a
             // button never pulls its label out of it.
-            var bounds = layer.isGroup ? layer.localBounds : layer.frame
+            // The box you can see: a band swept round a label's words catches
+            // it, rather than stopping four points short of an edge that is
+            // not drawn.
+            var bounds = layer.isGroup ? layer.localBounds : layer.withoutSlack(layer.frame)
             if !layer.isGroup, !layer.transform.isIdentity {
                 let corners = layer.transformedCorners
                 guard let first = corners.first else { return false }

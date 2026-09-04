@@ -302,10 +302,11 @@ struct LayerGeometryTests {
         let text = Layer(name: "Text", content: .text(TextContent(string: "hi")),
                          frame: CGRect(x: 0, y: 0, width: 200, height: 30))
         let editing = LayerGeometryEditing(layer: text)
-        #expect(editing.minimum(for: .width) == TextMeasurement.minimumWidth)
+        // Counted on the WORDS, because the words are what the field shows.
+        #expect(editing.minimum(for: .width) == TextMeasurement.minimumContentWidth)
         let floored = LayerGeometry.applying(12, to: .width, of: text.frame,
                                              notBelow: editing.minimum(for: .width))
-        #expect(floored.width == TextMeasurement.minimumWidth)
+        #expect(floored.width == TextMeasurement.minimumContentWidth)
     }
 
     @Test("Everything else keeps the one-point floor it has always had")

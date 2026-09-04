@@ -46,15 +46,31 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     /// take typing.
     public struct Member: Hashable, Sendable {
         public let id: UUID
-        /// The layer's frame in the space its numbers are shown in — its
-        /// parent's, the same frame the single-layer fields show.
+        /// The box a person SEES, in the space its numbers are shown in — its
+        /// parent's, the same frame the single-layer fields show. For a text
+        /// layer that is the words, not the stored box: the empty room a
+        /// measured text box carries on its far edges is `slack`, and a W of
+        /// 104 for a hundred points of words is a number nobody can act on.
         public let frame: CGRect
+        /// What this layer's stored box carries beyond `frame`, put straight
+        /// back on whatever a typed number produces (`Layer.boxSlack`). Zero
+        /// for everything but text.
+        public let slack: CGSize
         public let editing: LayerGeometryEditing
 
-        public init(id: UUID, frame: CGRect, editing: LayerGeometryEditing) {
+        public init(id: UUID, frame: CGRect, editing: LayerGeometryEditing,
+                    slack: CGSize = .zero) {
             self.id = id
             self.frame = frame
+            self.slack = slack
             self.editing = editing
+        }
+
+        /// `box` turned back into the box to store.
+        func stored(_ box: CGRect) -> CGRect {
+            guard slack != .zero else { return box }
+            return CGRect(x: box.minX, y: box.minY,
+                          width: box.width + slack.width, height: box.height + slack.height)
         }
     }
 
@@ -256,12 +272,16 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         }
     }
 
+    /// The new boxes to STORE. A member is left out when the box a person sees
+    /// does not move, so an edit that changes nothing produces no moves — and
+    /// what comes back carries the slack again, because that is the box the
+    /// words are drawn in.
     private func moves(for field: LayerGeometryField,
                        _ transform: (CGRect, Member) -> CGRect) -> [UUID: CGRect] {
         var moves: [UUID: CGRect] = [:]
         for member in members(taking: field) {
             let frame = transform(member.frame, member)
-            if frame != member.frame { moves[member.id] = frame }
+            if frame != member.frame { moves[member.id] = member.stored(frame) }
         }
         return moves
     }

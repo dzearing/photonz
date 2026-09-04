@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1150,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:59:19.735Z",
-  "updated": "2026-09-04T17:59:19.736Z",
+  "updated": "2026-09-04T18:00:37.347Z",
   "deps": [],
   "blockedBy": [],
   "notes": "TextMeasurement.slack (4pt, = TextRasterizer.frameInset * 2) sits inside Layer.frame on the far edges. Layer.contentBounds already names the visible box and GroupFlow now flows by it (2026-09-04). Everything else - selection rendering, LayerGeometryEditing, Measure, snapping - still reads localBounds. Options: keep the slack in the frame and make the UI read contentBounds everywhere, or take the slack out of the frame entirely and have DocumentRenderer/TextRasterizer outset when rasterizing (bigger: needs a document migration or every saved text box re-wraps).",
@@ -23,6 +23,19 @@
     {
       "t": "2026-09-04T17:59:19.736Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T18:00:37.347Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T18:08:07.384Z",
+      "note": "Adversarial review before building. The bug is real and visible three ways: the blue outline hugs a label at top-left but floats 4pt clear at bottom-right; W reads 104 for a 100pt word, and typing 100 back re-wraps it; a label dragged next to another snaps its invisible tail flush instead of its words. Rejected the bigger fix (take the slack out of Layer.frame and have the renderer outset when it rasterizes): it is the honest model, but it moves every saved text frame, needs a document migration, and rewrites the one path this task promises not to disturb (nothing about how text renders changes). Taking the contained fix: the canvas and the panel speak the box you can SEE, and the conversion back to the stored box happens at one door each."
+    },
+    {
+      "t": "2026-09-04T18:08:07.384Z",
+      "note": "Plan: Layer.withoutSlack/withSlack in PhotonzCore as the one pair of primitives; contentBounds made public on top of them. Selection outline, handles, resize drag, snapping peers, multi-select outline and rubber band read the words box; EditorState puts the slack back at previewCanvasFrame/commitCanvasFrame/commitCanvasDrop; LayerGeometrySelection.Member carries the slack so W/H show the words and typing puts it back. Caliper: checked, measure feet snap only to detected image edges and to other calipers, never to layer frames, so the number a caliper reads between two labels is already the space on screen once GroupFlow flows by contentBounds (2026-09-04); acceptance 3 gets a test rather than a change."
     }
-  ]
+  ],
+  "started": "2026-09-04T18:00:37.346Z"
 }

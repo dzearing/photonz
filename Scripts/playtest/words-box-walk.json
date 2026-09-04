@@ -1,0 +1,110 @@
+{
+  "out": "/tmp/photonz-playtest/words-box",
+  "seed": "A measured text box carries a few points of empty room on its far edges so the letters never clip. It used to show: the blue box round a label hugged it at the top left and floated clear of it at the bottom right, and W read four points more than the words were wide. This walk looks at both.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Save changes"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-outline",
+      "note": "THE TEST: the blue box sits the same distance off the words on all four sides. Before this it hugged the S at the top left and stood four points clear past the last letter and under the baseline."
+    },
+    {
+      "do": "snapshot",
+      "name": "words-box-1-outline"
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-fields",
+      "note": "W and H say how big the words are. Measure the letters on the canvas and the two numbers agree."
+    },
+    {
+      "do": "snapshot",
+      "name": "words-box-2-fields"
+    },
+    {
+      "do": "panel",
+      "stage": "2-fields"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "100"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-typed-100",
+      "note": "THE TEST: 100 typed into W leaves a box a hundred points of words wide. W reads 100 back, the words did not re-wrap, and the blue box is still flush to the letters on the left."
+    },
+    {
+      "do": "snapshot",
+      "name": "words-box-3-typed-100"
+    },
+    {
+      "do": "panel",
+      "stage": "3-typed-100"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1140,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:45:28.020Z",
-  "updated": "2026-09-04T17:59:38.256101Z",
+  "updated": "2026-09-04T18:00:13.269Z",
   "deps": [],
   "blockedBy": [],
   "notes": "GroupFlow.arranged builds each Item from Layer.localBounds, while GroupFlow.size measures with Layer.contentBounds (localBounds minus TextMeasurement.slack, 4 points on the far edges). So the flow advances the cursor by the slack as well as the gap. Fixing it means the Item carrying both boxes: advance by the content box, hand the layer a target built from the full box. TextRefitTests.aStretchedLabelInAStackPushesTheRowsBelowItDown asserts the current arithmetic and will need updating. Found while giving the starter card its column stack (2026-09-04).",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-04T17:59:38.256101Z",
       "note": "Documented in docs/design/ui-building.md under the stack and grid section: 'The gap is the space you can see.' Audit at queue/audits/2026-09-04-gap-means-visible-space.json."
+    },
+    {
+      "t": "2026-09-04T18:00:13.268Z",
+      "note": "GroupFlow flows by the box you can see: a gap of 8 is now 8 points of visible space between two lines of type, and the starter card breathes evenly (picture to title = title to body = 8). Also fixes a centred label sitting two points off centre and a stretched label wrapping four points early. 7 new tests, 7 updated, 3076 green; measured off a probe-app render. Audit queue/audits/2026-09-04-gap-means-visible-space.json. Follow-up filed: a text layer's own box still hangs four points past its words."
     }
   ],
-  "started": "2026-09-04T17:47:39.583Z"
+  "started": "2026-09-04T17:47:39.583Z",
+  "completed": "2026-09-04T18:00:13.269Z"
 }

@@ -66,18 +66,18 @@ extension PhotonzDocument {
     /// flying it to the middle of the screen would take it out of the button it
     /// belongs to.
     public func arrangeContainer(of id: UUID) -> ArrangeContainer? {
-        guard let box = canvasBounds(of: id),
+        guard let box = canvasContentBounds(of: id),
               let parentID = parentID(of: id),
               let parent = layer(id: parentID),
               let group = parent.group,
               group.layout?.arranges != true else { return nil }
         if group.isFrame {
-            guard let bounds = canvasBounds(of: parentID) else { return nil }
+            guard let bounds = canvasContentBounds(of: parentID) else { return nil }
             return ArrangeContainer(id: parentID, bounds: bounds)
         }
         var union: CGRect?
         for child in group.children where child.id != id {
-            guard let sibling = canvasBounds(of: child.id) else { continue }
+            guard let sibling = canvasContentBounds(of: child.id) else { continue }
             union = union.map { $0.union(sibling) } ?? sibling
         }
         guard let bounds = union else { return nil }

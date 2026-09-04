@@ -895,11 +895,19 @@ final class CanvasNSView: NSView {
         let local = handleSpacePoint(p, layer: layer)
         var frame = Handles.resize(start, dragging: handle, to: local, preserveAspect: preserveAspect)
         if let layer, layer.resizeWidthOnly, case .text(let content) = layer.content {
-            let w = max(frame.width, TextRasterizer.minimumTextWidth)
-            let measured = TextRasterizer.naturalSize(content, maxWidth: w,
+            // Every number here is the box a person SEES: the handles are on
+            // the words, so the width dragged out is the words' width and the
+            // height handed back is how tall they came out. The room the
+            // renderer draws them in goes on top for the measurement, and is
+            // taken off again for the answer, so the outline keeps hugging
+            // the letters through the whole drag.
+            let slack = layer.boxSlack
+            let w = max(frame.width, TextMeasurement.minimumContentWidth)
+            let measured = TextRasterizer.naturalSize(content, maxWidth: w + slack.width,
                                                       minWidth: TextRasterizer.minimumTextWidth)
             let minX = handle.movesMinX ? frame.maxX - w : frame.minX
-            frame = CGRect(x: minX, y: start.minY, width: w, height: measured.height)
+            frame = CGRect(x: minX, y: start.minY, width: w,
+                           height: max(0, measured.height - slack.height))
         }
         if let layer {
             frame = Handles.anchoredFrame(start: start, proposed: frame, handle: handle,
@@ -1518,7 +1526,7 @@ final class CanvasNSView: NSView {
                 onExtendSelection(named)
                 refreshOverlays()
             } else {
-                selectedLayerFrame = document?.canvasLayer(id: named)?.frame
+                selectedLayerFrame = document?.canvasLayer(id: named).map { $0.withoutSlack($0.frame) }
                 onSelectLayerInGroup(named, document?.parentID(of: named))
                 refreshOverlays()
             }
@@ -1665,7 +1673,7 @@ final class CanvasNSView: NSView {
         // arrow's caption. That is what makes double clicking a group holding
         // a label select the label, and double clicking again start typing.
         if event.clickCount == 2, let step = groupAwareDescent(at: p, zoom: viewport.zoom) {
-            selectedLayerFrame = document?.canvasLayer(id: step.id)?.frame
+            selectedLayerFrame = document?.canvasLayer(id: step.id).map { $0.withoutSlack($0.frame) }
             onSelectLayerInGroup(step.id, step.context)
             refreshOverlays()
             return
@@ -1895,12 +1903,15 @@ final class CanvasNSView: NSView {
             // previews fall back to full submits until the renders land, so a
             // drag loses nothing but the head start. A copy drag still never
             // gets a sprite at all; mouseDragged checks that before it asks.
-            selectedLayerFrame = hit.frame
+            // The box you see: a label lines up by its last letter, and what
+            // this drag commits is read back as a visible box.
+            let seen = hit.withoutSlack(hit.frame)
+            selectedLayerFrame = seen
             moveDrag = MoveDrag(layerID: hit.id,
-                                grabOffset: CGPoint(x: p.x - hit.frame.origin.x,
-                                                    y: p.y - hit.frame.origin.y),
-                                size: hit.frame.size,
-                                startOrigin: hit.frame.origin,
+                                grabOffset: CGPoint(x: p.x - seen.origin.x,
+                                                    y: p.y - seen.origin.y),
+                                size: seen.size,
+                                startOrigin: seen.origin,
                                 peers: Experiments.shared.alignLayersEnabled
                                     ? (document?.snapPeers(excluding: hit.id) ?? []) : [],
                                 snapped: Snapping.Result(origin: hit.frame.origin),
@@ -2359,7 +2370,7 @@ final class CanvasNSView: NSView {
             if PickedMemberPress(moved: drag.moved).narrowsSelection {
                 // The frame goes in first so the handles land on the layer in
                 // the same beat as the click, rather than a refresh later.
-                selectedLayerFrame = document?.canvasLayer(id: drag.pick.id)?.frame
+                selectedLayerFrame = document?.canvasLayer(id: drag.pick.id).map { $0.withoutSlack($0.frame) }
                 onSelectLayerInGroup(drag.pick.id, drag.pick.context)
             }
             adoptionHost = nil
@@ -2544,7 +2555,10 @@ final class CanvasNSView: NSView {
                                    large: event.modifierFlags.contains(.shift)),
            moveDrag == nil, resizeDrag == nil, transformDrag == nil,
            let id = selectedLayerID, let layer = document?.canvasLayer(id: id), !layer.isLocked {
-            let frame = layer.frame.offsetBy(dx: delta.dx, dy: delta.dy)
+            // The box you see, because that is what every commit out of this
+            // view carries (`EditorState.storedCanvasFrame` puts the slack of
+            // a text box back).
+            let frame = layer.withoutSlack(layer.frame).offsetBy(dx: delta.dx, dy: delta.dy)
             selectedLayerFrame = frame
             onFrameCommit(id, frame)
             refreshOverlays()
@@ -3378,7 +3392,12 @@ final class CanvasNSView: NSView {
         // The outline (and frame-handle placement) follows the layer's
         // transform — the in-flight one during a rotate/skew drag.
         let activeTransform = transformDrag?.transform ?? selectedLayer.transform
-        let center = CGPoint(x: frame.midX, y: frame.midY)
+        // The chrome turns about the centre of the box the RENDERER turns the
+        // layer about, which is the stored one: a text box's slack sits on its
+        // far edges, so its centre is half of that past the middle of the
+        // words the outline is drawn round.
+        let slack = selectedLayer.boxSlack
+        let center = CGPoint(x: frame.midX + slack.width / 2, y: frame.midY + slack.height / 2)
         let docToHandle = activeTransform.isIdentity
             ? CGAffineTransform.identity
             : activeTransform.affineTransform(around: center)

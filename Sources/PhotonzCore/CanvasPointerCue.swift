@@ -106,7 +106,10 @@ extension Layer {
         guard corners.count == 4, zoom > 0 else { return nil }
         let topMid = CGPoint(x: (corners[0].x + corners[1].x) / 2,
                              y: (corners[0].y + corners[1].y) / 2)
-        let center = CGPoint(x: frame.midX, y: frame.midY)
+        // The middle of the box the corners came from, so the knob floats
+        // straight out from the top edge it is attached to.
+        let box = withoutSlack(frame)
+        let center = CGPoint(x: box.midX, y: box.midY)
         let dx = topMid.x - center.x
         let dy = topMid.y - center.y
         let length = hypot(dx, dy)

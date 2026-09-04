@@ -1842,6 +1842,25 @@ label on its words rather than on its box, stretches it so the words reach the
 padding rather than stopping short of it, and reads a hand-spaced column back as
 the gap you would have measured with a ruler.
 
+**A text layer's box is its words.** The same spare room used to be visible in
+every number a person reads off a label: the blue box hugged it at the top left
+and floated four points clear at the bottom right, W said 104 where the words
+were 100 wide, and a label dragged next to something lined itself up by an edge
+that is not drawn. So the box a person sees is now the box every surface
+speaks. The selection outline and its eight handles, the rotate knob, the W and
+H fields, the magnets a drag lines itself up with, the band you sweep round
+something and the Arrange row all read the words; the canvas and the panel put
+the room back at the one door each of them commits through, so nothing about
+how the words are drawn changes and no saved document moves. `Layer.withoutSlack`
+and `Layer.withSlack` are the pair, `Layer.contentBounds` and
+`PhotonzDocument.canvasContentBounds` are the boxes built on them, and
+`LayerGeometrySelection.Member.slack` carries the room through a typed number.
+The floor a text box stops at is stated on the words as well
+(`TextMeasurement.minimumContentWidth`, 80), because 80 is the number the field
+says out loud. Tested in `TextBoxIsItsWordsTests`, walked by
+`Scripts/playtest/words-box-walk.json`, `words-gap-walk.json` and
+`words-drag-walk.json`.
+
 **The flow owns one axis; the placement rules own the other.** A column stack
 decides every Y, and whether a row sits Left, Centre, Right or Stretch across is
 the same Horizontal menu that was already in this section, which any one layer

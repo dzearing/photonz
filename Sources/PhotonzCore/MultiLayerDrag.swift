@@ -70,7 +70,7 @@ public extension PhotonzDocument {
         guard !ids.isEmpty else { return nil }
         let members = allLayers.compactMap { layer -> MultiLayerDrag.Member? in
             guard ids.contains(layer.id), !layer.isLocked,
-                  let bounds = canvasBounds(of: layer.id) else { return nil }
+                  let bounds = canvasContentBounds(of: layer.id) else { return nil }
             var parent = parentID(of: layer.id)
             while let up = parent {
                 if ids.contains(up) { return nil }

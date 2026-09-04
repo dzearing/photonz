@@ -50,14 +50,21 @@ public enum TransformDrag {
 }
 
 extension Layer {
-    /// The frame's corners mapped through the layer's transform, clockwise
-    /// from top-left: the polygon the selection outline should draw for a
-    /// rotated/skewed layer.
+    /// The corners of the box you can SEE, mapped through the layer's
+    /// transform, clockwise from top-left: the polygon the selection outline
+    /// should draw for a rotated/skewed layer.
+    ///
+    /// The box is the words for a text layer (`Layer.withoutSlack`), so an
+    /// outline hugs the letters on all four sides. It still turns about the
+    /// centre of the STORED box, because that is the point the renderer turns
+    /// the layer about, and an outline that pivoted anywhere else would swing
+    /// off its own words.
     public var transformedCorners: [CGPoint] {
-        let corners = [CGPoint(x: frame.minX, y: frame.minY),
-                       CGPoint(x: frame.maxX, y: frame.minY),
-                       CGPoint(x: frame.maxX, y: frame.maxY),
-                       CGPoint(x: frame.minX, y: frame.maxY)]
+        let box = withoutSlack(frame)
+        let corners = [CGPoint(x: box.minX, y: box.minY),
+                       CGPoint(x: box.maxX, y: box.minY),
+                       CGPoint(x: box.maxX, y: box.maxY),
+                       CGPoint(x: box.minX, y: box.maxY)]
         guard !transform.isIdentity else { return corners }
         let t = transform.affineTransform(around: CGPoint(x: frame.midX, y: frame.midY))
         return corners.map { $0.applying(t) }

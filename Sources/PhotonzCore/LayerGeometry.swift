@@ -233,7 +233,8 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         // Text is the one content with a floor of its own: below it a caption
         // is an unreadable sliver, so the canvas refuses to drag one narrower
         // and the field refuses to type one.
-        minimumWidth = layer.resizeWidthOnly ? TextMeasurement.minimumWidth
+        // Counted on the words, because the words are what the field shows.
+        minimumWidth = layer.resizeWidthOnly ? TextMeasurement.minimumContentWidth
                                              : LayerGeometry.minimumSide
         minimumHeight = LayerGeometry.minimumSide
         frameIsTheShape = !layer.hasEndpointHandles

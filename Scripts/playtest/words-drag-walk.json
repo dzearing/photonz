@@ -1,0 +1,99 @@
+{
+  "out": "/tmp/photonz-playtest/words-drag",
+  "seed": "Pulling a label's right edge in to re-wrap it. The handle is on the box a person can see, so it sits on the last letter, and what the drag hands back gains the room the renderer draws the words in again. Lining a label up with its neighbours is the same change one layer down (Snapping offers a label's words as the magnet); that one is covered by tests rather than by a picture, because a short label's box stops at eighty points wide and the last letter is nowhere near its edge.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        160,
+        160
+      ]
+    },
+    {
+      "do": "type",
+      "text": "The quick brown fox jumps over the lazy dog"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-line",
+      "note": "one long line, hugging its words. W is how wide the words are."
+    },
+    {
+      "do": "snapshot",
+      "name": "words-drag-1-one-line"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        168
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        430,
+        168
+      ],
+      "to": [
+        320,
+        168
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-narrowed",
+      "note": "THE TEST: the right edge was grabbed where the box is DRAWN. The words re-wrapped to the new width and the blue box is still flush to them, top, bottom and both sides."
+    },
+    {
+      "do": "snapshot",
+      "name": "words-drag-2-narrowed"
+    },
+    {
+      "do": "render",
+      "name": "words-drag-2-narrowed-doc"
+    }
+  ]
+}

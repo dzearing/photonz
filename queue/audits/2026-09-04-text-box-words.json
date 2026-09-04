@@ -1,0 +1,29 @@
+{
+  "feature": "A text layer's box is its words",
+  "epic": "ui-layout",
+  "summary": "Select a label and the blue box now sits on the letters on all four sides instead of hugging them at the top left and floating clear at the bottom right. W and H say how big the words are, so the number in the panel is the number you can measure on the picture.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this is how a text layer reads everywhere now.",
+  "try": [
+    { "do": "On a blank canvas, press T, click once and type Save changes, then press Command-Return.", "shot": "2026-09-04-text-box-words-1.png" },
+    { "do": "Look at the blue box: the space between it and the letters should be the same on the left as on the right, and the same above as below." },
+    { "do": "Open the inspector and read W and H in Position & Size." },
+    { "do": "Type 100 into W and press Return. W reads 100 back and the words do not move.", "shot": "2026-09-04-text-box-words-2.png" },
+    { "do": "Type a long sentence into a second label, then drag its right handle left until it takes two lines.", "shot": "2026-09-04-text-box-words-4.png" },
+    { "do": "Put two labels 60 apart (Y 200 and Y 260), then measure the space between them with the Measure tool.", "shot": "2026-09-04-text-box-words-3.png" },
+    { "do": "Check the caliper says 44, which is 260 minus 200 minus the 16 the H field reports." }
+  ],
+  "evaluate": [
+    "Does the box round a label look like it belongs to the words, or does it still sit slightly off on one side?",
+    "When you type a width into W, does the label end up as wide as you asked?",
+    "Do the numbers in the panel now agree with what a caliper measures on the same label?",
+    "Dragging a label's right edge in: does the handle feel like it is on the last letter?",
+    "Is a text box now too tight anywhere, so a letter looks cut off at an edge?"
+  ],
+  "rough": [
+    "The empty room is still in the box that gets saved. It had to be, or every text layer in every saved file would re-wrap. So this is the canvas, the panel, the magnets and the sweep band all speaking the box you can see, with one conversion at each door. Anything new that reads a text layer's box has to remember to do the same.",
+    "The narrowest a text box can be went from 80 to 84 in what is stored, so its WORDS floor at 80: that is what makes the panel able to say 'will not go below 80' truthfully. A text box that was already sitting on the old floor comes out four points wider and could gain back a wrapped line. Nothing else moves.",
+    "Found and not fixed: a short label typed on the canvas is 80 points wide even when its word is 46, because every inline text edit is given a minimum width. The labels inside the starter components hug their words instead, so the two disagree. Filed as its own task, 'A short label is as wide as its word'.",
+    "The caliper was never the problem: its feet snap to the edges detected in a picture and to other measurements, never to a layer's box, so it always read the space you can see. What changed is that the panel now agrees with it.",
+    "Screen Recording was granted, so every picture here is the window as a person sees it, not an offscreen render."
+  ]
+}

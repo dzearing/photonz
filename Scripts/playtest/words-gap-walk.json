@@ -1,0 +1,34 @@
+{
+  "out": "/tmp/photonz-playtest/words-gap",
+  "seed": "Two labels, sixty points apart from the top of one to the top of the next. The panel says each one is sixteen points tall, so the space you can see between them is forty-four. A caliper dragged across that space has to say forty-four too, or the numbers on the panel are not the numbers on the picture.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1240, "height": 900 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [200, 200] },
+    { "do": "type", "text": "First line" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [200, 260] },
+    { "do": "type", "text": "Second line" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-second-label", "note": "the second label: Y 260, H 16. With the first at Y 200 the space a person can see between the two lines is 44." },
+    { "do": "snapshot", "name": "words-gap-1-second-label" },
+
+    { "do": "tool", "tool": "measure" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "click", "at": [300, 216] },
+    { "do": "move", "at": [300, 260] },
+    { "do": "click", "at": [300, 260] },
+    { "do": "move", "at": [380, 238] },
+    { "do": "click", "at": [380, 238] },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-caliper", "note": "THE TEST: a caliper from the bottom of the first line's words to the top of the second's reads 44, the same number the two Y fields and the H field add up to." },
+    { "do": "snapshot", "name": "words-gap-2-caliper" },
+    { "do": "render", "name": "words-gap-2-caliper-doc" }
+  ]
+}

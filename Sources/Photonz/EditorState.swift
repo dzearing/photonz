@@ -3634,7 +3634,7 @@ final class EditorState {
         let selected = actionableLayerIDs
         return selected.compactMap { id in
             guard let layer = document.layer(id: id), !layer.isLocked,
-                  let bounds = document.canvasBounds(of: id) else { return nil }
+                  let bounds = document.canvasContentBounds(of: id) else { return nil }
             // A layer inside a selected group is already carried by that
             // group, so it takes no place of its own here: moving both would
             // be lining a thing up against something it is part of.
@@ -3643,6 +3643,8 @@ final class EditorState {
                 if selected.contains(up) { return nil }
                 parent = document.parentID(of: up)
             }
+            // Lined up by the box you can see, so a right-aligned label lands
+            // its last letter on the edge rather than four points past it.
             return LayerArrangement.Box(id: id, frame: bounds)
         }
     }
@@ -6025,10 +6027,25 @@ final class EditorState {
         return layer
     }
 
-    /// A layer's canvas-space frame, preview-aware.
+    /// A layer's canvas-space frame, preview-aware — the box a person can
+    /// SEE, which is the words for a text layer rather than the stored box
+    /// with its slack on the far edges. Everything the canvas draws chrome
+    /// against comes through here, so an outline hugs the letters and a handle
+    /// sits on the corner it looks like it sits on. What the canvas hands back
+    /// gains the slack again at `storedCanvasFrame`.
     func canvasFrame(of id: UUID) -> CGRect? {
-        if let frame = previewMoves[id] { return frame }
-        return document?.canvasLayer(id: id)?.frame
+        guard let layer = document?.layer(id: id) else { return nil }
+        if let frame = previewMoves[id] { return layer.withoutSlack(frame) }
+        return document?.canvasLayer(id: id).map { layer.withoutSlack($0.frame) }
+    }
+
+    /// The other direction: a canvas-space box as the canvas SHOWS it, turned
+    /// back into the box to store, in the space the layer is stored in. The
+    /// one door every canvas commit goes through, so the words never lose the
+    /// room they are drawn in.
+    private func storedCanvasFrame(_ frame: CGRect, of id: UUID) -> CGRect? {
+        guard let document, let layer = document.layer(id: id) else { return nil }
+        return document.parentSpaceFrame(layer.withSlack(frame), of: id)
     }
 
     /// A layer's frame in the space it is STORED in — its parent's, which is
@@ -6077,9 +6094,14 @@ final class EditorState {
             // itself owns where its contents sit and the fields must say so
             // rather than taking a number and putting it back.
             let holder = document.parentID(of: layer.id).flatMap { document.layer(id: $0) }
-            return LayerGeometrySelection.Member(id: layer.id, frame: frame,
+            // The fields speak the box a person can see. A label's W is how
+            // wide its words are, and typing one back puts the room the
+            // renderer draws them in underneath it again.
+            return LayerGeometrySelection.Member(id: layer.id,
+                                                 frame: layer.withoutSlack(frame),
                                                  editing: LayerGeometryEditing(layer: layer,
-                                                                               in: holder))
+                                                                               in: holder),
+                                                 slack: layer.boxSlack)
         }
         return LayerGeometrySelection(members)
     }
@@ -6267,13 +6289,13 @@ final class EditorState {
     /// so a hundred mouse-moves compose into one clean scale rather than a
     /// hundred stacked ones.
     func previewCanvasFrame(id: UUID, frame: CGRect) {
-        guard let document, let parent = document.parentSpaceFrame(frame, of: id) else { return }
+        guard let parent = storedCanvasFrame(frame, of: id) else { return }
         previewLayerFrame(id: id, frame: parent)
     }
 
     /// Mouse-up from the canvas, in canvas coordinates: one undo step.
     func commitCanvasFrame(id: UUID, frame: CGRect) {
-        guard let document, let parent = document.parentSpaceFrame(frame, of: id) else { return }
+        guard let parent = storedCanvasFrame(frame, of: id) else { return }
         commitLayerFrame(id: id, frame: parent)
     }
 
@@ -6287,7 +6309,7 @@ final class EditorState {
     /// coming, and there is no pointer over a screen to say it is about to
     /// happen. See `FrameAdoption.swift`.
     func commitCanvasDrop(id: UUID, frame: CGRect) {
-        guard let document, let parent = document.parentSpaceFrame(frame, of: id) else { return }
+        guard let parent = storedCanvasFrame(frame, of: id) else { return }
         commitLayerFrame(id: id, frame: parent, joiningScreens: true)
     }
 

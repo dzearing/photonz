@@ -29,13 +29,20 @@ public enum TextMeasurement {
         (installed.measure ?? estimated)(text, maxWidth)
     }
 
-    /// The narrowest a text box goes. Below this a caption is a sliver of a
-    /// column many lines tall rather than something you can read, so the
-    /// canvas drag stops here — and so, through `LayerGeometryEditing`, does
-    /// the width you type into the W field. One number, so the two ways of
-    /// setting a width cannot disagree (the renderer's
-    /// `TextRasterizer.minimumTextWidth` is this).
-    public static let minimumWidth: CGFloat = 80
+    /// The narrowest the WORDS in a text box go. Below this a caption is a
+    /// sliver of a column many lines tall rather than something you can read,
+    /// so the canvas drag stops here — and so, through `LayerGeometryEditing`,
+    /// does the width you type into the W field. It is stated on the words
+    /// because that is the number both of those surfaces show: a floor of 80
+    /// that left 76 on screen would make the field's own "will not go below
+    /// 80" a lie.
+    public static let minimumContentWidth: CGFloat = 80
+
+    /// The narrowest a text box is STORED at: the words' floor plus the room
+    /// the renderer draws them in. Everything that floors a frame rather than
+    /// a reading uses this (the renderer's `TextRasterizer.minimumTextWidth`
+    /// is this), so the two ways of setting a width cannot disagree.
+    public static let minimumWidth: CGFloat = minimumContentWidth + slack
 
     /// The slack a measured box carries around its glyphs, so rounding and
     /// antialiased edges never clip at the boundary. Matches the renderer's
@@ -96,23 +103,51 @@ public enum TextMeasurement {
 
 extension Layer {
 
+    /// The room this layer's stored box carries beyond the box a person can
+    /// SEE. Nothing for every kind of layer but text, where it is the slack a
+    /// measurement leaves for antialiased glyph edges, sitting entirely on the
+    /// far edges because the words are drawn flush to the near corner.
+    public var boxSlack: CGSize {
+        text == nil ? .zero : CGSize(width: TextMeasurement.slack, height: TextMeasurement.slack)
+    }
+
+    /// `box` as it LOOKS: this layer's slack taken off its far edges.
+    ///
+    /// Everything a person reads a box off goes through here — the selection
+    /// outline and its handles, the W and H fields, the magnets a drag lines
+    /// itself up with, the band you sweep round something. Leave the slack in
+    /// and a label's outline floats clear of its own last letter, its width
+    /// reads four points more than the words are, and it lines up by an edge
+    /// nobody can see.
+    public func withoutSlack(_ box: CGRect) -> CGRect {
+        let slack = boxSlack
+        guard slack != .zero else { return box }
+        let standard = box.standardized
+        return CGRect(x: standard.minX, y: standard.minY,
+                      width: max(0, standard.width - slack.width),
+                      height: max(0, standard.height - slack.height))
+    }
+
+    /// The other direction: a box as it looks, turned back into the box to
+    /// STORE. What the canvas and the fields hand back has to gain the slack
+    /// again or the words would lose the room they are drawn in and re-wrap.
+    public func withSlack(_ box: CGRect) -> CGRect {
+        let slack = boxSlack
+        guard slack != .zero else { return box }
+        let standard = box.standardized
+        return CGRect(x: standard.minX, y: standard.minY,
+                      width: standard.width + slack.width,
+                      height: standard.height + slack.height)
+    }
+
     /// The box this layer's CONTENT fills, which is its own box for everything
     /// but text.
     ///
-    /// A measured text box carries the slack its measurement leaves for
-    /// antialiased edges, and the words are drawn flush to the near corner, so
-    /// the slack all sits on the far edges. A container closing around its
-    /// contents has to close around the WORDS: leave the slack in and a
-    /// centred label sits two points left of the middle of the button it is
-    /// in, which is exactly the kind of wrongness nobody can name but everyone
-    /// can see.
-    var contentBounds: CGRect {
-        let box = localBounds
-        guard text != nil else { return box }
-        return CGRect(x: box.minX, y: box.minY,
-                      width: max(0, box.width - TextMeasurement.slack),
-                      height: max(0, box.height - TextMeasurement.slack))
-    }
+    /// A container closing around its contents has to close around the WORDS:
+    /// leave the slack in and a centred label sits two points left of the
+    /// middle of the button it is in, which is exactly the kind of wrongness
+    /// nobody can name but everyone can see.
+    public var contentBounds: CGRect { withoutSlack(localBounds) }
 
     /// Whether this box is as wide as its words want to be.
     ///

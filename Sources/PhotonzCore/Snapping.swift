@@ -176,7 +176,9 @@ public extension PhotonzDocument {
             for layer in list {
                 guard layer.isVisible, !dragged.contains(layer.id) else { continue }
                 if !ancestors.contains(layer.id) {
-                    boxes.append(layer.localBounds.offsetBy(dx: origin.x, dy: origin.y))
+                    // The box a person can SEE: a label lines up by its last
+                    // letter, not by the empty room past it.
+                    boxes.append(layer.contentBounds.offsetBy(dx: origin.x, dy: origin.y))
                 }
                 if layer.isGroup {
                     collect(layer.children,

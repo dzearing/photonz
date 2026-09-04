@@ -1,0 +1,28 @@
+{
+  "id": "a-short-label-is-as-wide-as-its-word",
+  "title": "A short label is as wide as its word",
+  "goal": "Type a short label like OK on the canvas and the box round it is eighty points wide with the word sitting in the left third of it, because every label typed on the canvas is given a minimum width. A label that has never been dragged narrower should be exactly as wide as what it says, the way the labels inside the starter components already are.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1160,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T18:24:58.442Z",
+  "updated": "2026-09-04T18:24:58.443Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-04 while making a text box read as its words. The floor is TextMeasurement.minimumWidth (now 84 stored = 80 words) and it is applied as naturalSize(minWidth:) by every path that commits an inline text edit (EditorState 2931/3016/3030, CanvasView 4079, TextBlockMetrics). StarterComponents build labels with TextMeasurement.size(of:) and no floor, so they hug: that is the inconsistency. Layer.textHugsItsWords already names the distinction the fix needs - the floor belongs to a box someone has dragged narrower (a paragraph), not to one that hugs its words and never wraps.",
+  "acceptance": [
+    "Typing a short label on the canvas leaves a box no wider than the word",
+    "Dragging a label narrower still stops at the same place it stops today, because a paragraph needs a floor to be readable",
+    "Re-wording a hugging label keeps it hugging, and re-wording a dragged one keeps its width",
+    "Nothing about how the words are drawn changes: no line clips and no wrap moves"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T18:24:58.443Z",
+      "note": "created (manual)"
+    }
+  ]
+}

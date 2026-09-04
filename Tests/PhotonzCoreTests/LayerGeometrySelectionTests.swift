@@ -191,31 +191,43 @@ struct LayerGeometrySelectionTests {
         Layer(name: "Text", content: .text(TextContent(string: "hi")), frame: frame)
     }
 
+    /// A text member as the panel builds one: the field speaks the WORDS, and
+    /// the empty room a measured text box carries on its far edges rides along
+    /// so whatever is typed comes back as the box to store.
+    private func textMember(_ words: CGRect) -> (Layer, LayerGeometrySelection.Member) {
+        let label = text(CGRect(x: words.minX, y: words.minY,
+                                width: words.width + TextMeasurement.slack,
+                                height: words.height + TextMeasurement.slack))
+        return (label, LayerGeometrySelection.Member(id: label.id, frame: words,
+                                                     editing: LayerGeometryEditing(layer: label),
+                                                     slack: label.boxSlack))
+    }
+
     @Test("A typed width on a text box stops where dragging its edge stops")
     func typedTextWidthStopsAtTheCanvasFloor() {
-        let frame = CGRect(x: 0, y: 0, width: 200, height: 30)
-        let label = text(frame)
-        let sel = LayerGeometrySelection([member(label, frame)])
-        #expect(sel.applying(12, to: .width)[label.id]?.width == TextMeasurement.minimumWidth)
+        let (label, member) = textMember(CGRect(x: 0, y: 0, width: 200, height: 30))
+        let sel = LayerGeometrySelection([member])
+        #expect(sel.applying(12, to: .width)[label.id]?.width
+                == TextMeasurement.minimumContentWidth + TextMeasurement.slack)
     }
 
     @Test("Each layer stops at its own floor, so one number can land differently on two of them")
     func eachLayerKeepsItsOwnFloor() {
         let box = CGRect(x: 0, y: 0, width: 200, height: 40)
-        let words = CGRect(x: 0, y: 60, width: 200, height: 30)
         let rect = rectangle(box)
-        let label = text(words)
-        let sel = LayerGeometrySelection([member(rect, box), member(label, words)])
+        let (label, words) = textMember(CGRect(x: 0, y: 60, width: 200, height: 30))
+        let sel = LayerGeometrySelection([member(rect, box), words])
         let moves = sel.applying(12, to: .width)
         #expect(moves[rect.id]?.width == 12)
-        #expect(moves[label.id]?.width == TextMeasurement.minimumWidth)
+        #expect(moves[label.id]?.width
+                == TextMeasurement.minimumContentWidth + TextMeasurement.slack)
     }
 
     @Test("An arrow key cannot step a text box below its floor")
     func steppingStopsAtTheFloor() {
-        let frame = CGRect(x: 0, y: 0, width: TextMeasurement.minimumWidth, height: 30)
-        let label = text(frame)
-        let sel = LayerGeometrySelection([member(label, frame)])
+        let (_, words) = textMember(CGRect(x: 0, y: 0,
+                                           width: TextMeasurement.minimumContentWidth, height: 30))
+        let sel = LayerGeometrySelection([words])
         #expect(sel.stepping(.width, direction: -1, coarse: false).isEmpty)
     }
 
@@ -223,10 +235,9 @@ struct LayerGeometrySelectionTests {
 
     @Test("The field reads back what the layers took, not what was typed")
     func landingIsWhatTheLayersTook() {
-        let frame = CGRect(x: 0, y: 0, width: 200, height: 30)
-        let label = text(frame)
-        let sel = LayerGeometrySelection([member(label, frame)])
-        #expect(sel.landing(12, in: .width) == .agreed(TextMeasurement.minimumWidth))
+        let (_, words) = textMember(CGRect(x: 0, y: 0, width: 200, height: 30))
+        let sel = LayerGeometrySelection([words])
+        #expect(sel.landing(12, in: .width) == .agreed(TextMeasurement.minimumContentWidth))
         #expect(sel.landing(296, in: .width) == .agreed(296))
     }
 
