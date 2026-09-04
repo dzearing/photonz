@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T22:12:31.301Z",
-  "updated": "2026-09-04T01:02:51.148Z",
+  "updated": "2026-09-04T01:39:33.074Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/Playtest/PlaytestHarness.swift around line 491 builds the NSEvent with characters and charactersIgnoringModifiers both set to key.characters, the unshifted letter. AppKit key-equivalent matching for KeyboardShortcut(\"m\", modifiers: .shift) wants \"M\" in charactersIgnoringModifiers, so the invisible stand-in button never fires. Fix: uppercase (or shift-map) characters when the shift modifier is present. Seen on 2026-09-02 while verifying the Current selection slot: step \"key m + shift\" logged \"taken by window\" but activeTool never became wand.\n\nObjective: unmanned-loop (retriaged 2026-09-02 from measure-redline: the defect is in the playtest harness, not in the app). It is what lets any shifted shortcut, measure or ui-building, be proven by a walk instead of by hand.",
@@ -40,19 +40,19 @@
     },
     {
       "t": "2026-09-04T02:20:00.000Z",
-      "note": "root cause was not charactersIgnoringModifiers as the notes guessed. The harness built its key events by hand and told them what they typed: a shifted M said it had typed \"m\". SwiftUI matches a letter shortcut against the character the keyboard really produced, so \u21e7M landed on the plain M command. Hand-built events with the shifted character fixed the matching but broke ordinary typing (no window number, so a text field ignores them); CoreGraphics-built events type nothing but match exactly. The harness now builds both: a system event to ask \"is this a shortcut\", a window-addressed one to deliver the press."
+      "note": "root cause was not charactersIgnoringModifiers as the notes guessed. The harness built its key events by hand and told them what they typed: a shifted M said it had typed \"m\". SwiftUI matches a letter shortcut against the character the keyboard really produced, so ⇧M landed on the plain M command. Hand-built events with the shifted character fixed the matching but broke ordinary typing (no window number, so a text field ignores them); CoreGraphics-built events type nothing but match exactly. The harness now builds both: a system event to ask \"is this a shortcut\", a window-addressed one to deliver the press."
     },
     {
       "t": "2026-09-04T02:20:00.000Z",
-      "note": "the fake presses had also produced a false finding, written into ToolGroupButton on 2026-09-02: that SwiftUI ignores modifiers and duplicate letter registrations fight. With real presses they do not. Next therefore had \u21e7M, \u21e7R, \u21e7O, \u21e7L doing nothing at all for a person while the tool family walk called them proven. ToolGroupShortcuts now registers each letter plain and shifted, and KeyModifierTracker (which existed only to work around the false finding) is gone."
+      "note": "the fake presses had also produced a false finding, written into ToolGroupButton on 2026-09-02: that SwiftUI ignores modifiers and duplicate letter registrations fight. With real presses they do not. Next therefore had ⇧M, ⇧R, ⇧O, ⇧L doing nothing at all for a person while the tool family walk called them proven. ToolGroupShortcuts now registers each letter plain and shifted, and KeyModifierTracker (which existed only to work around the false finding) is gone."
     },
     {
       "t": "2026-09-04T02:20:00.000Z",
-      "note": "acceptance 1 verified: Scripts/playtest/shift-letter-shortcut-walk.json presses \u21e7M twice and the tool changes each time, green in both releases. acceptance 2 verified: the same walk fails at its first \u21e7M against the pre-fix binary, and tool-bar-families.json (80 steps, five shifted letters) is green."
+      "note": "acceptance 1 verified: Scripts/playtest/shift-letter-shortcut-walk.json presses ⇧M twice and the tool changes each time, green in both releases. acceptance 2 verified: the same walk fails at its first ⇧M against the pre-fix binary, and tool-bar-families.json (80 steps, five shifted letters) is green."
     },
     {
       "t": "2026-09-04T02:20:00.000Z",
-      "note": "regression: 20 key and typing walks green, including redline (\u21e7\u2318C), undo-shortcut (\u21e7\u2318N menu chord), geometry and number field typing, nudge (\u21e7arrows), shift-click and shift-sweep selection. Scripts/test.sh green (2579 tests)."
+      "note": "regression: 20 key and typing walks green, including redline (⇧⌘C), undo-shortcut (⇧⌘N menu chord), geometry and number field typing, nudge (⇧arrows), shift-click and shift-sweep selection. Scripts/test.sh green (2579 tests)."
     },
     {
       "t": "2026-09-04T02:20:00.000Z",
@@ -61,7 +61,12 @@
     {
       "t": "2026-09-04T02:20:00.000Z",
       "note": "left for later: walks leak settings into each other (tool-bar-families hides the inspector, the next walk starts with it hidden and its focus steps fail). Cost an hour of false leads today. Recorded in the audit, not filed, since unmanned-loop is not staged now."
+    },
+    {
+      "t": "2026-09-04T01:39:33.073Z",
+      "note": "Scripted walks now send the presses a keyboard sends (CoreGraphics-built event for shortcut matching, window-addressed copy for typing), which exposed and fixed a live Next bug: shift plus a tool letter had stopped cycling the tool families. Guard walk Scripts/playtest/shift-letter-shortcut-walk.json green in both releases and failing against the pre-fix binary; 20 key/typing walks and Scripts/test.sh green. Audit: queue/audits/2026-09-03-shift-letter-shortcuts.json"
     }
   ],
-  "started": "2026-09-04T01:02:51.147Z"
+  "started": "2026-09-04T01:02:51.147Z",
+  "completed": "2026-09-04T01:39:33.074Z"
 }
