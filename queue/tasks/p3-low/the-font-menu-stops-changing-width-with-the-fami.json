@@ -1,0 +1,35 @@
+{
+  "id": "the-font-menu-stops-changing-width-with-the-fami",
+  "title": "The Font menu stops changing width with the family you pick",
+  "goal": "The Text section jumps sideways as you try fonts, because the family menu resizes itself to whatever is picked. It should hold one width like the menus beside it.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:08:33.437Z",
+  "updated": "2026-09-04T22:08:50.028Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Rough line from queue/audits/2026-09-04-type-menu-labels.json: \"The Font menu still sizes itself to whatever family is picked, so a long family name makes it wider than the others.\" The other menus in that section were given captions in the same task, so this is the last row that does not match. Panel code: Sources/Photonz/LayersPanel.swift Text section.",
+  "acceptance": [
+    "The family menu holds the same width whatever family is picked, and matches the other menus in the Text section",
+    "A family name too long for that width is shortened with an ellipsis and given a tip carrying the full name",
+    "Nothing else in the Text section moves when the family changes",
+    "Ships unflagged as panel polish. To see it: open Photonz Next, type some words, then switch the family between a short name and a long one and watch the row hold still",
+    "A screenshot of both, short name and long name, goes in the audit",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:08:33.437Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:08:50.027Z",
+      "note": "seq 1250 -> 6"
+    }
+  ]
+}

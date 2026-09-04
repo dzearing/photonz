@@ -1,0 +1,36 @@
+{
+  "id": "a-row-can-push-its-contents-to-its-two-ends",
+  "title": "A row can push its contents to its two ends",
+  "goal": "A stack that has been given a size can spread the room it has left between its rows instead of holding one fixed gap, which is how a nav bar with a logo on the left and buttons on the right is built.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:07:47.142Z",
+  "updated": "2026-09-04T22:08:49.868Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/PhotonzCore/GroupLayout.swift holds a single CGFloat gap with usedGap; the spread case wants gap to become a small enum or an optional so Codable can stay backward compatible. Placement runs in GroupFlow.swift. No decision card: this is an option on the Gap row the user already sets, inside the auto layout epic they promoted on 2026-09-03, not a new surface. The starter nav bar still holds the size it was drawn at, see queue/audits/2026-09-04-ui-hug.json.",
+  "acceptance": [
+    "The Gap row can be set to spread the leftover room instead of a number, on a stack that has a size of its own",
+    "A stack that hugs its contents has no leftover room, so the choice is not offered there and says why in one line rather than sitting dead",
+    "With two rows the room goes between them, with three it is shared equally, and the padding on the sides is respected",
+    "Turning it back to a number restores the number that was there before",
+    "Ships behind next-auto-layout. To see it: open Photonz Next, drop the starter nav bar, set its width to 640, set its Gap to spread, and watch the pieces move to the two ends",
+    "Tests in PhotonzCore cover two rows, three rows, both directions, padding and the hug case before the app code is written",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:07:47.143Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:08:49.868Z",
+      "note": "seq 1190 -> 5"
+    }
+  ]
+}

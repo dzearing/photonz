@@ -1,0 +1,36 @@
+{
+  "id": "the-tool-says-when-a-saved-color-cannot-come-wit",
+  "title": "The tool says when a saved color cannot come with it",
+  "goal": "Arming a tool with a color you saved by name is quiet in the two places it stops being that color, so what you draw is not the color you thought you picked. Both moments should say so.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:08:06.433Z",
+  "updated": "2026-09-04T22:08:49.933Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Two rough lines from queue/audits/2026-09-04-tool-holds-saved-colour.json: picking any color under the Using Accent line silently lets go of Accent, and a tool armed with a name in one document draws the plain color it remembers in a document that has no such name, with no message. Code: Sources/PhotonzCore/ToolArming.swift and ToolColorStyles.swift; ColorStyles.swift holds the named colors, which live per document. Reuse the existing link-break pill from the components and styles work rather than inventing a second way of saying a link broke.",
+  "acceptance": [
+    "Picking a plain color in the popover while the tool is using a saved color says on screen, at that moment, that the name has been let go",
+    "Drawing in a document that does not have that saved color says once that the tool is drawing the plain color it remembers, rather than silently doing it",
+    "Neither message is a dialog and neither needs dismissing to keep working",
+    "Nothing changes when the tool is holding a plain color to begin with",
+    "Ships behind next-styles. To see it: open Photonz Next, save a fill as a named color, arm the arrow tool with it from the toolbar swatch, then drag the picker to another color and read what the row says",
+    "Tests in PhotonzCore cover both cases before the app code is written",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:08:06.434Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:08:49.933Z",
+      "note": "seq 1210 -> 7"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "a-knob-can-be-a-number",
+  "title": "A knob can be a number",
+  "goal": "A component can offer a number as a knob, so one card original can produce copies with different corner rounding or different room inside, without any of them leaving the family.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:08:26.302Z",
+  "updated": "2026-09-04T22:08:49.996Z",
+  "deps": [
+    "a-copy-can-be-given-its-own-color"
+  ],
+  "blockedBy": [],
+  "notes": "Second half of the knob-kinds gap: Sources/PhotonzCore/ComponentProperties.swift:28 holds only text, visible and variant. Deps on a-copy-can-be-given-its-own-color, which is where the fourth kind and its storage, mixed reading and panel row get built; this one should be mostly following that shape. docs/design/ui-building.md line 552 names both as first-version limits.",
+  "acceptance": [
+    "A number a layer already has, such as corner radius, outline thickness or a stack gap, can be exposed as a knob",
+    "A copy shows that knob as a number field that behaves like every other number field, arrow keys and all",
+    "A copy that has not answered follows the original, and a copy that has keeps its answer when the original changes",
+    "Over several copies the field reads Mixed the way every other control does",
+    "Old documents decode unchanged",
+    "Ships behind next-components. To see it: open Photonz Next, draw a rectangle, round its corners, make it a component, expose the corner radius, drop two copies and give one of them square corners",
+    "Tests in PhotonzCore cover exposing, answering, clearing and the mixed reading before the app code is written",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:08:26.303Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:08:49.995Z",
+      "note": "seq 1240 -> 5"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "a-sweep-inside-a-group-picks-the-layers-in-that",
+  "title": "A sweep inside a group picks the layers in that group",
+  "goal": "When you have gone inside a group to work on its pieces, dragging a band round three of them selects those three, instead of reaching past them and grabbing whole layers from the top of the document.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:07:56.839Z",
+  "updated": "2026-09-04T22:08:49.901Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Open thread carried by the last two manager passes, now confirmed in code: Sources/PhotonzCore/Document.swift:277 layerIDs(fullyInside:) filters the top level layers array only and never descends. There is no notion of which group you are in anywhere in Sources/Photonz (no activeGroup or enteredGroup), so the cheapest honest reading is the parent of the current selection. Canvas side is CanvasView.swift around line 1483.",
+  "acceptance": [
+    "While the selection is inside a group, a rubber band sweep considers that group children and nothing above them",
+    "With nothing selected, or with a top level layer selected, a sweep behaves exactly as it does today",
+    "A sweep that catches a nested group still takes it whole, never half its contents",
+    "Shift sweeping adds to the selection within the same group",
+    "Ships unflagged as a fix to next-layer-groups behaviour. To see it: open Photonz Next, draw three rectangles, group them, double click into the group, then drag a band round two of the three and watch only those two get handles",
+    "Tests in PhotonzCore cover the inside-a-group case, the top level case, a nested group and the shift case before the app code is written",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:07:56.840Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:08:49.900Z",
+      "note": "seq 1200 -> 6"
+    }
+  ]
+}

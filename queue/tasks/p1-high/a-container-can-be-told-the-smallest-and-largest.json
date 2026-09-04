@@ -1,0 +1,36 @@
+{
+  "id": "a-container-can-be-told-the-smallest-and-largest",
+  "title": "A container can be told the smallest and largest it may get",
+  "goal": "A group that hugs its contents can be given a floor and a ceiling, so a button with one letter in it is still a button and a card with a long title stops growing instead of running off the screen.",
+  "epic": "ui-layout",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:07:26.798Z",
+  "updated": "2026-09-04T22:08:49.836Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Comes from the rough list of queue/audits/2026-09-04-ui-hug.json: \"There is no minimum width, so a button with one letter in it is as narrow as one letter plus its room.\" Model lives in Sources/PhotonzCore/GroupLayout.swift, which today holds kind, direction, columns, gap, rowGap, padding, width and height and nothing else; usedWidth/usedHeight and hugsWidth/hugsHeight are the clamp points. Layout runs in GroupFlow.swift and the panel rows are in Sources/Photonz/LayersPanel.swift. Keep the maths in the core, out of the view. Codable needs the new keys optional so old files decode.",
+  "acceptance": [
+    "The Layout section offers a smallest and a largest size on each axis, empty by default, so nothing changes for a group nobody has set one on",
+    "A hugging stack never goes below its smallest size and never past its largest one, whatever is inside it",
+    "A stack pinned at its largest size lays its rows out in the room it has rather than overflowing quietly",
+    "The numbers survive save and reopen, and an old document with no numbers opens unchanged",
+    "Ships behind next-auto-layout. To see it: open Photonz Next, draw a rectangle, type a word on it, group them, set the group to Stack, turn Width to Hug, type 96 into the smallest width, then shorten the word and watch the group hold at 96",
+    "Tests cover the floor, the ceiling, both axes and the hug and fixed cases in PhotonzCore before the app code is written",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:07:26.798Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:08:49.835Z",
+      "note": "seq 180 -> 20"
+    }
+  ]
+}

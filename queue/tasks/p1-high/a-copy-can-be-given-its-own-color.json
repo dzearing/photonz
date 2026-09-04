@@ -1,0 +1,38 @@
+{
+  "id": "a-copy-can-be-given-its-own-color",
+  "title": "A copy can be given its own color",
+  "goal": "A component can offer a color as a knob, so one button original can produce a blue copy and a red copy without either of them leaving the family.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T22:07:37.991Z",
+  "updated": "2026-09-04T22:08:49.801Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Objective gap, not a rough line. Sources/PhotonzCore/ComponentProperties.swift:28 holds exactly three knob kinds today (text, visible, variant) and ComponentPropertyValue matches; docs/design/ui-building.md line 552 lists this as a deliberate first-version limit, and the epic promises create once, reuse everywhere, override safely. Reuse ColorStyles.swift and ColorStyleSelection.swift for the value and the mixed reading rather than writing a second one. Panel rows: Sources/Photonz/ComponentPanel.swift.",
+  "acceptance": [
+    "A fill or an outline inside an original can be exposed as a knob, next to wording, show or hide, and choice",
+    "A copy shows that knob as a color row and answers it with the app own picker, the same picker every other color row opens",
+    "A copy that has not answered follows the original, and editing the original repaints every copy that has not",
+    "A saved named color can be the answer, so renaming or editing that color moves every copy that points at it",
+    "Over several copies the row reads Mixed the way every other control does, and setting it sets them all",
+    "Old documents decode unchanged, and a knob whose layer is gone is dropped rather than crashing",
+    "Ships behind next-components. To see it: open Photonz Next, draw a rectangle, make it a component, expose its fill, drop two copies from the Library, give one a different color, then edit the original fill and watch the untouched copy follow",
+    "Tests in PhotonzCore cover exposing, answering, clearing, the named-color case and the mixed reading before the app code is written",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T22:07:37.991Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T22:08:49.800Z",
+      "note": "seq 190 -> 10"
+    }
+  ]
+}

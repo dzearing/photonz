@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-03T17:19:14.274Z",
+  "updated": "2026-09-04T22:08:56.188Z",
   "focus": "ui-building",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -25,7 +25,7 @@
         {
           "id": "ui-layout",
           "title": "Auto-layout and grids that behave like real UI",
-          "note": "Moved up on 2026-09-03 by the decision \"Six audits in one day say nothing resizes to fit what is inside it. Should auto layout move up now?\" \u2014 answered \"Move auto layout up, start it next\".",
+          "note": "Moved up on 2026-09-03 by the decision \"Six audits in one day say nothing resizes to fit what is inside it. Should auto layout move up now?\" — answered \"Move auto layout up, start it next\".",
           "stage": "now",
           "children": []
         },
@@ -68,8 +68,8 @@
         {
           "id": "epic-uehjr1",
           "title": "Using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool.",
-          "note": "",
-          "stage": "now",
+          "note": "Finished. Arrow captions landed and were audited on 2026-09-04; sent back to later on 2026-09-04 by the manager pass.",
+          "stage": "later",
           "children": []
         },
         {
@@ -82,15 +82,15 @@
         {
           "id": "alignment-checks",
           "title": "Alignment checking",
-          "note": "Blocked on a UX decision.",
-          "stage": "now",
+          "note": "Finished. The decision resolved on 2026-08-22 and every alignment-checks task is done; sent back to later on 2026-09-04 by the manager pass.",
+          "stage": "later",
           "children": []
         },
         {
           "id": "spec-export",
           "title": "Spec export: copy a clean spec list from a capture",
-          "note": "",
-          "stage": "now",
+          "note": "Finished. Copy a spec list, copy one measurement, and the picture-plus-spec handoff all landed and were audited; sent back to later on 2026-09-04 by the manager pass.",
+          "stage": "later",
           "children": []
         }
       ]
