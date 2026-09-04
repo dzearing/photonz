@@ -8183,3 +8183,42 @@ and text field should get sizing of their own.
 blue over a blue button (a probe capture can only ever show the background
 selection color, since macOS will not focus a script-launched app), and whether
 plain Return inside a one line label should commit rather than insert a line.
+
+## 2026-09-04 — a copy is not asked to decide what its original decides
+
+Picking a copy of a component showed the whole Layout section, and every number
+in it was a lie: the arrangement and where the contents sit are refilled from
+the original after every edit, so 24 typed into a copy's Padding read back as 24
+until the next edit anywhere in the document and then it was 0 again.
+Reproduced in a test first, both for the arrangement and for the contents'
+placement, before anything was changed.
+
+The two answers the task allowed were hide the section or make the typing stick.
+Neither literally: making it stick means a per copy override that survives the
+sync plus a way to reset it, which is the same machinery as the C6 knobs and a
+feature nobody has asked for, and hiding it makes a copy look broken next to an
+original that has the section. The app already had a third idiom for exactly
+this — the answer the W and H fields give a copy — so a copy is now SHOWN its
+arrangement and refused the typing of it, with the numbers in a sentence rather
+than in fields it cannot use, and one line at the foot of the section saying to
+use Edit Original, which is three rows below in the same panel.
+
+The refusal lives in the model rather than in the panel: `canSetGroupLayout`
+says no to a copy and the new `ownsContentRules(id:)` guards `setGroupLayout`,
+`updateGroupLayout` and `setContentPlacement`, so no keystroke, script or menu
+can write a number the next sync is about to drop.
+
+Walked with `Scripts/playtest/copy-layout-walk.json` against the probe app: the
+copy's panel capture lists zero Layout controls, the original's lists all of
+them, and after the original's padding went to 32 the copy's readout said 32.
+Reading the capture also produced two fixes — the ownership line moved to the
+foot of the section so it covers the rows it also hands over, and the copy now
+says "Set by the stack" where the original says it, instead of reading back the
+answer the stack overrides. 3061 tests green. Audit:
+`queue/audits/2026-09-04-copy-layout.json`.
+
+**Next.** The queue's remaining ui-components follow-ups: the card, nav bar and
+text field should get sizing of their own.
+
+**Open questions.** In the audit: whether anyone ever wants ONE copy to have its
+own padding, which is the feature this task deliberately did not build.
