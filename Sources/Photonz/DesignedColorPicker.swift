@@ -172,6 +172,7 @@ struct DesignedColorPicker: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
                 .help("Close")
+                .playtestControl("Close", detail: "the picker")
             }
         }
     }
@@ -193,6 +194,9 @@ struct DesignedColorPicker: View {
         .labelsHidden()
         .controlSize(.small)
         .help("Which numbers you are sliding. HEX is also where a pasted color goes.")
+        // A real segmented control, so HSL, RGB and HEX read straight off it;
+        // the marker only lends them the row they are on.
+        .playtestField("Color format")
     }
 
     // MARK: - 5 · One slider per channel
@@ -254,6 +258,10 @@ struct DesignedColorPicker: View {
                 .controlSize(.small)
                 .onSubmit(submitHex)
                 .help("Takes #7C4DFF, rgb(124, 77, 255) or hsl(256 100% 65%)")
+                // Not "HEX": that is the tab that opens this row, and two
+                // things a walk can press wearing one word is a walk that
+                // has to guess.
+                .playtestControl("Hex value", detail: "HEX")
         }
     }
 
@@ -276,6 +284,7 @@ struct DesignedColorPicker: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .controlSize(.small)
+            .playtestField("Swatches")
 
             let swatches = scopeSwatches
             if swatches.isEmpty {
@@ -303,6 +312,16 @@ struct DesignedColorPicker: View {
                         }
                         .buttonStyle(.plain)
                         .help(hex)
+                        // A swatch has no words on it, and the colour it holds
+                        // is worked out from whatever you opened the picker
+                        // on, so a walk that named one by its hex would stop
+                        // working the moment the colour before it changed. It
+                        // answers to its place in the row instead — `press
+                        // "Shades 3"` — and carries the hex it happens to be
+                        // today, so the log still says which colour landed and
+                        // a walk that DOES know the hex can say that.
+                        .playtestControl("\(scope.title) \(index + 1)",
+                                         detail: hex + (isCurrent(hex, at: index) ? ", already picked" : ""))
                     }
                 }
                 .frame(minHeight: 22, alignment: .top)
@@ -351,6 +370,7 @@ struct DesignedColorPicker: View {
                     }
                     .controlSize(.small)
                     .help("Keeps this \(ColorStyleNaming.subject(paint)) in the Library under a name")
+                    .playtestControl("Save style", detail: "the picker")
                 }
             }
             if isNaming { namingField }
@@ -396,10 +416,15 @@ struct DesignedColorPicker: View {
                 .focused($nameFocused)
                 .onSubmit(saveStyle)
                 .nameFieldKeys(commit: saveStyle, revert: { isNaming = false })
+                .playtestControl("Style name")
             Button("Save", action: saveStyle)
                 .controlSize(.small)
                 .help("Saves this \(ColorStyleNaming.subject(paint)) under that name")
+                .playtestControl("Save")
         }
+        // The Library has a Save of its own, so this one says which row it is
+        // on and a walk can tell them apart.
+        .playtestField("Style name")
     }
 
     /// Keeps the WHOLE paint, not the colour the square happens to be pointed

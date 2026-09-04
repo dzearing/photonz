@@ -632,9 +632,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// This is the only way to select a layer the canvas will not give you: a
     /// locked one, which a click on the picture falls straight through.
     case selectRow(row: String, modifiers: [PlaytestModifier])
-    /// Press a control in the right hand panel by the words on it: a button,
-    /// one segment of a picker, the name of a row. `in` names the row it sits
-    /// on, for when the same word appears twice — the Layout section holds a
+    /// Press a control in the right hand panel — or in a popover open on top
+    /// of it, the colour picker above all — by the words on it: a button, one
+    /// segment of a picker, the name of a row. `in` names the row it sits on,
+    /// for when the same word appears twice — the Layout section holds a
     /// Hug and a Fixed for Width and another pair for Height. `count` doubles
     /// the click, `modifiers` read as they do under a pointer.
     ///
@@ -649,6 +650,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `panel-<stage>.json`: every tile on the shelf, every row in the layers
     /// list, and every menu in the dock, by the names a walk has to use for
     /// them. The `menus` step for the panel.
+    ///
+    /// A popover open on top of the panel is part of the listing while it is
+    /// open, since a popover is a window of its own and used to be invisible
+    /// to a walk: the colour picker could be photographed and never used.
     case panel(stage: String)
     /// Turn the wheel over a panel that scrolls, by `by` points (negative goes
     /// down the list). A list that builds only the rows you can see has to be

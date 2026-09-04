@@ -26,11 +26,15 @@ struct PlaytestPressTarget {
     var name: String
     /// Where it lives, for the log and for the list a `panel` step writes.
     var detail: String
-    /// Where to put the pointer, in window coordinates.
+    /// Where to put the pointer, in the coordinates of `window`.
     var point: CGPoint
     /// Nothing happens if this is pressed, and the walk should say so rather
     /// than reporting a pass.
     var isEnabled: Bool
+    /// The window the point belongs to. Usually the editor window, but a
+    /// popover — the colour picker above all — is a window of its own sitting
+    /// on top of it, and a click meant for it has to be addressed to it.
+    var window: NSWindow?
 }
 
 enum PlaytestPanelPress {
@@ -56,7 +60,8 @@ enum PlaytestPanelPress {
                 return PlaytestPressTarget(
                     name: label, detail: detail,
                     point: CGPoint(x: centre(ofSegment: index, in: control, box: box), y: box.midY),
-                    isEnabled: control.isEnabled && control.isEnabled(forSegment: index))
+                    isEnabled: control.isEnabled && control.isEnabled(forSegment: index),
+                    window: control.window)
             }
         }
     }

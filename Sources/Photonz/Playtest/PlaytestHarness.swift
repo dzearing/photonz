@@ -1032,13 +1032,31 @@ private final class Run {
 
     // MARK: - The right hand panel
 
-    /// Every named thing the panel is showing right now, read fresh.
-    private func panelTargets() throws -> [PanelTargetView] {
-        guard let content = try requireWindow().contentView else {
-            throw Failure(description: "the window has no content view")
+    /// Every surface a walk can reach right now: the editor window, and
+    /// anything the editor has put on top of it.
+    ///
+    /// A popover is not part of the window it appears to grow out of, it is a
+    /// window of its own sitting on top, attached as a child. So a search that
+    /// started at the editor's content view and walked down could photograph
+    /// the colour picker and never touch it: every tab, swatch and field in it
+    /// was invisible to a walk, which is what made colour work something the
+    /// loop could only hand back as a picture.
+    private func panelWindows() throws -> [NSWindow] {
+        let host = try requireWindow()
+        let attached = NSApp.windows.filter { other in
+            other !== host && other.isVisible
+                && (other.parent === host || host.childWindows?.contains(other) == true)
         }
-        return Self.findAll(PanelTargetView.self, in: content)
-            .filter { $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
+        return [host] + attached
+    }
+
+    /// Every named thing the panel and whatever is open above it are showing
+    /// right now, read fresh.
+    private func panelTargets() throws -> [PanelTargetView] {
+        try panelWindows().flatMap { window in
+            window.contentView.map { Self.findAll(PanelTargetView.self, in: $0) } ?? []
+        }
+        .filter { $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
     }
 
     private func panelTarget(_ name: String, kind: PanelTargetKind) throws -> PanelTargetView {
@@ -1072,12 +1090,15 @@ private final class Run {
     /// 2026-09-04). Posting both first means the loop always finds its way out.
     private func pressControl(_ name: String, in row: String?, count: Int,
                               modifiers: [PlaytestModifier], number: Int) async throws {
-        let window = try requireWindow()
         let target = try pressTarget(name, in: row)
         guard target.isEnabled else {
             throw Failure(description: "the control \"\(target.name)\" is dimmed, so pressing it would do nothing")
         }
-        guard let content = window.contentView,
+        // The control's OWN window, which for anything inside a popover is the
+        // popover and not the editor: the point is in its coordinates and the
+        // event has to be addressed to it, or the click lands on the editor
+        // window at whatever happens to be under those numbers.
+        guard let window = target.window, let content = window.contentView,
               content.convert(content.bounds, to: nil).contains(target.point) else {
             throw Failure(description: "the control \"\(target.name)\" is not in the window; "
                 + "scroll to it with a \"scrollPanel\" step first")
@@ -1153,12 +1174,23 @@ private final class Run {
         if let loose = all.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
             return loose
         }
+        // Then the steadier word beside it, the way a shelf tile can be named
+        // by its file rather than by "10 hours ago". A swatch is called
+        // "Shades 3" because the colour under it moves, but a walk that knows
+        // exactly which colour it wants may say so — as long as only one
+        // thing on screen is that colour, since a guess between two would
+        // pass and prove nothing.
+        let beside = all.filter { target in
+            target.detail.split(separator: ",").contains {
+                $0.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(name) == .orderedSame
+            }
+        }
+        if beside.count == 1 { return beside[0] }
         // Something scrolled out of the dock is still built and still listed,
         // so the list says which ones would need a scroll before a press.
-        let reach = try requireWindow().contentView.map { $0.convert($0.bounds, to: nil) }
         let seen = all.map { target -> String in
             var about = target.detail
-            if reach?.contains(target.point) == false {
+            if Self.isInReach(target) == false {
                 about += about.isEmpty ? "scrolled out of view" : ", scrolled out of view"
             }
             return about.isEmpty ? target.name : "\(target.name) (\(about))"
@@ -1167,13 +1199,21 @@ private final class Run {
             + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
     }
 
-    /// Everything in the panel a press can land on: what the panel named for
-    /// itself, and every segment of every picker, which names itself.
+    /// Everything a press can land on: what the panel named for itself, and
+    /// every segment of every picker, which names itself. A popover open on
+    /// top of the panel is read the same way and its controls join the list,
+    /// so the colour picker can be used and not only photographed.
     private func pressTargets() throws -> [PlaytestPressTarget] {
-        guard let content = try requireWindow().contentView else {
-            throw Failure(description: "the window has no content view")
-        }
-        let everything = try panelTargets()
+        try panelWindows().flatMap { pressTargets(in: $0) }
+    }
+
+    /// The same, for one surface. Rows and controls are matched up WITHIN a
+    /// window: a frame means nothing across two of them, so a picker floating
+    /// over the Fill row must not take that row's name.
+    private func pressTargets(in window: NSWindow) -> [PlaytestPressTarget] {
+        guard let content = window.contentView else { return [] }
+        let everything = Self.findAll(PanelTargetView.self, in: content)
+            .filter { $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
         let fields = everything.filter { $0.kind == .field }
         // A marker cannot tell whether the control in front of it is dimmed —
         // SwiftUI's `disabled` leaves no mark on the view tree — so a press on
@@ -1191,16 +1231,22 @@ private final class Run {
             }
             return PlaytestPressTarget(name: target.name, detail: pieces.joined(separator: ", "),
                                        point: CGPoint(x: frame.midX, y: frame.midY),
-                                       isEnabled: true)
+                                       isEnabled: true, window: window)
         }
         return marked + PlaytestPanelPress.segments(in: content, named: fields)
     }
 
+    /// Whether a press could actually land on this: something scrolled out of
+    /// the dock is still built and still listed, but out of reach until the
+    /// walk scrolls to it. Judged against the control's OWN window, so a
+    /// popover's contents are not measured against the editor behind them.
+    private static func isInReach(_ target: PlaytestPressTarget) -> Bool {
+        guard let content = target.window?.contentView else { return false }
+        return content.convert(content.bounds, to: nil).contains(target.point)
+    }
+
     /// What the panel is showing, in the names a walk has to use.
     private func readPanel() throws -> [String: Any] {
-        guard let content = try requireWindow().contentView else {
-            throw Failure(description: "the window has no content view")
-        }
         func describe(_ target: PanelTargetView) -> [String: Any] {
             let frame = target.convert(target.bounds, to: nil)
             return ["name": target.name, "detail": target.detail,
@@ -1215,11 +1261,13 @@ private final class Run {
                 ["name": control.name, "detail": control.detail, "enabled": control.isEnabled,
                  // Something scrolled out of the dock is still built, and still
                  // listed, but a press cannot reach it until the walk scrolls.
-                 "inWindow": content.convert(content.bounds, to: nil).contains(control.point),
+                 "inWindow": Self.isInReach(control),
                  "x": Int(control.point.x.rounded()), "y": Int(control.point.y.rounded())]
             },
-            "menus": PlaytestPanelMenu.buttons(in: content)
-                .map { PlaytestPanelMenu.title(of: $0) }.filter { !$0.isEmpty },
+            "menus": try panelWindows().compactMap(\.contentView).flatMap { surface in
+                PlaytestPanelMenu.buttons(in: surface)
+                    .map { PlaytestPanelMenu.title(of: $0) }.filter { !$0.isEmpty }
+            },
         ]
     }
 
@@ -2238,7 +2286,13 @@ private final class Run {
                     let name = document.colorStyle(id: id)?.name ?? "?"
                     body = "\(selection.members.first?.colorHex ?? "?") · style \(name)"
                 }
-                return "\(slot.rawValue) \(body) ×\(selection.count)"
+                // A ramp reads as one hex like any other colour, so the kind
+                // is said out loud: otherwise a walk that pressed Linear in
+                // the picker has no way to show that anything happened.
+                let ramp = editor.selectionPaint(slot: slot).flatMap { paint in
+                    paint.isGradient ? ", \(paint.kind.rawValue) ramp of \(paint.stops.count)" : nil
+                } ?? ""
+                return "\(slot.rawValue) \(body)\(ramp) ×\(selection.count)"
             }
         }()
         // What the type rows read for the picked layers, in the words the rows

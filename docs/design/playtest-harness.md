@@ -136,8 +136,8 @@ scale so you can read coordinates straight off the fixture.
 | `clearClipboard` | | Empties the clipboard. |
 | `readClipboard` | `stage` | Logs the clipboard's types and text. |
 | `selectRow` | `row`, optional `modifiers` | Clicks a row in the layers list by the name it shows, the way a person picks a layer out of the list instead of off the picture. Modifiers read as they do under a pointer: shift ranges from the anchor row, command adds or removes. This is the only way to select a LOCKED layer, since a click on the picture falls straight through one. Fails with the list of rows that ARE there. |
-| `panel` | `stage` | Writes what the RIGHT HAND PANEL is showing to the log and to `panel-<stage>.json`: every tile on the Library shelf, every row in the layers list, every control a `press` can land on (with the row it is on and whether it is far enough up the dock to be reached where it is), and every menu in the dock, by the names the steps below use for them. The `menus` step for the panel, and the first step to write when a walk cannot find something. |
-| `press` | `control`, optional `in` `count` `modifiers` | Presses something in the RIGHT HAND PANEL by the words on it: a button ("Clear Stretch"), one segment of a picker ("Row", "Fixed"), a row that goes somewhere. `in` names the row it sits on, for when the same word appears twice — the Layout section holds a Hug and a Fixed for Width and another pair for Height, so `{"control": "Fixed", "in": "Width"}`. The press is real mouse events posted to the app's queue, never the control's action called behind its back, so a control that is covered or wired to nothing fails the walk. Fails with the list of controls that ARE there; a `panel` step prints the same list. |
+| `panel` | `stage` | Writes what the RIGHT HAND PANEL, and any popover open on top of it, are showing to the log and to `panel-<stage>.json`: every tile on the Library shelf, every row in the layers list, every control a `press` can land on (with the row it is on and whether it is far enough up the dock to be reached where it is), and every menu in the dock, by the names the steps below use for them. The `menus` step for the panel, and the first step to write when a walk cannot find something. |
+| `press` | `control`, optional `in` `count` `modifiers` | Presses something in the RIGHT HAND PANEL, or in a popover open on top of it, by the words on it: a button ("Clear Stretch"), one segment of a picker ("Row", "Fixed"), a row that goes somewhere. `in` names the row it sits on, for when the same word appears twice — the Layout section holds a Hug and a Fixed for Width and another pair for Height, so `{"control": "Fixed", "in": "Width"}`. The press is real mouse events posted to the app's queue, never the control's action called behind its back, so a control that is covered or wired to nothing fails the walk. Fails with the list of controls that ARE there; a `panel` step prints the same list. |
 | `panelMenu` | `menu`, optional `shot` `choose` | Opens a menu INSIDE the window by the words on its button ("Add"), writes its rows to the log, and closes it. `shot` names a real screen capture of the menu in place over the panel, written to `<shot>-sc.png` — the only kind of picture of a menu there is, since a menu is drawn outside this process and renders blank offscreen. `choose` picks one of its rows by title instead of closing with nothing chosen. Needs the Screen Recording grant for the picture; the rows reach the log either way. |
 | `scrollPanel` | `by`, optional `row` | Scrolls the panel list `by` points, negative going DOWN the list. The log says how many rows were on screen before and after, which rows arrived, how many row bodies were built, and what it cost the main thread. Name a `row` to pick which list; leave it out for the layers list wherever it is sitting, which is what a walk crawling down a long list wants, since the row it started from scrolls away and stops being built. The layers list builds only the rows you can see, so this is the only way to reach the rest. A synthesised wheel is usually swallowed by a SwiftUI scroll area, so the step falls back to scrolling directly and SAYS which of the two happened. |
 | `dragTile` | `tile`, `to`, optional `space` `hold` | Picks a tile up off the Library shelf by its name and lets it go on the picture, through the canvas's own drag destination — the same calls a drop from the Finder makes, carrying the very payload the tile's own drag hands over. A capture tile can be named by the caption it shows ("10 hours ago") or, better for a walk that has to keep working, by its file name. `hold` names a picture taken while it is still in the air, which is the only moment the landing outline exists. |
@@ -223,11 +223,52 @@ The names, as of September 2026:
 | Shadow | `Enable Shadow` | there is one |
 | Frame | `Clip contents` | there is one |
 | Layout | `Clear Stretch`, `Each side`, the pickers | `in: "Width"`, `in: "Height"` |
+| The colour picker | see below | `in: "Paint type"`, `in: "Swatches"`, … |
 
 `Twist` is the triangle that opens a group. It matters more than it looks: the
 layers list builds a row only once it is on screen, so every row inside a shut
 group is invisible to `panel`, `press` and `dragRow` until a walk has pressed
 the twist on the group above it.
+
+### The colour picker is a window of its own, and a walk can use it
+
+A popover does not live inside the window it appears to grow out of: it is a
+separate window sitting on top. So a search that started at the editor's
+content view walked straight past the colour picker, and every audit that
+touched colour had to hand back a picture of it. `panel` and `press` now read
+the editor window AND anything attached to it, and a press is addressed to the
+window the control is actually in.
+
+Open it the way a person does — `{"do": "press", "control": "Color", "in":
+"Fill"}` — and everything inside is then in the same list as the panel's own:
+
+| In the picker | Called | Told apart by |
+| --- | --- | --- |
+| The type tiles | `Solid`, `Linear`, `Radial`, `Angular` | `in: "Paint type"` |
+| The numbers switch | `HSL`, `RGB`, `HEX` | `in: "Color format"` |
+| The HEX box | `Hex value` | it is not called HEX, which is the tab above it |
+| The swatch rows | `Shades`, `Related`, `Document`, `Recent` | `in: "Swatches"` |
+| One swatch | `Shades 1` … `Shades 9`, `Related 4`, … | the row and the place in it |
+| A gradient's ramp | `Add a stop`, `Remove this stop`, `Reverse the ramp` | `in: "Stops"` |
+| Keeping the colour | `Save style`, then `Style name` and `Save` | `in: "Style name"` |
+| Shutting it | `Close` | `in: "the picker"` |
+
+A swatch is named by its PLACE in the row, not by its colour: the shades are
+worked out from whatever colour you opened on, so a walk that said `#7C4DFF`
+would stop working the first time the colour before it changed. The hex it
+holds today is in its detail, so the log still says which colour landed, and a
+walk that genuinely knows the hex may name that instead as long as only one
+thing on screen is wearing it.
+
+Two things to know before writing one. The swatch row REMEMBERS which scope it
+was left on between launches, so a walk that wants the shades presses `Shades`
+first rather than assuming. And the eyedropper is deliberately unnamed: it
+raises the system screen sampler, which would take the app hostage with nothing
+left running to dismiss it.
+
+What is still only photographable in the picker is the saturation square and
+the channel sliders, for the same reason as the panel's sliders: a press is not
+a drag.
 
 What is still only photographable is the SLIDERS — Opacity, Blur, Corner
 Radius, Border and the five shadow rows. Their rows are named, so a `panel`

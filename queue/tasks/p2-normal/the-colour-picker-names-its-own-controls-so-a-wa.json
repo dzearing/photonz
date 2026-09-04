@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T14:11:50.549Z",
-  "updated": "2026-09-04T14:11:50.550Z",
+  "updated": "2026-09-04T14:24:31.531Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The picker is a SwiftUI .popover, so it is a separate NSWindow: PlaytestHarness.panelTargets walks down from requireWindow().contentView and never reaches it. Either widen the search to the app's popover windows (NSApp.windows filtered to those owned by the editor window) or give the picker its own target search. Files: Sources/Photonz/ColorPickerPopover.swift, DesignedColorPicker.swift, Playtest/PlaytestHarness.swift (panelTargets, pressTargets, pressControl's in-window check, which also assumes the editor window's bounds). Raised by the 2026-09-04 panel-controls audit.",
@@ -23,6 +23,43 @@
     {
       "t": "2026-09-04T14:11:50.550Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T14:24:31.531Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T14:36:30.856732Z",
+      "note": "Reviewed the idea before building. Three things the task's own notes got wrong or left out. (1) It is not enough to widen the search: the press itself has to be ADDRESSED to the popover's window, because the point is in that window's coordinates and posting it to the editor window lands the click on whatever happens to sit under those numbers in the panel behind. (2) The eyedropper must stay unnamed. It raises the system screen sampler, which takes the app hostage with nothing left running to dismiss it, so a walk that pressed it would hang for good. (3) Naming a swatch by its hex looks obvious and is a trap: the shades are derived from whatever colour you opened on, so the walk breaks the first time the colour before it changes. Swatches are named by their place in the row instead, with the hex in the detail."
+    },
+    {
+      "t": "2026-09-04T14:36:30.856732Z",
+      "note": "Also cut from the mock's implied scope: the saturation square and the channel sliders stay unnamed. A press is a click, not a drag of a knob, so naming them would list controls that cannot usefully be pressed, which is the trap the panel's own sliders already document."
+    },
+    {
+      "t": "2026-09-04T14:36:30.856732Z",
+      "note": "Built. Harness: panelWindows() adds the editor window's attached child windows, panelTargets/pressTargets read each surface separately (rows and controls are matched WITHIN a window, so a picker floating over the Fill row cannot take that row's name), PlaytestPressTarget carries its own window and pressControl posts to it, and isInReach judges scroll reach against the control's own window. pressTarget gained one fallback: when no name matches, a word that appears whole in exactly one control's detail matches, so `press \"#7C4DFF\"` finds the swatch wearing it. Marked in SwiftUI: PaintTypeRow's four tiles, the stop bar's three buttons, the format and swatch-scope pickers' rows, every swatch, the HEX box, Save style + Style name + Save, and Close."
+    },
+    {
+      "t": "2026-09-04T14:36:30.856732Z",
+      "note": "The state readout now says the paint KIND: a gradient used to read as one hex like any flat colour, so a walk that pressed Linear had no way to show anything happened. `fill #F6E4C1, linear ramp of 3 x1`."
+    },
+    {
+      "t": "2026-09-04T14:46:50.523821Z",
+      "note": "Verified on the probe with Screen Recording granted. Scripts/playtest/picker-controls-walk.json, 69 steps, ok: the four tabs walk the fill through linear ramp of 2, three stops, radial, angular and back to solid; pressing \"Shades 5\" puts #E1A632 on the picked rectangle and pressing \"Related 5\" puts #32E1A6 on it; Save style plus a typed name plus the Save beside it puts Blush on the Library shelf; and Close takes the picker's controls back out of the listing. Two real screen captures kept with the audit."
+    },
+    {
+      "t": "2026-09-04T14:46:50.523821Z",
+      "note": "Scripts/test.sh: 3002 tests green."
+    },
+    {
+      "t": "2026-09-04T14:46:50.523821Z",
+      "note": "Regression: ran all 32 walks that use panel, press, panelMenu, scrollPanel, dragTile, dragRow or selectRow, which is every walk this change can reach. 30 finished. The two that did not are environmental and would fail the same way on the commit before this one: drop-lands-here-walk needs a fixture PNG copied into ~/Pictures/Screenshots that its own seed note describes and nothing enforces, and type-menu-labels-walk changes the text size from 24 to 48, which the probe remembers, so it breaks itself on any second run. openPanelMenu, the code path that walk fails in, is untouched by this task. Filed as `a-walk-that-changes-a-remembered-setting-puts-it`."
+    },
+    {
+      "t": "2026-09-04T14:50:15.275356Z",
+      "note": "drop-lands-here-walk passes with its fixture copied into ~/Pictures/Screenshots: 31 steps, ok. So the regression set is 31 of 32 walks green, and the one that is not, type-menu-labels-walk, fails in openPanelMenu, which this task does not touch, because the walk sets the text size to 48 and the probe remembers it."
     }
-  ]
+  ],
+  "started": "2026-09-04T14:24:31.530Z"
 }

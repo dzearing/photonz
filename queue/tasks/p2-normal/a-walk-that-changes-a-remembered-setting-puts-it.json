@@ -1,0 +1,27 @@
+{
+  "id": "a-walk-that-changes-a-remembered-setting-puts-it",
+  "title": "A walk that changes a remembered setting puts it back",
+  "goal": "Two of the scripted walks only pass the first time they are ever run on a machine. One of them changes the text size from 24 to 48 and the app remembers that, so the next run looks for a 24 that is no longer there and stops. Anyone who runs the walks twice sees a failure that is not a real one, which makes the whole set less trustworthy to read.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 1110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T14:46:32.315Z",
+  "updated": "2026-09-04T14:46:32.316Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while regression-testing the colour picker walk work on 2026-09-04. type-menu-labels-walk step 17 is panelMenu {menu: 24 pt, choose: 48 pt}; the text size is remembered in the probe defaults, so on a second run the button reads 48 pt and the step fails with \"no menu called 24 pt\". drop-lands-here-walk has the same shape of problem from the other side: it carries a seed note saying to copy Scripts/playtest/fixtures/Photonz drop probe.png into ~/Pictures/Screenshots first, which nothing enforces, so it fails with \"no tile called Photonz drop probe\" unless a person read the note. Options: a reset step at the top of a walk, a walk-level setup block the runner performs, or the probe starting from clean defaults each launch.",
+  "acceptance": [
+    "Running type-menu-labels-walk twice in a row passes both times",
+    "Running the whole walk set twice in a row produces the same result both times",
+    "Any walk that needs something set up first says so in a way the runner can act on, rather than only in a note for a person"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T14:46:32.316Z",
+      "note": "created (manual)"
+    }
+  ]
+}

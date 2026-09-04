@@ -1,0 +1,27 @@
+{
+  "feature": "The colour picker can be driven by a scripted walk",
+  "epic": "unmanned-loop",
+  "summary": "A playtest walk can now open the colour picker and use it: press the Solid, Linear, Radial and Angular tabs, switch between HSL, RGB and HEX, pick a swatch off any of the four rows, add or remove a gradient stop, save the colour as a style and close the picker. Until now a walk could open it and take a photograph of it and nothing else, so every feature inside the picker reached you as a picture.",
+  "setup": "Nothing to turn on. This is a change to how the loop drives the app, so the thing to judge is the walk log, not a new control. Run it with: Scripts/playtest.sh Scripts/playtest/picker-controls-walk.json",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/picker-controls-walk.json and wait for it to say ok.", "shot": "2026-09-04-picker-controls-open.png" },
+    { "do": "Open /tmp/photonz-playtest/picker-controls/panel-2-open.json and read the control list: the picker's own controls stand in it beside the panel's." },
+    { "do": "Read the Fill line in the log at stages 4-linear through 8-solid: it walks linear ramp of 2, linear ramp of 3, radial, angular, then back to one flat colour.", "shot": "2026-09-04-picker-controls-linear.png" },
+    { "do": "Read stage 11-shade-picked: pressing \"Shades 5\" put #E1A632 on the rectangle." },
+    { "do": "Read stage 13-style-saved: Save style, a typed name and the Save beside it were all pressed, and Blush is on the Library shelf." },
+    { "do": "Open the picker yourself in the dev app and check nothing about it changed. Every marker is invisible and probe-only." }
+  ],
+  "evaluate": [
+    "Is \"Shades 5\" a name you would guess for the fifth swatch on the shades row, or would you reach for the hex first?",
+    "The picker remembers which swatch row you left it on between launches, so it opened on Related rather than Shades. Is that the right thing for it to remember?",
+    "The saturation square and the four channel sliders still cannot be driven, only photographed. Is that a gap worth closing next, or is picking a swatch enough for the walks you care about?",
+    "The eyedropper is deliberately unreachable, because pressing it would raise the system screen sampler and hang the walk. Does that leave a hole in anything you wanted covered?",
+    "Does a Fill line that reads \"#F6E4C1, linear ramp of 3\" tell you what you need about a gradient, or do you want the stops listed?"
+  ],
+  "rough": [
+    "The Screen Recording grant was on, so both pictures here are real screen captures of the probe, not offscreen renders.",
+    "A swatch is named by its place in the row, not by its colour, because the shades are worked out from whatever colour the picker opened on: a walk that said #7C4DFF would break the first time the colour before it changed. The hex is in the detail, so the log still says which colour landed.",
+    "Because the swatch row is sticky across launches, a walk that wants the shades has to press Shades first rather than assuming. That is a real trap and it cost this walk one failed run.",
+    "The gradient aim pad and the ramp itself are still out of reach for the same reason as the sliders: aiming is a drag, not a press."
+  ]
+}

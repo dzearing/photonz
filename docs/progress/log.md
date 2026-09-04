@@ -8013,3 +8013,54 @@ Next / open: closing the four sides while they differ leaves only the word
 Filed as `a-stack-with-uneven-room-shows-its-numbers-even`. Still unbuilt:
 dragging the room out on the canvas, and any link between a padding and a
 spacing scale.
+
+## 2026-09-04 — The colour picker names its own controls, so a walk can pick a colour
+
+A popover is not part of the window it appears to grow out of: it is a separate
+window sitting on top, attached as a child. The playtest harness only ever
+walked down from the editor window's content view, so the colour picker could
+be opened by a walk and then only photographed. Every feature inside it — the
+Solid / Linear / Radial / Angular tabs, the swatch rows, the HSL / RGB / HEX
+switch, Save style — reached the user as a picture.
+
+`panel` and `press` now read the editor window AND anything attached to it.
+Each surface is read on its own, so rows and controls are matched up within one
+window and a picker floating over the Fill row cannot take that row's name.
+More than widening the search was needed: a press is real mouse events, and the
+point is in the popover's own coordinates, so the event has to be ADDRESSED to
+the popover's window. Posting it to the editor window would have clicked
+whatever sits under those numbers in the panel behind.
+
+Named in the picker: the four paint-type tiles, the three ramp buttons, the
+format and swatch-scope rows, every swatch, the HEX box, Save style with its
+name field and Save, and Close. A swatch answers to its PLACE in the row —
+`Shades 5` — not to its hex, because the shades are derived from whatever
+colour the picker opened on, so a walk naming a hex breaks the first time the
+colour before it changes. The hex it holds today is in its detail, and a press
+can name a detail word when exactly one control wears it, so `press "#E1A632"`
+works too when a walk really does know.
+
+Left unreachable on purpose: the eyedropper, which raises the system screen
+sampler and would take the app hostage with nothing left running to dismiss it;
+and the saturation square, the channel sliders and the gradient aim pad, since
+a press is a click and not a drag of a knob.
+
+The state readout now says the paint kind — `fill #F6E4C1, linear ramp of 3` —
+because a gradient used to read as one flat hex, so a walk that pressed Linear
+had no way to show anything had happened.
+
+Verified live: `Scripts/playtest/picker-controls-walk.json` on the probe app
+with Screen Recording granted, so the pictures are real window captures. Sixty
+nine steps: the four tabs walk the fill through linear, three stops, radial,
+angular and back to solid; `Shades 5` puts #E1A632 on the rectangle; Save style
+plus a typed name plus Save puts Blush on the Library shelf; and Close takes
+the picker's controls back out of the listing. 3002 tests green, and the
+nineteen colour and panel walks most likely to be disturbed still finish. No
+render path touched, so no perf note.
+
+Audit: `queue/audits/2026-09-04-picker-walkable.json`.
+
+Next / open: the swatch row remembers which scope it was left on between
+launches, which cost this walk one failed run before it learned to press
+`Shades` first. Still unreachable: dragging the square, the sliders and the
+gradient aim.

@@ -109,6 +109,11 @@ struct PaintTypeRow: View {
                     .help("\(kind.title) paint")
                     .accessibilityLabel(kind.title)
                     .accessibilityAddTraits(kind == paint.kind ? [.isSelected] : [])
+                    // These read as a picker but are four buttons, so they say
+                    // who they are the way a picker's segments already do:
+                    // "Paint type, already on Solid".
+                    .playtestControl(kind.title, detail: kind == paint.kind
+                                     ? "Paint type, already on \(kind.title)" : "Paint type")
             }
         }
     }
@@ -202,6 +207,8 @@ struct GradientGeometryRow: View {
         .controlSize(.mini)
         .help(tip)
         .accessibilityLabel(tip)
+        // A picture is all these are, so a walk names them by what they do.
+        .playtestControl(tip, detail: "Stops")
     }
 }
 
