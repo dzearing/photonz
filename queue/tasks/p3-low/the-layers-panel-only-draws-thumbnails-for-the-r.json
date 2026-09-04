@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 1060,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T04:18:23.092Z",
-  "updated": "2026-09-04T08:52:50.100379Z",
+  "updated": "2026-09-04T08:52:54.467Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the lazy-rows work merged 2026-09-04. EditorState.thumbnails(for:) walks every row of LayersListView.rows and calls thumbnail(for:), which kicks off a detached render per uncached layer. The rows themselves are lazy now (LazyVStack), but the thumbnail gather is not: it is computed in the list body over the whole displays array. Needs the visible row window, which is derivable from the scroll offset (.onScrollGeometryChange) plus LayerListMetrics row stride, with a generous buffer each side so a fast scroll does not outrun the renders. Deliberately left out of the lazy-rows task because a grey square flashing past is a visible regression traded for an invisible win, so it needs its own measurement. ViewBuildMeter (probe only) is the pattern for proving it: add a thumbnailRequest subject and count.",
@@ -66,7 +66,12 @@
     {
       "t": "2026-09-04T08:52:50.100379Z",
       "note": "Scripts/test.sh green: 2842 tests, 255 suites. Audit at queue/audits/2026-09-04-layer-thumbnails.json with two real captures."
+    },
+    {
+      "t": "2026-09-04T08:52:54.466Z",
+      "note": "The layers panel now asks for pictures only for the rows on screen plus four off each edge. Measured on the probe with the cache emptied: a ten layer document asks for 10 renders, a hundred layer document asks for 10 too (was 100). Walking the whole hundred row list asks for 101 in total, one per layer, none twice; walking back up asks for none. Scripts/test.sh green (2842 tests). Audit: queue/audits/2026-09-04-layer-thumbnails.json"
     }
   ],
-  "started": "2026-09-04T08:38:54.898Z"
+  "started": "2026-09-04T08:38:54.898Z",
+  "completed": "2026-09-04T08:52:54.467Z"
 }
