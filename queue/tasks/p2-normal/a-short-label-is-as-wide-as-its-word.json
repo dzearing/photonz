@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1160,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T18:24:58.442Z",
-  "updated": "2026-09-04T18:28:00.546Z",
+  "updated": "2026-09-04T18:42:28.616Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-04 while making a text box read as its words. The floor is TextMeasurement.minimumWidth (now 84 stored = 80 words) and it is applied as naturalSize(minWidth:) by every path that commits an inline text edit (EditorState 2931/3016/3030, CanvasView 4079, TextBlockMetrics). StarterComponents build labels with TextMeasurement.size(of:) and no floor, so they hug: that is the inconsistency. Layer.textHugsItsWords already names the distinction the fix needs - the floor belongs to a box someone has dragged narrower (a paragraph), not to one that hugs its words and never wraps.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-04T18:41:34.534207Z",
       "note": "Left rough: eight selection handles round a 19x16 box crowd the letters. That is true of any tiny layer, but a short label is the first common one. Filed separately."
+    },
+    {
+      "t": "2026-09-04T18:42:28.615Z",
+      "note": "A label typed on the canvas is now exactly as wide as its words: OK lands 19 on screen instead of 80. The floor moved back to where a width is chosen (the wrap cap, and the narrowest a box can be dragged or typed to, both still 80). Next only, behind next-placement. Two bugs fixed on the way: roomyBox measured a box against itself, and restyling kept a second copy of the measurement that re-floored hugging labels. Verified live in the probe with Scripts/playtest/short-label-walk.json and real screen captures; Scripts/test.sh green at 3099. Audit: queue/audits/2026-09-04-short-label-width.json. Commit 3c05410, pushed."
     }
   ],
-  "started": "2026-09-04T18:28:00.546Z"
+  "started": "2026-09-04T18:28:00.546Z",
+  "completed": "2026-09-04T18:42:28.616Z"
 }
