@@ -303,6 +303,21 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The same, sweeping around the middle instead, so a walk can show more
     /// than one kind of gradient without four separate actions.
     case paintSelectionAngularGradient
+    /// Arm the tool in your hand with a straight gradient running out of the
+    /// colour it already has, which is what choosing Linear in the toolbar
+    /// swatch's picker does. It reaches the tool's interior when it has one
+    /// and its outline otherwise. The type row is inside a popover a walk
+    /// cannot reach with a pointer, so this is the way in.
+    case armToolGradient
+    /// The same, sweeping around the middle instead.
+    case armToolAngularGradient
+    /// Open the toolbar swatch's picker on what the tool in your hand draws
+    /// its outline (or a text block its ink) in, which is what clicking that
+    /// swatch does.
+    case openToolColorPicker
+    /// The same, on the toolbar's Fill swatch: the interior the next box comes
+    /// out with.
+    case openToolFillPicker
     /// Open the color picker on the Color section's first painted row, which
     /// is what clicking that row's swatch does. The dock is out of a walk's
     /// pointer reach, so this is how the picker itself gets photographed.

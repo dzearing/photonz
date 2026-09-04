@@ -1,0 +1,58 @@
+{
+  "out": "/tmp/photonz-playtest/tool-gradient",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1500, "height": 950 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "openToolFillPicker" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-tool-picker-solid", "note": "the toolbar Fill swatch's picker, nothing selected: four type tiles drawn in the colour the tool is holding, Solid on" },
+    { "do": "snapshot", "name": "toolgrad-1-type-row-on-the-tool" },
+    { "do": "action", "action": "closeColorPicker" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "armToolGradient" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-armed", "note": "the tool is armed: the toolbar swatch itself now shows the ramp, before anything is drawn" },
+    { "do": "snapshot", "name": "toolgrad-2-swatch-shows-the-ramp" },
+
+    { "do": "drag", "from": [140, 160], "to": [420, 340], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [470, 160], "to": [750, 340], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-two-boxes", "note": "TWO boxes drawn one after the other, both gradient, neither painted afterwards" },
+    { "do": "render", "name": "toolgrad-3-two-boxes" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-arrow-still-flat", "note": "picking up the arrow: its own swatch is still the flat red it always was, because each tool remembers its own" },
+    { "do": "snapshot", "name": "toolgrad-4-arrow-is-still-flat" },
+    { "do": "action", "action": "armToolAngularGradient" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "drag", "from": [820, 200], "to": [1000, 400], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-arrow-sweeps", "note": "an arrow armed with a sweep: shaft and head both take it" },
+    { "do": "render", "name": "toolgrad-5-arrow" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-back-to-the-box", "note": "back on the rectangle tool, still armed: the swatch shows the ramp it was left on" },
+    { "do": "drag", "from": [140, 420], "to": [420, 600], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-third-box", "note": "a third box, still gradient" },
+    { "do": "render", "name": "toolgrad-6-canvas" },
+    { "do": "snapshot", "name": "toolgrad-7-window" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "openToolColorPicker" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "8-text-has-no-row", "note": "the text tool's ink is laid down letter by letter and can only be one colour, so its picker has no type row at all" },
+    { "do": "snapshot", "name": "toolgrad-8-text-has-no-type-row" },
+    { "do": "action", "action": "closeColorPicker" },
+    { "do": "wait", "seconds": 0.4 }
+  ]
+}

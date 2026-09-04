@@ -693,6 +693,14 @@ private final class Run {
                 paintGradient(editor, kind: .linear)
             case .paintSelectionAngularGradient:
                 paintGradient(editor, kind: .angular)
+            case .armToolGradient:
+                armTool(editor, kind: .linear)
+            case .armToolAngularGradient:
+                armTool(editor, kind: .angular)
+            case .openToolColorPicker:
+                editor.openColorWell = "tool.color"
+            case .openToolFillPicker:
+                editor.openColorWell = "tool.fill"
             case .openColorPicker:
                 if let slot = editor.colorStyleSlots
                     .first(where: { editor.colorStyleSelection(slot: $0).members.first != nil }) {
@@ -1432,6 +1440,24 @@ private final class Run {
         paint.stops = Paint.seededStops(from: paint.hex)
         paint.kind = kind
         editor.setSelectionPaint(slot: slot, paint: paint)
+    }
+
+    /// Arms the tool in your hand with a gradient out of the colour it already
+    /// has — exactly what pressing a tile in the toolbar swatch's type row
+    /// does. A tool with an interior takes it on the fill, which is the swatch
+    /// that swatch pair puts first; anything else takes it on its outline.
+    private func armTool(_ editor: EditorState, kind: Paint.Kind) {
+        if var fill = editor.activeToolFillPaint {
+            fill.becoming(kind)
+            editor.setAnnotationFillPaint(fill)
+            actionDetail = "fill armed \(kind.rawValue) out of #\(fill.hex.dropFirst())"
+        } else if var paint = editor.activeToolPaint {
+            paint.becoming(kind)
+            editor.setAnnotationPaint(paint)
+            actionDetail = "outline armed \(kind.rawValue) out of #\(paint.hex.dropFirst())"
+        } else {
+            actionDetail = "this tool holds no colour of its own"
+        }
     }
 
     /// A colour drag in the picker, still down. Pushes a few live frames at the

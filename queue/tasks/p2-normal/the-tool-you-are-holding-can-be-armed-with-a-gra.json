@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1040,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T03:26:35.267Z",
-  "updated": "2026-09-04T03:26:35.267Z",
+  "updated": "2026-09-04T04:20:58.191Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from a-color-slot-can-hold-a-gradient-not-just-a-flat. The blocker is that tool defaults live as hex strings: EditorState.activeToolColorHex / activeToolFillHex and AnnotationStyles, plus the three ColorPickerContent call sites in EditorView.swift (1061, 1146, 1617) which use the hex-flavoured init. Paint already round-trips through settings-safe Codable, so the change is mostly widening those stores and the AnnotationBuilder seed.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-04T03:26:35.267Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T04:20:58.191Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T04:23:39.592264Z",
+      "note": "Adversarial review, before building. (1) First-time walk: with the rectangle tool held and nothing selected, you click the fill swatch, the picker opens, four type tiles appear, you pick Linear. Nothing else on screen changes, so you have no idea the tool is armed until you draw. The swatch IS the whole feedback for this feature, so both toolbar swatches (the fill/border pair and the single colour dot) have to DRAW the gradient, not the one flat colour it stands for. Without that the feature is invisible and the task is not done. (2) A trap the mock never had: the same popover doubles as the inspector for a selected zoom callout, whose ring is drawn one flat colour by a different path. Offering it four tiles would be a row that quietly does nothing, which is the exact failure the gradient row was gated to avoid, so gradients are off whenever a callout is selected. Text is already off through the .text slot. (3) Checked rather than assumed: the shape rasterizer paints line, arrow shaft, arrowhead, box border, box interior and highlight all through GradientPainter, so every annotation tool can really be armed and none of them lies. (4) Cut: no new controls, no gradient handles on the canvas, no second picker. The whole change is that the tool's remembered colour becomes a remembered paint and the two swatches show it. (5) Shortest version that delivers the value: widen the per-shape memory, seed the new shape from it, draw the swatches from it. Everything else already exists."
+    },
+    {
+      "t": "2026-09-04T04:23:39.592264Z",
+      "note": "Plan. Core: ShapeDefaults.colorHex/fillColorHex become Paint/Paint? behind the same wire keys, so a flat default still writes the bare hex string the prefs have always held and prefs written before gradients decode untouched; the hex accessors stay as flattening shims. AnnotationStyles gains paint/fillPaint per shape and per tool, and content(for:) seeds the new annotation's paint and fill from them, which is what carries the gradient into the live drag preview as well as the committed shape. AnnotationBuilder.restyled takes a paint and a fill. EditorState gains setAnnotationPaint / setAnnotationFillPaint / activeToolFillPaint, with the hex calls becoming solid-paint wrappers. EditorView draws both toolbar swatches with PaintFill and passes the paint-flavoured ColorPickerContent init, gradients gated on the slot plus no-callout."
+    },
+    {
+      "t": "2026-09-04T04:36:49.300911Z",
+      "note": "Built. Core: ShapeDefaults holds a Paint per shape for the outline and one for the interior, behind the wire keys colorHex and fillColorHex, so a flat default still writes the bare hex string the prefs always held and prefs written before gradients decode untouched. AnnotationStyles gained paint/fillPaint per shape and per tool and content(for:) seeds the new shape from them, which is what carries the ramp into the live drag preview as well as the committed shape. App: EditorState.setAnnotationPaint / setAnnotationFillPaint / activeToolPaint / activeToolFillPaint replaced their hex-only ancestors outright rather than sitting beside them, and both toolbar swatches draw through PaintFill so the ramp is visible before anything is drawn. Gradients are offered on the toolbar only where the shape rasterizer can really draw one: off for text ink, off whenever a zoom callout is selected."
+    },
+    {
+      "t": "2026-09-04T04:36:49.300911Z",
+      "note": "Adversarial review of the built thing, on the probe with real screen captures (Screen Recording granted). Walked it as a person: arm the fill, watch the swatch become the ramp, draw two boxes, pick up the arrow (still flat red, per-shape memory holds), arm it with a sweep, come back to the rectangle and draw a third, still gradient. Then quit and relaunch: the first box of the new session came out gradient with the picker never opened. Also checked the highlight tool, whose whole body is the outline paint and composites with multiply, because a tool that offered the row and then drew flat would be the failure this row is gated to avoid: it takes the ramp. Two things I changed while reviewing rather than shipping as-is: the swatch had to DRAW the paint or the feature is invisible until you draw, and the toolbar's two pickers moved onto the shared open-well key so a callout's flat-only ring is never offered four tiles and so only one picker is open at a time. Left honest in the audit: the arrow's angular sweep is genuinely hard to see on a thin diagonal, painting from the docked panel still does not arm the tool the way the toolbar does, and the Solid tile as the way back to flat is covered by a unit test rather than a driven press."
     }
-  ]
+  ],
+  "started": "2026-09-04T04:20:58.191Z"
 }

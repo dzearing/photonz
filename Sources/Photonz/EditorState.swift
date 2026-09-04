@@ -2162,41 +2162,55 @@ final class EditorState {
         return layer
     }
 
-    /// A swatch pick restyles the selected annotation (one undo step) when
-    /// there is one; either way it becomes the default for new annotations.
-    func setAnnotationColor(_ hex: String) {
+    /// A pick from the toolbar's colour row restyles the selected annotation
+    /// (one undo step) when there is one; either way it becomes the default
+    /// for new annotations.
+    ///
+    /// It takes a whole paint, so the tool in your hand can be armed with a
+    /// gradient and a run of shapes comes out gradient without painting each
+    /// one afterwards.
+    func setAnnotationPaint(_ paint: Paint) {
         // Per-tool color (17.12): a shape's color is its OWN, not the shared
         // paint-bucket foreground — picking here never touches the FG swatch.
         if let layer = selectedAnnotationLayer, let shape = layer.annotation?.shape {
             discardDragPreview() // a click-select's held sprite shows the old style
-            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, colorHex: hex) } }
-            annotationStyles.setColorHex(hex, forShape: shape)
+            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, paint: paint) } }
+            annotationStyles.setPaint(paint, forShape: shape)
         } else {
-            annotationStyles.setColorHex(hex, for: activeTool)
+            annotationStyles.setPaint(paint, for: activeTool)
         }
         saveAnnotationStyles()
-        recordRecentColor(hex: hex)
+        // The recents row is a row of colors, so a gradient leaves its flat
+        // color there rather than nothing.
+        recordRecentColor(hex: paint.hex)
+    }
+
+    /// What the current selection/tool draws its outline in, gradient and all.
+    var activeToolPaint: Paint? {
+        if let layer = selectedAnnotationLayer { return layer.annotation?.paint }
+        return annotationStyles.paint(for: activeTool)
     }
 
     /// The interior fill the current selection/tool draws with (rectangle /
-    /// ellipse); nil = no fill.
-    var activeToolFillHex: String? {
-        if let layer = selectedAnnotationLayer { return layer.annotation?.fillColorHex }
-        return annotationStyles.fillColorHex(for: activeTool)
+    /// ellipse), gradient and all; nil = no fill.
+    var activeToolFillPaint: Paint? {
+        if let layer = selectedAnnotationLayer { return layer.annotation?.fill }
+        return annotationStyles.fillPaint(for: activeTool)
     }
 
     /// A fill pick for the selected box (one undo step) or, with none selected,
-    /// the active tool's new-shape default. nil = no fill (outline only).
-    func setAnnotationFillColor(_ hex: String?) {
+    /// the active tool's new-shape default, so the next box comes out of the
+    /// tool already carrying it. nil = no fill (outline only).
+    func setAnnotationFillPaint(_ paint: Paint?) {
         if let layer = selectedAnnotationLayer, let shape = layer.annotation?.shape {
             discardDragPreview()
-            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, fillColorHex: .some(hex)) } }
-            annotationStyles.setFillColorHex(hex, forShape: shape)
+            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, fill: .some(paint)) } }
+            annotationStyles.setFillPaint(paint, forShape: shape)
         } else {
-            annotationStyles.setFillColorHex(hex, for: activeTool)
+            annotationStyles.setFillPaint(paint, for: activeTool)
         }
         saveAnnotationStyles()
-        if let hex { recordRecentColor(hex: hex) }
+        if let paint { recordRecentColor(hex: paint.hex) }
     }
 
     /// The shape a toolbar-popover style edit applies to: the selected
@@ -3895,6 +3909,12 @@ final class EditorState {
     var openColorWell: String?
 
     /// The binding a color well hands its popover.
+    /// The same well opened or shut by the swatch that owns it, which is what
+    /// clicking a toolbar swatch twice means.
+    func toggleColorWell(_ key: String) {
+        openColorWell = openColorWell == key ? nil : key
+    }
+
     func colorWellBinding(_ key: String) -> Binding<Bool> {
         Binding(get: { [weak self] in self?.openColorWell == key },
                 set: { [weak self] shown in self?.openColorWell = shown ? key : nil })

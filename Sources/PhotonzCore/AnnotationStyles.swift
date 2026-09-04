@@ -65,12 +65,19 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public func colorHex(forShape shape: AnnotationShape) -> String { defaults(forShape: shape).colorHex }
 
+    /// What the next shape of this kind is drawn IN, gradient and all.
+    public func paint(forShape shape: AnnotationShape) -> Paint { defaults(forShape: shape).paint }
+
     public func strokeWidth(forShape shape: AnnotationShape) -> CGFloat { defaults(forShape: shape).strokeWidth }
 
     public func arrowheadScale(forShape shape: AnnotationShape) -> CGFloat { defaults(forShape: shape).arrowheadScale }
 
     /// Interior fill new rectangles/ellipses start with; nil = no fill.
     public func fillColorHex(forShape shape: AnnotationShape) -> String? { defaults(forShape: shape).fillColorHex }
+
+    /// The interior new boxes of this kind start with, gradient and all;
+    /// nil = no fill.
+    public func fillPaint(forShape shape: AnnotationShape) -> Paint? { defaults(forShape: shape).fill }
 
     /// Corner radius new rectangles start with.
     public func cornerRadius(forShape shape: AnnotationShape) -> CGFloat { defaults(forShape: shape).cornerRadius }
@@ -87,6 +94,12 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         shapes[shape.rawValue, default: .standard(for: shape)].colorHex = hex
     }
 
+    /// Arms this shape's outline with a paint. A gradient here is what makes a
+    /// whole run of shapes come out gradient without painting each one.
+    public mutating func setPaint(_ paint: Paint, forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].paint = paint
+    }
+
     public mutating func setLayerStyle(_ style: LayerStyle, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].layerStyle = style
     }
@@ -101,6 +114,11 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public mutating func setFillColorHex(_ hex: String?, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].fillColorHex = hex
+    }
+
+    /// Arms this shape's interior with a paint; nil = no fill.
+    public mutating func setFillPaint(_ paint: Paint?, forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].fill = paint
     }
 
     public mutating func setCornerRadius(_ radius: CGFloat, forShape shape: AnnotationShape) {
@@ -138,6 +156,19 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         setColorHex(hex, forShape: shape)
     }
 
+    /// What the tool in your hand is armed with, gradient and all; nil for a
+    /// tool that draws no shape.
+    public func paint(for tool: Tool) -> Paint? {
+        guard let shape = tool.annotationShape else { return nil }
+        return paint(forShape: shape)
+    }
+
+    /// Arms the tool in your hand. Ignored by a tool that draws no shape.
+    public mutating func setPaint(_ paint: Paint, for tool: Tool) {
+        guard let shape = tool.annotationShape else { return }
+        setPaint(paint, forShape: shape)
+    }
+
     /// The interior fill `tool` draws with (rectangle/ellipse); nil = no fill,
     /// and nil for tools that have no interior.
     public func fillColorHex(for tool: Tool) -> String? {
@@ -150,16 +181,33 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         setFillColorHex(hex, forShape: shape)
     }
 
+    /// The interior the tool in your hand is armed with, gradient and all.
+    public func fillPaint(for tool: Tool) -> Paint? {
+        guard let shape = tool.annotationShape else { return nil }
+        return fillPaint(forShape: shape)
+    }
+
+    public mutating func setFillPaint(_ paint: Paint?, for tool: Tool) {
+        guard let shape = tool.annotationShape else { return }
+        setFillPaint(paint, forShape: shape)
+    }
+
     /// Styled content for a new annotation, nil for non-annotation tools.
     public func content(for tool: Tool) -> AnnotationContent? {
         guard let shape = tool.annotationShape else { return nil }
         let d = defaults(forShape: shape)
         // Highlight is a filled box; the stroke width slider doesn't touch it.
         let width = tool.usesStrokeWidth ? d.strokeWidth : AnnotationContent.defaultStrokeWidth
-        return AnnotationContent(shape: shape, strokeWidth: width, colorHex: d.colorHex,
-                                 arrowheadScale: d.arrowheadScale,
-                                 cornerRadius: d.cornerRadius, fillColorHex: d.fillColorHex,
-                                 captionFontSize: d.captionFontSize)
+        var content = AnnotationContent(shape: shape, strokeWidth: width, colorHex: d.colorHex,
+                                        arrowheadScale: d.arrowheadScale,
+                                        cornerRadius: d.cornerRadius, fillColorHex: d.fillColorHex,
+                                        captionFontSize: d.captionFontSize)
+        // The whole paint, not just the flat color it stands for: an armed
+        // tool's gradient reaches the new shape here, which is the one place
+        // both the live drag preview and the committed shape are built from.
+        content.paint = d.paint
+        content.fill = d.fill
+        return content
     }
 
     // MARK: - Defaults & palettes
@@ -193,11 +241,27 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
 /// One annotation type's persisted defaults.
 public struct ShapeDefaults: Equatable, Codable, Sendable {
-    public var colorHex: String
+    /// What the next shape of this kind is drawn IN. A paint rather than one
+    /// flat color, so the tool in your hand can be armed with a gradient and a
+    /// whole run of shapes comes out gradient without painting each one.
+    public var paint: Paint
+    /// The one flat color this default stands for. Everything that can only
+    /// hold one reads it, and setting it puts the tool back to flat, which is
+    /// what picking a plain color off a swatch row means.
+    public var colorHex: String {
+        get { paint.hex }
+        set { paint.hex = newValue; paint.kind = .solid }
+    }
     public var strokeWidth: CGFloat
     public var arrowheadScale: CGFloat
-    /// Interior fill for box shapes; nil = outline only.
-    public var fillColorHex: String?
+    /// Interior fill for box shapes; nil = outline only. A paint for the same
+    /// reason the outline is one.
+    public var fill: Paint?
+    /// The fill's one flat color; setting it puts the fill back to flat.
+    public var fillColorHex: String? {
+        get { fill?.hex }
+        set { fill = newValue.map { Paint(hex: $0) } }
+    }
     /// Corner radius for rectangles; 0 = sharp.
     public var cornerRadius: CGFloat
     /// Non-destructive effects (shadow/opacity/blur/border/corner) new objects
@@ -206,28 +270,51 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
     /// Caption text size for arrows (image pixels).
     public var captionFontSize: CGFloat
 
-    public init(colorHex: String, strokeWidth: CGFloat, arrowheadScale: CGFloat,
-                fillColorHex: String? = nil, cornerRadius: CGFloat = 0,
+    public init(paint: Paint, strokeWidth: CGFloat, arrowheadScale: CGFloat,
+                fill: Paint? = nil, cornerRadius: CGFloat = 0,
                 layerStyle: LayerStyle = LayerStyle(),
                 captionFontSize: CGFloat = AnnotationContent.captionFontSizeDefault) {
-        self.colorHex = colorHex
+        self.paint = paint
         self.strokeWidth = strokeWidth
         self.arrowheadScale = arrowheadScale
-        self.fillColorHex = fillColorHex
+        self.fill = fill
         self.cornerRadius = cornerRadius
         self.layerStyle = layerStyle
         self.captionFontSize = captionFontSize
     }
 
+    /// The flat way in, which is every default the app had before gradients.
+    public init(colorHex: String, strokeWidth: CGFloat, arrowheadScale: CGFloat,
+                fillColorHex: String? = nil, cornerRadius: CGFloat = 0,
+                layerStyle: LayerStyle = LayerStyle(),
+                captionFontSize: CGFloat = AnnotationContent.captionFontSizeDefault) {
+        self.init(paint: Paint(hex: colorHex), strokeWidth: strokeWidth,
+                  arrowheadScale: arrowheadScale,
+                  fill: fillColorHex.map { Paint(hex: $0) }, cornerRadius: cornerRadius,
+                  layerStyle: layerStyle, captionFontSize: captionFontSize)
+    }
+
+    /// `paint` and `fill` keep the key names their flat ancestors wrote —
+    /// `colorHex`, `fillColorHex` — because a flat paint still writes a bare
+    /// hex string there. Prefs that have never held a gradient are byte for
+    /// byte what they always were, and prefs written before gradients existed
+    /// decode untouched.
+    private enum CodingKeys: String, CodingKey {
+        case paint = "colorHex"
+        case strokeWidth, arrowheadScale
+        case fill = "fillColorHex"
+        case cornerRadius, layerStyle, captionFontSize
+    }
+
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        colorHex = try c.decode(String.self, forKey: .colorHex)
+        paint = try c.decode(Paint.self, forKey: .paint)
         strokeWidth = try c.decode(CGFloat.self, forKey: .strokeWidth)
         // `arrowheadScale` may be absent in early per-shape prefs.
         arrowheadScale = try c.decodeIfPresent(CGFloat.self, forKey: .arrowheadScale)
             ?? AnnotationStyles.defaultArrowheadScale
         // `fillColorHex` postdates per-shape prefs; absent = no fill.
-        fillColorHex = try c.decodeIfPresent(String.self, forKey: .fillColorHex)
+        fill = try c.decodeIfPresent(Paint.self, forKey: .fill)
         // `cornerRadius` postdates per-shape prefs; absent = sharp.
         cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
         // `layerStyle` postdates per-shape prefs.

@@ -1,0 +1,30 @@
+{
+  "feature": "The tool you are holding can be armed with a gradient",
+  "epic": "ui-components",
+  "summary": "The colour swatch in the toolbar, the one that decides what the NEXT shape comes out as, can now hold a gradient instead of one flat colour. Arm it once and a whole run of shapes comes out gradient without painting a single one afterwards, and the swatch itself shows the ramp so you can see the tool is loaded before you draw.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Start on a blank canvas.",
+  "try": [
+    { "do": "Press R for the rectangle tool, with nothing selected." },
+    { "do": "Click the front (Fill) square of the swatch pair at the right of the toolbar, and pick Linear from the four tiles at the top of the picker.", "shot": "2026-09-04-tool-gradient-1.png" },
+    { "do": "Close the picker and look at the swatch: it is now the ramp, not the flat red." },
+    { "do": "Drag out two rectangles, one after the other. Neither is painted afterwards." },
+    { "do": "Press A for the arrow tool and look at its swatch: still the flat red it always was." },
+    { "do": "Press R again and drag a third rectangle. Still gradient.", "shot": "2026-09-04-tool-gradient-2.png" },
+    { "do": "Press T for the text tool and open its swatch: no type row at all, because text ink can only be one colour." },
+    { "do": "Quit and reopen the app, press R and draw: the first box of the new session is still gradient." }
+  ],
+  "evaluate": [
+    "Does the swatch showing the ramp tell you the tool is loaded, or did you still have to draw one to find out?",
+    "Is each tool remembering its own gradient right, or would you expect arming the rectangle to arm the arrow too?",
+    "Is the tool staying armed across launches what you want, or should a new session start flat?",
+    "When you switch the Fill checkbox on over a gradient outline, the interior inherits that same gradient. Is that the colour you expected, or did you want the flat one?",
+    "Is the Solid tile enough of a way back to a flat colour, or do you want something faster?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both shots are real window captures from a scripted walk, not offscreen renders.",
+    "The arrow's own gradient is real but hard to see: an angular sweep across a long thin diagonal reads as almost one colour with a warm head. Linear on a box is where this feature looks like something.",
+    "Painting a shape from the docked Colour panel does NOT arm the tool, only the toolbar swatch does. That is the same split flat colours have always had, so it was left alone rather than changed under this task, but it is a real inconsistency worth a decision.",
+    "The toolbar's two pickers now obey the same one-picker-at-a-time rule every other colour row does, which they did not before. Opening a panel colour row closes the toolbar one and the other way round. This is a small behaviour change beyond the task and it is what let a walk open them at all.",
+    "Pressing Solid to go back to flat is checked by the shared code path and a unit test, not by a driven walk: a press inside the popover cannot be driven by a pointer script."
+  ]
+}

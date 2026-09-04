@@ -9,7 +9,11 @@ struct EditorView: View {
     /// panel (phase-9 carousel) reads it until phase 11.4 replaces it with the
     /// global slide-down overlay.
     @Environment(AppCoordinator.self) private var coordinator
-    @State private var isStylePopoverPresented = false
+    /// The toolbar's own two pickers answer to the same "only one picker is
+    /// open" rule every other colour row does, and by name — so a walk can
+    /// open the one the tool is holding without a pointer.
+    private var toolStyleWellKey: String { "tool.color" }
+    private var toolFillWellKey: String { "tool.fill" }
     /// The bespoke HSB color picker popover (13.2).
     @State private var isFgPickerShown = false
     @State private var isBgPickerShown = false
@@ -17,7 +21,6 @@ struct EditorView: View {
     /// a canvas too narrow for the wand's options to lay out along the bar.
     @State private var isWandToleranceShown = false
     @State private var isCropAspectShown = false
-    @State private var isShapeFillPickerShown = false
     /// Slider drafts so a drag doesn't snap back to the committed value mid-drag.
     @State private var strokeWidthDraft: CGFloat?
     @State private var arrowheadScaleDraft: CGFloat?
@@ -1043,27 +1046,35 @@ struct EditorView: View {
     }
 
     private var shapeFillSwatch: some View {
-        Button { isShapeFillPickerShown = true } label: {
-            shapeSwatchLabel(hex: editorState.activeToolFillHex)
+        Button { editorState.openColorWell = toolFillWellKey } label: {
+            shapeSwatchLabel(paint: editorState.activeToolFillPaint)
         }
         .help("Fill color — the shape's interior. Uncheck Fill for an outline.")
-        .popover(isPresented: $isShapeFillPickerShown, arrowEdge: .top) {
-            let off = editorState.activeToolFillHex == nil
+        .popover(isPresented: editorState.colorWellBinding(toolFillWellKey), arrowEdge: .top) {
+            let off = editorState.activeToolFillPaint == nil
             VStack(alignment: .leading, spacing: 14) {
                 // A checkbox enables the fill; the picker stays visible but
                 // disabled (dimmed) when it's off, so it's clear what it controls.
                 Toggle("Fill", isOn: Binding(
                     get: { !off },
                     set: { on in
-                        editorState.setAnnotationFillColor(on ? (editorState.activeToolFillHex ?? activeToolColorHex) : nil)
+                        // Switched on from nothing, the interior starts where
+                        // the shape's own colour is — gradient and all, so a
+                        // box armed with a ramp fills with the same ramp.
+                        editorState.setAnnotationFillPaint(
+                            on ? (editorState.activeToolFillPaint ?? activeToolPaint) : nil)
                     }))
                     .font(.callout)
                 ColorPickerContent(editorState: editorState,
-                                   hex: editorState.activeToolFillHex ?? activeToolColorHex,
+                                   paint: editorState.activeToolFillPaint ?? activeToolPaint,
                                    name: "Fill",
                                    slot: .fill,
                                    supportsOpacity: true,
-                                   embedded: true) { editorState.setAnnotationFillColor($0) }
+                                   // The tool can be armed with a gradient, so
+                                   // the type row is here for the same reason
+                                   // it is on a selected shape's Fill row.
+                                   supportsGradient: ColorSlot.fill.acceptsGradient,
+                                   embedded: true) { editorState.setAnnotationFillPaint($0) }
                     .disabled(off)
                     .opacity(off ? 0.4 : 1)
             }
@@ -1072,23 +1083,26 @@ struct EditorView: View {
     }
 
     private var shapeBorderSwatch: some View {
-        Button { isStylePopoverPresented.toggle() } label: {
+        Button { editorState.toggleColorWell(toolStyleWellKey) } label: {
             // Show the "none" slash when the box has no border.
-            shapeSwatchLabel(hex: editedStrokeWidth > 0 ? activeToolColorHex : nil)
+            shapeSwatchLabel(paint: editedStrokeWidth > 0 ? activeToolPaint : nil)
         }
         .help("Border color, width, and corner radius")
-        .popover(isPresented: $isStylePopoverPresented, arrowEdge: .top) {
+        .popover(isPresented: editorState.colorWellBinding(toolStyleWellKey), arrowEdge: .top) {
             stylePopover
         }
     }
 
-    /// A rounded-rect swatch; a nil hex shows the white-with-red-slash "none".
-    private func shapeSwatchLabel(hex: String?) -> some View {
-        RoundedRectangle(cornerRadius: 4)
-            .fill(hex.map { Color(hex: $0) } ?? Color.white)
+    /// A rounded-rect swatch; a nil paint shows the white-with-red-slash
+    /// "none". It draws the PAINT rather than the one flat colour it stands
+    /// for, because this little square is the only thing that says the tool in
+    /// your hand is armed with a gradient before you draw with it.
+    private func shapeSwatchLabel(paint: Paint?) -> some View {
+        PaintFill(paint: paint ?? Paint(hex: "#FFFFFF"))
+            .clipShape(RoundedRectangle(cornerRadius: 4))
             .frame(width: 18, height: 18)
             .overlay {
-                if hex == nil {
+                if paint == nil {
                     Path { p in
                         p.move(to: CGPoint(x: 2, y: 16))
                         p.addLine(to: CGPoint(x: 16, y: 2))
@@ -1544,6 +1558,31 @@ struct EditorView: View {
         return editorState.annotationStyles.colorHex(for: editorState.activeTool) ?? "#FF3B30" // non-annotation fallback
     }
 
+    /// The same colour, gradient and all: what the tool in your hand is armed
+    /// with, or what the selected object is painted with. A callout's ring and
+    /// a text block's ink are drawn one flat colour by a different path, so
+    /// they come back flat here and never see the type row.
+    private var activeToolPaint: Paint {
+        if editorState.selectedZoomCalloutLayer != nil || selectedTextContent != nil
+            || editorState.activeTool == .text {
+            return Paint(hex: activeToolColorHex)
+        }
+        if let selected = selectedAnnotation { return selected.paint }
+        return editorState.annotationStyles.paint(for: editorState.activeTool)
+            ?? Paint(hex: activeToolColorHex)
+    }
+
+    /// Whether the swatch the toolbar opens can be armed with a gradient. The
+    /// slot has to be one a ramp can be drawn into AND the thing being painted
+    /// has to be one the shape rasterizer draws, which a zoom callout's ring is
+    /// not: four tiles that quietly do nothing are worse than no tiles.
+    private var toolColorAcceptsGradient: Bool {
+        editorState.selectedZoomCalloutLayer == nil && toolColorSlot.acceptsGradient
+    }
+
+    /// Which of a layer's colours the toolbar's single swatch stands for.
+    private var toolColorSlot: ColorSlot { showsTextControls ? .text : .stroke }
+
     /// Stroke width applies to stroke shapes only — highlight is a fill.
     private var showsStrokeWidthRow: Bool {
         if editorState.selectedZoomCalloutLayer != nil {
@@ -1582,17 +1621,17 @@ struct EditorView: View {
     /// Swatch showing the active tool's color; opens the style popover.
     private var styleButton: some View {
         Button {
-            isStylePopoverPresented.toggle()
+            editorState.toggleColorWell(toolStyleWellKey)
         } label: {
-            Circle()
-                .fill(Color(hex: activeToolColorHex))
+            PaintFill(paint: activeToolPaint)
+                .clipShape(Circle())
                 .frame(width: 16, height: 16)
                 .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
                 .frame(width: 28, height: 28)
         }
         .toolTip(editorState.activeTool == .text ? "Text Style" : "Annotation Style", key: "S")
         .keyboardShortcut("s", modifiers: [])
-        .popover(isPresented: $isStylePopoverPresented, arrowEdge: .top) {
+        .popover(isPresented: editorState.colorWellBinding(toolStyleWellKey), arrowEdge: .top) {
             stylePopover
         }
     }
@@ -1615,11 +1654,12 @@ struct EditorView: View {
                 // One consistent color control everywhere: the same picker
                 // this row opens is the one every other color row opens.
                 ColorPickerContent(editorState: editorState,
-                                   hex: activeToolColorHex,
+                                   paint: activeToolPaint,
                                    name: showsTextControls ? "Text" : "Color",
-                                   slot: showsTextControls ? .text : .stroke,
+                                   slot: toolColorSlot,
                                    supportsOpacity: true,
-                                   embedded: true) { applyColor($0) }
+                                   supportsGradient: toolColorAcceptsGradient,
+                                   embedded: true) { applyPaint($0) }
                 if showsTextControls {
                     fontPicker
                 } else if showsStrokeWidthRow {
@@ -1745,13 +1785,17 @@ struct EditorView: View {
     /// Routes a committed color pick to the bucket the popover is editing:
     /// the selected callout's border, the active/selected text, or the active
     /// annotation. Every path records the shared recents list (13.2).
-    private func applyColor(_ hex: String) {
+    /// Where a pick from the toolbar's one colour row lands. A shape takes the
+    /// whole paint, so a gradient arms the tool; a callout's ring and a text
+    /// block's ink take the flat colour they can draw, which is why neither
+    /// was offered the type row in the first place.
+    private func applyPaint(_ paint: Paint) {
         if editorState.selectedZoomCalloutLayer != nil {
-            editorState.setCalloutBorderColor(hex)
+            editorState.setCalloutBorderColor(paint.hex)
         } else if showsTextControls {
-            editorState.setTextColor(hex)
+            editorState.setTextColor(paint.hex)
         } else {
-            editorState.setAnnotationColor(hex)
+            editorState.setAnnotationPaint(paint)
         }
     }
 

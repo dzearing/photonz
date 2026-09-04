@@ -7531,3 +7531,53 @@ cannot put a pointer inside a popover — synthesized events into a popover wind
 are dropped while the probe is not the active app, tried three ways (the window,
 the hosting view, the app's event queue) before giving up on it. That wiring was
 checked by reading.
+
+## 2026-09-04 — The tool you are holding can be armed with a gradient (Next, `next-color-picker`)
+
+A colour slot could hold a gradient, but only after the shape existed: you drew
+the box and then painted it. The swatch in the toolbar — the one that decides
+what the NEXT shape comes out as — still took one flat hex, so a run of gradient
+shapes meant painting every one of them.
+
+`ShapeDefaults` holds a `Paint` for the outline and one for the interior now,
+behind the wire keys `colorHex` and `fillColorHex` that its flat ancestors
+wrote. A flat default still writes the bare string, so prefs that never held a
+gradient are byte for byte what they were and prefs written before gradients
+existed decode untouched. `AnnotationStyles` gained `paint`/`fillPaint` per
+shape and per tool, and `content(for:)` seeds the new annotation from them —
+which is the one place both the live drag preview and the committed shape are
+built from, so the ramp reaches the drag as well as the result.
+`AnnotationBuilder.restyled` takes a `paint:` and a `fill:` beside the hex ones.
+
+In the app, `EditorState.setAnnotationPaint` / `setAnnotationFillPaint` and
+`activeToolPaint` / `activeToolFillPaint` replaced their hex-only ancestors
+outright rather than sitting beside them, and both toolbar swatches draw through
+`PaintFill`. That last part is the feature: without it the tool is armed and
+nothing on screen says so until you draw, which is a feature you cannot see.
+
+Gradients are offered on the toolbar only where the shape rasterizer can really
+draw one. Text ink is laid down glyph by glyph and a zoom callout's ring is a
+flat pass over the finished layer, so neither is offered the type row — four
+tiles that quietly do nothing are worse than no tiles.
+
+The toolbar's two pickers moved off private view state onto the shared
+`openColorWell` key. That makes them obey the same one-picker-at-a-time rule
+every other colour row already did, and it is what lets a walk open them without
+a pointer.
+
+Verified: `Scripts/test.sh` green (2695 tests, 11 new in
+`Tests/PhotonzCoreTests/ToolPaintTests.swift`) and
+`Scripts/playtest/tool-gradient-walk.json` on the probe with real screen
+captures — arm the fill, the swatch becomes the ramp, two boxes come out
+gradient, the arrow tool is still flat red, a third box after switching back is
+still gradient, and the text tool's picker has no type row. A second walk after
+quitting the probe drew the first box of a fresh session gradient with the
+picker never opened, which is the between-launches half. A third checked the
+highlight tool, whose whole body is the outline paint and composites with
+multiply: it takes the ramp. New playtest actions: `armToolGradient`,
+`armToolAngularGradient`, `openToolColorPicker`, `openToolFillPicker`.
+Audit: `queue/audits/2026-09-04-tool-gradient.json`.
+
+Not changed, and worth a decision: painting a shape from the docked Colour panel
+still does not arm the tool, only the toolbar swatch does. That is the split
+flat colours have always had, so it was left alone rather than widened here.

@@ -161,20 +161,26 @@ extension AnnotationBuilder {
     /// `fillColorHex` is doubly-optional: outer nil keeps the current fill,
     /// `.some(nil)` clears it, `.some(hex)` sets it.
     public static func restyled(_ layer: Layer, colorHex: String? = nil,
+                                paint: Paint? = nil,
                                 strokeWidth: CGFloat? = nil,
                                 arrowheadScale: CGFloat? = nil,
                                 cornerRadius: CGFloat? = nil,
                                 fillColorHex: String?? = nil,
+                                fill: Paint?? = nil,
                                 caption: String?? = nil,
                                 captionFontSize: CGFloat? = nil) -> Layer {
         guard var a = layer.annotation,
               let start = layer.annotationEndpoint(.start),
               let end = layer.annotationEndpoint(.end) else { return layer }
         if let colorHex { a.colorHex = colorHex }
+        // The whole paint, gradient and all. `colorHex` above is the flat way
+        // in and stays exactly what it was.
+        if let paint { a.paint = paint }
         if let strokeWidth { a.strokeWidth = strokeWidth }
         if let arrowheadScale { a.arrowheadScale = arrowheadScale }
         if let cornerRadius { a.cornerRadius = cornerRadius }
         if let fillColorHex { a.fillColorHex = fillColorHex }
+        if let fill { a.fill = fill }
         if let caption { a.caption = caption }
         if let captionFontSize { a.captionFontSize = captionFontSize }
         var updated = layer
