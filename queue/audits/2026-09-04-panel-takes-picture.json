@@ -1,0 +1,28 @@
+{
+  "feature": "The whole right hand panel takes a dropped picture",
+  "epic": "ui-building",
+  "summary": "Letting a picture go anywhere on the right hand panel now adds it to the document. Before, only the empty space below the last section took it: over Layers, Position & Size or Library the pointer showed the no-entry sign, so the same panel answered two different ways depending on how far down you let go.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. Open any screenshot so the panel has a few sections in it.",
+  "try": [
+    { "do": "Add a couple of pictures to the canvas so the Layers list has several rows." },
+    { "do": "Drag a picture out of the Finder and hold it over the Layers section header. The pointer shows the green plus, not the no-entry sign." },
+    { "do": "Without letting go, slide down over a layer row, then over Position & Size, then over the Library. The pointer keeps promising the copy the whole way down." },
+    { "do": "Let go on a layer row. The picture arrives as a new layer on top and is selected.", "shot": "2026-09-04-panel-takes-picture-landed.png" },
+    { "do": "Drag a text file or a folder over the same panel. It is still refused, the way it already was." },
+    { "do": "Drag one layer row onto another to reorder the stack, and drag a section header up or down to reorder the panel. Both still work.", "shot": "2026-09-04-panel-takes-picture-reordered.png" }
+  ],
+  "evaluate": [
+    "Holding the picture over the panel, does the pointer stay steady all the way down, or is there still a spot where it flickers to no-entry?",
+    "When the picture lands it goes on top and centred, exactly like a drop on the chrome. Is landing on top the right answer here?",
+    "Should letting a picture go ON a layer row slot it in at that spot in the stack, with a drop line to show where, instead of putting it on top?",
+    "Nothing in the panel lights up while a picture is in the air over it. Does the panel need to say it is ready to take the drop, or is the pointer enough?",
+    "Dragging a Library tile up onto a section now adds it as a layer too. Is that welcome, or surprising?"
+  ],
+  "rough": [
+    "A picture let go on a layer row lands on top of the stack, not at that row's position. That was the shortest fix and it matches every other drop in the window, but the panel is the one place where the position under the pointer means something, so it is the obvious thing to disagree with.",
+    "There is no highlight, no drop line, no glow while a picture is held over the panel. The only feedback is the pointer.",
+    "Dragging a layer row onto a section header used to promise a move and then silently do nothing. It now shows the no-entry sign, which is honest, but it is a small change nobody asked for.",
+    "Section header reordering could not be driven by a scripted walk (the harness has no step for it), so that one item was checked by reading the code rather than by running it. Everything else in the list was recorded by Scripts/playtest/panel-takes-picture-walk.json.",
+    "Screen Recording was granted for this run, so both pictures above are the real window taken by that walk."
+  ]
+}

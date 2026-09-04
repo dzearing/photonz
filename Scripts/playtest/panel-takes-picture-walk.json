@@ -1,0 +1,165 @@
+{
+  "out": "/tmp/photonz-playtest/panel-takes-picture",
+  "seed": "A document with a couple of layers, so the Layers section has rows and the sections fill the top of the right hand panel. A picture is then held over each part of that panel in turn: a layer row, the Position & Size section, a section further down, and the empty space below them all. A text file is held over the same panel to prove it is still refused, and a layer row is dragged over another to prove reordering is untouched. Points are window coordinates measured down from the top-left corner.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1400,
+      "canvasHeight": 1000,
+      "width": 1180,
+      "height": 860
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        300,
+        300
+      ],
+      "space": "window"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        500,
+        450
+      ],
+      "space": "window"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "0-two-layers"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        80
+      ],
+      "space": "window",
+      "hold": "1-over-layers-header"
+    },
+    {
+      "do": "describe",
+      "stage": "1-over-layers-header",
+      "note": "a picture held over the Layers section header"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        140
+      ],
+      "space": "window",
+      "hold": "2-over-layer-row"
+    },
+    {
+      "do": "describe",
+      "stage": "2-over-layer-row",
+      "note": "a picture held over a layer row"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        300
+      ],
+      "space": "window",
+      "hold": "3-over-lower-section"
+    },
+    {
+      "do": "describe",
+      "stage": "3-over-lower-section",
+      "note": "a picture held over a section further down the panel"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Redline notes.txt",
+      "at": [
+        1050,
+        300
+      ],
+      "space": "window",
+      "hold": "4-text-file-over-section"
+    },
+    {
+      "do": "describe",
+      "stage": "4-text-file-over-section",
+      "note": "a text file over the same spot is still refused, so the panel takes only what it can place"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        820
+      ],
+      "space": "window",
+      "hold": "5-below-every-section"
+    },
+    {
+      "do": "describe",
+      "stage": "5-below-every-section",
+      "note": "the empty space below every section, which already took it before this change"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        140
+      ],
+      "space": "window",
+      "hold": "6-let-go-on-a-row",
+      "release": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "7-picture-landed"
+    },
+    {
+      "do": "describe",
+      "stage": "6-let-go-on-a-row",
+      "note": "letting the picture go on a layer row adds it as a layer: the state line here counts one more layer than the step before it"
+    },
+    {
+      "do": "dragRow",
+      "row": "Photonz drop probe 3",
+      "onto": "Photonz drop probe",
+      "zone": "below"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "8-rows-reordered"
+    },
+    {
+      "do": "describe",
+      "stage": "8-rows-reordered",
+      "note": "dragging the newest layer row behind the first one still reorders the stack, so the file drop did not cost the list its own drag"
+    }
+  ]
+}

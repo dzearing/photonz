@@ -86,8 +86,10 @@ struct InspectorPanel: View {
                         ) {
                             sectionContent(id)
                         }
-                        .onDrop(of: [.text],
-                                delegate: SectionDropDelegate(item: id, order: $order, dragging: $dragging))
+                        .onDrop(of: [.text] + FileDrop.types,
+                                delegate: SectionDropDelegate(item: id, order: $order,
+                                                              dragging: $dragging,
+                                                              editorState: editorState))
                         // Where this section sits inside the dock, for the
                         // reveal below. Only the Library's is kept, and it is
                         // kept OUTSIDE @State on purpose: this fires on every
@@ -630,11 +632,18 @@ enum InspectorSectionID: String, CaseIterable {
     }
 }
 
-/// Reorders sections live as a dragged header passes over another section.
+/// Reorders sections live as a dragged header passes over another section, and
+/// takes a picture let go on the section the way the rest of the window does.
+///
+/// A section answers for files because nothing behind it can: SwiftUI gives the
+/// drag to the innermost target under the pointer and stops there, so a section
+/// that only understood headers made the top half of the panel refuse a picture
+/// the bottom half was happily taking.
 private struct SectionDropDelegate: DropDelegate {
     let item: InspectorSectionID
     @Binding var order: [InspectorSectionID]
     @Binding var dragging: InspectorSectionID?
+    let editorState: EditorState
 
     func dropEntered(info: DropInfo) {
         guard let dragging, dragging != item,
@@ -645,11 +654,17 @@ private struct SectionDropDelegate: DropDelegate {
         }
     }
 
-    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        if dragging != nil { return DropProposal(operation: .move) }
+        return DropProposal(operation: FileDrop.carriesUsableFile(info) ? .copy : .forbidden)
+    }
 
     func performDrop(info: DropInfo) -> Bool {
-        dragging = nil
-        return true
+        guard dragging == nil else {
+            dragging = nil
+            return true
+        }
+        return FileDrop.accept(info, into: editorState)
     }
 }
 
@@ -699,9 +714,19 @@ private struct LayerRowDropDelegate: DropDelegate {
                                  pointerY: info.location.y, rowHeight: rowHeight)
     }
 
-    func dropEntered(info: DropInfo) { target = proposal(info) }
+    func dropEntered(info: DropInfo) {
+        guard dragging != nil else { return }
+        target = proposal(info)
+    }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
+        // Nothing was picked up in the list, so this is a file coming in from
+        // outside. A row answers for one because nothing behind it can, and it
+        // answers the way the rest of the window does: a picture is taken, and
+        // anything else shows the no-entry sign.
+        guard dragging != nil else {
+            return DropProposal(operation: FileDrop.carriesUsableFile(info) ? .copy : .forbidden)
+        }
         let proposed = proposal(info)
         if target != proposed { target = proposed }
         return DropProposal(operation: proposed == nil ? .forbidden : .move)
@@ -712,6 +737,7 @@ private struct LayerRowDropDelegate: DropDelegate {
     }
 
     func performDrop(info: DropInfo) -> Bool {
+        guard dragging != nil else { return FileDrop.accept(info, into: editorState) }
         defer { dragging = nil; target = nil }
         guard let drop = proposal(info) else { return false }
         editorState.dropRows(ids: carried, drop)
@@ -1175,7 +1201,7 @@ private struct LayersRow: View, Equatable {
         #endif
         content
             .onDrag(pickUp)
-            .onDrop(of: [.text], delegate: LayerRowDropDelegate(
+            .onDrop(of: [.text] + FileDrop.types, delegate: LayerRowDropDelegate(
                 row: panelRow, dragging: $draggingLayerID, target: $dropTarget,
                 rowHeight: rowHeight, editorState: editorState))
             .playtestTarget(display.name, kind: .row,
