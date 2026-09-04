@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:08.695Z",
-  "updated": "2026-09-04T13:02:15.092478Z",
+  "updated": "2026-09-04T13:02:51.099Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Evidence: queue/audits/2026-09-04-panel-takes-picture.json rough 2 (\"There is no highlight, no drop line, no glow while a picture is held over the panel. The only feedback is the pointer.\") and rough 1 (a picture let go on a layer row lands on top of the stack, not at that row); queue/audits/2026-09-04-panel-refuses-file.json rough 2 (nothing an unmanned run can photograph, because the only feedback lives in the window server); queue/audits/2026-09-04-refused-file.json rough 1. The canvas side already exists and is the model to copy: queue/audits/2026-09-04-drop-lands-here.json and 2026-09-03-drop-preview.json. docs/design/mocks/shared/UX-PATTERNS.md section 3 has no rule for what a drop target looks like while something is held over it, which is why each surface answered differently; whoever does this should add that rule in the same sitting.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-04T13:02:15.092478Z",
       "note": "Also added the missing rule to docs/design/mocks/shared/UX-PATTERNS.md section 3 (what a surface looks like while something is held over it), which the task asked for. Follow-up filed: a scripted walk cannot use Frame Selection, the step hangs the harness."
+    },
+    {
+      "t": "2026-09-04T13:02:51.098Z",
+      "note": "The right hand panel now draws an accent edge when it will take the file in the air and a dashed red edge when it will refuse it, and the Layers list draws the exact slot with its own drop line: in front of or behind a row, or an outline around the frame the picture is about to go inside. Letting go lands it exactly there, sized to the list it joins, instead of always on top. Core is test first (22 new tests in Tests/PhotonzCoreTests/PanelIncomingDropTests.swift); full suite 2974 green. Verified live in the probe with Screen Recording granted via Scripts/playtest/panel-shows-landing-walk.json, which also proves the canvas landing box is unchanged and the panel stays quiet while a drag is over the canvas. Audit + five real window captures: queue/audits/2026-09-04-panel-shows-landing.json. UX-PATTERNS section 3 gained the missing drop target rule. Commit 4a92ded, pushed."
     }
   ],
-  "started": "2026-09-04T12:37:46.327Z"
+  "started": "2026-09-04T12:37:46.327Z",
+  "completed": "2026-09-04T13:02:51.099Z"
 }
