@@ -1,0 +1,30 @@
+{
+  "feature": "The tool holds a saved colour",
+  "epic": "ui-components",
+  "summary": "Point a shape at a saved colour like Accent and the tool that draws it comes away holding Accent, so the next shape wears the name too. It wears the NAME, not a copy: edit Accent later and every shape you drew moves with it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Saved colours (the Library's Styles shelf) are on by default.",
+  "try": [
+    { "do": "Draw a rectangle, switch to Select, and click it." },
+    { "do": "On the Color section's first row, open the styles menu and choose Save as Style. Type Accent and press Return." },
+    { "do": "Press R for the rectangle tool and drag out a second box. Do not paint it." },
+    { "do": "Click the second box and read its Color row: it should say Accent." },
+    { "do": "Open the Library's Styles shelf, click the Accent tile, and drag its colour somewhere obviously different." },
+    { "do": "Press A for the arrow tool and look at the round colour swatch in the toolbar.", "shot": "2026-09-04-tool-holds-saved-colour-1.png" },
+    { "do": "Press S to open that swatch, read the line at the top, and click Unlink.", "shot": "2026-09-04-tool-holds-saved-colour-2.png" },
+    { "do": "Draw one more shape: it should be a colour of its own again." }
+  ],
+  "evaluate": [
+    "When you drew the second box, did you expect it to be wearing Accent, or did it surprise you?",
+    "Recolouring Accent moved every box you had drawn. Is that the good kind of powerful, or the frightening kind?",
+    "The palette mark beside the toolbar swatch is the only warning that the next shape will carry a name. Do you notice it in the corner of your eye, or does it need to be louder?",
+    "Is Unlink where you would look for the way out, or would you reach for the colour picker underneath it first?",
+    "Saving a colour under a name now also arms the tool. Is that what you wanted from a button called Save as Style, or is it doing two things?"
+  ],
+  "rough": [
+    "The palette mark is a mark, not a name. It sits beside the round swatch that arrow, line and highlight use; the rectangle's fill-over-border swatch pair has no room for it, so there it lives only in the hover tip. If the mark is too quiet the fix is probably the name in the toolbar, which costs width.",
+    "Picking any colour in the popover under the Using Accent line silently lets go of Accent. That is what picking a plain colour has always meant, and the tip says so, but nothing on screen warns you at the moment you drag the picker.",
+    "What the tool holds is a preference and a saved colour lives inside one document, so a tool armed with Accent in one document draws the plain colour it remembers in a document that has no Accent. That is deliberate and silent. There is no message saying the name did not come along.",
+    "Verified on the real app: Screen Recording was granted, so both pictures are window captures rather than offscreen renders. Walk: Scripts/playtest/tool-holds-saved-colour-walk.json.",
+    "The mock had nothing to say here. This came out of shipping the previous task, where colour rows started arming the tool for plain colours only."
+  ]
+}

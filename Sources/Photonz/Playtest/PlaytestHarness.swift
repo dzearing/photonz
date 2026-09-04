@@ -2147,6 +2147,13 @@ private final class Run {
             // prove the choice survives the drag and reaches the next callout.
             "calloutToolShape": editor.calloutToolShape.rawValue,
             "toolFillPaint": Self.describe(paint: editor.activeToolFillPaint),
+            // The SAVED colour the tool is holding, outline and inside, or
+            // "none". A tool holding Accent draws shapes that follow Accent
+            // when it is edited later, which a colour on its own can never
+            // show, so this is what a walk reads to prove the name carried
+            // over and that a plain colour let go of it again.
+            "toolStyle": editor.toolColorStyle(slot: .stroke)?.name ?? "none",
+            "toolFillStyle": editor.toolColorStyle(slot: .fill)?.name ?? "none",
             "selected": editor.selectedLayerID?.uuidString ?? "nil",
             // Everything the Layers menu would act on, by name and in draw
             // order: one layer clicked, several ⇧-clicked, or a whole sweep.

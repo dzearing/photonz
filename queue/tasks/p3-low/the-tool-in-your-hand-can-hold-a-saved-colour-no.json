@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 1150,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T09:05:31.350Z",
-  "updated": "2026-09-04T09:05:31.350Z",
+  "updated": "2026-09-04T10:42:26.838Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while shipping painting-a-shape-from-the-panel-arms-the-tool-th. EditorState.setSelectionPaint / setSelectionColor / setColorEnabled now call armToolsFromSelection, which reads PhotonzDocument.toolArming and lands it via AnnotationStyles.arm. useColorStyle deliberately does NOT, because AnnotationStyles holds a Paint and nothing else: arming from a style would bake the styles current colour into the tool as a plain colour, so the next shape would match today and drift the day the style is edited. Doing this properly means AnnotationStyles (and AnnotationContent, which already has no binding field) being able to carry a ColorStyle id per slot, plus AnnotationBuilder writing the binding onto the new layer. Check Layer.colorStyleBindings for the shape a layer already uses.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-04T09:05:31.350Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T10:42:26.838Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T10:55:00.000Z",
+      "note": "Adversarial review before building. (1) The tool's memory is an app preference and a saved colour's id lives inside ONE document, so arming with a name and then opening another document must fall back to the plain colour it also remembers, silently. That is the main hazard and it decides the design: the name is resolved through the open document every time a shape is drawn, never trusted blind. (2) If the tool remembered only the colour, editing the saved colour while the tool is armed would draw the OLD colour and the safety net would immediately break the link again, so a new shape takes the saved colour's CURRENT paint. (3) A saved colour can be told it is only for outlines after the tool was armed with it for fills, so the offer list is re-checked at draw time too. (4) Cut as decorative: a second glyph stacked on the 18pt fill/border swatch pair. The name belongs in the popover the swatch opens, where there is room for it and for the way back. (5) Undo stays out of it: what the tool is holding is a preference, like thickness and corner radius, and undo silently changing what is in your hand would be the surprise."
+    },
+    {
+      "t": "2026-09-04T11:40:00.000Z",
+      "note": "Adversarial pass on the BUILT thing, on the real app. Two things came back changed. (1) The palette mark started as a badge on the corner of the 16pt swatch; the capture showed it covering the colour and reading as a smudge on the dark bar, so it moved to sit BESIDE the swatch and the button grows to fit. (2) Arming from Save as Style and from Unlink was quietly snapshotting the picked layer's shadow and corner radius as the new shape defaults, because a ring rides along with a shape's remembered look. Neither of those two repaints anything, so both now pass rememberingBorder: false. Left as is and written into the audit: picking a colour in the popover under the Using Accent line lets go of the name with no warning at the moment you drag; and a tool armed in one document draws the plain colour it remembers in a document with no such name, silently."
+    },
+    {
+      "t": "2026-09-04T11:45:00.000Z",
+      "note": "All four acceptance items verified live in the probe, not assumed. Walk Scripts/playtest/tool-holds-saved-colour-walk.json, Screen Recording granted. Save Accent -> toolStyle=Accent. Second box drawn untouched -> 'stroke #B0184A style Accent'. Accent repainted green -> both boxes follow AND the third box drawn after comes out #00A870 still wearing Accent, so the tool handed over the current colour rather than the one it was armed with. Unlink -> toolStyle=none and the next box is a bare hex. Pointing an arrow at Accent arms the arrow tool alone. panel-arms-tool-walk.json re-run and identical to main. Scripts/test.sh: 2927 tests green."
     }
-  ]
+  ],
+  "started": "2026-09-04T10:42:26.838Z"
 }

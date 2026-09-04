@@ -1096,10 +1096,12 @@ struct EditorView: View {
         Button { editorState.openColorWell = toolFillWellKey } label: {
             shapeSwatchLabel(paint: editorState.activeToolFillPaint)
         }
-        .help("Fill color — the shape's interior. Uncheck Fill for an outline.")
+        .help(editorState.toolColorStyle(slot: .fill).map { "Fill color — using \($0.name)" }
+              ?? "Fill color — the shape's interior. Uncheck Fill for an outline.")
         .popover(isPresented: editorState.colorWellBinding(toolFillWellKey), arrowEdge: .top) {
             let off = editorState.activeToolFillPaint == nil
             VStack(alignment: .leading, spacing: 14) {
+                toolColorStyleRow(slot: .fill)
                 // A checkbox enables the fill; the picker stays visible but
                 // disabled (dimmed) when it's off, so it's clear what it controls.
                 Toggle("Fill", isOn: Binding(
@@ -1134,9 +1136,42 @@ struct EditorView: View {
             // Show the "none" slash when the box has no border.
             shapeSwatchLabel(paint: editedStrokeWidth > 0 ? activeToolPaint : nil)
         }
-        .help("Border color, width, and corner radius")
+        .help(editorState.toolColorStyle(slot: .stroke).map { "Border color — using \($0.name)" }
+              ?? "Border color, width, and corner radius")
         .popover(isPresented: editorState.colorWellBinding(toolStyleWellKey), arrowEdge: .top) {
             stylePopover
+        }
+    }
+
+    /// What the swatch above is HOLDING, when it is holding a saved colour
+    /// rather than just a colour: the palette mark and the name, and the way
+    /// back out.
+    ///
+    /// The swatch alone cannot say this. Two shapes can be the same blue with
+    /// only one of them following Accent, and the difference is the whole point
+    /// of saving a colour, so the popover the swatch opens is where the name
+    /// goes. The same mark and the same word Unlink the inspector's colour rows
+    /// use, so the two places read as one idea.
+    ///
+    /// Picking a colour in the picker below lets go of the name, which is what
+    /// picking a plain colour has always meant. The tip says so rather than the
+    /// row growing a second sentence.
+    @ViewBuilder private func toolColorStyleRow(slot: ColorSlot) -> some View {
+        if let style = editorState.toolColorStyle(slot: slot) {
+            HStack(spacing: 6) {
+                Image(systemName: "swatchpalette")
+                    .foregroundStyle(.secondary)
+                Text("Using \(style.name)")
+                    .font(.callout)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer(minLength: 8)
+                Button("Unlink") { editorState.releaseToolColorStyle(slot: slot) }
+                    .buttonStyle(.link)
+                    .font(.callout)
+            }
+            .help("New shapes follow the saved color \(style.name). "
+                  + "Picking a color below lets go of it.")
         }
     }
 
@@ -1660,17 +1695,35 @@ struct EditorView: View {
     }
 
     /// Swatch showing the active tool's color; opens the style popover.
+    ///
+    /// When the tool is holding a SAVED colour the palette mark appears BESIDE
+    /// the swatch, because two identical greens where only one follows Accent
+    /// look exactly alike and the shape is drawn long before you would think to
+    /// open the popover. Beside rather than on top: a mark laid over a 16pt
+    /// circle covers the one thing the circle is there to show, and at that size
+    /// it read as a smudge rather than as a mark. The name itself is one click
+    /// away, inside.
     private var styleButton: some View {
-        Button {
+        let heldStyle = editorState.toolColorStyle(slot: toolColorSlot)
+        return Button {
             editorState.toggleColorWell(toolStyleWellKey)
         } label: {
-            PaintFill(paint: activeToolPaint)
-                .clipShape(Circle())
-                .frame(width: 16, height: 16)
-                .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
-                .frame(width: 28, height: 28)
+            HStack(spacing: 3) {
+                PaintFill(paint: activeToolPaint)
+                    .clipShape(Circle())
+                    .frame(width: 16, height: 16)
+                    .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
+                if heldStyle != nil {
+                    Image(systemName: "swatchpalette")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: heldStyle == nil ? 28 : 42, height: 28)
         }
-        .toolTip(editorState.activeTool == .text ? "Text Style" : "Annotation Style", key: "S")
+        .toolTip(heldStyle.map { "Using \($0.name)" }
+                 ?? (editorState.activeTool == .text ? "Text Style" : "Annotation Style"),
+                 key: "S")
         .keyboardShortcut("s", modifiers: [])
         .popover(isPresented: editorState.colorWellBinding(toolStyleWellKey), arrowEdge: .top) {
             stylePopover
@@ -1692,6 +1745,7 @@ struct EditorView: View {
                     .font(.callout)
             }
             VStack(alignment: .leading, spacing: 14) {
+                toolColorStyleRow(slot: toolColorSlot)
                 // One consistent color control everywhere: the same picker
                 // this row opens is the one every other color row opens.
                 ColorPickerContent(editorState: editorState,

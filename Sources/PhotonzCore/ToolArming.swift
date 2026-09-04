@@ -6,10 +6,16 @@ import Foundation
 public struct ToolArming: Hashable, Sendable {
     public let shape: AnnotationShape
     public let paint: Paint?
+    /// The saved colour the shapes were wearing, when they all wore the same
+    /// one. Nil means the colour is just a colour, so the tool comes away
+    /// holding a colour rather than a name — which is also the honest answer
+    /// when only some of them wore it.
+    public let styleID: UUID?
 
-    public init(shape: AnnotationShape, paint: Paint?) {
+    public init(shape: AnnotationShape, paint: Paint?, styleID: UUID? = nil) {
         self.shape = shape
         self.paint = paint
+        self.styleID = styleID
     }
 }
 
@@ -32,20 +38,32 @@ public extension PhotonzDocument {
     ///
     /// Locked layers have no say. A pick on the row could not repaint them, so
     /// letting one hold the old colour would stop the pick arming anything.
+    /// A saved colour comes away with it. Point three boxes at Accent and the
+    /// box tool is holding Accent, so the next box wears the NAME and still
+    /// follows it the day Accent is edited. A kind whose shapes wear DIFFERENT
+    /// names, or where only some of them wear one, comes away with the colour
+    /// and no name: printing a name half of them wear is how you carry one into
+    /// work that never asked for it.
     func toolArming(layerIDs: [UUID], slot: ColorSlot) -> [ToolArming] {
         var order: [AnnotationShape] = []
         var painted: [AnnotationShape: [Paint?]] = [:]
+        var named: [AnnotationShape: [UUID?]] = [:]
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked,
                   let shape = layer.annotation?.shape,
                   layer.colorSlots.contains(slot) else { continue }
             if painted[shape] == nil { order.append(shape) }
             painted[shape, default: []].append(layer.paint(for: slot))
+            named[shape, default: []].append(layer.colorStyleID(for: slot))
         }
         return order.compactMap { shape in
             guard let paints = painted[shape], let first = paints.first,
                   paints.allSatisfy({ Self.sameArming($0, first) }) else { return nil }
-            return ToolArming(shape: shape, paint: first)
+            let names = named[shape] ?? []
+            let name = names.first.flatMap { first in
+                names.allSatisfy { $0 == first } ? first : nil
+            }
+            return ToolArming(shape: shape, paint: first, styleID: name)
         }
     }
 
@@ -70,7 +88,13 @@ public extension AnnotationStyles {
     /// is styling laid over whatever the layer is rather than part of the shape
     /// itself, so it is remembered with the rest of a shape's look; new text
     /// takes the foreground colour, so there is no text default to arm.
-    mutating func arm(_ paint: Paint?, slot: ColorSlot, forShape shape: AnnotationShape) {
+    ///
+    /// `styleID` is the saved colour the shapes were wearing. Passing one means
+    /// the tool holds the NAME, so the next shape follows it when it is edited;
+    /// passing none puts the tool back to holding a plain colour, which is what
+    /// picking one off a swatch row means.
+    mutating func arm(_ paint: Paint?, styleID: UUID? = nil, slot: ColorSlot,
+                      forShape shape: AnnotationShape) {
         switch slot {
         case .stroke:
             // A line always has a colour, so there is no "nothing" to arm with.
@@ -82,5 +106,8 @@ public extension AnnotationStyles {
         case .text, .border:
             return
         }
+        // After the paint, never before: painting a slot is exactly how a tool
+        // lets go of the name it was holding.
+        setColorStyleID(styleID, slot: slot, forShape: shape)
     }
 }

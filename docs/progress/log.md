@@ -7914,3 +7914,57 @@ touched, so no perf note.
 Next / open: whether a picture dropped on the panel should land in the middle of
 the canvas (what it does today) or at the top of the layers list is a question
 for the user, and it is on the audit.
+
+## 2026-09-04 — The tool in your hand can hold a saved colour
+
+Pointing a shape at a saved colour used to leave the tool that drew it on the
+old colour, while picking a plain colour on the same row carried over by
+itself. Same row, same gesture, two different meanings. Now a saved colour
+carries over too, and the next shape wears the NAME rather than a copy of it,
+so editing Accent later still moves everything drawn with it.
+
+The awkward part is that the two things live in different places. What a tool
+holds is an app preference that survives launches (`AnnotationStyles`), and a
+saved colour's identity lives inside ONE document. So `ShapeDefaults` now keeps
+a `[ColorStyleBinding]` beside its paint — the name AND the colour that name
+stands for — and `PhotonzDocument.wearingArmedColorStyles`
+(`Sources/PhotonzCore/ToolColorStyles.swift`) has the last word every time a
+shape is drawn: a name this document has never heard of falls back to the flat
+paint, a name that has been repainted hands over what it is NOW, and a name
+since reserved for outlines is not poured into a box. Every one of those is a
+test in `Tests/PhotonzCoreTests/ToolColorStyleArmingTests.swift`.
+
+`ToolArming` carries the styleID, and agrees on it separately from the paint:
+two boxes that are the same blue with only one of them following Accent arm the
+colour and no name. Painting a slot any other way lets go of the name, which is
+the single invariant that keeps the claim honest — `setPaint`, `setFillPaint`
+and both hex setters all clear it, so `arm` sets the binding after the paint,
+never before.
+
+App side: `useColorStyle`, `unlinkColorStyle` and `saveColorStyle` now arm the
+tool the way `setSelectionColor` already did; `setColorStylePaint` refreshes
+what an armed tool remembers, so the toolbar swatch and the live drag preview
+never sit on a colour the shape will not come out. `deleteColorStyle` makes the
+tool let go the same way every layer does. Saving and unlinking pass
+`rememberingBorder: false`, because neither repaints anything and arming a ring
+would snapshot the picked layer's shadow and corner radius as the new defaults
+off the back of a button that only named a colour.
+
+The readout: the palette mark appears BESIDE the toolbar's round swatch (a first
+pass put it on top of the 16pt circle and it covered the one thing the circle is
+for and read as a smudge), and the popover it opens leads with
+`swatchpalette · Using Accent · Unlink`, the same idiom the inspector's colour
+rows use. The log gains `toolStyle` / `toolFillStyle`.
+
+Verified live: `Scripts/playtest/tool-holds-saved-colour-walk.json` draws boxes
+and arrows through save, carry-over, edit, and unlink, with Screen Recording
+granted so the pictures are real window captures.
+`Scripts/playtest/panel-arms-tool-walk.json` re-run and byte-for-byte unchanged
+against main. No render path touched, so no perf note.
+
+Audit: `queue/audits/2026-09-04-tool-holds-saved-colour.json`.
+
+Next / open: the fill-over-border swatch pair (rectangles, ellipses) has no room
+for the palette mark, so there it lives only in the hover tip. If the mark turns
+out to be too quiet the answer is probably the name in the toolbar, which costs
+width. That is on the audit.

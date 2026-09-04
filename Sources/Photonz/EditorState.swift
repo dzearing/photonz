@@ -1127,6 +1127,13 @@ final class EditorState {
         // Inherit this shape's last non-destructive effects (e.g. a drop shadow
         // added to the previous arrow carries to the next).
         layer.style = annotationStyles.layerStyle(forShape: shape)
+        // ...and any SAVED colour the tool is holding, so the new shape wears
+        // the name rather than a copy of it and still follows the name the day
+        // it is edited. The document has the last word: a name it has never
+        // heard of falls back to the flat colour the tool remembers with it.
+        if let document {
+            layer = document.wearingArmedColorStyles(layer, styles: annotationStyles)
+        }
         perform { [layer] in $0.addLayerDrawnOnFrame(layer) }
         // An arrow that is about to offer its caption is not finished yet: the
         // Arrow tool stays in hand while the field is open (a drag draws the
@@ -4357,6 +4364,10 @@ final class EditorState {
         var saved: UUID?
         perform { saved = $0.saveColorStyle(from: targets, slot: slot, name: name) }
         guard let styleID = saved else { return nil }
+        // Saving points the layers you saved from at the new name, so the tool
+        // that draws them comes away holding it: naming a colour and then
+        // drawing the next shape in a copy of it would undo the naming.
+        armToolsFromSelection(slot: slot, targets: targets, rememberingBorder: false)
         showColorStyleShelf()
         // The saved color is one tile among the ones already kept, so the shelf
         // scrolls to it for the same reason a new component's tile does.
@@ -4386,6 +4397,11 @@ final class EditorState {
         guard !targets.isEmpty else { return }
         discardDragPreview()
         perform { _ = $0.bindColorStyle(layerIDs: targets, slot: slot, styleID: styleID) }
+        // The tool comes away holding the NAME, so the next shape of that kind
+        // is drawn in it too and still follows it the day it is edited. A plain
+        // colour on this row has always carried over; a saved one now does the
+        // same thing, which is the only way the two picks mean one thing.
+        armToolsFromSelection(slot: slot, targets: targets)
     }
 
     /// "Unlink": every picked color stays exactly as it is, it just becomes its
@@ -4395,6 +4411,9 @@ final class EditorState {
         let targets = colorStyleSelection(slot: slot).layerIDs
         guard !targets.isEmpty else { return }
         perform(reportingLinkBreaks: false) { $0.unbindColorStyle(layerIDs: targets, slot: slot) }
+        // ...and the tool lets go with them, so the next shape is a colour of
+        // its own like the ones just unlinked.
+        armToolsFromSelection(slot: slot, targets: targets, rememberingBorder: false)
     }
 
     /// The color well on a whole-selection row: paints every picked layer that
@@ -4438,19 +4457,28 @@ final class EditorState {
     /// A kind whose shapes end up disagreeing arms nothing rather than being
     /// guessed at. Read AFTER the change, so it is what the shapes are wearing
     /// now rather than what was aimed at them.
-    private func armToolsFromSelection(slot: ColorSlot, targets: [UUID]) {
+    ///
+    /// `rememberingBorder` is off for the two callers that repaint nothing —
+    /// saving a colour under a name, and letting go of a name. A ring rides
+    /// along with the rest of a shape's remembered look, so arming it there
+    /// would snapshot the shadow and the corner radius of whatever happened to
+    /// be picked as the new defaults, off the back of a button that only named
+    /// a colour.
+    private func armToolsFromSelection(slot: ColorSlot, targets: [UUID],
+                                       rememberingBorder: Bool = true) {
         guard let document else { return }
         let arming = document.toolArming(layerIDs: targets, slot: slot)
         if !arming.isEmpty {
             for entry in arming {
-                annotationStyles.arm(entry.paint, slot: slot, forShape: entry.shape)
+                annotationStyles.arm(entry.paint, styleID: entry.styleID,
+                                     slot: slot, forShape: entry.shape)
             }
             saveAnnotationStyles()
         }
         // A ring is styling laid over a layer rather than part of the shape, so
         // it rides along with the rest of a shape's remembered look, exactly
         // the way pulling its width in the Effects section already does.
-        if slot == .border { rememberStyleDefault(of: targets) }
+        if slot == .border, rememberingBorder { rememberStyleDefault(of: targets) }
     }
 
     /// What the picked layers are painted with in a slot, when they agree.
@@ -4527,9 +4555,30 @@ final class EditorState {
         guard colorStylesEnabled else { return }
         discardDragPreview()
         perform { _ = $0.setColorStylePaint(styleID: styleID, paint: paint) }
+        refreshArmedColorStyles(styleID: styleID)
         // The recents row is a row of colours, so a ramp leaves its flat colour
         // there rather than nothing.
         recordRecentColor(hex: paint.hex)
+    }
+
+    /// A tool holding a saved colour that has just been repainted has to show
+    /// the new one. What the tool holds is the name; the colour it remembers
+    /// beside it is only what that name stands for right now, and the toolbar
+    /// swatch and the live drag preview both read that colour. Without this
+    /// they would sit on the old one until the tool was armed again, so the
+    /// shape you drew would not be the shape the swatch promised.
+    private func refreshArmedColorStyles(styleID: UUID) {
+        guard let style = document?.colorStyle(id: styleID) else { return }
+        var changed = false
+        for shape in AnnotationShape.allCases {
+            for slot in [ColorSlot.stroke, .fill]
+            where annotationStyles.colorStyleID(forShape: shape, slot: slot) == styleID {
+                annotationStyles.arm(style.paint(for: slot), styleID: styleID,
+                                     slot: slot, forShape: shape)
+                changed = true
+            }
+        }
+        if changed { saveAnnotationStyles() }
     }
 
     /// The Style section's Name field. One name in one place: the shelf tile
@@ -4544,7 +4593,51 @@ final class EditorState {
     func deleteColorStyle(styleID: UUID) {
         guard colorStylesEnabled else { return }
         perform { $0.deleteColorStyle(id: styleID) }
+        // The tool lets go of the name for the same reason every layer does:
+        // it keeps the colour it is holding and simply owns it again.
+        var released = false
+        for shape in AnnotationShape.allCases {
+            for slot in [ColorSlot.stroke, .fill]
+            where annotationStyles.colorStyleID(forShape: shape, slot: slot) == styleID {
+                annotationStyles.setColorStyleID(nil, slot: slot, forShape: shape)
+                released = true
+            }
+        }
+        if released { saveAnnotationStyles() }
         if selectedLibraryItemID == styleID.uuidString { selectedLibraryItemID = nil }
+    }
+
+    // MARK: - What the toolbar swatch is holding
+
+    /// The saved colour the toolbar's swatch stands for, or nil when the colour
+    /// there is just a colour.
+    ///
+    /// It reads the selected shape when there is one and the tool in your hand
+    /// otherwise, exactly the way the swatch's colour does, so the name and the
+    /// colour under it always describe the same thing. A name this document has
+    /// never heard of is no name at all: what the tool holds outlives any one
+    /// document, so the swatch would otherwise claim a colour nobody could find.
+    func toolColorStyle(slot: ColorSlot) -> ColorStyle? {
+        guard colorStylesEnabled, let document else { return nil }
+        let id = selectedAnnotationLayer.map { $0.colorStyleID(for: slot) }
+            ?? annotationStyles.colorStyleID(for: activeTool, slot: slot)
+        guard let id else { return nil }
+        return document.colorStyle(id: id)
+    }
+
+    /// Unlink, from the toolbar swatch: the colour stays exactly as it is, it
+    /// just stops being a name. With a shape selected that is the same unlink
+    /// the shape's own Colour row offers; with nothing selected it is the tool
+    /// in your hand letting go, so the next shape is a colour of its own.
+    func releaseToolColorStyle(slot: ColorSlot) {
+        guard colorStylesEnabled else { return }
+        if selectedAnnotationLayer != nil {
+            unlinkColorStyle(slot: slot)
+            return
+        }
+        guard let shape = activeTool.annotationShape else { return }
+        annotationStyles.setColorStyleID(nil, slot: slot, forShape: shape)
+        saveAnnotationStyles()
     }
 
     /// How many of the document's colors this style paints.

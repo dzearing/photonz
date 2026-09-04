@@ -92,12 +92,18 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public mutating func setColorHex(_ hex: String, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].colorHex = hex
+        setColorStyleID(nil, slot: .stroke, forShape: shape)
     }
 
     /// Arms this shape's outline with a paint. A gradient here is what makes a
     /// whole run of shapes come out gradient without painting each one.
+    ///
+    /// Any saved colour the tool was holding is let go of here, because a plain
+    /// colour is a plain colour: this is the one way an outline gets painted
+    /// without a name, so it is the one place the name has to come off.
     public mutating func setPaint(_ paint: Paint, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].paint = paint
+        setColorStyleID(nil, slot: .stroke, forShape: shape)
     }
 
     public mutating func setLayerStyle(_ style: LayerStyle, forShape shape: AnnotationShape) {
@@ -114,11 +120,43 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public mutating func setFillColorHex(_ hex: String?, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].fillColorHex = hex
+        setColorStyleID(nil, slot: .fill, forShape: shape)
     }
 
-    /// Arms this shape's interior with a paint; nil = no fill.
+    /// Arms this shape's interior with a paint; nil = no fill. Any saved colour
+    /// the interior was holding comes off, for the same reason it does on the
+    /// outline.
     public mutating func setFillPaint(_ paint: Paint?, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].fill = paint
+        setColorStyleID(nil, slot: .fill, forShape: shape)
+    }
+
+    // MARK: - The saved colour a tool is holding
+
+    /// The saved colour this shape's tool draws a slot in, or nil when the
+    /// colour there is just a colour.
+    ///
+    /// It is only ever an id. What the colour actually IS lives in the open
+    /// document, and the document is asked every time a shape is drawn — this
+    /// preference outlives any one document, so an id from a document that is
+    /// closed means nothing and has to fall back to the flat paint beside it.
+    /// `PhotonzDocument.wearingArmedColorStyles` is where that happens.
+    public func colorStyleID(forShape shape: AnnotationShape, slot: ColorSlot) -> UUID? {
+        defaults(forShape: shape).colorStyleID(for: slot)
+    }
+
+    /// Points this shape's tool at a saved colour, or lets go of the one it was
+    /// holding. Painting the slot any other way lets go by itself.
+    public mutating func setColorStyleID(_ id: UUID?, slot: ColorSlot,
+                                         forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].setColorStyleID(id, for: slot)
+    }
+
+    /// The saved colour the tool in your hand is holding for a slot; nil for a
+    /// tool that draws no shape.
+    public func colorStyleID(for tool: Tool, slot: ColorSlot) -> UUID? {
+        guard let shape = tool.annotationShape else { return nil }
+        return colorStyleID(forShape: shape, slot: slot)
     }
 
     public mutating func setCornerRadius(_ radius: CGFloat, forShape shape: AnnotationShape) {
@@ -269,6 +307,24 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
     public var layerStyle: LayerStyle
     /// Caption text size for arrows (image pixels).
     public var captionFontSize: CGFloat
+    /// The saved colours this shape's tool is HOLDING, slot by slot. Same list
+    /// a layer keeps, for the same reason: a name and the colour it currently
+    /// paints, so the next shape can wear the name rather than a copy of it.
+    /// Nil, not an empty list, when the tool holds no names, so a preference
+    /// that has never seen one writes exactly what it always wrote.
+    public var colorStyles: [ColorStyleBinding]?
+
+    /// The saved colour a slot is holding, if any.
+    public func colorStyleID(for slot: ColorSlot) -> UUID? {
+        colorStyles?.first { $0.slot == slot }?.styleID
+    }
+
+    /// Points a slot at a saved colour, or lets go of the one it holds.
+    public mutating func setColorStyleID(_ id: UUID?, for slot: ColorSlot) {
+        var kept = (colorStyles ?? []).filter { $0.slot != slot }
+        if let id { kept.append(ColorStyleBinding(slot: slot, styleID: id)) }
+        colorStyles = kept.isEmpty ? nil : kept.sorted { $0.slot.rawValue < $1.slot.rawValue }
+    }
 
     public init(paint: Paint, strokeWidth: CGFloat, arrowheadScale: CGFloat,
                 fill: Paint? = nil, cornerRadius: CGFloat = 0,
@@ -303,7 +359,7 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         case paint = "colorHex"
         case strokeWidth, arrowheadScale
         case fill = "fillColorHex"
-        case cornerRadius, layerStyle, captionFontSize
+        case cornerRadius, layerStyle, captionFontSize, colorStyles
     }
 
     public init(from decoder: Decoder) throws {
@@ -322,6 +378,9 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         // `captionFontSize` postdates captions themselves.
         captionFontSize = try c.decodeIfPresent(CGFloat.self, forKey: .captionFontSize)
             ?? AnnotationContent.captionFontSizeDefault
+        // `colorStyles` postdates a tool being able to hold a saved colour at
+        // all; absent = holding none, which is what every older pref means.
+        colorStyles = try c.decodeIfPresent([ColorStyleBinding].self, forKey: .colorStyles)
     }
 
     /// The smart default for a shape: red strokes, yellow highlight (system
