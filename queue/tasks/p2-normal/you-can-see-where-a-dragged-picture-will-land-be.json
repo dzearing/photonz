@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1000,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T00:48:48.875Z",
-  "updated": "2026-09-04T01:00:20.053429Z",
+  "updated": "2026-09-04T01:01:52.987Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The placement rule is PhotonzDocument.placementForIncomingImage (Sources/PhotonzCore/Clipboard.swift), so the preview and the drop can share one call. CanvasView already has the machinery for a component drag: componentLanding + trackComponentDrag + refreshOverlays (Sources/Photonz/CanvasView.swift ~1129). The missing piece is the image size during draggingUpdated: read it off the file URL with CGImageSourceCopyPropertiesAtIndex (kCGImagePropertyPixelWidth/Height), no decode needed, cached per draggingSequenceNumber. Found while auditing the drop-placement task on 2026-09-03; the hold shot Scripts/playtest/drop-lands-here-walk.json takes (1-tile-in-the-air) shows the empty canvas this would fill.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-04T01:00:20.053429Z",
       "note": "audit: queue/audits/2026-09-03-drop-preview.json with three real captures."
+    },
+    {
+      "t": "2026-09-04T01:01:52.986Z",
+      "note": "Dragging a capture over the canvas now draws the exact box it will land in, plus a dashed outline of the screen it would join. Shared with the drop through placementForIncomingImage; size read from the file header (ImageCodec.pixelSize, 3 new tests) once per drag. Verified on the probe with Scripts/playtest/drop-preview-walk.json: every previewed box matches the landed layer frame exactly. Full suite green (2578). Audit: queue/audits/2026-09-03-drop-preview.json. Commit 7dc521f, pushed."
     }
   ],
-  "started": "2026-09-04T00:50:49.832Z"
+  "started": "2026-09-04T00:50:49.832Z",
+  "completed": "2026-09-04T01:01:52.987Z"
 }
