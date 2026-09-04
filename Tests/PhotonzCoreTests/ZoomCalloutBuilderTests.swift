@@ -127,4 +127,58 @@ struct ZoomCalloutBuilderTests {
         #expect(!Tool.zoomCallout.createsAnnotationByDrag)
         #expect(AnnotationStyles().content(for: .zoomCallout) == nil)
     }
+    // MARK: - The Zoom Callout section's own controls
+    //
+    // Magnification and shape are the only two things a callout has that no
+    // other layer does, and until 2026-09-04 they had nowhere on screen to be
+    // set: the popover holding them was reachable only while a drawing tool
+    // was in hand, and picking up a drawing tool drops the layer selection.
+    // They live in the dock now, and these are the rules the section reads.
+
+    @Test func magnificationRangeStartsAboveOne() {
+        // Below 1.25 a callout shows the picture at nearly its own size, which
+        // is a box saying nothing; six is where the source is a handful of
+        // pixels and the box is a wall.
+        #expect(ZoomCalloutBuilder.magnificationRange == 1.25...6)
+        #expect(ZoomCalloutBuilder.magnificationRange.contains(ZoomCalloutBuilder.defaultMagnification))
+    }
+
+    @Test func rangeStretchesToHoldWhatIsAlreadyThere() {
+        // Dragging a corner sets magnification from the frame, so it can land
+        // outside what the slider offers. A thumb pinned at the end beside a
+        // readout saying 9.4x reads as broken, so the range grows instead.
+        #expect(ZoomCalloutBuilder.magnificationRange(including: 9.4) == 1.25...9.4)
+        #expect(ZoomCalloutBuilder.magnificationRange(including: 0.5) == 0.5...6)
+        // A value already inside changes nothing.
+        #expect(ZoomCalloutBuilder.magnificationRange(including: 3) == ZoomCalloutBuilder.magnificationRange)
+    }
+
+    @Test func aBrokenMagnificationLeavesTheRangeAlone() {
+        #expect(ZoomCalloutBuilder.magnificationRange(including: .nan) == ZoomCalloutBuilder.magnificationRange)
+        #expect(ZoomCalloutBuilder.magnificationRange(including: .infinity) == ZoomCalloutBuilder.magnificationRange)
+    }
+
+    @Test func magnificationReadsAsATimesNumber() {
+        #expect(ZoomCalloutBuilder.magnificationLabel(2) == "2.0\u{00D7}")
+        #expect(ZoomCalloutBuilder.magnificationLabel(3.26) == "3.3\u{00D7}")
+        #expect(ZoomCalloutBuilder.magnificationLabel(4.5) == "4.5\u{00D7}")
+    }
+
+    @Test func calloutShapesSayTheirNames() {
+        #expect(ZoomCalloutShape.rectangle.title == "Rectangle")
+        #expect(ZoomCalloutShape.circle.title == "Circle")
+    }
+
+    @Test func aCalloutRingIsTheLayerOwnBorder() {
+        // Which is why the ring's colour has ONE home, the Border row in the
+        // Color section, and its thickness has one, the Border slider in
+        // Effects. Nothing about a callout needs a second copy of either.
+        let style = ZoomCalloutBuilder.defaultStyle
+        #expect(style.borderWidth > 0)
+        #expect(style.borderColorHex == "#FF3B30")
+        let layer = ZoomCalloutBuilder.layer(from: CGPoint(x: 20, y: 30),
+                                             to: CGPoint(x: 80, y: 90), canvas: canvas)!
+        #expect(layer.colorSlots == [.border])
+        #expect(layer.colorHex(for: .border) == "#FF3B30")
+    }
 }

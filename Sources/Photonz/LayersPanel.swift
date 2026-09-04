@@ -256,6 +256,10 @@ struct InspectorPanel: View {
                layer.isMainComponent || layer.isComponentInstance {
                 set.insert(.component)
             }
+            // A picked callout's own settings. Present whenever one is
+            // picked, the way Color and Effects are: what a callout magnifies
+            // is a property of the callout, not of the tool in your hand.
+            if layer.zoomCallout != nil { set.insert(.callout) }
             if layer.measure != nil { set.insert(.measure) }
             if layer.collage != nil { set.insert(.collage) }
         }
@@ -383,6 +387,10 @@ struct InspectorPanel: View {
             SelectionColorInspector()
         case .annotation:
             AnnotationInspector()
+        case .callout:
+            if let layer = selectedLayer, layer.zoomCallout != nil {
+                CalloutInspector(layer: layer)
+            }
         case .text:
             TextInspector()
         case .measure:
@@ -560,6 +568,11 @@ enum InspectorSectionID: String, CaseIterable {
     // see `inspector.sectionOrder.version`.
     case effects
     case annotation
+    // A picked zoom callout's own two settings, beside the shapes' own: how
+    // much it magnifies and whether it is a box or a circle. Its ring is the
+    // layer's border, so the ring's color stays in Color and its thickness
+    // stays in Effects, like every other layer's.
+    case callout
     case text
     case measure
     case collage
@@ -588,6 +601,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .component: "Component"
         case .color: "Color"
         case .annotation: "Annotation"
+        case .callout: "Zoom Callout"
         case .text: "Text"
         case .measure: "Measure"
         case .collage: "Collage"

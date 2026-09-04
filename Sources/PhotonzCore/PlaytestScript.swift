@@ -383,6 +383,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Size menu set to 14pt, and the Weight menu set to Bold. Both are menus
     /// in the dock, which a walk cannot reach with the pointer, so this is how
     /// a walk proves one pick reached every picked label.
+    /// The Zoom Callout section's own two controls, which live in the dock and
+    /// so cannot be reached with the pointer: pull Magnification to 4x the way
+    /// a slider drag does (preview, then one committed undo step), and switch
+    /// the Shape row to Circle.
+    case magnifyCallout, roundCallout
     case setTextSize, setTextWeight
     /// The same menus set the other way, so a walk can put the picked labels
     /// into a known state whatever the last walk left the new-text default at.

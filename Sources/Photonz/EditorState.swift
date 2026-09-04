@@ -2423,10 +2423,16 @@ final class EditorState {
 
     // MARK: - Zoom-callout inspector
 
-    /// The selected zoom-callout layer when the select tool is active — the
-    /// style popover becomes the callout inspector for it.
+    /// The picked zoom-callout layer, whatever tool is in hand.
+    ///
+    /// It used to insist on the select tool, back when these controls lived in
+    /// the tool bar's style popover and had to keep out of the way of the tool
+    /// you were holding. They are the Zoom Callout section in the dock now
+    /// (`CalloutInspector`), which is about the thing you picked rather than
+    /// the thing in your hand, so the section stays put the way Color and
+    /// Effects do.
     var selectedZoomCalloutLayer: Layer? {
-        guard activeTool == .select, let id = selectedLayerID,
+        guard let id = selectedLayerID,
               let layer = document?.layer(id: id), layer.zoomCallout != nil else { return nil }
         return layer
     }
@@ -2461,16 +2467,11 @@ final class EditorState {
         perform { $0.updateLayer(id: layer.id) { $0.content = .zoomCallout(callout) } }
     }
 
-    func setCalloutBorderColor(_ hex: String) {
-        guard let layer = selectedZoomCalloutLayer else { return }
-        perform { $0.updateLayer(id: layer.id) { $0.style.borderColorHex = hex } }
-        recordRecentColor(hex: hex)
-    }
-
-    func setCalloutBorderWidth(_ width: CGFloat) {
-        guard let layer = selectedZoomCalloutLayer else { return }
-        perform { $0.updateLayer(id: layer.id) { $0.style.borderWidth = width } }
-    }
+    // A callout's ring has no setter of its own. It IS the layer's border, so
+    // its colour goes through `setSelectionColor(slot: .border)` with every
+    // other colour and its width through the Effects Border slider with every
+    // other layer's — one control each, and the same one wherever you got to
+    // it from.
 
     /// Drops a live drag preview whose sprite no longer matches the layer
     /// (content edits, undo/redo). The canvas falls back to the last composite
@@ -2495,8 +2496,8 @@ final class EditorState {
 
     /// The single funnel for the shared recents list. Called from every COMMIT
     /// path (not preview): annotation color, per-layer annotation color, text
-    /// color, callout border color, and LayerStyle border/shadow. Malformed hex
-    /// is ignored by `RecentColors.record`.
+    /// color, and LayerStyle border/shadow (which is what a callout's ring
+    /// is). Malformed hex is ignored by `RecentColors.record`.
     func recordRecentColor(hex: String) {
         recentColors.record(hex: hex)
         if let data = try? JSONEncoder().encode(recentColors) {

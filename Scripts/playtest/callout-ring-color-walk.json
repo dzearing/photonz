@@ -1,0 +1,43 @@
+{
+  "out": "/tmp/photonz-playtest/callout-ring-color",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "drag", "from": [300, 300], "to": [520, 440], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-drawn", "note": "one callout drawn and picked: the dock holds a Zoom Callout section with Magnification and Shape, and the ring's colour is the Border row in Color" },
+    { "do": "snapshot", "name": "callout-1-drawn" },
+    { "do": "render", "name": "callout-1-red-ring" },
+
+    { "do": "action", "action": "magnifyCallout" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-magnified", "note": "Magnification pulled to 4x: the box grew around its centre and the readout follows" },
+    { "do": "snapshot", "name": "callout-2-magnified" },
+    { "do": "render", "name": "callout-2-four-times" },
+
+    { "do": "action", "action": "roundCallout" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "3-rounded", "note": "Shape switched to Circle" },
+    { "do": "snapshot", "name": "callout-3-rounded" },
+    { "do": "render", "name": "callout-3-circle" },
+
+    { "do": "action", "action": "paintSelectionBorderColor" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "4-repainted", "note": "the Border row in the Color section repaints the ring: the ONE home for the ring colour" },
+    { "do": "snapshot", "name": "callout-4-repainted" },
+    { "do": "render", "name": "callout-4-crimson-ring" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-undone", "note": "three undos put the colour, the shape and the magnification back, one step each" },
+    { "do": "render", "name": "callout-5-back-to-start" },
+    { "do": "snapshot", "name": "callout-5-undone" }
+  ]
+}

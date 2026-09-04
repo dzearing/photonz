@@ -9,6 +9,18 @@ extension Layer {
     }
 }
 
+extension ZoomCalloutShape {
+    /// What the Shape row calls this, in words. The row used to be two glyphs
+    /// in a popover; a box and a circle are easy enough to draw, but the dock
+    /// says its settings in words so a collapsed section can still be read.
+    public var title: String {
+        switch self {
+        case .rectangle: return "Rectangle"
+        case .circle: return "Circle"
+        }
+    }
+}
+
 /// Builds zoom-callout layers from completed drags and keeps their
 /// magnification honest through frame edits.
 public enum ZoomCalloutBuilder {
@@ -18,6 +30,27 @@ public enum ZoomCalloutBuilder {
     /// Sources smaller than this (either axis, document points) are stray
     /// clicks, not regions worth magnifying.
     public static let minimumSourceSide: CGFloat = 4
+
+    /// What the Magnification slider offers. Below 1.25 a callout shows the
+    /// picture at nearly its own size, which is a box saying nothing; past six
+    /// the source is a handful of pixels and the box is a wall.
+    public static let magnificationRange: ClosedRange<CGFloat> = 1.25...6
+
+    /// The slider's range with `value` guaranteed inside it.
+    ///
+    /// Dragging a callout's corner sets its magnification from the frame, so
+    /// the number can land outside what the slider offers. A thumb pinned at
+    /// the end beside a readout saying 9.4x reads as broken, so the range
+    /// stretches to hold what is already there instead.
+    public static func magnificationRange(including value: CGFloat) -> ClosedRange<CGFloat> {
+        guard value.isFinite else { return magnificationRange }
+        return min(magnificationRange.lowerBound, value)...max(magnificationRange.upperBound, value)
+    }
+
+    /// What the readout beside the slider says: one decimal and a times sign.
+    public static func magnificationLabel(_ value: CGFloat) -> String {
+        Double(value).formatted(.number.precision(.fractionLength(1))) + "\u{00D7}"
+    }
 
     /// What new callouts look like: a bordered, rounded, floating box. The
     /// border color matches the annotation default so the tools share one

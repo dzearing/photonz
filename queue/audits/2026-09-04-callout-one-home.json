@@ -1,0 +1,29 @@
+{
+  "feature": "A callout has one home for every part of it",
+  "epic": "ui-building",
+  "summary": "A zoom callout you draw is now a thing you can keep editing: a Zoom Callout section in the right hand panel sets how much it magnifies and whether it is a box or a circle. Neither of those could be reached at all before. Its ring keeps the one home it already had, the Border row in the Color section, and there is no longer a rival copy of it hiding in the tool bar.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Open a screenshot, press Z for Zoom Callout, and drag a box round something small." },
+    { "do": "Look down the right hand panel for the Zoom Callout section, under Effects.", "shot": "2026-09-04-callout-one-home-1.png" },
+    { "do": "Pull Magnification up to about 4x and watch the box grow around its middle." },
+    { "do": "Click Circle in the Shape row.", "shot": "2026-09-04-callout-one-home-2.png" },
+    { "do": "Click the swatch in the Color section's Border row and pick a different colour for the ring.", "shot": "2026-09-04-callout-one-home-3.png" },
+    { "do": "Pull the Border slider in Effects to make the ring thicker or take it away entirely." },
+    { "do": "Press Command Z three times and watch the colour, the shape and the size come back one step each." }
+  ],
+  "evaluate": [
+    "Is Zoom Callout where you looked for Magnification, or did you expect it higher up beside Position and Size?",
+    "Magnification and the W and H fields both resize the callout. Does having both feel like two views of one thing, or like two controls fighting?",
+    "Is Shape worth a row, or would you rather have picked box or circle while you were drawing it?",
+    "The ring's colour is in Color and its thickness is in Effects, both under the word Border. Does that split read cleanly, or do you want the ring in one place?",
+    "Nothing in the tool bar says anything about a callout while the Z tool is in your hand. Did you miss it there?"
+  ],
+  "rough": [
+    "Verified live in the probe app with the Screen Recording grant, so all three pictures are the window as a person sees it, not offscreen renders.",
+    "The task this came from said the ring colour could be set in two rival places. It could not: the tool bar half was unreachable code, because the popover holding it belongs to the tool in your hand and picking up a drawing tool clears the layer selection. What that code really cost was Magnification and Shape, which had nowhere to be at all. So the fix is the deletion the task asked for plus a home for the two controls that came off it.",
+    "Circle over a source that is not square draws a stadium, not a circle: the ring rounds by half the short side. That is how it has always rendered and is untouched here.",
+    "A callout picked alongside other layers shows this section for the callout only, the way Frame and Layout sections already do. Magnification over a mixed selection would not mean anything.",
+    "The word Border now appears twice in the panel for a callout, once in Color for the ring's colour and once in Effects for its width. That is the app wide pattern for every layer rather than anything about callouts, so it was left alone."
+  ]
+}

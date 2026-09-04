@@ -7631,3 +7631,51 @@ script-launched process focus, so the proof is the exact strings read off the
 live menu bar. The menu bar icon's drop-down was reasoned about rather than
 read — it is rebuilt every time it opens — and the audit asks for that one by
 hand.
+
+## 2026-09-04 — A callout has one home for every part of it
+
+The task said a zoom callout's ring colour could be set in two rival places, the
+tool bar swatch and the Border row in the Color section. Reproduced first, and
+it does not: with a callout picked there is exactly ONE ring colour on screen,
+the Border row. The tool bar swatch belongs to the TOOL in your hand, and
+`EditorState.setTool` clears `selectedLayerID` for every tool but select, fill
+and the marquees, so the only tools that open that popover cannot have a callout
+selected. Confirmed twice, in the code and in the probe: picking up the arrow
+tool with a callout selected dropped the selection and the swatch showed the
+arrow's own orange.
+
+What the dead branches actually cost was worse. That popover was the ONLY host
+of the Magnification slider and the rectangle/circle Shape buttons, so a callout
+could be drawn and then never made bigger and never made round.
+
+So: the deletion the task asked for, plus a home for the two controls that came
+off it. `CalloutInspector` is a new **Zoom Callout** section in the dock
+(`InspectorSectionID.callout`, between Effects and Shadow) holding Magnification
+and Shape. Every `selectedZoomCalloutLayer` branch is out of `EditorView`'s tool
+colour path and style popover, and `setCalloutBorderColor` /
+`setCalloutBorderWidth` are gone from `EditorState`: a callout's ring IS the
+layer's border, so its colour goes through `setSelectionColor(slot: .border)`
+with every other colour and its width through the Effects Border slider with
+every other layer's. `selectedZoomCalloutLayer` no longer insists on the select
+tool, because the section is about the thing you picked rather than the thing in
+your hand.
+
+Core, test first: `ZoomCalloutBuilder.magnificationRange`,
+`magnificationRange(including:)` (a callout resized by its corners can carry a
+magnification outside what the slider offers; the range stretches rather than
+pinning the thumb beside a readout it disagrees with), `magnificationLabel`, and
+`ZoomCalloutShape.title`. One more test pins the whole point of the task: a
+callout's only colour slot is `.border`.
+
+Two additive playtest actions, `magnifyCallout` and `roundCallout`, since the
+dock cannot be reached with a pointer from a walk.
+`Scripts/playtest/callout-ring-color-walk.json` draws one, pulls it to 4x,
+rounds it, repaints the ring from the Color section and undoes all three.
+`Scripts/test.sh` green (2789). Audit:
+`queue/audits/2026-09-04-callout-one-home.json`, three real screen captures.
+
+Left alone and said so in the audit: Circle over a non-square source draws a
+stadium (the ring rounds by half the short side, unchanged), and the word Border
+appears twice in the panel for a callout, once in Color for the ring's colour and
+once in Effects for its width, which is the app-wide pattern rather than anything
+about callouts.

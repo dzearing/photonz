@@ -669,6 +669,13 @@ private final class Run {
                 dragStyleSlider(editor, through: [0.9, 0.7, 0.55, 0.45]) { style, v in
                     style.opacity = v
                 }
+            case .magnifyCallout:
+                // Exactly what a pull on the Magnification slider does: live
+                // previews through the frame, one undo step on release.
+                editor.previewCalloutMagnification(4)
+                editor.commitCalloutMagnification()
+            case .roundCallout:
+                editor.setCalloutShape(.circle)
             case .setTextSize:
                 let ids = editor.textSelection.layerIDs
                 if !ids.isEmpty { editor.setTextStyle(ids: ids, fontSize: 14) }

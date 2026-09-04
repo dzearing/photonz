@@ -1540,12 +1540,15 @@ struct EditorView: View {
         editorState.activeTool == .text || selectedTextContent != nil
     }
 
-    /// The color the popover currently represents: the selected annotation's
-    /// or callout's, the selected/edited text's, or what the active tool draws.
+    /// The color the popover currently represents: the selected annotation's,
+    /// the selected/edited text's, or what the active tool draws.
+    ///
+    /// A zoom callout is never one of them. This popover belongs to the TOOL
+    /// in your hand, and the only tools that open it drop the layer selection
+    /// when they are picked up, so a callout could not be showing here even
+    /// when the code said it could. Its ring is the layer's own border and
+    /// lives in the Color and Effects sections with every other layer's.
     private var activeToolColorHex: String {
-        if let callout = editorState.selectedZoomCalloutLayer {
-            return callout.style.borderColorHex
-        }
         if let selected = selectedAnnotation {
             return selected.colorHex
         }
@@ -1559,12 +1562,11 @@ struct EditorView: View {
     }
 
     /// The same colour, gradient and all: what the tool in your hand is armed
-    /// with, or what the selected object is painted with. A callout's ring and
-    /// a text block's ink are drawn one flat colour by a different path, so
-    /// they come back flat here and never see the type row.
+    /// with, or what the selected object is painted with. A text block's ink is
+    /// laid down glyph by glyph by a different path, so it comes back flat here
+    /// and never sees the type row.
     private var activeToolPaint: Paint {
-        if editorState.selectedZoomCalloutLayer != nil || selectedTextContent != nil
-            || editorState.activeTool == .text {
+        if selectedTextContent != nil || editorState.activeTool == .text {
             return Paint(hex: activeToolColorHex)
         }
         if let selected = selectedAnnotation { return selected.paint }
@@ -1572,22 +1574,16 @@ struct EditorView: View {
             ?? Paint(hex: activeToolColorHex)
     }
 
-    /// Whether the swatch the toolbar opens can be armed with a gradient. The
-    /// slot has to be one a ramp can be drawn into AND the thing being painted
-    /// has to be one the shape rasterizer draws, which a zoom callout's ring is
-    /// not: four tiles that quietly do nothing are worse than no tiles.
-    private var toolColorAcceptsGradient: Bool {
-        editorState.selectedZoomCalloutLayer == nil && toolColorSlot.acceptsGradient
-    }
+    /// Whether the swatch the toolbar opens can be armed with a gradient: a
+    /// ramp has to be something the slot can hold, or four tiles that quietly
+    /// do nothing are worse than no tiles.
+    private var toolColorAcceptsGradient: Bool { toolColorSlot.acceptsGradient }
 
     /// Which of a layer's colours the toolbar's single swatch stands for.
     private var toolColorSlot: ColorSlot { showsTextControls ? .text : .stroke }
 
     /// Stroke width applies to stroke shapes only — highlight is a fill.
     private var showsStrokeWidthRow: Bool {
-        if editorState.selectedZoomCalloutLayer != nil {
-            return true
-        }
         if let selected = selectedAnnotation {
             return selected.shape != .highlight
         }
@@ -1602,14 +1598,12 @@ struct EditorView: View {
     }
 
     private var editedStrokeWidth: CGFloat {
-        editorState.selectedZoomCalloutLayer?.style.borderWidth
-            ?? selectedAnnotation?.strokeWidth
+        selectedAnnotation?.strokeWidth
             ?? editorState.annotationStyles.strokeWidth(for: editorState.activeTool)
     }
 
     /// The arrowhead-size row applies to arrows only.
     private var showsArrowheadRow: Bool {
-        if editorState.selectedZoomCalloutLayer != nil { return false }
         if let selected = selectedAnnotation { return selected.shape == .arrow }
         return editorState.activeTool == .arrow
     }
@@ -1671,9 +1665,6 @@ struct EditorView: View {
             }
             .disabled(borderOff)
             .opacity(borderOff ? 0.4 : 1)
-            if editorState.selectedZoomCalloutLayer != nil {
-                calloutInspector
-            }
         }
         .padding(16)
         .buttonStyle(.plain)
@@ -1683,52 +1674,10 @@ struct EditorView: View {
         // material carry the surface instead.
     }
 
-    /// Magnification + shape controls for the selected zoom callout. Color and
-    /// width reuse the shared swatch/dot rows above.
-    private var calloutInspector: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "plus.magnifyingglass")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-                Slider(value: Binding(
-                    get: { Double(editorState.selectedCalloutMagnification ?? 2) },
-                    set: { editorState.previewCalloutMagnification(CGFloat($0)) }),
-                       in: 1.25...6) { editing in
-                    if !editing { editorState.commitCalloutMagnification() }
-                }
-                Text(Double(editorState.selectedCalloutMagnification ?? 2)
-                    .formatted(.number.precision(.fractionLength(1))) + "×")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .frame(width: 34, alignment: .trailing)
-            }
-            HStack(spacing: 6) {
-                calloutShapeButton(.rectangle, "rectangle", "Rectangular callout")
-                calloutShapeButton(.circle, "circle", "Circular callout")
-            }
-        }
-        .frame(width: 220)
-    }
-
-    private func calloutShapeButton(_ shape: ZoomCalloutShape, _ symbol: String,
-                                    _ help: String) -> some View {
-        let isActive = editorState.selectedZoomCalloutLayer?.zoomCallout?.shape == shape
-        return Button {
-            editorState.setCalloutShape(shape)
-        } label: {
-            Image(systemName: symbol)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(isActive ? Color.white : Color.primary)
-                .frame(width: 28, height: 24)
-                .background {
-                    if isActive {
-                        RoundedRectangle(cornerRadius: 6).fill(Color.accentColor)
-                    }
-                }
-        }
-        .help(help)
-    }
+    // A callout's Magnification and Shape used to sit here, under a popover a
+    // picked callout can never open. They are the Zoom Callout section in the
+    // dock now (`CalloutInspector`), beside the Color and Effects rows that
+    // paint its ring.
 
     /// Font family / size / weight menus. Drives the new-text defaults for the
     /// text tool, or the selected text element's face/size/weight (13.1) — the
@@ -1782,17 +1731,13 @@ struct EditorView: View {
         return (TextStyles.fontSizes + [size]).sorted()
     }
 
-    /// Routes a committed color pick to the bucket the popover is editing:
-    /// the selected callout's border, the active/selected text, or the active
-    /// annotation. Every path records the shared recents list (13.2).
-    /// Where a pick from the toolbar's one colour row lands. A shape takes the
-    /// whole paint, so a gradient arms the tool; a callout's ring and a text
-    /// block's ink take the flat colour they can draw, which is why neither
-    /// was offered the type row in the first place.
+    /// Where a pick from the toolbar's one colour row lands: the
+    /// active/selected text, or the active annotation. Every path records the
+    /// shared recents list (13.2). A shape takes the whole paint, so a gradient
+    /// arms the tool; a text block's ink takes the flat colour it can draw,
+    /// which is why it was not offered the type row in the first place.
     private func applyPaint(_ paint: Paint) {
-        if editorState.selectedZoomCalloutLayer != nil {
-            editorState.setCalloutBorderColor(paint.hex)
-        } else if showsTextControls {
+        if showsTextControls {
             editorState.setTextColor(paint.hex)
         } else {
             editorState.setAnnotationPaint(paint)
@@ -1814,20 +1759,12 @@ struct EditorView: View {
                 get: { strokeWidthDraft ?? editedStrokeWidth },
                 set: { v in
                     strokeWidthDraft = v
-                    // Annotations preview live; callouts commit on release only
-                    // (no preview path, so live updates would spam undo).
-                    if editorState.selectedZoomCalloutLayer == nil {
-                        editorState.previewAnnotationRestyle(strokeWidth: v.rounded())
-                    }
+                    editorState.previewAnnotationRestyle(strokeWidth: v.rounded())
                 }
             ), in: AnnotationStyles.strokeWidthRange, onEditingChanged: { editing in
                 if !editing {
-                    let final = (strokeWidthDraft ?? editedStrokeWidth).rounded()
-                    if editorState.selectedZoomCalloutLayer != nil {
-                        editorState.setCalloutBorderWidth(final)
-                    } else {
-                        editorState.setAnnotationStrokeWidth(final)
-                    }
+                    editorState.setAnnotationStrokeWidth(
+                        (strokeWidthDraft ?? editedStrokeWidth).rounded())
                     strokeWidthDraft = nil
                 }
             })

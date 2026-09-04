@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 620,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T18:09:56.734Z",
-  "updated": "2026-09-04T06:55:48.301Z",
+  "updated": "2026-09-04T07:13:15.819Z",
   "deps": [],
   "blockedBy": [],
   "notes": "LayerPlacement offers the same five choices for every content kind. GroupFlow.span with .stretch sets the box height, which Layer.resized(to:) now overrides for text. The horizontal case became meaningful in a-label-grows-to-fit-what-it-says; the vertical one did not.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-04T07:13:03.596500Z",
       "note": "Verified live in the probe (Screen Recording granted). Scripts/playtest/text-fills-height-walk.json: label 80x21 in a 180-tall row -> pick Stretch in the real Layout menu -> 80x180 with Align down at middle -> pick Top -> back to 80x21. Audit queue/audits/2026-09-04-text-fills-height.json with three real window captures. Follow-up filed: a-layer-in-a-column-stack-is-not-offered-a-place."
+    },
+    {
+      "t": "2026-09-04T07:13:15.818Z",
+      "note": "Vertical Stretch on a text box now fills the height of what holds it, with the words placed by Align, instead of doing nothing. Layer.resized(to:fillingHeight:) keeps a height the container decided (GroupFlow for a row or grid, LayerScaling for a resized group or screen), never below what the words need; taking the fill back hands the height to the words again, since text has no height handle; the Height field and the menu's Follow row stopped saying untrue things. 10 new tests, full suite 2783 green, verified live in the probe with Screen Recording via Scripts/playtest/text-fills-height-walk.json. Audit: queue/audits/2026-09-04-text-fills-height.json. Committed 4e90422 and pushed."
     }
   ],
-  "started": "2026-09-04T06:55:48.300Z"
+  "started": "2026-09-04T06:55:48.300Z",
+  "completed": "2026-09-04T07:13:15.819Z"
 }
