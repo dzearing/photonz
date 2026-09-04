@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 640,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T21:14:17.809Z",
-  "updated": "2026-09-04T07:28:15.141Z",
+  "updated": "2026-09-04T07:35:17.154Z",
   "deps": [],
   "blockedBy": [],
   "notes": "TextInspector in Sources/Photonz/LayersPanel.swift. The menus are labelsHidden() Pickers; SelectionMenu now carries a .help() string but nothing visible. Options: a leading caption per row like the Effects sliders, or writing the mixed entry as the setting name (for example \"Mixed sizes\").\n\nDone: captions live in SelectionMenu (LayersPanel.swift) and in TextInspector.captioned for the align row. Walk: Scripts/playtest/type-menu-labels-walk.json (it depends on the probe's remembered text size being 24 pt; delete the probe's `textStyles` default first, and collapse Arrange/Position/Color/Effects so the Text section fits on screen).",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-04T07:35:02.559317Z",
       "note": "Audit: queue/audits/2026-09-04-type-menu-labels.json with two real window captures."
+    },
+    {
+      "t": "2026-09-04T07:35:17.153Z",
+      "note": "Font, Size, Weight, Across and Down each name themselves in a caption above the control in the Text section, so a menu reading Mixed says which setting differs. Sources/Photonz/LayersPanel.swift. Verified live in the probe with Scripts/playtest/type-menu-labels-walk.json (real screen captures); Scripts/test.sh 2789 tests pass. Audit: queue/audits/2026-09-04-type-menu-labels.json"
     }
   ],
-  "started": "2026-09-04T07:28:15.140Z"
+  "started": "2026-09-04T07:28:15.140Z",
+  "completed": "2026-09-04T07:35:17.154Z"
 }
