@@ -745,10 +745,24 @@ struct ComponentPropertyList: View {
                 if !rows.isEmpty {
                     Section(kind.label) {
                         ForEach(rows, id: \.layerID) { candidate in
-                            Button(candidate.menuLabel) {
-                                editorState.addComponentProperty(componentID: componentID,
-                                                                 target: candidate.layerID,
-                                                                 kind: kind)
+                            if kind == .color {
+                                // A colour row names the PART, because one box
+                                // has both a fill and an outline and a row
+                                // reading "Box" would not say which you were
+                                // about to hand to every copy.
+                                ForEach(candidate.colorSlots, id: \.self) { slot in
+                                    Button("\(candidate.pathLabel) \u{00B7} \(slot.selectionTitle)") {
+                                        editorState.addComponentProperty(componentID: componentID,
+                                                                         target: candidate.layerID,
+                                                                         kind: kind, slot: slot)
+                                    }
+                                }
+                            } else {
+                                Button(candidate.menuLabel) {
+                                    editorState.addComponentProperty(componentID: componentID,
+                                                                     target: candidate.layerID,
+                                                                     kind: kind)
+                                }
                             }
                         }
                     }
@@ -904,6 +918,8 @@ struct ComponentInstanceProperties: View {
             .labelsHidden()
             .controlSize(.small)
             .help("Only the shapes the original holds. A copy can never show something it does not define")
+        case .color:
+            InstanceColorKnob(instances: [instance], property: property)
         }
     }
 
@@ -920,6 +936,210 @@ struct ComponentInstanceProperties: View {
         .opacity(overridden.contains(property.id) ? 1 : 0)
         .disabled(!overridden.contains(property.id))
         .help("Follow the original again for this one")
+    }
+}
+
+/// A colour knob on a copy: the same swatch, the same picker and the same list
+/// of saved colours every other colour in the app gets, speaking for the copies
+/// it is given rather than for a layer.
+///
+/// Two controls and no more. The swatch IS the readout and the button: click it
+/// and the app's own picker opens on the colour this copy is wearing. Beside it
+/// is the palette menu, which is where a saved colour becomes the answer, so a
+/// copy can be "the danger one" rather than "the #CC2222 one" and stays right
+/// when that colour is edited later.
+///
+/// There is deliberately no Save as Style here. The picker this opens already
+/// offers it, and a second way to save inside a 264pt dock is a crowded row for
+/// an errand you do once.
+private struct InstanceColorKnob: View {
+    @Environment(EditorState.self) private var editorState
+    /// The copies this row answers for. One today; the shape is plural because
+    /// the reading already is, and Mixed is what it says when they differ.
+    let instances: [UUID]
+    let property: ComponentProperty
+
+    @State private var isHovering = false
+
+    private var slot: ColorSlot { property.slot ?? .fill }
+    private var selection: ColorStyleSelection {
+        editorState.componentColorSelection(instances: instances, property: property.id)
+    }
+    /// Only the saved colours kept for the part this knob paints, scoped the
+    /// same way the canvas row scopes them.
+    private var styles: [ColorStyle] {
+        editorState.componentColorStyles(instances: instances, property: property.id)
+    }
+    /// What this well answers to, so only one picker is ever open and a walk
+    /// can open this one without a pointer.
+    private var wellKey: String { "knob.\(property.id.uuidString)" }
+
+    var body: some View {
+        let selection = self.selection
+        if selection.isEmpty {
+            // The original has no colour in that part any more, so there is
+            // nothing for this copy to follow and nothing to set.
+            Text("No color")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .help("The original has no \(property.name.lowercased()) any more, "
+                      + "so there is nothing for this copy to change")
+            Spacer(minLength: 0)
+        } else {
+            well(selection)
+            if editorState.colorStylesEnabled { stylesMenu(selection) }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func well(_ selection: ColorStyleSelection) -> some View {
+        Button { editorState.openColorWell = wellKey } label: { label(selection) }
+            .buttonStyle(.plain)
+            // A readout and a control look alike sitting still, so the hairline
+            // firms up under the pointer: that is what says this one is worth
+            // clicking.
+            .onHover { isHovering = $0 }
+            .help(help(selection))
+            .accessibilityLabel("\(property.name) color")
+            // The same word every colour well in the panel answers to, its own
+            // knob saying which one: `press "Color" in "Fill"`.
+            .playtestControl("Color", detail: property.name)
+            .popover(isPresented: editorState.colorWellBinding(wellKey), arrowEdge: .top) {
+                ColorPickerContent(editorState: editorState,
+                                   paint: openingPaint(selection),
+                                   name: property.name,
+                                   slot: slot,
+                                   supportsOpacity: true,
+                                   supportsGradient: slot.acceptsGradient,
+                                   onClose: { editorState.openColorWell = nil },
+                                   // Live while the pointer is down, so the
+                                   // copy follows the drag; ONE step, and one
+                                   // recents entry, when it is let go of.
+                                   onPreview: { paint in
+                    editorState.previewInstanceColor(instances: instances,
+                                                     property: property.id, paint: paint)
+                }) { paint in
+                    editorState.setInstanceColor(instances: instances,
+                                                 property: property.id, paint: paint)
+                }
+            }
+    }
+
+    @ViewBuilder private func label(_ selection: ColorStyleSelection) -> some View {
+        if selection.reading == .mixed {
+            // A chip rather than bare text: the same height and hairline as the
+            // swatch it replaces, so a row that says Mixed still looks like a
+            // row with something to press.
+            Text(ColorStyleSelection.mixedText)
+                .font(.caption)
+                .foregroundStyle(isHovering ? AnyShapeStyle(.primary) : MixedLook.style)
+                .padding(.horizontal, 6)
+                .frame(height: 18)
+                .background(RoundedRectangle(cornerRadius: 4).fill(.quaternary))
+                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
+        } else {
+            PaintFill(paint: shownPaint(selection))
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                // Under a colour that can be see-through, so a translucent fill
+                // reads as translucent rather than as a paler one.
+                .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
+                .frame(width: 18, height: 18)
+                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
+        }
+    }
+
+    /// The saved-colour menu, the same three states the canvas row has: wearing
+    /// a name, wearing several, or wearing none.
+    @ViewBuilder private func stylesMenu(_ selection: ColorStyleSelection) -> some View {
+        let style = selection.boundStyleID.flatMap { id in
+            editorState.colorStyles.first { $0.id == id }
+        }
+        Menu {
+            if let style {
+                Section("Using \(style.name)") {
+                    Button("Edit \(style.name) in the Library") {
+                        editorState.selectLibraryItem(style.id.uuidString)
+                    }
+                    Button("Unlink") {
+                        editorState.unlinkInstanceColorStyle(instances: instances,
+                                                             property: property.id)
+                    }
+                }
+            }
+            if !styles.isEmpty {
+                Section(offerTitle) {
+                    ForEach(styles) { option in
+                        Button {
+                            editorState.setInstanceColorStyle(instances: instances,
+                                                              property: property.id,
+                                                              styleID: option.id)
+                        } label: {
+                            Label {
+                                Text(option.name)
+                            } icon: {
+                                Image(systemName: option.id == style?.id
+                                      ? "checkmark.circle.fill" : "circle.fill")
+                            }
+                        }
+                    }
+                }
+            } else if !editorState.colorStyles.isEmpty {
+                // There ARE saved colours, they are just kept for other parts.
+                Section("Your saved colors are for other parts") {
+                    Button("Change what one is for in the Library") {
+                        editorState.showColorStyleShelf()
+                    }
+                }
+            } else {
+                Text("No saved colors yet")
+            }
+        } label: {
+            if let style {
+                HStack(spacing: 3) {
+                    Image(systemName: "swatchpalette")
+                    Text(style.name)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+            } else {
+                Image(systemName: "swatchpalette")
+            }
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .help(style.map { "This copy uses the saved color \($0.name)" }
+              ?? "Use a saved color for this, so editing that color moves every copy that points at it")
+    }
+
+    /// What the list of saved colours is headed. It names the part, so a short
+    /// list reads as scoped rather than as colours having gone missing.
+    private var offerTitle: String {
+        let noun = property.name.lowercased()
+        return noun == "color" ? "Saved colors" : "Saved colors for \(noun)"
+    }
+
+    /// The paint the swatch draws: whatever is in flight during a drag, else
+    /// what the copies are wearing.
+    private func shownPaint(_ selection: ColorStyleSelection) -> Paint {
+        editorState.previewedInstanceColor(instances: instances, property: property.id)
+            ?? selection.members.first?.paint ?? Paint(hex: "#FFFFFF")
+    }
+
+    /// The colour the picker opens on: the one they share, so opening a
+    /// gradient shows you the gradient rather than flattening it on the click.
+    private func openingPaint(_ selection: ColorStyleSelection) -> Paint {
+        selection.savablePaint ?? selection.members.first?.paint ?? Paint(hex: "#FFFFFF")
+    }
+
+    private var edge: Color { .primary.opacity(isHovering ? 0.55 : 0.25) }
+
+    private func help(_ selection: ColorStyleSelection) -> String {
+        guard selection.count > 1 else {
+            return "Sets this copy\u{2019}s \(property.name.lowercased()). "
+                + "The original, and every copy that has not been given one, keeps following it"
+        }
+        return "Sets the \(property.name.lowercased()) of all \(selection.count) of them, in one step"
     }
 }
 

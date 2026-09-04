@@ -505,11 +505,21 @@ extension PhotonzDocument {
         guard let index = colorStyles.firstIndex(where: { $0.id == styleID }) else { return 0 }
         colorStyles[index].paint = paint
         let style = colorStyles[index]
+        // Worked out before the walk, because a copy's answer names a knob and
+        // only the originals know which colour that knob paints.
+        let knobs = componentColorKnobSlots
         var repainted = 0
         mapLayers { layer in
             for binding in layer.colorStyleBindings ?? [] where binding.styleID == styleID {
                 layer.setPaint(style.paint(for: binding.slot), for: binding.slot)
                 repainted += 1
+            }
+            // A copy that answered a colour knob with this name follows it too.
+            // The answer keeps the colour beside the name so it stays honest
+            // the day the name is deleted.
+            layer.updateColorAnswers { property, answer in
+                guard answer.styleID == styleID, let slot = knobs[property] else { return nil }
+                return ComponentColorAnswer(paint: style.paint(for: slot), styleID: styleID)
             }
         }
         return repainted
@@ -531,6 +541,12 @@ extension PhotonzDocument {
         mapLayers { layer in
             for binding in layer.colorStyleBindings ?? [] where binding.styleID == id {
                 layer.unbindColorStyle(for: binding.slot)
+            }
+            // A copy that answered a colour knob with this name keeps the
+            // colour and simply owns it again, exactly as a layer does.
+            layer.updateColorAnswers { _, answer in
+                guard answer.styleID == id else { return nil }
+                return ComponentColorAnswer(paint: answer.paint)
             }
         }
     }
@@ -578,6 +594,16 @@ extension PhotonzDocument {
                                 uniquingKeysWith: { first, _ in first })
         var broken = 0
         mapLayers { layer in
+            // A copy's answer naming a colour this document does not have is
+            // the same false claim one level up, and lets go the same way: the
+            // colour it is wearing stays, the name goes. `deleteColorStyle`
+            // does this on the way out; this is the net under a file that
+            // arrived with the claim already broken.
+            layer.updateColorAnswers { _, answer in
+                guard let styleID = answer.styleID, styles[styleID] == nil else { return nil }
+                broken += 1
+                return ComponentColorAnswer(paint: answer.paint)
+            }
             guard let bindings = layer.colorStyleBindings else { return }
             for binding in bindings {
                 // Paint-deep, and against what the style paints IN THAT SLOT:

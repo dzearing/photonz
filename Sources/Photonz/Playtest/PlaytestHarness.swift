@@ -799,6 +799,8 @@ private final class Run {
             case .makeComponent: editor.makeComponent()
             case .exposeWording: editor.exposeFirstProperty(kind: .text)
             case .exposeChoice: editor.exposeFirstProperty(kind: .variant)
+            case .exposeColor: editor.exposeFirstProperty(kind: .color)
+            case .knobUsesSavedColor: editor.answerFirstColorKnobWithSavedColor()
             case .cycleChoice: editor.cycleInstanceChoice()
             case .makeChoice: editor.makeChoice()
             case .detachInstance: editor.detachInstance()

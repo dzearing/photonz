@@ -588,6 +588,7 @@ final class EditorState {
         editingCaptionLayerID = nil
         stylePreview = nil
         paintPreview = nil
+        knobPaintPreview = nil
         thumbnailCache = [:]
         shelfThumbnails = [:]
         dragPreviewGeneration += 1
@@ -4589,6 +4590,9 @@ final class EditorState {
     /// The document stays the opening colour for the whole gesture; only the
     /// canvas and the row's chip follow.
     private var paintPreview: (slot: ColorSlot, ids: [UUID], paint: Paint)?
+    /// The same thing for a colour knob on a copy, keyed by the knob rather
+    /// than by a slot: the row paints the copies' answers, not their layers.
+    private var knobPaintPreview: (instances: [UUID], property: UUID, paint: Paint)?
 
     /// What a colour row's chip shows: the paint in flight while a drag is
     /// happening, the document's otherwise. Without it the little swatch under
@@ -4624,9 +4628,10 @@ final class EditorState {
     /// would keep showing a colour the document does not have until the next
     /// edit. A no-op the rest of the time, which is nearly always.
     func discardPickerPreview() {
-        guard paintPreview != nil || stylePreview != nil else { return }
+        guard paintPreview != nil || stylePreview != nil || knobPaintPreview != nil else { return }
         paintPreview = nil
         stylePreview = nil
+        knobPaintPreview = nil
         rerender()
     }
 
@@ -4769,10 +4774,14 @@ final class EditorState {
     var componentPropertyAwaitingName: UUID?
 
     @discardableResult
-    func addComponentProperty(componentID: UUID, target: UUID, kind: ComponentPropertyKind) -> UUID? {
+    func addComponentProperty(componentID: UUID, target: UUID, kind: ComponentPropertyKind,
+                              slot: ColorSlot? = nil) -> UUID? {
         guard componentsEnabled else { return nil }
         var added: UUID?
-        perform { added = $0.addComponentProperty(componentID: componentID, target: target, kind: kind) }
+        perform {
+            added = $0.addComponentProperty(componentID: componentID, target: target,
+                                            kind: kind, slot: slot)
+        }
         componentPropertyAwaitingName = added
         return added
     }
@@ -4829,6 +4838,80 @@ final class EditorState {
     func clearInstanceOverride(instance: UUID, property: UUID) {
         guard componentsEnabled else { return }
         perform(announcing: false) { $0.clearInstanceOverride(instance: instance, property: property) }
+    }
+
+    // MARK: - A colour knob on a copy
+
+    /// What one colour knob row shows: the same `ColorStyleSelection` a colour
+    /// row on the canvas shows, so the two can never disagree about whether a
+    /// colour is shared, named or Mixed.
+    func componentColorSelection(instances: [UUID], property: UUID) -> ColorStyleSelection {
+        guard componentsEnabled, let document else {
+            return ColorStyleSelection(slot: .fill, members: [], selectionCount: 0, capableCount: 0)
+        }
+        return document.componentColorSelection(instances: instances, property: property)
+    }
+
+    /// The saved colours a knob row offers: the ones kept for the part it
+    /// paints, exactly as the canvas row scopes them.
+    func componentColorStyles(instances: [UUID], property: UUID) -> [ColorStyle] {
+        guard let slot = document?.componentColorSlot(instance: instances.first ?? UUID(),
+                                                      property: property) else { return [] }
+        return colorStyles(for: slot)
+    }
+
+    /// One frame of a colour drag on a knob: paints the copies and renders,
+    /// recording nothing, so the picture follows the pull instead of appearing
+    /// when you let go.
+    func previewInstanceColor(instances: [UUID], property: UUID, paint: Paint) {
+        guard componentsEnabled, var doc = document, !instances.isEmpty else { return }
+        knobPaintPreview = (instances, property, paint)
+        guard doc.setInstanceColor(instances: instances, property: property,
+                                   answer: ComponentColorAnswer(paint: paint)) > 0 else { return }
+        // A copy is refilled from its original by the sync, which normally runs
+        // inside `History.perform`; a preview records nothing, so it has to ask
+        // for the refill itself or the copy would not repaint at all.
+        doc.syncComponentInstances()
+        submit(doc)
+    }
+
+    /// The paint a knob row's swatch shows: the one in flight while a drag is
+    /// happening, so the chip under the picker keeps up with the canvas.
+    func previewedInstanceColor(instances: [UUID], property: UUID) -> Paint? {
+        guard let preview = knobPaintPreview, preview.property == property,
+              preview.instances == instances else { return nil }
+        return preview.paint
+    }
+
+    /// Letting go: ONE undo step for the whole gesture, however many copies it
+    /// reached, and one entry in the recents row.
+    func setInstanceColor(instances: [UUID], property: UUID, paint: Paint) {
+        guard componentsEnabled else { return }
+        knobPaintPreview = nil
+        perform(announcing: false) {
+            _ = $0.setInstanceColor(instances: instances, property: property,
+                                    answer: ComponentColorAnswer(paint: paint))
+        }
+        recordRecentColor(hex: paint.hex)
+    }
+
+    /// Answers a knob with a saved colour, so editing that colour later moves
+    /// every copy pointing at it.
+    func setInstanceColorStyle(instances: [UUID], property: UUID, styleID: UUID) {
+        guard componentsEnabled, colorStylesEnabled else { return }
+        knobPaintPreview = nil
+        perform(announcing: false) {
+            _ = $0.setInstanceColorStyle(instances: instances, property: property, styleID: styleID)
+        }
+    }
+
+    /// Lets a knob go back to a colour of its own, keeping what it is wearing.
+    /// Not the same as Revert, which puts the copy back on the original.
+    func unlinkInstanceColorStyle(instances: [UUID], property: UUID) {
+        guard componentsEnabled, colorStylesEnabled else { return }
+        perform(announcing: false) {
+            _ = $0.unlinkInstanceColorStyle(instances: instances, property: property)
+        }
     }
 
     // MARK: - Editing a piece inside a copy
@@ -5014,7 +5097,22 @@ final class EditorState {
               let componentID = document?.layer(id: id)?.componentID,
               let candidate = componentPropertyCandidates(componentID: componentID)
                   .first(where: { $0.kinds.contains(kind) }) else { return }
-        addComponentProperty(componentID: componentID, target: candidate.layerID, kind: kind)
+        // A colour knob names WHICH colour, so a walk asking for one takes the
+        // first the candidate offers, which is a shape's fill.
+        addComponentProperty(componentID: componentID, target: candidate.layerID, kind: kind,
+                             slot: kind == .color ? candidate.colorSlots.first : nil)
+    }
+
+    /// Answers the selected copy's first colour knob with the first saved
+    /// colour kept for that part. The list of saved colours is a menu in the
+    /// dock, which a walk cannot open, so this is the way in.
+    func answerFirstColorKnobWithSavedColor() {
+        guard componentsEnabled, let id = actionableLayerIDs.first,
+              let componentID = document?.layer(id: id)?.instanceOf,
+              let property = componentProperties(of: componentID).first(where: { $0.kind == .color }),
+              let style = componentColorStyles(instances: [id], property: property.id).first
+        else { return }
+        setInstanceColorStyle(instances: [id], property: property.id, styleID: style.id)
     }
 
     /// Moves the selected copy's first choice knob on to its next option, the

@@ -1484,3 +1484,6 @@
 {"t":"2026-09-04T22:08:50.028Z","ev":"task_resequenced","id":"the-font-menu-stops-changing-width-with-the-fami","from":1250,"to":6}
 {"t":"2026-09-04T22:09:00.926Z","ev":"objectives_updated","by":"manager","change":"measure-redline sub-epics epic-uehjr1, alignment-checks and spec-export sent back to later: every task under each is done and audited. measure-redline itself stays now for its one blocked task. Focus stays ui-building with ui-components and ui-layout holding the work."}
 {"t":"2026-09-04T22:09:50.714Z","ev":"manager","filed":8,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-09-04-1509.md"}
+{"t":"2026-09-04T22:10:11.191Z","ev":"manager_pass","exit":0,"ready":9}
+{"t":"2026-09-04T22:10:11.222Z","ev":"task_started","id":"a-copy-can-be-given-its-own-color","title":"A copy can be given its own color","priority":"p1-high"}
+{"t":"2026-09-04T22:32:33.865Z","ev":"task_created","id":"the-knobs-panel-speaks-for-several-copies-at-onc","priority":"p2-normal","title":"The knobs panel speaks for several copies at once"}

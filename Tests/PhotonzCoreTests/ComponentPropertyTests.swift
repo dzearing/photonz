@@ -46,8 +46,11 @@ struct ComponentPropertyTests {
         let c = withComponent()
         let candidates = c.doc.componentPropertyCandidates(componentID: c.componentID)
         let kinds = Dictionary(uniqueKeysWithValues: candidates.map { ($0.layerID, Set($0.kinds)) })
-        #expect(kinds[c.labelID] == [.text, .visible])
-        #expect(kinds[c.boxID] == [.visible])
+        // ...and every one of them has a colour to offer, which is its own
+        // kind (`ComponentColorKnobTests` is where the colours themselves are
+        // pinned down).
+        #expect(kinds[c.labelID] == [.text, .visible, .color])
+        #expect(kinds[c.boxID] == [.visible, .color])
         #expect(kinds[c.controlID] == [.visible, .variant])
         // The original itself is not a knob on itself: a copy's own visibility
         // is already the copy's.
@@ -164,7 +167,8 @@ struct ComponentPropertyTests {
         _ = c.doc.addComponentProperty(componentID: c.componentID, target: c.labelID, kind: .text)
         let candidates = c.doc.componentPropertyCandidates(componentID: c.componentID)
         let label = candidates.first { $0.layerID == c.labelID }
-        #expect(label?.kinds == [.visible])
+        // Its wording is spoken for; showing it and painting it are not.
+        #expect(label?.kinds == [.visible, .color])
     }
 
     @Test func wordingIsRefusedOnALayerWithNoWording() {

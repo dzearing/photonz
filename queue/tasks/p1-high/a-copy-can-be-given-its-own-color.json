@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:37.991Z",
-  "updated": "2026-09-04T22:08:49.801Z",
+  "updated": "2026-09-04T22:16:00.005152Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective gap, not a rough line. Sources/PhotonzCore/ComponentProperties.swift:28 holds exactly three knob kinds today (text, visible, variant) and ComponentPropertyValue matches; docs/design/ui-building.md line 552 lists this as a deliberate first-version limit, and the epic promises create once, reuse everywhere, override safely. Reuse ColorStyles.swift and ColorStyleSelection.swift for the value and the mixed reading rather than writing a second one. Panel rows: Sources/Photonz/ComponentPanel.swift.",
@@ -33,6 +33,31 @@
     {
       "t": "2026-09-04T22:08:49.800Z",
       "note": "seq 190 -> 10"
+    },
+    {
+      "t": "2026-09-04T22:10:11.222Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T22:16:00.005152Z",
+      "note": "adversarial review (before building): (1) 'Over several copies the row reads Mixed' cannot be reached in the app today. The Component section only renders for a SINGLE selected layer (LayersPanel.swift:426), so no knob of any kind speaks for several copies. Building Mixed for colour alone would be a state nobody can ever see. Shortest version that keeps the value: put the mixed reading in the model, reusing ColorStyleSelection, tested; file the multi-copy knobs panel as a follow-up covering all four knob kinds, because Mixed for a wording field, a switch and a choice is its own UX question."
+    },
+    {
+      "t": "2026-09-04T22:16:00.005152Z",
+      "note": "(2) a colour knob has to name a SLOT, not just a layer: one rectangle has both a fill and an outline. So the Add menu row says which, and the knob's default name is the slot's own word (Fill, Outline), never the kind's word (Colour), or every colour knob on an unnamed shape reads the same."
+    },
+    {
+      "t": "2026-09-04T22:16:00.005152Z",
+      "note": "(3) the answer must be able to BE a saved name, not only a colour, or 'give this copy its own colour' and 'keep your design system' pull apart. So the answer carries a paint AND an optional style pointer, exactly the way a layer does; that is also what makes deleting a saved colour leave every copy the colour it is wearing."
+    },
+    {
+      "t": "2026-09-04T22:16:00.005152Z",
+      "note": "(4) cut as decorative: no Save as Style button on the knob row. The picker it opens already offers saving, and a second save affordance crowds a 264pt dock."
+    },
+    {
+      "t": "2026-09-04T22:16:00.005152Z",
+      "note": "(5) what the plan did not cover: a fill switched OFF in the original. Only a slot that has a colour can be exposed, and a knob whose colour later goes away sits out rather than dragging every copy's answer down with it."
     }
-  ]
+  ],
+  "started": "2026-09-04T22:10:11.221Z"
 }

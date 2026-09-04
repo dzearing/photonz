@@ -560,9 +560,12 @@ real limit of the slices above, not an oversight.
   and available everywhere, and dropping one copies it into your document.
 - **Styles are per document too**, and have no token layer underneath, so there
   is no light and dark resolution of a named color yet.
-- **Only three kinds of exposed property**: wording, whether a part shows, and a
-  choice among shapes the main already contains. No numbers, no colors, no
-  images as properties.
+- **Four kinds of exposed property**: wording, whether a part shows, a choice
+  among shapes the main already contains, and a COLOUR (one slot of one layer:
+  its fill, outline, ink or border). No numbers and no images as properties.
+  A colour answer may be a raw paint or a saved colour, so a copy can be "the
+  danger one" and follow every later edit to that name; the knobs panel still
+  speaks for one copy at a time, so there is no Mixed reading on screen yet.
 - **Detach is one way.** There is no re-attach; undo is the way back.
 - **A main cannot be made from a group that already contains a main.** An
   instance inside a main is fine and updates correctly; promoting a group that

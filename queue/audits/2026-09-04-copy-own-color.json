@@ -1,0 +1,30 @@
+{
+  "feature": "A copy can be given its own color",
+  "epic": "ui-components",
+  "summary": "An original can now offer one of its colors as a knob, so one button can produce a red copy, a copy painted with a saved color, and a copy that still follows the original, all still the same component. Before this, a copy could only be told what to say, what to show, and which shape to be.",
+  "setup": "Photonz Next. Components and saved colors are on by default; nothing to turn on.",
+  "try": [
+    { "do": "Draw a rectangle, add a text layer over it, select both and press Command G, then Layer > Make Component. Name it Button." },
+    { "do": "In the Component section, open the Add menu and choose Color > Rectangle · Fill. The knob arrives named Fill, for the part it paints." },
+    { "do": "Drop three copies from the Library shelf onto the canvas.", "shot": "2026-09-04-copy-own-color-2-copy.png" },
+    { "do": "Select the first copy and click the swatch on its Fill row. Pick any color and close the picker.", "shot": "2026-09-04-copy-own-color-4-own-colour.png" },
+    { "do": "Select the second copy, open its Fill picker, press Save style, name it Brand and press Save. Close the picker." },
+    { "do": "On that same copy, open the palette menu beside the swatch and choose Brand.", "shot": "2026-09-04-copy-own-color-7-named-colour.png" },
+    { "do": "Double click into the original's rectangle and repaint its Fill from the Color section.", "shot": "2026-09-04-copy-own-color-9-original-repainted.png" },
+    { "do": "Press the back arrow at the end of the first copy's Fill row to put it back on the original." }
+  ],
+  "evaluate": [
+    "The knob arrives called Fill rather than Rectangle. On a shape with both a fill and an outline, is the part the right thing to name it after?",
+    "The copy's Fill row is a swatch and a palette menu, the same pair every color row in the app has. Does it read as the same control you already know?",
+    "After the last step the original is red, one copy kept the color you picked, one stayed on Brand, and one turned red with the original. Is that the split you expected without being told?",
+    "Saving a color from inside the knob's own picker, then picking it from the menu beside it, is two steps. Should the knob row offer Save as Style directly instead?",
+    "A copy answering with a saved color shows the name where the swatch's neighbour usually is. Is the name legible enough at that width, or does it want the row to itself?"
+  ],
+  "rough": [
+    "The knobs panel still speaks for ONE copy. Select two copies and the whole Component section disappears, so there is no Mixed color row on screen yet even though the model computes one and is tested. Filed as \"The knobs panel speaks for several copies at once\", which is where Mixed for a switch and for a choice menu also gets decided.",
+    "The task asked for Mixed in this slice. It was built in the model and left out of the app on purpose: a Mixed color row nobody can ever reach is not a feature, and Mixed for the other three knob kinds is a real UX question that should not be settled inside a color task.",
+    "No Save as Style button on the knob row, deliberately. The picker it opens already offers saving and a second save affordance crowds a 264pt dock, but it does mean naming a color from a copy is two moves.",
+    "Only a color that is actually there can be exposed. A fill switched off in the original is not offered as a knob, and a knob whose color is switched off later reads \"No color\" and sits out rather than dropping every copy's answer.",
+    "Screenshots here are real window captures from a scripted playtest (Screen Recording was granted), not offscreen renders."
+  ]
+}

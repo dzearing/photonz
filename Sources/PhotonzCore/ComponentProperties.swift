@@ -10,17 +10,23 @@ import Foundation
 /// inside a copy is still the original's, so the only things a copy owns are
 /// its answers.
 ///
-/// There are three kinds of knob and they are deliberately the same shape as
+/// There are four kinds of knob and they are deliberately the same shape as
 /// each other: every one of them is one fact about one layer inside the
 /// original.
 ///
 /// - **wording** (`.text`) — what a text layer says.
 /// - **show or hide** (`.visible`) — whether a layer is drawn at all.
 /// - **a choice** (`.variant`) — which ONE of a group's children is drawn.
+/// - **a colour** (`.color`) — what one PART of a layer is painted: its fill,
+///   its outline, its ink, its border.
 ///
 /// The third is what makes "an instance can never show something the original
 /// does not define" true rather than aspirational: a choice can only land on a
 /// layer the group already holds, so there is nowhere for a copy to drift to.
+///
+/// The fourth is the only one that names something narrower than a layer, and
+/// it has to: one box has both a fill and an outline, so a colour knob carries
+/// the slot it paints alongside the layer it reaches.
 
 // MARK: - The knob
 
@@ -32,6 +38,9 @@ public enum ComponentPropertyKind: String, Hashable, Codable, Sendable, CaseIter
     case visible
     /// Which one of a group's children shows.
     case variant
+    /// What one part of a layer is painted. The part itself is the knob's
+    /// `slot`, because a box has more than one colour.
+    case color
 
     /// What the knob is called where a person meets it. Plain words: nobody
     /// arrives knowing what "boolean" or "variant" means.
@@ -40,6 +49,7 @@ public enum ComponentPropertyKind: String, Hashable, Codable, Sendable, CaseIter
         case .text: return "Wording"
         case .visible: return "Show or hide"
         case .variant: return "Choice"
+        case .color: return "Color"
         }
     }
 
@@ -51,6 +61,9 @@ public enum ComponentPropertyKind: String, Hashable, Codable, Sendable, CaseIter
         case .text: return "Wording"
         case .visible: return "Show"
         case .variant: return "Shape"
+        // Never reached: a colour knob is named after the part it paints, so
+        // `defaultPropertyName` answers for it before this does.
+        case .color: return "Color"
         }
     }
 
@@ -60,6 +73,7 @@ public enum ComponentPropertyKind: String, Hashable, Codable, Sendable, CaseIter
         case .text: return "text"
         case .visible: return "show"
         case .variant: return "choice"
+        case .color: return "color"
         }
     }
 }
@@ -75,13 +89,48 @@ public struct ComponentProperty: Hashable, Codable, Sendable, Identifiable {
     /// The layer inside the original this knob reaches. A copy's matching
     /// layer is derived from it, so this id is the one stable handle.
     public var target: UUID
+    /// WHICH colour, on a `.color` knob. Nil for every other kind, and absent
+    /// from anything written before colour knobs existed, so an old document
+    /// decodes exactly as it did.
+    public var slot: ColorSlot?
 
-    public init(id: UUID = UUID(), name: String, kind: ComponentPropertyKind, target: UUID) {
+    public init(id: UUID = UUID(), name: String, kind: ComponentPropertyKind, target: UUID,
+                slot: ColorSlot? = nil) {
         self.id = id
         self.name = name
         self.kind = kind
         self.target = target
+        self.slot = kind == .color ? slot : nil
     }
+}
+
+/// A copy's answer to a colour knob: what it is painted, and the saved colour
+/// it came from when it came from one.
+///
+/// It is the same two facts a LAYER carries, and deliberately so. The paint is
+/// what gets drawn, so nothing downstream has to learn what a style is; the
+/// pointer is the extra fact that says where the colour came from, so editing
+/// that saved colour finds its way back here, and deleting it leaves the copy
+/// exactly the colour it was wearing.
+public struct ComponentColorAnswer: Hashable, Codable, Sendable {
+    /// What this copy paints in the slot. Kept fresh while it points at a
+    /// saved colour, so it is an honest answer the moment the name goes away.
+    public var paint: Paint
+    /// The saved colour it points at, or nil for a colour of its own.
+    public var styleID: UUID?
+
+    public init(paint: Paint, styleID: UUID? = nil) {
+        self.paint = paint
+        self.styleID = styleID
+    }
+
+    public init(colorHex: String, styleID: UUID? = nil) {
+        self.init(paint: Paint(hex: colorHex), styleID: styleID)
+    }
+
+    /// The one flat colour it stands for, which is what a row that can only
+    /// print one colour says.
+    public var colorHex: String { paint.hex }
 }
 
 /// A copy's answer to one knob.
@@ -92,6 +141,8 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
     /// id rather than the copy's own means the answer survives the copy being
     /// duplicated, and it can be checked against what the original holds.
     case variant(UUID)
+    /// What one part of the copy is painted, and the saved colour it points at.
+    case color(ComponentColorAnswer)
 
     /// The kind of knob this answer fits, so an answer can never land on a
     /// knob it makes no sense for.
@@ -100,6 +151,7 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .text: return .text
         case .visible: return .visible
         case .variant: return .variant
+        case .color: return .color
         }
     }
 
@@ -118,7 +170,12 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         return nil
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, text, visible, variant }
+    public var colorValue: ComponentColorAnswer? {
+        if case .color(let answer) = self { return answer }
+        return nil
+    }
+
+    private enum CodingKeys: String, CodingKey { case kind, text, visible, variant, color }
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
@@ -127,6 +184,7 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .text(let string): try c.encode(string, forKey: .text)
         case .visible(let flag): try c.encode(flag, forKey: .visible)
         case .variant(let id): try c.encode(id, forKey: .variant)
+        case .color(let answer): try c.encode(answer, forKey: .color)
         }
     }
 
@@ -136,6 +194,7 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .text: self = .text(try c.decode(String.self, forKey: .text))
         case .visible: self = .visible(try c.decode(Bool.self, forKey: .visible))
         case .variant: self = .variant(try c.decode(UUID.self, forKey: .variant))
+        case .color: self = .color(try c.decode(ComponentColorAnswer.self, forKey: .color))
         }
     }
 }
@@ -163,17 +222,23 @@ public struct ComponentPropertyCandidate: Hashable, Sendable {
     /// Only the kinds that mean something for this layer, and only the ones it
     /// is not already exposed as.
     public var kinds: [ComponentPropertyKind]
+    /// The colours this layer could still offer, in the order the inspector
+    /// lists them. `.color` appears in `kinds` exactly while this is not empty,
+    /// because "already exposed" is about ONE colour and not about the layer:
+    /// exposing a box's fill leaves its outline on offer.
+    public var colorSlots: [ColorSlot]
     /// What an unnamed text layer says, so a menu of rows all reading "Text" is
     /// still a menu you can choose from. Nil for anything the author named,
     /// where the name already says which layer this is.
     public var words: String?
 
     public init(layerID: UUID, name: String, path: [String], kinds: [ComponentPropertyKind],
-                words: String? = nil) {
+                colorSlots: [ColorSlot] = [], words: String? = nil) {
         self.layerID = layerID
         self.name = name
         self.path = path
         self.kinds = kinds
+        self.colorSlots = colorSlots
         self.words = words
     }
 
@@ -214,6 +279,17 @@ extension Layer {
     var canBeVariant: Bool {
         guard let group, !isComponentInstance, group.children.count > 1 else { return false }
         return true
+    }
+
+    /// The colours of this layer that could become knobs: the slots it has AND
+    /// has something in.
+    ///
+    /// A fill that has been switched off is not a colour anybody can expose,
+    /// because there is nothing there for a copy to follow. The row is still
+    /// the way back to a fill on the layer itself; it is only as a KNOB that an
+    /// absent colour means nothing.
+    var knobColorSlots: [ColorSlot] {
+        colorSlots.filter { paint(for: $0) != nil }
     }
 }
 
@@ -260,10 +336,17 @@ extension PhotonzDocument {
                 kinds.append(.visible)
                 if layer.canBeVariant { kinds.append(.variant) }
                 kinds.removeAll { taken.contains(PropertyKey(target: layer.id, kind: $0)) }
+                // Colours are counted one at a time: a box whose fill is
+                // already a knob still has an outline to offer.
+                let slots = layer.knobColorSlots.filter {
+                    !taken.contains(PropertyKey(target: layer.id, kind: .color, slot: $0))
+                }
+                if !slots.isEmpty { kinds.append(.color) }
                 let here = path + [layer.name]
                 if !kinds.isEmpty {
                     found.append(ComponentPropertyCandidate(layerID: layer.id, name: layer.name,
                                                             path: here, kinds: kinds,
+                                                            colorSlots: slots,
                                                             words: Self.menuWords(of: layer)))
                 }
                 // A copy's insides belong to ITS original, so there is nothing
@@ -288,9 +371,15 @@ extension PhotonzDocument {
     /// Whether a layer inside the original could take this kind of knob, which
     /// is the check `addComponentProperty` makes and the menu asks first.
     public func canAddComponentProperty(componentID: UUID, target: UUID,
-                                        kind: ComponentPropertyKind) -> Bool {
-        componentPropertyCandidates(componentID: componentID)
-            .first { $0.layerID == target }?.kinds.contains(kind) ?? false
+                                        kind: ComponentPropertyKind,
+                                        slot: ColorSlot? = nil) -> Bool {
+        guard let candidate = componentPropertyCandidates(componentID: componentID)
+            .first(where: { $0.layerID == target }) else { return false }
+        guard kind == .color else { return slot == nil && candidate.kinds.contains(kind) }
+        // "The colour" of a box that has two is not a thing, so a colour knob
+        // with no part named is refused rather than guessed at.
+        guard let slot else { return false }
+        return candidate.colorSlots.contains(slot)
     }
 
     /// Exposes a layer inside an original as a knob, and returns the knob's id.
@@ -307,14 +396,17 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func addComponentProperty(componentID: UUID, target: UUID,
                                               kind: ComponentPropertyKind,
+                                              slot: ColorSlot? = nil,
                                               name: String? = nil) -> UUID? {
-        guard canAddComponentProperty(componentID: componentID, target: target, kind: kind),
+        guard canAddComponentProperty(componentID: componentID, target: target,
+                                      kind: kind, slot: slot),
               let main = mainComponent(componentID: componentID),
               let targetLayer = layer(id: target) else { return nil }
         let chosen = ComponentNaming.normalized(name)
-            ?? freshPropertyName(base: Self.defaultPropertyName(for: targetLayer, kind: kind),
+            ?? freshPropertyName(base: Self.defaultPropertyName(for: targetLayer, kind: kind,
+                                                                slot: slot),
                                  taken: main.componentProperties.map(\.name))
-        let property = ComponentProperty(name: chosen, kind: kind, target: target)
+        let property = ComponentProperty(name: chosen, kind: kind, target: target, slot: slot)
         if kind == .variant { settleVariant(target: target) }
         updateLayer(id: main.id) { layer in
             guard var group = layer.group else { return }
@@ -377,11 +469,12 @@ extension PhotonzDocument {
     public func componentDefaultValue(componentID: UUID, propertyID: UUID) -> ComponentPropertyValue? {
         guard let property = componentProperty(componentID: componentID, propertyID: propertyID),
               let target = layer(id: property.target) else { return nil }
-        return Self.value(of: property.kind, on: target)
+        return Self.value(of: property.kind, slot: property.slot, on: target)
     }
 
     /// One layer's own answer to a kind of knob.
-    static func value(of kind: ComponentPropertyKind, on layer: Layer) -> ComponentPropertyValue? {
+    static func value(of kind: ComponentPropertyKind, slot: ColorSlot? = nil,
+                      on layer: Layer) -> ComponentPropertyValue? {
         switch kind {
         case .text:
             guard case .text(let content) = layer.content else { return nil }
@@ -392,6 +485,14 @@ extension PhotonzDocument {
             guard let shown = layer.children.first(where: \.isVisible) ?? layer.children.first
             else { return nil }
             return .variant(shown.id)
+        case .color:
+            // A colour that has been switched off since the knob was made
+            // leaves the knob with nothing to read. It stays on the list rather
+            // than being dropped, because dropping it would throw away every
+            // copy's answer over a checkbox somebody may be about to tick back.
+            guard let slot, let paint = layer.paint(for: slot) else { return nil }
+            return .color(ComponentColorAnswer(paint: paint,
+                                               styleID: layer.colorStyleID(for: slot)))
         }
     }
 
@@ -411,7 +512,13 @@ extension PhotonzDocument {
     ///
     /// Every one of these is a starting point. The name is a field on the
     /// original's list, so anything better is one rename away.
-    static func defaultPropertyName(for layer: Layer, kind: ComponentPropertyKind) -> String {
+    /// A COLOUR knob is the exception, and always takes the part it paints:
+    /// "Fill", "Outline", "Text", "Border". One box has two colours, so a knob
+    /// named after the box says nothing about which of them it turns, and the
+    /// rest of the app already names colours this way.
+    static func defaultPropertyName(for layer: Layer, kind: ComponentPropertyKind,
+                                    slot: ColorSlot? = nil) -> String {
+        if kind == .color { return slot?.selectionTitle ?? kind.defaultName }
         if ComponentNaming.isPlaceholderLayerName(layer.name) { return kind.defaultName }
         return layer.name
     }
@@ -443,12 +550,16 @@ extension PhotonzDocument {
     private struct PropertyKey: Hashable {
         var target: UUID
         var kind: ComponentPropertyKind
-        init(target: UUID, kind: ComponentPropertyKind) {
+        /// Which colour, on a colour knob, so "already exposed that way" means
+        /// one colour rather than the whole layer.
+        var slot: ColorSlot?
+        init(target: UUID, kind: ComponentPropertyKind, slot: ColorSlot? = nil) {
             self.target = target
             self.kind = kind
+            self.slot = slot
         }
         init(_ property: ComponentProperty) {
-            self.init(target: property.target, kind: property.kind)
+            self.init(target: property.target, kind: property.kind, slot: property.slot)
         }
     }
 }
@@ -487,6 +598,17 @@ extension PhotonzDocument {
         guard let copy = layer(id: instance), let componentID = copy.instanceOf, !copy.isLocked,
               let property = componentProperty(componentID: componentID, propertyID: propertyID),
               property.kind == value.kind else { return false }
+        if case .color(let answer) = value {
+            // A colour the original does not have is nothing to override: the
+            // knob's own slot is empty, so painting here would give the copy a
+            // fill the original never defined.
+            guard componentDefaultValue(componentID: componentID, propertyID: propertyID) != nil
+            else { return false }
+            // ...and a name this document has never heard of is a claim nothing
+            // can honour, so it is refused rather than stored.
+            guard let styleID = answer.styleID else { return true }
+            return colorStyle(id: styleID) != nil
+        }
         guard case .variant(let option) = value else { return true }
         return componentVariantOptions(componentID: componentID, propertyID: propertyID)
             .contains { $0.id == option }
@@ -559,19 +681,40 @@ extension PhotonzDocument {
         let answers = Dictionary(overrides.map { ($0.property, $0.value) },
                                  uniquingKeysWith: { _, last in last })
         for property in properties {
-            guard let value = answers[property.id], value.kind == property.kind else { continue }
+            guard var value = answers[property.id], value.kind == property.kind else { continue }
+            if case .color(let answer) = value {
+                // A colour that has gone from the original since the knob was
+                // made has nothing for the copy to override.
+                guard let slot = property.slot,
+                      layer(id: property.target)?.paint(for: slot) != nil else { continue }
+                // What a saved colour paints TODAY, so a copy pointing at one
+                // follows every edit to it without storing the colour twice.
+                value = .color(resolvedColorAnswer(answer, slot: slot))
+            }
             let derived = ComponentIdentity.derived(instance: instance, source: property.target)
             Self.mutate(id: derived, in: &children, contents: contents) { layer, holder in
-                Self.apply(value, to: &layer, instance: instance, contents: holder)
+                Self.apply(value, to: &layer, instance: instance, slot: property.slot,
+                           contents: holder)
             }
         }
+    }
+
+    /// What a colour answer actually paints: the saved colour it points at
+    /// while that colour is still on the shelf, and the colour it is wearing
+    /// once that name is gone.
+    func resolvedColorAnswer(_ answer: ComponentColorAnswer,
+                             slot: ColorSlot) -> ComponentColorAnswer {
+        guard let styleID = answer.styleID, let style = colorStyle(id: styleID) else {
+            return ComponentColorAnswer(paint: answer.paint)
+        }
+        return ComponentColorAnswer(paint: style.paint(for: slot), styleID: styleID)
     }
 
     /// One answer written onto one layer inside a copy. `contents` is how the
     /// group around this layer lines its contents up, which is what decides
     /// which edge a label grows from when its wording gets longer.
     private static func apply(_ value: ComponentPropertyValue, to layer: inout Layer,
-                              instance: UUID, contents: LayerPlacement?) {
+                              instance: UUID, slot: ColorSlot?, contents: LayerPlacement?) {
         switch value {
         case .text(let string):
             guard case .text(var content) = layer.content else { return }
@@ -598,6 +741,17 @@ extension PhotonzDocument {
                 group.children[index].isVisible = group.children[index].id == wanted
             }
             layer.content = .group(group)
+        case .color(let answer):
+            guard let slot else { return }
+            layer.setPaint(answer.paint, for: slot)
+            // The binding travels with the colour, so a copy wearing a saved
+            // name looks exactly like a layer wearing it: the Library counts
+            // it as a use, and the next edit to that name reaches it.
+            if let styleID = answer.styleID {
+                layer.bindColorStyle(styleID, for: slot)
+            } else {
+                layer.unbindColorStyle(for: slot)
+            }
         }
     }
 

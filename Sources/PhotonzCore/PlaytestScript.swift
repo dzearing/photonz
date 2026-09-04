@@ -404,6 +404,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The same for a choice: expose the first group inside the selected
     /// original that holds alternatives.
     case exposeChoice
+    /// The same for a colour: expose the first colour the selected original has
+    /// to offer, which is the fill of the first shape inside it.
+    case exposeColor
+    /// Answers the selected copy's first colour knob with the document's first
+    /// saved colour kept for that part. The list is a menu in the dock, which a
+    /// walk cannot open, so this is how the named-colour path gets photographed.
+    case knobUsesSavedColor
     /// Save as Style on the selected layer's first painted color (Next,
     /// `next-styles`, step D8): opens the name field under that color row. The
     /// button is in the dock, which a walk cannot reach with the pointer, so

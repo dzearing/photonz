@@ -8582,3 +8582,44 @@ Verified in the probe app: `Scripts/playtest/surface-in-a-stack-walk.json`
 (new) and `inert-rule-walk.json` as a regression. 3133 tests pass.
 
 Next: back to the queue.
+
+## 2026-09-04 — a copy can be given its own color
+
+A colour is the fourth kind of knob an original can expose (`.color`),
+alongside wording, show or hide, and a choice. It is the only one that names
+something narrower than a layer, because it has to: one box has both a fill
+and an outline, so `ComponentProperty` now carries a `ColorSlot` and the Add
+menu lists one row per colour ("Rectangle · Fill"), not one per layer. Its
+default name is the part it paints ("Fill", "Outline", "Text", "Border")
+rather than the layer's name, which is the rest of the app's convention and
+the only naming that tells two knobs on one shape apart.
+
+A copy's answer is `ComponentColorAnswer`: a `Paint` AND an optional saved
+colour to point at, which is exactly the two facts a LAYER carries. That is
+what makes "give this copy its own colour" and "keep your design system" both
+true at once: a copy pointing at Brand follows every later edit to Brand, and
+the day Brand is deleted the copy is already wearing the right colour and
+simply owns it again. `setColorStylePaint` and `deleteColorStyle` keep the
+answers up to date inside the walk they already make, and
+`reconcileColorStyles` is the net under a file whose claim arrived broken.
+
+The reading over several copies reuses `ColorStyleSelection` rather than
+inventing a second one, so a colour row on a copy's panel and a colour row on
+the canvas can never disagree about whether a colour is shared, named or
+Mixed.
+
+Cut on purpose, and recorded in the audit: the knobs panel still speaks for
+ONE copy (the Component section is gated on a single selected layer), so the
+Mixed reading is tested in the model and not yet on screen. Building it for
+colour alone would have been a state nobody could reach, and Mixed for a
+wording field, a switch and a choice menu is a real UX question of its own.
+Filed as "The knobs panel speaks for several copies at once".
+
+Verified in the probe app: `Scripts/playtest/copy-own-color-walk.json` (new)
+drives the whole loop with real window captures — expose, three copies, one
+given its own colour, one pointed at a saved colour, then the original
+repainted so the untouched copy follows and the other two do not. 3157 tests
+pass. No composite-path change: the extra work is one nil check per layer in
+a walk that already ran.
+
+Next: back to the queue.
