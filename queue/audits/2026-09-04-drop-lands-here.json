@@ -1,0 +1,28 @@
+{
+  "feature": "A dropped capture lands where you let go of it",
+  "epic": "ui-building",
+  "summary": "Dragging a picture onto the canvas now leaves it centred on the point you let go of, instead of jumping to the middle of the canvas. A picture too big for the canvas is still scaled down to fit, but it sits around the drop point rather than dead centre.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. You need at least one capture on the Library shelf (open the right hand dock, Library, Media).",
+  "try": [
+    { "do": "Make a new blank canvas, roughly 900 by 700." },
+    { "do": "Open the Library shelf in the right hand dock and pick Media." },
+    { "do": "Drag a small capture off the shelf and let go near the top right of the white canvas.", "shot": "2026-09-04-drop-lands-here-1-tile.png" },
+    { "do": "Read X and Y in Position & Size: the picture is centred on the spot you let go of." },
+    { "do": "Drag the same file in from a Finder window and let go somewhere else. It lands the same way.", "shot": "2026-09-04-drop-lands-here-2-three-drops.png" },
+    { "do": "Drag one more in and let go a few points inside the top left corner: it is nudged wholly onto the canvas, never half off." },
+    { "do": "Drag in a screenshot bigger than the canvas and let go high up: it is scaled down to fit, sitting high rather than centred.", "shot": "2026-09-04-drop-lands-here-3-fitted.png" },
+    { "do": "Press Command V with an image on the clipboard: a paste has no pointer, so it still arrives in the middle." }
+  ],
+  "evaluate": [
+    "When you let go, does the picture appear where your eye already was?",
+    "Nudging a picture wholly onto the canvas when you let go over the edge: helpful, or would you rather it hung off the edge exactly where you dropped it?",
+    "A picture too big for the canvas can only shift a little before it runs out of room. Does that feel right, or does it read as the old jump-to-centre?",
+    "Should a paste keep landing in the middle, or should it land wherever you last clicked?",
+    "Nothing is drawn while the picture is in the air, so you cannot see how big it will land until you let go. How much does that bother you?"
+  ],
+  "rough": [
+    "There is no landing outline while a capture is being dragged over the canvas. A component dragged off the shelf draws the box it will fill; a picture draws nothing, so the size is a surprise until you let go. Filed as its own task rather than bundled in here.",
+    "Letting go over the canvas edge nudges the picture wholly onto the canvas instead of leaving it half off. That is a judgement call, made to match what already happens when you drop onto a screen. Moving a layer afterwards is not clamped, so you can still push it off the edge by hand.",
+    "Verified live in the probe app with Screen Recording granted: the three shots are real window captures, not offscreen renders."
+  ]
+}

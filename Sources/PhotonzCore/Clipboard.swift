@@ -39,6 +39,16 @@ public enum PastePlacement {
                       y: box.midY - placed.height / 2,
                       width: placed.width, height: placed.height)
     }
+
+    /// A box of `size` centred on `point`, nudged just far enough to sit
+    /// wholly inside `box`. This is what letting go of something means: it
+    /// lands under the pointer, and never half over an edge where half of it
+    /// would be invisible.
+    public static func frame(of size: CGSize, centeredOn point: CGPoint, in box: CGRect) -> CGRect {
+        CGRect(x: min(max(point.x - size.width / 2, box.minX), box.maxX - size.width),
+               y: min(max(point.y - size.height / 2, box.minY), box.maxY - size.height),
+               width: size.width, height: size.height)
+    }
 }
 
 extension PhotonzDocument {
@@ -61,27 +71,24 @@ extension PhotonzDocument {
     /// canvas coordinates.
     ///
     /// `point` is where the pointer let go, in canvas coordinates, or nil for
-    /// a paste, which has no pointer. Landing on a frame means landing IN it:
-    /// the image is sized to fit that screen — a picture that arrives four
-    /// times too big and clipped to its middle is not what anybody meant — and
-    /// it lands under the pointer, nudged just far enough to sit wholly on the
-    /// screen rather than half over its edge. A paste, having no pointer,
-    /// lands in the middle of the screen it falls on.
+    /// a paste, which has no pointer.
     ///
-    /// Everywhere else — bare canvas, or a document with no frames at all —
-    /// this is the placement it has always been.
+    /// Letting go of something puts it where you let go, so a dropped picture
+    /// lands centred on the pointer — the same way a component dragged off the
+    /// shelf does. The box it lands in is the screen under the pointer, or the
+    /// whole canvas when there is no screen there. Either way it is sized to
+    /// fit that box (a picture that arrives four times too big and clipped to
+    /// its middle is not what anybody meant) and nudged just far enough to sit
+    /// wholly inside it rather than half over an edge.
+    ///
+    /// A paste has no pointer, so it keeps arriving in the middle of whatever
+    /// box it falls on.
     public func placementForIncomingImage(size: CGSize, at point: CGPoint? = nil) -> CGRect {
-        let onCanvas = PastePlacement.frame(forImageOf: size, canvas: canvasSize)
-        let probe = point ?? CGPoint(x: onCanvas.midX, y: onCanvas.midY)
-        guard let frameID = frameID(under: probe), let box = canvasBounds(of: frameID) else {
-            return onCanvas
-        }
+        let canvas = CGRect(origin: .zero, size: canvasSize)
+        let probe = point ?? CGPoint(x: canvas.midX, y: canvas.midY)
+        let box = frameID(under: probe).flatMap { canvasBounds(of: $0) } ?? canvas
         let fitted = PastePlacement.frame(forImageOf: size, in: box)
         guard let point else { return fitted }
-        let placed = CGRect(x: point.x - fitted.width / 2, y: point.y - fitted.height / 2,
-                            width: fitted.width, height: fitted.height)
-        return CGRect(x: min(max(placed.minX, box.minX), box.maxX - fitted.width),
-                      y: min(max(placed.minY, box.minY), box.maxY - fitted.height),
-                      width: fitted.width, height: fitted.height)
+        return PastePlacement.frame(of: fitted.size, centeredOn: point, in: box)
     }
 }

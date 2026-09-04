@@ -414,20 +414,37 @@ private final class Run {
                  state: describe())
 
         case .dropImage(let file, let at):
-            // Straight to the same call the canvas's drag destination makes, so
-            // a walk can land a Finder drop without synthesising a drag session.
-            let editor = try requireEditor()
-            _ = try requireCanvas()
+            // Through the canvas's own drag destination, carrying the file the
+            // way the Finder carries it, so a walk lands a Finder drop on the
+            // very calls a pointer makes — the same ones a tile off the Library
+            // shelf arrives on.
+            let canvas = try requireCanvas()
+            let window = try requireWindow()
             let url = file.hasPrefix("/")
                 ? URL(fileURLWithPath: file)
                 : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
             guard FileManager.default.fileExists(atPath: url.path) else {
                 throw Failure(description: "there is no file at \(url.path) to drop")
             }
-            let p = try documentPoint(at)
-            editor.addImageLayerOrOpen(at: url, droppedAt: p)
+            guard let provider = NSItemProvider(contentsOf: url) else {
+                throw Failure(description: "\(url.lastPathComponent) cannot be carried on a drag")
+            }
+            let board = try await PlaytestPanelDrag.pasteboard(from: provider, named: "file")
+            let viewPoint = try self.viewPoint(at)
+            let info = PlaytestDraggingInfo(pasteboard: board,
+                                            location: canvas.convert(viewPoint, to: nil),
+                                            window: window)
+            guard canvas.draggingEntered(info) != [] else {
+                throw Failure(description: "the canvas refused the file \(url.lastPathComponent)")
+            }
+            _ = canvas.draggingUpdated(info)
+            guard canvas.performDragOperation(info) else {
+                throw Failure(description: "the canvas would not take the file \(url.lastPathComponent)")
+            }
             await sleep(0.3)
-            note(number, step.name, "\(url.lastPathComponent) at \(short(p)) document", state: describe())
+            note(number, step.name,
+                 "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))",
+                 state: describe())
 
         case .snapshot(let name):
             // A sheet is its own window on top of the editor's, so while one is

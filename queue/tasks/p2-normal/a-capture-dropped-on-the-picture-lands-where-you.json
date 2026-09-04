@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 990,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T00:38:16.399Z",
-  "updated": "2026-09-04T00:38:16.399Z",
+  "updated": "2026-09-04T00:39:24.408Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the panel-reach walk on 2026-09-03. PhotonzDocument.placementForIncomingImage (Sources/PhotonzCore/Clipboard.swift:73) ignores the drop point entirely when there is no frame under it: it returns PastePlacement.frame(forImageOf:canvas:), which centres and fits. With a frame under the point it DOES honour the point (clamped to the frame). So the fix is the no-frame branch. Reproduce: Scripts/playtest.sh with a dragTile step onto a blank canvas; the layer reads X 412 Y 0 W 617 H 1024 for a drop aimed at 500,400.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-04T00:38:16.399Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T00:39:24.408Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T00:49:58.293209Z",
+      "note": "Adversarial review before building: the idea is right and needs no new UI. A component dragged off the same shelf already lands centred on the pointer, so the picture was the odd one out, not the mock. Shortest version: make the canvas just another box in the rule the frame branch already uses, rather than adding a second placement path."
+    },
+    {
+      "t": "2026-09-04T00:49:58.293209Z",
+      "note": "One judgement call taken rather than filed: letting go over the canvas edge nudges the picture wholly onto the canvas, the same way a drop onto a screen already does, instead of leaving it half off where it would be invisible in an export. Recorded in the audit for the user to disagree with."
+    },
+    {
+      "t": "2026-09-04T00:49:58.293209Z",
+      "note": "Unified PhotonzDocument.placementForIncomingImage on one rule (fit to the box under the pointer, centre on the pointer, nudge inside), with PastePlacement.frame(of:centeredOn:in:) as the shared piece. Tests first; 2575 tests green."
+    },
+    {
+      "t": "2026-09-04T00:49:58.293209Z",
+      "note": "Playtest dropImage now goes through the canvas's own drag destination with a file URL pasteboard, so a walk proves the Finder routing, not just the placement maths."
+    },
+    {
+      "t": "2026-09-04T00:49:58.293209Z",
+      "note": "Verified live on the probe (Screen Recording granted, real window captures): shelf tile at 640,200 -> X 480 Y 100; Finder file at 200,520 -> X 40 Y 420; let go at 10,10 -> X 0 Y 0; 1440x960 on a 900x700 canvas -> fitted 900x600 at Y 80, not the old centred Y 50. paste-onto-frame-walk still lands on the screen unchanged."
+    },
+    {
+      "t": "2026-09-04T00:49:58.293209Z",
+      "note": "Review after building: the only thing that still feels clumsy is that nothing is drawn while the picture is in the air, so its size is a surprise until you let go. Filed as you-can-see-where-a-dragged-picture-will-land-be rather than bundled in."
     }
-  ]
+  ],
+  "started": "2026-09-04T00:39:24.408Z"
 }

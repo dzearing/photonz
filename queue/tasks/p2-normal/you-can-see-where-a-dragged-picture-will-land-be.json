@@ -1,0 +1,28 @@
+{
+  "id": "you-can-see-where-a-dragged-picture-will-land-be",
+  "title": "You can see where a dragged picture will land before you let go",
+  "goal": "While you drag a capture over the canvas, nothing tells you where it will land or how big it will be, so the size is a surprise. Draw the box it would fill under the pointer while the drag is in the air, the way a component dragged off the shelf already does.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1000,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T00:48:48.875Z",
+  "updated": "2026-09-04T00:48:48.876Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The placement rule is PhotonzDocument.placementForIncomingImage (Sources/PhotonzCore/Clipboard.swift), so the preview and the drop can share one call. CanvasView already has the machinery for a component drag: componentLanding + trackComponentDrag + refreshOverlays (Sources/Photonz/CanvasView.swift ~1129). The missing piece is the image size during draggingUpdated: read it off the file URL with CGImageSourceCopyPropertiesAtIndex (kCGImagePropertyPixelWidth/Height), no decode needed, cached per draggingSequenceNumber. Found while auditing the drop-placement task on 2026-09-03; the hold shot Scripts/playtest/drop-lands-here-walk.json takes (1-tile-in-the-air) shows the empty canvas this would fill.",
+  "acceptance": [
+    "Dragging a capture over the canvas draws an outline of exactly the box it would land in",
+    "The outline follows the pointer, and snaps to the screen under the pointer when there is one",
+    "The outline disappears the moment the drag leaves the canvas or is let go",
+    "A scripted walk photographs the outline while the drag is still in the air"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T00:48:48.876Z",
+      "note": "created (manual)"
+    }
+  ]
+}

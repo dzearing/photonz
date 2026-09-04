@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/drop-lands-here",
+  "seed": "The shelf tile comes from the Screenshots folder, so before running: cp \"Scripts/playtest/fixtures/Photonz drop probe.png\" ~/Pictures/Screenshots/ (and delete it again afterwards).",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showLibrary" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "focus", "field": "Search media" },
+    { "do": "type", "text": "Photonz drop probe" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "0-shelf" },
+
+    { "do": "dragTile", "tile": "Photonz drop probe", "to": [640, 200], "hold": "1-tile-in-the-air" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-tile-landed", "note": "a 320x200 capture dragged off the Library shelf and let go at 640,200 should read X 480 Y 100 W 320 H 200: centred on the point, not on the canvas" },
+    { "do": "snapshot", "name": "1-tile-landed" },
+    { "do": "render", "name": "1-tile-landed-doc" },
+
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [200, 520] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-finder-drop", "note": "the same file let go at 200,520 the way the Finder hands it over should read X 40 Y 420: a shelf tile and a Finder file land the same way" },
+    { "do": "snapshot", "name": "2-finder-drop" },
+
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [10, 10] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-nudged-in", "note": "let go 10 points inside the top left corner, it is nudged wholly onto the canvas: X 0 Y 0, never half off the edge" },
+    { "do": "snapshot", "name": "3-nudged-in" },
+    { "do": "render", "name": "3-three-drops-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "action", "action": "undo" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "dropImage", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [450, 380] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-too-big-fitted", "note": "a 1440x960 capture on a 900x700 canvas is still scaled down to fit (900x600), but sits around the drop point: X 0 Y 80, not the old centred Y 50" },
+    { "do": "snapshot", "name": "4-too-big-fitted" },
+    { "do": "render", "name": "4-too-big-doc" }
+  ]
+}

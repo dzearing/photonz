@@ -7099,3 +7099,39 @@ Audit and both picture pairs are in `queue/audits/`.
 100% zoom the committed words are visibly softer than the draft that was
 just on screen. Pre-existing, filed as
 `a-placed-label-stays-crisp-when-you-zoom-in`.
+
+## 2026-09-03 — A capture dropped on the picture lands where you let go of it
+
+Dragging a screenshot off the Library shelf onto the canvas did not put it
+where you let go: it jumped to the middle of the picture, scaled to fit.
+Everywhere else in the app, and for a component dragged off the same shelf,
+letting go of something puts it where you let go.
+
+`PhotonzDocument.placementForIncomingImage` had two branches and only one of
+them looked at the pointer. A picture landing ON a screen was already fitted
+to that screen, centred on the pointer, and nudged wholly inside it; a picture
+landing on bare canvas ignored the pointer entirely. The two are now one rule
+with the canvas as the outermost box: fit to the box under the pointer (a
+screen, or the whole canvas), centre on the pointer, nudge just far enough to
+sit wholly inside. A paste has no pointer, so it still arrives in the middle.
+
+`PastePlacement.frame(of:centeredOn:in:)` is the shared piece, so the frame
+branch and the canvas branch cannot drift apart again.
+
+The playtest `dropImage` step used to call the editor directly, which proved
+the placement but not the routing. It now builds a file URL pasteboard and
+hands it to the canvas's own drag destination, so a walk lands a Finder drop
+on the very calls a pointer makes — the same ones a shelf tile arrives on,
+which is what makes "a tile and a Finder file behave the same" a proven claim
+rather than a code reading.
+
+Verified on the probe with `Scripts/playtest/drop-lands-here-walk.json`
+(shelf tile at 640,200 → X 480 Y 100; the same file from the Finder at
+200,520 → X 40 Y 420; let go at 10,10 → nudged to X 0 Y 0; a 1440×960 capture
+on a 900×700 canvas → fitted to 900×600 at Y 80, not the old centred Y 50).
+`paste-onto-frame-walk` still lands on the screen the same way. Audit and the
+three window captures are in `queue/audits/`.
+
+**Next:** nothing is drawn while a picture is in the air over the canvas, so
+its size is a surprise until you let go, where a component draws the box it
+will fill. Filed as `you-can-see-where-a-dragged-picture-will-land-be`.

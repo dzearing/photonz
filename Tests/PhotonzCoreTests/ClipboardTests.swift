@@ -148,13 +148,20 @@ struct PasteOntoFrameTests {
         #expect(placed == CGRect(x: 100, y: 60, width: 390, height: 844))
     }
 
-    @Test("An image dropped on bare canvas lands exactly where it always did")
-    func imageOnBareCanvasIsUnchanged() {
+    @Test("An image dropped on bare canvas lands centred on the point it was let go of")
+    func imageOnBareCanvasLandsUnderThePointer() {
         let document = makeDocument()
         let placed = document.placementForIncomingImage(size: CGSize(width: 200, height: 100),
                                                         at: bareCanvas)
-        #expect(placed == PastePlacement.frame(forImageOf: CGSize(width: 200, height: 100),
-                                               canvas: document.canvasSize))
+        #expect(placed == CGRect(x: 1400, y: 950, width: 200, height: 100))
+    }
+
+    @Test("An image let go over the canvas edge is nudged wholly onto it, never half off")
+    func imageOnBareCanvasNearTheEdgeIsNudgedIn() {
+        let document = makeDocument()
+        let placed = document.placementForIncomingImage(size: CGSize(width: 200, height: 100),
+                                                        at: CGPoint(x: 10, y: 10))
+        #expect(placed == CGRect(x: 0, y: 0, width: 200, height: 100))
     }
 
     @Test("A paste with no pointer uses the canvas centre, and joins a frame sitting there")
@@ -171,13 +178,25 @@ struct PasteOntoFrameTests {
                 == CGRect(x: 950, y: 550, width: 200, height: 100))
     }
 
-    @Test("A document with no frames places an arriving image exactly as before")
-    func noFramesNoChange() {
+    @Test("A document with no frames still lands a dropped image under the pointer")
+    func noFramesStillFollowsThePointer() {
         let document = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600),
                                        layers: [leaf("Shot", CGRect(x: 0, y: 0, width: 800, height: 600))])
         let size = CGSize(width: 200, height: 100)
-        let expected = PastePlacement.frame(forImageOf: size, canvas: document.canvasSize)
-        #expect(document.placementForIncomingImage(size: size, at: CGPoint(x: 10, y: 10)) == expected)
-        #expect(document.placementForIncomingImage(size: size, at: nil) == expected)
+        #expect(document.placementForIncomingImage(size: size, at: CGPoint(x: 600, y: 200))
+                == CGRect(x: 500, y: 150, width: 200, height: 100))
+        // A paste has no pointer, so it still arrives in the middle.
+        #expect(document.placementForIncomingImage(size: size, at: nil)
+                == PastePlacement.frame(forImageOf: size, canvas: document.canvasSize))
+    }
+
+    @Test("An image too big for the canvas is fitted to it, and still follows the drop point")
+    func oversizedImageFitsTheCanvasAroundTheDropPoint() {
+        let document = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600), layers: [])
+        // 1600x600 fits to 800x300: as wide as the canvas, so only the drop
+        // point's height has anywhere to go.
+        let placed = document.placementForIncomingImage(size: CGSize(width: 1600, height: 600),
+                                                        at: CGPoint(x: 400, y: 200))
+        #expect(placed == CGRect(x: 0, y: 50, width: 800, height: 300))
     }
 }

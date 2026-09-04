@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:07:11.208Z",
-  "updated": "2026-09-04T00:00:21.411Z",
+  "updated": "2026-09-04T00:38:59.055Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review finding, 2026-09-03: five audits in one day admit the same blind spot. queue/audits/2026-09-03-knob-naming.json and 2026-09-03-component-choice-one-step.json (a menu inside the dock cannot be opened by a walk, so its rows are covered by a test rather than a picture), 2026-09-03-layers-tree.json (the harness drives the canvas, not the inspector, and cannot synthesise a panel drag, so the drop indicator picture came from a one-off), 2026-09-03-library.json (dragging a tile and double clicking a tile are both hand paths). 2026-09-03-readable-component-tiles.json also reports that focusing the Library search field hangs the app in a walk; the name field work later the same day (commit b4e804d) touched that box, so check whether it still hangs before assuming it does. The harness is Sources/Photonz/Playtest/PlaytestHarness.swift with its script model in PhotonzCore (PlaytestScript); actions are added in pairs, a pure step in the model and a driver in the harness.",
@@ -56,7 +56,12 @@
     {
       "t": "2026-09-04T00:38:33.888147Z",
       "note": "Review of the built thing on the real app. Rough edges kept, not hidden: a menu opened in a walk flashes on the real screen for about half a second (unavoidable, menus are real windows); the picture that follows the pointer during a drag still does not exist in a walk; four capture tiles can all read \"yesterday\", so a tile can also be named by its file. Found while testing: a capture dropped on bare canvas ignores where you let go and lands centred. Pre-existing (Clipboard.swift placementForIncomingImage), filed as a-capture-dropped-on-the-picture-lands-where-you."
+    },
+    {
+      "t": "2026-09-04T00:38:59.054Z",
+      "note": "Four new walk steps land in the harness: panel (lists the dock's tiles, rows and menus by name), panelMenu (opens a menu inside the window, logs its rows and photographs it in place), dragTile (a tile off the Library onto the picture), dragRow (a row onto another row, above/below/inside, with the drop line photographed). Verified end to end by Scripts/playtest/panel-reach-walk.json in the probe app with Screen Recording granted: real captures of the Add menu open over the panel, the tile in the air with its landing outline, and both drop indicators. The reported Library search hang did not reproduce and the walk now types into that field every run. Media tiles verified separately against a real capture file. Scripts/test.sh green (2573 tests, 9 new). Audit: queue/audits/2026-09-03-panel-reach.json."
     }
   ],
-  "started": "2026-09-04T00:00:21.410Z"
+  "started": "2026-09-04T00:00:21.410Z",
+  "completed": "2026-09-04T00:38:59.055Z"
 }

@@ -33,7 +33,7 @@
 
     { "do": "dropImage", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [1200, 880] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "4-dropped-on-canvas", "note": "a file let go on bare canvas is a loose layer, centred on the canvas as it always was" },
+    { "do": "describe", "stage": "4-dropped-on-canvas", "note": "a file let go on bare canvas is a loose layer, centred on the point it was let go of" },
     { "do": "snapshot", "name": "paste-4-dropped-on-canvas" },
     { "do": "render", "name": "paste-4-dropped-doc" }
   ]
