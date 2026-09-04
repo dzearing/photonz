@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1060,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T06:13:36.706Z",
-  "updated": "2026-09-04T06:13:36.707Z",
+  "updated": "2026-09-04T06:24:03.065018Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed 2026-09-04 by the UX-PATTERNS scrub task. UX-PATTERNS.md section 4 now states the rule: a property keeps its home whatever the count, and a multi-select-only section is reserved for properties with no single-layer home (Arrange). The app violates it: InspectorSectionID.color (Sources/Photonz/LayersPanel.swift) is present only while several layers are picked and is documented in place as being on screen INSTEAD of the per-kind sections; SelectionColorInspector lives in Sources/Photonz/ColorStylePanel.swift, landed by commit 0af62a5. Audit queue/audits/2026-09-03-multi-style.json flags the same thing in its own rough: \"the colour you were just editing moves to a different section when you shift-click a second layer\". Likely shape of the fix: keep the per-kind section (Annotation/Text/Frame) on screen for a homogeneous multi-selection and make its colour rows answer for all of them, falling back to the whole-selection section only when the picked layers span kinds. Multi-layer colour logic already exists in core and should be reused, not rewritten.",
@@ -24,6 +24,43 @@
     {
       "t": "2026-09-04T06:13:36.707Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T06:15:37.974Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T06:24:03.065018Z",
+      "note": "Adversarial review before building: the task's notes proposed keeping the per-kind section (Rectangle/Text/Frame) on screen for a homogeneous multi-selection and re-homing colour there. That is the wrong shape. It gives a colour two homes depending on whether the picked layers agree in kind, which is the same jump one level down, and the section heading itself already changes word (Rectangle to Rectangles to Shapes). One always-present Color section is the shorter and steadier answer."
+    },
+    {
+      "t": "2026-09-04T06:24:03.065018Z",
+      "note": "Then found the app already does that: commit fc66980 (2026-09-03 09:25) deleted the colour rows out of AnnotationInspector, TextInspector and FrameInspector and made the Color section appear as soon as anything with a colour is picked. This task was filed 14 hours later by the panel-rules scrub, from the stale audit rough and a stale code comment. So the work here became: prove it on the running app, close the gaps in coverage, and clear the stale claims."
+    },
+    {
+      "t": "2026-09-04T06:24:03.065018Z",
+      "note": "Verified on the probe (Screen Recording granted, real captures). One box picked: Color section holds Fill and Outline. Shift-click a second: SAME heading, SAME rows, now x2. Box plus text: Fill, Outline and Text, all still under Color. A single text layer alone: one Text row under Color. Acceptance 1 and 4 hold."
+    },
+    {
+      "t": "2026-09-04T06:24:03.065018Z",
+      "note": "Added a mixed-colour stage to Scripts/playtest/color-one-home-walk.json: two boxes wearing different colours read 'fill mixed x2', one pick on the row paints both, and ONE undo puts both back to mixed. Acceptance 2 holds and is now covered."
+    },
+    {
+      "t": "2026-09-04T06:24:03.065018Z",
+      "note": "Acceptance 3: Scripts/playtest/multi-style-walk.json proves Save as Style for All 3 and Use a style on all 3 are both reachable from the Fill row, and that one undo returns all three to Mixed. Its later stages were quietly not testing that, because clicking one of several picked layers does not narrow the selection: the walk's unlink hit all three boxes while claiming to hit one. Taught the walk to drop the selection on bare canvas first, and filed the underlying defect as clicking-one-of-several-picked-layers-narrows-th."
+    },
+    {
+      "t": "2026-09-04T06:24:03.065018Z",
+      "note": "Acceptance 5: took the 'the app does not do this yet' parenthetical out of UX-PATTERNS section 4 and replaced it with what the app actually does, naming the walk that keeps it true. Also rewrote the stale InspectorSectionID.color comment that still said the section is only ever on screen INSTEAD of the per-kind ones."
+    },
+    {
+      "t": "2026-09-04T06:24:03.065018Z",
+      "note": "Adversarial review of the built thing: the one honest gap is vertical. Arrange exists only on a multi-selection, so picking a second box inserts it above Color and pushes the section from y=348 to y=525 in a 900pt window. The rule explicitly allows a multi-select-only section for properties with no single-layer home, so this is not a re-homing, but it is why the Fill row is not left under the pointer. Put it to the user as an audit question rather than resequencing the panel unasked."
+    },
+    {
+      "t": "2026-09-04T06:24:03.065018Z",
+      "note": "Scripts/test.sh green: 2749 tests in 249 suites. Audit at queue/audits/2026-09-04-color-one-home.json with four real captures."
     }
-  ]
+  ],
+  "started": "2026-09-04T06:15:37.973Z"
 }

@@ -245,11 +245,13 @@ the dock, or a `.sheet.down` overlay.
   that appears only during multi-select is for properties with no single-layer
   home at all, such as aligning and distributing, and never for re-homing ones
   that already have a home. Selecting a second layer must not move the control
-  you were just using. *(Written 2026-09-04. The app does not do this yet:
-  commit `0af62a5` adds a Color section that exists only while several layers are
-  picked and takes Fill out of the per-kind section, which audit
-  `2026-09-03-multi-style` flags in its own rough. Filed as a task against the
-  app rather than written into this rule.)*
+  you were just using. *(The app follows this: the Color section is on screen as
+  soon as anything with a color is picked, and Fill, Outline and Text sit under
+  it for one layer and for five. `Scripts/playtest/color-one-home-walk.json` is
+  the walk that keeps it true. The one thing that does still shift is vertical:
+  Arrange appears above it on a multi-selection and pushes the sections below it
+  down the panel, which is the allowance this rule makes for a section with no
+  single-layer home.)*
 - **Selection is shown in one consistent way**: the frame on canvas, the matching
   `.lrow.sel` in Layers, and a selection label. One object selected in three
   places reads as one selection.

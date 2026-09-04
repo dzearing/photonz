@@ -59,6 +59,27 @@
     { "do": "action", "action": "undo" },
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "9-undone", "note": "two undos put both switches back" }
+    { "do": "describe", "stage": "9-undone", "note": "two undos put both switches back" },
+
+    { "do": "click", "at": [900, 620] },
+    { "do": "click", "at": [220, 200] },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "10-one-box-repainted", "note": "one box painted on its own, so the two boxes now wear different colors" },
+
+    { "do": "click", "at": [900, 620] },
+    { "do": "click", "at": [220, 200] },
+    { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "11-mixed", "note": "two boxes wearing different colors: the SAME Fill row, in the SAME section, now reading Mixed" },
+    { "do": "snapshot", "name": "color-one-home-5-mixed" },
+
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "12-mixed-resolved", "note": "one pick on that row paints both" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "13-one-undo", "note": "ONE undo puts both back, so the row edits in a single step" }
   ]
 }

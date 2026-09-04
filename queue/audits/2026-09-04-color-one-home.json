@@ -1,0 +1,30 @@
+{
+  "feature": "A color keeps its section whatever you pick",
+  "epic": "ui-components",
+  "summary": "Fill, Outline and Text sit under one Color heading whether one layer is picked or five. Adding a layer to the selection widens what those rows answer for, and no longer moves the row you were using into a differently named section.",
+  "setup": "Photonz Dev, Experiments window, release Next. Save a color as a style and reuse it is on by default; it needs Keep reusable pieces in a Library, which is also on.",
+  "try": [
+    { "do": "Start a blank canvas, press R and drag out two boxes side by side." },
+    { "do": "Press V and click the left box. Read the Color section: Fill and Outline.", "shot": "2026-09-04-color-one-home-1-one-layer.png" },
+    { "do": "Shift-click the right box. Same heading, same two rows, now speaking for both.", "shot": "2026-09-04-color-one-home-2-two-layers.png" },
+    { "do": "Click empty canvas, click the left box alone, and paint its Fill a different color." },
+    { "do": "Click empty canvas, click the left box, shift-click the right one. The Fill row reads Mixed.", "shot": "2026-09-04-color-one-home-3-mixed.png" },
+    { "do": "Pick a color on that Fill row. Both boxes take it. Press Command Z once: both go back to Mixed together." },
+    { "do": "Open the Fill row's fan menu and choose Save as Style for All 2, type Brand, press Return. Both wear it." },
+    { "do": "Click empty canvas, click a box, shift-click a text layer. Fill, Outline and Text are all under the same Color heading.", "shot": "2026-09-04-color-one-home-4-text-and-box.png" }
+  ],
+  "evaluate": [
+    "Adding a second layer keeps the Fill row where it was in the section list, but Arrange appears above it and pushes the whole panel down about 180 points. Does that read as a new section arriving, or as your color moving?",
+    "Would you rather Arrange sat below the property sections so nothing you were touching shifts when you pick a second layer?",
+    "The rows are named Outline, Fill and Text by slot rather than by what is picked. Over a single arrow, does Outline read right where the word used to be Color?",
+    "With a box and a text layer picked you get three rows, one of which applies to only one of them. Is that clearer than being told the two share nothing?",
+    "Mixed is the same word Position & Size uses for numbers that differ. Does it say the right thing about a color?"
+  ],
+  "rough": [
+    "The screenshots are real captures of the app, taken by the probe build with Screen Recording granted.",
+    "The behavior this task was filed against was already fixed a day earlier, in commit fc66980. What this session did was prove it on the running app, add the missing coverage (a genuinely Mixed one-off color, and one undo putting both layers back), and take the stale claim out of the panel rules and the section-order comment.",
+    "One thing does still move: Arrange only exists while several layers are picked, so it appears above Color and pushes it down the panel. The panel rules allow that, since aligning has no single-layer home, but it is the reason picking a second box does not leave your Fill row exactly under the pointer.",
+    "Found on the way and filed separately: clicking one of several picked layers does not narrow the selection to it. You have to click empty canvas first. That silently broke the multi-style walk, which had been unlinking a style from all three boxes while claiming to unlink one.",
+    "A gradient fill is reported by the harness as a single hex, so a walk cannot yet tell a ramp from the flat color it starts on."
+  ]
+}

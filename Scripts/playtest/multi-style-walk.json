@@ -12,7 +12,7 @@
     { "do": "drag", "from": [640, 140], "to": [840, 260], "steps": 8 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "1-drew", "note": "three filled boxes, each painted a color of its own" },
+    { "do": "describe", "stage": "1-drew", "note": "three filled boxes, all wearing the stock color" },
 
     { "do": "click", "at": [220, 200] },
     { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
@@ -31,12 +31,15 @@
     { "do": "describe", "stage": "3-saved", "note": "one name typed once: all three boxes should wear Accent, and the shelf should hold it with 3 uses" },
     { "do": "snapshot", "name": "multi-style-3-all-three-wear-it" },
 
+    { "do": "click", "at": [950, 560] },
     { "do": "click", "at": [740, 200] },
     { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3b-third-alone", "note": "just the third box picked, so the unlink below reaches it and nothing else" },
     { "do": "action", "action": "unlinkColorStyle" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "4-one-unlinked", "note": "the third box keeps its color but lets go of the style" },
 
+    { "do": "click", "at": [950, 560] },
     { "do": "click", "at": [220, 200] },
     { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
     { "do": "click", "at": [740, 200], "modifiers": ["shift"] },

@@ -1,0 +1,28 @@
+{
+  "id": "clicking-one-of-several-picked-layers-narrows-th",
+  "title": "Clicking one of several picked layers narrows the selection to it",
+  "goal": "With three boxes picked, clicking one of them to work on just that one does nothing: all three stay picked. You have to click empty canvas first and then click the box. Every other app on the Mac narrows the selection to the thing you clicked, and Photonz should too.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1070,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T06:23:02.580Z",
+  "updated": "2026-09-04T06:23:02.581Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-09-04 while verifying the colour-section task. CanvasView.mouseDown (around Sources/Photonz/CanvasView.swift:1780) deliberately swallows a press on a member of a multi-selection so the group can travel with the pointer, and starts a MultiMoveDrag. The mouseUp branch for multiMove (around :2251) commits a move when liveOrigins is non-nil and otherwise does nothing, so a press that never moved leaves the selection untouched. The fix is the standard press-keeps/click-narrows split: in that mouseUp branch, when the drag never moved, select the layer that was pressed. Reproduced with Scripts/playtest/multi-style-walk.json before it was taught to deselect first: its stage 4 unlinked the style from all three boxes instead of the one it had clicked.",
+  "acceptance": [
+    "With several layers picked, clicking one of them and letting go without moving leaves only that layer picked",
+    "Pressing on one of several picked layers and dragging still moves the whole selection, as it does today",
+    "Shift-clicking a picked layer still drops it from the selection rather than narrowing to it",
+    "A playtest walk proves the click narrows, and the drag does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T06:23:02.581Z",
+      "note": "created (manual)"
+    }
+  ]
+}

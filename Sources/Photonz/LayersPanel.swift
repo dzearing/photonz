@@ -545,9 +545,11 @@ enum InspectorSectionID: String, CaseIterable {
     // say what KIND of group you have selected, and both belong near the top
     // where the name is worth reaching.
     case component
-    // What several picked layers are painted, and one place to set them all to
-    // the same named color (Next, `next-styles`). Above the per-kind sections,
-    // because it is only ever on screen INSTEAD of them.
+    // Every color the picked layers wear, and one place to set them all at
+    // once. Above the per-kind sections, because the look of a thing is what
+    // you reach for first, and it sits in the SAME place whether one layer is
+    // picked or twenty: adding to the selection widens what a row answers for
+    // and never moves the row.
     case color
     // Fade, corners, blur and border: the look of the thing, right beside the
     // colors it is painted, because they are the same question. This is the
