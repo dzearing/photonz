@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 1170,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T09:24:23.707Z",
-  "updated": "2026-09-04T09:24:23.708Z",
+  "updated": "2026-09-04T11:34:49.208586Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Layer.contentsWithTheirOwnPlacement (PhotonzCore/LayerPlacement.swift) reads child.placement without knowing the group layout; PlacementEditing(arrangement:) added 2026-09-04 answers which axis is dead. PlacementInspector.exceptions renders the list. The clearing half is the harder question: the childRows menu for the owned axis is gone now, which is what makes the stale rule unreachable.",
@@ -23,6 +23,43 @@
     {
       "t": "2026-09-04T09:24:23.708Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T11:14:21.006Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T11:34:49.208586Z",
+      "note": "Adversarial review before building: the contradiction is real and on screen. A column stack's own Vertical row already reads Set by the stack, while the exceptions list below it counted a layer whose only rule was on that same direction. The group claimed a layer was out of line on a direction the group also claimed to own."
+    },
+    {
+      "t": "2026-09-04T11:34:49.208586Z",
+      "note": "Rejected auto-stripping the dead rule when a group becomes a stack: flipping direction row/column is a normal exploratory action, and destroying a setting on a reversible toggle is worse than keeping an inert one. Kept the rule, made it visible and clearable instead."
+    },
+    {
+      "t": "2026-09-04T11:34:49.208586Z",
+      "note": "Shortest version that delivers the value: filter the list and the summary by the group's arrangement, and put a one-click clear on the row that already says who owns the axis. No badges, no bulk clear, no warning in the group list."
+    },
+    {
+      "t": "2026-09-04T11:34:49.208586Z",
+      "note": "Core: contentsWithTheirOwnPlacement is now a function taking the group's arrangement (the flag decision stays in the app layer, PhotonzCore stays pure). Axes the flow owns are dropped before the PlacementOverride is built, so the count and the summary both stop naming them. PlacementEditing gained inertRule(in:) and flowNoun."
+    },
+    {
+      "t": "2026-09-04T11:34:49.208586Z",
+      "note": "App: PlacementInspector.ownedByTheFlow takes a stale rule and a clear action, and shows a link button reading Clear <rule>. Wired for a layer's own rows and for the group's Contents rows. The caption under a child's rows now talks about the stale rule when there is one, instead of saying Following the group over a row offering to clear a rule."
+    },
+    {
+      "t": "2026-09-04T11:34:49.208586Z",
+      "note": "Review after building, on the probe: verified by capture that a column stack with one across-rule and one down-rule now reads 'One layer has a rule of its own' naming only the across one, and that the down-rule layer's Vertical row reads 'Set by the stack   Clear Stretch'. Scripts/playtest/inert-rule-walk.json."
+    },
+    {
+      "t": "2026-09-04T11:34:49.208586Z",
+      "note": "Could not drive the Clear button itself: a synthesized click in the right hand panel hangs the walk (SwiftUI hosting view swallows mouseDown), so the harness routes every click to the canvas. Tried making window-space clicks hit-test the real view, it hung, reverted. Recorded in the audit's rough. Filed as its own task."
+    },
+    {
+      "t": "2026-09-04T11:34:49.208586Z",
+      "note": "Scripts/test.sh green (2942 tests). placement-exceptions-walk and stack-owns-axis-walk both still ok."
     }
-  ]
+  ],
+  "started": "2026-09-04T11:14:21.005Z"
 }

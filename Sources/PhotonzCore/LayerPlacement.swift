@@ -232,6 +232,12 @@ public struct PlacementEditing: Hashable, Sendable {
     public let setByTheFlow: String?
     public let reason: String?
 
+    /// The flow named on its own, for a sentence that has to talk about it
+    /// rather than label a row: "the row" or "the stack".
+    public static let rowNoun = "the row"
+    public static let stackNoun = "the stack"
+    public let flowNoun: String?
+
     /// `arrangement` is the layout of the group these placements apply inside:
     /// the container's own layout when this is one layer's row, and the
     /// group's own layout when it is the row for everything inside it. Nil for
@@ -242,6 +248,7 @@ public struct PlacementEditing: Hashable, Sendable {
             canSetVertical = true
             setByTheFlow = nil
             reason = nil
+            flowNoun = nil
             return
         }
         let across = arrangement.flowsHorizontally
@@ -249,6 +256,23 @@ public struct PlacementEditing: Hashable, Sendable {
         canSetVertical = across
         setByTheFlow = across ? Self.rowTitle : Self.stackTitle
         reason = across ? Self.rowReason : Self.stackReason
+        flowNoun = across ? Self.rowNoun : Self.stackNoun
+    }
+
+    /// The rule this setting still carries on the axis the flow decides, in the
+    /// words the menu used for it, or nil where there is nothing sitting there.
+    ///
+    /// A setting made before the group became a stack stays in the file: the
+    /// flow only takes the axis over, it does not wipe what was there, because
+    /// flipping a column to a row and back would then quietly lose it. So the
+    /// row that says who owns the axis now also says what is still written on
+    /// it, and offers to take it off, rather than letting it spring back to
+    /// life the day somebody changes the direction.
+    public func inertRule(in placement: LayerPlacement?) -> String? {
+        guard let placement else { return nil }
+        if !canSetHorizontal { return placement.horizontal?.title }
+        if !canSetVertical { return placement.vertical?.title }
+        return nil
     }
 }
 
@@ -293,12 +317,21 @@ extension Layer {
     /// ITS container, and belongs in that container's Layout section, not here.
     /// A piece whose rule happens to match the container's answer is still in
     /// the list, because it stops matching the moment the container changes.
-    public var contentsWithTheirOwnPlacement: [PlacementOverride] {
-        children.reversed().compactMap { child in
-            guard let placement = child.placement, !placement.isEmpty else { return nil }
+    ///
+    /// A rule on the axis the flow decides is NOT in the list, and is not in
+    /// the summary of a piece that is: a Bottom inside a column stack moves
+    /// nothing, so naming it says somebody is out of line when nobody is.
+    /// `arrangement` is this group's own layout, or nil for a group that
+    /// arranges nothing, in which case every rule counts as it always did.
+    public func contentsWithTheirOwnPlacement(arrangement: GroupLayout?) -> [PlacementOverride] {
+        let flow = PlacementEditing(arrangement: arrangement)
+        return children.reversed().compactMap { child in
+            guard let placement = child.placement else { return nil }
+            let horizontal = flow.canSetHorizontal ? placement.horizontal : nil
+            let vertical = flow.canSetVertical ? placement.vertical : nil
+            guard horizontal != nil || vertical != nil else { return nil }
             return PlacementOverride(id: child.id, name: child.name,
-                                     horizontal: placement.horizontal,
-                                     vertical: placement.vertical)
+                                     horizontal: horizontal, vertical: vertical)
         }
     }
 }

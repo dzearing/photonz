@@ -956,7 +956,10 @@ private final class Run {
             case .pickFirstOwnRule:
                 if let id = editor.selectedLayerID,
                    let group = editor.document?.layer(id: id),
-                   let first = group.contentsWithTheirOwnPlacement.first {
+                   let arrangement = Experiments.shared.autoLayoutEnabled ? group.group?.layout
+                                                                          : nil,
+                   let first = group.contentsWithTheirOwnPlacement(arrangement: arrangement)
+                       .first {
                     editor.selectLayer(first.id, inGroup: id)
                 }
             case .stretchSelectionAcross:

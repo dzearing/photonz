@@ -1,0 +1,29 @@
+{
+  "feature": "A rule that does nothing is no longer counted as a rule",
+  "epic": "ui-layout",
+  "summary": "A stack decides one direction for everything inside it. A layer whose only placement rule is on that direction now stops being listed under the group as an exception, and the layer's own row offers to clear the rule that stopped mattering.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag next-auto-layout on (it is on by default).",
+  "try": [
+    { "do": "Draw two rectangles, one above the other." },
+    { "do": "Select the top one and set Layout > Vertical to Stretch." },
+    { "do": "Select the bottom one and set Layout > Horizontal to Stretch." },
+    { "do": "Select both and press Layer > Stack Selection, which makes a column.", "shot": "2026-09-04-inert-placement-rule-1.png" },
+    { "do": "Read the end of the Layout section: it should say one layer has a rule of its own, not two." },
+    { "do": "Double-click into the group and select the top rectangle.", "shot": "2026-09-04-inert-placement-rule-2.png" },
+    { "do": "Read the Vertical row: Set by the stack, with Clear Stretch beside it." },
+    { "do": "Click Clear Stretch, then set Direction to Row and back to Column to check nothing springs back." }
+  ],
+  "evaluate": [
+    "When the group says one layer has a rule of its own, does that match what you would have counted yourself?",
+    "Does Clear Stretch read as safe to press, or does it look like it might undo something you wanted?",
+    "Is the sentence under the rows enough to explain why a setting you made is doing nothing?",
+    "Would you rather the app just threw the dead rule away when the group became a stack, instead of telling you about it?",
+    "Selecting the layer is the only place a dead rule shows. Did you find it, or did you expect the group's list to point at it?"
+  ],
+  "rough": [
+    "A dead rule is deliberately invisible from the group: the whole point was to stop counting it, so the only place it shows is the layer's own Layout rows. If that turns out to be too quiet, the fix is a separate quieter line under the exceptions list, not putting it back in the count.",
+    "Screen Recording was granted, so both shots are real captures of the window, not offscreen renders.",
+    "The Clear button was not clicked by the scripted walk. A synthesized click in the right hand panel hangs the walk, because that panel is drawn by SwiftUI and swallows the event, so the harness sends every click to the canvas. The button's presence and wording are from a real capture; the clearing itself runs the same call the Horizontal menu's Follow group item already runs and goes through undo like any other change.",
+    "Clearing is one axis at a time and deliberate. Flipping a column to a row and back keeps everything, which is why the dead rule is kept rather than thrown away on the arrangement change."
+  ]
+}

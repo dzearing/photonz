@@ -57,6 +57,9 @@ struct PlacementInspector: View {
         // layer's, so that row says who owns it rather than offering a menu
         // that changes nothing. The same rule the group's own rows use below.
         let flow = PlacementEditing(arrangement: arrangement(of: container))
+        // What this layer still says on the axis the flow took over, so the row
+        // that owns it can offer to take it off.
+        let stale = flow.inertRule(in: current.placement)
         VStack(alignment: .leading, spacing: 6) {
             Text(container.isFrame ? "This layer on \(container.name)"
                                    : "This layer in \(container.name)")
@@ -81,7 +84,9 @@ struct PlacementInspector: View {
                     .fixedSize()
                 }
             } else {
-                ownedByTheFlow("Horizontal", flow)
+                ownedByTheFlow("Horizontal", flow, clearing: stale) {
+                    editorState.setPlacement(id: current.id, horizontal: nil)
+                }
             }
             if flow.canSetVertical {
                 row("Vertical") {
@@ -102,13 +107,21 @@ struct PlacementInspector: View {
                     .fixedSize()
                 }
             } else {
-                ownedByTheFlow("Vertical", flow)
+                ownedByTheFlow("Vertical", flow, clearing: stale) {
+                    editorState.setPlacement(id: current.id, vertical: nil)
+                }
             }
-            Text(childCaption(resolved, flow))
+            Text(childCaption(resolved, flow, stale: stale))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// The group's own default still written on the axis its flow decides, so
+    /// the Contents rows can offer to clear it the same way a layer's do.
+    private func contentsInertRule(_ flow: PlacementEditing) -> String? {
+        flow.inertRule(in: current.group?.contentPlacement)
     }
 
     /// How a group arranges its contents, or nil where it arranges nothing —
@@ -123,7 +136,16 @@ struct PlacementInspector: View {
 
     private var isOnAScreen: Bool { container?.isFrame == true }
 
-    private func childCaption(_ resolved: ResolvedPlacement, _ flow: PlacementEditing) -> String {
+    private func childCaption(_ resolved: ResolvedPlacement, _ flow: PlacementEditing,
+                              stale: String?) -> String {
+        // A rule sitting on the axis the flow took over is the one thing on
+        // these rows nobody expects, so when there is one it is what the
+        // caption talks about: saying "following the group" over a row that is
+        // offering to clear a rule reads as a contradiction.
+        if let stale, let owner = flow.flowNoun {
+            return "\(stale) is still set where \(owner) decides. It changes nothing now, "
+                + "and comes back if the direction changes."
+        }
         // Stretch means something different for words than it does for a box:
         // the box fills, and where the words sit in it is the Text section's
         // Align. Said here because this is where the choice is made. Only on an
@@ -167,7 +189,9 @@ struct PlacementInspector: View {
             // a live control that changes nothing is worse than a row that
             // says who owns it.
             if !flow.canSetHorizontal {
-                ownedByTheFlow("Horizontal", flow)
+                ownedByTheFlow("Horizontal", flow, clearing: contentsInertRule(flow)) {
+                    editorState.setContentPlacement(id: current.id, horizontal: nil)
+                }
             } else {
                 row("Horizontal") {
                     Menu {
@@ -184,7 +208,9 @@ struct PlacementInspector: View {
                 }
             }
             if !flow.canSetVertical {
-                ownedByTheFlow("Vertical", flow)
+                ownedByTheFlow("Vertical", flow, clearing: contentsInertRule(flow)) {
+                    editorState.setContentPlacement(id: current.id, vertical: nil)
+                }
             } else {
                 row("Vertical") {
                     Menu {
@@ -225,7 +251,7 @@ struct PlacementInspector: View {
     /// an empty list would be a permanent question about an answer of none.
     @ViewBuilder
     private var exceptions: some View {
-        let overrides = current.contentsWithTheirOwnPlacement
+        let overrides = current.contentsWithTheirOwnPlacement(arrangement: arrangement(of: current))
         if !overrides.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
                 Text(overrides.count == 1 ? "One layer has a rule of its own"
@@ -286,13 +312,31 @@ struct PlacementInspector: View {
     /// The row for an axis the stack decides. It stays in place, with the same
     /// label in the same column, so nothing shuffles under the pointer when a
     /// group becomes a stack, and hovering it says where the answer is set.
+    ///
+    /// `clearing` is the rule still written on that axis from before the stack
+    /// took it over. It does nothing today, and it is not counted as a rule of
+    /// its own anywhere else, so this row is the one place it can be seen — and
+    /// the only place it can be taken off before flipping the direction brings
+    /// it back to life.
     @ViewBuilder
-    private func ownedByTheFlow(_ title: String, _ flow: PlacementEditing) -> some View {
+    private func ownedByTheFlow(_ title: String, _ flow: PlacementEditing,
+                                clearing stale: String? = nil,
+                                clear: @escaping () -> Void = {}) -> some View {
         if let answer = flow.setByTheFlow {
             row(title) {
-                Text(answer)
-                    .font(.callout)
-                    .foregroundStyle(.tertiary)
+                HStack(spacing: 8) {
+                    Text(answer)
+                        .font(.callout)
+                        .foregroundStyle(.tertiary)
+                    if let stale {
+                        Button("Clear \(stale)", action: clear)
+                            .buttonStyle(.link)
+                            .font(.caption)
+                            .help("\(stale) is still set here from before, and does nothing while "
+                                  + "\(flow.flowNoun ?? "the flow") decides this direction. Clear "
+                                  + "it so changing the direction later does not bring it back.")
+                    }
+                }
             }
             .help(flow.reason ?? "")
         }

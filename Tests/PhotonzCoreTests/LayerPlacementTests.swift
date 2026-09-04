@@ -353,16 +353,16 @@ struct LayerPlacementTests {
 
     @Test("A group with nothing overriding it lists nobody")
     func noOverridesListsNobody() {
-        #expect(plate().contentsWithTheirOwnPlacement.isEmpty)
-        #expect(plate(contents: LayerPlacement(horizontal: .center)).contentsWithTheirOwnPlacement
-                    .isEmpty)
+        #expect(plate().contentsWithTheirOwnPlacement(arrangement: nil).isEmpty)
+        #expect(plate(contents: LayerPlacement(horizontal: .center))
+                    .contentsWithTheirOwnPlacement(arrangement: nil).isEmpty)
     }
 
     @Test("A group lists exactly the pieces that placed themselves")
     func overridesAreTheOnesWithARuleOfTheirOwn() {
         let group = plate(contents: LayerPlacement(horizontal: .center, vertical: .center),
                           background: LayerPlacement(horizontal: .stretch))
-        let overrides = group.contentsWithTheirOwnPlacement
+        let overrides = group.contentsWithTheirOwnPlacement(arrangement: nil)
         #expect(overrides.count == 1)
         #expect(overrides.first?.name == "Background")
         #expect(overrides.first?.id == group.children.first?.id)
@@ -374,7 +374,8 @@ struct LayerPlacementTests {
     func overridesReadTopMostFirst() {
         let group = plate(background: LayerPlacement(horizontal: .stretch),
                           label: LayerPlacement(vertical: .top))
-        #expect(group.contentsWithTheirOwnPlacement.map(\.name) == ["Label", "Background"])
+        #expect(group.contentsWithTheirOwnPlacement(arrangement: nil).map(\.name)
+                    == ["Label", "Background"])
     }
 
     @Test("Each listed piece says what its own rule is, per axis")
@@ -399,7 +400,7 @@ struct LayerPlacementTests {
         inner.name = "Inner"
         let outer = Layer(name: "Outer", content: .group(GroupContent(children: [inner])),
                           frame: .zero)
-        #expect(outer.contentsWithTheirOwnPlacement.isEmpty)
+        #expect(outer.contentsWithTheirOwnPlacement(arrangement: nil).isEmpty)
     }
 
     @Test("A piece that says the same thing the group says is still not following it")
@@ -408,13 +409,13 @@ struct LayerPlacementTests {
         // group's answer changes, which is exactly why it is worth naming.
         let group = plate(contents: LayerPlacement(horizontal: .center),
                           label: LayerPlacement(horizontal: .center))
-        #expect(group.contentsWithTheirOwnPlacement.map(\.name) == ["Label"])
+        #expect(group.contentsWithTheirOwnPlacement(arrangement: nil).map(\.name) == ["Label"])
     }
 
     @Test("Something that is not a group lists nobody")
     func aLeafListsNobody() {
         #expect(box("Plain", CGRect(x: 0, y: 0, width: 10, height: 10))
-                    .contentsWithTheirOwnPlacement.isEmpty)
+                    .contentsWithTheirOwnPlacement(arrangement: nil).isEmpty)
     }
 
     // MARK: - The axis a stack has already decided is not a menu
@@ -426,6 +427,7 @@ struct LayerPlacementTests {
         #expect(!flow.canSetVertical)
         #expect(flow.setByTheFlow == PlacementEditing.stackTitle)
         #expect(flow.reason == PlacementEditing.stackReason)
+        #expect(flow.flowNoun == PlacementEditing.stackNoun)
     }
 
     @Test("A row stack decides across, so the down menu is the live one")
@@ -435,6 +437,7 @@ struct LayerPlacementTests {
         #expect(flow.canSetVertical)
         #expect(flow.setByTheFlow == PlacementEditing.rowTitle)
         #expect(flow.reason == PlacementEditing.rowReason)
+        #expect(flow.flowNoun == PlacementEditing.rowNoun)
     }
 
     @Test("A grid and a group that arranges nothing both still ask about both axes")
@@ -449,6 +452,91 @@ struct LayerPlacementTests {
             #expect(flow.canSetVertical)
             #expect(flow.setByTheFlow == nil)
             #expect(flow.reason == nil)
+            #expect(flow.flowNoun == nil)
+        }
+    }
+
+    // MARK: - A rule that does nothing is not a rule of its own
+
+    /// The plate, arranged, so "who is not following" can be asked of a group
+    /// that has already decided one of the two answers itself.
+    private func arrangedPlate(_ layout: GroupLayout?,
+                               background: LayerPlacement? = nil,
+                               label: LayerPlacement? = nil) -> Layer {
+        var layer = plate(background: background, label: label)
+        if case .group(var content) = layer.content {
+            content.layout = layout
+            layer.content = .group(content)
+        }
+        return layer
+    }
+
+    @Test("A rule only on the direction the stack decides is not a rule of its own")
+    func aRuleOnTheOwnedAxisIsNotAnException() {
+        // Bottom, on a column stack that decides every Y: it changes nothing on
+        // screen, so counting it tells you somebody is not following when
+        // everybody is.
+        let column = GroupLayout(kind: .stack, direction: .column)
+        let group = arrangedPlate(column, label: LayerPlacement(vertical: .bottom))
+        #expect(group.contentsWithTheirOwnPlacement(arrangement: column).isEmpty)
+        // The same layer in a group that arranges nothing is still an exception.
+        #expect(group.contentsWithTheirOwnPlacement(arrangement: nil).map(\.name) == ["Label"])
+    }
+
+    @Test("A rule on the other direction is listed exactly as it was")
+    func aRuleOnTheLiveAxisIsStillListed() {
+        let column = GroupLayout(kind: .stack, direction: .column)
+        let group = arrangedPlate(column, background: LayerPlacement(horizontal: .stretch))
+        let overrides = group.contentsWithTheirOwnPlacement(arrangement: column)
+        #expect(overrides.map(\.name) == ["Background"])
+        #expect(overrides.first?.summary == "Stretch across")
+    }
+
+    @Test("The summary never names a direction the stack decides")
+    func theSummaryDropsTheOwnedAxis() {
+        let both = LayerPlacement(horizontal: .stretch, vertical: .bottom)
+        let column = GroupLayout(kind: .stack, direction: .column)
+        let inAColumn = arrangedPlate(column, label: both)
+            .contentsWithTheirOwnPlacement(arrangement: column)
+        #expect(inAColumn.first?.summary == "Stretch across")
+        #expect(inAColumn.first?.vertical == nil)
+        let row = GroupLayout(kind: .stack, direction: .row)
+        let inARow = arrangedPlate(row, label: both)
+            .contentsWithTheirOwnPlacement(arrangement: row)
+        #expect(inARow.first?.summary == "Bottom down")
+        #expect(inARow.first?.horizontal == nil)
+    }
+
+    @Test("A grid decides neither direction, so both still count")
+    func aGridCountsBothDirections() {
+        let grid = GroupLayout(kind: .grid)
+        let group = arrangedPlate(grid, label: LayerPlacement(vertical: .bottom))
+        #expect(group.contentsWithTheirOwnPlacement(arrangement: grid).first?.summary
+                    == "Bottom down")
+    }
+
+    // MARK: - Clearing the rule that stopped mattering
+
+    @Test("The owned axis says what rule is still sitting on it, so it can be cleared")
+    func theOwnedAxisNamesTheRuleLeftOnIt() {
+        let column = PlacementEditing(arrangement: GroupLayout(kind: .stack, direction: .column))
+        #expect(column.inertRule(in: LayerPlacement(vertical: .top)) == "Top")
+        #expect(column.inertRule(in: LayerPlacement(horizontal: .left)) == nil)
+        #expect(column.inertRule(in: LayerPlacement(horizontal: .left, vertical: .stretch))
+                    == "Stretch")
+        let row = PlacementEditing(arrangement: GroupLayout(kind: .stack, direction: .row))
+        #expect(row.inertRule(in: LayerPlacement(horizontal: .left)) == "Left")
+        #expect(row.inertRule(in: LayerPlacement(vertical: .top)) == nil)
+    }
+
+    @Test("Nothing to clear where the flow decides neither direction, or nothing was set")
+    func nothingToClearWhereBothAxesAreLive() {
+        let column = PlacementEditing(arrangement: GroupLayout(kind: .stack, direction: .column))
+        #expect(column.inertRule(in: nil) == nil)
+        #expect(column.inertRule(in: LayerPlacement()) == nil)
+        for arrangement in [GroupLayout(kind: .grid), nil] {
+            let flow = PlacementEditing(arrangement: arrangement)
+            #expect(flow.inertRule(in: LayerPlacement(horizontal: .left, vertical: .top)) == nil)
         }
     }
 

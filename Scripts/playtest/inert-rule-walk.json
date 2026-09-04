@@ -1,0 +1,141 @@
+{
+  "out": "/tmp/photonz-playtest/inert-rule",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        60
+      ],
+      "to": [
+        300,
+        120
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        160
+      ],
+      "to": [
+        300,
+        220
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        90
+      ]
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionDown"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        190
+      ]
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionAcross"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        90
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        190
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-group",
+      "note": "the column stack selected: only the layer with a rule ACROSS should be counted, the one whose only rule is DOWN changes nothing and must not be listed"
+    },
+    {
+      "do": "snapshot",
+      "name": "inert-1-group"
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-dead-rule",
+      "note": "the layer whose only rule is down: Vertical must read Set by the stack and offer to clear the Stretch still written on it"
+    },
+    {
+      "do": "snapshot",
+      "name": "inert-2-dead-rule"
+    }
+  ]
+}
