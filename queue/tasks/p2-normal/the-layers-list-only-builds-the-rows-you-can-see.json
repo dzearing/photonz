@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1030,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T02:45:45.942Z",
-  "updated": "2026-09-04T03:54:30.841Z",
+  "updated": "2026-09-04T04:20:22.987Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the equatable-rows work merged 2026-09-04 (Scripts/playtest/layers-row-count-perf-walk.json). LayersListView.rows is a plain VStack inside a bounded ScrollView; the VStack is eager. A LazyVStack would skip offscreen rows entirely, but the list measures contentHeight from a GeometryReader over the rows so the area can hug short content, and a lazy stack reports no height for rows it has not materialised. Needs a different height source (row count times measured row height, say) before the swap is safe.",
@@ -38,7 +38,12 @@
     {
       "t": "2026-09-04T04:18:59.547441Z",
       "note": "Adversarial review AFTER building, on the probe. What is honest: the win is arrival and scrolling, not clicking - a click already cost the same at 4 and 121 layers after the equatable-rows work, and still does. What I could not fix: the panel still asks for a thumbnail for every layer in the document, filed as the-layers-panel-only-draws-thumbnails-for-the-r. What changed outside the app: a walk can only reach a row that is BUILT, so one naming a row far down a long list has to scroll to it first; a new scrollPanel step does that and docs/design/playtest-harness.md says so. Every existing walk works on documents short enough to fit the panel and all still pass. A synthesised scroll wheel turned out to be swallowed by the SwiftUI scroll area, so the step scrolls the view directly and says which of the two happened rather than reporting a pass for a walk that went nowhere."
+    },
+    {
+      "t": "2026-09-04T04:20:22.986Z",
+      "note": "LayersListView.rows is a LazyVStack and the area's height is computed by LayerListMetrics.naturalHeight (PhotonzCore, new, 6 tests) instead of measured from the rows. Measured on the probe with the same walk on both builds: a 120 layer document built 120 rows before and 6 after, a 3 layer one built 3 either way, and a screenful of scrolling builds 8 or 9 rows at a steady 23-28ms wherever you are in the list. Hugging, capping and reaching the bottom shown in three real screen captures; drag, drop lines and group disclosure A/B'd with panel-reach-walk.json, every step matched and the panel screenshot after the drop is pixel identical. Two probe-only additions to prove it: ViewBuildMeter counts view bodies, and a scrollPanel step turns the wheel over a panel list. Audit queue/audits/2026-09-04-layers-lazy-rows.json. Commit 67bda5e, pushed. Thumbnails still gathered for every layer, filed as the-layers-panel-only-draws-thumbnails-for-the-r."
     }
   ],
-  "started": "2026-09-04T03:54:30.840Z"
+  "started": "2026-09-04T03:54:30.840Z",
+  "completed": "2026-09-04T04:20:22.987Z"
 }
