@@ -1,0 +1,27 @@
+{
+  "id": "painting-a-shape-from-the-panel-arms-the-tool-th",
+  "title": "Painting a shape from the panel arms the tool the same way the toolbar does",
+  "goal": "Pick a colour on the swatch in the toolbar and the tool remembers it, so the next shape comes out that colour. Pick the same colour on the panel at the right, with a shape selected, and it does not: the next shape comes out the old colour. Make the two agree, whichever way the answer goes.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1070,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T04:38:22.764Z",
+  "updated": "2026-09-04T04:38:22.764Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while shipping the-tool-you-are-holding-can-be-armed-with-a-gra. EditorState.setAnnotationPaint / setAnnotationFillPaint remember the shape default; setSelectionPaint / setSelectionColor (the panel path, ColorStylePanel.SelectionColorWell) do not. This split predates gradients and was left alone rather than widened under that task. It is a UX judgement about whether picking a colour on an existing object should reload the tool, so it likely wants a decision card before any code.",
+  "acceptance": [
+    "Painting a selected shape from the panel decides what the next shape of that kind comes out as, or a decision card says it deliberately should not",
+    "The toolbar swatch and the panel row show the same colour for the same shape at all times",
+    "Whichever rule wins, it is the same for a flat colour and for a gradient"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T04:38:22.764Z",
+      "note": "created (manual)"
+    }
+  ]
+}
