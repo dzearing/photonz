@@ -4292,6 +4292,10 @@ final class EditorState {
         guard !targets.isEmpty else { return }
         discardDragPreview()
         perform { _ = $0.setColorEnabled(layerIDs: targets, slot: slot, on: on) }
+        // Switching a box's inside off here arms the tool with no inside, so
+        // the next box comes out an outline like the one just emptied. Same
+        // rule as picking a colour on the row above it.
+        armToolsFromSelection(slot: slot, targets: targets)
     }
 
     /// How many layers are picked, which is what the whole-selection Color
@@ -4367,6 +4371,7 @@ final class EditorState {
         guard !targets.isEmpty else { return }
         discardDragPreview()
         perform { _ = $0.setColorHex(layerIDs: targets, slot: slot, hex: hex) }
+        armToolsFromSelection(slot: slot, targets: targets)
         recordRecentColor(hex: hex)
     }
 
@@ -4378,9 +4383,37 @@ final class EditorState {
         guard !targets.isEmpty else { return }
         discardDragPreview()
         perform { _ = $0.setPaint(layerIDs: targets, slot: slot, paint: paint) }
+        armToolsFromSelection(slot: slot, targets: targets)
         // The recents row is a row of colours, so a gradient leaves its flat
         // colour there rather than nothing.
         recordRecentColor(hex: paint.hex)
+    }
+
+    /// Painting a shape from the panel arms the tool that draws it, so the next
+    /// shape of that kind comes out the colour just chosen — the same thing the
+    /// toolbar swatch has always done, and the same thing Thickness, Corner
+    /// Radius and the Effects sliders already do from this panel. Colour was
+    /// the one field where picking in the two places meant two different
+    /// things.
+    ///
+    /// Every kind of shape the pick reached is armed for itself, so painting a
+    /// box and an arrow blue leaves both tools blue and the ellipse tool alone.
+    /// A kind whose shapes end up disagreeing arms nothing rather than being
+    /// guessed at. Read AFTER the change, so it is what the shapes are wearing
+    /// now rather than what was aimed at them.
+    private func armToolsFromSelection(slot: ColorSlot, targets: [UUID]) {
+        guard let document else { return }
+        let arming = document.toolArming(layerIDs: targets, slot: slot)
+        if !arming.isEmpty {
+            for entry in arming {
+                annotationStyles.arm(entry.paint, slot: slot, forShape: entry.shape)
+            }
+            saveAnnotationStyles()
+        }
+        // A ring is styling laid over a layer rather than part of the shape, so
+        // it rides along with the rest of a shape's remembered look, exactly
+        // the way pulling its width in the Effects section already does.
+        if slot == .border { rememberStyleDefault(of: targets) }
     }
 
     /// What the picked layers are painted with in a slot, when they agree.

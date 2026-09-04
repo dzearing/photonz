@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 1070,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T04:38:22.764Z",
-  "updated": "2026-09-04T04:38:22.764Z",
+  "updated": "2026-09-04T08:53:27.263Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while shipping the-tool-you-are-holding-can-be-armed-with-a-gra. EditorState.setAnnotationPaint / setAnnotationFillPaint remember the shape default; setSelectionPaint / setSelectionColor (the panel path, ColorStylePanel.SelectionColorWell) do not. This split predates gradients and was left alone rather than widened under that task. It is a UX judgement about whether picking a colour on an existing object should reload the tool, so it likely wants a decision card before any code.",
@@ -22,6 +22,39 @@
     {
       "t": "2026-09-04T04:38:22.764Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T08:53:27.263Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T08:57:42.149Z",
+      "note": "Adversarial review before building. The task notes guessed this needed a decision card. It does not: the app has ALREADY answered the question everywhere except colour. Pull Thickness, Corner Radius or Arrowhead on a shape in the right-hand panel and the next shape of that kind comes out with it (rememberAnnotationDefaults); style a single shape's effects there and the tool takes the whole look (rememberStyleDefault). Colour is the sole field that does not. Going the other way would mean stripping arming out of the toolbar swatch, which would undo the gradient-arming feature shipped hours ago. So the rule is: painting from the panel arms the tools that draw what it painted, exactly the way every other panel control does. No card, reasoning recorded here."
+    },
+    {
+      "t": "2026-09-04T08:57:42.150Z",
+      "note": "Shortest version that delivers the value: one pure-core reading (which shape kinds a colour row just settled on, and what they agree on) plus a call from the two panel entry points. Cut from scope: pointing a row at a saved style does not arm (binding to a name is not picking a colour, and baking the name's colour into the tool would be a silent copy); a text block's ink has no tool default at all (new text takes the FG swatch), so nothing to agree with."
+    },
+    {
+      "t": "2026-09-04T09:05:47.872Z",
+      "note": "Built. PhotonzCore gains ToolArming.swift: PhotonzDocument.toolArming(layerIDs:slot:) says which shape kinds a colour row just settled and what each of them agrees on (nil = no fill, which is an answer too), and AnnotationStyles.arm(_:slot:forShape:) lands it on the right part. Read AFTER the change, so it is what the shapes wear now rather than what was aimed at them. 20 new tests in ToolArmingTests; full suite green at 2862."
+    },
+    {
+      "t": "2026-09-04T09:05:47.873Z",
+      "note": "Wired in EditorState.armToolsFromSelection, called from setSelectionPaint, setSelectionColor and setColorEnabled. Nothing arms during a colour drag, only on release, so one pull is still one undo step and one recents entry. The Border slot goes through rememberStyleDefault instead, the same way pulling its width in the Effects section already does."
+    },
+    {
+      "t": "2026-09-04T09:05:47.873Z",
+      "note": "Verified in the app, not assumed. Scripts/playtest/panel-arms-tool-walk.json on the probe: fill switched off in the panel takes toolFillPaint to none; paintSelectionColor takes toolPaint from #FF3B30 to #B0184A; a second box drawn and never painted reads stroke #B0184A; paintSelectionGradient takes toolPaint to '#B0184A linear' and a third box comes out with the ramp. Pixels sampled from the renders confirm it (176,24,74 = #B0184A on both boxes). The arrow, never picked, kept its own colour. PlaytestHarness describe() now logs toolPaint and toolFillPaint, which is what makes the walk provable rather than eyeballed."
+    },
+    {
+      "t": "2026-09-04T09:05:47.873Z",
+      "note": "Acceptance 2 checked over the whole walk: at every describe, toolPaint and the panel's stroke row read the same thing. Acceptance 3 checked both ways: a flat crimson and a linear ramp both carry."
+    },
+    {
+      "t": "2026-09-04T09:05:47.873Z",
+      "note": "Review of the built thing. What I could not fix: pointing a row at a SAVED colour still does not arm, because AnnotationStyles holds a paint and nothing else, so arming from a style would bake a frozen copy that drifts when the style is edited. Filed as the-tool-in-your-hand-can-hold-a-saved-colour-no rather than shipping the worse of two answers. Painting a text block's ink arms nothing either: the text tool has no colour of its own (new text takes the FG swatch), which is an older gap this did not widen. Undo puts the shape back but leaves the tool armed, which is exactly what the toolbar path already does. All three are in the audit's rough list for the user to react to."
     }
-  ]
+  ],
+  "started": "2026-09-04T08:53:27.262Z"
 }

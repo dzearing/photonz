@@ -1,0 +1,28 @@
+{
+  "id": "the-tool-in-your-hand-can-hold-a-saved-colour-no",
+  "title": "The tool in your hand can hold a saved colour, not just a copy of one",
+  "goal": "Point a shape at a saved colour like Accent and the tool that draws it still comes out the old colour, so the next shape has to be pointed at Accent too. Picking a plain colour on the same row does carry over. Make a saved colour carry over as well, and have the next shape actually wear the name rather than a copy of it, so editing Accent later still moves everything.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1150,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T09:05:31.350Z",
+  "updated": "2026-09-04T09:05:31.350Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while shipping painting-a-shape-from-the-panel-arms-the-tool-th. EditorState.setSelectionPaint / setSelectionColor / setColorEnabled now call armToolsFromSelection, which reads PhotonzDocument.toolArming and lands it via AnnotationStyles.arm. useColorStyle deliberately does NOT, because AnnotationStyles holds a Paint and nothing else: arming from a style would bake the styles current colour into the tool as a plain colour, so the next shape would match today and drift the day the style is edited. Doing this properly means AnnotationStyles (and AnnotationContent, which already has no binding field) being able to carry a ColorStyle id per slot, plus AnnotationBuilder writing the binding onto the new layer. Check Layer.colorStyleBindings for the shape a layer already uses.",
+  "acceptance": [
+    "Choosing a saved colour on a selected shape means the next shape of that kind is drawn wearing that same saved colour",
+    "The new shape follows the saved colour when it is edited later, rather than keeping a frozen copy of what it was",
+    "The toolbar swatch says which saved colour the tool is holding, not just what colour it looks like",
+    "Unlinking, or picking a plain colour instead, puts the tool back to holding a plain colour"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T09:05:31.350Z",
+      "note": "created (manual)"
+    }
+  ]
+}

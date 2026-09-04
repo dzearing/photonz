@@ -1941,6 +1941,14 @@ private final class Run {
     }
 
     /// What the editor is doing right now, in the terms an audit talks about.
+    /// One colour in the words a walk reads: the flat colour it stands for,
+    /// and the kind of ramp when it is one. "none" is an answer too, and means
+    /// the next box comes out an outline.
+    private static func describe(paint: Paint?) -> String {
+        guard let paint else { return "none" }
+        return paint.isGradient ? "\(paint.hex) \(paint.kind.rawValue)" : paint.hex
+    }
+
     private func describe() -> [String: Any] {
         let began = CACurrentMediaTime()
         defer { MainThreadMeter.shared.exclude(CACurrentMediaTime() - began) }
@@ -2099,6 +2107,13 @@ private final class Run {
                 return "\(body) ×\(selection.count)"
             }(),
             "shapeSection": editor.shapeSelection.title,
+            // What the toolbar swatch is showing: the outline and the inside
+            // the tool in your hand would draw with. Painting a shape from the
+            // right hand panel arms that tool, so this is what a walk reads to
+            // prove the next shape comes out the colour just picked, and to
+            // prove the swatch and the panel row never disagree.
+            "toolPaint": Self.describe(paint: editor.activeToolPaint),
+            "toolFillPaint": Self.describe(paint: editor.activeToolFillPaint),
             "selected": editor.selectedLayerID?.uuidString ?? "nil",
             // Everything the Layers menu would act on, by name and in draw
             // order: one layer clicked, several ⇧-clicked, or a whole sweep.

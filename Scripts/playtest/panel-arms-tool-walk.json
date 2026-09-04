@@ -1,0 +1,59 @@
+{
+  "out": "/tmp/photonz-playtest/panel-arms-tool",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1500, "height": 950 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 160], "to": [400, 320], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "toggleFillSwitch" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-outline-only", "note": "the Fill checkbox in the panel switched off, so this box is an outline. toolFillPaint must be none too: the next box comes out an outline like this one" },
+    { "do": "snapshot", "name": "panelarms-1-fill-switched-off" },
+
+    { "do": "action", "action": "openColorPicker" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-picker-open", "note": "the picker open on the panel's Outline row, which is the row being fixed" },
+    { "do": "snapshot", "name": "panelarms-2-panel-row-picker" },
+    { "do": "action", "action": "closeColorPicker" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-painted", "note": "painted crimson from the PANEL, not the toolbar. toolPaint must now be #B0184A as well: the swatch and the row agree" },
+    { "do": "snapshot", "name": "panelarms-3-swatch-followed-the-panel" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-tool-back", "note": "back on the rectangle tool with nothing picked: the tool is holding what the panel left it" },
+    { "do": "drag", "from": [440, 160], "to": [700, 320], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-second-box", "note": "a second box drawn and never painted: it comes out the colour picked on the panel" },
+    { "do": "render", "name": "panelarms-4-two-boxes-agree" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-arrow-untouched", "note": "the arrow was never picked, so it keeps whatever colour it was already holding: each tool remembers its own" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Rectangle 2" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "paintSelectionGradient" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "7-gradient-from-the-panel", "note": "a gradient chosen on the panel row: toolPaint must say linear, exactly the way arming from the toolbar does" },
+    { "do": "snapshot", "name": "panelarms-5-gradient-armed-from-the-panel" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [740, 160], "to": [1000, 320], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-third-box", "note": "a third box, never painted, comes out the gradient the panel chose" },
+    { "do": "render", "name": "panelarms-6-gradient-carried" },
+    { "do": "snapshot", "name": "panelarms-7-window" }
+  ]
+}

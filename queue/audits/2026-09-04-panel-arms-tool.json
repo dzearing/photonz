@@ -1,0 +1,30 @@
+{
+  "feature": "Painting from the panel arms the tool",
+  "epic": "ui-components",
+  "summary": "Pick a colour on a selected shape in the right hand panel and the tool that draws it comes away holding that colour, so the next shape of that kind matches without picking again. Until now only the toolbar swatch did that, so the same colour picked in two places meant two different things.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to turn on. Every shape tool keeps its own colour, so a box going blue leaves the arrow alone.",
+  "try": [
+    { "do": "Press R and drag out a rectangle." },
+    { "do": "Press V and click the rectangle." },
+    { "do": "In the Color section on the right, click the Outline swatch and pick a strong blue.", "shot": "2026-09-04-panel-arms-tool-1.png" },
+    { "do": "Look at the shape swatch in the middle of the toolbar at the bottom: it is showing the same blue." },
+    { "do": "Press R and drag out a second rectangle. It comes out blue without you picking anything." },
+    { "do": "Select one box, open the Outline swatch again and press the Linear tile, then draw a third box: it comes out with the same gradient.", "shot": "2026-09-04-panel-arms-tool-2.png" },
+    { "do": "Press A for the arrow and check its swatch: still whatever the arrow was already holding, untouched." },
+    { "do": "Select a box and uncheck Fill in the panel, then draw another box: it comes out an outline too." }
+  ],
+  "evaluate": [
+    "Recolouring one shape you already drew now changes what the next one comes out as. Is that what you expect, or did you mean to fix just that one shape?",
+    "The toolbar swatch changing under your eye is the only signal the tool was re-armed. Is that enough of a tell, or should something say so?",
+    "With three boxes picked and painted at once, all three tools of those kinds get armed. Right call, or should a multi-pick leave the tools alone?",
+    "Unchecking Fill on a shape arms the tool with no fill. Useful, or a step too far from what unchecking a box means?",
+    "Undo puts the shape back but leaves the tool armed with the new colour. Does that ever bite you?"
+  ],
+  "rough": [
+    "Pointing a colour row at a saved style (picking Accent from the row's menu) still does NOT arm the tool. Arming it would bake a copy of that style's colour into the tool, so the next shape would look right today and quietly drift the day the style is edited. The real answer is a tool that can hold a STYLE, which is its own piece of work: filed as a follow-up task.",
+    "Painting a text block's ink from the panel arms nothing, because the text tool has no colour of its own to arm: new text takes the foreground colour from the swatch pair. That is a separate gap, not something this change made worse.",
+    "The border colour is remembered the way every other Effects field already is, which means it rides along with the whole look and only when exactly one layer is picked. Painting a border across three layers arms nothing.",
+    "Taken further than the task asked in one place: the Fill checkbox. Switching a box's inside off in the panel arms the tool with no inside, because the toolbar's Fill toggle has always done exactly that and leaving the two apart would have been the same bug in a second spot.",
+    "Screen Recording was granted for this run, so the two pictures here are real window captures rather than offscreen renders."
+  ]
+}
