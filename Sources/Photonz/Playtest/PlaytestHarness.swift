@@ -616,6 +616,9 @@ private final class Run {
                     + " with a \(click) click",
                  state: describe())
 
+        case .press(let control, let row, let count, let modifiers):
+            try await pressControl(control, in: row, count: count, modifiers: modifiers, number: number)
+
         case .panel(let stage):
             let inventory = try readPanel()
             write(json: inventory, to: "panel-\(stage).json")
@@ -1021,6 +1024,118 @@ private final class Run {
         return match
     }
 
+    /// Presses a control in the panel by the words on it.
+    ///
+    /// The press is real mouse events, not the control's action called behind
+    /// its back: a button that is dimmed, covered by something else, or wired
+    /// to nothing has to fail a walk the way it fails a person, and a shortcut
+    /// straight to the action would report a pass for all three.
+    ///
+    /// The events are POSTED to the app's queue rather than handed to the view.
+    /// SwiftUI answers a press from inside its own tracking loop, which pulls
+    /// the release out of that queue; a walk that called `mouseDown` directly
+    /// left the release nowhere to be found and stopped for good (tried
+    /// 2026-09-04). Posting both first means the loop always finds its way out.
+    private func pressControl(_ name: String, in row: String?, count: Int,
+                              modifiers: [PlaytestModifier], number: Int) async throws {
+        let window = try requireWindow()
+        let target = try pressTarget(name, in: row)
+        guard target.isEnabled else {
+            throw Failure(description: "the control \"\(target.name)\" is dimmed, so pressing it would do nothing")
+        }
+        guard let content = window.contentView,
+              content.convert(content.bounds, to: nil).contains(target.point) else {
+            throw Failure(description: "the control \"\(target.name)\" is not in the window; "
+                + "scroll to it with a \"scrollPanel\" step first")
+        }
+        let flags = eventFlags(modifiers)
+        let stamp = ProcessInfo.processInfo.systemUptime
+        guard let down = NSEvent.mouseEvent(
+                with: .leftMouseDown, location: target.point, modifierFlags: flags, timestamp: stamp,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                clickCount: count, pressure: 1),
+              let up = NSEvent.mouseEvent(
+                with: .leftMouseUp, location: target.point, modifierFlags: flags, timestamp: stamp + 0.05,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 1,
+                clickCount: count, pressure: 0) else {
+            throw Failure(description: "could not make a mouse event for \"\(target.name)\"")
+        }
+        MainThreadMeter.shared.install()
+        MainThreadMeter.shared.reset()
+        ViewBuildMeter.shared.reset()
+        NSApp.postEvent(down, atStart: false)
+        NSApp.postEvent(up, atStart: false)
+        // Long enough for the queue to drain and for whatever the press
+        // changed to be laid out before the next step reads it.
+        await sleep(0.35)
+        let place = target.detail.isEmpty ? "" : " in \(target.detail)"
+        note(number, "press",
+             "\"\(target.name)\"\(place) at window \(short(target.point)), "
+             + "\(count == 1 ? "one click" : "\(count) clicks")"
+             + (modifiers.isEmpty ? "" : " with \(modifiers.map(\.rawValue).joined(separator: "+"))")
+             + "; " + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report,
+             state: describe())
+    }
+
+    /// The one thing in the panel called this, or a refusal that says what IS
+    /// there. Two things wearing the same name is refused rather than guessed
+    /// at: a walk that pressed the wrong one would pass and prove nothing.
+    private func pressTarget(_ name: String, in row: String?) throws -> PlaytestPressTarget {
+        let everything = try pressTargets()
+        // "in" narrows to one row of the panel — Width's Fixed, not Height's.
+        let all = row.map { wanted in
+            everything.filter { $0.detail.range(of: wanted, options: .caseInsensitive) != nil }
+        } ?? everything
+        let inRow = row.map { " in \"\($0)\"" } ?? ""
+        let exact = all.filter { $0.name == name }
+        if exact.count == 1 { return exact[0] }
+        if exact.count > 1 {
+            throw Failure(description: "\(exact.count) controls in the panel are called \"\(name)\"\(inRow): "
+                + exact.map { "\($0.name) (\($0.detail))" }.joined(separator: ", ")
+                + ". Add an \"in\" naming the row it is on.")
+        }
+        if let loose = all.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
+            return loose
+        }
+        // Something scrolled out of the dock is still built and still listed,
+        // so the list says which ones would need a scroll before a press.
+        let reach = try requireWindow().contentView.map { $0.convert($0.bounds, to: nil) }
+        let seen = all.map { target -> String in
+            var about = target.detail
+            if reach?.contains(target.point) == false {
+                about += about.isEmpty ? "scrolled out of view" : ", scrolled out of view"
+            }
+            return about.isEmpty ? target.name : "\(target.name) (\(about))"
+        }.joined(separator: ", ")
+        throw Failure(description: "no control called \"\(name)\"\(inRow) is in the panel; the ones that are: "
+            + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
+    }
+
+    /// Everything in the panel a press can land on: what the panel named for
+    /// itself, and every segment of every picker, which names itself.
+    private func pressTargets() throws -> [PlaytestPressTarget] {
+        guard let content = try requireWindow().contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let everything = try panelTargets()
+        let fields = everything.filter { $0.kind == .field }
+        // A marker cannot tell whether the control in front of it is dimmed —
+        // SwiftUI's `disabled` leaves no mark on the view tree — so a press on
+        // one is judged by what it changes, not by asking first. A picker
+        // segment is a real AppKit control and does know.
+        let marked = everything.filter { $0.kind == .control }.map { target -> PlaytestPressTarget in
+            let frame = target.convert(target.bounds, to: nil)
+            var pieces = target.detail.isEmpty ? [] : [target.detail]
+            if let row = PlaytestPanelPress.field(at: frame, among: fields), !pieces.contains(row) {
+                pieces.append(row)
+            }
+            return PlaytestPressTarget(name: target.name, detail: pieces.joined(separator: ", "),
+                                       point: CGPoint(x: frame.midX, y: frame.midY),
+                                       isEnabled: true)
+        }
+        return marked + PlaytestPanelPress.segments(in: content, named: fields)
+    }
+
     /// What the panel is showing, in the names a walk has to use.
     private func readPanel() throws -> [String: Any] {
         guard let content = try requireWindow().contentView else {
@@ -1036,6 +1151,13 @@ private final class Run {
         return [
             "tiles": targets.filter { $0.kind == .tile }.map(describe),
             "rows": targets.filter { $0.kind == .row }.map(describe),
+            "controls": try pressTargets().map { control in
+                ["name": control.name, "detail": control.detail, "enabled": control.isEnabled,
+                 // Something scrolled out of the dock is still built, and still
+                 // listed, but a press cannot reach it until the walk scrolls.
+                 "inWindow": content.convert(content.bounds, to: nil).contains(control.point),
+                 "x": Int(control.point.x.rounded()), "y": Int(control.point.y.rounded())]
+            },
             "menus": PlaytestPanelMenu.buttons(in: content)
                 .map { PlaytestPanelMenu.title(of: $0) }.filter { !$0.isEmpty },
         ]
@@ -1052,6 +1174,7 @@ private final class Run {
         }
         let menus = (inventory["menus"] as? [String] ?? [])
         return "shelf tiles: \(names("tiles"))\nlayer rows: \(names("rows"))"
+            + "\ncontrols: \(names("controls"))"
             + "\nmenus: \(menus.isEmpty ? "none" : menus.joined(separator: ", "))"
     }
 

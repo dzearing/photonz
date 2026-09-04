@@ -1379,3 +1379,5 @@
 {"t":"2026-09-04T12:10:10.683Z","ev":"task_created","id":"a-locked-layer-inside-a-stack-is-left-where-it-i","priority":"p3-low","title":"A locked layer inside a stack is left where it is"}
 {"t":"2026-09-04T12:10:20.809Z","ev":"triage","summary":"2026-09-04 daily pass: 0 merged, 1 priority move (scripted walk can press a panel control p3 -> p1, it unblocks focus verification), 0 resets (guard clean, nothing in_progress), 11 tasks resequenced to steps of 10 within each priority, 7 new tasks filed from the design review, 1 goal and acceptance list rewritten. Open tasks 4 -> 11 (p1 0 -> 1, p2 2 -> 6, p3 2 -> 4); ready 2 -> 9. Every open task names an epic; none serve a later epic."}
 {"t":"2026-09-04T12:12:44.906Z","ev":"digest","file":"2026-09-04.md"}
+{"t":"2026-09-04T12:13:07.254Z","ev":"task_started","id":"a-scripted-walk-can-press-a-control-in-the-right","title":"A scripted walk can press a control in the right hand panel","priority":"p1-high"}
+{"t":"2026-09-04T12:36:38.528Z","ev":"task_created","id":"the-panel-names-the-rest-of-its-controls-so-a-wa","priority":"p2-normal","title":"The panel names the rest of its controls so a walk can press them"}

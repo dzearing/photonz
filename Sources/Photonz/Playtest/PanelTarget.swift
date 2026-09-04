@@ -24,6 +24,15 @@ enum PanelTargetKind: String {
     case tile
     /// One row in the layers list.
     case row
+    /// Something in the panel a person presses: a button, a checkbox, the
+    /// name of a row that goes somewhere.
+    case control
+    /// One labelled row of the panel — Width, Direction, Vertical — covering
+    /// its word and whatever control sits on it. It lends its name to what it
+    /// holds, so a walk can say Width's Fixed rather than whichever Fixed came
+    /// first, and it is never pressed itself: the middle of a row is its empty
+    /// space.
+    case field
 }
 
 /// The invisible marker behind one tile or row. Like `HintAnchorView` it is a
@@ -80,17 +89,40 @@ extension View {
                         payload: (@MainActor () -> NSItemProvider)? = nil) -> some View {
         background(PanelTargetAnchor(name: name, kind: kind, detail: detail, payload: payload))
     }
+
+    /// Names a control in the panel by the words on it, so a `press` step can
+    /// find it. `detail` says where it lives, for the log and for the list a
+    /// `panel` step writes: "Layout, Vertical".
+    ///
+    /// The marker is a position only. Pressing goes through real mouse events
+    /// at that position, so a control that is dimmed or covered fails a walk
+    /// the same way it fails a person, which calling its action straight would
+    /// hide.
+    func playtestControl(_ name: String, detail: String = "") -> some View {
+        playtestTarget(name, kind: .control, detail: detail)
+    }
+
+    /// Names one labelled row of the panel, so a `press` step can say which
+    /// row it means when two of them wear the same words. Put it on the whole
+    /// row, word and control together. The row itself is never pressed.
+    func playtestField(_ title: String) -> some View {
+        playtestTarget(title, kind: .field)
+    }
 }
 
 #else
 
 enum PanelTargetKind: String {
-    case tile, row
+    case tile, row, control, field
 }
 
 extension View {
     func playtestTarget(_ name: String, kind: PanelTargetKind, detail: String = "",
                         payload: (@MainActor () -> NSItemProvider)? = nil) -> some View { self }
+
+    func playtestControl(_ name: String, detail: String = "") -> some View { self }
+
+    func playtestField(_ title: String) -> some View { self }
 }
 
 #endif

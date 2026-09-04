@@ -1,0 +1,233 @@
+{
+  "out": "/tmp/photonz-playtest/panel-press",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        60
+      ],
+      "to": [
+        300,
+        120
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        160
+      ],
+      "to": [
+        300,
+        220
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        90
+      ]
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionDown"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        190
+      ]
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionAcross"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        90
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        190
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panel",
+      "stage": "1-before"
+    },
+    {
+      "do": "describe",
+      "stage": "1-before",
+      "note": "the layer inside the stack whose only rule is Stretch down: its Vertical row is owned by the stack and offers Clear Stretch"
+    },
+    {
+      "do": "snapshot",
+      "name": "panel-press-1-before"
+    },
+    {
+      "do": "press",
+      "control": "Clear Stretch"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "2-after"
+    },
+    {
+      "do": "describe",
+      "stage": "2-after",
+      "note": "after the press the dead rule is gone, so no Clear button is left in the Layout section"
+    },
+    {
+      "do": "snapshot",
+      "name": "panel-press-2-after"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        400
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-canvas-still-works",
+      "note": "a plain click on the picture still lands on the canvas and deselects"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "4-group"
+    },
+    {
+      "do": "describe",
+      "stage": "4-group",
+      "note": "the stack itself: the Layout section shows Arrangement and Direction as segmented pickers"
+    },
+    {
+      "do": "press",
+      "control": "Row"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-row",
+      "note": "pressing the Row segment of Direction turns the column stack into a row"
+    },
+    {
+      "do": "snapshot",
+      "name": "panel-press-3-row"
+    },
+    {
+      "do": "press",
+      "control": "Fixed",
+      "in": "Width"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "6-fixed"
+    },
+    {
+      "do": "describe",
+      "stage": "6-fixed",
+      "note": "the same word appears on the Width row and the Height row; \"in\" says which one, and only Width changes"
+    },
+    {
+      "do": "snapshot",
+      "name": "panel-press-4-fixed"
+    }
+  ]
+}

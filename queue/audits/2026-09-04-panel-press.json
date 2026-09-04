@@ -1,0 +1,28 @@
+{
+  "feature": "A scripted walk can press a control in the right hand panel",
+  "epic": "unmanned-loop",
+  "summary": "An unmanned playtest could only ever click the picture, so a feature living in the right hand panel could be photographed and never used. A walk can now press a button or a picker in that panel by the words on it, which is how the Layout section gets checked off by pressing it rather than by looking at it.",
+  "setup": "Nothing to install. This is loop tooling, so the way to try it is to run a walk: Scripts/playtest.sh Scripts/playtest/panel-press-walk.json. The shots below come from that walk.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/panel-press-walk.json and wait for it to say ok." },
+    { "do": "Open /tmp/photonz-playtest/panel-press/panel-1-before.json and read the controls list: every button and picker segment the panel is showing, with the row it sits on." },
+    { "do": "Look at the first shot: a layer inside a stack, its Vertical row reading Set by the stack with Clear Stretch beside it.", "shot": "2026-09-04-panel-press-1-before.png" },
+    { "do": "Look at the second shot: the same panel after the walk pressed Clear Stretch. The button is gone and the sentence under it has changed.", "shot": "2026-09-04-panel-press-2-after.png" },
+    { "do": "Look at the third shot: Direction now reads Row and Width reads Fixed, both from scripted presses of picker segments.", "shot": "2026-09-04-panel-press-3-picker.png" },
+    { "do": "Read the press lines in log.json: each one names what it pressed and the row it was on." },
+    { "do": "Change one press to a name that does not exist and run it again, to see the walk fail with the list of what IS there." }
+  ],
+  "evaluate": [
+    "Reading the controls list from a panel step, could you write a press for a control you had never seen before?",
+    "Is naming the row (\"Fixed\" in \"Width\") the way you would expect to tell two identical words apart, or would you rather write the words that are on screen in some other form?",
+    "A press on a SwiftUI button cannot tell whether the button is dimmed, so it reports a pass and the walk has to judge by what changed. Is that honest enough, or should a press be refused unless it changes something?",
+    "Only two kinds of thing are pressable today: picker segments everywhere, and the handful of buttons that have been named so far. Which panel control do you most want named next?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so all three shots are real captures of the window, not offscreen renders.",
+    "A button drawn by SwiftUI has to be named by hand, one line on the control. Picker segments name themselves, so the whole Layout section works with no annotation at all, but the eye and lock in the layers list, the colour wells, and the Effects buttons are not reachable yet. A follow-up task covers naming them.",
+    "A press cannot tell whether a SwiftUI control is dimmed: disabled leaves no mark on the view tree. A picker segment is a real AppKit control and does know, and is refused when dead.",
+    "A control scrolled out of the dock is still built and still listed, but a press refuses it and asks for a scrollPanel first rather than clicking a spot that is not on screen.",
+    "The mock had nothing to say here; this is loop tooling, and the shape came from what the panel already does for tiles and layer rows."
+  ]
+}

@@ -611,6 +611,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// This is the only way to select a layer the canvas will not give you: a
     /// locked one, which a click on the picture falls straight through.
     case selectRow(row: String, modifiers: [PlaytestModifier])
+    /// Press a control in the right hand panel by the words on it: a button,
+    /// one segment of a picker, the name of a row. `in` names the row it sits
+    /// on, for when the same word appears twice — the Layout section holds a
+    /// Hug and a Fixed for Width and another pair for Height. `count` doubles
+    /// the click, `modifiers` read as they do under a pointer.
+    ///
+    /// A walk could only ever click the picture, so a feature that lives in
+    /// the panel could be photographed and never used: three audits on
+    /// 2026-09-04 had to say so out loud. This names the control instead of a
+    /// pixel, so a panel that reflows does not break the walk, and it presses
+    /// with real mouse events, so a control that is dimmed, covered or wired
+    /// to nothing fails the walk the way it would fail a person.
+    case press(control: String, in: String?, count: Int, modifiers: [PlaytestModifier])
     /// Write what the right hand panel is showing to the log and to
     /// `panel-<stage>.json`: every tile on the shelf, every row in the layers
     /// list, and every menu in the dock, by the names a walk has to use for
@@ -654,7 +667,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
         "dragFile", "dragRow", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
-        "panel", "panelMenu",
+        "panel", "panelMenu", "press",
         "readClipboard", "render", "scrollPanel", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
 
@@ -687,6 +700,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragTile: "dragTile"
         case .dragRow: "dragRow"
         case .selectRow: "selectRow"
+        case .press: "press"
         case .panel: "panel"
         case .scrollPanel: "scrollPanel"
         case .describe: "describe"
@@ -806,6 +820,10 @@ public enum PlaytestStep: Sendable, Equatable {
                             zone: zone, hold: try f.optionalString("hold"))
         case "selectRow":
             self = .selectRow(row: try f.string("row"), modifiers: try f.modifiers())
+        case "press":
+            let count = try f.optionalNumber("count").map { Int($0) } ?? 1
+            self = .press(control: try f.string("control"), in: try f.optionalString("in"),
+                          count: max(1, count), modifiers: try f.modifiers())
         case "panel":
             self = .panel(stage: try f.string("stage"))
         case "scrollPanel":

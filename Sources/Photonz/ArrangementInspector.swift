@@ -174,6 +174,9 @@ struct ArrangementInspector: View {
             Spacer(minLength: 8)
             control()
         }
+        // Lends the row's word to whatever it holds, so a scripted walk can
+        // say Width's Fixed rather than whichever Fixed came first.
+        .playtestField(title)
     }
 
     private func number(_ title: String, value: CGFloat, minimum: CGFloat = 0,

@@ -1,0 +1,28 @@
+{
+  "id": "the-panel-names-the-rest-of-its-controls-so-a-wa",
+  "title": "The panel names the rest of its controls so a walk can press them",
+  "goal": "A scripted playtest can now press a button in the right hand panel, but only the ones that have been given a name so far: the Layout section and its pickers. The eye and the lock on a layer row, the colour wells, the Effects buttons and the Frame section are still photographable and not pressable, so a feature that lives in any of them still gets handed over on a picture. This names them, one line each.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 1080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T12:36:38.527Z",
+  "updated": "2026-09-04T12:36:38.528Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Use playtestControl(name) on the control and playtestField(title) on the row that holds it (Sources/Photonz/Playtest/PanelTarget.swift). Segmented pickers need nothing: PlaytestPanelPress reads NSSegmentedControl segments straight off the view tree. Files: LayersPanel.swift (eye, lock), ColorStylePanel.swift, FrameInspector.swift, GeometryInspector.swift. Docs: docs/design/playtest-harness.md, Reaching into the right hand panel.",
+  "acceptance": [
+    "A walk can press the eye and the lock on a named row in the layers list, and the log says which row",
+    "A walk can press the buttons in the Effects and Frame sections by the words on them",
+    "A panel step lists every one of them with the row it sits on",
+    "Scripts/test.sh passes and every existing walk still finishes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T12:36:38.528Z",
+      "note": "created (manual)"
+    }
+  ]
+}

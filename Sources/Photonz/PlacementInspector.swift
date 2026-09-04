@@ -307,6 +307,7 @@ struct PlacementInspector: View {
         .buttonStyle(.plain)
         .onHover { hoveredContentID = $0 ? exception.id : nil }
         .help("Select \(exception.name)")
+        .playtestControl(exception.name, detail: "Layout, a layer with a rule of its own")
     }
 
     /// The row for an axis the stack decides. It stays in place, with the same
@@ -335,6 +336,7 @@ struct PlacementInspector: View {
                             .help("\(stale) is still set here from before, and does nothing while "
                                   + "\(flow.flowNoun ?? "the flow") decides this direction. Clear "
                                   + "it so changing the direction later does not bring it back.")
+                            .playtestControl("Clear \(stale)", detail: "Layout")
                     }
                 }
             }
@@ -352,6 +354,9 @@ struct PlacementInspector: View {
             Spacer(minLength: 8)
             control()
         }
+        // Lends the row's word to whatever it holds, so a scripted walk can
+        // say which of two rows wearing the same answer it means.
+        .playtestField(title)
     }
 
     /// The current answer. A row that has not been set says the same word the

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T11:34:49.242Z",
-  "updated": "2026-09-04T12:08:41.755Z",
+  "updated": "2026-09-04T12:36:54.072421Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Clicks are dispatched straight to CanvasNSView (PlaytestHarness case .click), so a window-space point silently lands on the canvas behind the panel and reads as a click on nothing. Hit-testing the content view and sending mouseDown to the SwiftUI hosting view under it hangs the walk (tried 2026-09-04, reverted). PlaytestPanelMenu solved the same class of problem for menus with a tracking-mode hop; likely the same shape of answer, or drive the control through its accessibility element instead.",
@@ -35,6 +35,39 @@
     {
       "t": "2026-09-04T12:08:41.755Z",
       "note": "seq 1200 -> 10"
+    },
+    {
+      "t": "2026-09-04T12:13:07.254Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T12:36:54.072421Z",
+      "note": "review before building: the mock says nothing here, so the question was what a walk should NAME. A pixel in the panel was rejected outright: it breaks the moment the panel reflows, and every audit would have to compute coordinates. Naming the words on the control is the only form that keeps working."
+    },
+    {
+      "t": "2026-09-04T12:36:54.072421Z",
+      "note": "tried the accessibility tree first, as the task file suggested: in-process it is empty. SwiftUI only builds accessibility nodes for a real assistive client, so a spike found the one AppKit-backed slider in a test panel and none of its buttons. Dropped it."
+    },
+    {
+      "t": "2026-09-04T12:36:54.072421Z",
+      "note": "found why the earlier attempt hung: handing mouseDown to the view directly leaves SwiftUI's own tracking loop waiting for a release that is not in the event queue. POSTING both events to the app's queue instead (NSApp.postEvent) fires a SwiftUI button and returns. Proven in a standalone spike before touching the app."
+    },
+    {
+      "t": "2026-09-04T12:36:54.072421Z",
+      "note": "shortest version that delivers the value: one press step. Two halves, because the panel has two kinds of thing. A SwiftUI button says who it is through the marker idiom the panel already uses for tiles and rows (playtestControl). A segmented picker is a real NSSegmentedControl underneath, so its segments name themselves and the whole Layout section works with no annotation at all."
+    },
+    {
+      "t": "2026-09-04T12:36:54.072421Z",
+      "note": "review of the built thing, on the real app: pressing Fixed was ambiguous, because Width and Height each have a Hug and a Fixed. Added playtestField on the row so a segment carries its row's word, and an optional \"in\" on the step. Both error paths were checked by running walks that fail on purpose: ambiguous names and unknown names both refuse with the full list, and neither hangs."
+    },
+    {
+      "t": "2026-09-04T12:36:54.072421Z",
+      "note": "verified on the real app, Screen Recording granted: Scripts/playtest/panel-press-walk.json presses Clear Stretch on a layer inside a stack (the case three audits could not check), then presses the Row segment of Direction and the Fixed segment of Width. Real screen captures show the panel before and after each. Existing walks re-run unchanged: inert-rule, redline, panel-reach, stack-owns-axis, panel-takes-picture all still ok."
+    },
+    {
+      "t": "2026-09-04T12:36:54.072421Z",
+      "note": "still open: a press cannot tell whether a SwiftUI control is dimmed (disabled leaves no mark on the view tree); picker segments can and are refused when dead. Only the Layout section's buttons are named so far; follow-up task the-panel-names-the-rest-of-its-controls-so-a-wa covers the eye, the lock, the colour wells and the Effects buttons."
     }
-  ]
+  ],
+  "started": "2026-09-04T12:13:07.253Z"
 }

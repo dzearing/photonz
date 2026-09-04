@@ -134,7 +134,8 @@ scale so you can read coordinates straight off the fixture.
 | `clearClipboard` | | Empties the clipboard. |
 | `readClipboard` | `stage` | Logs the clipboard's types and text. |
 | `selectRow` | `row`, optional `modifiers` | Clicks a row in the layers list by the name it shows, the way a person picks a layer out of the list instead of off the picture. Modifiers read as they do under a pointer: shift ranges from the anchor row, command adds or removes. This is the only way to select a LOCKED layer, since a click on the picture falls straight through one. Fails with the list of rows that ARE there. |
-| `panel` | `stage` | Writes what the RIGHT HAND PANEL is showing to the log and to `panel-<stage>.json`: every tile on the Library shelf, every row in the layers list, and every menu in the dock, by the names the steps below use for them. The `menus` step for the panel, and the first step to write when a walk cannot find something. |
+| `panel` | `stage` | Writes what the RIGHT HAND PANEL is showing to the log and to `panel-<stage>.json`: every tile on the Library shelf, every row in the layers list, every control a `press` can land on (with the row it is on and whether it is far enough up the dock to be reached where it is), and every menu in the dock, by the names the steps below use for them. The `menus` step for the panel, and the first step to write when a walk cannot find something. |
+| `press` | `control`, optional `in` `count` `modifiers` | Presses something in the RIGHT HAND PANEL by the words on it: a button ("Clear Stretch"), one segment of a picker ("Row", "Fixed"), a row that goes somewhere. `in` names the row it sits on, for when the same word appears twice — the Layout section holds a Hug and a Fixed for Width and another pair for Height, so `{"control": "Fixed", "in": "Width"}`. The press is real mouse events posted to the app's queue, never the control's action called behind its back, so a control that is covered or wired to nothing fails the walk. Fails with the list of controls that ARE there; a `panel` step prints the same list. |
 | `panelMenu` | `menu`, optional `shot` `choose` | Opens a menu INSIDE the window by the words on its button ("Add"), writes its rows to the log, and closes it. `shot` names a real screen capture of the menu in place over the panel, written to `<shot>-sc.png` — the only kind of picture of a menu there is, since a menu is drawn outside this process and renders blank offscreen. `choose` picks one of its rows by title instead of closing with nothing chosen. Needs the Screen Recording grant for the picture; the rows reach the log either way. |
 | `scrollPanel` | `by`, optional `row` | Scrolls the panel list `by` points, negative going DOWN the list. The log says how many rows were on screen before and after, which rows arrived, how many row bodies were built, and what it cost the main thread. Name a `row` to pick which list; leave it out for the layers list wherever it is sitting, which is what a walk crawling down a long list wants, since the row it started from scrolls away and stops being built. The layers list builds only the rows you can see, so this is the only way to reach the rest. A synthesised wheel is usually swallowed by a SwiftUI scroll area, so the step falls back to scrolling directly and SAYS which of the two happened. |
 | `dragTile` | `tile`, `to`, optional `space` `hold` | Picks a tile up off the Library shelf by its name and lets it go on the picture, through the canvas's own drag destination — the same calls a drop from the Finder makes, carrying the very payload the tile's own drag hands over. A capture tile can be named by the caption it shows ("10 hours ago") or, better for a walk that has to keep working, by its file name. `hold` names a picture taken while it is still in the air, which is the only moment the landing outline exists. |
@@ -152,7 +153,7 @@ had to admit the same hole — a menu in the dock covered by a test instead of a
 picture, a drop line photographed from a one-off build, a tile drag taken on
 trust.
 
-Three steps close it, and one more makes them writable:
+Four steps close it, and one more makes them writable:
 
 - `panel` lists what is there. Start here: it prints the tiles, the rows and the
   menus by the exact names the other three take, so a walk is written from what
@@ -167,6 +168,15 @@ Three steps close it, and one more makes them writable:
   nothing on the main queue runs meanwhile, which is why a walk that clicked one
   simply stopped. The driver arranges its way out first, from a thread that
   reaches the main one in the tracking run loop mode by hand.
+- `press` presses a control. Both halves of the panel are covered: a button or
+  a link drawn by SwiftUI says who it is through a marker behind it, and a
+  segmented picker — Free / Stack / Grid, Row / Column, Hug / Fixed, which is
+  most of the Layout section — is a real AppKit control underneath, so its
+  segments name themselves and need no marker. Either way the press is real
+  mouse events POSTED to the app's queue. That last word is the whole trick:
+  SwiftUI answers a press from inside its own tracking loop, which pulls the
+  release out of that queue, so a walk that called `mouseDown` on the view
+  directly left the release nowhere to be found and stopped for good.
 - `dragTile` and `dragRow` carry out a real drop. They build the pasteboard from
   the very closure the view's own `onDrag` uses and hand it to the destination
   as a dragging info, so `draggingEntered`, `draggingUpdated` and
@@ -181,6 +191,21 @@ device can start, so it is the one part of a panel drag a walk cannot see.
 Tiles and rows say their own names: each hangs an invisible marker behind itself
 (`PanelTarget.swift`) carrying the name a person reads and the same drag closure
 the pointer uses, so a walk can never pick up something a person could not.
+
+A control does the same with `playtestControl("Clear Stretch")`, and the row it
+sits on is named with `playtestField("Width")` — put that on the whole row, word
+and control together. A row is never pressed itself, since the middle of a row
+is its empty space; it only lends its word to whatever it holds, so two rows
+wearing the same answer can be told apart. Adding either to a new control is one
+line and is how a feature that lives in the panel becomes playtestable rather
+than merely photographable.
+
+Two things a press cannot tell you. It cannot say whether a SwiftUI control is
+DIMMED — `disabled` leaves no mark on the view tree — so a press on a dead
+button reports a pass, and the walk has to judge it by what changed; a picker
+segment is a real AppKit control and does know. And a control scrolled out of
+the dock is still built and still listed, but a press refuses it and asks for a
+`scrollPanel` first, rather than clicking a spot that is not on screen.
 
 ## Reading the cost of a step
 

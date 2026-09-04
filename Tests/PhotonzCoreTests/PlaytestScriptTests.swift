@@ -655,6 +655,59 @@ struct PlaytestScriptTests {
 
     /// A list that builds only the rows you can see has to be scrolled for the
     /// rest to arrive, and no other step can turn a wheel.
+    /// Three audits on 2026-09-04 had to hand back a photograph of a button
+    /// in the right hand panel instead of a press, because nothing could reach
+    /// one. A press names the words on the control, never a pixel.
+    @Test func aWalkCanPressAControlInThePanelByItsName() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "press", "control": "Clear Stretch" } ] }
+        """)
+        guard case .press(let control, let row, let count, let modifiers) = script.steps[0] else {
+            Issue.record("press"); return
+        }
+        #expect(control == "Clear Stretch")
+        #expect(row == nil)
+        #expect(count == 1)
+        #expect(modifiers.isEmpty)
+        #expect(script.steps[0].name == "press")
+    }
+
+    /// The Layout section holds a Hug and a Fixed for Width and another pair
+    /// for Height, so the words alone do not say which one.
+    @Test func aPressCanSayWhichRowTheControlIsOn() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "press", "control": "Fixed", "in": "Width" } ] }
+        """)
+        guard case .press(let control, let row, _, _) = script.steps[0] else {
+            Issue.record("press"); return
+        }
+        #expect(control == "Fixed")
+        #expect(row == "Width")
+    }
+
+    @Test func aPressCanBeDoubledAndHeldWithModifiers() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "press", "control": "Direction", "count": 2, "modifiers": ["option"] } ] }
+        """)
+        guard case .press(_, _, let count, let modifiers) = script.steps[0] else {
+            Issue.record("press"); return
+        }
+        #expect(count == 2)
+        #expect(modifiers == [.option])
+    }
+
+    @Test func aPressMustNameTheControl() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "press" } ] }
+            """)
+        }
+    }
+
+    @Test func pressIsOneOfTheStepNames() {
+        #expect(PlaytestStep.names.contains("press"))
+    }
+
     @Test func aScrollPanelStepNamesARowAndHowFarToGo() throws {
         let script = try decode("""
         { "steps": [ { "do": "scrollPanel", "row": "Background", "by": -400 } ] }
