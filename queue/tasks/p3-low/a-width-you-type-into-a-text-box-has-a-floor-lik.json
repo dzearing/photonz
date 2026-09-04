@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 600,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T18:09:56.672Z",
-  "updated": "2026-09-03T18:09:56.672Z",
+  "updated": "2026-09-04T06:36:01.403Z",
   "deps": [],
   "blockedBy": [],
   "notes": "LayerGeometry.clampedSide floors at minimumSide = 1 for every layer; CanvasView.resizedFrame floors a text drag at TextRasterizer.minimumTextWidth (80). Either LayerGeometry needs a per-layer floor or LayerGeometrySelection.applying needs to ask the layer. Found while building a-label-grows-to-fit-what-it-says.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-03T18:09:56.672Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T06:36:01.403Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T06:45:00.000Z",
+      "note": "Adversarial review before building. Only text has a drag floor above 1 (Handles.resize floors every other layer at 1, the same number LayerGeometry.clampedSide uses), so the disagreement is text-only and the fix is a per-layer floor, not a new global minimum. Two things the task did not say but a person would hit: (1) the down arrow in the W field shows the number it asked for even when the layer refused it, so a text box at 80 reads 79 while it is still 80; (2) typing 12 and watching it become 80 with no word anywhere reads as a broken field, so the W hover tip should say where it stops. Both are in scope of 'the number the field shows is the number the box took'. Shortest version: one floor constant in core, LayerGeometryEditing carries it per layer, the field displays what landed."
+    },
+    {
+      "t": "2026-09-04T07:05:00.000Z",
+      "note": "Built. One floor number in core (TextMeasurement.minimumWidth = 80; TextRasterizer.minimumTextWidth is now that constant, so the canvas drag and the typed field cannot drift apart). LayerGeometryEditing carries minimumWidth/minimumHeight per layer and answers minimum(for:); LayerGeometry.applying takes notBelow:; LayerGeometrySelection passes each member's own floor, so one number can land at 12 on a rectangle and 80 on a label in the same selection. Added LayerGeometrySelection.landing(_:in:) so the field shows what the layers took rather than what was typed, which also stops the down arrow counting 79 on a box still at 80. The W hover tip now says where it stops."
+    },
+    {
+      "t": "2026-09-04T07:10:00.000Z",
+      "note": "Verified in the probe app, not just in tests: Scripts/playtest/text-width-floor-walk.json places a label 132 wide, drags its right edge as far left as it goes (stops at 80), undoes, types 12 into W (lands at 80, height re-wraps 21 -> 38), and the focus lines report the W field holding \"80\" after the type and again after a down arrow. 2767 tests green. Screenshot 2026-09-04-typed-width-floor-1.png is a real screen capture (probe holds Screen Recording)."
+    },
+    {
+      "t": "2026-09-04T07:12:00.000Z",
+      "note": "Post-build review. The hover tip is the one piece not photographed: the playtest hover step only finds toolbar tooltips, so the copy is covered by a core test instead. Left alone deliberately: whether 80 is the right floor at all is a product question, and it is asked in the audit rather than changed here."
     }
-  ]
+  ],
+  "started": "2026-09-04T06:36:01.402Z"
 }

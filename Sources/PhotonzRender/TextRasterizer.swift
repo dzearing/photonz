@@ -17,7 +17,10 @@ public enum TextRasterizer {
     /// The minimum width (document points) a text block floors at, so a short
     /// caption isn't a sliver and so the live editor and committed frame agree on
     /// a sensible minimum. Shared by the canvas inline editor and `naturalSize`.
-    public static let minimumTextWidth: CGFloat = 80
+    /// It is the model's floor (`TextMeasurement.minimumWidth`), not a second
+    /// number: the width you type into the inspector stops in the same place
+    /// the width you drag does.
+    public static let minimumTextWidth: CGFloat = TextMeasurement.minimumWidth
 
     /// Renders `text` word-wrapped inside `size` (in pixels), sitting where its
     /// `alignment` and `verticalAlignment` say — top left for text that has

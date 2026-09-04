@@ -49,7 +49,9 @@ public enum LayerGeometry {
     public static var unitSuffix: String { MeasureUnit.pixels.suffix }
 
     /// The smallest a typed width or height may make a layer: below one point
-    /// there is nothing left to see or grab.
+    /// there is nothing left to see or grab. Some layers stop sooner than this
+    /// — a text box floors where its drag does — which is
+    /// `LayerGeometryEditing.minimum(for:)`.
     public static let minimumSide: CGFloat = 1
 
     /// A ceiling on a typed size, so a slipped keystroke ("29600000") cannot
@@ -88,15 +90,20 @@ public enum LayerGeometry {
     /// same way a drag can put it there). Size is clamped into a range that
     /// still renders. A value that is not a real number leaves the frame
     /// untouched, so a half-typed "-" or "1e" never moves anything.
+    ///
+    /// `notBelow` is the layer's own floor, for the layers that stop before
+    /// one point: pass `LayerGeometryEditing.minimum(for:)` and a typed width
+    /// stops exactly where dragging that layer's edge stops. Nil means the
+    /// ordinary floor.
     public static func applying(_ value: CGFloat, to field: LayerGeometryField,
-                                of frame: CGRect) -> CGRect {
+                                of frame: CGRect, notBelow floor: CGFloat? = nil) -> CGRect {
         guard value.isFinite else { return frame }
         var result = frame
         switch field {
         case .x: result.origin.x = value
         case .y: result.origin.y = value
-        case .width: result.size.width = clampedSide(value)
-        case .height: result.size.height = clampedSide(value)
+        case .width: result.size.width = clampedSide(value, notBelow: floor)
+        case .height: result.size.height = clampedSide(value, notBelow: floor)
         }
         return result
     }
@@ -139,8 +146,8 @@ public enum LayerGeometry {
         return CGFloat(value)
     }
 
-    private static func clampedSide(_ value: CGFloat) -> CGFloat {
-        min(max(value, minimumSide), maximumSide)
+    private static func clampedSide(_ value: CGFloat, notBelow floor: CGFloat? = nil) -> CGFloat {
+        min(max(value, max(floor ?? minimumSide, minimumSide)), maximumSide)
     }
 }
 
@@ -182,6 +189,13 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     public let canSetWidth: Bool
     public let canSetHeight: Bool
 
+    /// The narrowest a typed width may make this layer, and the shortest a
+    /// typed height may. A text box stops at the width its drag stops at, so
+    /// the two ways of setting a width land in the same place; everything else
+    /// stops at one point, which is where its drag stops.
+    public let minimumWidth: CGFloat
+    public let minimumHeight: CGFloat
+
     private let widthReason: String?
     private let heightReason: String?
     private let moveReason: String?
@@ -191,6 +205,12 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// where its contents sit, so typing a position there would be undone
     /// before you saw it, and the field says who owns it instead.
     public init(layer: Layer, in container: Layer? = nil) {
+        // Text is the one content with a floor of its own: below it a caption
+        // is an unreadable sliver, so the canvas refuses to drag one narrower
+        // and the field refuses to type one.
+        minimumWidth = layer.resizeWidthOnly ? TextMeasurement.minimumWidth
+                                             : LayerGeometry.minimumSide
+        minimumHeight = LayerGeometry.minimumSide
         if layer.isLocked {
             canMove = false
             canSetWidth = false
@@ -230,6 +250,16 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         case .x, .y: canMove
         case .width: canSetWidth
         case .height: canSetHeight
+        }
+    }
+
+    /// The floor this field stops at, or nil for a field with no floor: a
+    /// position may go anywhere, including off the canvas.
+    public func minimum(for field: LayerGeometryField) -> CGFloat? {
+        switch field {
+        case .x, .y: nil
+        case .width: minimumWidth
+        case .height: minimumHeight
         }
     }
 

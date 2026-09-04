@@ -103,20 +103,62 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         return members.compactMap { $0.editing.fixedReason(for: field) }.first
     }
 
-    /// What to add to the hover tip when the field speaks for only part of the
-    /// selection, so a width that skips the arrow says so instead of looking
-    /// broken. Nil when it acts on everything picked.
+    /// What to add to the hover tip: how much of the selection the field
+    /// reaches, and where it stops. A width that skips the arrow in the
+    /// selection says so instead of looking broken, and a width that will not
+    /// go below 80 says so BEFORE you type 12 and watch it become 80. Nil when
+    /// the field acts on everything picked and stops nowhere in particular.
     public func note(for field: LayerGeometryField) -> String? {
-        let taking = members(taking: field).count
-        guard taking > 0, taking < count else { return nil }
-        return "Applies to \(taking) of the \(count) selected layers."
+        let taking = members(taking: field)
+        guard !taking.isEmpty else { return nil }
+        var parts: [String] = []
+        if taking.count < count {
+            parts.append("Applies to \(taking.count) of the \(count) selected layers.")
+        }
+        if let floor = floor(for: field) {
+            parts.append("Will not go below \(Int(floor)) \(LayerGeometry.unitSuffix).")
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
+    }
+
+    /// The floor the field stops at across the selection, when it is a floor
+    /// worth saying out loud. One point is not: every layer has it and nobody
+    /// types a width of zero on purpose. The largest floor among the layers
+    /// the field reaches stands for them, because that is the first place a
+    /// number typed into the box stops changing anything.
+    private func floor(for field: LayerGeometryField) -> CGFloat? {
+        let floors = members(taking: field).compactMap { $0.editing.minimum(for: field) }
+        guard let highest = floors.max(), highest > LayerGeometry.minimumSide else { return nil }
+        return highest
     }
 
     /// Every layer's new frame after `value` is typed into `field`. Layers the
     /// field does not act on, and layers already at that number, are left out,
     /// so an edit that changes nothing produces no moves at all.
     public func applying(_ value: CGFloat, to field: LayerGeometryField) -> [UUID: CGRect] {
-        moves(for: field) { LayerGeometry.applying(value, to: field, of: $0) }
+        moves(for: field) { frame, member in
+            LayerGeometry.applying(value, to: field, of: frame,
+                                   notBelow: member.editing.minimum(for: field))
+        }
+    }
+
+    /// What the field will read once `value` lands: the number the layers
+    /// actually take, which is not always the number that was typed. A text
+    /// box will not go below its floor, so typing 12 into W leaves 80 on
+    /// screen, and the field has to say 80 rather than sit there showing a
+    /// width nothing has. Mixed when one number lands differently on two
+    /// layers, for exactly the same reason the field reads Mixed at rest.
+    public func landing(_ value: CGFloat, in field: LayerGeometryField) -> LayerGeometryReading {
+        let taking = members(taking: field)
+        guard let first = taking.first else { return .empty }
+        func landed(_ member: Member) -> CGFloat {
+            let frame = LayerGeometry.applying(value, to: field, of: member.frame,
+                                               notBelow: member.editing.minimum(for: field))
+            return LayerGeometry.displayValue(field, of: frame)
+        }
+        let number = landed(first)
+        for member in taking.dropFirst() where landed(member) != number { return .mixed }
+        return .agreed(number)
     }
 
     /// Every layer's new frame after one arrow-key press. Each layer steps
@@ -124,18 +166,19 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     /// and only moves together — which is what a nudge means.
     public func stepping(_ field: LayerGeometryField, direction: Int,
                          coarse: Bool) -> [UUID: CGRect] {
-        moves(for: field) { frame in
+        moves(for: field) { frame, member in
             let stepped = LayerGeometry.stepped(LayerGeometry.value(field, of: frame),
                                                 direction: direction, coarse: coarse)
-            return LayerGeometry.applying(stepped, to: field, of: frame)
+            return LayerGeometry.applying(stepped, to: field, of: frame,
+                                          notBelow: member.editing.minimum(for: field))
         }
     }
 
     private func moves(for field: LayerGeometryField,
-                       _ transform: (CGRect) -> CGRect) -> [UUID: CGRect] {
+                       _ transform: (CGRect, Member) -> CGRect) -> [UUID: CGRect] {
         var moves: [UUID: CGRect] = [:]
         for member in members(taking: field) {
-            let frame = transform(member.frame)
+            let frame = transform(member.frame, member)
             if frame != member.frame { moves[member.id] = frame }
         }
         return moves

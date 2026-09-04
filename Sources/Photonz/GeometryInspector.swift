@@ -73,6 +73,7 @@ struct GeometryInspector: View {
             commit: { value in
                 editorState.setLayerGeometry(field: field, to: value)
             },
+            landing: { value in selection.landing(value, in: field) },
             stepAll: { direction, coarse in
                 editorState.stepLayerGeometry(field: field, direction: direction, coarse: coarse)
             })
@@ -115,6 +116,11 @@ private struct GeometryNumberField: View {
     let isEditable: Bool
     let help: String
     let commit: (CGFloat) -> Void
+    /// What the field will read once a number lands. A layer can refuse part
+    /// of what was typed — a text box will not go below its floor — and the
+    /// box has to show what the layer took, not what was asked for, or the
+    /// next arrow key steps from a number nothing has.
+    let landing: (CGFloat) -> LayerGeometryReading
     /// An arrow key with no number in the box: every layer steps from its own
     /// value, which is the only thing a step can mean when they differ.
     let stepAll: (Int, Bool) -> Void
@@ -203,11 +209,12 @@ private struct GeometryNumberField: View {
             text = display()
             return
         }
+        // The layers may clamp what was asked for (a width of 0 is not a
+        // layer, and a text box stops at its own floor); showing what they
+        // actually became beats showing what was typed.
+        let landed = landing(parsed)
         commit(parsed)
-        // The layers may have clamped what was asked for (a width of 0 is not
-        // a layer); showing what they actually became beats showing what was
-        // typed.
-        text = display()
+        text = display(landed)
     }
 
     /// An arrow key. A number in the box steps that number and lands it on
@@ -219,13 +226,18 @@ private struct GeometryNumberField: View {
             return
         }
         let next = LayerGeometry.stepped(base, direction: direction, coarse: coarse)
+        let landed = landing(next)
         commit(next)
-        text = displayed(next)
+        // Down arrow at a text box's floor holds at the floor rather than
+        // counting on down a box that is not moving.
+        text = display(landed)
     }
 
     /// What the box shows: the number the layers agree on, or the word that
     /// says they do not.
-    private func display() -> String {
+    private func display() -> String { display(reading) }
+
+    private func display(_ reading: LayerGeometryReading) -> String {
         switch reading {
         case .empty: return ""
         case .mixed: return LayerGeometrySelection.mixedText

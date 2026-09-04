@@ -1,0 +1,148 @@
+{
+  "out": "/tmp/photonz-playtest/text-width-floor",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        140
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in to continue"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-placed",
+      "note": "a label placed at 140,140, 132 wide by 21 tall"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-placed"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        272,
+        150
+      ],
+      "to": [
+        150,
+        150
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-dragged-narrow",
+      "note": "the right edge dragged as far left as it will go: the drag stops at 80 wide"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-dragged-narrow"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-undone",
+      "note": "back to the width it was placed at"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "12"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-typed-12",
+      "note": "12 typed into W: the label lands on 80, exactly where the drag stopped"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-typed-12"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "describe",
+      "stage": "5-field-reads",
+      "note": "the focus line above says what the W field is showing: it must be the 80 the label took, not the 12 that was typed"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "describe",
+      "stage": "6-arrow-down",
+      "note": "down arrow at the floor: the label stays 80 and the field still reads 80 rather than counting down to 79"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-arrow-down"
+    }
+  ]
+}

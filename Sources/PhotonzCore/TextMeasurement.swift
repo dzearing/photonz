@@ -29,6 +29,14 @@ public enum TextMeasurement {
         (installed.measure ?? estimated)(text, maxWidth)
     }
 
+    /// The narrowest a text box goes. Below this a caption is a sliver of a
+    /// column many lines tall rather than something you can read, so the
+    /// canvas drag stops here — and so, through `LayerGeometryEditing`, does
+    /// the width you type into the W field. One number, so the two ways of
+    /// setting a width cannot disagree (the renderer's
+    /// `TextRasterizer.minimumTextWidth` is this).
+    public static let minimumWidth: CGFloat = 80
+
     /// The slack a measured box carries around its glyphs, so rounding and
     /// antialiased edges never clip at the boundary. Matches the renderer's
     /// `frameInset` on each side.

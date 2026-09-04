@@ -294,4 +294,37 @@ struct LayerGeometryTests {
         let moved = layer.resized(to: LayerGeometry.applying(200, to: .x, of: layer.frame))
         #expect(moved.frame == CGRect(x: 200, y: 40, width: 100, height: 50))
     }
+
+    // MARK: The floor a typed size stops at
+
+    @Test("A text box's typed width stops where its dragged width stops, not at one point")
+    func textWidthHasTheCanvasFloor() {
+        let text = Layer(name: "Text", content: .text(TextContent(string: "hi")),
+                         frame: CGRect(x: 0, y: 0, width: 200, height: 30))
+        let editing = LayerGeometryEditing(layer: text)
+        #expect(editing.minimum(for: .width) == TextMeasurement.minimumWidth)
+        let floored = LayerGeometry.applying(12, to: .width, of: text.frame,
+                                             notBelow: editing.minimum(for: .width))
+        #expect(floored.width == TextMeasurement.minimumWidth)
+    }
+
+    @Test("Everything else keeps the one-point floor it has always had")
+    func otherLayersKeepTheOnePointFloor() {
+        let layer = rectangle(frame: CGRect(x: 0, y: 0, width: 100, height: 50))
+        let editing = LayerGeometryEditing(layer: layer)
+        #expect(editing.minimum(for: .width) == LayerGeometry.minimumSide)
+        #expect(editing.minimum(for: .height) == LayerGeometry.minimumSide)
+        #expect(LayerGeometry.applying(0, to: .width, of: layer.frame,
+                                       notBelow: editing.minimum(for: .width)).width
+                == LayerGeometry.minimumSide)
+    }
+
+    @Test("A position never has a floor: a layer may hang off the left edge")
+    func positionHasNoFloor() {
+        let text = Layer(name: "Text", content: .text(TextContent(string: "hi")),
+                         frame: CGRect(x: 0, y: 0, width: 200, height: 30))
+        let editing = LayerGeometryEditing(layer: text)
+        #expect(editing.minimum(for: .x) == nil)
+        #expect(editing.minimum(for: .y) == nil)
+    }
 }

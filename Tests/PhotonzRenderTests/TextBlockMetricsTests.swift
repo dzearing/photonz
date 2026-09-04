@@ -136,6 +136,12 @@ import Testing
         #expect(width == TextRasterizer.minimumTextWidth)
     }
 
+    @Test func theRendererAndTheTypedFieldFloorTextAtTheSameWidth() {
+        // One number, in one place: the canvas drag and the W field both stop
+        // here, so a width you type and a width you drag agree.
+        #expect(TextRasterizer.minimumTextWidth == TextMeasurement.minimumWidth)
+    }
+
     // MARK: Boxes with room to spare
 
     @Test func aBoxThatHugsItsWordsReportsNoRoom() {

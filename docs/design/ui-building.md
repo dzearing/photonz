@@ -592,6 +592,16 @@ for the selected layer, as numbers you can type.
   - A layer inside a picked group takes no place of its own, the same rule
     Arrange uses: the group already carries it, and setting both would move it
     twice. Locked layers stay in the count and accept nothing.
+- **A typed size stops where the drag stops** (2026-09-04). Every layer floors
+  at one point except text, which floors at 80: below that a caption is an
+  unreadable sliver of a column many lines tall, so the canvas refuses to drag
+  one narrower and the W field refuses to type one. Type 12 and the box lands
+  on 80, and the field then reads 80 rather than the 12 nothing took. An arrow
+  key stops at the same place instead of counting on down a box that is not
+  moving, and the W hover tip says "Will not go below 80 px." before you find
+  out by typing. The floor is one number,
+  `TextMeasurement.minimumWidth` (`TextRasterizer.minimumTextWidth` is it), read
+  per layer through `LayerGeometryEditing.minimum(for:)`.
 - Model and rules are `LayerGeometry` / `LayerGeometryEditing` /
   `LayerGeometrySelection` in `PhotonzCore`; the section is
   `GeometryInspector.swift`; the write goes through

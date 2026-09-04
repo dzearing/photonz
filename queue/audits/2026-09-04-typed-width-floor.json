@@ -1,0 +1,27 @@
+{
+  "feature": "A typed width stops where the dragged width stops",
+  "epic": "ui-layout",
+  "summary": "Typing a tiny width into the W field no longer leaves a text box as an unreadable sliver: it lands on 80, the same width dragging that edge stops at, and the field then shows the 80 the box took instead of the number you typed.",
+  "setup": "Photonz Dev, Experiments window, release Next. Position & Size is on by default there.",
+  "try": [
+    { "do": "Open a new blank canvas." },
+    { "do": "Press T, click on the canvas, type Sign in to continue, then press Command Return." },
+    { "do": "Drag the label's right edge as far left as it will go, and read W." },
+    { "do": "Undo, then click the W field and type 12 and press Return.", "shot": "2026-09-04-typed-width-floor-1.png" },
+    { "do": "Read W: it should say 80, the same number the drag stopped at, and the label should be that wide." },
+    { "do": "With W still focused, press the down arrow once." },
+    { "do": "Hover the W field and read the tip." }
+  ],
+  "evaluate": [
+    "When 12 turns into 80 in front of you, is it clear the box refused rather than the field misbehaving?",
+    "Is 80 the right place for a text box to stop, or is there a narrower column you actually want to type?",
+    "Does the down arrow holding at 80 feel right, or would you rather it keep counting and let the box catch up?",
+    "Does the hover tip saying it will not go below 80 px belong there, or is it noise on a field you use constantly?"
+  ],
+  "rough": [
+    "The mock never said anything about a floor. The task asked only that the typed number stop where the drag stops; the field showing what the layer took, and the arrow key holding at the floor, are two things a person hits immediately and they are in the same change.",
+    "Only text has a floor above one point. Everything else stops at one point both ways, so nothing else changed.",
+    "The hover tip copy is covered by a test but not photographed: the playtest hover step only finds toolbar tooltips, not the inspector's.",
+    "The screenshot is a real screen capture: the probe holds Screen Recording."
+  ]
+}
