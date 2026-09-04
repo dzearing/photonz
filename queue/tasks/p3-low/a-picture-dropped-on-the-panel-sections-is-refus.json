@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1190,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T10:39:35.164Z",
-  "updated": "2026-09-04T11:53:44.098Z",
+  "updated": "2026-09-04T12:04:52.085Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-04 while making the window refuse files it cannot use. Cause: the layers panel puts .onDrop(of: [.text], delegate: SectionDropDelegate) on every CollapsibleSection and .onDrop(of: [.text], delegate: LayerRowDropDelegate) on every row. SwiftUI routes a drag to the innermost drop target under the pointer and does NOT fall through to the window-wide destination behind it, so a picture over a section is refused by a delegate that only understands a section id. Mapped with Scripts/playtest/refused-file-panel-walk.json style steps: refused at window y<=320 with two layers, accepted below. Fix is probably to add [.image, EditorState.photonzType] to those two onDrop type lists and forward a picture to editorState.addImageLayerOrOpen, refusing anything else; decide first whether a picture dropped ON a layer row should insert at that position, which is a UX question worth asking.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-04T12:04:36.801139Z",
       "note": "Audit: queue/audits/2026-09-04-panel-takes-picture.json with two real window captures."
+    },
+    {
+      "t": "2026-09-04T12:04:52.084Z",
+      "note": "The whole right hand panel now takes a dropped picture. One shared reading of a file drag (Sources/Photonz/FileDrop.swift) is used by the window and by both inspector drop delegates, so a section header, a layer row and the empty space below them all give the same answer: a picture becomes a layer, anything else shows the no-entry sign. Verified by Scripts/playtest/panel-takes-picture-walk.json (accepted at the Layers header, on a layer row, over Position & Size and below every section; text file still refused; letting go added a layer; row reorder unchanged) and Scripts/test.sh, 2947 tests green. Audit: queue/audits/2026-09-04-panel-takes-picture.json."
     }
   ],
-  "started": "2026-09-04T11:53:44.097Z"
+  "started": "2026-09-04T11:53:44.097Z",
+  "completed": "2026-09-04T12:04:52.085Z"
 }
