@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1080,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T06:09:02.343Z",
-  "updated": "2026-09-04T09:14:35.841236Z",
+  "updated": "2026-09-04T09:14:44.360Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Verified in the probe on 2026-09-03: drop Hero banner.png, copyLayer, pasteLayer, two rows both read \"Hero banner\". EditorState.pasteLayer sets layer.name = transfer.layer.name, which deliberately undoes the \" copy\" that Layer.duplicated appends, and PhotonzDocument.uniquelyNamed only numbers names built from LayerNaming.autoStems, which a file-derived name is not. The duplicate path (nameDuplicates -> LayerNaming.copyName) is the shape to match. Sibling of two-pictures-with-the-same-name-get-told-apart-i, which fixed the same defect for placing a file twice.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-04T09:14:35.841236Z",
       "note": "Review of the built thing: repeated pastes all land at the same 16,16 offset and stack invisibly. Left alone (naming was the task) and filed as a-second-paste-lands-where-you-can-see-it."
+    },
+    {
+      "t": "2026-09-04T09:14:44.359Z",
+      "note": "LayerNaming.pastedName in PhotonzCore (8 new tests) names a pasted layer the way a duplicate is named; EditorState.pasteLayer uses it. Verified live in the probe: Hero banner / Hero banner copy / Hero banner copy 2, a hand-typed name untouched. Scripts/test.sh 2870 pass. Audit: queue/audits/2026-09-04-pasted-layer-name.json"
     }
   ],
-  "started": "2026-09-04T09:06:55.627Z"
+  "started": "2026-09-04T09:06:55.627Z",
+  "completed": "2026-09-04T09:14:44.360Z"
 }
