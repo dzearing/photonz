@@ -8146,3 +8146,40 @@ own.
 **Open questions.** In the audit: whether a hugging control should grow to the
 right or out from its middle, and whether the surface rule needs saying
 somewhere louder than the section's caption.
+
+## 2026-09-04 — Opening words offers them ready to be replaced
+
+**What changed.** Double clicking a piece of text on the canvas opened it with
+the cursor parked after the last letter, so typing a new label left you with
+the old one and the new one welded together: re-wording a copy of the starter
+Button gave "ButtonSave all the changes". Reproduced first with a fresh walk,
+then fixed so an inline field opens with its words held up highlighted, the way
+double clicking a label does in every other app.
+
+The rule lives in `PhotonzCore/TextEntry.swift` (`openingSelection`, measured in
+UTF-16 units so an emoji cannot leave the highlight a half character short) with
+its own tests, and both inline fields — a text block's and an arrow caption's,
+in `CanvasView.beginTextSession` / `beginCaptionSession` — read from it, so the
+two cannot drift apart.
+
+Two playtest harness improvements came with it, because the second acceptance
+item was not provable otherwise: a walk's click now goes to whatever view is
+under the pointer rather than always the canvas (the release is queued before
+the press so an open field's own tracking loop can end), and the layer tree a
+walk logs now carries the words of a text layer, so a walk proves what a label
+says without anybody having to read a picture.
+
+Walked with `Scripts/playtest/retype-label-walk.json` against the probe app:
+Hello re-worded to Goodbye, one undo brought Hello back, a click at the front of
+the open words then typing gave "Say Goodbye", and a copy of the starter Button
+re-worded cleanly to "Save all the changes". 3054 tests green. Audit:
+`queue/audits/2026-09-04-retype-label.json`.
+
+**Next.** The queue's remaining ui-components follow-ups: a copy should not be
+offered a Layout section whose numbers get thrown away, and the card, nav bar
+and text field should get sizing of their own.
+
+**Open questions.** In the audit: whether the highlight is legible as accent
+blue over a blue button (a probe capture can only ever show the background
+selection color, since macOS will not focus a script-launched app), and whether
+plain Return inside a one line label should commit rather than insert a line.

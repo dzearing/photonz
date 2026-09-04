@@ -1,0 +1,28 @@
+{
+  "feature": "Opening words offers them ready to be replaced",
+  "epic": "ui-components",
+  "summary": "Double clicking a piece of text on the canvas now holds its words up highlighted, so the first thing you type takes their place. Before this, the cursor sat after the last letter and a new label came out welded to the old one.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Press T, click on the canvas, type Hello, press ⌘Return." },
+    { "do": "Press V, then double click the word Hello." },
+    { "do": "Type Goodbye and press ⌘Return. It should read Goodbye, not HelloGoodbye." },
+    { "do": "Press ⌘Z once. Hello comes back." },
+    { "do": "Open the Library, drag the Button component onto the canvas twice." },
+    { "do": "Double click the second button's word. It is held up highlighted.", "shot": "2026-09-04-retype-label-offered.png" },
+    { "do": "Type Save all the changes and press ⌘Return.", "shot": "2026-09-04-retype-label-replaced.png" },
+    { "do": "Double click that label again, then click once between two of its letters. The highlight goes and the cursor lands where you clicked." }
+  ],
+  "evaluate": [
+    "When the words are held up highlighted, is it obvious that typing will replace them rather than add to them?",
+    "Over a colored button, is the highlight easy to read against the fill behind it?",
+    "Selecting the whole thing on a double click: does that ever get in your way when you only meant to fix one word?",
+    "Does one undo put the old wording back where you expect, in one step?",
+    "Does pressing Return on a selected text layer (instead of double clicking) feel like the same gesture?"
+  ],
+  "rough": [
+    "The screenshots are real window captures, but macOS will not give a script-launched app focus, so the highlight in them is drawn in the BACKGROUND selection color (a dark slab). In the app you are using it will be the system accent color. Accent-blue words on a blue button is the case worth judging with your own eyes.",
+    "The field's box still extends a little past the words to the right while it is open, which reads as a notch cut out of the button. That is how the inline field has always drawn and this change did not touch it.",
+    "Inside a button, a plain Return still inserts a new line into the label rather than committing it (⌘Return commits). For a one line label that is arguably the wrong default, but changing it would change every text block too, so it was left alone."
+  ]
+}

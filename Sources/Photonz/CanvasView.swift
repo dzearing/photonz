@@ -3895,7 +3895,14 @@ final class CanvasNSView: NSView {
         textEditorZoom = 0 // force the style pass below to apply
         styleTextEditor(with: style)
         window?.makeFirstResponder(editor)
-        editor.setSelectedRange(NSRange(location: string.utf16.count, length: 0))
+        // Words that are already there are offered ready to be replaced, the
+        // way double clicking a label does everywhere else. With the caret
+        // parked after them instead, a new label came out welded to the old
+        // one ("ButtonSave all the changes", reported 2026-09-04). A click
+        // inside the field afterwards drops the highlight and takes the caret
+        // where it landed, so re-wording one word is still one click away.
+        let opening = TextEntry.openingSelection(for: string)
+        editor.setSelectedRange(NSRange(location: opening.location, length: opening.length))
         onTextEditBegin(layerID)
         refreshOverlays()
     }
@@ -3966,7 +3973,8 @@ final class CanvasNSView: NSView {
         textEditorZoom = 0 // force the style pass below to apply
         styleTextEditor(with: style)
         window?.makeFirstResponder(editor)
-        editor.setSelectedRange(NSRange(location: 0, length: editor.string.utf16.count))
+        let opening = TextEntry.openingSelection(for: editor.string)
+        editor.setSelectedRange(NSRange(location: opening.location, length: opening.length))
         onCaptionEditBegin(layer.id)
         refreshOverlays()
     }

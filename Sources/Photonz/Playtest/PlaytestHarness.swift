@@ -323,13 +323,34 @@ private final class Run {
             MainThreadMeter.shared.install()
             MainThreadMeter.shared.reset()
             ViewBuildMeter.shared.reset()
+            // A click a person makes lands on whatever view is under the
+            // pointer. Nearly always that is the canvas, but while an inline
+            // text field is open it is the FIELD, and a click inside the words
+            // puts the caret where it landed. Handing that click to the canvas
+            // instead would commit the edit, which is not what the same click
+            // does in the app.
+            let target = canvas.superview.flatMap { canvas.hitTest(canvas.convert(p, to: $0)) } ?? canvas
             let t0 = CACurrentMediaTime()
-            if let event = mouseEvent(.leftMouseDown, at: p, on: canvas, flags: flags, clicks: count) { canvas.mouseDown(with: event) }
+            if target === canvas {
+                if let event = mouseEvent(.leftMouseDown, at: p, on: canvas, flags: flags, clicks: count) { canvas.mouseDown(with: event) }
+            } else {
+                // A text field tracks the drag itself and does not return
+                // until the button comes up, so the release is put in the
+                // queue before the press is delivered.
+                if let event = mouseEvent(.leftMouseUp, at: p, on: canvas, flags: flags, clicks: count) {
+                    NSApp.postEvent(event, atStart: false)
+                }
+                if let event = mouseEvent(.leftMouseDown, at: p, on: canvas, flags: flags, clicks: count) {
+                    target.mouseDown(with: event)
+                }
+            }
             let t1 = CACurrentMediaTime()
-            if let event = mouseEvent(.leftMouseUp, at: p, on: canvas, flags: flags, clicks: count) { canvas.mouseUp(with: event) }
+            if target === canvas,
+               let event = mouseEvent(.leftMouseUp, at: p, on: canvas, flags: flags, clicks: count) { canvas.mouseUp(with: event) }
             let t2 = CACurrentMediaTime()
             await sleep(0.05)
-            let timing = String(format: "handler down %.1fms up %.1fms; ", (t1 - t0) * 1000, (t2 - t1) * 1000)
+            let timing = (target === canvas ? "" : "landed on the open text field; ")
+                + String(format: "handler down %.1fms up %.1fms; ", (t1 - t0) * 1000, (t2 - t1) * 1000)
                 + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
@@ -2387,7 +2408,11 @@ private final class Run {
                 }
                 var line = String(repeating: "  ", count: depth)
                 line += "\(layer.name) [\(kind)] \(box.integral)"
-                if case .text(let content) = layer.content { line += " \(Int(content.fontSize))pt" }
+                // The words themselves, so a walk can prove what a label says
+                // without anybody having to read a picture.
+                if case .text(let content) = layer.content {
+                    line += " \(Int(content.fontSize))pt \"\(content.string)\""
+                }
                 if let annotation = layer.annotation {
                     line += " stroke \(Int(annotation.strokeWidth.rounded()))"
                 }

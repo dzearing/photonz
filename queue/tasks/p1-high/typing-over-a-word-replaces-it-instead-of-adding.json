@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 170,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:00:57.617Z",
-  "updated": "2026-09-04T17:00:57.618Z",
+  "updated": "2026-09-04T17:03:14.669Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while walking the container-hug task on 2026-09-04 (Scripts/playtest/button-hug-walk.json): the walk typed \"Save all the changes\" into a copy of the starter Button and got \"ButtonSave all the changes\". The inline editor is in CanvasView (beginTextEdit / commitTextEdit, EditorState); select-all on entry, and let a subsequent click place the caret.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-04T17:00:57.618Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T17:03:14.669Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T17:13:24.871892Z",
+      "note": "Reproduced first: Scripts/playtest/retype-label-walk.json typed Hello, re-opened it and typed Goodbye, and the layer came out reading HelloGoodbye."
+    },
+    {
+      "t": "2026-09-04T17:13:24.871892Z",
+      "note": "Adversarial review before building. The shortest version is the whole feature: hold the existing words up highlighted when the field opens, which is what double clicking a label does in every other app. Nothing else in the flow needs to change, and a click inside the field afterwards still places the caret because the field is a real view under the pointer. Considered and rejected: a custom highlight tint like the arrow caption's, since a text block can be any color on any background and the system selection color is the thing that adapts."
+    },
+    {
+      "t": "2026-09-04T17:13:24.871892Z",
+      "note": "Fix: PhotonzCore TextEntry states the rule (openingSelection offers the whole string, in UTF-16 units so an emoji does not leave the highlight short) with tests; CanvasView's beginTextSession and beginCaptionSession both read from it, so the two inline fields cannot drift."
+    },
+    {
+      "t": "2026-09-04T17:13:24.871892Z",
+      "note": "Playtest harness: a click now goes to whatever view is under the pointer instead of always the canvas, so a walk can prove the second acceptance item (a click inside an open field places the caret rather than committing). The release is queued before the press so the field's own tracking loop can end. The tree line a walk logs now carries the words of a text layer, so a walk can prove what a label says without anybody reading a picture."
+    },
+    {
+      "t": "2026-09-04T17:13:24.871892Z",
+      "note": "Verified on the probe, all three acceptance items: Hello -> Goodbye (not HelloGoodbye); a click at the front of the open words then typing gave Say Goodbye; one undo brought Hello back. The reported case too: a copy of the starter Button re-worded to Save all the changes with no Button left in front of it. 3054 tests pass."
+    },
+    {
+      "t": "2026-09-04T17:13:24.871892Z",
+      "note": "Review of the built thing: the one rough edge is that the capture can only ever show the BACKGROUND selection color (macOS will not focus a script-launched app), so accent-blue words on a blue button is the case the user has to judge in the dev app. Recorded in the audit."
     }
-  ]
+  ],
+  "started": "2026-09-04T17:03:14.668Z"
 }

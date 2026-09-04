@@ -1,0 +1,61 @@
+{
+  "out": "/tmp/photonz-playtest/retype-label",
+  "seed": "The reported bug: opening words for typing left the cursor sitting after them, so a new label came out welded to the old one (\"ButtonSave all the changes\"). The walk re-words a plain text layer, checks a click inside the open words still puts the cursor where you clicked, checks undo, and then re-words the label on a copy of the starter Button, which is where it was reported.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [400, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Hello" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-typed", "note": "a text layer reading Hello" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [410, 310], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Goodbye" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-retyped", "note": "THE TEST: the layer reads Goodbye, not HelloGoodbye" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-undone", "note": "one undo brings back Hello" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "click", "at": [410, 310], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "click", "at": [401, 310] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "Say " },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-caret-lands", "note": "THE SECOND TEST: a click inside the open words dropped the highlight and put the cursor at the front, so the layer now reads Say Goodbye" },
+
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [420, 560] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [420, 720] },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "click", "at": [420, 720], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-offered", "note": "THE THIRD TEST: the copy's label is open with the word Button highlighted, ready to be replaced" },
+    { "do": "snapshot", "name": "retype-5-offered" },
+
+    { "do": "type", "text": "Save all the changes" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-replaced", "note": "the copy reads Save all the changes, with no Button left in front of it, and the original above it is untouched" },
+    { "do": "snapshot", "name": "retype-6-replaced" },
+    { "do": "render", "name": "retype-6-replaced-doc" }
+  ]
+}
