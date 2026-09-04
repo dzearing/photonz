@@ -3114,8 +3114,12 @@ final class CanvasNSView: NSView {
         cropBorderLayer.path = CGPath(rect: rectInView, transform: nil)
 
         let handles = CGMutablePath()
-        for handle in ResizeHandle.allCases {
-            let p = viewport.viewPoint(fromDocument: Handles.point(for: handle, in: rect))
+        // A crop box dragged down to a thumbnail gets the same treatment as a
+        // tiny layer: handles step outside it so there is still a middle to
+        // pick the box up by. `Handles.layout` is what the press reads too.
+        let cropHandleLayout = Handles.layout(in: rect, zoom: viewport.zoom)
+        for handle in cropHandleLayout.handles {
+            let p = viewport.viewPoint(fromDocument: cropHandleLayout.point(for: handle))
             handles.addRect(CGRect(x: p.x - 4.5, y: p.y - 4.5, width: 9, height: 9))
         }
         cropHandlesLayer.path = handles
@@ -3328,8 +3332,9 @@ final class CanvasNSView: NSView {
             layerOutlineLayer.path = CGPath(rect: rect, transform: nil)
             layerOutlineLayer.isHidden = false
             let handles = CGMutablePath()
-            for handle in ResizeHandle.allCases {
-                let p = viewport.viewPoint(fromDocument: Handles.point(for: handle, in: docRect))
+            let canvasHandleLayout = Handles.layout(in: docRect, zoom: viewport.zoom)
+            for handle in canvasHandleLayout.handles {
+                let p = viewport.viewPoint(fromDocument: canvasHandleLayout.point(for: handle))
                 handles.addRect(CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
             }
             handlesLayer.path = handles
@@ -3446,8 +3451,15 @@ final class CanvasNSView: NSView {
             // resizes width-only via its own affordance).
             if !dragInFlight, offersOwnHandles(selectedLayer), selectedLayer.allowsFrameResize {
                 let handles = CGMutablePath()
-                for handle in ResizeHandle.allCases {
-                    let p = chromePoint(Handles.point(for: handle, in: frame))
+                // Handles fit the thing they are round: on a selection too
+                // small to hold them, the four edge midpoints drop away and the
+                // corners step outside the outline, so the object itself is
+                // still there to be grabbed and dragged. The press reads the
+                // same layout, so every square drawn is a target and nothing
+                // else is.
+                let handleLayout = Handles.layout(in: frame, zoom: viewport.zoom)
+                for handle in handleLayout.handles {
+                    let p = chromePoint(handleLayout.point(for: handle))
                     handles.addRect(CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
                 }
                 handlesLayer.path = handles

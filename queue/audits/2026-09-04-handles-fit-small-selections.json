@@ -1,0 +1,29 @@
+{
+  "feature": "Selection handles fit the thing they are round",
+  "epic": "ui-layout",
+  "summary": "A tiny thing on the canvas, like a two letter label, can be picked up and dragged again. It used to wear all eight resize handles, and between the squares and the slop round them there was no part of the word left that was not a resize target, so a press on it always started a resize and never a move.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. A blank canvas is enough.",
+  "try": [
+    { "do": "Press T for Text, click on an empty part of the canvas, type OK and press Command Return." },
+    { "do": "Look at the selection: four corner squares sitting just outside the outline, no squares on the edges, and the word itself completely clear.", "shot": "2026-09-04-handles-fit-1-tiny.png" },
+    { "do": "Rest the pointer on the middle of the word. The pointer stays a plain arrow, so a press there will move it." },
+    { "do": "Drag the word across the canvas by its middle and check X and Y changed while W and H did not.", "shot": "2026-09-04-handles-fit-2-dragged.png" },
+    { "do": "Rest the pointer on one of the corner squares outside the outline and check the resize arrows appear there." },
+    { "do": "Zoom in a few steps and watch the four edge handles come back once the label is big enough to hold them, each with air round it.", "shot": "2026-09-04-handles-fit-3-all-eight.png" },
+    { "do": "Draw an ordinary rectangle with R, select it, and check all eight handles are exactly where they always were, on the outline." }
+  ],
+  "evaluate": [
+    "When you press the middle of a two letter label, does it move the way you expected it to?",
+    "Do the four corners stepping outside the outline read as the label's handles, or do they read as floating dots that belong to nothing?",
+    "Losing the edge handles on something this small costs you nothing, since a corner resizes both ways. Does that hold up when you actually try to make a small label wider?",
+    "Zooming in brings the eight back. Does the moment they appear feel like the label growing up, or does it feel like the chrome changing under you?",
+    "The corner squares are now a target for about five points outside the outline. Does that ever steal a click you meant for something behind the label?"
+  ],
+  "rough": [
+    "The threshold is a screen measure, so the SAME layer is cramped zoomed out and roomy zoomed in. That is deliberate, since a handle is a screen-sized thing, but it does mean a big layer viewed at ten percent loses its edge handles too.",
+    "Around a small selection, a press in the few points just outside the outline now resizes rather than falling through to whatever is behind. That ring only exists around the already selected layer and it is where the squares are visibly drawn, so it should read as fair, but two tiny labels side by side is the case worth trying.",
+    "The line was drawn at forty screen points, not at the point where the handles technically stop overlapping. Below forty, three squares along an edge have no air between them and read as one bar laid over the object, which is the same complaint in a smaller font.",
+    "The video crop overlay has its own copy of this chrome and still draws all eight on any size of crop box. It is a different surface on an epic that is not in play, so it was left alone rather than half-changed.",
+    "Screen Recording was granted for this run, so all three pictures are the real window, taken by a scripted walk: Scripts/playtest/handles-fit-walk.json."
+  ]
+}

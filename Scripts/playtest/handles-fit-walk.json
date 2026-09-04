@@ -1,0 +1,279 @@
+{
+  "out": "/tmp/photonz-playtest/handles-fit",
+  "seed": "A two letter label is about twenty one points wide. Eight handles of eight points each, with six points of slop round every one of them, used to cover it completely: there was no part of the word left that was not a resize target, so the label could not be picked up and dragged at all. Now a selection too small to hold its handles keeps its four corners only, and those corners step outside the outline. This walk proves the middle of the word is grabbable again, that the corners still answer where they draw, that zooming in brings all eight back, and that an ordinary rectangle is untouched.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "OK"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "0-label",
+      "note": "The label is selected. The inspector says X 200 Y 200 W 21 H 17, so its frame is 21x17 at 100%: smaller than the eight handles that used to sit on it."
+    },
+    {
+      "do": "snapshot",
+      "name": "handles-fit-1-tiny"
+    },
+    {
+      "do": "move",
+      "at": [
+        210,
+        208
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-middle-is-grabbable",
+      "note": "THE TEST. The pointer is on the middle of the word OK. cue must read none and the cursor must be a plain arrow: a press here picks the label up and drags it. Before this change every point in the middle answered resize."
+    },
+    {
+      "do": "move",
+      "at": [
+        210,
+        200
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-old-top-handle-is-gone",
+      "note": "The exact spot the top edge handle used to occupy, the middle of the top edge. cue must read none: on a cramped selection the four edge midpoints drop away, because they are the ones that crowd the corners."
+    },
+    {
+      "do": "move",
+      "at": [
+        195,
+        195
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-corner-outside",
+      "note": "Five points up and left of the outline, which is where the top left corner handle now draws. cue must read resize-topLeft: the square is a target exactly where it is a picture."
+    },
+    {
+      "do": "move",
+      "at": [
+        226,
+        222
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-far-corner-outside",
+      "note": "The opposite corner, five points down and right of the outline. cue must read resize-bottomRight."
+    },
+    {
+      "do": "drag",
+      "from": [
+        210,
+        208
+      ],
+      "to": [
+        420,
+        360
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-dragged-by-its-middle",
+      "note": "THE OTHER HALF OF THE TEST. The label was picked up by the middle of the word and carried across the canvas. The inspector should now read X about 410 Y about 352, not 200 and 200, and the word should not have been stretched: W 21 H 17 still."
+    },
+    {
+      "do": "snapshot",
+      "name": "handles-fit-2-dragged"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-still-corners-at-156",
+      "note": "At 156% the label is 33 by 27 points on screen. It still gets its corners only, because three eight point squares along a thirty three point edge would have no air between them: they would read as one bar laid over the word rather than three targets. This is the step that says the rule is about room, not about technically fitting."
+    },
+    {
+      "do": "snapshot",
+      "name": "handles-fit-3-still-corners"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-all-eight-return",
+      "note": "Zoomed in far enough that the label is comfortably over forty points on both axes, all eight handles come back and sit on the outline with air between every one of them. Cramped is a screen measure, so the same layer is cramped far out and roomy up close."
+    },
+    {
+      "do": "snapshot",
+      "name": "handles-fit-4-all-eight"
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        120
+      ],
+      "to": [
+        740,
+        260
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        190
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-roomy-selected",
+      "note": "An ordinary 240x140 rectangle, comfortably bigger than its handles."
+    },
+    {
+      "do": "snapshot",
+      "name": "handles-fit-5-roomy"
+    },
+    {
+      "do": "move",
+      "at": [
+        620,
+        120
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "8-roomy-top",
+      "note": "THE NO REGRESSION TEST. The middle of the rectangle's top edge. cue must read resize-top: a normal sized layer keeps every handle it had, on the outline, exactly where it always was."
+    },
+    {
+      "do": "move",
+      "at": [
+        500,
+        190
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "9-roomy-left",
+      "note": "The middle of its left edge. cue must read resize-left."
+    },
+    {
+      "do": "move",
+      "at": [
+        740,
+        260
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "10-roomy-corner",
+      "note": "Its bottom right corner, ON the outline rather than outside it. cue must read resize-bottomRight."
+    },
+    {
+      "do": "move",
+      "at": [
+        620,
+        190
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "11-roomy-middle",
+      "note": "Its middle. cue must read none: it was always grabbable and still is."
+    }
+  ]
+}
