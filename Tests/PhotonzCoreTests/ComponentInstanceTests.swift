@@ -253,6 +253,12 @@ struct ComponentInstanceTests {
         #expect(!doc.panelRows(expanded: [a]).contains { $0.parentID == a })
     }
 
+    @Test func aCopyIsNotOneOfTheGroupsThatCanBeOpened() {
+        var (doc, _, componentID) = withComponent()
+        let a = doc.insertComponentInstance(of: componentID, at: CGPoint(x: 400, y: 300))!
+        #expect(!doc.openableGroupIDs.contains(a))
+    }
+
     @Test func nothingCanBeDroppedInsideACopy() {
         var (doc, _, componentID) = withComponent()
         let a = doc.insertComponentInstance(of: componentID, at: CGPoint(x: 400, y: 300))!

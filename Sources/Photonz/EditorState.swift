@@ -422,6 +422,10 @@ final class EditorState {
         case .file(let url):
             openImageOrSidecar(at: url)
             openedFileURL = url
+            // A plain image keeps its layers in a sidecar, so the window's
+            // document has no url of its own; the file it was opened from is
+            // what its open groups are filed under, and it is known only now.
+            restoreExpandedGroups()
             // A file opened from the capture folder can round-trip back to history.
             if url.deletingLastPathComponent().standardizedFileURL == capture.store.directory.standardizedFileURL {
                 sourceCaptureURL = url
@@ -512,6 +516,18 @@ final class EditorState {
         try? PackageIO.write(document, store: store, to: Self.sidecarURL(for: mediaURL))
     }
 
+    #if PHOTONZ_PLAYTEST
+    /// Probe only: keeps the layers beside the picture this window was opened
+    /// from, the same write a saved capture makes. A walk needs it because the
+    /// ordinary Save As puts up a dialog, and a background process cannot
+    /// answer one.
+    func playtestSaveLayers() {
+        guard let openedFileURL else { return }
+        writeCaptureSidecar(nextTo: openedFileURL)
+        markSaved()
+    }
+    #endif
+
     /// A "Save to Capture History" landed at `url` (override or save-as-new):
     /// adopt it as this window's source, refresh the layered sidecar, and mark
     /// the window clean.
@@ -527,6 +543,9 @@ final class EditorState {
         history = History(document: document)
         savedDocument = document
         documentURL = url
+        // The outgoing picture's open groups mean nothing to the incoming one,
+        // and clearing them must not be mistaken for the user shutting them.
+        withoutRememberingOpenGroups { expandedGroupIDs = [] }
         viewport = .fit(documentSize: document.canvasSize, in: canvasViewSize)
         selection = nil
         selectedLayerID = nil
@@ -546,6 +565,7 @@ final class EditorState {
         // is no host window yet — the real sizing runs once one is available.
         needsOpenSizing = true
         sizeWindowToImageIfReady()
+        restoreExpandedGroups()
     }
 
     // MARK: - Fit window to image on open
@@ -685,6 +705,9 @@ final class EditorState {
             try PackageIO.write(document, store: store, to: url)
             documentURL = url
             markSaved()
+            // Saved under a new name: the open groups belong to the new file
+            // too, so it opens looking the way this window looks now.
+            rememberExpandedGroups()
         } catch {
             presentError("Couldn't save the document.", error)
         }
@@ -3110,7 +3133,74 @@ final class EditorState {
     /// state, not document state: opening a group is not an edit, so it never
     /// touches the file or the undo stack, and it survives selection changes,
     /// undo and redo for as long as the window is open.
-    private(set) var expandedGroupIDs: Set<UUID> = []
+    ///
+    /// It also survives quitting. Which groups a file had open is filed beside
+    /// the document in the app's own settings (`OpenGroupMemory`), the same
+    /// place the app already keeps which panels were showing and how wide they
+    /// were, so a picture opens looking the way you left it without a byte of
+    /// it living in the file.
+    private(set) var expandedGroupIDs: Set<UUID> = [] {
+        didSet {
+            guard !isRestoringOpenGroups, expandedGroupIDs != oldValue else { return }
+            rememberExpandedGroups()
+        }
+    }
+
+    /// True only while the open groups are being reset or read back for a
+    /// document that is arriving, so setting them up cannot overwrite the
+    /// record of the file that is leaving.
+    @ObservationIgnored private var isRestoringOpenGroups = false
+
+    private func withoutRememberingOpenGroups(_ body: () -> Void) {
+        isRestoringOpenGroups = true
+        body()
+        isRestoringOpenGroups = false
+    }
+
+    /// Where this window's open/shut record is filed: the file it is editing.
+    /// Nil for a picture that has never been saved or opened from anywhere,
+    /// which is simply not remembered — there is nothing to come back to.
+    private var openGroupMemoryKey: String? {
+        (documentURL ?? openedFileURL)?.standardizedFileURL.path
+    }
+
+    static let openGroupsKey = "layers.openGroups"
+
+    private static func loadOpenGroupMemory() -> OpenGroupMemory {
+        guard let data = UserDefaults.standard.data(forKey: openGroupsKey),
+              let memory = try? JSONDecoder().decode(OpenGroupMemory.self, from: data)
+        else { return OpenGroupMemory() }
+        return memory
+    }
+
+    /// Files away which groups are open now, dropping any the document no
+    /// longer has. Nothing is written when the record would be unchanged, so
+    /// selecting your way around a picture is not a stream of writes.
+    private func rememberExpandedGroups() {
+        // Only the release that HAS groups keeps a record of them, so nothing
+        // about this reaches a release whose layers list is flat.
+        guard Experiments.shared.layerGroupsEnabled else { return }
+        guard let key = openGroupMemoryKey, let document else { return }
+        var memory = Self.loadOpenGroupMemory()
+        let before = memory
+        memory.remember(expandedGroupIDs, for: key, stillInDocument: document.openableGroupIDs)
+        guard memory != before, let data = try? JSONEncoder().encode(memory) else { return }
+        UserDefaults.standard.set(data, forKey: Self.openGroupsKey)
+    }
+
+    /// Reopens the groups this file had open last time. Called once the file
+    /// the window is editing is known, which for a picture opened from disk is
+    /// after the document has been installed.
+    private func restoreExpandedGroups() {
+        guard Experiments.shared.layerGroupsEnabled else { return }
+        guard let key = openGroupMemoryKey, let document else { return }
+        let remembered = Self.loadOpenGroupMemory()
+            .openGroups(for: key, stillInDocument: document.openableGroupIDs)
+        withoutRememberingOpenGroups { expandedGroupIDs.formUnion(remembered) }
+        // Written straight back, so a group deleted while the file was closed
+        // is gone from the record whether or not the list is ever touched.
+        rememberExpandedGroups()
+    }
 
     /// The rows the layers list draws, top down, with an open group's contents
     /// indented under it. With the groups flag off every group stays shut, so

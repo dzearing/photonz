@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T02:31:38.302Z",
-  "updated": "2026-09-03T12:08:27.385Z",
+  "updated": "2026-09-04T05:33:30.169069Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Open state currently lives in EditorState.expandedGroupIDs, per window, in memory. Persisting it means either a per-document side file keyed by layer UUID, or a field on the document that is deliberately not part of what a document IS. The choice is a UX decision about whether interface state belongs in a shared file: worth a decision card before building.",
@@ -26,6 +26,51 @@
     {
       "t": "2026-09-03T12:08:27.384Z",
       "note": "seq 570 -> 60"
+    },
+    {
+      "t": "2026-09-04T05:16:10.562Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T05:18:18.378225Z",
+      "note": "Adversarial review before building. (1) The task notes ask for a decision card on whether interface state belongs in the shared file. There is no real choice to make: acceptance item 2 already says the file must be unchanged by opening a group, and every other piece of interface state in this app (library shown, inspector width, which inspector sections are collapsed, last tool per group) already lives in preferences, not the document. Putting it in the .photonz package would also dirty a document just for looking at it. So: preferences side record, no decision card, and the reasoning is written down here instead."
+    },
+    {
+      "t": "2026-09-04T05:18:18.378225Z",
+      "note": "(2) Is restoring open groups even wanted? Yes. Coming back to a picture and finding every group shut is losing your place, and the list already opens groups by itself when the selection moves, so an open group is not a state the app treats as precious. Finder, Photoshop and Figma all remember it."
+    },
+    {
+      "t": "2026-09-04T05:18:18.378225Z",
+      "note": "(3) Shortest version that delivers the value: remember, per file, which groups were open, keyed by the file path; restore on open; write on change. No document format change, no undo entry, no new UI."
+    },
+    {
+      "t": "2026-09-04T05:18:18.378225Z",
+      "note": "(4) Failure modes to cover: a never-saved document has no key so nothing is remembered (acceptable, and said out loud in the audit); a group deleted since last time must not linger in the record (acceptance 3), so the set is narrowed to the groups actually in the document on both read and write; closing every group removes the record entirely rather than storing an empty one; the record is capped so a year of opening files does not grow preferences without bound; Save As moves the record to the new path."
+    },
+    {
+      "t": "2026-09-04T05:33:30.169069Z",
+      "note": "Built. OpenGroupMemory (PhotonzCore, 15 tests) holds one entry per file path: the open group ids, sorted, plus when they were last used, capped at 60 files oldest first. PhotonzDocument.openableGroupIDs (3 tests) is what both the read and the write intersect against, so a deleted group can never be handed back or written down. EditorState reads it on open and writes it whenever the open set changes, gated on the layer groups flag so Current is untouched."
+    },
+    {
+      "t": "2026-09-04T05:33:30.169069Z",
+      "note": "Verified on the real app, not asserted. Two walks (Scripts/playtest/open-groups-remembered-walk.json, open-groups-reopened-walk.json) run in two separate probe processes. Run one: group shut lists Group, Background; after a double click into it, Group, Rectangle 2, Rectangle, Background. Run two, a fresh process, nothing clicked: Group, Rectangle 2, Rectangle, Background straight away, with canUndo false. Screen captures with the Screen Recording grant are in queue/audits."
+    },
+    {
+      "t": "2026-09-04T05:33:30.169069Z",
+      "note": "Acceptance 2 checked by hashing the file: card.png and every file inside card.photonz are byte identical before and after the run that reopened and restored, and canUndo is false throughout that run."
+    },
+    {
+      "t": "2026-09-04T05:33:30.169069Z",
+      "note": "Acceptance 3 checked end to end, not just in unit tests: a bogus group id was written into the probe's own record for that file by hand, the file was reopened, and the bogus id was gone from the record afterwards while the real one stayed."
+    },
+    {
+      "t": "2026-09-04T05:33:30.169069Z",
+      "note": "Performance A/B on Scripts/playtest/select-click-perf-walk.json, the selection latency guard, same probe, with and without the change: longest run-loop pass per click median 41.3ms vs 41.9ms baseline, max 49.9ms vs 50.2ms. No regression. (Both are above the 30ms recorded in a58e6a1; that drift predates this change and belongs to whatever landed since.)"
+    },
+    {
+      "t": "2026-09-04T05:33:30.169069Z",
+      "note": "One harness addition was needed and is probe only: a saveLayers action, because the ordinary Save As puts up a dialog and a background process cannot answer one. Documented in docs/design/playtest-harness.md."
     }
-  ]
+  ],
+  "started": "2026-09-04T05:16:10.561Z"
 }

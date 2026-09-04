@@ -1,0 +1,27 @@
+{
+  "feature": "A group you opened in the layers list is still open when you come back",
+  "epic": "ui-components",
+  "summary": "Which groups a picture has open in its layers list is now remembered per file, so reopening a picture shows the same rows you left rather than every group shut. Opening a group is still not an edit: it costs no undo step and the file on disk is untouched.",
+  "setup": "Photonz Dev, Experiments window, release Next, with layer groups on. Nothing new to turn on.",
+  "try": [
+    { "do": "Open a screenshot, draw two rectangles on it, select both and press Command G.", "shot": "2026-09-04-open-groups-1-shut.png" },
+    { "do": "Double click one of the rectangles on the canvas so the layers list opens the group.", "shot": "2026-09-04-open-groups-2-open.png" },
+    { "do": "Save the picture, then close the window." },
+    { "do": "Quit Photonz and start it again." },
+    { "do": "Open the same file and look at the layers list without clicking anything.", "shot": "2026-09-04-open-groups-3-reopened.png" },
+    { "do": "Shut the group, close the window, reopen the file: it should be shut." },
+    { "do": "Press Command Z and confirm undo has nothing to do with any of this." }
+  ],
+  "evaluate": [
+    "Coming back to a picture with the same groups open, is that what you expected, or did you want a clean shut list every time?",
+    "With a deep tree, does reopening everything you had open feel like picking up where you left off, or like a wall of rows?",
+    "A picture you have never saved is not remembered, because there is no file to remember it against. Does that ever bite you?",
+    "Should shutting every group and reopening the file bring back nothing, as it does now, or should the app have a view of its own?"
+  ],
+  "rough": [
+    "Two windows on the same file share one record, so the last one to open or shut a group is the one remembered. Nobody has hit this; say so if you do.",
+    "A never-saved picture is not remembered at all. The alternative is remembering it against a window that will not exist next launch, which is worse.",
+    "The record is capped at the last 60 files, oldest first, so it cannot grow without end. A file you have not touched in a long while opens shut.",
+    "The screenshots are real screen captures of the probe app, taken with the Screen Recording grant, not offscreen renders."
+  ]
+}

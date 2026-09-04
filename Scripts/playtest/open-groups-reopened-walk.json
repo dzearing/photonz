@@ -1,0 +1,10 @@
+{
+  "out": "/tmp/photonz-playtest/open-groups-reopened",
+  "steps": [
+    { "do": "open", "file": "/tmp/photonz-open-groups/card.png", "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "panel", "stage": "1-reopened" },
+    { "do": "describe", "stage": "1-reopened", "note": "nothing has been clicked in this run: the group must already be open, and undo must have nothing in it" },
+    { "do": "snapshot", "name": "open-groups-3-reopened" }
+  ]
+}

@@ -137,6 +137,24 @@ extension PhotonzDocument {
         return rows
     }
 
+    /// Every group in the document the layers list can twist open, at any
+    /// depth. A copy of a component is not one: what is inside it belongs to
+    /// its original, so its row has no twist open.
+    ///
+    /// This is what an open/shut record is measured against, so a group that
+    /// has been deleted since last time leaves nothing behind.
+    public var openableGroupIDs: Set<UUID> {
+        var out: Set<UUID> = []
+        func walk(_ list: [Layer]) {
+            for layer in list where layer.isOpenableGroup {
+                out.insert(layer.id)
+                walk(layer.children)
+            }
+        }
+        walk(layers)
+        return out
+    }
+
     /// Every group above a layer, innermost first — the set that has to be
     /// open for the layer's row to be on screen. Empty for a layer sitting
     /// loose on the canvas.

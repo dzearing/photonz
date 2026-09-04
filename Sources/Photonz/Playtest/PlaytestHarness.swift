@@ -834,6 +834,8 @@ private final class Run {
             case .alignBottom: editor.alignSelection(.bottom)
             case .spaceEvenlyAcross: editor.distributeSelection(.horizontal)
             case .spaceEvenlyDown: editor.distributeSelection(.vertical)
+            case .saveLayers:
+                editor.playtestSaveLayers()
             case .stepIntoSelection:
                 if let id = editor.selectedLayerID,
                    let child = editor.document?.layer(id: id)?.children.first {

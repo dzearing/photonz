@@ -190,6 +190,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Undo and redo are menu chords too, so a walk that checks an undo step
     /// asks for it here.
     case undo, redo
+    /// Save the layers beside the picture this window was opened from, the way
+    /// saving a capture keeps its layers. A walk uses it to prove what comes
+    /// back the next time the same file is opened, which no dialog-driven save
+    /// could do from a background process.
+    case saveLayers
     /// Open the New Canvas sheet, so a walk can photograph it. A snapshot
     /// taken while a sheet is up photographs the sheet.
     case newCanvasDialog

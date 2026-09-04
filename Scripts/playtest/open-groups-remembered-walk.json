@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/open-groups-remembered",
+  "steps": [
+    { "do": "open", "file": "/tmp/photonz-open-groups/card.png", "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 200], "to": [560, 340] },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 400], "to": [560, 540] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [120, 140], "to": [640, 620] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "1-group-shut" },
+    { "do": "describe", "stage": "1-group-shut", "note": "one shut Group row: the two rectangles inside it are not rows yet" },
+    { "do": "snapshot", "name": "open-groups-1-shut" },
+
+    { "do": "click", "at": [300, 260], "count": 2 },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panel", "stage": "2-group-open" },
+    { "do": "describe", "stage": "2-group-open", "note": "a double click went inside the group, which opened it in the list; the two rectangles are rows now" },
+    { "do": "snapshot", "name": "open-groups-2-open" },
+
+    { "do": "action", "action": "saveLayers" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-saved", "note": "the layers are kept beside the picture, so the next run opens the same document" }
+  ]
+}

@@ -686,10 +686,17 @@ row with something hidden behind it.
   screenshot with three annotations on it is the list it always was.
 - **A shut group says how much it is hiding**, as a quiet count on the right of
   its row, in the same weight the Canvas row uses for its dimensions.
-- **Open is interface state, not document state.** It lives on the window, so
-  opening a group is not an edit, costs no undo step, and never touches the
-  file. It survives selection, undo and redo, and it does not survive a
-  relaunch.
+- **Open is interface state, not document state.** Opening a group is not an
+  edit: it costs no undo step and never touches the file. It survives selection,
+  undo and redo.
+- **It also survives quitting.** Which groups a picture had open is filed under
+  that file's path in the app's own settings (`OpenGroupMemory` in PhotonzCore),
+  beside the other things the app remembers about how you were looking at
+  something, so a picture opens looking the way you left it without a byte of
+  interface state living in the document. A group deleted since last time is
+  dropped from the record on the way in and on the way out; a picture with every
+  group shut has no record at all; a picture that has never been saved or opened
+  from anywhere has nowhere to file one, so it is not remembered.
 - **The list follows the canvas.** Any change of selection opens the groups
   above the newly selected layer, so double clicking into a group on the canvas
   opens that group in the list with the piece inside it highlighted. The two

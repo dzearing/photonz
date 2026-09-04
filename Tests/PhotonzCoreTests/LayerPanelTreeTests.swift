@@ -24,6 +24,21 @@ struct LayerPanelTreeTests {
         document.allLayers.first { $0.name == name }?.id ?? UUID()
     }
 
+    // MARK: - Which groups can be opened at all
+
+    @Test func everyGroupAtEveryDepthCanBeOpened() {
+        let document = doc([
+            leaf("Loose"),
+            group("Card", [leaf("Label"), group("Inner", [leaf("Dot")])]),
+        ])
+        #expect(document.openableGroupIDs == [id(document, "Card"), id(document, "Inner")])
+    }
+
+    @Test func aDocumentWithNoGroupsHasNothingToOpen() {
+        let document = doc([leaf("One"), leaf("Two")])
+        #expect(document.openableGroupIDs.isEmpty)
+    }
+
     // MARK: - Rows
 
     @Test func flatDocumentListsTopDown() {
