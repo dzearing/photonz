@@ -8428,3 +8428,27 @@ re-wording to Save changes gives 88 on one line, W typed as 200 still lands
 Next: the audit is `queue/audits/2026-09-04-short-label-width.json`. The one
 rough edge left is that a 19x16 selection gets the full eight handles and they
 cover the letters, filed as "Selection handles fit the thing they are round".
+
+## 2026-09-04 — read-only geometry numbers: duplicate task, one ungated fix
+
+Ran `a-number-you-cannot-type-into-does-not-wear-a-ty` and found it a
+duplicate of `a-number-you-cannot-type-into-stops-looking-like`, which is
+already blocked on the pending decision about whether a number you cannot
+type should lose its rounded border. Dropped it rather than opening a second
+card asking the same question.
+
+Verified the premise on the real app first rather than trusting the earlier
+task's log: with the shipping default a text layer's H really does sit in the
+same box as W with only the grey to tell them apart. Worth knowing for next
+time: a playtest walk does not clear its output directory, so `crop-*.png`
+from an earlier session survives into a new run and reads as fresh. That is
+what first made the default look already-fixed. Crop the run's own `-sc.png`.
+
+Landed the one part not gated on the decision: an empty read-only box was
+using the field's own letter as its placeholder, so an arrow read
+"W [ W ]  H [ H ]". Gone, verified in the probe, 3114 tests green.
+
+Also corrected UX-PATTERNS.md section 4, which named the duplicate task id as
+where the read-only-field exception was filed.
+
+Next: the decision card is still the blocker for the border question.
