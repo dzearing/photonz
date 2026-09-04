@@ -616,16 +616,19 @@ private struct SectionDropDelegate: DropDelegate {
     }
 }
 
-/// Measured natural height of the layer rows, so the bounded scroll area hugs
-/// the content until it exceeds the resizable max.
-private struct LayersContentHeightKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
+/// Measured height of a layers-panel row, so a drop can tell the top of a row
+/// from its middle, and so the list can work out how tall it wants to be
+/// without measuring rows it never built. Every row is the same shape, so one
+/// value serves them all.
+private struct LayerRowHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 38
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
-/// Measured height of a layers-panel row, so a drop can tell the top of a row
-/// from its middle. Every row is the same height, so one value serves them all.
-private struct LayerRowHeightKey: PreferenceKey {
+/// Measured height of the Canvas row at the foot of the list. It is separate
+/// from `LayerRowHeightKey` because the Canvas row is the ONE row that is
+/// always built, so it is the one measurement the list can always rely on.
+private struct LayerCanvasRowHeightKey: PreferenceKey {
     static let defaultValue: CGFloat = 38
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
@@ -836,32 +839,37 @@ struct LayersListView: View {
     /// and pushed the look of the thing off the bottom. Drag the grabber under
     /// the list to give it back as much room as you want; that sticks.
     @AppStorage("inspector.layersHeight") private var maxHeight = 200.0
-    /// Measured natural height of all the rows, so the area hugs the content when
-    /// it's short and only caps + scrolls once it exceeds `maxHeight`.
-    @State private var contentHeight: CGFloat = 160
+    /// Measured height of the Canvas row, the one row that is always built.
+    @State private var canvasRowHeight: CGFloat = 38
 
     static let minHeight: CGFloat = 120
     static let maxAllowedHeight: CGFloat = 600
 
-    /// A plain VStack of rows (NOT a `List`: a List has no natural height and its
+    /// A LazyVStack of rows (NOT a `List`: a List has no natural height and its
     /// fixed-height hack clipped the top rows), inside a bounded ScrollView so it
     /// scrolls independently, plus a drag handle to resize it. Reordering uses the
     /// same drag/drop the inspector sections use.
+    ///
+    /// Lazy, so a hundred-layer document builds the five rows the panel shows
+    /// and makes the rest as you scroll to them. That is why the area's height
+    /// is WORKED OUT (`LayerListMetrics`) rather than measured: a lazy stack
+    /// reports no height for a row it never built, and feeding that back into
+    /// this frame is a loop that shrinks itself — a smaller frame builds fewer
+    /// rows, which reports a smaller height, which shrinks the frame again.
     var body: some View {
-        VStack(spacing: 0) {
+        let displays = editorState.layerRows
+        let natural = LayerListMetrics.naturalHeight(rowCount: displays.count,
+                                                     rowHeight: rowHeight,
+                                                     canvasRowHeight: canvasRowHeight)
+        return VStack(spacing: 0) {
             ScrollView(.vertical) {
-                rows
-                    .background(GeometryReader { proxy in
-                        Color.clear.preference(key: LayersContentHeightKey.self,
-                                               value: proxy.size.height)
-                    })
+                rows(displays)
             }
-            .frame(height: min(contentHeight, maxHeight))
+            .frame(height: min(natural, maxHeight))
             .scrollBounceBehavior(.basedOnSize)
-            .onPreferenceChange(LayersContentHeightKey.self) { contentHeight = $0 }
 
             multiSelectionCount
-            resizeHandle
+            resizeHandle(natural: natural)
         }
         // The Rename command asks for a row's field. Only rows this list shows
         // answer, so the Measurements list next door does not open a second
@@ -899,8 +907,12 @@ struct LayersListView: View {
     /// every row re-ran its body on every click and looked its own layer up by
     /// searching the whole tree, which cost the list the square of its length
     /// (measured 2026-09-04: about 0.14ms of main thread per row per click).
-    private var rows: some View {
-        let displays = editorState.layerRows
+    ///
+    /// Lazy: `LazyVStack` builds a row the first time it comes into view and
+    /// keeps it after that, so opening a hundred-layer document costs the five
+    /// rows the panel is showing, not a hundred context menus, drop delegates
+    /// and gesture recognisers nobody is looking at.
+    private func rows(_ displays: [LayerRowDisplay]) -> some View {
         // The twist column appears only once there is something to twist open,
         // so a document with no groups is the list it always was.
         let showsTwist = Experiments.shared.layersListShowsGroups && displays.contains { $0.row.isGroup }
@@ -912,7 +924,7 @@ struct LayersListView: View {
         let canDetachInstance = componentsEnabled && editorState.canDetachInstance
         let thumbnails = editorState.thumbnails(for: displays)
         let target = dropTarget
-        return VStack(spacing: 2) {
+        return LazyVStack(spacing: LayerListMetrics.spacing) {
             ForEach(displays) { display in
                 LayersRow(display: display,
                           thumbnail: thumbnails[display.id],
@@ -939,8 +951,9 @@ struct LayersListView: View {
             canvasRow
         }
         .padding(.horizontal, 8)
-        .padding(.bottom, 2)
+        .padding(.bottom, LayerListMetrics.bottomPadding)
         .onPreferenceChange(LayerRowHeightKey.self) { rowHeight = max(1, $0) }
+        .onPreferenceChange(LayerCanvasRowHeightKey.self) { canvasRowHeight = max(1, $0) }
         // Rows slide/fade on add, delete, duplicate, reorder, and on a group
         // opening or closing. Keyed on the SHAPE of the list only: a selection
         // change is not a layout change and never was animated here.
@@ -950,9 +963,9 @@ struct LayersListView: View {
     /// A grabber under the list — drag to resize the layer area's max height.
     /// Only meaningful once the list is tall enough to scroll, but always shown
     /// so the affordance is discoverable.
-    private var resizeHandle: some View {
+    private func resizeHandle(natural: CGFloat) -> some View {
         PanelAreaResizeHandle(maxHeight: $maxHeight,
-                              currentHeight: min(contentHeight, maxHeight),
+                              currentHeight: min(natural, maxHeight),
                               minHeight: Self.minHeight,
                               maxAllowedHeight: Self.maxAllowedHeight,
                               help: "Drag to resize the layers area")
@@ -990,6 +1003,14 @@ struct LayersListView: View {
         .contentShape(Rectangle())
         .onTapGesture { editorState.selectCanvas() }
         .help("Select to resize the canvas by its edges")
+        // Measured on its own because it is not shaped like a layer row and
+        // the list's height arithmetic counts it separately. In a short list
+        // it is on screen, so the measurement is live exactly when hugging
+        // depends on it; in a long one the list is capped anyway and the
+        // default carries.
+        .background(GeometryReader { proxy in
+            Color.clear.preference(key: LayerCanvasRowHeightKey.self, value: proxy.size.height)
+        })
     }
 
     private func beginRename(id: UUID, name: String) {
@@ -1083,6 +1104,11 @@ private struct LayersRow: View, Equatable {
     }
 
     var body: some View {
+        // Probe-only, and the whole point of it: a walk counts these to prove
+        // the list built the rows on screen and not the ninety behind them.
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.layersRow)
+        #endif
         content
             .onDrag(pickUp)
             .onDrop(of: [.text], delegate: LayerRowDropDelegate(

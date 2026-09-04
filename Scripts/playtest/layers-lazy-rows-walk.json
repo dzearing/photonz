@@ -1,0 +1,1211 @@
+{
+ "out": "/tmp/photonz-playtest/layers-lazy-rows",
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1440,
+   "canvasHeight": 1024,
+   "width": 1240,
+   "height": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    1000,
+    150
+   ],
+   "to": [
+    1200,
+    300
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    1000,
+    600
+   ],
+   "to": [
+    1200,
+    750
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "hideInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "describe",
+   "stage": "few",
+   "note": "three layers: the panel just came back, so the action line above says how many rows it built"
+  },
+  {
+   "do": "panel",
+   "stage": "few"
+  },
+  {
+   "do": "snapshot",
+   "name": "few"
+  },
+  {
+   "do": "click",
+   "at": [
+    1100,
+    225
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "click",
+   "at": [
+    1100,
+    675
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    60,
+    60
+   ],
+   "to": [
+    120,
+    120
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.08
+  },
+  {
+   "do": "click",
+   "at": [
+    820,
+    420
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "action",
+   "action": "hideInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "describe",
+   "stage": "many",
+   "note": "a hundred and twenty layers: the action line above says how many rows the panel built this time"
+  },
+  {
+   "do": "panel",
+   "stage": "many"
+  },
+  {
+   "do": "snapshot",
+   "name": "many"
+  },
+  {
+   "do": "scrollPanel",
+   "row": "Rectangle 119",
+   "by": -4000
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panel",
+   "stage": "many-bottom"
+  },
+  {
+   "do": "snapshot",
+   "name": "many-bottom"
+  },
+  {
+   "do": "describe",
+   "stage": "many-bottom",
+   "note": "the wheel was turned all the way down the list of a hundred and twenty layers"
+  },
+  {
+   "do": "scrollPanel",
+   "row": "Background",
+   "by": 4000
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panel",
+   "stage": "many-top"
+  },
+  {
+   "do": "describe",
+   "stage": "many-top",
+   "note": "and all the way back up"
+  },
+  {
+   "do": "describe",
+   "stage": "many-crawl",
+   "note": "now a screenful at a time down the whole list, to see what making rows as you reach them costs"
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "click",
+   "at": [
+    1100,
+    225
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "click",
+   "at": [
+    1100,
+    675
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  }
+ ]
+}

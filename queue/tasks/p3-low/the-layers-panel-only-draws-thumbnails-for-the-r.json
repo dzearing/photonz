@@ -1,0 +1,31 @@
+{
+  "id": "the-layers-panel-only-draws-thumbnails-for-the-r",
+  "title": "The layers panel only draws thumbnails for the rows on screen",
+  "goal": "The layers panel asks for a small picture of every layer in the document, even the hundred you would have to scroll to see. A document with a hundred and twenty layers starts a hundred and twenty little background renders to fill a list that shows five. It should only make the pictures for the rows you are looking at, and the ones just off each edge, so opening a big document is cheap.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1060,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T04:18:23.092Z",
+  "updated": "2026-09-04T04:19:10.499Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the lazy-rows work merged 2026-09-04. EditorState.thumbnails(for:) walks every row of LayersListView.rows and calls thumbnail(for:), which kicks off a detached render per uncached layer. The rows themselves are lazy now (LazyVStack), but the thumbnail gather is not: it is computed in the list body over the whole displays array. Needs the visible row window, which is derivable from the scroll offset (.onScrollGeometryChange) plus LayerListMetrics row stride, with a generous buffer each side so a fast scroll does not outrun the renders. Deliberately left out of the lazy-rows task because a grey square flashing past is a visible regression traded for an invisible win, so it needs its own measurement. ViewBuildMeter (probe only) is the pattern for proving it: add a thumbnailRequest subject and count.",
+  "acceptance": [
+    "Opening a document with a hundred layers asks for no more thumbnails than a document with ten, measured on the probe",
+    "Scrolling the list at a normal speed never shows an empty grey square where a thumbnail should be",
+    "Scrolling to the bottom of a hundred layer list and back shows every thumbnail, none missing"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T04:18:23.093Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T04:19:10.498Z",
+      "note": "priority p2-normal -> p3-low"
+    }
+  ]
+}

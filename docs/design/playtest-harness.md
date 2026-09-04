@@ -129,6 +129,7 @@ read coordinates straight off the fixture.
 | `readClipboard` | `stage` | Logs the clipboard's types and text. |
 | `panel` | `stage` | Writes what the RIGHT HAND PANEL is showing to the log and to `panel-<stage>.json`: every tile on the Library shelf, every row in the layers list, and every menu in the dock, by the names the steps below use for them. The `menus` step for the panel, and the first step to write when a walk cannot find something. |
 | `panelMenu` | `menu`, optional `shot` `choose` | Opens a menu INSIDE the window by the words on its button ("Add"), writes its rows to the log, and closes it. `shot` names a real screen capture of the menu in place over the panel, written to `<shot>-sc.png` — the only kind of picture of a menu there is, since a menu is drawn outside this process and renders blank offscreen. `choose` picks one of its rows by title instead of closing with nothing chosen. Needs the Screen Recording grant for the picture; the rows reach the log either way. |
+| `scrollPanel` | `by`, optional `row` | Scrolls the panel list `by` points, negative going DOWN the list. The log says how many rows were on screen before and after, which rows arrived, how many row bodies were built, and what it cost the main thread. Name a `row` to pick which list; leave it out for the layers list wherever it is sitting, which is what a walk crawling down a long list wants, since the row it started from scrolls away and stops being built. The layers list builds only the rows you can see, so this is the only way to reach the rest. A synthesised wheel is usually swallowed by a SwiftUI scroll area, so the step falls back to scrolling directly and SAYS which of the two happened. |
 | `dragTile` | `tile`, `to`, optional `space` `hold` | Picks a tile up off the Library shelf by its name and lets it go on the picture, through the canvas's own drag destination — the same calls a drop from the Finder makes, carrying the very payload the tile's own drag hands over. A capture tile can be named by the caption it shows ("10 hours ago") or, better for a walk that has to keep working, by its file name. `hold` names a picture taken while it is still in the air, which is the only moment the landing outline exists. |
 | `dragRow` | `row`, `onto`, optional `zone` `hold` | Picks a row up in the layers list by its name and lets go of it on another row: `above` it (the default), `below` it, or `inside` it when that row is a group. `hold` names a picture taken before letting go, which is the only moment the line that says what will happen is on screen. |
 | `menus` | `stage`, optional `menu` | Writes the app's own menu bar to the log and to `menus-<stage>.json` (plus a `.txt` you can read): every menu, item, shortcut, submenu and enabled state, plus the windows that are open. `menu` narrows it to one top-level menu by title ("Capture"). This is how a runner names a real menu item instead of one guessed from the source, and it needs no privacy grant of any kind. See below for what the dimming is worth. |
@@ -149,6 +150,11 @@ Three steps close it, and one more makes them writable:
 - `panel` lists what is there. Start here: it prints the tiles, the rows and the
   menus by the exact names the other three take, so a walk is written from what
   the app is actually showing rather than from the source.
+  It lists what is BUILT, which since 2026-09-04 is what is on screen: the
+  layers list makes a row the first time you scroll to it, so a row further
+  down a long list is not in the inventory and cannot be named by `dragRow`
+  until a `scrollPanel` has brought it into view. In a document short enough to
+  fit the panel, which is most walks, nothing changes.
 - `panelMenu` opens a menu and photographs it. A menu takes the app hostage
   while it is up — the click that opens one does not return until it closes, and
   nothing on the main queue runs meanwhile, which is why a walk that clicked one

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1030,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T02:45:45.942Z",
-  "updated": "2026-09-04T02:45:45.943Z",
+  "updated": "2026-09-04T03:54:30.841Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the equatable-rows work merged 2026-09-04 (Scripts/playtest/layers-row-count-perf-walk.json). LayersListView.rows is a plain VStack inside a bounded ScrollView; the VStack is eager. A LazyVStack would skip offscreen rows entirely, but the list measures contentHeight from a GeometryReader over the rows so the area can hug short content, and a lazy stack reports no height for rows it has not materialised. Needs a different height source (row count times measured row height, say) before the swap is safe.",
@@ -22,6 +22,23 @@
     {
       "t": "2026-09-04T02:45:45.943Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T03:54:30.841Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T03:58:30.412684Z",
+      "note": "Adversarial review BEFORE building. (1) Is the value real? The equatable-rows work already made per-click cost flat with row count (29.0ms at 4 and at 121 layers), so this is not a fix for a measured stall. What is still eager is the first draw and every structural change: 121 row bodies, each with a 14-item context menu, two buttons, a drop delegate and three gestures. Real, but one-time, so the honest claim is 'cheaper to open and to reorder', not 'cheaper to click'. (2) What does a first-time user notice? Nothing, if it works. Everything, if it regresses: a list that stops hugging a short document, a scroll that jumps, a drop line that never appears. So the deliverable is really 'nothing changed except the cost', which means A/B the existing behaviour walks rather than assume. (3) Risks the note does not mention: the .animation(value: displays.map(\\.row)) sits on the stack, so rows materialising during a scroll could animate as inserts and make scrolling look like the list is growing; LayerRowHeightKey is published by rows, so with lazy rows only materialised rows report and the max/38 default has to carry the rest. (4) Shortest version: LazyVStack plus a COMPUTED height (row count times measured row height) instead of a measured one. The measured height is the whole reason a lazy stack could not be dropped in: it is a feedback loop (small frame, fewer rows materialised, smaller measured height). Computing it breaks the loop and nothing else has to move. (5) Cut from scope, deliberately: EditorState.thumbnails(for:) still asks for a picture for every row, so a 121 layer document still kicks off 121 background thumbnail renders. Windowing that needs the scroll offset and risks grey squares flashing while you scroll fast, which is a visible regression traded for an invisible win. Filing it as its own task instead."
+    },
+    {
+      "t": "2026-09-04T04:18:59.547441Z",
+      "note": "Built and measured. LayersListView.rows is a LazyVStack; the area's height comes from LayerListMetrics.naturalHeight (PhotonzCore, new, 6 tests) instead of a GeometryReader over the rows, and the Canvas row is measured on its own key because it is the row at the foot of the list. Acceptance 1: same walk on both builds (Scripts/playtest/layers-lazy-rows-walk.json), three layers built 3 rows before and after, a hundred and twenty built 120 before and 6 after; a screenful of scrolling builds 8 or 9 and costs a steady 23-28ms of main thread wherever you are in the list. Acceptance 2: the few screenshot shows the list ending right under the Canvas row with no gap, the many screenshot shows it capped at the set height and scrolling, and the bottom screenshot shows Background and Canvas as the last two rows with nothing cut off. Acceptance 3: panel-reach-walk.json ran on both builds, every step matched, and the panel screenshot after the drop is pixel for pixel identical; the grabber was not dragged by a script because no step can drag it, so what is verified is that the number it bases a drag on matches what is drawn."
+    },
+    {
+      "t": "2026-09-04T04:18:59.547441Z",
+      "note": "Adversarial review AFTER building, on the probe. What is honest: the win is arrival and scrolling, not clicking - a click already cost the same at 4 and 121 layers after the equatable-rows work, and still does. What I could not fix: the panel still asks for a thumbnail for every layer in the document, filed as the-layers-panel-only-draws-thumbnails-for-the-r. What changed outside the app: a walk can only reach a row that is BUILT, so one naming a row far down a long list has to scroll to it first; a new scrollPanel step does that and docs/design/playtest-harness.md says so. Every existing walk works on documents short enough to fit the panel and all still pass. A synthesised scroll wheel turned out to be swallowed by the SwiftUI scroll area, so the step scrolls the view directly and says which of the two happened rather than reporting a pass for a walk that went nowhere."
     }
-  ]
+  ],
+  "started": "2026-09-04T03:54:30.840Z"
 }

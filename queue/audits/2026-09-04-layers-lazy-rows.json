@@ -1,0 +1,31 @@
+{
+  "feature": "The layers list only builds the rows you can see",
+  "epic": "ui-components",
+  "summary": "The layers panel now makes a row the first time you scroll to it. A document with a hundred and twenty layers builds six rows when the panel appears, where it used to build all one hundred and twenty. Nothing about the list looks or behaves different: it still hugs a short document, still caps and scrolls past the height you set, and a drag to reorder lands in exactly the same place.",
+  "setup": "Photonz Dev, release Next or Current alike (this is how the list draws, not what it does, so it is shared). No flags to turn on.",
+  "try": [
+    { "do": "Open a new canvas and draw two rectangles.", "shot": "2026-09-04-layers-lazy-rows-few.png" },
+    { "do": "Look at the Layers section: it should end right under the Canvas row, with no empty space before Position & Size." },
+    { "do": "Select a rectangle and press Command-D about a hundred times to fill the document up.", "shot": "2026-09-04-layers-lazy-rows-many.png" },
+    { "do": "Watch the Layers section as the copies land: it should cap at five rows and start scrolling, not grow." },
+    { "do": "Scroll the layers list all the way to the bottom.", "shot": "2026-09-04-layers-lazy-rows-bottom.png" },
+    { "do": "Check that Background and the Canvas row are the last two, with nothing cut off under them." },
+    { "do": "Scroll back up a screenful at a time and watch for a stutter as each new row appears." },
+    { "do": "Drag a row onto another to reorder it, and drag the grabber under the list to make the area taller." }
+  ],
+  "evaluate": [
+    "Scrolling a hundred-layer list: does each new screenful appear instantly, or can you catch a row arriving?",
+    "Does the list still stop exactly under the Canvas row in a short document, with no gap you notice?",
+    "Does the grabber under the list still track your cursor one to one, or does it lag or jump on the first pull?",
+    "Reordering by drag: does the blue drop line still appear where you expect, at the same moment it used to?",
+    "Is there anything about a long layers list that still feels slow, now that the rows are not the cost?"
+  ],
+  "rough": [
+    "Measured on the probe rather than assumed, same walk on both builds (Scripts/playtest/layers-lazy-rows-walk.json). Three layers: 3 rows built, before and after. A hundred and twenty layers: 120 rows built before, 6 after. Scrolling the whole list bottom to top builds 8 or 9 rows per screenful and costs a steady 23 to 28ms of main thread per screenful wherever you are in the list, so it does not get more expensive further down.",
+    "Behaviour checked by A/B rather than assumed: panel-reach-walk.json (row drag, the drop line above a row and inside a group, group disclosure, rows found by name) ran on both builds. Every step matched, and the screenshot of the panel after the drop is pixel for pixel identical.",
+    "The grabber under the list was NOT verified by a scripted drag, because no step can drag it. What was verified is the number it bases a drag on: the list's height is now worked out from the row count instead of measured, and the screenshots and the row positions in the panel inventory both say the worked-out number matches what is drawn. If the grabber feels different on the first pull, that is the thing to look at.",
+    "Left alone on purpose: the panel still asks for a thumbnail picture for every layer in the document, not just the rows on screen, so a hundred and twenty layer document still kicks off a hundred and twenty small background renders. Windowing that needs the scroll position and risks grey squares flashing past while you scroll fast, which trades an invisible win for a visible loss. Filed as its own task.",
+    "One consequence outside the app: a scripted walk can only reach a row that is built, so a walk naming a row far down a long list now has to scroll to it first. A new scrollPanel step does that, and the harness doc says so. Every existing walk works on documents short enough to fit the panel, and all of them still pass.",
+    "The synthesised scroll wheel is swallowed by the SwiftUI scroll area, so the new step scrolls the view directly instead and says so in its log line. That is a limit of the harness, not of the list."
+  ]
+}

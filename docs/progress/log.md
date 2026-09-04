@@ -2,6 +2,61 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-04 — The layers list only builds the rows you can see (go loop)
+
+Queue task `the-layers-list-only-builds-the-rows-you-can-see` (epic
+`ui-components`). Follow-up to the equatable-rows work earlier the same day.
+
+**A hundred and twenty layer document now builds six rows when the panel
+appears, where it built a hundred and twenty.** `LayersListView.rows` is a
+`LazyVStack`, so a row is made the first time you scroll to it. Measured on the
+probe with the same walk on both builds
+(`Scripts/playtest/layers-lazy-rows-walk.json`): three layers built 3 rows
+before and after; a hundred and twenty built 120 before and 6 after. Crawling
+the whole list a screenful at a time builds 8 or 9 rows per screenful and costs
+a steady 23 to 28ms of main thread wherever you are in it.
+
+**The height is worked out now, not measured.** That was the whole reason a lazy
+stack could not just be dropped in: the area hugs a short list, and it learned
+how tall to be by measuring the rows, which is a loop that eats itself once the
+rows are lazy (a smaller frame builds fewer rows, which report a smaller height,
+which shrinks the frame). `LayerListMetrics.naturalHeight` in `PhotonzCore` (new,
+6 tests) computes it from the row count, one measured row height, and the Canvas
+row, which is measured separately because it is the row at the foot of the list.
+The screenshots confirm the computed number matches what is drawn: the list
+still ends right under the Canvas row in a short document and still caps at the
+height the grabber sets in a long one.
+
+**Nothing a person sees changed.** `panel-reach-walk.json` (row drag, the drop
+line above a row and inside a group, group disclosure, rows found by name) ran on
+both builds and every step matched; the screenshot of the panel after the drop is
+pixel for pixel identical.
+
+**Two probe-only additions came out of needing to prove it.** `ViewBuildMeter`
+counts view bodies, because once the per-row cost is small a hundred wasted rows
+and five useful ones look the same on a stopwatch: the click and action steps now
+report row builds beside their timing. A new `scrollPanel` step turns the wheel
+over a panel list, since a lazy list has to be scrolled for the rest to arrive and
+no other step could. A synthesised wheel is swallowed by the SwiftUI scroll area,
+so the step scrolls the view directly instead and says which of the two happened.
+
+**One consequence outside the app**, written into
+`docs/design/playtest-harness.md`: a walk can only reach a row that is built, so
+one naming a row far down a long list has to scroll to it first. Every existing
+walk works on documents short enough to fit the panel and all still pass.
+
+Shared between Current and Next rather than forked, like the equatable-rows work
+before it: this is how the list draws, not what it does.
+
+**Next**: the panel still asks for a thumbnail picture for every layer in the
+document, so a hundred and twenty layer file still starts a hundred and twenty
+little background renders to fill a list showing five. Windowing that needs the
+scroll position and risks grey squares flashing past on a fast scroll, so it is
+its own task with its own measurement:
+`the-layers-panel-only-draws-thumbnails-for-the-r`.
+
+Audit: `queue/audits/2026-09-04-layers-lazy-rows.json`
+
 ## 2026-09-03 — You can see where a dragged picture will land (go loop)
 
 Queue task `you-can-see-where-a-dragged-picture-will-land-be` (epic

@@ -286,13 +286,15 @@ private final class Run {
             let flags = eventFlags(modifiers)
             MainThreadMeter.shared.install()
             MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
             let t0 = CACurrentMediaTime()
             if let event = mouseEvent(.leftMouseDown, at: p, on: canvas, flags: flags, clicks: count) { canvas.mouseDown(with: event) }
             let t1 = CACurrentMediaTime()
             if let event = mouseEvent(.leftMouseUp, at: p, on: canvas, flags: flags, clicks: count) { canvas.mouseUp(with: event) }
             let t2 = CACurrentMediaTime()
             await sleep(0.05)
-            let timing = String(format: "handler down %.1fms up %.1fms; ", (t1 - t0) * 1000, (t2 - t1) * 1000) + MainThreadMeter.shared.report
+            let timing = String(format: "handler down %.1fms up %.1fms; ", (t1 - t0) * 1000, (t2 - t1) * 1000)
+                + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
         case .drag(let from, let to, let steps, let modifiers, let hold):
@@ -507,6 +509,30 @@ private final class Run {
             write(json: inventory, to: "panel-\(stage).json")
             note(number, step.name, Self.outlinePanel(inventory), state: inventory)
 
+        case .scrollPanel(let row, let by):
+            let rows = try panelTargets().filter { $0.kind == .row }
+            let target: PanelTargetView
+            if let row {
+                target = try panelTarget(row, kind: .row)
+            } else if let any = rows.first {
+                target = any
+            } else {
+                throw Failure(description: "there are no rows in the panel to scroll")
+            }
+            let before = rows.map(\.name)
+            ViewBuildMeter.shared.reset()
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            let moved = try scroll(from: target, by: by)
+            await sleep(0.4)
+            let after = try panelTargets().filter { $0.kind == .row }.map(\.name)
+            let arrived = after.filter { !before.contains($0) }
+            note(number, step.name,
+                 "from \"\(target.name)\" by \(Int(by))pt: \(moved); rows on screen \(before.count) -> \(after.count), "
+                 + "new \(arrived.isEmpty ? "none" : arrived.joined(separator: ", "))"
+                 + "; " + ViewBuildMeter.shared.report + "; " + MainThreadMeter.shared.report,
+                 state: describe())
+
         case .describe(let stage, let text):
             note(number, stage, text ?? "", state: describe())
 
@@ -550,6 +576,10 @@ private final class Run {
 
         case .action(let action):
             let editor = try requireEditor()
+            // Zeroed here so `showInspector` reports the cost of the panel
+            // ARRIVING: the number of layer rows the list builds when it comes
+            // back on screen, which is the thing a lazy list is claiming.
+            ViewBuildMeter.shared.reset()
             switch action {
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
@@ -802,7 +832,8 @@ private final class Run {
                 editor.isCanvasSizeDialogPresented = false
             }
             await sleep(0.2)
-            let detail = actionDetail.map { "\(action.rawValue) · \($0)" } ?? action.rawValue
+            let detail = (actionDetail.map { "\(action.rawValue) · \($0)" } ?? action.rawValue)
+                + "; " + ViewBuildMeter.shared.report
             actionDetail = nil
             note(number, step.name, detail, state: describe())
         }
@@ -1625,6 +1656,39 @@ private final class Run {
             with: type, location: view.convert(viewPoint, to: nil), modifierFlags: flags,
             timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
             context: nil, eventNumber: 0, clickCount: clicks, pressure: 1)
+    }
+
+    /// Turns the wheel over whatever scrolls behind `target`.
+    ///
+    /// A wheel event is what a person sends, so it is what this sends: the
+    /// enclosing scroll view gets a real `scrollWheel(with:)`. Some SwiftUI
+    /// scroll areas swallow a synthesised wheel, so if the clip view has not
+    /// moved afterwards this scrolls it directly rather than reporting a pass
+    /// for a walk that went nowhere. Either way it says which happened.
+    private func scroll(from target: PanelTargetView, by points: Double) throws -> String {
+        guard let scrollView = target.enclosingScrollView else {
+            throw Failure(description: "\"\(target.name)\" is not inside anything that scrolls")
+        }
+        let clip = scrollView.contentView
+        let start = clip.bounds.origin.y
+        if let wheel = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
+                               wheel1: Int32(points.rounded()), wheel2: 0, wheel3: 0),
+           let event = NSEvent(cgEvent: wheel) {
+            scrollView.scrollWheel(with: event)
+        }
+        if abs(clip.bounds.origin.y - start) > 0.5 {
+            return String(format: "wheel moved it %.0fpt", clip.bounds.origin.y - start)
+        }
+        // Down the list is +y in a flipped clip view and -y in one that is not,
+        // which is the same direction the wheel means by a negative number.
+        let step = clip.isFlipped ? -points : points
+        let wanted = CGPoint(x: clip.bounds.origin.x, y: start + step)
+        clip.scroll(to: wanted)
+        scrollView.reflectScrolledClipView(clip)
+        let delta = clip.bounds.origin.y - start
+        return abs(delta) > 0.5
+            ? String(format: "the wheel did nothing, so it was scrolled directly by %.0fpt", delta)
+            : "IT DID NOT MOVE: already at the end, or nothing here scrolls"
     }
 
     // MARK: - Rendering

@@ -539,6 +539,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// list, and every menu in the dock, by the names a walk has to use for
     /// them. The `menus` step for the panel.
     case panel(stage: String)
+    /// Turn the wheel over a panel that scrolls, by `by` points (negative goes
+    /// down the list). A list that builds only the rows you can see has to be
+    /// scrolled to prove the rest arrive, and that is not something a click can
+    /// do.
+    ///
+    /// `row` names a row to turn the wheel over. Leave it out to scroll the
+    /// layers list wherever it happens to be sitting: after a few turns the row
+    /// a walk started from has scrolled away and is no longer built, so naming
+    /// one every time is a step that stops working halfway down the list.
+    case scrollPanel(row: String?, by: Double)
     /// Write the editor's state (tool, mode, layers, hint, clipboard note) to
     /// the log under `stage`.
     case describe(stage: String, note: String?)
@@ -568,7 +578,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragRow", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
         "panel", "panelMenu",
-        "readClipboard", "render", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
+        "readClipboard", "render", "scrollPanel", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
@@ -598,6 +608,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragTile: "dragTile"
         case .dragRow: "dragRow"
         case .panel: "panel"
+        case .scrollPanel: "scrollPanel"
         case .describe: "describe"
         case .clearClipboard: "clearClipboard"
         case .readClipboard: "readClipboard"
@@ -704,6 +715,8 @@ public enum PlaytestStep: Sendable, Equatable {
                             zone: zone, hold: try f.optionalString("hold"))
         case "panel":
             self = .panel(stage: try f.string("stage"))
+        case "scrollPanel":
+            self = .scrollPanel(row: fields["row"] as? String, by: try f.number("by"))
         case "describe":
             self = .describe(stage: try f.string("stage"), note: fields["note"] as? String)
         case "clearClipboard":

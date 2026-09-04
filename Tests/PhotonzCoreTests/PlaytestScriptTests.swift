@@ -534,6 +534,36 @@ struct PlaytestScriptTests {
         #expect(zone == .above)
     }
 
+    /// A list that builds only the rows you can see has to be scrolled for the
+    /// rest to arrive, and no other step can turn a wheel.
+    @Test func aScrollPanelStepNamesARowAndHowFarToGo() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "scrollPanel", "row": "Background", "by": -400 } ] }
+        """)
+        guard case .scrollPanel(let row, let by) = script.steps[0] else { Issue.record("scrollPanel"); return }
+        #expect(row == "Background")
+        #expect(by == -400)
+    }
+
+    /// Halfway down a lazy list the row a walk started from is gone, so the
+    /// step has to work without naming one.
+    @Test func aScrollPanelStepCanLeaveTheRowOut() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "scrollPanel", "by": -160 } ] }
+        """)
+        guard case .scrollPanel(let row, let by) = script.steps[0] else { Issue.record("scrollPanel"); return }
+        #expect(row == nil)
+        #expect(by == -160)
+    }
+
+    @Test func aScrollPanelStepWithoutADistanceIsRefused() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "scrollPanel", "row": "Background" } ] }
+            """)
+        }
+    }
+
     @Test func aRowDragRefusesAZoneThatIsNotOne() {
         #expect(throws: PlaytestScriptError.self) {
             _ = try decode("""
