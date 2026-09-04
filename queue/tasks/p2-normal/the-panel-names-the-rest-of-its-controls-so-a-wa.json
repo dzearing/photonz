@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1080,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:36:38.527Z",
-  "updated": "2026-09-04T14:12:09.481811Z",
+  "updated": "2026-09-04T14:12:37.505Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Use playtestControl(name) on the control and playtestField(title) on the row that holds it (Sources/Photonz/Playtest/PanelTarget.swift). Segmented pickers need nothing: PlaytestPanelPress reads NSSegmentedControl segments straight off the view tree. Files: LayersPanel.swift (eye, lock), ColorStylePanel.swift, FrameInspector.swift, GeometryInspector.swift. Docs: docs/design/playtest-harness.md, Reaching into the right hand panel.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-04T14:12:09.481811Z",
       "note": "Left undone, on purpose: the colour picker a well opens is a window of its own, so nothing inside it is pressable. Filed as \"the-colour-picker-names-its-own-controls-so-a-wa\". Audit: queue/audits/2026-09-04-panel-controls.json."
+    },
+    {
+      "t": "2026-09-04T14:12:37.505Z",
+      "note": "Visibility, Lock and Twist on every layer row; Color, Switch and Save on every colour row; Color on every well; Revert <field> on the component arrows; Enable Shadow; Clip contents; the four editable Position & Size numbers. Rows named with playtestField so a press can say which one. Harness: in prefers a whole detail item over a substring (Rectangle vs Rectangle 2), and a detail leads with its row. Verified live on the probe with Screen Recording granted by the new Scripts/playtest/panel-controls-walk.json (75 steps, ok, every press line names its row); eight existing walks re-run ok; Scripts/test.sh green. Audit queue/audits/2026-09-04-panel-controls.json. Follow-up filed for the colour picker's own controls."
     }
   ],
-  "started": "2026-09-04T13:52:49.600Z"
+  "started": "2026-09-04T13:52:49.600Z",
+  "completed": "2026-09-04T14:12:37.505Z"
 }
