@@ -1798,10 +1798,13 @@ final class CanvasNSView: NSView {
             }
             let copying = copyDragModifier(event)
             onSelectLayerInGroup(pick.id, pick.context)
-            // A copy drag never floats a sprite: the sprite's underlay hides
-            // the layer it lifts, and the whole point here is that the original
-            // stays visible where it is.
-            if !copying { onDragBegin(hit.id) }
+            // The drag preview (two full renders, then a pass to hand the
+            // canvas its sprite) starts once the pointer really travels, in
+            // mouseDragged, not here: most presses on a layer are clicks that
+            // never move, and a click has no use for a sprite. Per-move
+            // previews fall back to full submits until the renders land, so a
+            // drag loses nothing but the head start. A copy drag still never
+            // gets a sprite at all; mouseDragged checks that before it asks.
             selectedLayerFrame = hit.frame
             moveDrag = MoveDrag(layerID: hit.id,
                                 grabOffset: CGPoint(x: p.x - hit.frame.origin.x,
@@ -1937,11 +1940,16 @@ final class CanvasNSView: NSView {
             refreshOverlays()
         } else if var drag = moveDrag {
             let proposed = CGPoint(x: p.x - drag.grabOffset.x, y: p.y - drag.grabOffset.y)
+            // Read the copy modifier BEFORE deciding to float a sprite: a copy
+            // drag never gets one, because the sprite's underlay hides the layer
+            // it lifts and the original has to stay visible where it is.
+            if copyDragModifier(event) { drag.copying = true }
             if !drag.moved {
                 let travel = hypot(proposed.x - drag.startOrigin.x, proposed.y - drag.startOrigin.y)
                 drag.moved = travel * viewport.zoom >= 4
+                // The press has become a drag: now the sprite is worth making.
+                if drag.moved, !drag.copying { onDragBegin(drag.layerID) }
             }
-            if copyDragModifier(event) { drag.copying = true }
             if drag.moved {
                 // ⌘ drags free, the way it already does for a measure foot or a
                 // region corner: one key that means "ignore the magnets"

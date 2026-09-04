@@ -117,6 +117,8 @@ private final class Run {
     /// Appends a log line and rewrites `log.json`, so a run that dies mid-way
     /// still leaves everything it learned.
     private func note(_ step: Int, _ name: String, _ text: String, state: [String: Any]? = nil) {
+        let began = CACurrentMediaTime()
+        defer { MainThreadMeter.shared.exclude(CACurrentMediaTime() - began) }
         var entry: [String: Any] = [
             "step": step, "do": name, "note": text,
             "t": (Date().timeIntervalSince(startedAt) * 1000).rounded() / 1000,
@@ -164,7 +166,7 @@ private final class Run {
 
         case .wait(let seconds):
             await sleep(seconds)
-            note(number, step.name, "\(seconds)s")
+            note(number, step.name, "\(seconds)s \(MainThreadMeter.shared.report)")
 
         case .key(let key, let modifiers):
             let window = try requireWindow()
@@ -277,10 +279,16 @@ private final class Run {
             let canvas = try requireCanvas()
             let p = try viewPoint(at)
             let flags = eventFlags(modifiers)
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            let t0 = CACurrentMediaTime()
             if let event = mouseEvent(.leftMouseDown, at: p, on: canvas, flags: flags, clicks: count) { canvas.mouseDown(with: event) }
+            let t1 = CACurrentMediaTime()
             if let event = mouseEvent(.leftMouseUp, at: p, on: canvas, flags: flags, clicks: count) { canvas.mouseUp(with: event) }
+            let t2 = CACurrentMediaTime()
             await sleep(0.05)
-            note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p))", state: describe())
+            let timing = String(format: "handler down %.1fms up %.1fms; ", (t1 - t0) * 1000, (t2 - t1) * 1000) + MainThreadMeter.shared.report
+            note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
         case .drag(let from, let to, let steps, let modifiers, let hold):
             let canvas = try requireCanvas()
@@ -1546,6 +1554,8 @@ private final class Run {
 
     /// What the editor is doing right now, in the terms an audit talks about.
     private func describe() -> [String: Any] {
+        let began = CACurrentMediaTime()
+        defer { MainThreadMeter.shared.exclude(CACurrentMediaTime() - began) }
         guard let editor else { return [:] }
         let document = editor.document
         let layers = document?.layers ?? []
@@ -1790,6 +1800,66 @@ private final class Run {
         ]
         if let stock = known.first(where: { $0.0 === current })?.1 { return stock }
         return CanvasCursor.name(of: current) ?? "other"
+    }
+}
+/// How busy the main thread is after a step, from the main run loop's own
+/// observer: total time on the main thread since the last `click`, how many
+/// run-loop passes that took, and the longest single pass. A pass longer than
+/// a frame (16ms) is a frame the app did not draw, which is what "sluggish"
+/// means to a person clicking. The harness's own work (describing the editor,
+/// rewriting the log) is subtracted, so the numbers are the app's alone.
+///
+/// `Scripts/playtest/select-click-perf-walk.json` is the walk that reads
+/// these; the numbers it produced on 2026-09-03 are in its commit message.
+@MainActor
+final class MainThreadMeter {
+    static let shared = MainThreadMeter()
+    private var observer: CFRunLoopObserver?
+    private var busy: CFTimeInterval = 0
+    private var passes = 0
+    private var longest: CFTimeInterval = 0
+    private var activeSince: CFTimeInterval?
+    private var excludedInPass: CFTimeInterval = 0
+
+    func install() {
+        guard observer == nil else { return }
+        let observer = CFRunLoopObserverCreateWithHandler(nil, CFRunLoopActivity.allActivities.rawValue, true, 0) { [unowned self] _, activity in
+            let now = CACurrentMediaTime()
+            switch activity {
+            case .afterWaiting, .entry:
+                if activeSince == nil { activeSince = now; excludedInPass = 0 }
+            case .beforeWaiting, .exit:
+                if let since = activeSince {
+                    let d = max(0, now - since - excludedInPass)
+                    busy += d
+                    passes += 1
+                    longest = max(longest, d)
+                    activeSince = nil
+                    excludedInPass = 0
+                }
+            default: break
+            }
+        }
+        self.observer = observer
+        CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
+    }
+
+    func reset() {
+        busy = 0; passes = 0; longest = 0
+        activeSince = CACurrentMediaTime()
+        excludedInPass = 0
+    }
+
+    /// Time the harness itself spent on the main thread, which is not the
+    /// app's cost: taken off the total and off the pass it happened in.
+    func exclude(_ seconds: CFTimeInterval) {
+        if activeSince != nil { excludedInPass += seconds } else { busy -= seconds }
+    }
+
+    var report: String {
+        var total = busy
+        if let since = activeSince { total += max(0, CACurrentMediaTime() - since - excludedInPass) }
+        return String(format: "mainBusy %.1fms over %d passes, longest %.1fms", total * 1000, passes, longest * 1000)
     }
 }
 #endif
