@@ -46,7 +46,11 @@ struct LibraryPanel: View, Equatable {
     static let maxTiles = 60
     /// The shelf's scrolling area as a coordinate space, so the grid can say
     /// how far it has been scrolled rather than where it is in the window.
-    fileprivate static let shelfSpace = "library.shelf"
+    // nonisolated: a plain name, read from the Sendable closure
+    // `onGeometryChange` hands its reader. Making the panel Equatable put that
+    // closure outside the main actor's isolation, and a constant string has no
+    // business being isolated in the first place.
+    fileprivate nonisolated static let shelfSpace = "library.shelf"
 
     private var scope: LibraryScope { LibraryScope(rawValue: scopeRaw) ?? .media }
 
