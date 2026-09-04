@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1110,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T14:46:32.315Z",
-  "updated": "2026-09-04T15:45:06.764Z",
+  "updated": "2026-09-04T15:45:36.827Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while regression-testing the colour picker walk work on 2026-09-04. type-menu-labels-walk step 17 is panelMenu {menu: 24 pt, choose: 48 pt}; the text size is remembered in the probe defaults, so on a second run the button reads 48 pt and the step fails with \"no menu called 24 pt\". drop-lands-here-walk has the same shape of problem from the other side: it carries a seed note saying to copy Scripts/playtest/fixtures/Photonz drop probe.png into ~/Pictures/Screenshots first, which nothing enforces, so it fails with \"no tile called Photonz drop probe\" unless a person read the note. Options: a reset step at the top of a walk, a walk-level setup block the runner performs, or the probe starting from clean defaults each launch.",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-04T15:45:06.764Z",
       "note": "Not verified: the other 77 walks in the folder were not double-run in this session. Two passes over all 132 is about three and a half hours of machine time and the user is playtesting on the same machine. Scripts/playtest-all.sh runs the whole folder for whoever wants that; the 55 chosen here are the ones that can read or write a remembered setting, which is the whole risk surface for this bug."
+    },
+    {
+      "t": "2026-09-04T15:45:36.826Z",
+      "note": "A walk now says what it needs in a setup block the harness performs before step one and undoes when the run ends: forget puts an area of the app's memory (text, color, shapes, measure, tools, groups, panel) back to factory, captures lends the Screenshots folder a picture and takes it back. Second half: a panel menu is named by the row it sits on rather than by the value it is showing, which is what made type-menu-labels fragile in the first place. Running the walks found a third and fourth case: label-grows (the drag missed the resize handle because the label's size was remembered) and picker-controls (0.8s was not long enough for the colour picker, now 2.0s). Shipped in 754ca1e. Verified on the probe: those four walks each pass twice in a row; the 55 state-sensitive walks ran twice back to back, 53/55 then 54/55, and the only difference was the flake now fixed. Scripts/test.sh green (3013). New Scripts/playtest-all.sh runs the whole folder; PlaytestWalkSetupTests holds every walk to the rule. No audit: nothing here changes what a person sees in the app, so there is nothing to playtest."
     }
   ],
-  "started": "2026-09-04T14:51:12.817Z"
+  "started": "2026-09-04T14:51:12.817Z",
+  "completed": "2026-09-04T15:45:36.827Z"
 }
