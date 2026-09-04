@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1050,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T03:26:35.299Z",
-  "updated": "2026-09-04T04:54:14.158131Z",
+  "updated": "2026-09-04T04:54:36.769Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from a-color-slot-can-hold-a-gradient-not-just-a-flat. ColorStyle holds colorHex: String today (PhotonzCore/ColorStyles.swift); widening it to Paint is the same trick Paint itself used: keep the wire key, encode a bare string while solid. The Library tile and every swatch that draws a style will want PaintFill rather than Color(hex:).",
@@ -95,7 +95,12 @@
     {
       "t": "2026-09-04T04:54:14.158131Z",
       "note": "Audit: queue/audits/2026-09-04-gradient-styles.json"
+    },
+    {
+      "t": "2026-09-04T04:54:36.768Z",
+      "note": "A style holds a whole Paint now, so a gradient can be saved under a name, drawn as a gradient on the Library shelf, applied to another shape whole, and re-aimed in one place with everything wearing it following in one undo step. Core in PhotonzCore/ColorStyles.swift + Paint.draws(sameAs:); app in ColorStylePanel/DesignedColorPicker/EditorState. 2721 tests pass; verified on the probe with Scripts/playtest/gradient-style-walk.json, real window captures. Audit: queue/audits/2026-09-04-gradient-styles.json"
     }
   ],
-  "started": "2026-09-04T04:38:53.605Z"
+  "started": "2026-09-04T04:38:53.605Z",
+  "completed": "2026-09-04T04:54:36.769Z"
 }
