@@ -78,7 +78,14 @@ enum LayerScaling {
             let target = placing(child.localBounds, from: before, to: after,
                                  sx: sx, sy: sy, as: placement,
                                  canScaleX: current.width > 0, canScaleY: current.height > 0)
-            guard child.isGroup else { return child.resized(to: target) }
+            // A text box normally throws away a height handed to it, so a
+            // child STRETCHED down the container says so: the height in
+            // `target` is the container's answer, not a guess.
+            guard child.isGroup else {
+                return child.resized(to: target,
+                                     fillingHeight: current.height > 0
+                                         && placement.vertical == .stretch)
+            }
             // A child that arranges itself is told its new size rather than
             // scaled, so a stack stretched across a screen dragged wider fills
             // the width with its own rows instead of magnifying them.

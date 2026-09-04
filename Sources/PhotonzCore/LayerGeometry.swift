@@ -182,6 +182,11 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// Why text has no typeable height.
     public static let textHeightReason = "Height follows the text. Change the width to re-wrap it, or the font size in the Text section."
 
+    /// The same field on a piece of text told to fill the box holding it: its
+    /// height stopped being the text's answer the moment something else took
+    /// it over, so the tip points at the control that owns it now.
+    public static let filledHeightReason = "This is stretched to fill the height of what holds it. Change that container's height, or pick a different Vertical in the Layout section."
+
     /// Why a layer in a stack has no typeable position: the stack decides it,
     /// and a typed number would be put straight back. Says what to do instead.
     public static let stackedReason = "The stack this is in decides where it sits. Change the group's Gap or Direction in the Layout section, or drag this past its neighbours to reorder them."
@@ -242,7 +247,10 @@ public struct LayerGeometryEditing: Hashable, Sendable {
             canSetWidth = true
             canSetHeight = !layer.resizeWidthOnly
             widthReason = nil
-            heightReason = layer.resizeWidthOnly ? Self.textHeightReason : nil
+            heightReason = layer.resizeWidthOnly
+                ? (layer.heightIsFilled(in: container) ? Self.filledHeightReason
+                                                       : Self.textHeightReason)
+                : nil
         } else {
             canSetWidth = false
             canSetHeight = false

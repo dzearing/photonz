@@ -135,6 +135,13 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// changes nothing.
     public var flowsHorizontally: Bool { kind == .stack && direction.isHorizontal }
 
+    /// Whether the flow itself decides how TALL the things in it are. A grid
+    /// shares its cell height out and a row hands every item the height of the
+    /// row, so a Stretch down the box means something in both. A column runs
+    /// down the page, where each item's height is its own and there is nothing
+    /// for that choice to fill.
+    public var decidesHeight: Bool { kind == .grid || direction.isHorizontal }
+
     private enum CodingKeys: String, CodingKey {
         case kind, direction, columns, gap, rowGap, padding, width, height
     }

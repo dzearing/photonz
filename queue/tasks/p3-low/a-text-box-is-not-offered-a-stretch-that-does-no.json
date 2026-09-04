@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 620,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T18:09:56.734Z",
-  "updated": "2026-09-03T18:09:56.735Z",
+  "updated": "2026-09-04T06:55:48.301Z",
   "deps": [],
   "blockedBy": [],
   "notes": "LayerPlacement offers the same five choices for every content kind. GroupFlow.span with .stretch sets the box height, which Layer.resized(to:) now overrides for text. The horizontal case became meaningful in a-label-grows-to-fit-what-it-says; the vertical one did not.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-03T18:09:56.735Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T06:55:48.300Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T06:59:30.556944Z",
+      "note": "Adversarial review before building. Reproduced by reading the path: GroupFlow gives a stretched child the full cross extent, then moved() calls Layer.resized(to:), whose text branch throws the height away and re-measures from the words. So vertical Stretch on text lands the box at the top of the space at its natural height, which is exactly what Top does. Two ways out: drop the choice, or honour it. Dropping it is wrong here because the rest of the app is already built for the other answer: TextContent carries a verticalAlignment, PhotonzRender's TextBlockMetrics.topInset exists only to place lines inside a box taller than the words, setPlacement already moves the words to Middle the moment you pick vertical Stretch, and the inspector already PRINTS 'Stretch fills the box with the words placed by Align, in Text.' docs/design/ui-building.md records that decision (Where the words sit in their box): keep Stretch for text, make it visible. Only Layer.resized(to:) never got the message. A label vertically centred in a row is the everyday UI case (a button label in a 36pt bar), so honouring it is also the more useful of the two."
+    },
+    {
+      "t": "2026-09-04T06:59:30.556944Z",
+      "note": "Shortest version that delivers it: the height is only kept when the container actually stretched it, so resized(to:) takes one extra flag that the two callers who know the rule pass in. Nothing re-measures on open, so a saved document is untouched until its container next resizes. Not doing: the same dead-choice problem exists for a child's Vertical row inside a COLUMN stack (the flow owns that axis for every content kind, not just text) - filed separately rather than widened into this."
+    },
+    {
+      "t": "2026-09-04T07:13:03.596500Z",
+      "note": "Built it. Layer.resized(to:fillingHeight:) keeps a height handed to a text box when the CONTAINER is the one that decided it; GroupFlow passes it wherever the flow decides heights (a row, a grid, via the new GroupLayout.decidesHeight) and LayerScaling passes it for a child whose rule resolves to stretch. Never below the height the words need, so a short row does not cut a line off. The Height field stops claiming the words decide it (LayerGeometryEditing.filledHeightReason, gated on Layer.heightIsFilled(in:)). Ten tests in TextRefitTests; full suite 2783 green."
+    },
+    {
+      "t": "2026-09-04T07:13:03.596500Z",
+      "note": "Post-build review on the real app found two more, both fixed. (1) Picking Top again left the box at the row's height for good: text has no height handle and its Height field takes no number, so nothing could ever shrink it. setPlacement and setContentPlacement now hand the height back to the words when the fill is taken away (Layer.textReleasedFromFill). (2) The Vertical menu's own Follow row read back the layer's OVERRIDE, so a stretched label offered 'Follow group (Stretch)' when following the group would give Top. It now reads the container's answer."
+    },
+    {
+      "t": "2026-09-04T07:13:03.596500Z",
+      "note": "Verified live in the probe (Screen Recording granted). Scripts/playtest/text-fills-height-walk.json: label 80x21 in a 180-tall row -> pick Stretch in the real Layout menu -> 80x180 with Align down at middle -> pick Top -> back to 80x21. Audit queue/audits/2026-09-04-text-fills-height.json with three real window captures. Follow-up filed: a-layer-in-a-column-stack-is-not-offered-a-place."
     }
-  ]
+  ],
+  "started": "2026-09-04T06:55:48.300Z"
 }

@@ -177,6 +177,18 @@ extension Layer {
                           : VerticalPlacement.allCases
     }
 
+    /// Whether the container decides this layer's height by stretching it to
+    /// fill its box, rather than the layer deciding it for itself.
+    ///
+    /// Only a container that HAS a height to share can: a column stack hands
+    /// every row the height it already had, so a Stretch there fills nothing
+    /// and the layer is still the size of what is in it.
+    public func heightIsFilled(in container: Layer?) -> Bool {
+        guard let container else { return false }
+        if let layout = container.group?.layout, !layout.decidesHeight { return false }
+        return resolvedPlacement(in: container).vertical == .stretch
+    }
+
     /// This layer's own setting with one axis changed, collapsed back to
     /// nothing when both axes end up following the container again.
     public func settingPlacement(horizontal: HorizontalPlacement?) -> LayerPlacement? {

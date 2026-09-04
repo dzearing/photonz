@@ -1,0 +1,209 @@
+{
+  "out": "/tmp/photonz-playtest/text-fills-height",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        120
+      ],
+      "to": [
+        460,
+        300
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        120
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Save"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        170,
+        130
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        341,
+        210
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-row",
+      "note": "a tall block and a short label made into a row: the label sits at the top of the row, one line tall"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-row"
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-inside",
+      "note": "which of the two is selected inside the row"
+    },
+    {
+      "do": "action",
+      "action": "pickNextSibling"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-label-picked",
+      "note": "the label inside the row is selected: Layout section must be on screen, Vertical reading Top"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-label-picked"
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionDown"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-filled",
+      "note": "Vertical set to Stretch: the label's box must now be as tall as the row, and its words centred down it"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-filled"
+    },
+    {
+      "do": "render",
+      "name": "4-filled-canvas"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-undone",
+      "note": "one undo puts the label back to one line at the top"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Top",
+      "shot": "6-vertical-menu",
+      "choose": "Stretch"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-filled-by-menu",
+      "note": "Stretch picked in the Layout section's own Vertical menu: the label must fill the height of the row"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-filled-by-menu"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Stretch",
+      "choose": "Top"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-released",
+      "note": "Top picked back: the box must give the height to the words again, since text has no height handle to drag it down with"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-released"
+    }
+  ]
+}

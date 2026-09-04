@@ -95,7 +95,14 @@ extension Layer {
     /// are building on. What is ON the screen still follows any placement rule
     /// it was given, so a bar stretches across a screen dragged wider while
     /// everything nobody has given a rule to holds still.
-    public func resized(to frame: CGRect) -> Layer {
+    ///
+    /// `fillingHeight` is the one thing a text box cannot work out for itself:
+    /// normally its height is however tall its words came out, so a height
+    /// handed to it is ignored. It is honoured when the container has STRETCHED
+    /// this layer down its box, because then the height in `frame` is the
+    /// container's answer rather than a guess, and only the two places that
+    /// know that rule (`GroupFlow`, `LayerScaling`) ever pass it.
+    public func resized(to frame: CGRect, fillingHeight: Bool = false) -> Layer {
         if annotation != nil { return AnnotationBuilder.resized(self, to: frame) }
         if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
@@ -116,9 +123,20 @@ extension Layer {
         // and re-measures nothing (`docs/design/ui-building.md`, "A label grows
         // to fit what it says").
         if case .text(let content) = content, resizeWidthOnly {
-            let width = frame.standardized.width
-            if abs(width - self.frame.standardized.width) > 0.01 {
-                layer.frame = CGRect(x: frame.standardized.minX, y: frame.standardized.minY,
+            let box = frame.standardized
+            let width = box.width
+            if fillingHeight {
+                // Told to fill the box it is in: it keeps the height it was
+                // handed, and the words sit in it wherever Align says. Never
+                // less than the words need, because a room too small to hold
+                // them is not a reason to cut the last line off
+                // (`docs/design/ui-building.md`, "Where the words sit in their
+                // box").
+                let needed = TextMeasurement.size(of: content, wrappingAt: width).height
+                layer.frame = CGRect(x: box.minX, y: box.minY,
+                                     width: width, height: max(box.height, needed))
+            } else if abs(width - self.frame.standardized.width) > 0.01 {
+                layer.frame = CGRect(x: box.minX, y: box.minY,
                                      width: width,
                                      height: TextMeasurement.size(of: content,
                                                                   wrappingAt: width).height)

@@ -116,6 +116,159 @@ struct TextRefitTests {
         #expect(flowed[2].frame.minY == flowed[1].frame.maxY + 10)
     }
 
+    // MARK: - Told to fill the height
+
+    /// A row of things, with a label told to fill the height of the row.
+    /// The label is the short one, so the row is as tall as the block beside
+    /// it and the label has room to fill.
+    private func rowHolding(_ label: Layer) -> PhotonzDocument {
+        let block = box("Block", CGRect(x: 200, y: 0, width: 60, height: 80))
+        var content = GroupContent(children: [label, block])
+        content.layout = GroupLayout(kind: .stack, direction: .row, gap: 10)
+        let row = Layer(name: "Row", content: .group(content), frame: .zero)
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600), layers: [row])
+        doc.reflowLayouts()
+        return doc
+    }
+
+    /// Stretch down has to DO something. A label told to fill the height takes
+    /// the height of the row holding it instead of staying the height of one
+    /// line, which is the whole point of the choice.
+    @Test func aLabelToldToFillTheHeightTakesTheHeightOfTheRow() {
+        let label = hugging("Save", placement: LayerPlacement(vertical: .stretch))
+        let filled = rowHolding(label).layers[0].children[0]
+        #expect(filled.frame.height == 80)
+        // Its width is still the width of its words: only the axis it was told
+        // to fill changed.
+        #expect(filled.frame.width == label.frame.width)
+        #expect(filled.frame.minY == 0)
+    }
+
+    /// ...and the label beside it that was told nothing still hugs its words,
+    /// so filling the height is something you ask for rather than something
+    /// that happens to every label in a row.
+    @Test func aLabelToldNothingStillHugsItsWords() {
+        let label = hugging("Save")
+        let placed = rowHolding(label).layers[0].children[0]
+        #expect(placed.frame.height == label.frame.height)
+    }
+
+    /// The words are never cut off. A row shorter than the sentence in it
+    /// leaves the box as tall as the words need rather than clipping the last
+    /// line off the bottom.
+    @Test func fillingAShortRowStillKeepsEveryLine() {
+        let label = hugging(paragraph, placement: LayerPlacement(vertical: .stretch))
+            .resized(to: CGRect(x: 0, y: 0, width: 120, height: 10))
+        let block = box("Block", CGRect(x: 200, y: 0, width: 60, height: 20))
+        var content = GroupContent(children: [label, block])
+        content.layout = GroupLayout(kind: .stack, direction: .row, gap: 10)
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600),
+                                  layers: [Layer(name: "Row", content: .group(content), frame: .zero)])
+        doc.reflowLayouts()
+        let filled = doc.layers[0].children[0]
+        #expect(filled.frame.height >= neededHeight(filled))
+    }
+
+    /// Down the page the stack itself decides the height, so a label in a
+    /// COLUMN told to fill it is still as tall as its words: the choice is
+    /// about the axis the flow is not running along, and re-wrapping still
+    /// shrinks the box back down.
+    @Test func aLabelInAColumnStillFollowsItsWordsWhenTheStackWidens() {
+        let label = hugging(paragraph, placement: LayerPlacement(horizontal: .stretch,
+                                                                 vertical: .stretch))
+        var content = GroupContent(children: [label,
+                                              box("One", CGRect(x: 0, y: 0, width: 60, height: 30))])
+        content.layout = GroupLayout(kind: .stack, direction: .column, gap: 10, width: 140)
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600),
+                                  layers: [Layer(name: "Stack", content: .group(content), frame: .zero)])
+        doc.reflowLayouts()
+        let narrow = doc.layers[0].children[0].frame.height
+        doc.updateGroupLayout(id: doc.layers[0].id) { $0.width = 600 }
+        doc.reflowLayouts()
+        let wide = doc.layers[0].children[0]
+        #expect(wide.frame.height < narrow)
+        #expect(wide.frame.height >= neededHeight(wide))
+    }
+
+    /// Filling the height survives a re-wrap: a label that fills a row and is
+    /// then made narrower keeps the row's height rather than snapping back to
+    /// the height of its lines.
+    @Test func fillingTheHeightSurvivesAReWrap() {
+        let label = hugging("Save", placement: LayerPlacement(vertical: .stretch))
+        var doc = rowHolding(label)
+        #expect(doc.layers[0].children[0].frame.height == 80)
+        doc.updateLayer(id: doc.layers[0].children[0].id) { $0.name = "Label" }
+        doc.reflowLayouts()
+        #expect(doc.layers[0].children[0].frame.height == 80)
+    }
+
+    /// A grid cell is a box too: a label told to fill it is as tall as the
+    /// cell, which is as tall as the tallest thing in the grid.
+    @Test func aLabelFillsItsGridCell() {
+        let label = hugging("Save", placement: LayerPlacement(vertical: .stretch))
+        var content = GroupContent(children: [label,
+                                              box("Card", CGRect(x: 200, y: 0, width: 60, height: 90))])
+        content.layout = GroupLayout(kind: .grid, columns: 2, gap: 10)
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600),
+                                  layers: [Layer(name: "Grid", content: .group(content), frame: .zero)])
+        doc.reflowLayouts()
+        #expect(doc.layers[0].children[0].frame.height == 90)
+    }
+
+    /// A document already carrying the choice opens exactly as it was saved.
+    /// Nothing re-measures on the way in, so a hand-placed box is never
+    /// re-flowed under its author by the act of opening the file.
+    @Test func openingADocumentThatAlreadyFillsMovesNothing() throws {
+        let doc = rowHolding(hugging("Save", placement: LayerPlacement(vertical: .stretch)))
+        let reopened = try JSONDecoder().decode(PhotonzDocument.self,
+                                                from: JSONEncoder().encode(doc))
+        #expect(reopened.layers == doc.layers)
+    }
+
+    /// The Height field says who decides it. A label filling its row is not
+    /// following its words any more, so the tip that says it is would send you
+    /// to the wrong control.
+    @Test func aFilledLabelSaysWhoDecidesItsHeight() {
+        let row = rowHolding(hugging("Save", placement: LayerPlacement(vertical: .stretch))).layers[0]
+        let filled = LayerGeometryEditing(layer: row.children[0], in: row)
+        #expect(!filled.allows(.height))
+        #expect(filled.fixedReason(for: .height) == LayerGeometryEditing.filledHeightReason)
+        // A label in the same row that was told nothing still follows its words.
+        let hugger = LayerGeometryEditing(layer: hugging("Save"), in: row)
+        #expect(hugger.fixedReason(for: .height) == LayerGeometryEditing.textHeightReason)
+    }
+
+    /// Taking the choice back gives the height to the words again. A box that
+    /// stayed row-tall after being told Top would be a box nobody can shrink,
+    /// since a text box has no height handle to drag.
+    @Test func takingTheFillBackHandsTheHeightToTheWords() {
+        let label = hugging("Save", placement: LayerPlacement(vertical: .stretch))
+        var doc = rowHolding(label)
+        let id = doc.layers[0].children[0].id
+        #expect(doc.layers[0].children[0].frame.height == 80)
+        doc.setPlacement(id: id, vertical: .top)
+        doc.reflowLayouts()
+        #expect(doc.layers[0].children[0].frame.height == label.frame.height)
+    }
+
+    /// ...and the same when the choice was the ROW's rather than the label's:
+    /// a row that stops stretching its contents hands every label's height
+    /// back too.
+    @Test func aRowThatStopsStretchingHandsTheHeightsBack() {
+        let label = hugging("Save")
+        var content = GroupContent(children: [label,
+                                              box("Block", CGRect(x: 200, y: 0, width: 60, height: 80))])
+        content.layout = GroupLayout(kind: .stack, direction: .row, gap: 10)
+        content.contentPlacement = LayerPlacement(vertical: .stretch)
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600),
+                                  layers: [Layer(name: "Row", content: .group(content), frame: .zero)])
+        doc.reflowLayouts()
+        #expect(doc.layers[0].children[0].frame.height == 80)
+        doc.setContentPlacement(id: doc.layers[0].id, vertical: .top)
+        doc.reflowLayouts()
+        #expect(doc.layers[0].children[0].frame.height == label.frame.height)
+    }
+
     // MARK: - Changing the words
 
     /// A copy of a component given longer wording shows all of it. The label

@@ -1,0 +1,28 @@
+{
+  "id": "a-layer-in-a-column-stack-is-not-offered-a-place",
+  "title": "A layer in a column stack is not offered a place the stack has already decided",
+  "goal": "When something sits inside a stack that runs down the page, the panel still offers a menu for where it sits vertically, and picking anything in it changes nothing, because the stack decides that. The same is true across for a stack that runs sideways. The group's own rows already say \"Set by the stack\" instead of showing a dead menu; the row for the layer inside it should say the same.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 1090,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T07:11:42.354Z",
+  "updated": "2026-09-04T07:11:42.355Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "PlacementInspector.childRows always renders both axes as menus from container.horizontalPlacementChoices / verticalPlacementChoices. contentRows already handles this with ownedByTheFlow(_:_:) driven by GroupLayout.flowsHorizontally; the child rows need the same treatment (and GroupLayout.decidesHeight, added 2026-09-04, is the vertical half of that question). Found while making vertical Stretch mean something for text: the text case was one instance of this wider dead-choice family.",
+  "acceptance": [
+    "Selecting a layer inside a column stack shows the vertical row as text saying the stack decides it, not a menu",
+    "Selecting a layer inside a row stack shows the horizontal row that way instead",
+    "The other axis stays a live menu, and a layer in a grid or a plain group keeps both menus",
+    "A layer that already carries a rule on the owned axis still opens without moving"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T07:11:42.355Z",
+      "note": "created (manual)"
+    }
+  ]
+}

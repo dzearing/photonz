@@ -1,0 +1,28 @@
+{
+  "feature": "A label can fill the height of what holds it",
+  "epic": "ui-layout",
+  "summary": "Telling a piece of text to Stretch down used to do nothing at all: the box stayed one line tall at the top of the space, which is exactly what Top does. Now it takes the height it was given and the words sit in it wherever Align says, so a label fills the row it is in and is centred down it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs the Layout section, which is the next-placement flag, on by default.",
+  "try": [
+    { "do": "Draw a tall rectangle on a blank canvas, then type a short label to the left of it." },
+    { "do": "Select both and press the Stack button in the Arrange row, which reads them as a row." },
+    { "do": "Double-click the label to step inside the group and select it.", "shot": "2026-09-04-text-fills-height-1.png" },
+    { "do": "In the Layout section, open the Vertical menu.", "shot": "2026-09-04-text-fills-height-2.png" },
+    { "do": "Pick Stretch.", "shot": "2026-09-04-text-fills-height-3.png" },
+    { "do": "In the Text section, change Align down to Top and then Bottom." },
+    { "do": "Come back to the Layout section and pick Top in the Vertical menu." }
+  ],
+  "evaluate": [
+    "When you pick Stretch, is a label centred down its row the answer you expected, or did you expect the box to fill and the words to stay put?",
+    "The Height field reads the row's height and will not take a number. Does its tip tell you enough about who owns that height now?",
+    "Picking Top again shrinks the box back to the words but leaves Align on Middle. Is that the right place for those two to part company?",
+    "Is one Vertical menu enough for this, or would you rather set it on the group once and have every label follow?",
+    "Does anything about the row look off the moment the label fills it: the dashed box, the handles, where the word lands?"
+  ],
+  "rough": [
+    "Verified live in the probe app with the Screen Recording grant, so all three pictures are the window as a person sees it, not offscreen renders. The Vertical menu shot is the real menu.",
+    "Coming off Stretch does not put Align back to Top. That is the existing rule that Align belongs to the user once it has been set, but for one line of words in a short box the two look identical, so nobody can tell it happened until the box grows again.",
+    "The same dead-choice problem still exists one axis over: a layer inside a column stack is offered a Vertical menu the stack has already decided, for every kind of content, not just text. Filed as its own task rather than widened into this one.",
+    "A row shorter than the words in it leaves the box as tall as the words rather than clipping them, so a label can still stand taller than the row it is filling. That looked better than losing a line, but it is a judgement call."
+  ]
+}

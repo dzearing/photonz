@@ -83,6 +83,20 @@ extension Layer {
         content.verticalAlignment = .middle
         return content
     }
+
+    /// The box this text goes back to the moment it stops being told to fill
+    /// the height of what holds it, or nil when it is already that box.
+    ///
+    /// Nothing else can hand that height back. A text box has no height handle
+    /// and its Height field takes no number, so a label left at the height of
+    /// the row it used to fill would be stuck that tall for good, and the only
+    /// way out would be to delete it and type it again. The width is untouched:
+    /// only the height was ever the container's to give.
+    public var textReleasedFromFill: CGRect? {
+        guard text != nil else { return nil }
+        let box = textRefitted(hugging: false, anchor: .left).frame
+        return box == frame ? nil : box
+    }
 }
 
 extension PhotonzDocument {

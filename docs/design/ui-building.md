@@ -113,9 +113,12 @@ change what its label should read at.
 
 **Text is the one box that is not simply multiplied.** Its width is — that is
 its wrap width — but its height is however tall the words are once they have
-re-wrapped to it, because the type never changed size. Stretching a label to
-twice the height with the same 14 pt glyphs in it would just be a box with a
-hole under the words. See "A label grows to fit what it says" below.
+re-wrapped to it, because the type never changed size. See "A label grows to fit
+what it says" below. The one exception is a label told to fill the height, which
+is the whole point of that choice: the box takes the height it was handed and
+Align says where the words sit in it, so a label in a 36 pt row is centred in the
+row rather than stuck against its top edge with a hole underneath. See "Where the
+words sit in their box".
 
 **A screen is a container too, with one substitution.** Dragging a frame's edge
 moves where it clips rather than magnifying what is on it, so on a screen
@@ -228,6 +231,18 @@ inspector has an Align row with the two of them, behind `next-placement`.
 - **Alignment never moves the box.** It says where the words sit in the room the
   box already has, so a stretched label stays stretched and a paragraph keeps
   its wrap width.
+- **Stretching down actually makes that room** (landed 2026-09-04). A text box
+  normally throws away a height handed to it, so for a while vertical Stretch
+  did nothing at all and read as Top: the words moved to Middle of a box that
+  never grew. Now the height is kept whenever the container is the one that
+  decided it — a row hands every item the height of the row, a grid the height
+  of its cell, and a resized group or screen the height its rule worked out —
+  and it is never less than the words need, so a room too small for them still
+  shows every line. Down a COLUMN there is nothing to fill: a column hands each
+  row the height it already had, so Stretch there leaves the box hugging its
+  words, and the inspector's Height tip still says the words decide it. Nothing
+  re-measures when a file is opened, so a document saved with the choice already
+  set is exactly what it was until its container is next resized.
 - **A box too small for its words keeps every line.** CoreText fills a frame
   from the top down and drops what does not fit, so text that needs at least the
   box it has is drawn exactly as it always was rather than centred into losing

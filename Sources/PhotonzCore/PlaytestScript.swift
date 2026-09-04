@@ -434,6 +434,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// cannot reach with the pointer, so this is how a walk proves a rule set
     /// by hand survives the next resize.
     case stretchSelectionAcross
+    /// The same DOWN the box, which is what picking Stretch in that section's
+    /// Vertical menu does. It is how a walk shows a label filling the height
+    /// of the row holding it instead of hugging one line of words.
+    case stretchSelectionDown
     /// Set the selected GROUP's rule for everything inside it to Stretch
     /// across (Next, `next-placement`), which is what picking Stretch in the
     /// Layout section's Horizontal menu under "Contents of" does. Same reason

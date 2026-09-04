@@ -95,7 +95,11 @@ enum GroupFlow {
         var out = children
         for (slot, position) in order.enumerated() {
             let child = children[taking[position]]
-            out[taking[position]] = moved(child, to: targets[slot])
+            // The height in that box is only the flow's answer where the flow
+            // decides heights at all, so a Stretch in a column fills nothing.
+            out[taking[position]] = moved(child, to: targets[slot],
+                                          fillingHeight: layout.decidesHeight
+                                              && items[position].vertical == .stretch)
         }
         return out
     }
@@ -103,10 +107,13 @@ enum GroupFlow {
     /// A layer put at a box. A move is a move — the layer is shifted, not
     /// re-fitted — because a caliper's feet and an arrow's ends are remapped by
     /// a resize and there is nothing to remap when only the corner changed.
-    private static func moved(_ layer: Layer, to box: CGRect) -> Layer {
+    private static func moved(_ layer: Layer, to box: CGRect,
+                              fillingHeight: Bool = false) -> Layer {
         let current = layer.localBounds
         guard current != box else { return layer }
-        guard current.size == box.size else { return layer.resized(to: box) }
+        guard current.size == box.size else {
+            return layer.resized(to: box, fillingHeight: fillingHeight)
+        }
         var out = layer
         out.frame = layer.frame.offsetBy(dx: box.minX - current.minX, dy: box.minY - current.minY)
         return out

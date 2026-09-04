@@ -17,8 +17,27 @@ extension PhotonzDocument {
         setContentPlacement(id: id) { $0.horizontal = horizontal }
     }
 
+    /// Down the box, where a group that stops stretching its contents also has
+    /// to hand every text box's height back: a label still at the height of the
+    /// row it used to fill has no handle and no field that could shrink it.
     public mutating func setContentPlacement(id: UUID, vertical: VerticalPlacement?) {
+        let released = vertical == .stretch ? [] : textsReleasedFromFill(in: id)
         setContentPlacement(id: id) { $0.vertical = vertical }
+        for (child, box) in released { updateLayer(id: child) { $0.frame = box } }
+    }
+
+    /// The text directly inside this group that is filling its height because
+    /// the GROUP says so rather than because it says so itself, each with the
+    /// box it goes back to. Text with a rule of its own is left alone: that
+    /// rule still says stretch, and it is not what just changed.
+    private func textsReleasedFromFill(in id: UUID) -> [(UUID, CGRect)] {
+        guard let group = layer(id: id),
+              group.group?.contentPlacement?.vertical == .stretch else { return [] }
+        return group.children.compactMap { child in
+            guard child.placement?.vertical == nil,
+                  let box = child.textReleasedFromFill else { return nil }
+            return (child.id, box)
+        }
     }
 
     private mutating func setContentPlacement(id: UUID,
@@ -51,13 +70,19 @@ extension PhotonzDocument {
         }
     }
 
+    /// Down the box the same edit runs backwards too: text that STOPS filling
+    /// the height goes back to the height of its words, because nothing else
+    /// could ever give that height back (`Layer.textReleasedFromFill`).
     public mutating func setPlacement(id: UUID, vertical: VerticalPlacement?) {
         guard let layer = layer(id: id) else { return }
         let next = layer.settingPlacement(vertical: vertical)
         let filled = layer.textAlignedToFill(vertical: vertical)
+        let released = vertical != .stretch && layer.placement?.vertical == .stretch
+            ? layer.textReleasedFromFill : nil
         updateLayer(id: id) {
             $0.placement = next
             if let filled { $0.content = .text(filled) }
+            if let released { $0.frame = released }
         }
     }
 

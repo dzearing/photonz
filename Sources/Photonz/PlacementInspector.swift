@@ -48,6 +48,11 @@ struct PlacementInspector: View {
     @ViewBuilder
     private func childRows(in container: Layer) -> some View {
         let resolved = current.resolvedPlacement(in: container)
+        // What "Follow" would actually give you, which is the CONTAINER's
+        // answer. The resolved one is this layer's own rule wherever it has
+        // set one, and a Follow row that reads back the override it is
+        // offering to drop promises the very thing picking it takes away.
+        let inherited = container.contentPlacementDefault
         VStack(alignment: .leading, spacing: 6) {
             Text(container.isFrame ? "This layer on \(container.name)"
                                    : "This layer in \(container.name)")
@@ -55,7 +60,7 @@ struct PlacementInspector: View {
                 .foregroundStyle(.secondary)
             row("Horizontal") {
                 Menu {
-                    Button(followTitle(resolved.horizontal.title, isFrame: container.isFrame)) {
+                    Button(followTitle(inherited.horizontal.title, isFrame: container.isFrame)) {
                         editorState.setPlacement(id: current.id, horizontal: nil)
                     }
                     Divider()
@@ -72,7 +77,7 @@ struct PlacementInspector: View {
             }
             row("Vertical") {
                 Menu {
-                    Button(followTitle(resolved.vertical.title, isFrame: container.isFrame)) {
+                    Button(followTitle(inherited.vertical.title, isFrame: container.isFrame)) {
                         editorState.setPlacement(id: current.id, vertical: nil)
                     }
                     Divider()
