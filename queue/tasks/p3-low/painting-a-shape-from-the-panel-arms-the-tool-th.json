@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 1070,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T04:38:22.764Z",
-  "updated": "2026-09-04T08:53:27.263Z",
+  "updated": "2026-09-04T09:06:08.456Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while shipping the-tool-you-are-holding-can-be-armed-with-a-gra. EditorState.setAnnotationPaint / setAnnotationFillPaint remember the shape default; setSelectionPaint / setSelectionColor (the panel path, ColorStylePanel.SelectionColorWell) do not. This split predates gradients and was left alone rather than widened under that task. It is a UX judgement about whether picking a colour on an existing object should reload the tool, so it likely wants a decision card before any code.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-04T09:05:47.873Z",
       "note": "Review of the built thing. What I could not fix: pointing a row at a SAVED colour still does not arm, because AnnotationStyles holds a paint and nothing else, so arming from a style would bake a frozen copy that drifts when the style is edited. Filed as the-tool-in-your-hand-can-hold-a-saved-colour-no rather than shipping the worse of two answers. Painting a text block's ink arms nothing either: the text tool has no colour of its own (new text takes the FG swatch), which is an older gap this did not widen. Undo puts the shape back but leaves the tool armed, which is exactly what the toolbar path already does. All three are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-04T09:06:08.455Z",
+      "note": "Picking a colour on a selected shape in the right hand panel now arms the tool that draws it, so the next shape of that kind comes out matching. New PhotonzCore.toolArming + AnnotationStyles.arm (20 tests, full suite green at 2862), wired through EditorState.armToolsFromSelection from the panel's colour pick and its Fill checkbox. Verified on the probe with Scripts/playtest/panel-arms-tool-walk.json: toolPaint follows the panel from #FF3B30 to #B0184A, an unpainted second box reads #B0184A, a gradient chosen on the panel carries into a third box. Audit at queue/audits/2026-09-04-panel-arms-tool.json with two real window captures. Saved colours still do not arm on purpose, filed as the-tool-in-your-hand-can-hold-a-saved-colour-no. Commit cf25ba9, pushed."
     }
   ],
-  "started": "2026-09-04T08:53:27.262Z"
+  "started": "2026-09-04T08:53:27.262Z",
+  "completed": "2026-09-04T09:06:08.456Z"
 }

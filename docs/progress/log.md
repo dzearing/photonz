@@ -7767,3 +7767,33 @@ razor sharp with it on. `Scripts/playtest/crisp-zoom-walk.json`.
 `queue/audits/2026-09-04-crisp-zoom.json`, two real screen captures.
 
 Next: back to the queue.
+
+## 2026-09-04 — Painting from the panel arms the tool
+
+Closed the last place where picking a colour meant two different things
+depending on where you picked it. The toolbar swatch has always armed the tool;
+the Color rows in the right hand panel did not, so recolouring a box and drawing
+another gave you the old colour back. Now they agree, which is also the rule the
+panel already follows for Thickness, Corner Radius, Arrowhead and the Effects
+sliders.
+
+New in PhotonzCore: `toolArming(layerIDs:slot:)` reads which kinds of shape a
+colour row just settled and what each of them agrees on (nil is an answer too,
+and means the next box comes out an outline); `AnnotationStyles.arm` lands it on
+the outline or the inside. Kinds that end up disagreeing arm nothing rather than
+being guessed at. `EditorState.armToolsFromSelection` calls it from
+`setSelectionPaint`, `setSelectionColor` and `setColorEnabled` — on release
+only, so a colour drag is still one undo step.
+
+Verified on the probe: `Scripts/playtest/panel-arms-tool-walk.json`. The harness
+`describe()` now logs `toolPaint` and `toolFillPaint`, which is what lets a walk
+prove the swatch and the panel row never disagree instead of eyeballing a
+snapshot.
+
+Next / open: pointing a row at a SAVED colour still does not arm, deliberately —
+`AnnotationStyles` holds a paint and nothing else, so arming from a style would
+bake a frozen copy that drifts when the style is edited. Doing it properly means
+the tool being able to hold a style binding, filed as
+`the-tool-in-your-hand-can-hold-a-saved-colour-no`. A text block's ink arms
+nothing either, because the text tool has no colour of its own: new text takes
+the foreground swatch.
