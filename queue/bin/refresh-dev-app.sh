@@ -49,11 +49,29 @@ if ! swift build -c release --arch arm64 -Xswiftc -DPHOTONZ_PLAYTEST; then
 fi
 
 # 2. Now the seconds-long part: close the app, swap the bundle, bring it back.
+#    Assembling tears the bundle down and rebuilds it, so a probe build racing
+#    for the same dist directory can leave a file mid-flight and the copy fails
+#    with a permission error (seen 2026-09-03: AppIcon.icns, Operation not
+#    permitted, while another SwiftPM held .build). One retry after a breath
+#    clears that, and a bundle left half built is worse than no attempt, so a
+#    second failure rebuilds once more from nothing before giving up.
 (( RUNNING )) && { say "compiled; swapping the bundle"; quit_app }
-if ! PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh; then
-  say "bundling failed; putting the app back on the previous build"
-  (( RUNNING )) && open "$APP"
-  exit 1
+bundle() { PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh }
+if ! bundle; then
+  say "bundling failed, retrying once"
+  sleep 4
+  rm -rf "$APP"
+  if ! bundle; then
+    say "bundling failed twice; putting the app back on the previous build"
+    (( RUNNING )) && open "$APP"
+    exit 1
+  fi
 fi
-(( RUNNING )) && { open "$APP"; sleep 2 }
+# The app is only current once it is running the bundle we just wrote. Relaunch
+# even when it came back on its own during a failed attempt.
+if (( RUNNING )); then
+  quit_app
+  open "$APP"
+  sleep 2
+fi
 say "$APP rebuilt$( ((RUNNING)) && echo " and relaunched" || echo "; it was not running, so it stays closed")"
