@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 1090,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T07:11:42.354Z",
-  "updated": "2026-09-04T09:15:11.685Z",
+  "updated": "2026-09-04T09:24:50.985Z",
   "deps": [],
   "blockedBy": [],
   "notes": "PlacementInspector.childRows always renders both axes as menus from container.horizontalPlacementChoices / verticalPlacementChoices. contentRows already handles this with ownedByTheFlow(_:_:) driven by GroupLayout.flowsHorizontally; the child rows need the same treatment (and GroupLayout.decidesHeight, added 2026-09-04, is the vertical half of that question). Found while making vertical Stretch mean something for text: the text case was one instance of this wider dead-choice family.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-04T09:45:00.000Z",
       "note": "Review of the built thing: one wart left. A layer can carry a rule on the owned axis from before it was stacked; it is inert, it can no longer be cleared from this section, and it wakes up if the stack is flipped from column to row. The group's exceptions list still counts it. Filed as a-rule-that-does-nothing-is-still-counted-as-a-r rather than widening this task, since it is a different surface. Audit: queue/audits/2026-09-04-stack-owns-axis.json."
+    },
+    {
+      "t": "2026-09-04T09:24:50.984Z",
+      "note": "The Layout section stops offering a placement menu for the direction a stack has already decided: a column stack reads 'Set by the stack' beside Vertical, a row stack reads 'Set by the row' beside Horizontal, the other direction stays a live menu, and a grid or a plain group keeps both. One PlacementEditing value in PhotonzCore now feeds both the group's rows and the layer's rows so they cannot drift. Also stopped the caption promising a Stretch would fill the box down a column stack. 2874 tests green; verified live in the probe over all three cases with real window captures (Scripts/playtest/stack-owns-axis-walk.json). Audit: queue/audits/2026-09-04-stack-owns-axis.json."
     }
   ],
-  "started": "2026-09-04T09:15:11.685Z"
+  "started": "2026-09-04T09:15:11.685Z",
+  "completed": "2026-09-04T09:24:50.985Z"
 }
