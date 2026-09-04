@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 1120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T08:22:23.510Z",
-  "updated": "2026-09-04T09:59:45.847469Z",
+  "updated": "2026-09-04T10:01:11.461Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up to the crisp-zoom work of 2026-09-04. DocumentRenderer.renderTile already magnifies the document and rasterizes text at the tile scale; MeasureRasterizer, AnnotationRasterizer and CollageRasterizer are still called with the document-point box and magnified afterwards (see the boxInPoints branch in ciImage(for:)). Each one needs the same treatment TextRasterizer got: a scale parameter that scales the CGContext, leaving the geometry in document points. Watch the raster cache keys.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-04T09:59:45.847469Z",
       "note": "post-build review on the probe (Screen Recording granted, real -sc.png captures): before/after of the same walk at ~316% shows the chip and the caption going from visibly blurry to sharp. Left as-is: the ~90ms delay before the sharp copy lands (pre-existing), and the capped canvas-sized shape. Both are in the audit's rough."
+    },
+    {
+      "t": "2026-09-04T10:01:11.460Z",
+      "note": "Measure chips, arrow captions, shape strokes and collages are now baked at the zoom's resolution alongside text. AnnotationRasterizer/MeasureRasterizer/CollageRasterizer take a scale; PillRasterizer reads the context CTM so the WORDS in a chip sharpen too, not just the capsule; DocumentRenderer.crispScale caps the cost so a canvas-sized shape falls back to today's behaviour. 3 new tile tests confirmed failing pre-change, 2901 tests green, crisp tile 8.8/9.9/10.5ms at 200/400/800% plus a new redlined-capture budget at 6.9ms. Verified on the probe with real screen captures: queue/audits/2026-09-04-crisp-shapes.json. Commit 74c6178."
     }
   ],
-  "started": "2026-09-04T09:45:11.444Z"
+  "started": "2026-09-04T09:45:11.444Z",
+  "completed": "2026-09-04T10:01:11.461Z"
 }
