@@ -3863,6 +3863,46 @@ final class EditorState {
     /// Whether colors can be saved under a name at all.
     var colorStylesEnabled: Bool { Experiments.shared.colorStylesEnabled }
 
+    /// `next-color-picker`: whether every color row opens the app's designed
+    /// picker rather than the one it shipped with (and, on a few rows, the
+    /// system color panel).
+    var designedColorPickerEnabled: Bool { Experiments.shared.designedColorPickerEnabled }
+
+    /// Which color well has its picker open, by the key the well gives itself
+    /// ("selection.fill", "shadow", "backdrop"). Nil means none.
+    ///
+    /// One field rather than a flag inside each well, for two reasons: two
+    /// pickers can never be open at once, and a walk can open one from outside
+    /// the dock, which the pointer cannot reach.
+    var openColorWell: String?
+
+    /// The binding a color well hands its popover.
+    func colorWellBinding(_ key: String) -> Binding<Bool> {
+        Binding(get: { [weak self] in self?.openColorWell == key },
+                set: { [weak self] shown in self?.openColorWell = shown ? key : nil })
+    }
+
+    /// Saves a color the picker is holding under a name, whatever it came from.
+    ///
+    /// This is the picker's own Save style, which differs from the color row's
+    /// in one way: the row saves what the picked layers are painted in and
+    /// points them at it, while this saves a color that may be nothing's yet,
+    /// so it only puts it on the shelf. Both land in the Library the same way,
+    /// and both show it, because a style you cannot see is a button that
+    /// appears to do nothing.
+    @discardableResult
+    func saveColorStyle(hex: String, name: String? = nil, slot: ColorSlot? = nil) -> UUID? {
+        guard colorStylesEnabled else { return nil }
+        discardDragPreview()
+        var saved: UUID?
+        perform { saved = $0.addColorStyle(name: name, colorHex: hex,
+                                           roles: slot.map { [$0.styleRole] }) }
+        guard let styleID = saved else { return nil }
+        showColorStyleShelf()
+        pendingLibraryTileID = styleID.uuidString
+        return styleID
+    }
+
     /// The color row that is asking for a name right now, raised by its Save as
     /// Style button and lowered when the name lands, when Escape drops it, or
     /// when the selection moves on. It lives here rather than inside the row so

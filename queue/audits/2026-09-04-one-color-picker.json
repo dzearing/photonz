@@ -1,0 +1,53 @@
+{
+  "feature": "One color picker, everywhere a color is chosen",
+  "epic": "ui-components",
+  "summary": "Every swatch in the app now opens the same designed picker, including the four rows that used to raise the system color panel. It has a saturation and brightness square, HSL, RGB and HEX with a slider and a number per channel, one swatch row that switches between shades of this color, its relatives, the colors this document already uses and the ones you picked recently, a live contrast reading, an eyedropper and Save style.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"One color picker, everywhere a color is chosen\" is on by default. Save style needs the styles switch, which is also on by default.",
+  "try": [
+    {
+      "do": "Draw two rectangles, click one, and click the Fill swatch in the Color section.",
+      "shot": "2026-09-04-one-color-picker-fill-dark.png"
+    },
+    {
+      "do": "Drag inside the square, then let go. Watch the shape repaint once, on release."
+    },
+    {
+      "do": "Click RGB, then HEX, and paste rgb(124, 77, 255) into the field.",
+      "shot": "2026-09-04-one-color-picker-fill-light.png"
+    },
+    {
+      "do": "Click Document in the swatch row, then click one of the colors it lists.",
+      "shot": "2026-09-04-one-color-picker-document-scope.png"
+    },
+    {
+      "do": "Turn Enable Shadow on in the Shadow section and click the swatch beside Blur.",
+      "shot": "2026-09-04-one-color-picker-shadow-light.png"
+    },
+    {
+      "do": "Click the eyedropper and sample something outside the app."
+    },
+    {
+      "do": "Click Save style, type Brand, press Return, and look at the Library.",
+      "shot": "2026-09-04-one-color-picker-saved-style.png"
+    },
+    {
+      "do": "Press Command Z once and check the shape goes back in one step."
+    }
+  ],
+  "evaluate": [
+    "Opening on Fill and then on Shadow, does it feel like the same control turning up twice, or like two controls that happen to look alike?",
+    "Is the before and after pair at the top telling you anything, or is it two swatches you never look at?",
+    "When you want a slightly darker version of what you have, is the Shades row where your hand goes, or do you still reach for the L slider?",
+    "The contrast reading says how the color does on white. Is white the background you are actually asking about?",
+    "In HSL and RGB there is no hex anywhere on screen. Did you go looking for it?"
+  ],
+  "rough": [
+    "The color lands on release, not while you drag, so the shape does not repaint live under the picker. That is on purpose for now: every live tick would be its own undo step, and coalescing them is a change to how edits are recorded rather than to the picker. Filed as a follow-up.",
+    "The eyedropper is the system sampler. Its own magnified loupe follows the pointer and is what shows the color live; the picker's own swatch only updates when the click lands. Building our own sampler would mean a full screen overlay and a second capture permission for a loupe macOS already draws.",
+    "Changed from the mock: the swatch row has a fourth scope, Recent. The mock has three, and dropping recents would have been a regression for the commonest move, reusing the color you just used somewhere else.",
+    "Changed from the mock: the contrast reading is fixed on white rather than switching to whichever background scores better. A readout that silently changes its own background cannot answer \"can I put this on the page\". The figure for black is in the tooltip.",
+    "Not built, on purpose: the Solid, Linear, Radial and Angular tabs. Three of the four would have done nothing. Gradients are a follow-up and the tab row arrives with them.",
+    "The opacity slider only appears where the thing being painted can actually keep a transparency: a shape's fill, outline, text and border, the tool color, and the measurement chip. The shadow row has its own Opacity slider a few lines below, so the picker is not given a second one to fight with it.",
+    "Screenshots are real captures of the running probe, not offscreen renders."
+  ]
+}

@@ -83,6 +83,8 @@ public enum FeatureCatalog {
 
     public static let autoLayoutFlag = "next-auto-layout"
 
+    public static let colorPickerFlag = "next-color-picker"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -342,6 +344,15 @@ public enum FeatureCatalog {
                     name: starterComponentsFlag,
                     title: "Components in the Library from the start",
                     description: "The Library\u{2019}s Components shelf comes with five ready components on it \u{2014} a button, a text field, a card, a nav bar and a badge \u{2014} so the first thing you do is drag one out instead of building one. Each is an ordinary component: it takes copies, its wording and its parts are adjustable on every copy, and it comes apart. They paint from named styles, so recoloring Accent once repaints every one of them. Dropping one brings it and its colors into the document; a document you never drop one into carries none of it. Needs Make a component out of what you drew. Off means the shelf holds only the components you made yourself; starters already dropped into a document keep working either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: colorPickerFlag,
+                    title: "One color picker, everywhere a color is chosen",
+                    description: "Every swatch in the app opens the same picker, whether it paints a shape\u{2019}s outline, its inside, a shadow, a backdrop, text, a measurement or a tool. It opens with the color you are changing shown beside the one you started from, so you can tell whether you improved it. Inside: a shade and saturation square you drag in, a slider and a number for each channel, and a switch between HSL, RGB and HEX \u{2014} paste \u{201C}#7C4DFF\u{201D}, \u{201C}rgb(124, 77, 255)\u{201D} or \u{201C}hsl(256 100% 65%)\u{201D} into the HEX field and it takes all three. Under that, one row of swatches that switches between nine shades of the color you are on, six colors related to it, the colors this document already uses, and the ones you picked recently. An eyedropper samples any pixel on screen, a live reading says whether the color can be read on white, and Save style puts it in the Library under a name. Off means the color rows open the picker the app shipped with and a few of them open the system color panel instead.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

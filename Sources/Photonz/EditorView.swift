@@ -1058,8 +1058,11 @@ struct EditorView: View {
                         editorState.setAnnotationFillColor(on ? (editorState.activeToolFillHex ?? activeToolColorHex) : nil)
                     }))
                     .font(.callout)
-                ColorPickerPopover(initialHex: editorState.activeToolFillHex ?? activeToolColorHex,
-                                   recents: editorState.recentColors.colors,
+                ColorPickerContent(editorState: editorState,
+                                   hex: editorState.activeToolFillHex ?? activeToolColorHex,
+                                   name: "Fill",
+                                   slot: .fill,
+                                   supportsOpacity: true,
                                    embedded: true) { editorState.setAnnotationFillColor($0) }
                     .disabled(off)
                     .opacity(off ? 0.4 : 1)
@@ -1140,7 +1143,11 @@ struct EditorView: View {
               : "Background fill: new canvas space and ⌫-cleared backgrounds use this")
         .popover(isPresented: isForeground ? $isFgPickerShown : $isBgPickerShown,
                  arrowEdge: .top) {
-            ColorPickerPopover(initialHex: hex, recents: editorState.recentColors.colors) { newHex in
+            ColorPickerContent(editorState: editorState,
+                                hex: hex,
+                                name: isForeground ? "Foreground fill" : "Background fill",
+                                slot: .fill,
+                                onClose: { if isForeground { isFgPickerShown = false } else { isBgPickerShown = false } }) { newHex in
                 if isForeground { editorState.foregroundFillHex = newHex }
                 else { editorState.backgroundFillHex = newHex }
                 editorState.recordRecentColor(hex: newHex)
@@ -1605,10 +1612,13 @@ struct EditorView: View {
                     .font(.callout)
             }
             VStack(alignment: .leading, spacing: 14) {
-                // One consistent color control everywhere (swatches + recents +
-                // HSB + hex + eyedropper).
-                ColorPickerPopover(initialHex: activeToolColorHex,
-                                   recents: editorState.recentColors.colors,
+                // One consistent color control everywhere: the same picker
+                // this row opens is the one every other color row opens.
+                ColorPickerContent(editorState: editorState,
+                                   hex: activeToolColorHex,
+                                   name: showsTextControls ? "Text" : "Color",
+                                   slot: showsTextControls ? .text : .stroke,
+                                   supportsOpacity: true,
                                    embedded: true) { applyColor($0) }
                 if showsTextControls {
                     fontPicker

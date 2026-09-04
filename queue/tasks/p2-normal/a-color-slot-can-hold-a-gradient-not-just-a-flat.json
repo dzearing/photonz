@@ -1,0 +1,29 @@
+{
+  "id": "a-color-slot-can-hold-a-gradient-not-just-a-flat",
+  "title": "A color slot can hold a gradient, not just a flat color",
+  "goal": "Today every color in the app is one flat color. Let a shape's fill, its outline or a screen's surface hold a gradient instead: a straight one, one that spreads out from a point, or one that sweeps around. You reach it by clicking the same swatch you already click, choosing between four small pictures of what your own color would look like, and then aiming it on the canvas.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1010,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T02:04:00.051Z",
+  "updated": "2026-09-04T02:04:00.052Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Named in the picker task (one-colour-picker-the-designed-one-everywhere-a) as the deliberate follow-up. The picker's header and its VStack already leave room for the type row; nothing is stubbed, so this adds it. The mock is docs/design/mocks/pages/color.html (cp-types, cp-geo, the stop strip) and docs/design/mocks/shared/components/colorpicker.js has the whole interaction worked out including the aim pad and the callout bubble. Model side: LayerContent colour fields are String hexes today, so a Paint type has to arrive in PhotonzCore with Codable back-compat (a plain hex string stays a hex string), and every rasterizer that reads a hex needs the gradient path.",
+  "acceptance": [
+    "The color picker's top row offers Solid, Linear, Radial and Angular, each drawn with the colors you are actually using",
+    "Choosing a gradient shows a ramp you can add, move, delete and reverse stops on, and an aim pad for its angle or centre",
+    "A shape painted with a gradient draws that gradient on the canvas, in export, and in its layer thumbnail",
+    "A slot that can only take a flat color, like a drop shadow, never shows the row at all",
+    "A document saved with a gradient reopens with it, and one saved before gradients existed opens unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T02:04:00.052Z",
+      "note": "created (manual)"
+    }
+  ]
+}

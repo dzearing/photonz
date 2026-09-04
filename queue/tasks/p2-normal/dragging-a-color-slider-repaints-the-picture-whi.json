@@ -1,0 +1,29 @@
+{
+  "id": "dragging-a-color-slider-repaints-the-picture-whi",
+  "title": "Dragging a color slider repaints the picture while you drag",
+  "goal": "When you drag inside the color picker the shape does not change until you let go, so you are guessing until the moment you commit. Make the picture follow the drag live, while still counting the whole drag as one change you can undo in one step.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1020,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T02:04:00.083Z",
+  "updated": "2026-09-04T02:04:00.084Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Named in the picker audit (queue/audits/2026-09-04-one-color-picker.json) as the thing that still feels clumsy. The picker (Sources/Photonz/DesignedColorPicker.swift) already has the split: SaturationValueField and ChannelSlider call onCommit only on drag end. What is missing is a coalescing path in EditorState like the one dragCornerRadius and dragOpacity already use for the Effects sliders (see PlaytestHarness .dragOpacity) so the live frames preview and the release commits once. Reuse that rather than inventing a second one.",
+  "acceptance": [
+    "Dragging in the square or on any channel slider repaints the selected layers on every frame",
+    "Letting go leaves exactly one entry in undo for the whole drag, not one per frame",
+    "One undo puts the color back to what it was before the drag started",
+    "Recent colors gains one entry for the drag, not one per frame",
+    "Dragging over a large selection stays smooth enough that the picker does not stutter"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T02:04:00.084Z",
+      "note": "created (manual)"
+    }
+  ]
+}

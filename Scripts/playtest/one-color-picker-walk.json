@@ -1,0 +1,233 @@
+{
+  "out": "/tmp/photonz-playtest/one-color-picker",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1100,
+      "canvasHeight": 700,
+      "width": 1500,
+      "height": 950
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        140,
+        160
+      ],
+      "to": [
+        420,
+        340
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        470,
+        160
+      ],
+      "to": [
+        750,
+        340
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        280,
+        250
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "openColorPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-fill-dark",
+      "note": "the Color section's swatch opens the designed picker: was and now beside the row's name, the square, HSL with a slider and a number per channel, the shades row, the contrast reading and Save style"
+    },
+    {
+      "do": "snapshot",
+      "name": "one-color-picker-1-fill-dark"
+    },
+    {
+      "do": "action",
+      "action": "closeColorPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "action",
+      "action": "openColorPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-fill-light",
+      "note": "the same picker in light"
+    },
+    {
+      "do": "snapshot",
+      "name": "one-color-picker-2-fill-light"
+    },
+    {
+      "do": "action",
+      "action": "closeColorPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "addShadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "openShadowColorPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-shadow-light",
+      "note": "a second place, the Shadow row, opens the same picker rather than the system color panel; it says Shadow at the top and offers no opacity slider because the shadow keeps its own"
+    },
+    {
+      "do": "snapshot",
+      "name": "one-color-picker-3-shadow-light"
+    },
+    {
+      "do": "action",
+      "action": "closeColorPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "action",
+      "action": "openShadowColorPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-shadow-dark",
+      "note": "the Shadow row's picker in dark"
+    },
+    {
+      "do": "snapshot",
+      "name": "one-color-picker-4-shadow-dark"
+    },
+    {
+      "do": "action",
+      "action": "closeColorPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "paintSelectionColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "5-painted",
+      "note": "one pick paints the shape, in one undo step"
+    },
+    {
+      "do": "render",
+      "name": "one-color-picker-painted"
+    },
+    {
+      "do": "action",
+      "action": "openColorPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "saveStyleFromPicker"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "6-saved",
+      "note": "Save style inside the picker names the colour and puts it on the Library's Styles shelf, the same shelf the colour row's own Save as Style uses"
+    },
+    {
+      "do": "snapshot",
+      "name": "one-color-picker-6-saved-style"
+    },
+    {
+      "do": "action",
+      "action": "closeColorPicker"
+    },
+    {
+      "do": "appearance",
+      "value": "system"
+    }
+  ]
+}

@@ -515,6 +515,18 @@ private final class Run {
             note(number, stage, "clipboard types \(types); text:\n\(text ?? "nil")",
                  state: ["types": types, "text": text ?? NSNull()])
 
+        case .appearance(let which):
+            // This app only. The machine's own setting is left alone, because a
+            // walk that flipped the desktop to dark would flip it under whoever
+            // is sitting at it.
+            NSApp.appearance = switch which {
+            case .light: NSAppearance(named: .aqua)
+            case .dark: NSAppearance(named: .darkAqua)
+            case .system: nil
+            }
+            await sleep(0.4)
+            note(number, step.name, "drawing \(which.rawValue)", state: describe())
+
         case .menus(let stage, let menu):
             let tree = try readMenuBar(only: menu)
             write(json: tree, to: "menus-\(stage).json")
@@ -637,6 +649,24 @@ private final class Run {
             case .followOriginalLook:
                 if let id = editor.selectedLayerID {
                     editor.clearInstanceStyleOverrides(instance: id)
+                }
+            case .openColorPicker:
+                if let slot = editor.colorStyleSlots
+                    .first(where: { editor.colorStyleSelection(slot: $0).members.first != nil }) {
+                    editor.openColorWell = "selection.\(slot.rawValue)"
+                }
+            case .openShadowColorPicker:
+                editor.openColorWell = "shadow"
+            case .closeColorPicker:
+                editor.openColorWell = nil
+            case .saveStyleFromPicker:
+                // The color the open picker is holding, which for the Color
+                // section's rows is the color those layers share.
+                if let key = editor.openColorWell,
+                   let raw = key.split(separator: ".").last.map(String.init),
+                   let slot = ColorSlot(rawValue: raw),
+                   let hex = editor.colorStyleSelection(slot: slot).savableColorHex {
+                    editor.saveColorStyle(hex: hex, name: "Brand", slot: slot)
                 }
             case .saveColorStyle:
                 // The picked layers' first color that could carry a name: with

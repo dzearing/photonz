@@ -7220,3 +7220,43 @@ after the change: a walk stops mid-run with the probe gone or stuck; not
 reproduced under a watcher, not caused by this work.
 
 Verified: `Scripts/test.sh` green (2099 tests), walk on the probe.
+
+## 2026-09-04 — One color picker, everywhere a color is chosen (Next, `next-color-picker`)
+
+The app had three answers to "pick a color" and which one you met depended on
+which row you clicked: a bespoke popover on the shape and tool rows, the system
+color panel on the shadow, backdrop and measurement rows. There is one now, the
+one the design study drew.
+
+Core, test first (37 new tests): `ColorPickerModel.swift` — HSL and HSV views of
+`RGBA`, `PickerColor` holding the hue separately so a drag to black and back
+returns the color rather than a red, the channel and format tables, a parser for
+every way a color arrives as text (`#7C4DFF`, `#F0C`, `rgb(124 77 255)`,
+`hsl(256 100% 65%)`, with or without an alpha), the derived shade and relative
+ramps, and `ContrastReading` on real WCAG luminance (linearized, unlike the
+existing `relativeLuminance`, which is a light-or-dark approximation and stays
+where it is). `DocumentColors.swift` — what a document is actually painted with,
+most used first, capped at one row.
+
+App: `DesignedColorPicker.swift` is the picker; `ColorPickerEntry.swift` is the
+ONE switch between it and the old one, so a future color row cannot open
+something else. Nine call sites rewired, four of which used to raise the system
+panel. `EditorState.openColorWell` replaced the per-well `@State`, so only one
+picker is ever open and a walk can open one without a pointer.
+
+Harness: actions `openColorPicker`, `openShadowColorPicker`, `closeColorPicker`,
+and an `appearance` step that puts the PROBE into light or dark for the shots
+that follow, leaving the machine's own setting alone.
+
+Departures from the mock, all reasoned in the audit: a fourth swatch scope
+(Recent, because losing recents would be a regression), the contrast reading
+fixed on white rather than switching to whichever background flatters it, and no
+Solid/Linear/Radial/Angular tab row because three of four would have done
+nothing.
+
+Next: the color lands on release rather than during the drag (live would be one
+undo step per frame; coalescing is queued), and gradients in a slot are queued.
+
+Verified: `Scripts/test.sh` green (2616 tests), three walks on the probe with
+real screen captures in light and dark from the Fill row and the Shadow row.
+Audit: `queue/audits/2026-09-04-one-color-picker.json`.

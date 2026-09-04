@@ -179,6 +179,11 @@ public enum PlaytestCondition: Hashable, Sendable {
 /// synthesized event and the script still needs the outcome. The inspector
 /// toggle is a button and the zoom commands are menu chords, so a walk that
 /// needs the canvas wide or the picture big asks for it here.
+/// Which way round the probe draws itself for the shots that follow.
+public enum PlaytestAppearance: String, CaseIterable, Hashable, Codable, Sendable {
+    case light, dark, system
+}
+
 public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case copySpecList, copyImage, hideAllMeasurements, showAllMeasurements
     case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
@@ -290,6 +295,20 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// on that row does. The field takes typing like any other, and Return
     /// saves the border color under that name.
     case saveBorderColorStyle
+    /// Open the color picker on the Color section's first painted row, which
+    /// is what clicking that row's swatch does. The dock is out of a walk's
+    /// pointer reach, so this is how the picker itself gets photographed.
+    case openColorPicker
+    /// The same, on the Shadow section's color row, so a walk can show the one
+    /// picker turning up in a second place.
+    case openShadowColorPicker
+    /// Shut whichever picker is open, the way Escape or the picker's own close
+    /// button does.
+    case closeColorPicker
+    /// Save style inside the open picker, on the color the picker is holding.
+    /// The button is inside a popover, which a walk cannot reach with the
+    /// pointer, so this is the way in; the name is typed and Return saves.
+    case saveStyleFromPicker
     /// Pick the first style on the Library shelf, which is what a click on its
     /// tile does, so its own section can be photographed.
     case pickFirstColorStyle
@@ -516,6 +535,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// app's menus needs an Accessibility grant only a person can give, but the
     /// probe is our own app and can always say what is in its own menu bar.
     case menus(stage: String, menu: String?)
+    /// Put the probe into light or dark for the shots that follow, so one walk
+    /// can photograph a surface both ways. It changes THIS app only, never the
+    /// machine's setting, so nothing outside the probe notices.
+    case appearance(PlaytestAppearance)
     case action(PlaytestAction)
 
     public static let defaultTimeout: Double = 10
@@ -523,7 +546,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
+        "action", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
         "dragRow", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
         "panel", "panelMenu",
@@ -534,6 +557,7 @@ public enum PlaytestStep: Sendable, Equatable {
     public var name: String {
         switch self {
         case .open: "open"
+        case .appearance: "appearance"
         case .blank: "blank"
         case .wait: "wait"
         case .key: "key"
@@ -670,6 +694,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .readClipboard(stage: try f.string("stage"))
         case "menus":
             self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"))
+        case "appearance":
+            self = .appearance(try f.enumValue("value", PlaytestAppearance.self))
         case "action":
             self = .action(try f.enumValue("action", PlaytestAction.self))
         default:

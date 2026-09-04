@@ -1676,16 +1676,15 @@ struct ShadowInspector: View {
     }
 
     private func shadowColorPicker(_ ids: [UUID]) -> some View {
-        ColorPicker("Shadow color", selection: Binding(
-            get: { Color(hex: shadowColorReading.value ?? "#000000") },
-            set: { color in
-                if let hex = color.hexString {
-                    editorState.setLayerStyle(ids: ids) { $0.shadow?.colorHex = hex }
-                    editorState.recordRecentColor(hex: hex)
-                }
-            }), supportsOpacity: false)
-            .labelsHidden()
-            .controlSize(.small)
+        // The same picker every other color row opens. A shadow keeps its own
+        // Opacity slider in this section, so the picker is not offered a second
+        // one that would fight with it.
+        ColorWellButton(hex: shadowColorReading.value ?? "#000000",
+                        name: "Shadow",
+                        supportsOpacity: false) { hex in
+            editorState.setLayerStyle(ids: ids) { $0.shadow?.colorHex = hex }
+            editorState.recordRecentColor(hex: hex)
+        }
     }
 }
 
@@ -2340,17 +2339,19 @@ struct MeasureInspector: View {
                 // opacity slider, so "no chip" is just alpha 0), Text = readout.
                 // Whole-object transparency lives in Effects, where every layer's
                 // does.
-                swatchRow("Stroke", color: Color(hex: c.strokeColorHex)) {
-                    if let hex = $0.hexString { editorState.setMeasureStrokeColor(hex, commit: true) }
+                swatchRow("Stroke", hex: c.strokeColorHex) {
+                    editorState.setMeasureStrokeColor($0, commit: true)
                 }
-                swatchRow("Chip", color: Color(hex: c.chipColorHex).opacity(c.chipOpacity),
-                          supportsOpacity: true) {
-                    if let hex = $0.hexString {
-                        editorState.setMeasureChipColor(hex, opacity: $0.alphaComponent, commit: true)
-                    }
+                // The chip's opacity IS its alpha, so the picker's opacity
+                // slider writes it: "no chip" is alpha 0 rather than a separate
+                // switch.
+                swatchRow("Chip", hex: chipHex(c), supportsOpacity: true) { picked in
+                    let rgba = RGBA(hex: picked)
+                    editorState.setMeasureChipColor(rgba?.hexString ?? picked,
+                                                    opacity: rgba?.a ?? 1, commit: true)
                 }
-                swatchRow("Text", color: Color(hex: c.textColorHex)) {
-                    if let hex = $0.hexString { editorState.setMeasureTextColor(hex, commit: true) }
+                swatchRow("Text", hex: c.textColorHex) {
+                    editorState.setMeasureTextColor($0, commit: true)
                 }
                 if Experiments.shared.measurePanelEnabled {
                     geometryGrid(c)
@@ -2493,15 +2494,21 @@ struct MeasureInspector: View {
 
     /// One color row: caption on the left, swatch next to it, so the three
     /// swatches line up in a column.
-    @ViewBuilder private func swatchRow(_ label: String, color: Color,
+    /// The chip's color and its opacity as one string, because to the picker
+    /// they are one color.
+    private func chipHex(_ measure: MeasureContent) -> String {
+        var rgba = RGBA(hex: measure.chipColorHex) ?? RGBA(r: 1, g: 1, b: 1)
+        rgba.a = measure.chipOpacity
+        return rgba.hexStringWithAlpha
+    }
+
+    @ViewBuilder private func swatchRow(_ label: String, hex: String,
                                         supportsOpacity: Bool = false,
-                                        set: @escaping (Color) -> Void) -> some View {
+                                        set: @escaping (String) -> Void) -> some View {
         HStack(spacing: 8) {
             Text(label).font(.caption).foregroundStyle(.secondary)
                 .frame(width: 44, alignment: .leading)
-            ColorPicker(label, selection: Binding(get: { color }, set: { set($0) }),
-                        supportsOpacity: supportsOpacity)
-                .labelsHidden().controlSize(.small)
+            ColorWellButton(hex: hex, name: label, supportsOpacity: supportsOpacity, onCommit: set)
             Spacer(minLength: 0)
         }
     }
@@ -2619,15 +2626,10 @@ struct CollageInspector: View {
                         .font(.caption).controlSize(.small)
                     Spacer()
                     if let hex = c.backdropColorHex {
-                        ColorPicker("Backdrop color", selection: Binding(
-                            get: { Color(hex: hex) },
-                            set: { color in
-                                if let newHex = color.hexString {
-                                    editorState.updateCollage(layerID: layer.id) { $0.backdropColorHex = newHex }
-                                }
-                            }),
-                            supportsOpacity: false)
-                            .labelsHidden().controlSize(.small)
+                        ColorWellButton(hex: hex, name: "Backdrop") { newHex in
+                            editorState.updateCollage(layerID: layer.id) { $0.backdropColorHex = newHex }
+                            editorState.recordRecentColor(hex: newHex)
+                        }
                     }
                 }
                 Text("Drop photos from the history or Finder into a cell; drag a photo layer onto a cell to absorb it; drag between cells to swap.")

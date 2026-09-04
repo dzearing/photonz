@@ -280,6 +280,12 @@ extension Experiments {
         libraryEnabled && isEnabled(FeatureCatalog.stylesFlag)
     }
 
+    /// `next-color-picker`: whether every color row opens the app's designed
+    /// picker. It stands on its own rather than on the styles flag: naming a
+    /// color and picking one are two different questions, and someone who
+    /// turns naming off still wants one picker rather than three.
+    var designedColorPickerEnabled: Bool { isEnabled(FeatureCatalog.colorPickerFlag) }
+
     /// `next-starter-components`: whether the Components shelf arrives with the
     /// app's own five on it. They are components, so this needs components:
     /// with them off there is no shelf to stock and the switch reads as off.

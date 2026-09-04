@@ -1,0 +1,32 @@
+{
+  "id": "the-panel-comes-back-in-the-same-frame-as-the-se",
+  "title": "The panel comes back in the same frame as the selection it describes",
+  "goal": "Clicking a layer after nothing was selected is the slowest click there is: the whole right hand panel has to be built from nothing, nine sliders, text fields and a colour well, and the click waits for all of it. The picture should react at once and the panel should catch up, so a click never feels like it is thinking.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T01:26:57.419Z",
+  "updated": "2026-09-04T01:26:57.481Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the selection latency work merged 2026-09-04, which took the common click from 63ms of main thread work to 46ms but left this one at a 53ms run loop pass. Cause is section creation: Position and Size, Effects, Shadow and Component all mount at once. Two options the runner should weigh and record: keep those sections mounted and hidden, or hand the dock its update one run loop pass after the canvas so handles land first. Measure with Scripts/playtest/select-click-perf-walk.json, which reports mainBusy and the longest pass per click.",
+  "acceptance": [
+    "Measured with the selection walk: the click that brings the panel back after a deselect costs no more than a click that only moves the selection",
+    "The canvas handles and highlight appear in the first frame after the click, before the panel finishes",
+    "No section flickers or jumps as it arrives, and nothing is left blank once the panel settles",
+    "Numbers before and after are in the audit under queue/audits/, taken with the same walk"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T01:26:57.419Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T01:26:57.480Z",
+      "note": "seq 170 -> 15"
+    }
+  ]
+}

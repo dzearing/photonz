@@ -412,6 +412,7 @@ struct ColorStyleRow<Well: View>: View {
     private func swatch(_ hex: String) -> some View {
         RoundedRectangle(cornerRadius: 4)
             .fill(Color(hex: hex))
+            .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
             .frame(width: 18, height: 18)
             .overlay(RoundedRectangle(cornerRadius: 4)
                 .strokeBorder(.primary.opacity(0.25), lineWidth: 1))
@@ -462,14 +463,17 @@ struct SelectionColorWell: View {
     /// tip can say it: "Fill", "Outline", "Text".
     let part: String
 
-    @State private var isPickerShown = false
     @State private var isHovering = false
 
     private var selection: ColorStyleSelection { editorState.colorStyleSelection(slot: slot) }
 
+    /// The key this well answers to, so only one picker is ever open and a
+    /// walk can open this one without a pointer.
+    private var wellKey: String { "selection.\(slot.rawValue)" }
+
     var body: some View {
         let selection = self.selection
-        Button { isPickerShown = true } label: { label(selection) }
+        Button { editorState.openColorWell = wellKey } label: { label(selection) }
             .buttonStyle(.plain)
             // A readout and a control look alike sitting still, so the hairline
             // firms up under the pointer: that is what says this one is worth
@@ -478,9 +482,13 @@ struct SelectionColorWell: View {
             .onHover { isHovering = $0 }
             .help(help(selection))
             .accessibilityLabel("\(part) of \(selection.count) selected layers")
-            .popover(isPresented: $isPickerShown, arrowEdge: .top) {
-                ColorPickerPopover(initialHex: openingHex(selection),
-                                   recents: editorState.recentColors.colors) { hex in
+            .popover(isPresented: editorState.colorWellBinding(wellKey), arrowEdge: .top) {
+                ColorPickerContent(editorState: editorState,
+                                   hex: openingHex(selection),
+                                   name: part,
+                                   slot: slot,
+                                   supportsOpacity: true,
+                                   onClose: { editorState.openColorWell = nil }) { hex in
                     editorState.setSelectionColor(slot: slot, hex: hex)
                 }
             }
@@ -490,6 +498,9 @@ struct SelectionColorWell: View {
         if case .color(let hex) = selection.reading {
             RoundedRectangle(cornerRadius: 4)
                 .fill(Color(hex: hex))
+                // Under a color that can be see-through, so a translucent fill
+                // reads as translucent rather than as a paler one.
+                .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
                 .frame(width: 18, height: 18)
                 .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
         } else {
@@ -710,8 +721,10 @@ struct LibraryStyleInspector: View {
                         .buttonStyle(.plain)
                         .help("Changing this repaints every layer using this style")
                         .popover(isPresented: $isPickerShown, arrowEdge: .top) {
-                            ColorPickerPopover(initialHex: style.colorHex,
-                                               recents: editorState.recentColors.colors) { hex in
+                            ColorPickerContent(editorState: editorState,
+                                               hex: style.colorHex,
+                                               name: style.name,
+                                               onClose: { isPickerShown = false }) { hex in
                                 editorState.setColorStyleHex(styleID: style.id, hex: hex)
                             }
                         }

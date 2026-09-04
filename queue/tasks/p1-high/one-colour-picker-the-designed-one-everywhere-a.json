@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 8,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T01:20:58.623Z",
-  "updated": "2026-09-04T01:20:58.657Z",
+  "updated": "2026-09-04T01:40:33.943Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-03 with a screenshot of the designed picker from the surface design. What exists today, from a read: Sources/Photonz/ColorPickerPopover.swift is a bespoke picker with preset swatches, a recents row, hue saturation brightness sliders, a hex field and a screen eyedropper. It is used from ColorStylePanel.swift lines 482 and 713 and EditorView.swift lines 1061, 1143 and 1610. It is missing, against the mock: the shade and saturation square, the HSL RGB hex switch, an opacity slider, shades and related rows, the document colours row, the contrast reading, the titled preview header and Save style. Five other places bypass it entirely and open the operating system colour panel through SwiftUI ColorPicker: LayersPanel.swift lines 1677 (shadow), 2500 (the shared swatchRow helper, which is what the shape outline and inside rows use), and 2620 (backdrop). That split is why the picker the user meets depends on which row they click, and it is the main thing to fix. The design study pages to read for the intended shape are docs/design/mocks/pages/color.html, comp-color.html and lang-color.html. Gradients appear in the mock as Solid, Linear, Radial and Angular tabs; file that as a follow-up task rather than building it here, but leave the header row able to carry the tabs. Ships behind next-styles.",
@@ -32,6 +32,27 @@
     {
       "t": "2026-09-04T01:20:58.657Z",
       "note": "seq 170 -> 8"
+    },
+    {
+      "t": "2026-09-04T01:40:33.943Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T01:44:20.715195Z",
+      "note": "Adversarial review before building. Kept: the SV square, the format switch, the derived shades/related rows, the document-colours row, the contrast readout, Save style, the eyedropper. CUT: the Solid/Linear/Radial/Angular tab row, because four tabs where three do nothing is decoration, not room; gradients are a follow-up so the row arrives with them. CHANGED from the mock: (1) the swatch row gains a fourth scope, Recent, because today's picker has a recents row and losing it would be a regression for the commonest move, reusing the colour you just used elsewhere; (2) the contrast readout reports against white specifically, as the acceptance asks, rather than the mock's better-of-white-or-black, because the question a person is asking is whether this reads on the page, and a readout that silently switches its own background cannot answer it; the black figure goes in the tooltip. (3) Opacity is only offered where the slot can carry it; a slider whose value has nowhere to be stored is a lie. LIMIT accepted: the eyedropper is the system sampler, whose live magnified loupe is the live preview; the picker's own swatch updates on release, not during. Building our own screen sampler would need a full-screen overlay and its own capture permission for a loupe macOS already draws. FIRST-TIME USER worry: three derived rows plus recents is a lot of swatches. Mitigated by the mock's own answer, one row with a scope switch, so the popover stays one screenful."
+    },
+    {
+      "t": "2026-09-04T01:44:20.715195Z",
+      "note": "Scoping: the picker ships behind a NEW Next-only flag next-color-picker, not next-styles. next-styles means 'a colour can be saved under a name' and gating the whole picker on it would take the picker away from anyone who turns naming off. Save style inside the picker is what next-styles gates."
+    },
+    {
+      "t": "2026-09-04T02:07:48.085499Z",
+      "note": "Review of the built thing, on the probe. Fixed three things it turned up: the square took focus on open and drew a heavy accent box, so the custom ring is gone and the system's own focus effect shows instead; the shades row marked nothing, because a colour is hardly ever sitting exactly on a derived shade, so it marks the NEAREST step now (ColorRamp.nearestShadeIndex); and the was/now pair read as one swatch until you changed something, so there is a hairline seam between them. Also made the swatch scope stick between openings, which is the mock's 'it keeps its shades when it moves between slots'. Left in: the colour lands on release rather than during the drag, and there is no hex on screen in HSL or RGB mode. Both are in the audit's rough, the first is queued."
+    },
+    {
+      "t": "2026-09-04T02:07:48.085499Z",
+      "note": "Acceptance verified one by one on the running probe, not assumed. 1 every colour row: grepped, the only SwiftUI ColorPicker and the only ColorPickerPopover left in the app are the flag-off branch of ColorPickerEntry; photographed from the Fill row and the Shadow row, and the measure Stroke/Chip/Text rows are swatch buttons now. 2 header preview + name + close: photographed. 3 square, H/S/L/A sliders each with its number, HSL|RGB|HEX: photographed. 4 eyedropper: the system sampler, same call the old picker made; its own loupe is the live preview, the picker's swatch updates on release. NOT verified live by a walk, because a walk cannot drive the sampler; stated plainly in the audit. 5 shades, related, document, recent rows: shades and document photographed, all four are one code path. 6 contrast on white with its grade: photographed, read 'AA Large 3.5:1 on white' then 'AA 6.8:1 on white' after a repaint. 7 Save style: photographed end to end, the tile 'Brand' lands on the Library's Styles shelf in the crimson that was picked. 8 dragging does not add a recent: structural, onCommit is called only from drag END, a number submitted, a swatch clicked or a sample taken, never from onChanged; read every call site. 9 audit written with four real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-04T01:40:33.942Z"
 }

@@ -474,6 +474,7 @@ other Next flag in the catalog. Current never sees any of them.
 | 7 | `next-starter-components` | the Library holds only components you authored |
 | 8 | `next-styles` | fills are raw values only, no Library styles section |
 | 9 | none | it is an audit of everything above |
+| picker | `next-color-picker` | the color rows open the picker the app shipped with, and shadow, backdrop and the measurement rows open the system color panel |
 
 Three rules that go with them:
 
@@ -1906,3 +1907,56 @@ Walked end to end in `Scripts/playtest/screen-adoption-walk.json`.
 Not in this slice: a screen growing to fit something dropped half over its
 edge, and a single click reaching a layer that sits directly on a screen (it
 still picks the screen, which is the rule for every group).
+
+
+## Landed: one color picker, everywhere a color is chosen (Next, `next-color-picker`, 2026-09-04)
+
+Asked for on 2026-09-03 with a screenshot of the designed picker. The app had
+three different answers to "pick a color": a bespoke popover on the shape and
+tool rows, the system color panel on the shadow, backdrop and measurement rows,
+and nothing at all in between. Which picker you met depended on which row you
+clicked.
+
+There is one now, drawn the way `docs/design/mocks/pages/color.html` draws it:
+what you are painting and what it looked like before, a saturation and
+brightness square, a switch between HSL, RGB and HEX with one slider and one
+number per channel, one swatch row that answers "near this one" four ways,
+a live contrast reading and Save style. Every color row in Next opens it:
+a shape's inside, its outline, text, border, a drop shadow, a collage backdrop,
+a measurement's stroke, chip and text, the tool colors, the foreground and
+background fills, and a saved color's own row. No row raises the system panel
+any more.
+
+The arithmetic is in `PhotonzCore` and tested: `ColorPickerModel.swift` holds
+the HSL and HSV views of a color, `PickerColor` (hue kept separately, so
+dragging to black and back returns the color you started from rather than a
+red), the channel and format tables, `ColorText.parse` for everything a pasted
+color arrives as, the derived shade and relative ramps, and `ContrastReading`
+on real WCAG luminance. `DocumentColors.swift` answers what a document is
+actually painted with, most used first. The view is
+`Sources/Photonz/DesignedColorPicker.swift`; `ColorPickerEntry.swift` holds the
+ONE switch between it and the old picker, so no future row can open something
+else.
+
+Three deliberate departures from the mock, each in the audit
+(`queue/audits/2026-09-04-one-color-picker.json`):
+
+- **A fourth swatch scope, Recent.** The mock has three. Dropping recents would
+  have been a regression for the commonest move, reusing the color you just
+  used on something else.
+- **The contrast reading is fixed on white**, where the mock reports whichever
+  of white or black scores better. A readout that silently changes its own
+  background cannot answer "can I put this on the page". Black is in the tip.
+- **No Solid, Linear, Radial and Angular row.** Three of the four would have
+  done nothing. Gradients are their own task and the row arrives with them.
+
+Two things the picker is honest about and does not yet do: the color lands on
+release rather than during the drag (one drag would otherwise be twenty undo
+steps), and the eyedropper is the system sampler, whose own loupe is the live
+preview. Both are queued.
+
+Two pieces of harness came with it, because a popover in the dock is out of a
+walk's pointer reach: the actions `openColorPicker`, `openShadowColorPicker`
+and `closeColorPicker`, and an `appearance` step that puts the probe into light
+or dark for the shots that follow without touching the machine's own setting.
+Walk: `Scripts/playtest/one-color-picker-walk.json`.

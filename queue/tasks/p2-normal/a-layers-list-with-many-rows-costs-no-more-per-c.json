@@ -1,0 +1,31 @@
+{
+  "id": "a-layers-list-with-many-rows-costs-no-more-per-c",
+  "title": "A layers list with many rows costs no more per click than a short one",
+  "goal": "Every row in the layers list rebuilds itself each time you click a layer, so the more layers a document has the slower a click gets. Only the rows whose appearance actually changed should redo any work.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T01:26:57.451Z",
+  "updated": "2026-09-04T01:26:57.510Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the selection latency work merged 2026-09-04. Every LayersPanel row re-runs its body per click, O(rows). Small at todays row counts, but it scales with the users documents, and components and groups make documents deeper. The Library panel was fixed the same way in that work: conform the view to Equatable and give it an equatable() so SwiftUI can skip it. Measure with Scripts/playtest/select-click-perf-walk.json.",
+  "acceptance": [
+    "A click in a document with many layers costs about the same main thread time as the same click in a document with a handful",
+    "Measured with a walk that builds a deep document, with before and after numbers in the audit under queue/audits/",
+    "Selection highlighting, drag reordering and group disclosure all still behave exactly as they do now"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T01:26:57.452Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-04T01:26:57.510Z",
+      "note": "seq 1010 -> 120"
+    }
+  ]
+}
