@@ -384,14 +384,19 @@ final class EditorState {
     /// frame; everywhere else the image lands centred on the canvas as it
     /// always has. Either way the new layer is named after the file, so a
     /// stack of placed pictures reads in the Layers list.
-    func addImageLayerOrOpen(at url: URL, droppedAt point: CGPoint? = nil) {
+    ///
+    /// `landing` is the slot in the LAYERS STACK a drop on the right hand
+    /// panel pointed at — the one the drop line drew — so the picture arrives
+    /// where the panel promised instead of always on top.
+    func addImageLayerOrOpen(at url: URL, droppedAt point: CGPoint? = nil,
+                             landingAt landing: LayerDrop? = nil) {
         if url.pathExtension.lowercased() == "photonz" || document == nil {
             openImage(at: url)
             return
         }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
-        pasteImage(image, at: point, fileName: url.lastPathComponent)
+        pasteImage(image, at: point, fileName: url.lastPathComponent, landingAt: landing)
     }
 
     /// Opens a CGImage (from a file or a screen capture) as a fresh document.
@@ -3330,6 +3335,69 @@ final class EditorState {
                                allowsInside: Experiments.shared.layerGroupsEnabled)
     }
 
+    // MARK: - What the right hand panel promises a file held over it
+
+    /// What the panel is about to do with the thing being held over it, which
+    /// is what its border and the line in the layers list draw. Nil when
+    /// nothing is in the air over the panel.
+    ///
+    /// It lives here rather than in the panel because three different targets
+    /// answer for the same surface — a section, a layer row, and the panel
+    /// itself — and they have to speak with one voice.
+    enum PanelDropOffer: Equatable {
+        /// The panel will take it, and the picture will land here. The landing
+        /// is nil only when there is no stack to land in, where the file opens
+        /// a window of its own instead.
+        case accepts(LayerDrop?)
+        /// The panel cannot use what is being held over it.
+        case refuses
+    }
+
+    private(set) var panelDropOffer: PanelDropOffer?
+
+    /// Which target last spoke. A pointer crossing from one target to the next
+    /// enters the new one BEFORE it leaves the old, so a clear from a target
+    /// that no longer owns the offer is the stale half of a crossing and is
+    /// ignored — without this the panel's highlight blinks out every time the
+    /// pointer crosses a row boundary.
+    @ObservationIgnored private var panelDropOwner: AnyHashable?
+
+    /// Says what the panel will do with what is in the air. Called on every
+    /// frame of a drag, so an unchanged answer writes nothing.
+    func offerPanelDrop(_ offer: PanelDropOffer, from owner: AnyHashable) {
+        panelDropOwner = owner
+        guard panelDropOffer != offer else { return }
+        panelDropOffer = offer
+    }
+
+    /// The thing in the air has left this target, or landed on it.
+    func endPanelDrop(from owner: AnyHashable) {
+        guard panelDropOwner == owner else { return }
+        panelDropOwner = nil
+        panelDropOffer = nil
+    }
+
+    /// The landing the panel is currently promising, which is what the drop
+    /// line in the layers list draws.
+    var panelDropLanding: LayerDrop? {
+        guard case .accepts(let drop) = panelDropOffer else { return nil }
+        return drop
+    }
+
+    /// Where a picture arriving from outside would land if it were let go over
+    /// this row now.
+    func incomingDropProposal(over row: LayerPanelRow, pointerY: CGFloat,
+                              rowHeight: CGFloat) -> LayerDrop? {
+        document?.incomingDropProposal(over: row, pointerY: pointerY, rowHeight: rowHeight,
+                                       allowsInside: Experiments.shared.layerGroupsEnabled)
+    }
+
+    /// Where a picture let go on the panel, but not on any one row, lands.
+    /// Not gated on the groups flag: a frame under the middle of the canvas
+    /// swallows an incoming picture whatever that flag says, and the promise
+    /// has to match what actually happens.
+    var incomingDropOnTop: LayerDrop? { document?.incomingDropOnTop() }
+
     /// A finished drag in the layers list: one undo step, and the layers keep
     /// their place on the canvas.
     func dropRows(ids: Set<UUID>, _ drop: LayerDrop) {
@@ -5773,28 +5841,39 @@ final class EditorState {
     /// the next free number, so placing the same file twice reads as two rows
     /// rather than one word repeated.
     private func pasteImage(_ image: CGImage, at point: CGPoint? = nil,
-                            fileName: String? = nil) {
+                            fileName: String? = nil, landingAt landing: LayerDrop? = nil) {
         guard let document else {
             openCapture(image)
             return
         }
         let ref = store.register(image)
-        var frame = document.placementForIncomingImage(size: ref.pixelSize, at: point)
+        // A drop on the panel points at a place in the STACK, not a place on
+        // the picture, so it is sized to the list it is joining and centred
+        // there. Everything else lands the way it always has.
+        var frame = landing.map { document.placementForIncomingImage(size: ref.pixelSize, landingAt: $0) }
+            ?? document.placementForIncomingImage(size: ref.pixelSize, at: point)
         guard !frame.isEmpty else { return }
         // ⌘V has no pointer, so the same picture keeps arriving in the middle
         // of the canvas: each one after the first steps past the last so you
         // can see the one you just made. A drop lands where you let go, which
         // is already somewhere you chose, so it never cascades.
-        if point == nil { frame = cascadedPasteFrame(landingAt: frame) }
+        if point == nil, landing == nil { frame = cascadedPasteFrame(landingAt: frame) }
         // Numbered against what is already here, so dropping one file in twice
         // gives two rows you can tell apart instead of the same word twice.
         let name = PlacedImageNaming.layerName(fileName: fileName,
                                                taken: Set(document.allLayers.map(\.name)))
         let layer = Layer(name: name, content: .image(ref), frame: frame)
         discardDragPreview()
-        perform { $0.addLayerDrawnOnFrame(layer) }
+        perform {
+            // The panel drew a line saying exactly where this goes, so that is
+            // where it goes. The fallback is the way every other drop lands.
+            if let landing, $0.insertLayer(layer, landing) { return }
+            $0.addLayerDrawnOnFrame(layer)
+        }
+        // Landing inside a group opens it, so you can see where it went.
+        if case .inside(let groupID) = landing { expandedGroupIDs.insert(groupID) }
         selectedLayerID = layer.id
-        if point == nil { recordPaste(layer.id, at: frame) }
+        if point == nil, landing == nil { recordPaste(layer.id, at: frame) }
     }
 
     // MARK: - Layer selection & move

@@ -257,6 +257,101 @@ extension PhotonzDocument {
             return parentOrigin(of: id)
         }
     }
+
+    // MARK: - A picture arriving from outside the list
+
+    /// Where a picture arriving from OUTSIDE the document — dragged in from
+    /// the Finder, off the Library shelf — would land if it were let go over
+    /// this row now. This is what the drop line under the pointer draws, and
+    /// it is read the same three ways a row drag is: the top strip puts the
+    /// newcomer in front of the row, the bottom strip behind it, and the
+    /// middle of a group row puts it inside.
+    ///
+    /// It is separate from `dropProposal` because nothing is being carried:
+    /// there is no layer that could be its own parent, and a LOCKED row still
+    /// takes a newcomer beside it — the row is locked, the list it sits in is
+    /// not. Only dropping INSIDE a locked group is refused, because that is
+    /// the one case where the locked layer itself would change.
+    ///
+    /// `allowsInside` is the groups feature flag, exactly as it is there.
+    public func incomingDropProposal(over row: LayerPanelRow, pointerY: CGFloat,
+                                     rowHeight: CGFloat, allowsInside: Bool = true) -> LayerDrop? {
+        guard let target = layer(id: row.id) else { return nil }
+        let offersInside = allowsInside && target.isOpenableGroup && !target.isLocked
+        return switch LayerDropZone.forPointer(
+            y: pointerY, rowHeight: rowHeight,
+            offersInside: offersInside,
+            // The slot under an OPEN group row already belongs to its own
+            // topmost child, the same as for a row being dragged.
+            offersBelow: !(row.isGroup && row.isExpanded)) {
+        case .above: .above(row.id)
+        case .inside: .inside(row.id)
+        case .below: .below(row.id)
+        }
+    }
+
+    /// Where a picture let go on the right hand panel, but not on any one row,
+    /// lands: inside the frame under the middle of the canvas when there is
+    /// one — because that is the box the picture itself is about to be placed
+    /// in — and on top of everything otherwise.
+    ///
+    /// Nil for a document with no layers at all, which has no stack to sit on
+    /// top of.
+    public func incomingDropOnTop() -> LayerDrop? {
+        let centre = CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2)
+        if let frame = frameID(under: centre) { return .inside(frame) }
+        guard let top = layers.last else { return nil }
+        return .above(top.id)
+    }
+
+    /// Puts a BRAND NEW layer exactly where the drop line said it would go.
+    ///
+    /// `layer.frame` arrives in canvas coordinates and is rewritten into the
+    /// space it lands in, so the picture sits on screen where it was shown
+    /// however deep in the tree its row is. Returns false when the drop cannot
+    /// take it, which leaves the document untouched and keeps a refused drag
+    /// off the undo stack.
+    @discardableResult
+    public mutating func insertLayer(_ newcomer: Layer, _ drop: LayerDrop) -> Bool {
+        guard let targetPath = path(of: drop.targetID),
+              let destination = dropSpaceOrigin(drop) else { return false }
+        if case .inside = drop {
+            guard let group = layer(id: drop.targetID),
+                  group.isOpenableGroup, !group.isLocked else { return false }
+        }
+        var placed = uniquelyNamed(newcomer)
+        placed.frame = placed.frame.offsetBy(dx: -destination.x, dy: -destination.y)
+        switch drop {
+        case .inside:
+            withChildren(atPath: targetPath) { $0.append(placed) }
+        case .above, .below:
+            let slot = targetPath[targetPath.count - 1]
+            let at: Int
+            if case .above = drop { at = slot + 1 } else { at = slot }
+            if targetPath.count == 1 {
+                layers.insert(placed, at: min(max(0, at), layers.count))
+            } else {
+                withChildren(atPath: Array(targetPath.dropLast())) { children in
+                    children.insert(placed, at: min(max(0, at), children.count))
+                }
+            }
+        }
+        return true
+    }
+
+    /// The canvas-space box a newcomer landing at `drop` is placed in: the
+    /// group it lands inside, the group whose list it joins, or the whole
+    /// canvas for a drop against a layer sitting loose on it.
+    func incomingPlacementBox(_ drop: LayerDrop) -> CGRect {
+        let canvas = CGRect(origin: .zero, size: canvasSize)
+        switch drop {
+        case .inside(let id):
+            return canvasBounds(of: id) ?? canvas
+        case .above(let id), .below(let id):
+            guard let parent = parentID(of: id) else { return canvas }
+            return canvasBounds(of: parent) ?? canvas
+        }
+    }
 }
 
 // MARK: - What a row draws

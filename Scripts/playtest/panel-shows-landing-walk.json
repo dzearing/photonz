@@ -1,0 +1,265 @@
+{
+  "out": "/tmp/photonz-playtest/panel-shows-landing",
+  "seed": "A 1400x1000 canvas holding a frame in the middle and two pictures either side of it, so the right hand panel has a frame row, two layer rows and a stack of sections. A picture is then held over each part of that panel in turn \u2014 the top of a row, the bottom of a row, the middle of the frame row, a section header, the empty space under everything \u2014 and each step writes down what the panel says it is about to do and photographs it saying it. A text file is held over the same panel to prove the refusal is visible too. Canvas points are document coordinates; panel points are window coordinates measured down from the top-left corner. Two last steps hold the same picture over the canvas itself, to show the canvas landing box is untouched and the panel stays quiet while the drag is not over it.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1400,
+      "canvasHeight": 1000,
+      "width": 1180,
+      "height": 860
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        320
+      ],
+      "to": [
+        900,
+        680
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        180,
+        150
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1200,
+        850
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "0-panel-at-rest"
+    },
+    {
+      "do": "describe",
+      "stage": "0-panel-at-rest",
+      "note": "the stack the panel is showing before anything is held over it"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        128
+      ],
+      "space": "window",
+      "hold": "1-top-of-a-row"
+    },
+    {
+      "do": "describe",
+      "stage": "1-top-of-a-row",
+      "note": "a picture held over the TOP of the first layer row"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        145
+      ],
+      "space": "window",
+      "hold": "2-middle-of-a-row"
+    },
+    {
+      "do": "describe",
+      "stage": "2-middle-of-a-row",
+      "note": "a picture held over the middle of the same row"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        162
+      ],
+      "space": "window",
+      "hold": "3-bottom-of-a-row"
+    },
+    {
+      "do": "describe",
+      "stage": "3-bottom-of-a-row",
+      "note": "a picture held over the BOTTOM of the same row"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        185
+      ],
+      "space": "window",
+      "hold": "4-second-row"
+    },
+    {
+      "do": "describe",
+      "stage": "4-second-row",
+      "note": "a picture held over the row under it"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        205
+      ],
+      "space": "window",
+      "hold": "5-third-row"
+    },
+    {
+      "do": "describe",
+      "stage": "5-third-row",
+      "note": "a picture held over the third row"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        80
+      ],
+      "space": "window",
+      "hold": "6-section-header"
+    },
+    {
+      "do": "describe",
+      "stage": "6-section-header",
+      "note": "a picture held over the Layers section header, which is not a place in the stack"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        820
+      ],
+      "space": "window",
+      "hold": "7-below-everything"
+    },
+    {
+      "do": "describe",
+      "stage": "7-below-everything",
+      "note": "a picture held over the empty space below every section"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Redline notes.txt",
+      "at": [
+        1050,
+        145
+      ],
+      "space": "window",
+      "hold": "8-text-file-refused"
+    },
+    {
+      "do": "describe",
+      "stage": "8-text-file-refused",
+      "note": "a text file over a layer row: the panel says it will refuse it"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Redline notes.txt",
+      "at": [
+        1050,
+        820
+      ],
+      "space": "window",
+      "hold": "9-text-file-refused-below"
+    },
+    {
+      "do": "describe",
+      "stage": "9-text-file-refused-below",
+      "note": "the same text file over the empty space below every section"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1050,
+        162
+      ],
+      "space": "window",
+      "hold": "10-letting-go",
+      "release": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "11-landed-where-it-said"
+    },
+    {
+      "do": "describe",
+      "stage": "11-landed-where-it-said",
+      "note": "the picture landed at the slot the line drew, not on top of the stack"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        1100,
+        200
+      ],
+      "space": "document",
+      "hold": "12-over-the-canvas"
+    },
+    {
+      "do": "describe",
+      "stage": "12-over-the-canvas",
+      "note": "the same picture held over bare canvas: the canvas still draws its landing box and the panel says nothing"
+    },
+    {
+      "do": "dragFile",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        700,
+        500
+      ],
+      "space": "document",
+      "hold": "13-over-the-frame"
+    },
+    {
+      "do": "describe",
+      "stage": "13-over-the-frame",
+      "note": "held over the frame on the canvas: the landing box still fits the frame, unchanged by this task"
+    }
+  ]
+}

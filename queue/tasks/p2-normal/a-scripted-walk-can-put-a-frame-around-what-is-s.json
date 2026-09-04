@@ -1,0 +1,27 @@
+{
+  "id": "a-scripted-walk-can-put-a-frame-around-what-is-s",
+  "title": "A scripted walk can put a frame around what is selected",
+  "goal": "An unmanned run cannot currently check any feature that needs a screen on the canvas unless it draws one by hand with the frame tool: asking the app to put a frame around what is selected, the way the Layer menu does, freezes the scripted run and it never finishes. Make that step work, so frame-shaped UI building work can be verified the same way everything else is.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1090,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T13:01:19.379Z",
+  "updated": "2026-09-04T13:01:19.379Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-09-04 while writing Scripts/playtest/panel-shows-landing-walk.json. A walk containing {\"do\":\"frameSelection\"} produces no log.json and no done.json at all: the run hangs inside the step, so Scripts/playtest.sh times out with an empty output folder. Bisected: the identical walk with that one step removed completes. Harness site: PlaytestHarness.swift case .frameSelection -> editor.frameSelection(). Suspect a sheet or an alert put up on the main actor that nothing dismisses, or a wait on something the harness never satisfies. Workaround in use: pick the frame tool and drag a rectangle in document space.",
+  "acceptance": [
+    "A walk step that frames the selection completes and the run reaches its last step",
+    "The frame it makes holds the layer that was selected, proven by the state line in the walk log",
+    "An existing walk is added or updated to cover it, and it passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T13:01:19.379Z",
+      "note": "created (manual)"
+    }
+  ]
+}

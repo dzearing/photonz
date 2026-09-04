@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:08.695Z",
-  "updated": "2026-09-04T12:09:08.695Z",
+  "updated": "2026-09-04T13:02:15.092478Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Evidence: queue/audits/2026-09-04-panel-takes-picture.json rough 2 (\"There is no highlight, no drop line, no glow while a picture is held over the panel. The only feedback is the pointer.\") and rough 1 (a picture let go on a layer row lands on top of the stack, not at that row); queue/audits/2026-09-04-panel-refuses-file.json rough 2 (nothing an unmanned run can photograph, because the only feedback lives in the window server); queue/audits/2026-09-04-refused-file.json rough 1. The canvas side already exists and is the model to copy: queue/audits/2026-09-04-drop-lands-here.json and 2026-09-03-drop-preview.json. docs/design/mocks/shared/UX-PATTERNS.md section 3 has no rule for what a drop target looks like while something is held over it, which is why each surface answered differently; whoever does this should add that rule in the same sitting.",
@@ -26,6 +26,27 @@
     {
       "t": "2026-09-04T12:09:08.695Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T12:37:46.328Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T13:02:15.092478Z",
+      "note": "Adversarial review before building. The mock has no rule here, and the audits offered two answers: keep landing on top and just light the panel up, or make the drop line precise. Kept the SHORTEST version that is not a lie: the panel always draws a real LayerDrop, so 'on top' is drawn as a line above the top row and 'inside that screen' as an outline on that row, and the picture then lands exactly there. Cut a separate top-of-list ornament and a size readout as decoration. Rejected showing a line at the top of the list while the pointer is halfway down a row, which is honest only until you try to aim with it."
+    },
+    {
+      "t": "2026-09-04T13:02:15.092478Z",
+      "note": "Built. PhotonzCore (TDD, 22 new tests): incomingDropProposal reads a row the same three ways a row drag does; incomingDropOnTop is where a drop that is not on a row really goes (inside the frame under the middle of the canvas, else top of stack); insertLayer puts a brand new layer at a drop line and rewrites its canvas frame into the space it joins; placementForIncomingImage(landingAt:) sizes it to the list it joins. App: EditorState.panelDropOffer with an owner token so a crossing between targets does not blink the highlight off, the section/row/panel drop delegates all speak through it, and the layers list draws the promise with the drop line it already had. PanelDropAffordance draws the accent edge for accept and a dashed red edge for refuse."
+    },
+    {
+      "t": "2026-09-04T13:02:15.092478Z",
+      "note": "Verified live in the probe with Screen Recording granted. Scripts/playtest/panel-shows-landing-walk.json: over a row top/bottom the panel says 'in front of'/'behind' that row, over a frame row 'inside Frame', over a section header and the empty space 'in front of' the topmost row or 'inside Frame', a text file says 'it will refuse this' everywhere on the panel, and letting go on the frame row put the picture inside the frame (layer count at top level unchanged, the newcomer selected). Canvas untouched: held over bare canvas the box is still centred on the pointer, over the frame it still joins the frame, and the panel says nothing. Full suite 2974 tests green."
+    },
+    {
+      "t": "2026-09-04T13:02:15.092478Z",
+      "note": "Also added the missing rule to docs/design/mocks/shared/UX-PATTERNS.md section 3 (what a surface looks like while something is held over it), which the task asked for. Follow-up filed: a scripted walk cannot use Frame Selection, the step hangs the harness."
     }
-  ]
+  ],
+  "started": "2026-09-04T12:37:46.327Z"
 }

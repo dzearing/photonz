@@ -136,4 +136,16 @@ extension PhotonzDocument {
         guard let point else { return fitted }
         return PastePlacement.frame(of: fitted.size, centeredOn: point, in: box)
     }
+
+    /// Where an image let go on the right hand PANEL lands, in canvas
+    /// coordinates: centred on, and fitted into, whatever list it is joining —
+    /// the frame it lands inside, or the whole canvas.
+    ///
+    /// A drop on the panel has no canvas point behind it: you are pointing at
+    /// a place in the STACK, not at a place on the picture. So it lands in the
+    /// middle of its new home, which is where the drop line already promised
+    /// it would be.
+    public func placementForIncomingImage(size: CGSize, landingAt drop: LayerDrop) -> CGRect {
+        PastePlacement.frame(forImageOf: size, in: incomingPlacementBox(drop))
+    }
 }

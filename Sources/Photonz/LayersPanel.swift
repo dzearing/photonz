@@ -143,6 +143,19 @@ struct InspectorPanel: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.regularMaterial)
+        // The panel answering for a file let go where it has no other target:
+        // the empty space under the last section, and the gaps between them.
+        // Registered for FILES ONLY, so a section header or a layer row dragged
+        // out here still falls through to the window exactly as it did before.
+        .onDrop(of: FileDrop.types, delegate: PanelFileDrop(editorState: editorState))
+        // What the panel is about to do with what you are holding. Drawn over
+        // everything and hit-testing nothing, so it cannot swallow the drag it
+        // is describing.
+        .overlay {
+            PanelDropAffordance(offer: editorState.panelDropOffer)
+                .allowsHitTesting(false)
+        }
+        .animation(.easeOut(duration: 0.12), value: editorState.panelDropOffer)
         .onAppear(perform: loadOrder)
         .onChange(of: order) { persistOrder() }
     }
@@ -632,6 +645,76 @@ enum InspectorSectionID: String, CaseIterable {
     }
 }
 
+/// The panel itself answering for a file let go anywhere it has no other drop
+/// target: the empty space under the last section, and the gaps between the
+/// sections.
+///
+/// There is no `validateDrop`, on purpose. Answering false there takes the
+/// delegate out of the drag altogether, and then the panel could never say it
+/// was about to REFUSE something — the refusal would live in the pointer and
+/// nowhere else, which is the thing this surface was fixed for.
+private struct PanelFileDrop: DropDelegate {
+    let editorState: EditorState
+
+    /// Who is speaking, for the one-voice rule in `offerPanelDrop`.
+    private var owner: AnyHashable { "inspector-panel" }
+
+    func dropEntered(info: DropInfo) { offerFile(info) }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: offerFile(info))
+    }
+
+    func dropExited(info: DropInfo) { editorState.endPanelDrop(from: owner) }
+
+    func performDrop(info: DropInfo) -> Bool {
+        let landing = editorState.incomingDropOnTop
+        editorState.endPanelDrop(from: owner)
+        return FileDrop.accept(info, into: editorState, landingAt: landing)
+    }
+
+    @discardableResult
+    private func offerFile(_ info: DropInfo) -> DropOperation {
+        guard FileDrop.carriesUsableFile(info) else {
+            editorState.offerPanelDrop(.refuses, from: owner)
+            return .forbidden
+        }
+        editorState.offerPanelDrop(.accepts(editorState.incomingDropOnTop), from: owner)
+        return .copy
+    }
+}
+
+/// What the panel draws while something is in the air over it, so the only
+/// sign of what is about to happen is not the shape of the pointer.
+///
+/// Two answers, told apart at a glance rather than by reading: a solid accent
+/// edge with a faint wash means the panel will take this, and a dashed red
+/// edge means it will not. The precise slot the picture will take is drawn by
+/// the layers list itself, in the same drop line a dragged row already gets.
+private struct PanelDropAffordance: View {
+    let offer: EditorState.PanelDropOffer?
+
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: 10) }
+
+    @ViewBuilder
+    var body: some View {
+        switch offer {
+        case .accepts:
+            shape
+                .fill(Color.accentColor.opacity(0.07))
+                .overlay { shape.strokeBorder(Color.accentColor, lineWidth: 2) }
+                .padding(3)
+        case .refuses:
+            shape
+                .strokeBorder(Color.red.opacity(0.55),
+                              style: StrokeStyle(lineWidth: 2, dash: [5, 4]))
+                .padding(3)
+        case nil:
+            EmptyView()
+        }
+    }
+}
+
 /// Reorders sections live as a dragged header passes over another section, and
 /// takes a picture let go on the section the way the rest of the window does.
 ///
@@ -646,7 +729,11 @@ private struct SectionDropDelegate: DropDelegate {
     let editorState: EditorState
 
     func dropEntered(info: DropInfo) {
-        guard let dragging, dragging != item,
+        guard let dragging else {
+            offerFile(info)
+            return
+        }
+        guard dragging != item,
               let from = order.firstIndex(of: dragging),
               let to = order.firstIndex(of: item) else { return }
         withAnimation(.spring(duration: 0.25)) {
@@ -656,7 +743,12 @@ private struct SectionDropDelegate: DropDelegate {
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
         if dragging != nil { return DropProposal(operation: .move) }
-        return DropProposal(operation: FileDrop.carriesUsableFile(info) ? .copy : .forbidden)
+        return DropProposal(operation: offerFile(info))
+    }
+
+    func dropExited(info: DropInfo) {
+        guard dragging == nil else { return }
+        editorState.endPanelDrop(from: item)
     }
 
     func performDrop(info: DropInfo) -> Bool {
@@ -664,7 +756,23 @@ private struct SectionDropDelegate: DropDelegate {
             dragging = nil
             return true
         }
-        return FileDrop.accept(info, into: editorState)
+        let landing = editorState.incomingDropOnTop
+        editorState.endPanelDrop(from: item)
+        return FileDrop.accept(info, into: editorState, landingAt: landing)
+    }
+
+    /// Tells the panel what it is about to do with the file in the air, and
+    /// answers the pointer the same thing. A section is not a place in the
+    /// stack, so a picture let go here lands on top — which is what the line
+    /// at the top of the layers list is drawing while this is showing.
+    @discardableResult
+    private func offerFile(_ info: DropInfo) -> DropOperation {
+        guard FileDrop.carriesUsableFile(info) else {
+            editorState.offerPanelDrop(.refuses, from: item)
+            return .forbidden
+        }
+        editorState.offerPanelDrop(.accepts(editorState.incomingDropOnTop), from: item)
+        return .copy
     }
 }
 
@@ -715,7 +823,10 @@ private struct LayerRowDropDelegate: DropDelegate {
     }
 
     func dropEntered(info: DropInfo) {
-        guard dragging != nil else { return }
+        guard dragging != nil else {
+            offerFile(info)
+            return
+        }
         target = proposal(info)
     }
 
@@ -724,24 +835,50 @@ private struct LayerRowDropDelegate: DropDelegate {
         // outside. A row answers for one because nothing behind it can, and it
         // answers the way the rest of the window does: a picture is taken, and
         // anything else shows the no-entry sign.
-        guard dragging != nil else {
-            return DropProposal(operation: FileDrop.carriesUsableFile(info) ? .copy : .forbidden)
-        }
+        guard dragging != nil else { return DropProposal(operation: offerFile(info)) }
         let proposed = proposal(info)
         if target != proposed { target = proposed }
         return DropProposal(operation: proposed == nil ? .forbidden : .move)
     }
 
     func dropExited(info: DropInfo) {
+        guard dragging != nil else {
+            editorState.endPanelDrop(from: row.id)
+            return
+        }
         if target?.targetID == row.id { target = nil }
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        guard dragging != nil else { return FileDrop.accept(info, into: editorState) }
+        guard dragging != nil else {
+            let landing = fileLanding(info)
+            editorState.endPanelDrop(from: row.id)
+            return FileDrop.accept(info, into: editorState, landingAt: landing)
+        }
         defer { dragging = nil; target = nil }
         guard let drop = proposal(info) else { return false }
         editorState.dropRows(ids: carried, drop)
         return true
+    }
+
+    /// Where the picture in the air lands if it is let go on this row now: the
+    /// slot the pointer is pointing at, read the same three ways a row drag is,
+    /// falling back to the top of the stack for a row that cannot take it.
+    private func fileLanding(_ info: DropInfo) -> LayerDrop? {
+        editorState.incomingDropProposal(over: row, pointerY: info.location.y, rowHeight: rowHeight)
+            ?? editorState.incomingDropOnTop
+    }
+
+    /// Tells the panel what it is about to do with the file in the air, and
+    /// answers the pointer the same thing.
+    @discardableResult
+    private func offerFile(_ info: DropInfo) -> DropOperation {
+        guard FileDrop.carriesUsableFile(info) else {
+            editorState.offerPanelDrop(.refuses, from: row.id)
+            return .forbidden
+        }
+        editorState.offerPanelDrop(.accepts(fileLanding(info)), from: row.id)
+        return .copy
     }
 }
 
@@ -1013,7 +1150,11 @@ struct LayersListView: View {
                                                       firstVisibleRow: firstVisibleRow,
                                                       viewportHeight: viewport)
         let thumbnails = editorState.thumbnails(for: Array(displays[window]))
-        let target = dropTarget
+        // One drop line for two kinds of drag: a row being reordered inside
+        // the list, and a picture arriving from outside it. They never happen
+        // at once, and drawing them the same way is the point — the promise a
+        // file gets is the promise the list already made to its own rows.
+        let target = dropTarget ?? editorState.panelDropLanding
         return LazyVStack(spacing: LayerListMetrics.spacing) {
             ForEach(displays) { display in
                 LayersRow(display: display,

@@ -30,13 +30,18 @@ enum FileDrop {
     }
 
     /// Takes the file the drag is carrying. A picture joins the open document
-    /// as a new layer on top; a Photonz document opens.
-    static func accept(_ info: DropInfo, into editorState: EditorState) -> Bool {
+    /// as a new layer; a Photonz document opens.
+    ///
+    /// `landing` is the slot in the layers stack the panel promised while the
+    /// file was still in the air — the one the drop line drew. Nil means land
+    /// the way a drop on the canvas chrome always has, on top of everything.
+    static func accept(_ info: DropInfo, into editorState: EditorState,
+                       landingAt landing: LayerDrop? = nil) -> Bool {
         guard carriesUsableFile(info),
               let provider = info.itemProviders(for: [.fileURL]).first else { return false }
         Task { @MainActor in
             guard let url = await fileURL(from: provider) else { return }
-            editorState.addImageLayerOrOpen(at: url)
+            editorState.addImageLayerOrOpen(at: url, landingAt: landing)
         }
         return true
     }

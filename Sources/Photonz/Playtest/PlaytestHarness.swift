@@ -538,6 +538,11 @@ private final class Run {
                 await sleep(0.05)
             }
             let landing = canvas.dropLandingDescription
+            // What the RIGHT HAND PANEL is promising, read before the drag is
+            // told to leave: the pointer's own sign lives in the window server
+            // and cannot be photographed, so the panel's promise is the thing
+            // a walk can actually write down.
+            let promise = panelPromise()
             var held = ""
             if let hold, let content = window.contentView {
                 try snapshot(content, name: hold)
@@ -563,6 +568,7 @@ private final class Run {
                 ?? "no landing box"
             note(number, step.name,
                  "\(url.lastPathComponent) held over \(short(at.point)) \(at.space.rawValue): \(answer), \(shown)"
+                    + ", \(promise)"
                     + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)\(landed)",
                  state: describe())
 
@@ -2103,6 +2109,28 @@ private final class Run {
     private static func describe(paint: Paint?) -> String {
         guard let paint else { return "none" }
         return paint.isGradient ? "\(paint.hex) \(paint.kind.rawValue)" : paint.hex
+    }
+
+    /// What the right hand panel is saying it will do with the thing in the
+    /// air, in the words its own border and drop line are drawing. This is the
+    /// half of a drag a walk can record: the pointer's sign cannot be
+    /// photographed, but the promise that decides it can be read.
+    private func panelPromise() -> String {
+        guard let editor, let offer = editor.panelDropOffer else {
+            return "the panel says nothing"
+        }
+        switch offer {
+        case .refuses:
+            return "the panel says it will refuse this"
+        case .accepts(let drop):
+            guard let drop else { return "the panel will take it into a window of its own" }
+            let name = editor.document?.layer(id: drop.targetID)?.name ?? "a layer"
+            return switch drop {
+            case .above: "the panel will put it in front of \"\(name)\""
+            case .below: "the panel will put it behind \"\(name)\""
+            case .inside: "the panel will put it inside \"\(name)\""
+            }
+        }
     }
 
     private func describe() -> [String: Any] {

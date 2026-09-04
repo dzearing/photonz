@@ -222,9 +222,35 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   right of the screen, and carries its own Edit row (AGENTS.md, GLOBAL
   surfaces).
 
+### What a surface looks like while something is held over it
+
+Added 2026-09-04 (audit `2026-09-04-panel-shows-landing`). Every surface that
+takes a drop answers the same two questions BEFORE the user lets go, and it
+answers them on screen, never only in the shape of the pointer. The pointer's
+sign lives in the window server: it cannot be looked at closely, it cannot be
+photographed, and on a big surface it is nowhere near the thing that is about
+to change.
+
+- **Will you take this?** The surface that will take the drop draws an accent
+  edge around itself and a faint accent wash inside it. The surface that will
+  REFUSE it draws a dashed warning edge and no wash. Two answers, told apart at
+  a glance rather than by reading.
+- **Where exactly will it go?** Whatever precision the surface has, it draws.
+  A canvas draws the box the thing will fill. A list draws the same insertion
+  line it already draws for its own rows: a line above or below a row for a
+  slot in that list, an outline around a row for landing inside it. A surface
+  with no finer answer than "somewhere in here" draws only the edge.
+- **The promise is kept, exactly.** Whatever is drawn is where the thing lands.
+  A surface that cannot honour a precise promise must make a coarser one rather
+  than a prettier lie: a picture that will really land on top of the stack draws
+  its line at the top of the stack even while the pointer is halfway down.
+- **The edge is not the answer on its own.** A surface that can say where must
+  say where. The edge says the surface is live; the line says what happens.
+
 Audit failing examples: a component catalog rendered as a bespoke centered card
 with no dock and no open/close affordance; a panel that grows the window instead
-of scrolling inside its group; a page that only works wide. Correct: a `.dgrp` in
+of scrolling inside its group; a page that only works wide; a dock that takes a
+dropped file with no sign at all that it was going to. Correct: a `.dgrp` in
 the dock, or a `.sheet.down` overlay.
 
 ---

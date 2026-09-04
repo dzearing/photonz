@@ -1,0 +1,32 @@
+{
+  "feature": "The right hand panel shows where a dragged picture will land",
+  "epic": "ui-building",
+  "summary": "Hold a picture over the right hand panel and the panel now says what it is about to do: an accent edge around the whole panel means it will take it, and a line in the Layers list shows the exact slot it will take. Let go and it lands there, including partway down the stack or inside a screen, instead of always going on top. A file the app cannot use draws a dashed red edge instead, so the refusal is visible without reading the pointer.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: Group what you selected and Build on a frame are already on. You need a Finder window beside Photonz with a PNG and a text file in it.",
+  "try": [
+    { "do": "Open a picture, press F and drag a frame out over the middle of the canvas, then drop two more pictures on the canvas either side of it." },
+    { "do": "Drag a PNG out of the Finder and hold it over the Layers section header. An accent edge wraps the panel and a line appears above the top row.", "shot": "2026-09-04-panel-shows-landing-1-on-top.png" },
+    { "do": "Without letting go, slide down onto a layer row and stop near its top edge, then near its bottom edge. The line follows you from one slot to the next.", "shot": "2026-09-04-panel-shows-landing-2-between-rows.png" },
+    { "do": "Slide onto the middle of the Frame row. The line becomes an outline around that row: the picture is going inside the screen.", "shot": "2026-09-04-panel-shows-landing-3-inside-a-frame.png" },
+    { "do": "Let go there. The frame twists open and the picture is inside it, centred, selected.", "shot": "2026-09-04-panel-shows-landing-5-landed.png" },
+    { "do": "Drag a text file over the same panel. The edge turns dashed and red, and no line is drawn.", "shot": "2026-09-04-panel-shows-landing-4-refused.png" },
+    { "do": "Drag a PNG over the empty space below every section and watch which row lights up before you let go.", "shot": null },
+    { "do": "Drag a PNG over the picture itself. The canvas draws its landing box exactly as it did before and the panel stays quiet." }
+  ],
+  "evaluate": [
+    "Is the accent edge around the whole panel the right weight, or does it shout louder than the line that carries the actual answer?",
+    "Dashed red for a file the app cannot use: right, or too alarming for something you are only hovering?",
+    "When you aim at a slot partway down the stack, does the line land where your eye expects, or do you overshoot?",
+    "Holding a picture over the empty space at the bottom lights up a row at the TOP of the panel, because that is genuinely where it will land. Does that read as helpful, or as the wrong thing blinking?",
+    "Letting a picture go on a row now slots it in at that row instead of putting it on top. Is that the behavior you wanted, or did you prefer always-on-top?"
+  ],
+  "rough": [
+    "The panel's promise can be a long way from the pointer. With a frame under the middle of the canvas, a picture held anywhere on the panel that is not a row lands INSIDE that frame, so the frame's row outlines itself while your pointer is 700 points below it. It is honest, and it is the one case worth knowing about before you let go, but the eye has to travel.",
+    "If you collapse the Layers section, or scroll the row the promise points at out of the list's own scroller, only the panel edge is drawn and the exact slot is not. The edge still says the panel will take it.",
+    "Dropping several files at once still places only the first, and the panel still draws one line for them. That was already true and is now more visible.",
+    "A section header, Position & Size, the Library, the empty space below them: none of these is a place in the stack, so all of them promise the same thing, the top of the stack (or the frame under the middle of the canvas). Only rows are precise.",
+    "The panel affordance lives in the shared inspector, so Current shows it too. Forking the whole panel to hold one drag affordance back from Current would cost far more than it protects, and is the same call the canvas drop preview made on 2026-09-03.",
+    "Screen Recording was granted for this run, so every picture above is the real window taken by Scripts/playtest/panel-shows-landing-walk.json, not an offscreen render.",
+    "A scripted walk cannot make a frame with Layer > Frame Selection: that step hangs the harness and never finishes. The walk draws its frame with the frame tool instead. Filed as its own task."
+  ]
+}
