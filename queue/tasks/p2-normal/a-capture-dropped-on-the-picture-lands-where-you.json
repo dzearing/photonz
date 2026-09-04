@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 990,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T00:38:16.399Z",
-  "updated": "2026-09-04T00:39:24.408Z",
+  "updated": "2026-09-04T00:50:16.858Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the panel-reach walk on 2026-09-03. PhotonzDocument.placementForIncomingImage (Sources/PhotonzCore/Clipboard.swift:73) ignores the drop point entirely when there is no frame under it: it returns PastePlacement.frame(forImageOf:canvas:), which centres and fits. With a frame under the point it DOES honour the point (clamped to the frame). So the fix is the no-frame branch. Reproduce: Scripts/playtest.sh with a dragTile step onto a blank canvas; the layer reads X 412 Y 0 W 617 H 1024 for a drop aimed at 500,400.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-04T00:49:58.293209Z",
       "note": "Review after building: the only thing that still feels clumsy is that nothing is drawn while the picture is in the air, so its size is a surprise until you let go. Filed as you-can-see-where-a-dragged-picture-will-land-be rather than bundled in."
+    },
+    {
+      "t": "2026-09-04T00:50:16.857Z",
+      "note": "A dropped capture now lands centred on the point you let go of, on bare canvas as well as on a screen: one placement rule (fit to the box under the pointer, centre on it, nudge wholly inside) in PhotonzDocument.placementForIncomingImage. Verified live on the probe with Scripts/playtest/drop-lands-here-walk.json (shelf tile, Finder file, canvas edge, oversized capture) plus 2575 unit tests. Audit: queue/audits/2026-09-04-drop-lands-here.json. Pushed as c04543d."
     }
   ],
-  "started": "2026-09-04T00:39:24.408Z"
+  "started": "2026-09-04T00:39:24.408Z",
+  "completed": "2026-09-04T00:50:16.858Z"
 }
