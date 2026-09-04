@@ -1,0 +1,28 @@
+{
+  "feature": "The layers panel only makes pictures for the rows you can see",
+  "epic": "ui-components",
+  "summary": "A document with a hundred layers used to start a hundred small renders to fill a list showing five of them. It now asks for ten: the rows on screen plus four off each edge, and four more each time you scroll a screenful. Nothing looks different, it just stops costing the whole document to open one.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. Any document with more layers than the layers area shows at once will do.",
+  "try": [
+    { "do": "Open a picture, draw one rectangle, then hold Command D until the layers list is a hundred rows long." },
+    { "do": "Look at the Layers area: five rows, every one of them with a picture beside the name.", "shot": "2026-09-04-layer-thumbnails-1-hundred.png" },
+    { "do": "Scroll the layers list down one screenful at a time with the trackpad and watch the pictures arrive." },
+    { "do": "Keep going to the very bottom of the list, past Background.", "shot": "2026-09-04-layer-thumbnails-2-bottom.png" },
+    { "do": "Scroll all the way back up to the top." },
+    { "do": "Now flick the list hard from top to bottom in one throw and watch what the rows show mid-flight." },
+    { "do": "Drag the grabber under the layers list down to make the area tall, and scroll it again." }
+  ],
+  "evaluate": [
+    "Scrolling at the speed you would normally read a list, did every row already have its picture?",
+    "On the hard flick, did anything read as broken, or just as a list catching up?",
+    "Coming back up over rows you had already passed, did any picture have to be made again?",
+    "With the layers area dragged tall, does it still fill in as readily as the short one?",
+    "Does the panel feel any different from before at all? It should not."
+  ],
+  "rough": [
+    "Measured on the probe, not guessed: with every picture thrown away, a ten layer document asks for 10 and a hundred layer document asks for 10 as well. Walking the whole hundred row list top to bottom asked for 101 pictures in total, one per layer, none twice, and walking back up asked for none.",
+    "The runway is four rows past each edge, about one screenful of the panel at its resting height. A slow scroll never outruns it. A hard flick can, and those rows show their empty slot for the moment it takes the picture to arrive. Making the runway bigger trades that moment back for renders nobody looks at, so it is set where it is on purpose.",
+    "The pictures are kept once made, so this only ever costs you the first pass down a list.",
+    "The layers panel is shared between the two releases, so this lands in Current as well as Next. It changes no behaviour, only how much work the panel starts."
+  ]
+}

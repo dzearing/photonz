@@ -849,6 +849,10 @@ struct LayersListView: View {
     /// which of "inside this group" and "next to it" is about to happen.
     @State private var dropTarget: LayerDrop?
     @State private var rowHeight: CGFloat = 38
+    /// The row at the top of the visible area. Only the rows around it get a
+    /// picture made for them, so opening a document with a hundred layers
+    /// costs the same handful of renders as opening one with ten.
+    @State private var firstVisibleRow = 0
     @FocusState private var renameFieldFocused: Bool
 
     /// The layer area's max height (user-resizable, persisted). Beyond this the
@@ -883,12 +887,25 @@ struct LayersListView: View {
         let natural = LayerListMetrics.naturalHeight(rowCount: displays.count,
                                                      rowHeight: rowHeight,
                                                      canvasRowHeight: canvasRowHeight)
+        // The height the list is actually given, which is also the height of
+        // the window of rows worth drawing pictures for.
+        let viewport = min(natural, maxHeight)
         return VStack(spacing: 0) {
             ScrollView(.vertical) {
-                rows(displays)
+                rows(displays, viewport: viewport)
             }
-            .frame(height: min(natural, maxHeight))
+            .frame(height: viewport)
             .scrollBounceBehavior(.basedOnSize)
+            // Which row is at the top, watched as a ROW rather than as an
+            // offset: the action then fires once per row you scroll past
+            // instead of once per frame, which is what keeps this cheap.
+            .onScrollGeometryChange(for: Int.self) { geometry in
+                LayerListMetrics.firstVisibleRow(
+                    scrollOffset: geometry.contentOffset.y + geometry.contentInsets.top,
+                    rowHeight: rowHeight)
+            } action: { _, row in
+                firstVisibleRow = row
+            }
 
             multiSelectionCount
             resizeHandle(natural: natural)
@@ -934,7 +951,7 @@ struct LayersListView: View {
     /// keeps it after that, so opening a hundred-layer document costs the five
     /// rows the panel is showing, not a hundred context menus, drop delegates
     /// and gesture recognisers nobody is looking at.
-    private func rows(_ displays: [LayerRowDisplay]) -> some View {
+    private func rows(_ displays: [LayerRowDisplay], viewport: CGFloat) -> some View {
         // The twist column appears only once there is something to twist open,
         // so a document with no groups is the list it always was.
         let showsTwist = Experiments.shared.layersListShowsGroups && displays.contains { $0.row.isGroup }
@@ -944,7 +961,17 @@ struct LayersListView: View {
         // these flip.
         let canMakeComponent = componentsEnabled && editorState.canMakeComponent
         let canDetachInstance = componentsEnabled && editorState.canDetachInstance
-        let thumbnails = editorState.thumbnails(for: displays)
+        // Pictures for the rows you can see and a few off each edge, NOT for
+        // the ninety behind them: every one is a real render, so asking for
+        // all of them is most of the cost of opening a big document and none
+        // of the benefit. Rows outside the window draw their placeholder until
+        // they come near, and the cache keeps every picture once it lands, so
+        // scrolling back over ground you have covered asks for nothing.
+        let window = LayerListMetrics.thumbnailWindow(rowCount: displays.count,
+                                                      rowHeight: rowHeight,
+                                                      firstVisibleRow: firstVisibleRow,
+                                                      viewportHeight: viewport)
+        let thumbnails = editorState.thumbnails(for: Array(displays[window]))
         let target = dropTarget
         return LazyVStack(spacing: LayerListMetrics.spacing) {
             ForEach(displays) { display in

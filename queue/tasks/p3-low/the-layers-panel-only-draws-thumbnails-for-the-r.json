@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 1060,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T04:18:23.092Z",
-  "updated": "2026-09-04T04:19:10.499Z",
+  "updated": "2026-09-04T08:52:50.100379Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the lazy-rows work merged 2026-09-04. EditorState.thumbnails(for:) walks every row of LayersListView.rows and calls thumbnail(for:), which kicks off a detached render per uncached layer. The rows themselves are lazy now (LazyVStack), but the thumbnail gather is not: it is computed in the list body over the whole displays array. Needs the visible row window, which is derivable from the scroll offset (.onScrollGeometryChange) plus LayerListMetrics row stride, with a generous buffer each side so a fast scroll does not outrun the renders. Deliberately left out of the lazy-rows task because a grey square flashing past is a visible regression traded for an invisible win, so it needs its own measurement. ViewBuildMeter (probe only) is the pattern for proving it: add a thumbnailRequest subject and count.",
@@ -26,6 +26,47 @@
     {
       "t": "2026-09-04T04:19:10.498Z",
       "note": "priority p2-normal -> p3-low"
+    },
+    {
+      "t": "2026-09-04T08:38:54.898Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T08:52:50.100379Z",
+      "note": "Adversarial review before building. The mock is not the problem here, the trade is: the win (a hundred renders a document does not need) is invisible and the regression (a grey square flashing past under your thumb) is visible, so the buffer decides whether this is worth doing at all. Rejected the alternative of letting each row ask for its own picture: a row that reads the cache becomes an observer of it, so every picture that lands would redraw every row, which is worse than what we started with. Kept the list gathering them in one pass and narrowed WHAT it gathers."
+    },
+    {
+      "t": "2026-09-04T08:52:50.100379Z",
+      "note": "Shortest version that delivers the value: one arithmetic function in PhotonzCore (which rows are near the screen) plus one scroll watcher in the panel. No new state on EditorState, no eviction, no prefetch queue. The cache is still never thrown away, so this only costs the first pass down a list."
+    },
+    {
+      "t": "2026-09-04T08:52:50.100379Z",
+      "note": "PhotonzCore: LayerListMetrics.firstVisibleRow(scrollOffset:rowHeight:) and thumbnailWindow(rowCount:rowHeight:firstVisibleRow:viewportHeight:), buffer thumbnailBufferRows = 4. Ten tests written first in Tests/PhotonzCoreTests/LayerListMetricsTests.swift, including one that unions the window over every scroll position and proves all hundred and twenty rows are reachable."
+    },
+    {
+      "t": "2026-09-04T08:52:50.100379Z",
+      "note": "LayersPanel: LayersListView watches the scroll geometry AS A ROW INDEX, not as an offset, so the action fires once per row you scroll past instead of once per frame. rows(_:viewport:) slices displays by the window before calling editorState.thumbnails(for:). Viewport is min(natural, maxHeight), which the view already computes for the frame, so no extra state."
+    },
+    {
+      "t": "2026-09-04T08:52:50.100379Z",
+      "note": "Probe instrumentation: ViewBuildMeter gains a layerThumbnail subject, counted at the point a detached render is actually started (inside the in-flight guard) so it counts real work, not view body reruns. New probe-only action forgetThumbnails plus EditorState.forgetLayerThumbnails(), because adopting a document is the moment worth measuring and the app has no way to reopen a hundred layer document from a walk."
+    },
+    {
+      "t": "2026-09-04T08:52:50.100379Z",
+      "note": "Measured on the probe (Scripts/playtest/layers-thumbnail-window-walk.json, Screen Recording granted so the shots are real captures): with the cache emptied, a TEN layer document asks for 10 pictures and a HUNDRED layer document asks for 10 as well. Acceptance 1 met literally, not in spirit."
+    },
+    {
+      "t": "2026-09-04T08:52:50.100379Z",
+      "note": "Crawling the whole hundred row list a screenful at a time asked for 8 new pictures per screenful and 101 in total, one per layer, none twice. Crawling back up asked for zero. The bottom capture shows Rectangle 4 down to Background all carrying their picture, no empty slots. Acceptance 2 and 3 met."
+    },
+    {
+      "t": "2026-09-04T08:52:50.100379Z",
+      "note": "Adversarial review of the built thing: a slow read-speed scroll never outruns the four row runway; a hard flick does, and those rows show an empty slot for the moment the render takes. Recorded in the audit rough rather than papered over, because a bigger buffer buys that moment back with renders nobody looks at. LayersPanel.swift is shared, so this lands in Current as well as Next; it changes no behaviour, only how much work the panel starts, so no fork."
+    },
+    {
+      "t": "2026-09-04T08:52:50.100379Z",
+      "note": "Scripts/test.sh green: 2842 tests, 255 suites. Audit at queue/audits/2026-09-04-layer-thumbnails.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-04T08:38:54.898Z"
 }

@@ -202,6 +202,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// pressing Return in it does. A sheet cannot be typed into from a walk,
     /// so this is how a walk proves where the canvas lands.
     case createCanvas
+    /// Throw away every picture the layers panel has made, so the next line
+    /// measures what a document costs to open COLD. Nothing a person can do,
+    /// and nothing the shipping app carries: it is the one moment worth
+    /// measuring (a window adopting a document empties the same cache) made
+    /// reachable without saving and reopening a hundred layer file.
+    case forgetThumbnails
     /// ⌘G and ⇧⌘G are menu chords too.
     case group, ungroup
     /// Layer ▸ Stack Selection and Grid Selection (Next, `next-auto-layout`):

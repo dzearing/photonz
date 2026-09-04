@@ -18,6 +18,10 @@ final class ViewBuildMeter {
     /// The things worth counting. One case per list that claims to be lazy.
     enum Subject: String {
         case layersRow
+        /// Every time the layers list asks for a picture of a layer. The list
+        /// asks only for the rows near the screen, and "near" is not something
+        /// a screenshot can show either.
+        case layerThumbnail
     }
 
     private var counts: [Subject: Int] = [:]

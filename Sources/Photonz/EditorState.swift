@@ -5285,6 +5285,12 @@ final class EditorState {
             Task { @MainActor [weak self] in
                 guard let self, !self.thumbnailsInFlight.contains(hash) else { return }
                 self.thumbnailsInFlight.insert(hash)
+                // One count per render actually started, so a walk can say
+                // whether opening a hundred layer document costs a hundred
+                // renders or the handful the panel is showing. Probe only.
+                #if PHOTONZ_PLAYTEST
+                ViewBuildMeter.shared.built(.layerThumbnail)
+                #endif
                 let image = await Task.detached(priority: .utility) {
                     renderer.thumbnail(for: id, in: doc, store: store, maxDimension: 80)
                 }.value
@@ -5312,6 +5318,16 @@ final class EditorState {
         }
         return out
     }
+
+    #if PHOTONZ_PLAYTEST
+    /// Forget every picture the panel has made. Adopting a document does this
+    /// too, so a walk can use it to measure what a big document costs to open
+    /// without having to save and reopen one.
+    func forgetLayerThumbnails() {
+        thumbnailCache = [:]
+        thumbnailsInFlight = []
+    }
+    #endif
 
     /// The Library shelf's picture of a component, sharp enough to be blown up
     /// and cropped in a tile. Same render path as the panel row thumbnail,

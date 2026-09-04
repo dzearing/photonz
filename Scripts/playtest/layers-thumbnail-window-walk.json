@@ -1,0 +1,1112 @@
+{
+ "out": "/tmp/photonz-playtest/layers-thumbnail-window",
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1440,
+   "canvasHeight": 1024,
+   "width": 1240,
+   "height": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    60,
+    60
+   ],
+   "to": [
+    140,
+    140
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "describe",
+   "stage": "ten",
+   "note": "ten layers. The next line throws away every picture the panel has made, which is exactly what opening a document does, so the count on it is what a ten layer document costs to open."
+  },
+  {
+   "do": "action",
+   "action": "forgetThumbnails"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "panel",
+   "stage": "ten"
+  },
+  {
+   "do": "snapshot",
+   "name": "ten"
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.06
+  },
+  {
+   "do": "wait",
+   "seconds": 2.5
+  },
+  {
+   "do": "describe",
+   "stage": "hundred",
+   "note": "a hundred layers now, same panel, same five rows on screen. The count on the next line is the whole point of this task: it should read like the ten layer one, not ten times it."
+  },
+  {
+   "do": "action",
+   "action": "forgetThumbnails"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "panel",
+   "stage": "hundred"
+  },
+  {
+   "do": "snapshot",
+   "name": "hundred"
+  },
+  {
+   "do": "describe",
+   "stage": "crawl",
+   "note": "down the list a screenful at a time. Each line says how many new pictures that screenful asked for: a handful each time is the window moving with you."
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "scrollPanel",
+   "by": -160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "panel",
+   "stage": "bottom"
+  },
+  {
+   "do": "snapshot",
+   "name": "bottom"
+  },
+  {
+   "do": "describe",
+   "stage": "bottom",
+   "note": "the bottom of the list. Every row here should be showing its picture, not a grey square."
+  },
+  {
+   "do": "describe",
+   "stage": "back-up",
+   "note": "and back up over ground already covered: a picture once made is kept, so these lines should ask for almost nothing."
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "scrollPanel",
+   "by": 160
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "panel",
+   "stage": "top-again"
+  },
+  {
+   "do": "snapshot",
+   "name": "top-again"
+  }
+ ]
+}

@@ -688,6 +688,7 @@ private final class Run {
             case .copyImage: editor.copyCompositeToClipboard()
             case .hideAllMeasurements: editor.setAllMeasurementsVisible(false)
             case .showAllMeasurements: editor.setAllMeasurementsVisible(true)
+            case .forgetThumbnails: editor.forgetLayerThumbnails()
             case .hideInspector: editor.setInspectorVisible(false)
             case .showInspector: editor.setInspectorVisible(true)
             case .zoomIn: editor.zoomIn()
