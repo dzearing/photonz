@@ -465,9 +465,11 @@ struct LayerPlacementTests {
     /// The plate, arranged, so "who is not following" can be asked of a group
     /// that has already decided one of the two answers itself.
     private func arrangedPlate(_ layout: GroupLayout?,
+                               contentsAcross: Bool = false,
                                background: LayerPlacement? = nil,
                                label: LayerPlacement? = nil) -> Layer {
-        var layer = plate(background: background, label: label)
+        var layer = plate(contents: contentsAcross ? LayerPlacement(horizontal: .stretch) : nil,
+                          background: background, label: label)
         if case .group(var content) = layer.content {
             content.layout = layout
             layer.content = .group(content)
@@ -517,6 +519,94 @@ struct LayerPlacementTests {
         let group = arrangedPlate(grid, label: LayerPlacement(vertical: .bottom))
         #expect(group.contentsWithTheirOwnPlacement(arrangement: grid).first?.summary
                     == "Bottom down")
+    }
+
+    // MARK: - The surface behind a stack is not one of its rows
+
+    @Test("The surface behind a stack says it is the surface, not a row like the others")
+    func theSurfaceInAStackSaysSo() {
+        // Stretched both ways, this piece steps out of the flow entirely: it is
+        // painted to the group's own edges and measured by nobody. Summarised
+        // by the live axis alone it read "Stretch across", which is exactly
+        // what an ordinary row that fills the width reads, so the one piece
+        // that is NOT a row looked like every other row.
+        let column = GroupLayout(kind: .stack, direction: .column)
+        let group = arrangedPlate(column, background: LayerPlacement.fill)
+        let overrides = group.contentsWithTheirOwnPlacement(arrangement: column)
+        #expect(overrides.map(\.name) == ["Background"])
+        #expect(overrides.first?.isSurface == true)
+        #expect(overrides.first?.summary == "Surface behind the rest")
+    }
+
+    @Test("A row stack and a grid name their surface the same way")
+    func everyArrangementNamesItsSurface() {
+        for layout in [GroupLayout(kind: .stack, direction: .row), GroupLayout(kind: .grid)] {
+            let group = arrangedPlate(layout, background: LayerPlacement.fill)
+            let overrides = group.contentsWithTheirOwnPlacement(arrangement: layout)
+            #expect(overrides.first?.summary == "Surface behind the rest")
+        }
+    }
+
+    @Test("A piece that stretches only across a column stack is still an ordinary row")
+    func stretchingOneWayIsStillARow() {
+        let column = GroupLayout(kind: .stack, direction: .column)
+        let group = arrangedPlate(column, background: LayerPlacement(horizontal: .stretch))
+        let overrides = group.contentsWithTheirOwnPlacement(arrangement: column)
+        #expect(overrides.first?.isSurface == false)
+        #expect(overrides.first?.summary == "Stretch across")
+    }
+
+    @Test("A group that arranges nothing describes the same piece exactly as it did")
+    func aGroupThatArrangesNothingIsUnchanged() {
+        let group = plate(background: LayerPlacement.fill)
+        let overrides = group.contentsWithTheirOwnPlacement(arrangement: nil)
+        #expect(overrides.first?.isSurface == false)
+        #expect(overrides.first?.summary == "Stretch both ways")
+    }
+
+    @Test("A piece the group's own default turns into the surface is listed too")
+    func theGroupsDefaultCanMakeASurface() {
+        // Half its rule and half the group's: the group stretches everything
+        // across, this piece adds the down. Dropping the owned axis left it
+        // with no rule of its own to show and it fell off the list, which is
+        // the one piece in the group that most needs naming.
+        let column = GroupLayout(kind: .stack, direction: .column)
+        let group = arrangedPlate(column, contentsAcross: true,
+                                  background: LayerPlacement(vertical: .stretch))
+        let overrides = group.contentsWithTheirOwnPlacement(arrangement: column)
+        #expect(overrides.map(\.name) == ["Background"])
+        #expect(overrides.first?.summary == "Surface behind the rest")
+    }
+
+    @Test("The flow owns neither direction of the piece it is not arranging")
+    func theFlowDoesNotOwnTheSurface() {
+        // The stack decides where its rows sit down the page, and the surface
+        // is not one of them, so both of its rows stay live: setting one of
+        // them to something else is exactly how it stops being the surface.
+        let column = GroupLayout(kind: .stack, direction: .column)
+        let flow = PlacementEditing(arrangement: column, placing: LayerPlacement
+            .resolving(child: LayerPlacement.fill, container: nil))
+        #expect(flow.canSetHorizontal)
+        #expect(flow.canSetVertical)
+        #expect(flow.setByTheFlow == nil)
+        #expect(flow.flowNoun == nil)
+        // And the Stretch sitting on the axis the stack would own is not a
+        // leftover doing nothing: it is what makes this the surface, so the
+        // row must not offer to clear it as tidying up.
+        #expect(flow.inertRule(in: LayerPlacement.fill) == nil)
+    }
+
+    @Test("A row in the stack still hands the stack its direction")
+    func theFlowStillOwnsAnOrdinaryRow() {
+        let column = GroupLayout(kind: .stack, direction: .column)
+        let row = LayerPlacement(horizontal: .stretch, vertical: .bottom)
+        let flow = PlacementEditing(arrangement: column,
+                                    placing: LayerPlacement.resolving(child: row,
+                                                                      container: nil))
+        #expect(flow.canSetHorizontal)
+        #expect(!flow.canSetVertical)
+        #expect(flow.setByTheFlow == PlacementEditing.stackTitle)
+        #expect(flow.inertRule(in: row) == "Bottom")
     }
 
     // MARK: - Clearing the rule that stopped mattering

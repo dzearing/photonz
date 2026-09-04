@@ -1,0 +1,212 @@
+{
+  "out": "/tmp/photonz-playtest/surface-in-a-stack",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        60
+      ],
+      "to": [
+        340,
+        220
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        140,
+        90
+      ],
+      "to": [
+        300,
+        120
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        140,
+        150
+      ],
+      "to": [
+        300,
+        190
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        110,
+        210
+      ]
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionAcross"
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionDown"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        110,
+        210
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        105
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        170
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-group",
+      "note": "the column stack selected: the piece stretched both ways is the surface behind the other two, and the list at the foot of Layout must say so instead of Stretch across"
+    },
+    {
+      "do": "snapshot",
+      "name": "surface-1-group"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstOwnRule"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-the-surface",
+      "note": "the surface itself: both its rows must be live menus, no Clear Stretch offered, and the caption must say it is the surface behind the rest"
+    },
+    {
+      "do": "snapshot",
+      "name": "surface-2-the-surface"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        110,
+        210
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        105
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        170
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-free-group",
+      "note": "the same three pieces in a group that arranges nothing: the list must read Stretch both ways exactly as it always has, because there is no flow here for the surface to be mistaken for a row in"
+    },
+    {
+      "do": "snapshot",
+      "name": "surface-3-free-group"
+    }
+  ]
+}

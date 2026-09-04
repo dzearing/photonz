@@ -56,7 +56,12 @@ struct PlacementInspector: View {
         // The axis the container's own flow runs along is its answer, not this
         // layer's, so that row says who owns it rather than offering a menu
         // that changes nothing. The same rule the group's own rows use below.
-        let flow = PlacementEditing(arrangement: arrangement(of: container))
+        // ...unless the flow is not arranging this layer at all. Stretched both
+        // ways, it is the surface behind everything the flow lays out, painted
+        // to the group's own edges, so neither of its directions belongs to the
+        // stack and both rows stay live.
+        let arranges = arrangement(of: container)?.arranges == true
+        let flow = PlacementEditing(arrangement: arrangement(of: container), placing: resolved)
         // What this layer still says on the axis the flow took over, so the row
         // that owns it can offer to take it off.
         let stale = flow.inertRule(in: current.placement)
@@ -111,7 +116,7 @@ struct PlacementInspector: View {
                     editorState.setPlacement(id: current.id, vertical: nil)
                 }
             }
-            Text(childCaption(resolved, flow, stale: stale))
+            Text(childCaption(resolved, flow, stale: stale, arranges: arranges))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -122,6 +127,12 @@ struct PlacementInspector: View {
     /// the Contents rows can offer to clear it the same way a layer's do.
     private func contentsInertRule(_ flow: PlacementEditing) -> String? {
         flow.inertRule(in: current.group?.contentPlacement)
+    }
+
+    /// The word beside a listed piece, which for the surface is a plainer
+    /// sentence than a pair of directions and reads better a shade quieter.
+    private func exceptionStyle(_ exception: PlacementOverride) -> AnyShapeStyle {
+        exception.isSurface ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.secondary)
     }
 
     /// How a group arranges its contents, or nil where it arranges nothing —
@@ -137,7 +148,16 @@ struct PlacementInspector: View {
     private var isOnAScreen: Bool { container?.isFrame == true }
 
     private func childCaption(_ resolved: ResolvedPlacement, _ flow: PlacementEditing,
-                              stale: String?) -> String {
+                              stale: String?, arranges: Bool) -> String {
+        // The one layer in an arranged group that is not being arranged. Left
+        // unsaid, its rows read like any other layer's while it is doing
+        // something else entirely, and the Stretch that puts it there looks
+        // like a leftover worth clearing.
+        if arranges, resolved.isSurface {
+            return "Stretch both ways makes this the surface behind the rest, painted to the "
+                + "group's own edges instead of being lined up with the others. Change either "
+                + "one and it becomes one of them again."
+        }
         // A rule sitting on the axis the flow took over is the one thing on
         // these rows nobody expects, so when there is one it is what the
         // caption talks about: saying "following the group" over a row that is
@@ -174,7 +194,7 @@ struct PlacementInspector: View {
     private var contentRows: some View {
         let effective = current.contentPlacementDefault
         let arrangement = arrangement(of: current)
-        let flow = PlacementEditing(arrangement: arrangement)
+        let flow = PlacementEditing(arrangement: arrangement, placing: effective)
         return VStack(alignment: .leading, spacing: 6) {
             Text("Contents of \(current.name)")
                 .font(.caption)
@@ -318,7 +338,7 @@ struct PlacementInspector: View {
                 Spacer(minLength: 8)
                 Text(exception.summary)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(exceptionStyle(exception))
                     .lineLimit(1)
                 Image(systemName: "chevron.right")
                     .font(.caption2)

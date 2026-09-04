@@ -254,6 +254,21 @@ public struct PlacementEditing: Hashable, Sendable {
     /// the container's own layout when this is one layer's row, and the
     /// group's own layout when it is the row for everything inside it. Nil for
     /// a group that arranges nothing, so both axes stay live.
+    /// The same question asked of ONE piece, which the flow may not be
+    /// arranging at all.
+    ///
+    /// A piece stretched both ways is the surface behind the rest: it steps out
+    /// of the flow, is measured by nobody and is painted to the container's own
+    /// edges. So the flow decides neither of its directions, and both of its
+    /// rows stay live — setting one of them to something else is exactly how it
+    /// stops being the surface and becomes a piece being arranged again.
+    ///
+    /// `resolved` is that piece's answer once its own rule and the container's
+    /// default are put together, or nil to ask about the flow on its own.
+    public init(arrangement: GroupLayout?, placing resolved: ResolvedPlacement?) {
+        self.init(arrangement: resolved?.isSurface == true ? nil : arrangement)
+    }
+
     public init(arrangement: GroupLayout?) {
         guard let arrangement, arrangement.kind == .stack else {
             canSetHorizontal = true
@@ -301,19 +316,29 @@ public struct PlacementOverride: Identifiable, Hashable, Sendable {
     /// container on that axis, so at least one of the two is always set.
     public let horizontal: HorizontalPlacement?
     public let vertical: VerticalPlacement?
+    /// True where this piece is the surface behind everything the container
+    /// arranges rather than one of the things being arranged.
+    public let isSurface: Bool
 
     public init(id: UUID, name: String,
-                horizontal: HorizontalPlacement?, vertical: VerticalPlacement?) {
+                horizontal: HorizontalPlacement?, vertical: VerticalPlacement?,
+                isSurface: Bool = false) {
         self.id = id
         self.name = name
         self.horizontal = horizontal
         self.vertical = vertical
+        self.isSurface = isSurface
     }
 
     /// What this piece's own rule says, in a few words that fit beside its
     /// name. "Across" and "down" carry the axis so a single word like Stretch
     /// is never ambiguous about which direction it applies to.
     public var summary: String {
+        // In a stack or a grid this is the ONE piece in the list that is not
+        // being arranged, and summarising it by direction hid that: a surface
+        // in a column stack read "Stretch across", word for word what a row
+        // that fills the width reads. So it says what it is instead.
+        if isSurface { return "Surface behind the rest" }
         if horizontal == .stretch, vertical == .stretch { return "Stretch both ways" }
         let across = horizontal.map { "\($0.title) across" }
         let down = vertical.map { "\($0.title) down" }
@@ -336,14 +361,23 @@ extension Layer {
     /// `arrangement` is this group's own layout, or nil for a group that
     /// arranges nothing, in which case every rule counts as it always did.
     public func contentsWithTheirOwnPlacement(arrangement: GroupLayout?) -> [PlacementOverride] {
-        let flow = PlacementEditing(arrangement: arrangement)
+        let arranges = arrangement?.arranges == true
+        let container = group?.contentPlacement
         return children.reversed().compactMap { child in
             guard let placement = child.placement else { return nil }
+            // What the piece really does, which decides whether the flow is
+            // arranging it at all: a piece stretched both ways is the surface
+            // and the flow owns neither of its directions, so a rule sitting
+            // on the direction the flow would have owned still counts — it is
+            // half of what makes this the surface.
+            let resolved = LayerPlacement.resolving(child: placement, container: container)
+            let flow = PlacementEditing(arrangement: arrangement, placing: resolved)
             let horizontal = flow.canSetHorizontal ? placement.horizontal : nil
             let vertical = flow.canSetVertical ? placement.vertical : nil
             guard horizontal != nil || vertical != nil else { return nil }
             return PlacementOverride(id: child.id, name: child.name,
-                                     horizontal: horizontal, vertical: vertical)
+                                     horizontal: horizontal, vertical: vertical,
+                                     isSurface: arranges && resolved.isSurface)
         }
     }
 }

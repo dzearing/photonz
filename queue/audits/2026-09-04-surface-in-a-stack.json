@@ -1,0 +1,28 @@
+{
+  "feature": "The surface behind a stack says it is the surface",
+  "epic": "ui-components",
+  "summary": "In a group that stacks or grids its contents, the piece stretched both ways is no longer described like the rows around it. The list at the foot of Layout calls it the surface behind the rest, and selecting it says so too instead of offering to clear the very rule that puts it there.",
+  "setup": "Photonz Dev, Experiments window, release Next, with Layout (auto layout) on. Any group with a background behind its contents will do; the starter Card is the case this came from.",
+  "try": [
+    { "do": "Draw a rectangle, then two smaller ones on top of it." },
+    { "do": "Click the big one, and set both Horizontal and Vertical to Stretch in the Layout section." },
+    { "do": "Select all three and press Stack." },
+    { "do": "Click the group and read the last line of the Layout section.", "shot": "2026-09-04-surface-in-a-stack-1.png" },
+    { "do": "Click that line to jump to the piece it names.", "shot": "2026-09-04-surface-in-a-stack-2.png" },
+    { "do": "Change its Vertical to Top and watch it drop into the stack as an ordinary row." },
+    { "do": "Set Vertical back to Stretch and watch it go behind everything again." }
+  ],
+  "evaluate": [
+    "Does \"Surface behind the rest\" tell you, without thinking, that this piece is the background and not another row?",
+    "When you land on the surface itself, does the sentence under its two rows explain enough that you know what changing either one will do?",
+    "Is stretching both ways a discoverable way to say \"this is the background\", or would you expect to say it somewhere else entirely?",
+    "The surface's Vertical is a live menu again in a column stack, where every other layer's says \"Set by the stack\". Does that read as correct, or as an inconsistency?",
+    "In a group set to Free the same piece still reads \"Stretch both ways\". Should those two places use the same words?"
+  ],
+  "rough": [
+    "Two words say the same thing in two places: \"Surface behind the rest\" inside a stack or a grid, \"Stretch both ways\" in a group that arranges nothing. Left alone on purpose, because in a Free group there is no flow for the surface to be mistaken for part of, and the caption right above already explains Stretch both ways. If you would rather have one phrase everywhere, say so and it is a one-line change.",
+    "Nothing announces the idea. You only learn that stretching both ways makes a piece the background by doing it and then reading the list, or by landing on the piece. There is no hint on the Stretch menu itself.",
+    "Selecting the surface no longer offers \"Clear Stretch\" on its Vertical row. That button used to be there, described as clearing a leftover that changes nothing, and pressing it would have quietly dropped the background into the stack as a row. It is gone for the surface only; a genuinely dead rule still offers it.",
+    "Screenshots are real window captures from the probe app, not offscreen renders."
+  ]
+}

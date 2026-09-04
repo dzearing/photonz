@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 1210,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:45:33.370Z",
-  "updated": "2026-09-04T17:45:33.371Z",
+  "updated": "2026-09-04T22:01:39.422944Z",
   "deps": [],
   "blockedBy": [],
   "notes": "ArrangementInspector summarises each child by the cross axis only inside a stack, so a child resolving to stretch on both axes reads as Stretch across, identical to the rows around it. ResolvedPlacement.isSurface already knows the answer. Seen on the starter Card after it became a column stack (2026-09-04).",
@@ -22,6 +22,19 @@
     {
       "t": "2026-09-04T17:45:33.371Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T21:50:13.484Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T21:54:08.541817Z",
+      "note": "Pre-build review. Reproduced the claim by reading the path: GroupFlow.placed treats a child whose RESOLVED placement is stretch on both axes as the surface, skips it in arranged(), leaves it out of size(of:), and paints it to the group's whole box. The inspector's exceptions list, though, builds its summary through PlacementEditing, which drops the axis the stack owns, so that child reads 'Stretch across' beside rows that really are in the stack. Confirmed. Two findings beyond the ticket, on the same screen: (1) select the background itself and its Vertical row says 'Set by the stack' and offers 'Clear Stretch' with the caption 'It changes nothing now' - that Stretch is the whole reason the layer is a surface, so the button is a destructive change advertised as a no-op cleanup; (2) a child that is a surface only because the GROUP's default supplies the other stretch is dropped from the list entirely. Shortest honest fix: a surface is not in the flow, so the flow owns neither of its axes. Both its rows stay live, the fake Clear disappears, and the list names it. Nothing new to set. Keeping the group-that-arranges-nothing wording exactly as it is, per acceptance item 2: there the group's own caption already explains Stretch both ways."
+    },
+    {
+      "t": "2026-09-04T22:01:39.422944Z",
+      "note": "Shipped. Core: PlacementOverride carries isSurface and reads 'Surface behind the rest'; contentsWithTheirOwnPlacement now resolves each child against the group's own default before asking the flow, so a piece that is the surface only because the group supplies the other stretch is listed too; new PlacementEditing(arrangement:placing:) says the flow owns neither direction of a piece it is not arranging. App: PlacementInspector uses it for the child rows and the Contents rows, and a surface's caption says what it is. Nine new tests in LayerPlacementTests, 3133 pass. Verified in the probe app with Scripts/playtest/surface-in-a-stack-walk.json (real window captures, Screen Recording granted): a column stack lists 'Rectangle - Surface behind the rest'; selecting it shows Horizontal Stretch and Vertical Stretch as live menus with the surface sentence under them and no Clear Stretch; the same three pieces in a Free group still read 'Stretch both ways'. Ran inert-rule-walk.json as a regression: a genuinely dead rule still says 'Set by the stack' and still offers Clear Stretch. No new control - the surface's Vertical is the same menu every other layer has, restored where it was wrongly frozen, and a misleading Clear link was removed. Audit at queue/audits/2026-09-04-surface-in-a-stack.json."
     }
-  ]
+  ],
+  "started": "2026-09-04T21:50:13.483Z"
 }
