@@ -1,0 +1,37 @@
+{
+  "id": "one-colour-picker-the-designed-one-everywhere-a",
+  "title": "One colour picker, the designed one, everywhere a colour is chosen",
+  "goal": "The colour picker in the app is not the one the design study drew. Build the designed picker and use it in every place a colour is picked, so choosing a colour is the same act everywhere. It opens with a preview of what you are painting, a shade and saturation square with the hue, saturation, lightness and opacity sliders beside their numbers, a way to switch those numbers between HSL, RGB and hex, an eyedropper to sample the screen, rows of related shades and colours already used in this document, a live contrast reading against white, and a button to save what you picked as a named colour. Gradients (linear, radial and angular) are part of the design and are named here so the picker has room for them, but they are a follow-up, not this task.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T01:20:58.623Z",
+  "updated": "2026-09-04T01:20:58.657Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked by the user on 2026-09-03 with a screenshot of the designed picker from the surface design. What exists today, from a read: Sources/Photonz/ColorPickerPopover.swift is a bespoke picker with preset swatches, a recents row, hue saturation brightness sliders, a hex field and a screen eyedropper. It is used from ColorStylePanel.swift lines 482 and 713 and EditorView.swift lines 1061, 1143 and 1610. It is missing, against the mock: the shade and saturation square, the HSL RGB hex switch, an opacity slider, shades and related rows, the document colours row, the contrast reading, the titled preview header and Save style. Five other places bypass it entirely and open the operating system colour panel through SwiftUI ColorPicker: LayersPanel.swift lines 1677 (shadow), 2500 (the shared swatchRow helper, which is what the shape outline and inside rows use), and 2620 (backdrop). That split is why the picker the user meets depends on which row they click, and it is the main thing to fix. The design study pages to read for the intended shape are docs/design/mocks/pages/color.html, comp-color.html and lang-color.html. Gradients appear in the mock as Solid, Linear, Radial and Angular tabs; file that as a follow-up task rather than building it here, but leave the header row able to carry the tabs. Ships behind next-styles.",
+  "acceptance": [
+    "Every place a colour is picked opens the designed picker: the outline and inside of a shape, shadow, backdrop, text, measure chip and text, tool colours, and saved colours; no place opens the operating system colour panel any more",
+    "The picker shows a preview of the colour and the name of what it is painting at the top, with a close control",
+    "A shade and saturation square plus sliders for hue, saturation, lightness and opacity, each with its number, and a switch between HSL, RGB and hex",
+    "An eyedropper samples any pixel on screen and the picked colour follows the pointer live until released",
+    "A row of shades of the current colour, a row of related colours, and a row of colours already used in this document, each a single click to apply",
+    "A contrast reading of the current colour against white, shown with its pass or fail",
+    "Save style names the colour and puts it in the Library, matching what saving a colour does today",
+    "Dragging a slider does not add an entry to recent colours; only a deliberate pick does, which is how the current picker behaves",
+    "Audit written under queue/audits/ with pictures of the picker in light and dark and from two different places, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T01:20:58.624Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-04T01:20:58.657Z",
+      "note": "seq 170 -> 8"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T22:12:31.301Z",
-  "updated": "2026-09-03T12:08:27.327Z",
+  "updated": "2026-09-04T01:02:51.148Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/Playtest/PlaytestHarness.swift around line 491 builds the NSEvent with characters and charactersIgnoringModifiers both set to key.characters, the unshifted letter. AppKit key-equivalent matching for KeyboardShortcut(\"m\", modifiers: .shift) wants \"M\" in charactersIgnoringModifiers, so the invisible stand-in button never fires. Fix: uppercase (or shift-map) characters when the shift modifier is present. Seen on 2026-09-02 while verifying the Current selection slot: step \"key m + shift\" logged \"taken by window\" but activeTool never became wand.\n\nObjective: unmanned-loop (retriaged 2026-09-02 from measure-redline: the defect is in the playtest harness, not in the app). It is what lets any shifted shortcut, measure or ui-building, be proven by a walk instead of by hand.",
@@ -29,6 +29,11 @@
     {
       "t": "2026-09-03T12:08:27.327Z",
       "note": "seq 30 -> 40"
+    },
+    {
+      "t": "2026-09-04T01:02:51.148Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-04T01:02:51.147Z"
 }
