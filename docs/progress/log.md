@@ -8319,3 +8319,28 @@ are four points generous, and measuring two stacked labels box to box now reads
 **Open questions.** Old documents holding a stack of text close up by about four
 points per row when they are opened. That is the fix, but it is not a no-op on
 work somebody already saved.
+
+## 2026-09-04 — A text layer's box is its words
+
+The four points of empty room a measured text box carries on its far edges had
+leaked into every number a person reads off a label: the selection outline
+hugged the words at the top left and floated clear at the bottom right, W said
+104 where the words were 100 wide, and a drag lined a label up by an edge that
+is not drawn. The canvas, the panel, the magnets, the sweep band and the Arrange
+row now all speak the box you can see (`Layer.withoutSlack` / `withSlack`), and
+each commits back through one door that puts the room back. Stored frames are
+untouched, so nothing saved re-wraps. The floor moved onto the words
+(`TextMeasurement.minimumContentWidth` 80, stored 84) so the panel's stated
+floor is the number the panel shows.
+
+Verified in the probe with Screen Recording, not just in tests: outline flush on
+all four sides, W round-tripping 100, a caliper reading 44 where the fields say
+44, and a right-handle drag re-wrapping to two lines with the box still flush.
+Audit: `queue/audits/2026-09-04-text-box-words.json`.
+
+Found on the way and filed rather than fixed: a short label typed on the canvas
+is 80 points wide even when its word is 46, because every inline text edit is
+given a minimum width, while the labels inside the starter components hug. Task:
+"A short label is as wide as its word".
+
+Next: the queue's next p2, or that short-label task.
