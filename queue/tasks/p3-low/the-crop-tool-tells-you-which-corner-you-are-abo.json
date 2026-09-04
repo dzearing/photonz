@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 650,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T23:36:42.155Z",
-  "updated": "2026-09-04T07:43:06.839Z",
+  "updated": "2026-09-04T07:43:24.594Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The cue is decided in CanvasPointer.cue (PhotonzCore, pure) and applied in CanvasView.pointerCue / refreshGrabCursor, which currently guard on tool == .select. The crop press is CanvasView.mouseDown, the branch that builds CropDrag from Handles.hit(at:frame:cropRect:zoom:screenTolerance:8). Cursor images come from CanvasCursor.cursor(for:transform:). Left out of the every-handle pass on 2026-09-03 because Crop is its own mode with its own pointer, so whether the crosshair should give way is a judgement of its own.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-04T07:43:06.839Z",
       "note": "Post-build review. The one thing that still reads as a gap: inside the box a press moves it and the pointer says nothing, so the crosshair is now doing two jobs (draw a new box, move this one). Left as is on purpose and written into the audit as a question for the user, because adding a hand there is a look decision, not a bug. Also left alone: the press only takes the eight squares, not the whole crop edge the way Photoshop does. The cue mirrors the press rather than over-promising; widening the press is its own task."
+    },
+    {
+      "t": "2026-09-04T07:43:24.594Z",
+      "note": "Crop handles now show the matching resize arrows on hover. CanvasPointer.cropCue (pure, PhotonzCore) answers at the same 8pt slop the crop press uses; CanvasView.pointerCue takes a crop branch and holds the arrows through the drag. Inside the box and the dimmed surround keep the Crop crosshair. Verified on the probe with Scripts/playtest/crop-cue-walk.json: all eight handles read the right axis on the real pointer, inside and outside read crosshair, drags hold their arrows. Scripts/test.sh green (2794). Audit: queue/audits/2026-09-04-crop-handle-cue.json. Pushed as 1c968d2."
     }
   ],
-  "started": "2026-09-04T07:35:46.348Z"
+  "started": "2026-09-04T07:35:46.348Z",
+  "completed": "2026-09-04T07:43:24.594Z"
 }
