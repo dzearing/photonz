@@ -267,8 +267,13 @@ struct InspectorPanel: View {
             // print. Only a main has one.
             // ...and a copy gets the same slot, saying which original it
             // follows, so the two kinds of component layer answer in one place.
+            // ...and so does a piece INSIDE a copy, which is where somebody
+            // who clicked into one to change its words has just landed. The
+            // section is the only thing on the panel that can tell them the
+            // piece is not theirs to change and what is.
             if Experiments.shared.componentsEnabled,
-               layer.isMainComponent || layer.isComponentInstance {
+               layer.isMainComponent || layer.isComponentInstance
+                || editorState.selectedComponentPiece != nil {
                 set.insert(.component)
             }
             // A picked callout's own settings. Present whenever one is
@@ -322,8 +327,23 @@ struct InspectorPanel: View {
         if editorState.activeTool == .zoomCallout, Experiments.shared.calloutShapeEnabled {
             set.insert(.calloutTool)
         }
+        // A piece INSIDE a copy owns nothing. Its size, its colors, its type
+        // and its effects all come from the original and are written back over
+        // on the next redraw, so a panel full of those controls is a panel full
+        // of edits that get thrown away. It answers through the copy's knobs
+        // instead, and the Component section is where they are.
+        if editorState.selectedComponentPiece != nil {
+            set.subtract(Self.sectionsAPieceDoesNotOwn)
+        }
         return set
     }
+
+    /// What a piece inside a copy does not answer for. Everything here is a
+    /// fact the original decides.
+    private static let sectionsAPieceDoesNotOwn: Set<InspectorSectionID> = [
+        .arrange, .geometry, .frame, .placement, .color, .effects, .shadow,
+        .annotation, .callout, .text, .measure, .collage,
+    ]
 
     private var orderedAvailableSections: [InspectorSectionID] {
         let available = availableSections
@@ -406,6 +426,10 @@ struct InspectorPanel: View {
                 ComponentInspector(layer: layer)
             } else if let layer = selectedLayer, layer.isComponentInstance {
                 ComponentInstanceInspector(layer: layer)
+            } else if let piece = editorState.selectedComponentPiece {
+                // Clicked into a copy: the section answers for the COPY, not
+                // for the piece, because the piece has nothing of its own.
+                ComponentPieceInspector(piece: piece)
             }
         case .color:
             SelectionColorInspector()

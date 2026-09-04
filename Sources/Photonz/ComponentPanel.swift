@@ -502,6 +502,7 @@ struct ComponentInstanceInspector: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 ComponentInstanceProperties(instance: layer.id, componentID: componentID)
+                offer
                 ownLook
                 HStack(spacing: 6) {
                     Button("Edit Original") {
@@ -521,6 +522,23 @@ struct ComponentInstanceInspector: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 4)
+        }
+    }
+
+    /// The way out of a refused edit, on the copy you were trying to edit.
+    ///
+    /// Double clicking words the original never made adjustable says so in a
+    /// notice, and the notice would be advice with nowhere to act on it: the
+    /// piece is not selectable, so the Adjustable list on the ORIGINAL is the
+    /// only way in and it is two selections away. This is that press, here,
+    /// while it is still what you were doing.
+    @ViewBuilder private var offer: some View {
+        if let piece = editorState.wordingOffer(for: layer.id) {
+            let name = editorState.document?.componentPieceName(of: piece) ?? "that piece"
+            Button("Make \(name) Adjustable") { editorState.takeWordingOffer(piece) }
+                .controlSize(.small)
+                .help("Adds a Wording knob for \(name) on the original, so every copy can say something different")
+                .playtestControl("Make \(name) Adjustable")
         }
     }
 
@@ -555,6 +573,70 @@ struct ComponentInstanceInspector: View {
                 .controlSize(.small)
                 .help("Follow the original's look again, every part of it")
             }
+        }
+    }
+}
+
+/// What the dock says about a PIECE inside a copy: the copy it belongs to, the
+/// knobs that copy can set, and the two ways out if the piece you want is not
+/// one of them.
+///
+/// Clicking into a copy lands you here, and before this section existed the
+/// panel had nothing to say: it showed the piece's own Text and Color rows,
+/// every one of which is written over the moment the copy is put back in step
+/// with its original. The piece has nothing of its own, so the section answers
+/// for the copy instead.
+struct ComponentPieceInspector: View {
+    @Environment(EditorState.self) private var editorState
+    let piece: ComponentPiece
+
+    private var main: Layer? { editorState.document?.mainComponent(componentID: piece.componentID) }
+    private var pieceName: String { editorState.document?.componentPieceName(of: piece) ?? "This piece" }
+
+    /// Whether the piece you clicked into could be made typeable in one press.
+    private var canExposeWording: Bool { editorState.canExposePieceWording(of: piece.layer) }
+
+    var body: some View {
+        if let main {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    ComponentMark(size: 12, isInstance: true)
+                    Text(main.name)
+                        .font(.subheadline.weight(.medium))
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                }
+                Text("\(pieceName) is part of a copy. What it shows comes from the original, so it is set with the knobs below.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                ComponentInstanceProperties(instance: piece.instance, componentID: piece.componentID)
+                if canExposeWording {
+                    Button("Make Its Wording Adjustable") {
+                        editorState.exposePieceWording(of: piece.layer)
+                    }
+                    .controlSize(.small)
+                    .help("Adds a Wording knob for \(pieceName) on the original, so every copy can say something different")
+                    .playtestControl("Make Its Wording Adjustable")
+                }
+                HStack(spacing: 6) {
+                    Button("Select Copy") { editorState.selectEnclosingCopy(of: piece) }
+                        .controlSize(.small)
+                        .help("Picks the whole copy, which is what moves, resizes and detaches")
+                        .playtestControl("Select Copy")
+                    Button("Edit Original") {
+                        editorState.selectComponentOnCanvas(componentID: piece.componentID)
+                    }
+                    .controlSize(.small)
+                    .help("Selects the original, which is where a change to every copy is made")
+                    Button("Detach") { editorState.detachEnclosingCopy(of: piece) }
+                        .controlSize(.small)
+                        .help("Turns this copy into ordinary layers, so every piece of it can be edited directly")
+                        .playtestControl("Detach")
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
         }
     }
 }

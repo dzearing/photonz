@@ -303,6 +303,7 @@ struct EditorView: View {
                        onCandidateLevelChange: { editorState.measureCandidateLevel = $0 },
                        onToolChange: { editorState.setTool($0) },
                        onTextEditBegin: { editorState.beginTextEdit(layerID: $0) },
+                       onWordingRefused: { editorState.refuseWordingEdit($0) },
                        onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
                        onTextCancel: { editorState.cancelTextEdit() },
                        onCaptionEditBegin: { editorState.beginCaptionEdit(layerID: $0) },

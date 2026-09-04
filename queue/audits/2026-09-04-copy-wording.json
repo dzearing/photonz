@@ -1,0 +1,30 @@
+{
+  "feature": "Typing on a component, and on a copy of one",
+  "epic": "ui-components",
+  "summary": "Typing over the words inside a button used to throw them somewhere off the picture, which looked exactly like losing them. Now they stay, and double clicking the words of a COPY types them straight onto that copy's own Wording knob, so the copy says something different and the original does not.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components, Layer Groups and the Library are on by default.",
+  "try": [
+    { "do": "Open the Library and drag the Button tile onto the canvas. This first one is the ORIGINAL." },
+    { "do": "Double click its words, type over them, then click empty canvas. They should stay put, centred in the button." },
+    { "do": "Drag the Button tile out a second time. This one is a COPY." },
+    { "do": "Double click the copy's words, type Save, press Return, then click empty canvas.", "shot": "2026-09-04-copy-wording-1.png" },
+    { "do": "Click the copy once and look at the Component section: a Label field holding your words, with a way back beside it.", "shot": "2026-09-04-copy-wording-2.png" },
+    { "do": "Select the original and re-word ITS label. The copy should keep Save while everything else about it follows." },
+    { "do": "Draw a box, type a word on it, group the two and use Layer > Make Component. Drag a copy of it out, then double click that copy's words.", "shot": "2026-09-04-copy-wording-3.png" },
+    { "do": "Press Make Text Adjustable on the copy's section, then double click its words again and type." }
+  ],
+  "evaluate": [
+    "Does one double click on a copy's words feel right, or did you expect to step into the copy first the way a group makes you?",
+    "The field opens with the caret at the end, so typing appends to the label rather than replacing it. Should double clicking a copy's words select them all instead?",
+    "Is the refusal notice at the bottom of the canvas readable in the moment, or did it come and go before you had read it?",
+    "Make Text Adjustable adds a knob the panel then calls Wording. Do those two names being different bother you?",
+    "When you re-word a label the box re-centres in its button. Is that what you wanted every time, or is there a case where you wanted it to grow from the left?"
+  ],
+  "rough": [
+    "The reported cause was wrong and worth recording: the words were not being discarded by the component sync, they were being written into the wrong coordinate space. A label inside any group stored its new box in canvas coordinates, so it jumped by the group's origin and landed off the picture. That is fixed in PhotonzDocument.commitTextEdit, and it was never about components at all: any text inside any group did it.",
+    "A piece inside a copy still cannot be selected by clicking or in the layers list, by design. It can be reached by Select Layers Using This Color, and when it is, the panel now shows only the Component section for the copy: everything else about a piece belongs to the original and would be written back over.",
+    "A copy inside another copy refuses every wording edit and offers only Detach. The inner copy is rebuilt by the outer one, so an answer given to it has nowhere to live.",
+    "The refusal notice stays up for three seconds and does not clear early when you act on it, so it can still be on screen after you have pressed Make Text Adjustable.",
+    "Screen Recording was granted, so every picture here is a real window capture, not an offscreen render."
+  ]
+}

@@ -3105,6 +3105,14 @@ final class EditorState {
     /// editor used (document points), so layout doesn't shift on commit.
     func commitTextEdit(layerID: UUID?, origin: CGPoint, string: String, maxWidth: CGFloat) {
         editingTextLayerID = nil
+        // A piece inside a copy is not the thing that was edited: its words
+        // come from the original, so they land on the copy's own answer to the
+        // wording knob instead. Written onto the piece they would be gone by
+        // the next redraw, which is the whole reason this branch exists.
+        if let layerID, case .knob = wordingEdit(of: layerID) {
+            commitPieceWording(of: layerID, to: string)
+            return
+        }
         let isEmpty = string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         var content = textStyles.content(string: string)
         // Where the words sit belongs to the layer, not to the new-text style,
@@ -3136,14 +3144,15 @@ final class EditorState {
                 let size = TextBlockMetrics.frameSize(for: content, maxWidth: maxWidth,
                                                       roomyWidth: roomyWidth,
                                                       roomyHeight: roomyHeight)
+                // `origin` is where the editor sat on the CANVAS. A label
+                // inside a group stores its box relative to that group, so the
+                // document does the conversion: written straight in, the words
+                // land a whole group's origin away from where they were typed,
+                // which is how a label typed inside a button ended up off the
+                // button and looked like it had been thrown away.
                 perform { document in
-                    document.updateLayer(id: layerID) {
-                        $0.content = .text(content)
-                        $0.frame = CGRect(origin: origin, size: size)
-                        // Re-edit may have changed the color; keep the
-                        // auto-contrast shadow (3.6) opposing it.
-                        $0.style.shadow = TextBuilder.autoContrastShadow(forColorHex: content.colorHex)
-                    }
+                    document.commitTextEdit(id: layerID, content: content,
+                                            canvasFrame: CGRect(origin: origin, size: size))
                 }
             }
         } else {
@@ -4814,6 +4823,109 @@ final class EditorState {
     func clearInstanceOverride(instance: UUID, property: UUID) {
         guard componentsEnabled else { return }
         perform(announcing: false) { $0.clearInstanceOverride(instance: instance, property: property) }
+    }
+
+    // MARK: - Editing a piece inside a copy
+
+    /// The copy a layer is a piece of, and where that piece came from. Nil for
+    /// an ordinary layer, which is everything outside a copy.
+    func componentPiece(of id: UUID) -> ComponentPiece? {
+        guard componentsEnabled else { return nil }
+        return document?.componentPiece(of: id)
+    }
+
+    /// The copy the selection is a piece of, which is what puts the Component
+    /// section on the panel when you have clicked into one.
+    var selectedComponentPiece: ComponentPiece? {
+        guard let id = selectedLayerID else { return nil }
+        return componentPiece(of: id)
+    }
+
+    /// What typing over a layer means: nothing special, a knob to land on, or
+    /// a refusal with a way forward.
+    func wordingEdit(of id: UUID) -> ComponentPieceEdit {
+        guard componentsEnabled else { return .ordinary }
+        return document?.wordingEdit(of: id) ?? .ordinary
+    }
+
+    /// The piece somebody last tried to type over and could not, when the
+    /// original could still be given a knob for it. It puts the offer on the
+    /// copy's own section, which is what the notice tells them to look at: the
+    /// piece itself is never selected, so there is nowhere else to put it.
+    private(set) var wordingOffer: ComponentPiece?
+
+    /// Says out loud why an edit inside a copy went nowhere. Nothing else on
+    /// screen would: the double click would simply not open a field.
+    func refuseWordingEdit(_ refusal: ComponentPieceRefusal) {
+        wordingOffer = refusal.remedy == .exposeWording ? refusal.piece : nil
+        raiseCanvasNotice(.componentPieceRefused(refusal))
+    }
+
+    /// The offer this copy is carrying, if any: the piece somebody just tried
+    /// to type over.
+    func wordingOffer(for instance: UUID) -> ComponentPiece? {
+        guard let offer = wordingOffer, offer.instance == instance,
+              canExposePieceWording(of: offer.layer) else { return nil }
+        return offer
+    }
+
+    /// Takes the offer: the original grows a wording knob for that piece, and
+    /// the copy can answer it in the field that appears.
+    func takeWordingOffer(_ piece: ComponentPiece) {
+        exposePieceWording(of: piece.layer)
+        wordingOffer = nil
+    }
+
+    /// Lands words typed over a piece on the copy's own answer, or puts the
+    /// piece back to following the original when the field was emptied.
+    func commitPieceWording(of id: UUID, to string: String) {
+        guard componentsEnabled else { return }
+        let isEmpty = string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let instance = document?.componentPiece(of: id)?.instance
+        perform(announcing: false) { document in
+            if isEmpty {
+                document.clearPieceWording(of: id)
+            } else {
+                document.setPieceWording(of: id, to: string)
+            }
+        }
+        // The copy is what is left selected, so the knob that just took the
+        // words is on screen with a way back beside it. The piece itself is
+        // never selectable, and leaving nothing selected after typing would
+        // hide the one control that says what just happened.
+        if let instance { selectLayer(instance, inGroup: document?.parentID(of: instance)) }
+    }
+
+    /// Whether Make Wording Adjustable would do anything for this piece.
+    func canExposePieceWording(of id: UUID) -> Bool {
+        guard componentsEnabled else { return false }
+        return document?.canExposePieceWording(of: id) ?? false
+    }
+
+    /// Makes a piece's wording adjustable from the copy you are looking at: the
+    /// knob goes on the original, so every copy gets it, and this copy can
+    /// answer it straight away.
+    @discardableResult
+    func exposePieceWording(of id: UUID) -> UUID? {
+        guard componentsEnabled else { return nil }
+        var added: UUID?
+        perform { added = $0.exposePieceWording(of: id) }
+        return added
+    }
+
+    /// Picks the whole copy a piece belongs to, which is where everything a
+    /// copy CAN be told sits.
+    func selectEnclosingCopy(of piece: ComponentPiece) {
+        selectLayer(piece.instance, inGroup: document?.parentID(of: piece.instance))
+    }
+
+    /// Stops the copy a piece belongs to from following its original, from the
+    /// piece you were trying to edit. Detach is the one way to get at a piece
+    /// the original never made adjustable, so it is offered where you hit the
+    /// wall rather than only where the copy answers for itself.
+    func detachEnclosingCopy(of piece: ComponentPiece) {
+        selectEnclosingCopy(of: piece)
+        detachInstance()
     }
 
     /// Which parts of a copy's look are its own rather than the original's,

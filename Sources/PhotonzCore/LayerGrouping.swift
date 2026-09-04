@@ -210,6 +210,54 @@ extension PhotonzDocument {
         return frame.offsetBy(dx: -origin.x, dy: -origin.y)
     }
 
+    /// Lands an inline text edit on an existing layer: the new words, and the
+    /// box the editor measured for them.
+    ///
+    /// `canvasFrame` is in CANVAS coordinates, because that is the only space
+    /// the inline editor has: it floats over the picture and measures the words
+    /// against what is on screen. A layer inside a group stores its frame
+    /// relative to that group, so the box is written back into the layer's own
+    /// space here. Skipping that step moves the layer by the group's origin,
+    /// which for a label inside a button throws the label clean off the button
+    /// and reads, to the person who just typed it, as the words being thrown
+    /// away (reported 2026-09-04).
+    public mutating func commitTextEdit(id: UUID, content: TextContent, canvasFrame: CGRect) {
+        guard let existing = layer(id: id), existing.text != nil else { return }
+        var local = parentSpaceFrame(canvasFrame, of: id) ?? canvasFrame
+        // A label in a group that centres its contents stays centred when the
+        // words get longer, and one pinned right keeps its right edge. The
+        // editor grows the box from the left because that is where the caret
+        // is, so without this a button's label creeps off to one side every
+        // time it is re-worded. It is the same rule a copy's wording knob
+        // already follows.
+        local = Self.reanchored(local, from: existing.frame.standardized,
+                                anchor: LayerPlacement.resolving(
+                                    child: existing.placement,
+                                    container: parentID(of: id)
+                                        .flatMap { layer(id: $0)?.group?.contentPlacement }).horizontal)
+        updateLayer(id: id) {
+            $0.content = .text(content)
+            $0.frame = local
+            // A re-edit may have changed the color; keep the auto-contrast
+            // shadow opposing it.
+            $0.style.shadow = TextBuilder.autoContrastShadow(forColorHex: content.colorHex)
+        }
+    }
+
+    /// A re-measured box put back on the edge its group lines contents up on.
+    /// Left (and "scale", which is what a layer nobody gave a rule to does)
+    /// keeps the box exactly where the editor left it.
+    static func reanchored(_ box: CGRect, from before: CGRect,
+                           anchor: HorizontalPlacement) -> CGRect {
+        switch anchor {
+        case .center: return CGRect(x: (before.midX - box.width / 2).rounded(), y: box.origin.y,
+                                    width: box.width, height: box.height)
+        case .right: return CGRect(x: before.maxX - box.width, y: box.origin.y,
+                                   width: box.width, height: box.height)
+        case .scale, .left, .stretch: return box
+        }
+    }
+
     /// Moves a layer so the top left of the box it occupies lands on
     /// `parentOrigin`, in the space the layer is stored in — what the
     /// inspector's X and Y fields type into.

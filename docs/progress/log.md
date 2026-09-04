@@ -8064,3 +8064,34 @@ Next / open: the swatch row remembers which scope it was left on between
 launches, which cost this walk one failed run before it learned to press
 `Shades` first. Still unreachable: dragging the square, the sliders and the
 gradient aim.
+
+## 2026-09-04 — Typing on a component, and on a copy of one
+
+Queue task "You change a copy through its knobs, and nothing you type is ever
+thrown away" (p1-high, epic ui-components).
+
+**What changed.** The report was that typing over the words in a placed button
+loses them. Reproducing it with a playtest walk showed the cause was not the
+component sync everyone assumed: the inline text editor works in canvas
+coordinates and a layer inside a group stores its frame relative to that group,
+so committing an edit moved the label by the whole group's origin and threw it
+off the picture. Fixed in `PhotonzDocument.commitTextEdit` (new, in
+`LayerGrouping.swift`), which also re-anchors the re-measured box on the edge
+its group lines contents up on, so a button's label stays centred when it is
+re-worded. This affected every text layer inside every group, not just
+components.
+
+The copy half was real too and is now guarded. `ComponentPieceEditing.swift`
+(new, PhotonzCore) says what typing over a piece inside a copy means: ordinary,
+a wording knob to land on, or a refusal carrying the way forward. One double
+click on a copy's words types them, routed to that copy's own knob; with no
+knob the field does not open and a notice says which original decides them,
+with a one-press "Make <piece> Adjustable" on the copy's section. A piece
+inside a copy shows only the Component section in the panel, has no handles,
+and a drag on it drags the whole copy.
+
+**Next.** The auto-layout epic (`ui-layout`) is the next one staged now.
+
+**Open questions.** In the audit: whether double clicking a copy's words should
+select them all rather than putting the caret at the end, and whether the
+refusal notice reads in time.

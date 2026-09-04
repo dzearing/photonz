@@ -1,0 +1,45 @@
+{
+  "out": "/tmp/photonz-playtest/copy-wording",
+  "seed": "The reported bug: a button is copied, its words are typed over, and they vanish on the next redraw. The walk types into a copy and then clicks away, so the picture at the end is the only proof that matters.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "insertPickedComponent" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-original", "note": "the starter Button, as the ORIGINAL, in the middle of the canvas" },
+    { "do": "render", "name": "copy-1-original-doc" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [420, 620] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-copy", "note": "a copy of the Button at (420, 620), following the original" },
+    { "do": "snapshot", "name": "copy-2-copy" },
+    { "do": "render", "name": "copy-2-copy-doc" },
+
+    { "do": "click", "at": [420, 620], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-typing", "note": "one double click on the copy's words opens them for typing, straight away: a copy is one object, so there is no stepping into it first" },
+    { "do": "snapshot", "name": "copy-3-typing" },
+    { "do": "panel", "stage": "3-typing" },
+
+    { "do": "type", "text": "Save" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [1000, 200] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-clicked-away", "note": "THE TEST: after clicking away the copy still says Save, and the original still says Button" },
+    { "do": "snapshot", "name": "copy-4-clicked-away" },
+    { "do": "render", "name": "copy-4-clicked-away-doc" },
+
+    { "do": "click", "at": [420, 620] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-copy-panel", "note": "picking the whole copy shows its knobs: a Label field reading Save with a way back beside it" },
+    { "do": "snapshot", "name": "copy-5-copy-panel" },
+    { "do": "panel", "stage": "5-copy-panel" }
+  ]
+}

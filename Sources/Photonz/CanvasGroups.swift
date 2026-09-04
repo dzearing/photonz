@@ -44,12 +44,28 @@ extension CanvasNSView {
         return document.descendTarget(at: point, zoom: zoom, inside: groupContext)
     }
 
+    /// The copy a layer is a piece of, nil for everything that is not inside
+    /// one. A piece owns nothing: its size, its place and its look all come
+    /// from the original and are written back over on the next redraw.
+    func componentPiece(of id: UUID?) -> ComponentPiece? {
+        guard componentsEnabled, let id, let document else { return nil }
+        return document.componentPiece(of: id)
+    }
+
+    /// Whether a layer offers handles of its own. A piece inside a copy does
+    /// not: dragging one of its corners would resize something the next sync
+    /// puts straight back, so there is nothing to grab. Dragging the piece
+    /// itself moves the whole copy instead, which is what the person meant.
+    func offersOwnHandles(_ layer: Layer) -> Bool {
+        layer.offersHandles && componentPiece(of: layer.id) == nil
+    }
+
     /// Whether the selected layer offers the rotate knob. A group never does:
     /// groups translate and nothing else, so a knob that turned one would be a
     /// control with nothing behind it. Neither does a locked layer, which
     /// offers no handles of any kind (`Layer.offersHandles`).
     func offersRotation(_ layer: Layer) -> Bool {
-        layer.offersHandles && !layer.hasEndpointHandles && !layer.isGroup
+        offersOwnHandles(layer) && !layer.hasEndpointHandles && !layer.isGroup
     }
 }
 

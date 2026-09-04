@@ -171,6 +171,9 @@ struct CanvasView: NSViewRepresentable {
     let onCandidateLevelChange: (Int) -> Void
     let onToolChange: (Tool) -> Void
     let onTextEditBegin: (UUID?) -> Void
+    /// Typing over a piece of a copy went nowhere, and why. Nothing on screen
+    /// would say so otherwise: the field simply would not open.
+    let onWordingRefused: (ComponentPieceRefusal) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
     let onTextCancel: () -> Void
     let onCaptionEditBegin: (UUID) -> Void
@@ -263,6 +266,7 @@ struct CanvasView: NSViewRepresentable {
         view.onCaptionPlaceCancel = onCaptionPlaceCancel
         view.onToolChange = onToolChange
         view.onTextEditBegin = onTextEditBegin
+        view.onWordingRefused = onWordingRefused
         view.onTextCommit = onTextCommit
         view.onTextCancel = onTextCancel
         view.onCaptionEditBegin = onCaptionEditBegin
@@ -336,6 +340,7 @@ final class CanvasNSView: NSView {
     var onCaptionPlaceCancel: (() -> Void) = {}
     var onToolChange: ((Tool) -> Void) = { _ in }
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
+    var onWordingRefused: ((ComponentPieceRefusal) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
     var onTextCancel: (() -> Void) = {}
     var onCaptionEditBegin: ((UUID) -> Void) = { _ in }
@@ -1665,6 +1670,18 @@ final class CanvasNSView: NSView {
             refreshOverlays()
             return
         }
+        // A double click on the words of a COPY types them, in ONE gesture.
+        // A copy is one object — clicking it picks the whole thing and there
+        // is nothing inside to select — so the extra step a group asks for
+        // would buy nothing here. The words land on the copy's own wording
+        // knob; with no knob for them, `beginTextSession` says so instead of
+        // opening a field whose contents would be thrown away.
+        if event.clickCount == 2, componentsEnabled,
+           let pieceID = document?.textPiece(at: p, zoom: viewport.zoom),
+           let piece = document?.canvasLayer(id: pieceID) {
+            beginTextSession(layerID: pieceID, at: piece.frame.origin)
+            return
+        }
         // Double-click on a text layer re-opens it for inline editing. Checked
         // before handles: on a small text layer the handle hit zones cover the
         // whole frame and would eat the double-click.
@@ -1684,7 +1701,7 @@ final class CanvasNSView: NSView {
         // Lines/arrows expose their endpoints; everything else (that resizes)
         // gets the eight frame handles.
         let selectedLayer = selectedLayerID.flatMap { id in document?.canvasLayer(id: id) }
-        if let id = selectedLayerID, let layer = selectedLayer, layer.offersHandles,
+        if let id = selectedLayerID, let layer = selectedLayer, offersOwnHandles(layer),
            let content = layer.annotation,
            let endpoint = AnnotationEndpoints.hit(at: p, layer: layer, zoom: viewport.zoom),
            let drag = AnnotationEndpointDrag(layer: layer, endpoint: endpoint),
@@ -1720,7 +1737,7 @@ final class CanvasNSView: NSView {
         // two feet or the head); the others stay put and the value/label update
         // live. The readout pill is the head's grab too: dragging the number
         // moves it, and it is the only grab while it sits on the head dot.
-        if let id = selectedLayerID, let layer = selectedLayer, layer.offersHandles,
+        if let id = selectedLayerID, let layer = selectedLayer, offersOwnHandles(layer),
            let m = layer.measure,
            let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) {
             let tolerance = viewport.zoom > 0 ? 9 / viewport.zoom : 9
@@ -1781,7 +1798,7 @@ final class CanvasNSView: NSView {
         // transform so handles on a rotated/skewed layer hit where they draw.
         // ⌥ on a corner skews instead of resizing.
         if let id = selectedLayerID, let frame = selectedLayerFrame,
-           selectedLayer?.offersHandles ?? true, selectedLayer?.allowsFrameResize ?? true,
+           selectedLayer.map(offersOwnHandles) ?? true, selectedLayer?.allowsFrameResize ?? true,
            let handle = Handles.hit(at: handleSpacePoint(p, layer: selectedLayer),
                                     frame: frame, zoom: viewport.zoom) {
             if event.modifierFlags.contains(.option), handle.isCorner, let layer = selectedLayer {
@@ -1861,6 +1878,16 @@ final class CanvasNSView: NSView {
             }
             let copying = copyDragModifier(event)
             onSelectLayerInGroup(pick.id, pick.context)
+            // Dragging a PIECE inside a copy drags the whole copy. The piece
+            // itself cannot move: its place comes from the original and the
+            // next sync puts it back, so a drag on it would look like the
+            // canvas ignoring the pointer. Moving the copy is what the person
+            // grabbing its label meant anyway.
+            var hit = hit
+            if let piece = componentPiece(of: pick.id),
+               let copy = document?.canvasLayer(id: piece.instance) {
+                hit = copy
+            }
             // The drag preview (two full renders, then a pass to hand the
             // canvas its sprite) starts once the pointer really travels, in
             // mouseDragged, not here: most presses on a layer are clicks that
@@ -3379,7 +3406,7 @@ final class CanvasNSView: NSView {
             // Lines/arrows/measures edit by their endpoints (round handles), not
             // the eight frame handles; no rotate knob.
             rotateKnobLayer.isHidden = true
-            if !dragInFlight, selectedLayer.offersHandles {
+            if !dragInFlight, offersOwnHandles(selectedLayer) {
                 let handles = CGMutablePath()
                 // Calipers expose their three handles (two feet + head); lines/
                 // arrows their two ends.
@@ -3398,7 +3425,7 @@ final class CanvasNSView: NSView {
         } else {
             // Eight square frame handles, hidden mid-drag and for text (which
             // resizes width-only via its own affordance).
-            if !dragInFlight, selectedLayer.offersHandles, selectedLayer.allowsFrameResize {
+            if !dragInFlight, offersOwnHandles(selectedLayer), selectedLayer.allowsFrameResize {
                 let handles = CGMutablePath()
                 for handle in ResizeHandle.allCases {
                     let p = chromePoint(Handles.point(for: handle, in: frame))
@@ -3838,6 +3865,14 @@ final class CanvasNSView: NSView {
     /// layer underneath via `onTextEditBegin`.
     private func beginTextSession(layerID: UUID?, at origin: CGPoint) {
         guard textSession == nil else { return }
+        // Nothing typed is ever thrown away: a piece inside a copy takes its
+        // words from the original, so the field opens only when there is a
+        // wording knob for those words to land on, and otherwise says why.
+        if let layerID, componentsEnabled,
+           case .refused(let refusal) = document?.wordingEdit(of: layerID) {
+            onWordingRefused(refusal)
+            return
+        }
         var style = textContent ?? TextContent(string: "")
         var string = ""
         if let layerID, let layer = document?.canvasLayer(id: layerID),

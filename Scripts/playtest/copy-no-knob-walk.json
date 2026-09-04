@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/copy-no-knob",
+  "seed": "A component whose author never made its words adjustable. Typing over a copy of it must refuse in words rather than take the words and drop them, and the way forward must be one press away on the copy's own section.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [360, 260], "to": [560, 320], "steps": 8 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [400, 278] },
+    { "do": "type", "text": "Chip" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [320, 220], "to": [640, 380], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "makeComponent" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-original", "note": "a hand made component with NO knobs at all: nothing about it was ever made adjustable" },
+    { "do": "snapshot", "name": "noknob-1-original" },
+
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "dragTile", "tile": "Component", "to": [420, 620] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-copy", "note": "a copy of it, following the original" },
+    { "do": "snapshot", "name": "noknob-2-copy" },
+
+    { "do": "click", "at": [377, 617], "count": 2 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-refused", "note": "THE TEST: double clicking the copy's words refuses in plain words instead of opening a field, and the copy's section offers the way forward" },
+    { "do": "snapshot", "name": "noknob-3-refused" },
+    { "do": "panel", "stage": "3-refused" },
+
+    { "do": "press", "control": "Make Text Adjustable" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-exposed", "note": "one press and the copy has a Wording knob, with a field on its own section" },
+    { "do": "snapshot", "name": "noknob-4-exposed" },
+    { "do": "panel", "stage": "4-exposed" },
+
+    { "do": "click", "at": [377, 617], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": " Two" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [1000, 200] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-typed", "note": "now the same double click types, and the words stay after clicking away. The original is untouched." },
+    { "do": "snapshot", "name": "noknob-5-typed" },
+    { "do": "render", "name": "noknob-5-typed-doc" }
+  ]
+}

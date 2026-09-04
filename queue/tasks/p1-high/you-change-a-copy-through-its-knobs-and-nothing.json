@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T15:25:54.756Z",
-  "updated": "2026-09-04T15:25:54.822Z",
+  "updated": "2026-09-04T16:23:53.272091Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-04: drag a button, click the text in it, press Enter, type, the text disappears when you click away. This is a known consequence nobody guarded: the audit 2026-09-03-component-instances.json says in its own rough list that a copys contents are its originals so any edit in there would be silently thrown away. The canvas does not stop it: CanvasView.swift around line 2457 begins a text session for any selected .text layer with no check for whether that layer is resolved from a component, and ComponentInstances.swift resolvedChildren rebuilds those children from the original on the next resolve. The model half already exists and is the users own proposal: ComponentPropertyKind in ComponentProperties.swift offers text (Wording), visible (Show or hide) and variant (Choice), and StarterComponents.addStarterKnobs hangs knobs on the starter pieces, so a starter button should already have a wording knob. What is missing is the way in: the panel section .component (LayersPanel.swift line 631) and a guard on the canvas. Decide and record: does typing over a piece that HAS a knob edit the knob in place (preferred, it is what a person expects) or refuse and point at the panel. Open a decision card only if the answer changes what the user has to do.",
@@ -30,6 +30,39 @@
     {
       "t": "2026-09-04T15:25:54.822Z",
       "note": "seq 170 -> 3"
+    },
+    {
+      "t": "2026-09-04T15:56:19.438Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T16:23:53.272091Z",
+      "note": "Adversarial review before building: the task's own diagnosis said a copy's contents are rebuilt from the original so typed words are discarded. True of copies, but NOT what the user hit. Reproduced the report with a playtest walk on a starter Button: the first drag of a tile places the ORIGINAL, and typing over its label threw the label to (902, 776) instead of leaving it in the button. Root cause: the inline editor works in canvas coordinates and a layer inside a group stores its frame relative to that group, so commitTextEdit moved the label by the whole group's origin. Nothing to do with components; every text layer inside every group did it."
+    },
+    {
+      "t": "2026-09-04T16:23:53.272091Z",
+      "note": "Fixed at the root in PhotonzDocument.commitTextEdit (core, tested first): the editor's box is written back into the layer's own space, and the box is re-anchored on the edge its group lines contents up on, so a button's label stays centred when it is re-worded instead of creeping right."
+    },
+    {
+      "t": "2026-09-04T16:23:53.272091Z",
+      "note": "Then the copy half, which was real and unguarded: new core file ComponentPieceEditing.swift answers what typing over a piece inside a copy MEANS - ordinary, a wording knob to land on, or a refusal carrying the way forward (expose a knob, detach, unlock). 16 tests written before the code."
+    },
+    {
+      "t": "2026-09-04T16:23:53.272091Z",
+      "note": "Canvas: one double click on a copy's words types them, routed to the copy's wording knob. A copy is one object (hitTestPath deliberately stops at copies) so there is no stepping into it first. With no knob for those words the field does not open at all: a notice says which original decides them, and the copy's own section grows a Make <piece> Adjustable button that adds the knob in one press."
+    },
+    {
+      "t": "2026-09-04T16:23:53.272091Z",
+      "note": "Panel: a piece inside a copy (reachable through Select Layers Using This Color) now shows ONLY the Component section, answering for the copy. Its Position, Color, Text, Effects and Shadow rows all edited facts the original owns and would have been written back over. Handles are gone from a piece for the same reason, and a drag on one drags the whole copy."
+    },
+    {
+      "t": "2026-09-04T16:23:53.272091Z",
+      "note": "Verified in the real app: Scripts/playtest/copy-wording-walk.json (starter Button, type on a copy, click away, words stay, original untouched) and Scripts/playtest/copy-no-knob-walk.json (hand made component with no knobs: refusal notice, one press to expose, then typing sticks). Both green, Screen Recording granted so the audit carries real window captures. Full suite 3033 tests green."
+    },
+    {
+      "t": "2026-09-04T16:23:53.272091Z",
+      "note": "Audit: queue/audits/2026-09-04-copy-wording.json with three captures."
     }
-  ]
+  ],
+  "started": "2026-09-04T15:56:19.437Z"
 }

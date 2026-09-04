@@ -43,6 +43,12 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// choice HIDES all but one of the shapes that were just selected, so
         /// without a word on screen it reads as the app having deleted one.
         case componentChoiceMade(options: Int, knob: String)
+        /// An edit inside a copy was refused (`ComponentPieceRefusal`). A
+        /// piece of a copy comes from the original, so typing over one has
+        /// nowhere to land unless the original made it adjustable. Without a
+        /// word on screen the double click simply does nothing, which reads as
+        /// the app being broken.
+        case componentPieceRefused(ComponentPieceRefusal)
         /// Something stopped following what it came from: a color let go of a
         /// named style, a part of a copy's look was set by hand, a copy was
         /// ungrouped, or an original was deleted out from under its copies
@@ -72,8 +78,13 @@ public struct CopyConfirmation: Hashable, Sendable {
     /// How long THIS pill stays up, which depends on how much it is asking of
     /// the person reading it.
     public var lifetime: TimeInterval {
-        if case .linksBroken = subject { return Self.breakLifetime }
-        return Self.lifetime
+        switch subject {
+        // Both of these are the only ones you might want to ACT on, and 1.6
+        // seconds is under the time it takes to read a sentence naming two
+        // things and decide what to do about it.
+        case .linksBroken, .componentPieceRefused: return Self.breakLifetime
+        default: return Self.lifetime
+        }
     }
 
     /// Whether the pill should still be on screen at `now`. Strictly inside the
@@ -97,6 +108,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentCycle: return "Not placed"
         case .componentDetached: return "Detached"
         case .componentChoiceMade: return "Choice added"
+        case .componentPieceRefused(let refusal): return refusal.title
         case .linksBroken(let report): return report.title
         }
     }
@@ -121,6 +133,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "It no longer follows \(component)"
         case .componentChoiceMade(let options, let knob):
             return "1 of \(options) shapes shows. Copies pick it with \(knob)"
+        case .componentPieceRefused(let refusal):
+            return refusal.detail
         case .linksBroken(let report):
             return report.detail ?? ""
         }
