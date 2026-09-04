@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 600,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T18:09:56.672Z",
-  "updated": "2026-09-04T06:36:01.403Z",
+  "updated": "2026-09-04T06:45:55.687Z",
   "deps": [],
   "blockedBy": [],
   "notes": "LayerGeometry.clampedSide floors at minimumSide = 1 for every layer; CanvasView.resizedFrame floors a text drag at TextRasterizer.minimumTextWidth (80). Either LayerGeometry needs a per-layer floor or LayerGeometrySelection.applying needs to ask the layer. Found while building a-label-grows-to-fit-what-it-says.",
@@ -42,7 +42,12 @@
     {
       "t": "2026-09-04T07:12:00.000Z",
       "note": "Post-build review. The hover tip is the one piece not photographed: the playtest hover step only finds toolbar tooltips, so the copy is covered by a core test instead. Left alone deliberately: whether 80 is the right floor at all is a product question, and it is asked in the audit rather than changed here."
+    },
+    {
+      "t": "2026-09-04T06:45:55.686Z",
+      "note": "A typed width now stops where the dragged one does: text floors at 80 both ways (one constant, TextMeasurement.minimumWidth, read per layer through LayerGeometryEditing.minimum(for:)), the W field shows what the box took rather than what was typed, and an arrow key holds at the floor. Verified in the probe with Scripts/playtest/text-width-floor-walk.json plus 2767 green tests; audit queue/audits/2026-09-04-typed-width-floor.json with a real screen capture."
     }
   ],
-  "started": "2026-09-04T06:36:01.402Z"
+  "started": "2026-09-04T06:36:01.402Z",
+  "completed": "2026-09-04T06:45:55.687Z"
 }
