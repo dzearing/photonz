@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T02:31:38.302Z",
-  "updated": "2026-09-04T05:33:30.169069Z",
+  "updated": "2026-09-04T05:33:56.779Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Open state currently lives in EditorState.expandedGroupIDs, per window, in memory. Persisting it means either a per-document side file keyed by layer UUID, or a field on the document that is deliberately not part of what a document IS. The choice is a UX decision about whether interface state belongs in a shared file: worth a decision card before building.",
@@ -70,7 +70,12 @@
     {
       "t": "2026-09-04T05:33:30.169069Z",
       "note": "One harness addition was needed and is probe only: a saveLayers action, because the ordinary Save As puts up a dialog and a background process cannot answer one. Documented in docs/design/playtest-harness.md."
+    },
+    {
+      "t": "2026-09-04T05:33:56.778Z",
+      "note": "Which groups a file has open in the layers list is remembered per file and restored on open, in the app's own settings, never in the document (OpenGroupMemory in PhotonzCore, 15 tests; PhotonzDocument.openableGroupIDs, 3 tests; wired through EditorState behind the layer groups flag). Verified on the probe in two separate processes: the group is open with nothing clicked after a relaunch, canUndo is false, the picture and its package are byte identical, and a bogus group id seeded into the record was pruned on reopen. Perf A/B on the selection latency guard shows no change. Audit: queue/audits/2026-09-04-open-groups-remembered.json. Commit 58273ce, pushed."
     }
   ],
-  "started": "2026-09-04T05:16:10.561Z"
+  "started": "2026-09-04T05:16:10.561Z",
+  "completed": "2026-09-04T05:33:56.779Z"
 }
