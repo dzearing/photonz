@@ -571,13 +571,14 @@ private final class Run {
             await screenCapture(window, name: name)
             note(number, step.name, "\(name).png \(Int(content.bounds.width))x\(Int(content.bounds.height)) pt")
 
-        case .render(let name):
+        case .render(let name, let scale):
             let editor = try requireEditor()
-            guard let document = editor.document, let image = DocumentRenderer().render(document, store: editor.store) else {
+            guard let document = editor.document,
+                  let image = DocumentRenderer().render(document, store: editor.store, scale: scale) else {
                 throw Failure(description: "the document did not render")
             }
             try writePNG(image, name: name)
-            note(number, step.name, "\(name).png \(image.width)x\(image.height) px")
+            note(number, step.name, "\(name).png \(image.width)x\(image.height) px at \(scale)x")
 
         case .panelMenu(let menu, let shot, let choose):
             try await openPanelMenu(menu, shot: shot, choose: choose, number: number)

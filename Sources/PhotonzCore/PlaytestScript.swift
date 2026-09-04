@@ -576,8 +576,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// editor's, by its title: the history overlay is its own floating panel,
     /// so it is the only way to get a picture of it at all.
     case snapshot(name: String, window: String?)
-    /// Composite the document itself to `<out>/<name>.png`.
-    case render(name: String)
+    /// Composite the document itself to `<out>/<name>.png`, at `scale` output
+    /// pixels per document point — 1 for the picture as it is, 2 for the one
+    /// the export dialog's 2x hands back.
+    case render(name: String, scale: CGFloat)
     /// Open a menu that lives INSIDE the window — the Add menu on a
     /// component's Adjustable list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
@@ -781,7 +783,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .dragFile(file: try f.string("file"), at: try f.point("at"),
                              hold: try f.optionalString("hold"))
         case "render":
-            self = .render(name: try f.string("name"))
+            self = .render(name: try f.string("name"),
+                           scale: CGFloat(try f.optionalNumber("scale") ?? 1))
         case "panelMenu":
             self = .panelMenu(menu: try f.string("menu"),
                               shot: try f.optionalString("shot"),

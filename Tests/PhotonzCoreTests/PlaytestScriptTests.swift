@@ -203,8 +203,8 @@ struct PlaytestScriptTests {
         #expect(defaultTimeout == PlaytestStep.defaultTimeout)
         guard case .snapshot(let name, _) = script.steps[12] else { Issue.record("snapshot"); return }
         #expect(name == "3-distance")
-        guard case .render(let render) = script.steps[13] else { Issue.record("render"); return }
-        #expect(render == "final")
+        guard case .render(let render, let renderScale) = script.steps[13] else { Issue.record("render"); return }
+        #expect(render == "final" && renderScale == 1)
         guard case .describe(let stage, let note) = script.steps[14] else { Issue.record("describe"); return }
         #expect(stage == "3-distance" && note == "after two clicks")
         guard case .clearClipboard = script.steps[15] else { Issue.record("clearClipboard"); return }
@@ -225,6 +225,19 @@ struct PlaytestScriptTests {
         guard case .drag(_, _, let steps, _, _) = script.steps[1] else { Issue.record("drag"); return }
         #expect(steps == PlaytestStep.defaultDragSteps)
         #expect(script.out == nil)
+    }
+
+    /// A walk that wants to see what EXPORTING looks like asks the render step
+    /// for the scale the export dialog would use.
+    @Test func aRenderStepCanAskForAnExportScale() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "render", "name": "at-2x", "scale": 2 },
+                     { "do": "render", "name": "plain" } ] }
+        """)
+        guard case .render(let name, let scale) = script.steps[0] else { Issue.record("render"); return }
+        #expect(name == "at-2x" && scale == 2)
+        guard case .render(_, let plain) = script.steps[1] else { Issue.record("render"); return }
+        #expect(plain == 1)
     }
 
     @Test func theOutputFolderDefaultsToOutBesideTheScript() throws {

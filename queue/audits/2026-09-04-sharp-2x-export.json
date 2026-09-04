@@ -1,0 +1,29 @@
+{
+  "feature": "Exporting at 2x draws the picture at 2x",
+  "epic": "measure-redline",
+  "summary": "Choosing 2x in Export used to make a file with four times the pixels and none of the detail: the app finished the picture at document size and then enlarged it, so every measurement, caption and label came out just as soft as at 1x. The whole document is now drawn at the export's resolution, so the words have hard edges, and the capture underneath is enlarged exactly as well as it was before.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Open a screenshot.", "shot": "2026-09-04-sharp-2x-export-2.png" },
+    { "do": "Press I for Measure and drag a measurement across something with a number you can read." },
+    { "do": "Press Command E to open Export." },
+    { "do": "Pick PNG, pick 2x, and save the file." },
+    { "do": "Open that file in Preview and zoom to 200 percent." },
+    { "do": "Read the number in the chip, then compare it with the same export at 1x blown up to the same size.", "shot": "2026-09-04-sharp-2x-export-1.png" }
+  ],
+  "evaluate": [
+    "Does the number in the chip read as printed text rather than a photograph of text?",
+    "Is the screenshot underneath the redline as clean as it was in the old 2x export, or does anything about it look softer?",
+    "Does a 2x export still come back fast enough that saving feels instant?",
+    "Would you want a 3x option now that 2x means something, or is 2x all a hand-off needs?",
+    "Anything in a 2x export that still looks like it was enlarged rather than drawn?"
+  ],
+  "rough": [
+    "Shot 1 is the real thing: the top half is a 2x export from the probe, the bottom half is the same patch of the 1x export enlarged the way exporting used to enlarge it, both at the same size. Shot 2 is a real screen capture of the editor at the start of that run.",
+    "The capture itself has no more detail to give, so a 2x export is sharp marks over a smoothly enlarged screenshot. That is as good as it can be from a 1x source, but it does mean the two halves of the picture have different characters up close.",
+    "The dialog still just says 1x and 2x with a pixel count. Nothing in it promises a sharper picture, so somebody who never compared the two files would not know this changed.",
+    "Exporting a 12 megapixel document with ten layers takes about 90ms, the same as before: drawing four times the pixels costs about what enlarging twelve million of them cost.",
+    "A shape so big it fills the whole canvas is still enlarged rather than redrawn, the same cap the zoomed canvas uses. Normal marks are drawn at full resolution.",
+    "Zoomed-in canvas photos changed slightly too, since export and canvas share one path: they are now enlarged with the better resampler. No measurable cost, and nothing moved."
+  ]
+}

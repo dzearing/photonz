@@ -293,20 +293,29 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
 
     /// The composite at an integer-or-not scale factor (2 = retina export).
-    /// Upscaling happens on the assembled composite with Lanczos resampling,
-    /// GPU-side, before readback.
+    ///
+    /// Exporting at 2x asks for a bigger picture, and a bigger picture is only
+    /// worth having if it is a SHARPER one. So the whole document is drawn at
+    /// the export's resolution — the same crisp path a zoomed-in canvas takes
+    /// (`renderTile`) — rather than finished at document size and enlarged
+    /// afterwards: the words in a label, a measurement's number, an arrow's
+    /// caption and every border are laid out in export pixels and come out
+    /// with hard edges. A photo has no more detail to give, so it is blown up,
+    /// exactly the way the canvas blows it up.
     public func render(_ document: PhotonzDocument, store: ImageStore, scale: CGFloat) -> CGImage? {
-        guard scale > 0 else { return nil }
+        guard scale > 0, scale.isFinite else { return nil }
         guard scale != 1 else { return render(document, store: store) }
-        guard let output = compositeImage(document, store: store) else { return nil }
-        let scaled = output.applyingFilter("CILanczosScaleTransform", parameters: [
-            kCIInputScaleKey: scale,
-            kCIInputAspectRatioKey: 1.0
-        ])
+        // Whole output pixels: a canvas that does not land on one at this
+        // scale still exports a whole number of them, and the flip the layers
+        // are composited against has to agree with the frame that comes out.
         let extent = CGRect(x: 0, y: 0,
                             width: (document.canvasSize.width * scale).rounded(),
                             height: (document.canvasSize.height * scale).rounded())
-        return context.createCGImage(scaled.cropped(to: extent), from: extent)
+        guard extent.width >= 1, extent.height >= 1 else { return nil }
+        var magnified = document.magnified(by: scale)
+        magnified.canvasSize = extent.size
+        guard let output = compositeImage(magnified, store: store, contentScale: scale) else { return nil }
+        return context.createCGImage(output.cropped(to: extent), from: extent)
     }
 
     /// A patch of the composite drawn at `scale` output pixels per document
@@ -609,10 +618,15 @@ public final class DocumentRenderer: @unchecked Sendable {
             ? layer.frame.size
             : CGSize(width: layer.frame.width / contentScale, height: layer.frame.height / contentScale)
         var image: CIImage
+        // Whether the stored bitmap this layer draws is about to be blown up
+        // by a magnified render, which is the one case worth paying a better
+        // resampler for (see the scale-into-frame step below).
+        var enlargesPhoto = false
         switch layer.content {
         case .image(let ref):
             guard let cg = store.image(for: ref) else { return nil }
             image = magnified(wrapped(cg), nearest: magnifyNearest, scale: contentScale)
+            enlargesPhoto = !magnifyNearest && contentScale > 1
         case .text(let text):
             // Baked at the resolution it will be SHOWN at, so the scale-to-frame
             // step below is 1:1 and the words stay sharp however far in you are
@@ -691,7 +705,28 @@ public final class DocumentRenderer: @unchecked Sendable {
         if contentSize.width > 0, contentSize.height > 0 {
             let sx = frame.width / contentSize.width
             let sy = frame.height / contentSize.height
-            image = image.transformed(by: CGAffineTransform(scaleX: sx, y: sy))
+            // A photo has no more detail to give, so on a magnified render it
+            // is enlarged with the best resampling there is rather than the
+            // plain one an affine transform uses. That is what an export at 2x
+            // has always done to the whole picture, and it is why the capture
+            // under a redline stays as clean as it was before the words on top
+            // of it got sharp.
+            if enlargesPhoto, sx > 1, sy > 0 {
+                // Clamped first: the resampling kernel reaches past the edge of
+                // the bitmap, and without an edge to hold on to it fades the
+                // outermost pixels towards transparent, which shows up as a
+                // soft rim around a capture. Cropped back afterwards so the
+                // picture is exactly the size the frame asked for.
+                let target = image.extent.applying(CGAffineTransform(scaleX: sx, y: sy))
+                image = image.clampedToExtent()
+                    .applyingFilter("CILanczosScaleTransform", parameters: [
+                        kCIInputScaleKey: sx,
+                        kCIInputAspectRatioKey: sy / sx
+                    ])
+                    .cropped(to: target)
+            } else {
+                image = image.transformed(by: CGAffineTransform(scaleX: sx, y: sy))
+            }
         }
 
         // Style: blur (clamped first so edges don't fade to transparent).

@@ -7838,3 +7838,39 @@ at about 316% zoom, chip and caption going from visibly blurry to sharp
 Next / open: the sharp copy still arrives about 90ms after you stop zooming, so
 there is a soft frame first. That delay predates this and is a separate question
 about how eagerly the tile should be drawn.
+
+## 2026-09-04 — Exporting at 2x draws the picture at 2x
+
+`DocumentRenderer.render(_:store:scale:)` composited at 1x and ran
+`CILanczosScaleTransform` over the finished picture, so a 2x export was four
+times the pixels and none of the detail. It now composites
+`document.magnified(by: scale)` with `contentScale: scale` — the same crisp path
+`renderTile` takes for a zoomed-in canvas — so type, chips, captions, strokes
+and borders are laid out in export pixels. The magnified document's
+`canvasSize` is rounded to whole output pixels first, so the flip the layers
+composite against agrees with the frame that comes out.
+
+Doing only that would have traded one softness for another: the capture
+underneath went from a Lanczos enlargement to Core Image's default affine
+sampling, measurably softer (hard-edge share 0.20 against 0.40 on a striped
+fixture). So `ciImage(for:)` now enlarges stored bitmaps with Lanczos whenever a
+magnified render blows them up, clamped first and cropped back — without the
+clamp the kernel reaches past the bitmap and fades a soft rim around the export,
+which is what a fractional-scale test caught. Downscales and every 1x render are
+untouched, so a 1x export is byte for byte what it always was (pinned by a
+test). The zoomed canvas shares the path and gets the better resampler too, at
+no measurable cost (crisp tile 9.0/9.3/9.7ms at 200/400/800%, was
+9.2/9.5/9.8ms).
+
+Perf: 12MP/10-layer export at 2x is ~88ms median, against ~93ms for the old
+enlarge-afterwards path — a wash, slightly ahead, and now guarded by
+`exports12MPDocumentAtTwoWithinBudget`. Export is not on the 16ms budget; the
+new test bounds it at 400ms locally.
+
+The playtest `render` step takes an optional `scale`, so a walk can produce
+exactly what the Export dialog would write. That is how this was verified on the
+probe: `queue/audits/2026-09-04-sharp-2x-export.json`, with the 2x export and
+the old-style enlargement of the same patch stacked in one picture.
+
+Next / open: the Export dialog still says nothing about what 2x buys, and 3x is
+not offered. Both are questions for the user rather than gaps in this change.

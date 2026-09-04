@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 1130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T08:22:23.542Z",
-  "updated": "2026-09-04T08:22:23.543Z",
+  "updated": "2026-09-04T10:02:09.793Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "DocumentRenderer.render(_:store:scale:) still composites at 1x and applies CILanczosScaleTransform. The machinery to do it properly landed on 2026-09-04: composite document.magnified(by: scale) with contentScale: scale, the way renderTile does. Left out of that task because it changes the pixels every existing export test pins.",
+  "notes": "DocumentRenderer.render(_:store:scale:) still composites at 1x and applies CILanczosScaleTransform. The machinery to do it properly landed on 2026-09-04: composite document.magnified(by: scale) with contentScale: scale, the way renderTile does. Left out of that task because it changes the pixels every existing export test pins.\n\nDone 2026-09-04. render(_:store:scale:) in DocumentRenderer.swift now mirrors renderTile. The second half of the fix matters as much as the first: stored bitmaps are Lanczos-enlarged in ciImage(for:) (gated on enlargesPhoto, i.e. .image content, contentScale > 1, not magnifyNearest) so the capture keeps the quality the old whole-composite Lanczos gave it. clampedToExtent before the filter is load-bearing: without it the export gets a faded rim. Playtest walks can now render at a scale: { \"do\": \"render\", \"name\": \"x\", \"scale\": 2 }.",
   "acceptance": [
     "A label exported at 2x has visibly sharper edges than the same label exported at 1x and scaled up",
     "Exporting at 1x produces exactly the pixels it does today",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-04T08:22:23.543Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T10:02:09.793Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T10:19:44.769Z",
+      "note": "Adversarial review before building: the task said composite the magnified document, full stop. Taken literally that trades one softness for another, because the capture under the redline stops getting the good enlargement it used to get from the Lanczos pass over the whole composite, and the capture is most of what a redline export IS. Measured it on a striped fixture: hard-edge share 0.20 against 0.40. So the short version is crisp composite PLUS keeping the good resampler for stored bitmaps."
+    },
+    {
+      "t": "2026-09-04T10:19:44.769Z",
+      "note": "Built: render(_:store:scale:) composites document.magnified(by: scale) with contentScale: scale, canvasSize rounded to whole output pixels. ciImage(for:) enlarges stored bitmaps with CILanczosScaleTransform when a magnified render blows them up, clampedToExtent first and cropped back (without the clamp the kernel fades a rim around the picture; a fractional-scale test caught it). 1x and every downscale untouched."
+    },
+    {
+      "t": "2026-09-04T10:19:44.769Z",
+      "note": "Tests: ScaledRenderTests gained sharper-than-the-old-path, export-equals-the-canvas-tile, 1x-is-byte-for-byte, no-faded-corners, fractional-scale, and capture-no-softer-than-it-was. RenderPerfTests gained exports12MPDocumentAtTwoWithinBudget. Playtest render step takes an optional scale (PhotonzCore + harness + a parse test). Full suite 2908 green."
+    },
+    {
+      "t": "2026-09-04T10:19:44.769Z",
+      "note": "Perf: 12MP/10-layer 2x export ~88ms median against ~93ms for the old path, with pixels forced (createCGImage is lazy, so measuring without forcing them reported a bogus 0.3ms). Crisp tile 9.0/9.3/9.7ms at 200/400/800%, was 9.2/9.5/9.8ms."
+    },
+    {
+      "t": "2026-09-04T10:19:44.769Z",
+      "note": "Adversarial review after building, on the probe: ran a walk that opens a capture, places a measurement and renders at 1x and 2x. The chip goes from fuzzy to sharp, stacked in queue/audits/2026-09-04-sharp-2x-export-1.png. Still rough: the Export dialog promises nothing about sharpness, and the capture underneath is inherently an enlargement, so the two halves of a 2x export read differently up close."
     }
-  ]
+  ],
+  "started": "2026-09-04T10:02:09.792Z"
 }

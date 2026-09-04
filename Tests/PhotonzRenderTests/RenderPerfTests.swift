@@ -273,6 +273,40 @@ struct RenderPerfTests {
         #expect(median < 100, "crisp tile over a redlined capture regressed badly: \(median)ms")
     }
 
+    /// Exporting a 12MP document at 2x draws the whole thing at 2x instead of
+    /// enlarging a finished picture, so the words come out sharp. Drawing more
+    /// pixels costs more, and enlarging 12 million of them cost plenty too, so
+    /// this pins that the swap did not make saving a file slower. Export is not
+    /// on the 16ms budget (nobody drags a slider through it), but it is
+    /// something a person waits on, so it gets a bound of its own.
+    @Test func exports12MPDocumentAtTwoWithinBudget() {
+        let store = ImageStore()
+        let doc = makeBenchmarkDocument(store: store)
+        let renderer = DocumentRenderer()
+        // Core Image hands back a lazily-backed picture; encoding a file is
+        // what forces the pixels, so force them inside the measurement.
+        func force(_ image: CGImage?) { _ = image?.dataProvider?.data }
+        force(renderer.render(doc, store: store, scale: 2))
+
+        var samples: [Double] = []
+        let clock = ContinuousClock()
+        for _ in 0..<5 {
+            let duration = clock.measure {
+                force(renderer.render(doc, store: store, scale: 2))
+            }
+            samples.append(Double(duration.components.seconds) * 1000
+                           + Double(duration.components.attoseconds) / 1e15)
+        }
+        samples.sort()
+        let median = samples[samples.count / 2]
+        print("[perf] 12MP/10-layer export at 2x — median \(String(format: "%.1f", median))ms, " +
+              "min \(String(format: "%.1f", samples[0]))ms, " +
+              "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
+        // Measured ~90ms locally, the same as the old enlarge-afterwards path.
+        let bound: Double = ProcessInfo.processInfo.environment["CI"] != nil ? 700 : 400
+        #expect(median < bound, "2x export regressed badly: \(median)ms")
+    }
+
     /// The 16ms budget applies to *re-renders during editing* — that's what
     /// the user feels on every drag tick and slider tweak. The interactive
     /// path patches dirty regions, so measure it the way the app uses it:
