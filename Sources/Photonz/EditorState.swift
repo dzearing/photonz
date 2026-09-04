@@ -199,6 +199,11 @@ final class EditorState {
     // strokeWidth is in LOGICAL pixels (rendered ×pixelScale) so a 1px sizer line
     // aligns with the image's pixel grid.
     private(set) var measureStyles: MeasureStyles = EditorState.loadMeasureStyles()
+    /// The zoom callout tool's persisted memory: box or circle. The Zoom
+    /// Callout Tool section sets it, drawing a callout reads it, and changing a
+    /// picked callout's shape absorbs into it the way every other style edit
+    /// absorbs into the tool that drew it.
+    private(set) var calloutStyles: CalloutStyles = EditorState.loadCalloutStyles()
     /// Template content for a new caliper. The axis, feet, and head offset are
     /// set per placement, so mode/start/end/headOffset here are placeholders.
     var measureStyle: MeasureContent { measureStyles.content }
@@ -1335,7 +1340,8 @@ final class EditorState {
     func addZoomCallout(from start: CGPoint, to end: CGPoint) {
         guard let document,
               let layer = ZoomCalloutBuilder.layer(from: start, to: end,
-                                                   canvas: document.canvasSize) else { return }
+                                                   canvas: document.canvasSize,
+                                                   shape: calloutToolShape) else { return }
         perform { $0.addLayerDrawnOnFrame(layer) }
         finishCreating(layer.id)
     }
@@ -2075,6 +2081,33 @@ final class EditorState {
         return styles
     }
 
+    private static let calloutStylesKey = "calloutStyles"
+
+    private static func loadCalloutStyles() -> CalloutStyles {
+        guard let data = UserDefaults.standard.data(forKey: calloutStylesKey),
+              let styles = try? JSONDecoder().decode(CalloutStyles.self, from: data) else {
+            return CalloutStyles()
+        }
+        return styles
+    }
+
+    /// What the NEXT callout is drawn as. The tool section reads and writes
+    /// this; with the flag off it is always a rectangle, which is what Current
+    /// has always drawn.
+    var calloutToolShape: ZoomCalloutShape {
+        get { Experiments.shared.calloutShapeEnabled ? calloutStyles.shape : .rectangle }
+        set { rememberCalloutShape(newValue) }
+    }
+
+    /// Absorbs a shape choice into the tool's memory and persists it.
+    private func rememberCalloutShape(_ shape: ZoomCalloutShape) {
+        guard Experiments.shared.calloutShapeEnabled, calloutStyles.shape != shape else { return }
+        calloutStyles.shape = shape
+        if let data = try? JSONEncoder().encode(calloutStyles) {
+            UserDefaults.standard.set(data, forKey: Self.calloutStylesKey)
+        }
+    }
+
     /// The document's pixels-per-point scale, driving the points readout. A Retina
     /// screenshot is 2×. Changing it re-renders every measure's label.
     func setDocumentPixelScale(_ scale: CGFloat) {
@@ -2486,6 +2519,10 @@ final class EditorState {
               callout.shape != shape else { return }
         callout.shape = shape
         perform { $0.updateLayer(id: layer.id) { $0.content = .zoomCallout(callout) } }
+        // Rounding one callout arms the tool, the way painting a shape arms the
+        // tool that draws it: the next callout comes out the shape you just
+        // chose rather than back to a rectangle.
+        rememberCalloutShape(shape)
     }
 
     // A callout's ring has no setter of its own. It IS the layer's border, so

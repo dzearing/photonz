@@ -1,0 +1,27 @@
+{
+  "id": "a-new-callout-should-not-land-on-top-of-the-one",
+  "title": "A new callout should not land on top of the one already there",
+  "goal": "When you draw a second zoom callout near the first, the new one is placed on top of the one already on the picture, so you have to drag it off before you can read either. Placement looks for free space on the picture but does not count the callouts already placed.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1180,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T09:36:55.120Z",
+  "updated": "2026-09-04T09:36:55.121Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Geometry.zoomCalloutPlacement takes source, magnification and canvas only. It has no view of the document, so it cannot avoid what is already there. Seen while running Scripts/playtest/callout-shape-walk.json: the second circle callout landed over the first.",
+  "acceptance": [
+    "Drawing a second callout near an existing one places it clear of that callout",
+    "A callout that has nowhere clear to go still lands somewhere on the canvas rather than off it",
+    "The existing placement walk still puts a lone callout where it puts it today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T09:36:55.121Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/callout-shape",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "action", "action": "armCalloutRectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-tool-in-hand", "note": "Zoom Callout picked and nothing drawn: the dock shows a Zoom Callout Tool section with a Shape row, set to Rectangle" },
+    { "do": "snapshot", "name": "calloutshape-1-tool-section" },
+
+    { "do": "action", "action": "armCalloutCircle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-armed-circle", "note": "Shape set to Circle before drawing anything: calloutToolShape must say circle" },
+    { "do": "snapshot", "name": "calloutshape-2-armed-circle" },
+
+    { "do": "drag", "from": [300, 300], "to": [520, 440], "steps": 12, "hold": "calloutshape-3-round-draft" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-first-callout", "note": "the box dragged out previewed round (see the hold shot) and the callout landed round, no trip to the panel" },
+    { "do": "snapshot", "name": "calloutshape-4-first-circle" },
+    { "do": "render", "name": "calloutshape-5-circle-render" },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "describe", "stage": "4-tool-back", "note": "back on the tool with nothing picked: calloutToolShape must still say circle, the tool kept the choice" },
+    { "do": "drag", "from": [760, 300], "to": [980, 440], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "5-second-callout", "note": "a second callout, never touched in the panel, comes out round like the first" },
+    { "do": "render", "name": "calloutshape-6-two-circles" },
+    { "do": "snapshot", "name": "calloutshape-7-two-circles-window" },
+
+    { "do": "action", "action": "roundCallout" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "6-already-round", "note": "the picked callout is already a circle, so the picked-callout Shape row changes nothing" },
+
+    { "do": "action", "action": "armCalloutRectangle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "drag", "from": [300, 620], "to": [520, 760], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "7-back-to-boxes", "note": "Shape put back to Rectangle: the next callout is a box again" },
+    { "do": "render", "name": "calloutshape-8-box-again" },
+    { "do": "snapshot", "name": "calloutshape-9-final" }
+  ]
+}

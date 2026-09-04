@@ -394,6 +394,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// a slider drag does (preview, then one committed undo step), and switch
     /// the Shape row to Circle.
     case magnifyCallout, roundCallout
+    /// The Zoom Callout TOOL's Shape row, which is the choice made with the
+    /// tool in your hand and before any callout exists. Also in the dock, so
+    /// also out of a pointer's reach.
+    case armCalloutCircle, armCalloutRectangle
     case setTextSize, setTextWeight
     /// The same menus set the other way, so a walk can put the picked labels
     /// into a known state whatever the last walk left the new-text default at.

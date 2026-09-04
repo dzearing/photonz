@@ -64,9 +64,13 @@ public enum ZoomCalloutBuilder {
     /// the pixel-aligned drag box becomes the magnified source, and the frame
     /// lands where `Geometry.zoomCalloutPlacement` finds the most free space.
     /// Nil when the box is degenerate or off-canvas.
+    /// `shape` is what the tool in your hand is set to draw: a box, or a
+    /// circle. It reaches the new callout here so the choice is made BEFORE the
+    /// drag rather than corrected after it.
     public static func layer(from start: CGPoint, to end: CGPoint, canvas: CGSize,
                              magnification: CGFloat = ZoomCalloutBuilder.defaultMagnification,
-                             style: LayerStyle = ZoomCalloutBuilder.defaultStyle) -> Layer? {
+                             style: LayerStyle = ZoomCalloutBuilder.defaultStyle,
+                             shape: ZoomCalloutShape = .rectangle) -> Layer? {
         let box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
                          width: abs(end.x - start.x), height: abs(end.y - start.y))
         let source = Geometry.pixelAligned(box.intersection(CGRect(origin: .zero, size: canvas)))
@@ -75,7 +79,8 @@ public enum ZoomCalloutBuilder {
                                                   canvas: canvas)
         return Layer(name: "Zoom",
                      content: .zoomCallout(ZoomCalloutContent(sourceRect: source,
-                                                              magnification: magnification)),
+                                                              magnification: magnification,
+                                                              shape: shape)),
                      frame: frame, style: style)
     }
 

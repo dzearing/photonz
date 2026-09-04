@@ -1,0 +1,28 @@
+{
+  "feature": "Pick a zoom callout's shape before you draw it",
+  "epic": "ui-building",
+  "summary": "The Zoom Callout tool now carries its own Shape choice, Rectangle or Circle, while the tool is in your hand. The box you drag out previews in that shape, the callout lands in it, and the tool keeps the choice for the next one and after a relaunch.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Choose a zoom callout's shape before you draw it\", on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press Z to pick up the Zoom Callout tool.", "shot": "2026-09-04-callout-shape-1.png" },
+    { "do": "In the inspector, find the Zoom Callout Tool section and click Circle." },
+    { "do": "Drag a box over something worth magnifying, and look at the outline while the button is still down.", "shot": "2026-09-04-callout-shape-2.png" },
+    { "do": "Let go and watch the callout fly out." },
+    { "do": "Press Z again and drag a second box somewhere else." },
+    { "do": "Click that second callout and switch its Shape to Rectangle in the Zoom Callout section." },
+    { "do": "Press Z and drag a third box." }
+  ],
+  "evaluate": [
+    "Is the Shape row where you would look for it, or did you go to the tool button first?",
+    "Does a round drag outline tell you enough about what is coming, or did you still expect a rectangle?",
+    "Should the tool keep the last shape at all, or should every callout start as a rectangle?",
+    "After step 6, the third callout is a rectangle because changing a callout armed the tool. Is that what you expected, or should the panel leave the tool alone?",
+    "Is Circle worth a permanent row in the inspector, or would you rather it were a key you hold while dragging?"
+  ],
+  "rough": [
+    "With the inspector hidden there is no way to the choice at all. Every other tool setting has the same gap (the wand's tolerance, crop's aspect), so this follows the house rule rather than fixing it.",
+    "Magnification is deliberately NOT remembered by the tool. It comes out of the drag and every corner pull rewrites it, so a remembered value would quietly be whatever the last resize left behind.",
+    "Two callouts drawn near each other still land on top of one another: placement looks for free space on the picture but ignores callouts already placed. Filed separately, not touched here.",
+    "The tool section is titled \"Zoom Callout Tool\" and a picked callout's section is titled \"Zoom Callout\". They never show at once (picking up the tool drops the selection), but the two names sit one word apart."
+  ]
+}

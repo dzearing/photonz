@@ -300,6 +300,13 @@ struct InspectorPanel: View {
         if editorState.activeTool == .crop, Experiments.shared.toolOptionsEnabled {
             set.insert(.cropTool)
         }
+        // The Zoom Callout tool's shape, while the tool is in hand
+        // (`next-callout-shape`). Same test as the wand's tolerance: it changes
+        // what the drag produces, not what the pointer does, so it is a setting
+        // and settings live here.
+        if editorState.activeTool == .zoomCallout, Experiments.shared.calloutShapeEnabled {
+            set.insert(.calloutTool)
+        }
         return set
     }
 
@@ -369,6 +376,8 @@ struct InspectorPanel: View {
             WandToolInspector()
         case .cropTool:
             CropToolInspector()
+        case .calloutTool:
+            CalloutToolInspector()
         case .frame:
             if let layer = selectedLayer, layer.isFrame {
                 FrameInspector(layer: layer)
@@ -539,6 +548,11 @@ enum InspectorSectionID: String, CaseIterable {
     case measureTool
     case wandTool
     case cropTool
+    // The Zoom Callout tool's own setting (`next-callout-shape`): whether the
+    // next callout comes out a box or a circle. It sits with the other
+    // tool-in-hand sections, and the picked-callout section below carries the
+    // same choice for one that is already on the canvas.
+    case calloutTool
     case measurements
     // Above Position & Size, because the two answer the same question at
     // different scales: where do these sit, and where does this one sit.
@@ -593,6 +607,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .measureTool: "Measure Tool"
         case .wandTool: "Magic Wand"
         case .cropTool: "Crop Tool"
+        case .calloutTool: "Zoom Callout Tool"
         case .measurements: "Measurements"
         case .arrange: "Arrange"
         case .geometry: "Position & Size"
@@ -1511,6 +1526,40 @@ struct CropToolInspector: View {
             }
             .labelsHidden().controlSize(.small)
             .help("What shape the crop keeps. The Crop button holds the same list.")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+    }
+}
+
+// MARK: - Zoom Callout tool properties (D15)
+
+/// The Zoom Callout tool's own property, shown while the tool is in hand:
+/// whether the next callout is a box or a circle.
+///
+/// The shape used to be reachable only after the fact, in a picked callout's
+/// own section, so getting a circle meant drawing a rectangle and then going to
+/// fix it. It is a setting by D15's test — it changes what the drag produces,
+/// not what the pointer does — so it belongs with the tool's properties, and
+/// the tool keeps whatever you last chose.
+struct CalloutToolInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        @Bindable var state = editorState
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Shape").font(.caption).foregroundStyle(.secondary)
+            Picker("Shape", selection: $state.calloutToolShape) {
+                ForEach(ZoomCalloutShape.allCases, id: \.self) { shape in
+                    Text(shape.title).tag(shape)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .controlSize(.small)
+            .help("What the next callout is drawn in. The box you drag out previews "
+                  + "in the same shape, and a callout already on the canvas is "
+                  + "switched in its own section.")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)

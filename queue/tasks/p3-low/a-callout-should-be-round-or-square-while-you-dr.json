@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T07:27:44.952Z",
-  "updated": "2026-09-04T07:27:44.952Z",
+  "updated": "2026-09-04T09:25:22.752Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fallout from a-callout-ring-has-one-color-not-two. Shape now lives only in CalloutInspector (Sources/Photonz/CalloutInspector.swift), which needs a callout picked. The other tools keep their defaults in AnnotationStyles/UserDefaults; a callout has no equivalent, ZoomCalloutBuilder.layer always takes the default ZoomCalloutContent shape (.rectangle). Worth asking whether anyone wants circles at all before building the remembered-default plumbing.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-04T07:27:44.952Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T09:25:22.752Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T09:28:36.783Z",
+      "note": "Review before building. (1) Does anyone want circles? The choice already ships: a drawn callout can be made round in the Zoom Callout section. So this is not a new capability to validate, it is a two-step job that should be one. No decision card needed. (2) Where the choice belongs: D15 already answers this. Measure, Magic Wand and Crop each show their settings as a dock section while the tool is in hand (measureTool/wandTool/cropTool in LayersPanel). Shape passes D15 test for a setting rather than a mode: it changes what the result looks like, not what the pointer does. So it is a Zoom Callout Tool section, not a new flyout on the tool button. (3) Mock says nothing here, nothing to disagree with. (4) Shortest version: one Shape row plus a remembered default. Magnification deliberately left out of the tool section, it comes from the drag and every corner drag rewrites it, so remembering it would be noise. (5) What would surprise a first-time user: with Circle chosen, the drag box previews as a rectangle and a circle flies out. The renderer draws the source outline in the callout own silhouette, so the draft must be round too, and the landing animation must use the effective radius or it lands square then snaps. Both are in scope."
+    },
+    {
+      "t": "2026-09-04T09:28:36.784Z",
+      "note": "Plan: CalloutStyles in PhotonzCore (persisted shape memory, tested), ZoomCalloutBuilder.layer gains a shape parameter, new next-only flag next-callout-shape on by default in Next, Zoom Callout Tool dock section, drag preview and creation flight follow the chosen shape, and the picked-callout Shape picker absorbs into the memory the way the colour and fill pickers do."
+    },
+    {
+      "t": "2026-09-04T09:37:08.454Z",
+      "note": "Built. PhotonzCore gains CalloutStyles (the tool own memory, one field, tolerant decode, tests first) and ZoomCalloutBuilder.layer takes a shape. New next-only flag next-callout-shape, on by default in Next. EditorState holds calloutStyles under the calloutStyles defaults key with a calloutToolShape property; drawing reads it and the picked-callout Shape picker absorbs into it, the way painting a shape arms the tool that draws it. LayersPanel gains a Zoom Callout Tool section (CalloutToolInspector) beside Measure Tool, Magic Wand and Crop Tool. CanvasView carries the shape so the drag box previews round and the creation flight uses the callout own effective radius rather than the style radius, which is why a circle no longer lands square and snaps."
+    },
+    {
+      "t": "2026-09-04T09:37:08.455Z",
+      "note": "Review of the built thing, in the probe (Scripts/playtest/callout-shape-walk.json, Screen Recording granted so these are real window captures). Works: the section is on screen with the tool in hand and nothing drawn, the drag outline is round while the button is still down, the callout lands round, a second callout drawn afterwards comes out round without touching the panel, and putting the row back to Rectangle gives a box again. Also checked that a circle clips the magnified picture to the circle rather than drawing a round ring over a square, over a content rich region. Left rough: with the inspector hidden there is no way to the choice, same gap the wand tolerance and the crop aspect have; and two callouts drawn near each other still land on top of each other, which is placement not knowing about callouts already placed, filed as its own task."
+    },
+    {
+      "t": "2026-09-04T09:37:08.455Z",
+      "note": "Acceptance: (1) the tool remembers the shape, proved across two drags and persisted to UserDefaults; (2) the choice is reachable with nothing drawn, the Zoom Callout Tool section; (3) a placed callout still switches in its own Zoom Callout section, unchanged. Full suite green, 2879 tests. Audit at queue/audits/2026-09-04-callout-shape.json with two window captures."
     }
-  ]
+  ],
+  "started": "2026-09-04T09:25:22.752Z"
 }

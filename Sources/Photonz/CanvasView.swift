@@ -55,6 +55,9 @@ struct CanvasView: NSViewRepresentable {
     /// Styled content the active tool draws (color/width from the style
     /// popover), so the drag preview matches what commit will rasterize.
     let annotationContent: AnnotationContent?
+    /// What the Zoom Callout tool is set to draw (`next-callout-shape`), so the
+    /// box you drag out previews and flies in the shape that lands.
+    let calloutShape: ZoomCalloutShape
     /// The non-destructive style a freshly drawn shape inherits (border, corner
     /// radius…). The live preview needs it because a shape's visible outline can
     /// live in the LAYER border (rectangles) instead of the annotation's own
@@ -204,6 +207,7 @@ struct CanvasView: NSViewRepresentable {
                    multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
                    tool: tool, captionCloseRequest: captionCloseRequest,
                    annotationContent: annotationContent,
+                   calloutShape: calloutShape,
                    annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent,
                    measureToolMode: measureToolMode,
@@ -583,6 +587,10 @@ final class CanvasNSView: NSView {
     /// Styled content for the active tool, echoed from EditorState; the in-flight
     /// preview strokes with this so it matches the committed rasterization.
     private var annotationContent: AnnotationContent?
+    /// What the Zoom Callout tool is set to draw, echoed from EditorState. The
+    /// drag box previews in it and the creation flight lands in it, so choosing
+    /// Circle is visible from the first drag rather than after it.
+    private var calloutShape: ZoomCalloutShape = .rectangle
     /// The draft layer style for the active shape tool (border/corner radius);
     /// the create preview draws its border so outline-only rectangles show.
     private var annotationStyle: LayerStyle?
@@ -2206,7 +2214,8 @@ final class CanvasNSView: NSView {
                 // Build the same layer EditorState will commit, to drive the
                 // flight animation from source box to placed frame.
                 if let layer = ZoomCalloutBuilder.layer(from: drag.anchor, to: end,
-                                                        canvas: viewport.documentSize) {
+                                                        canvas: viewport.documentSize,
+                                                        shape: calloutShape) {
                     beginCalloutFlight(for: layer)
                     onZoomCalloutCommit(drag.anchor, end)
                 }
@@ -2709,6 +2718,7 @@ final class CanvasNSView: NSView {
                multiSelectedLayerIDs: Set<UUID>,
                dragPreview: DragPreview?, tool: Tool, captionCloseRequest: Int = 0,
                annotationContent: AnnotationContent?,
+               calloutShape: ZoomCalloutShape = .rectangle,
                annotationStyle: LayerStyle? = nil,
                textContent: TextContent?, measureContent: MeasureContent?,
                measureToolMode: MeasureToolMode = .distance,
@@ -2722,6 +2732,7 @@ final class CanvasNSView: NSView {
             if !isCanvasSelected { canvasResizeDrag = nil }
         }
         self.annotationContent = annotationContent
+        self.calloutShape = calloutShape
         self.annotationStyle = annotationStyle
         self.textContent = textContent
         self.measureContent = measureContent
@@ -3525,12 +3536,21 @@ final class CanvasNSView: NSView {
         annotationPreviewHeadLayer.path = nil
     }
 
-    /// What the zoom tool's drag box previews with: a rectangle in the
-    /// callout's border style, so the box that flies out matches the draft.
-    private var calloutDraftContent: AnnotationContent {
+    /// What the zoom tool's drag box previews with: a box in the callout's
+    /// border style, rounded exactly as the source outline the renderer bakes
+    /// will be. With the tool set to Circle that makes the draft round, so the
+    /// shape you chose is visible while you are still dragging it out rather
+    /// than a surprise when the callout lands.
+    private func calloutDraftContent(docBox: CGRect) -> AnnotationContent {
         let style = ZoomCalloutBuilder.defaultStyle
+        // Matches ZoomCalloutOverlayRasterizer: the callout's radius divided by
+        // the magnification, so source outline and box read as one shape.
+        let scaled = min(style.cornerRadius / ZoomCalloutBuilder.defaultMagnification,
+                         min(docBox.width, docBox.height) / 2)
+        let radius = ZoomCalloutContent(sourceRect: docBox, shape: calloutShape)
+            .effectiveCornerRadius(boxSize: docBox.size, styleRadius: scaled)
         return AnnotationContent(shape: .rectangle, strokeWidth: max(1, style.borderWidth / 2),
-                                 colorHex: style.borderColorHex)
+                                 colorHex: style.borderColorHex, cornerRadius: radius)
     }
 
     /// What the frame tool's drag previews with: a hairline rectangle, so what
@@ -3542,10 +3562,21 @@ final class CanvasNSView: NSView {
 
     /// In-flight drag-to-create: preview the active tool's styled content.
     private func refreshAnnotationPreview(constrained: Bool) {
-        var draft = tool == .zoomCallout ? calloutDraftContent : nil
+        guard let drag = annotationDrag else {
+            clearAnnotationPreview()
+            return
+        }
+        // The callout draft is rounded from the box being dragged, so it is
+        // built here where the box is known.
+        let docEnd = drag.end(constrained: constrained, shape: .rectangle)
+        var draft = tool == .zoomCallout
+            ? calloutDraftContent(docBox: CGRect(x: min(drag.anchor.x, docEnd.x),
+                                                 y: min(drag.anchor.y, docEnd.y),
+                                                 width: abs(docEnd.x - drag.anchor.x),
+                                                 height: abs(docEnd.y - drag.anchor.y)))
+            : nil
         if tool == .frame { draft = frameDraftContent }
-        guard let drag = annotationDrag,
-              let content = annotationContent ?? draft ?? tool.defaultAnnotation else {
+        guard let content = annotationContent ?? draft ?? tool.defaultAnnotation else {
             clearAnnotationPreview()
             return
         }
@@ -3700,7 +3731,13 @@ final class CanvasNSView: NSView {
 
         // Chrome that fades in: source outline + leader lines, matching what
         // the renderer bakes (ZoomCalloutOverlayRasterizer's styling).
-        let sourceRadius = (style.cornerRadius / magnification) * zoom
+        // Both radii go through the callout's own rule, so a circle flies as a
+        // circle instead of landing square and snapping round a frame later.
+        let sourceRadius = callout.effectiveCornerRadius(
+            boxSize: startFrame.size,
+            styleRadius: (style.cornerRadius / magnification) * zoom)
+        let boxRadius = callout.effectiveCornerRadius(boxSize: endFrame.size,
+                                                      styleRadius: style.cornerRadius * zoom)
         let outlinePath = CGPath(roundedRect: startFrame,
                                  cornerWidth: sourceRadius, cornerHeight: sourceRadius,
                                  transform: nil)
@@ -3756,7 +3793,7 @@ final class CanvasNSView: NSView {
                                forKey: "bounds")
         calloutFlightLayer.add(spring("cornerRadius",
                                       from: sourceRadius,
-                                      to: style.cornerRadius * zoom),
+                                      to: boxRadius),
                                forKey: "cornerRadius")
         func fadeIn() -> CABasicAnimation {
             let fade = CABasicAnimation(keyPath: "opacity")
@@ -3771,7 +3808,7 @@ final class CanvasNSView: NSView {
         CATransaction.setDisableActions(true)
         calloutFlightLayer.position = CGPoint(x: endFrame.midX, y: endFrame.midY)
         calloutFlightLayer.bounds = endBounds
-        calloutFlightLayer.cornerRadius = style.cornerRadius * zoom
+        calloutFlightLayer.cornerRadius = boxRadius
         calloutFlightOutlineLayer.opacity = 1
         calloutFlightLeaderLayer.opacity = 1
         CATransaction.commit()

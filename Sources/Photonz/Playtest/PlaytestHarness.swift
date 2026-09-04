@@ -762,6 +762,10 @@ private final class Run {
                 editor.commitCalloutMagnification()
             case .roundCallout:
                 editor.setCalloutShape(.circle)
+            case .armCalloutCircle:
+                editor.calloutToolShape = .circle
+            case .armCalloutRectangle:
+                editor.calloutToolShape = .rectangle
             case .setTextSize:
                 let ids = editor.textSelection.layerIDs
                 if !ids.isEmpty { editor.setTextStyle(ids: ids, fontSize: 14) }
@@ -2113,6 +2117,9 @@ private final class Run {
             // prove the next shape comes out the colour just picked, and to
             // prove the swatch and the panel row never disagree.
             "toolPaint": Self.describe(paint: editor.activeToolPaint),
+            // What the Zoom Callout tool is set to draw. A walk reads this to
+            // prove the choice survives the drag and reaches the next callout.
+            "calloutToolShape": editor.calloutToolShape.rawValue,
             "toolFillPaint": Self.describe(paint: editor.activeToolFillPaint),
             "selected": editor.selectedLayerID?.uuidString ?? "nil",
             // Everything the Layers menu would act on, by name and in draw

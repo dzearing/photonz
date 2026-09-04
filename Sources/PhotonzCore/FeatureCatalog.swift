@@ -87,6 +87,8 @@ public enum FeatureCatalog {
 
     public static let crispZoomFlag = "next-crisp-zoom"
 
+    public static let calloutShapeFlag = "next-callout-shape"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -382,6 +384,15 @@ public enum FeatureCatalog {
                     name: crispZoomFlag,
                     title: "Words stay sharp when you zoom in",
                     description: "Zoom past 100% and the labels, captions, measurement readouts and borders you have placed are drawn again at the size you are looking at them, instead of the whole picture being blown up. A label you place reads exactly as crisply as the one you are still typing, at any zoom. The picture underneath is untouched: a screenshot still goes square and blocky past 2x, which is what you want when you are counting pixels. Only the part of the canvas you can see is redrawn, so it costs the same at 800% as at 200%. Off means the whole canvas is stretched from one picture the way it always was, and placed text goes soft as you zoom in.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: calloutShapeFlag,
+                    title: "Choose a zoom callout\u{2019}s shape before you draw it",
+                    description: "Picking up the Zoom Callout tool puts a Zoom Callout Tool section in the inspector with one choice in it: Rectangle or Circle. The box you drag out previews in the shape you chose and the callout lands in it, and the tool keeps that choice for the next one and after a relaunch. Off means every callout is drawn as a rectangle and the only way to a circle is to draw one first and change it in the callout\u{2019}s own section.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

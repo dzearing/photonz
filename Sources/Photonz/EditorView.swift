@@ -233,6 +233,7 @@ struct EditorView: View {
                        tool: editorState.activeTool,
                        captionCloseRequest: editorState.captionCloseRequest,
                        annotationContent: editorState.activeAnnotationContent,
+                       calloutShape: editorState.calloutToolShape,
                        annotationStyle: editorState.activeAnnotationStyle,
                        textContent: editorState.activeTextContent,
                        measureContent: editorState.measureStyleForActiveMode,

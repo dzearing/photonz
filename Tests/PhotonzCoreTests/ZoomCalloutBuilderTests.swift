@@ -182,3 +182,44 @@ struct ZoomCalloutBuilderTests {
         #expect(layer.colorHex(for: .border) == "#FF3B30")
     }
 }
+
+/// The zoom callout tool's own memory: which silhouette the next callout is
+/// drawn in. Whether the tool draws a box or a circle is a choice you make with
+/// the tool in your hand, so it has to survive the drag and the relaunch, the
+/// way a shape's colour and an arrow's head size do.
+@Suite("CalloutStyles")
+struct CalloutStylesTests {
+
+    @Test func startsRectangular() {
+        #expect(CalloutStyles().shape == .rectangle)
+    }
+
+    @Test func newCalloutTakesTheRememberedShape() {
+        var styles = CalloutStyles()
+        styles.shape = .circle
+        let layer = ZoomCalloutBuilder.layer(from: CGPoint(x: 20, y: 30), to: CGPoint(x: 80, y: 90),
+                                             canvas: CGSize(width: 400, height: 300),
+                                             shape: styles.shape)
+        #expect(layer?.zoomCallout?.shape == .circle)
+    }
+
+    @Test func aCalloutIsStillARectangleWhenNobodySaysOtherwise() {
+        let layer = ZoomCalloutBuilder.layer(from: CGPoint(x: 20, y: 30), to: CGPoint(x: 80, y: 90),
+                                             canvas: CGSize(width: 400, height: 300))
+        #expect(layer?.zoomCallout?.shape == .rectangle)
+    }
+
+    @Test func survivesARoundTripThroughStorage() throws {
+        var styles = CalloutStyles()
+        styles.shape = .circle
+        let data = try JSONEncoder().encode(styles)
+        #expect(try JSONDecoder().decode(CalloutStyles.self, from: data) == styles)
+    }
+
+    /// A blob written before the tool remembered anything still decodes, and
+    /// says rectangle rather than throwing the memory away.
+    @Test func emptyStoredBlobDecodesToTheDefault() throws {
+        let data = Data("{}".utf8)
+        #expect(try JSONDecoder().decode(CalloutStyles.self, from: data) == CalloutStyles())
+    }
+}

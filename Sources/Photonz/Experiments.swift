@@ -203,6 +203,13 @@ extension Experiments {
     /// reads false and keeps both option rows in the bar.
     var toolOptionsEnabled: Bool { isEnabled(FeatureCatalog.toolOptionsFlag) }
 
+    /// `next-callout-shape`: whether the Zoom Callout tool carries its own
+    /// Shape choice while it is in hand, remembered between callouts, so a
+    /// circle is one choice rather than a rectangle you go back and fix.
+    /// Exists only in the Next release's catalog, so Current always reads
+    /// false and every callout is drawn as a rectangle.
+    var calloutShapeEnabled: Bool { isEnabled(FeatureCatalog.calloutShapeFlag) }
+
     /// `next-tool-groups`: whether the floating tool bar lays its tools out
     /// as families (`ToolBarLayout.families`), with Line / Rectangle / Ellipse
     /// sharing one Shapes button and Resize Image riding in the Crop flyout.
