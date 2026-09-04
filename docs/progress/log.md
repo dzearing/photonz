@@ -8553,3 +8553,32 @@ belongs to). With the sides open the box still says Mixed, per `MixedLook.swift`
 Next: nothing outstanding on this thread. `evaluate` in
 `queue/audits/2026-09-04-stack-padding-closed.json` asks whether the slashes and
 the bare clockwise order read fast enough without side labels.
+
+## 2026-09-04 — the surface behind a stack says it is the surface
+
+The Layout section's list of "layers with rules of their own" summarised
+every child by the direction the flow does not own. In a column stack that
+made a card's background read "Stretch across", word for word what a row
+that fills the width reads, even though `GroupFlow` takes a piece stretched
+both ways out of the arrangement entirely and paints it to the group's box.
+It now reads "Surface behind the rest" (`PlacementOverride.isSurface`).
+
+Two neighbouring problems came out of the same fix. A piece that is the
+surface only because the GROUP's default supplies the other stretch had no
+rule left on a live direction and fell off the list; it is listed now.
+And selecting the surface itself offered "Clear Stretch" on its Vertical
+row with the caption "It changes nothing now" — pressing it would have
+dropped the background into the stack as a row. New
+`PlacementEditing(arrangement:placing:)` says the flow owns neither
+direction of a piece it is not arranging, so both of the surface's rows are
+live menus again and the caption explains what the layer is. A genuinely
+dead rule is unchanged.
+
+Groups that arrange nothing are untouched, per the task's own acceptance:
+there is no flow there to be mistaken for, and the caption above already
+explains "Stretch both ways".
+
+Verified in the probe app: `Scripts/playtest/surface-in-a-stack-walk.json`
+(new) and `inert-rule-walk.json` as a regression. 3133 tests pass.
+
+Next: back to the queue.
