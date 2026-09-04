@@ -8494,3 +8494,38 @@ question its own way (a Mac switch has no mixed position), and a width the
 layers refused still shows the number that was typed.
 
 Next: the queue's own order decides. Both follow-ups are p3.
+
+## 2026-09-04 — a locked row in a stack
+
+Ran the queued task "A locked layer inside a stack is left where it is"
+(p3-low, epic ui-layout).
+
+**Reproduced first.** A scripted probe walk
+(`Scripts/playtest/locked-in-stack-walk.json`) stacks three rows, locks the
+middle one and deletes the top one: the locked row slides up with the rest.
+The audit note from 2026-09-03 was right.
+
+**Did not build the fix the task described.** Taking a locked row out of the
+flow leaves a visible empty band in the stack where the deleted row was, and a
+row that grows too tall to fit above the locked one has to jump below it to
+avoid overlapping. Both read as broken to anyone who does not remember locking
+that row, and other design tools keep locked layers in auto layout. That is a
+UX call, so it went to a decision card
+(`queue/decisions/a-locked-layer-inside-a-stack-is-left-where-it-i-you-lock-a-row-inside-a-stack-sh`)
+with a brief, recommending that the stack keeps arranging a locked row.
+
+**Shipped the undisputed half.** A locked row inside a stack said "Unlock it in
+the Layers list to change its position or size" — a promise the stack takes
+straight back, since unlocking leaves X and Y untypeable. It now reads "This
+layer is locked, and the stack it is in decides where it sits. Unlocking it in
+the Layers list gives back its size, not its position." Grid and hugging-group
+wordings follow; size still names the lock alone, because unlocking really does
+return the width and height. `LayerGeometryEditing.lockedInsideReason(_:)` and
+`containerOwnsPosition` are the new surface. Seven new tests, full suite 3122
+green, verified live in the probe with Screen Recording granted.
+
+Audit: `queue/audits/2026-09-04-locked-in-stack.json` (two real window
+captures).
+
+**Next:** the decision answer. B or C both come back to this task to be built;
+A retires it.
