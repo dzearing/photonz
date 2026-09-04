@@ -2316,7 +2316,7 @@ struct TextInspector: View {
                               help: help("font", selection.count)) {
                     editorState.setTextStyle(ids: ids, fontName: $0)
                 }
-                HStack(spacing: 8) {
+                HStack(alignment: .top, spacing: 8) {
                     SelectionMenu(label: "Size",
                                   reading: selection.number { $0.fontSize },
                                   options: sizes(selection),
@@ -2354,29 +2354,45 @@ struct TextInspector: View {
     private func alignRow(_ selection: TextLayerSelection, ids: [UUID]) -> some View {
         let across = selection.reading { $0.usedAlignment }
         let down = selection.reading { $0.usedVerticalAlignment }
-        return HStack(spacing: 8) {
-            Picker("Words across the box", selection: Binding<TextAlign?>(
-                get: { across.isMixed ? nil : across.value },
-                set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
-                Image(systemName: "text.alignleft").tag(TextAlign?.some(.left))
-                Image(systemName: "text.aligncenter").tag(TextAlign?.some(.center))
-                Image(systemName: "text.alignright").tag(TextAlign?.some(.right))
+        return HStack(alignment: .top, spacing: 8) {
+            captioned("Across") {
+                Picker("Words across the box", selection: Binding<TextAlign?>(
+                    get: { across.isMixed ? nil : across.value },
+                    set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
+                    Image(systemName: "text.alignleft").tag(TextAlign?.some(.left))
+                    Image(systemName: "text.aligncenter").tag(TextAlign?.some(.center))
+                    Image(systemName: "text.alignright").tag(TextAlign?.some(.right))
+                }
+                .pickerStyle(.segmented).labelsHidden().controlSize(.small)
+                .help(across.isMixed
+                      ? "The picked layers sit their words differently across the box. Choosing one sets all of them."
+                      : "Where the words sit across the box")
             }
-            .pickerStyle(.segmented).labelsHidden().controlSize(.small)
-            .help(across.isMixed
-                  ? "The picked layers sit their words differently across the box. Choosing one sets all of them."
-                  : "Where the words sit across the box")
-            Picker("Words down the box", selection: Binding<TextVerticalAlign?>(
-                get: { down.isMixed ? nil : down.value },
-                set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
-                Image(systemName: "align.vertical.top").tag(TextVerticalAlign?.some(.top))
-                Image(systemName: "align.vertical.center").tag(TextVerticalAlign?.some(.middle))
-                Image(systemName: "align.vertical.bottom").tag(TextVerticalAlign?.some(.bottom))
+            captioned("Down") {
+                Picker("Words down the box", selection: Binding<TextVerticalAlign?>(
+                    get: { down.isMixed ? nil : down.value },
+                    set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
+                    Image(systemName: "align.vertical.top").tag(TextVerticalAlign?.some(.top))
+                    Image(systemName: "align.vertical.center").tag(TextVerticalAlign?.some(.middle))
+                    Image(systemName: "align.vertical.bottom").tag(TextVerticalAlign?.some(.bottom))
+                }
+                .pickerStyle(.segmented).labelsHidden().controlSize(.small)
+                .help(down.isMixed
+                      ? "The picked layers sit their words differently down the box. Choosing one sets all of them."
+                      : "Where the words sit down the box")
             }
-            .pickerStyle(.segmented).labelsHidden().controlSize(.small)
-            .help(down.isMixed
-                  ? "The picked layers sit their words differently down the box. Choosing one sets all of them."
-                  : "Where the words sit down the box")
+        }
+    }
+
+    /// A control with its name in a small caption above it, the way the rest of
+    /// this dock labels things. Both alignment controls show nothing picked
+    /// when the layers differ, so without a caption a blank row of buttons
+    /// cannot say which of the two is the one that differs.
+    @ViewBuilder private func captioned<Content: View>(_ label: String,
+                                                       @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            content()
         }
     }
 
@@ -2408,24 +2424,32 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
     let reading: StyleReading<Value>
     let options: [Value]
     let title: (Value) -> String
-    /// What this menu is, in words: three menus in a row with no labels on
-    /// them, one of which says Mixed, is three menus you have to guess at.
+    /// What this menu is, in words, for anyone who hovers it. The caption above
+    /// the menu says the same thing without being asked.
     let help: String
     let choose: (Value) -> Void
 
     var body: some View {
-        Picker(label, selection: Binding<Value?>(
-            get: { reading.isMixed ? nil : reading.value },
-            set: { if let value = $0 { choose(value) } })) {
-            if reading.isMixed {
-                Text(LayerStyleSelection.mixedText).tag(Value?.none)
+        // The caption sits above the menu, the way every other labelled
+        // control in this dock reads (Effects sliders, Measure fields). A menu
+        // showing Mixed is only useful if the row beside it says WHAT is
+        // mixed, and with three menus in a row the shape of the word is not
+        // enough: "Regular" and "Mixed" both look like a weight.
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            Picker(label, selection: Binding<Value?>(
+                get: { reading.isMixed ? nil : reading.value },
+                set: { if let value = $0 { choose(value) } })) {
+                if reading.isMixed {
+                    Text(LayerStyleSelection.mixedText).tag(Value?.none)
+                }
+                ForEach(options, id: \.self) { option in
+                    Text(title(option)).tag(Value?.some(option))
+                }
             }
-            ForEach(options, id: \.self) { option in
-                Text(title(option)).tag(Value?.some(option))
-            }
+            .pickerStyle(.menu).labelsHidden().controlSize(.small)
+            .accessibilityLabel(label)
         }
-        .pickerStyle(.menu).labelsHidden().controlSize(.small)
-        .accessibilityLabel(label)
         .help(help)
     }
 }

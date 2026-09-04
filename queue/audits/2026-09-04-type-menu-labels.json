@@ -1,0 +1,27 @@
+{
+  "feature": "The type menus say what they are",
+  "epic": "ui-building",
+  "summary": "The Text section's menus used to be bare boxes reading SF Pro, 24 pt and Regular, with nothing saying which was which. Each now carries its name in a small caption above it, so a menu reading Mixed says out loud that it is the size that differs.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Pick the text tool, click on a blank canvas, type \"Sign in\" and press Command-Return." },
+    { "do": "Pick the text tool again, click lower down, type \"Use your account\" and press Command-Return." },
+    { "do": "Switch to the select tool and click the first label.", "shot": "2026-09-04-type-menu-labels-one-picked-sc.png" },
+    { "do": "Read the Text section: Font, Size, Weight, Across and Down each name themselves above their control." },
+    { "do": "Open the Size menu and choose 48 pt." },
+    { "do": "Click the first label, then Shift-click the second so both are picked.", "shot": "2026-09-04-type-menu-labels-mixed-sc.png" },
+    { "do": "Read the Text section again: the box under Size says Mixed, and the two beside it still read SF Pro and Regular." }
+  ],
+  "evaluate": [
+    "With both labels picked, can you tell at a glance that it is the size that differs, without hovering anything?",
+    "Do the captions make the section feel calmer, or just taller? It grew by about three lines.",
+    "Are Across and Down the right words for where the text sits in its box, or would Horizontal and Vertical read faster?",
+    "The Size and Weight boxes are different widths, so the row is slightly ragged. Does that bother you enough to make them share one width?"
+  ],
+  "rough": [
+    "The word Mixed sits in the menu at full strength, while a Mixed readout on an Effects slider is dimmed. Matching them would need the closed menu's own text styled, which AppKit does not hand over cheaply, so it is left as is.",
+    "The alignment controls were not in the task, but they had exactly the same problem: when the picked layers differ, both segmented rows go blank and neither says which one went blank. They got captions too.",
+    "The Font menu still sizes itself to whatever family is picked, so a long family name makes it wider than the others. Not changed here.",
+    "Screen Recording was granted for this run, so both shots are real captures of the window, not offscreen renders. The dock in them has Arrange, Position & Size, Color and Effects collapsed so the Text section fits on screen; that is my probe's setting, not a change to the app."
+  ]
+}

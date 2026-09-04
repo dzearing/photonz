@@ -1,0 +1,137 @@
+{
+  "out": "/tmp/photonz-playtest/type-menu-labels",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1320,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        130
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        260
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Use your account"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        180,
+        145
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-picked",
+      "note": "one label picked: the Text section must read no worse than before, each menu now carrying its own caption"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-one-picked"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "24 pt",
+      "shot": "2-size-menu",
+      "choose": "48 pt"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-resized",
+      "note": "the first label is now 48 pt, the second still 24 pt"
+    },
+    {
+      "do": "click",
+      "at": [
+        180,
+        145
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        272
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-two-picked-mixed",
+      "note": "two labels picked whose sizes differ: the menu reading Mixed must sit under a caption saying Size, so which setting differs is readable without hovering"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-two-picked-mixed"
+    }
+  ]
+}
