@@ -1096,8 +1096,24 @@ private final class Run {
     private func pressTarget(_ name: String, in row: String?) throws -> PlaytestPressTarget {
         let everything = try pressTargets()
         // "in" narrows to one row of the panel — Width's Fixed, not Height's.
+        //
+        // A detail is a list of words separated by commas, and a row's name is
+        // one whole item in it, so a whole item wins over a longer name that
+        // merely contains the asked-for one: `in: "Rectangle"` means the layer
+        // called Rectangle and not Rectangle 2 as well, which is otherwise how
+        // the second shape you draw makes the first one unpressable. Anything
+        // that matches nothing whole falls back to reading the detail as plain
+        // text, so half a row's name still finds it.
         let all = row.map { wanted in
-            everything.filter { $0.detail.range(of: wanted, options: .caseInsensitive) != nil }
+            let whole = everything.filter { target in
+                target.detail.split(separator: ",").contains {
+                    $0.trimmingCharacters(in: .whitespaces)
+                        .caseInsensitiveCompare(wanted) == .orderedSame
+                }
+            }
+            return whole.isEmpty
+                ? everything.filter { $0.detail.range(of: wanted, options: .caseInsensitive) != nil }
+                : whole
         } ?? everything
         let inRow = row.map { " in \"\($0)\"" } ?? ""
         let exact = all.filter { $0.name == name }
@@ -1105,7 +1121,13 @@ private final class Run {
         if exact.count > 1 {
             throw Failure(description: "\(exact.count) controls in the panel are called \"\(name)\"\(inRow): "
                 + exact.map { "\($0.name) (\($0.detail))" }.joined(separator: ", ")
-                + ". Add an \"in\" naming the row it is on.")
+                // Telling a walk to add an `in` it already has is no help, and
+                // two layers really can wear one name — a component and the
+                // copy of it are both called Card.
+                + (row == nil
+                   ? ". Add an \"in\" naming the row it is on."
+                   : ". The rows wear the same name, so \"in\" cannot tell them apart; "
+                     + "rename one of them first."))
         }
         if let loose = all.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
             return loose
@@ -1138,9 +1160,13 @@ private final class Run {
         // segment is a real AppKit control and does know.
         let marked = everything.filter { $0.kind == .control }.map { target -> PlaytestPressTarget in
             let frame = target.convert(target.bounds, to: nil)
-            var pieces = target.detail.isEmpty ? [] : [target.detail]
-            if let row = PlaytestPanelPress.field(at: frame, among: fields), !pieces.contains(row) {
-                pieces.append(row)
+            // The row leads and whatever the control is saying right now
+            // follows, the way a picker segment reads "Width, already on
+            // Fixed", so a checkbox reads "Fill, on" and not "on, Fill". A
+            // control that names its own row keeps the one copy.
+            var pieces = [PlaytestPanelPress.field(at: frame, among: fields)].compactMap { $0 }
+            if !target.detail.isEmpty, !pieces.contains(target.detail) {
+                pieces.append(target.detail)
             }
             return PlaytestPressTarget(name: target.name, detail: pieces.joined(separator: ", "),
                                        point: CGPoint(x: frame.midX, y: frame.midY),

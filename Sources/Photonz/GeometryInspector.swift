@@ -204,6 +204,10 @@ private struct GeometryNumberField: View {
                     step: { direction, coarse in step(direction: direction, coarse: coarse) })
         }
         .help(help)
+        // Named the same way the readout beside it is, so a `panel` step lists
+        // all four numbers whether or not this selection lets you type them,
+        // and pressing one puts the keyboard in it.
+        .playtestControl(field.label, detail: "Position & Size")
         .onAppear { text = display() }
         .onChange(of: reading) { text = display() }
         .onChange(of: selectionKey) { text = display() }

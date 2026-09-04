@@ -119,6 +119,11 @@ struct ColorWellButton: View {
                 .onHover { isHovering = $0 }
                 .help("\(name) color")
                 .accessibilityLabel("\(name) color")
+                // Every well in the panel is called Color; what it paints is
+                // the row it sits on, so a walk says `press "Color" in
+                // "Shadow"`. The system picker below is not marked, because
+                // its panel belongs to macOS and a walk cannot drive it.
+                .playtestControl("Color", detail: name)
                 .popover(isPresented: editorState.colorWellBinding(key), arrowEdge: .top) {
                     ColorPickerContent(editorState: editorState,
                                        hex: hex,

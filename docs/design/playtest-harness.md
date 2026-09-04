@@ -200,6 +200,40 @@ wearing the same answer can be told apart. Adding either to a new control is one
 line and is how a feature that lives in the panel becomes playtestable rather
 than merely photographable.
 
+### A control's name holds still; what changes about it goes in its detail
+
+An eye is called `Visibility` whether the layer is showing or hidden, and the
+detail says which: `Visibility (Layers, Label, shown)`. That is the same
+promise a picker segment already makes when it says `already on Fixed`, and it
+is what lets a walk press the same thing twice to toggle it. A name that read
+"Hide Layer" one moment and "Show Layer" the next would make the second press
+a different step from the first.
+
+The names, as of September 2026:
+
+| In | Called | Told apart by |
+| --- | --- | --- |
+| A layer row | `Visibility`, `Lock`, `Twist` | `in: "<the row's name>"` |
+| A color row | `Color`, `Switch`, `Save` | `in: "Fill"`, `in: "Background"`, … |
+| A well anywhere else | `Color` | `in: "Shadow"`, `in: "Backdrop"`, … |
+| Position & Size | `X`, `Y`, `W`, `H` | there is one of each |
+| A copy's own look | `Revert Blur`, `Revert Shadow`, … | the name says which |
+| Shadow | `Enable Shadow` | there is one |
+| Frame | `Clip contents` | there is one |
+| Layout | `Clear Stretch`, `Each side`, the pickers | `in: "Width"`, `in: "Height"` |
+
+`Twist` is the triangle that opens a group. It matters more than it looks: the
+layers list builds a row only once it is on screen, so every row inside a shut
+group is invisible to `panel`, `press` and `dragRow` until a walk has pressed
+the twist on the group above it.
+
+What is still only photographable is the SLIDERS — Opacity, Blur, Corner
+Radius, Border and the five shadow rows. Their rows are named, so a `panel`
+step lists them, but a press on a slider track is not a drag of its knob; use
+the `action` steps (`dragOpacity`, `dragCornerRadius`, `addShadow`, …) for the
+outcome. The Frame's Size menu is a menu, so it is opened with `panelMenu`
+rather than pressed.
+
 Two things a press cannot tell you. It cannot say whether a SwiftUI control is
 DIMMED — `disabled` leaves no mark on the view tree — so a press on a dead
 button reports a pass, and the walk has to judge it by what changed; a picker

@@ -42,6 +42,9 @@ struct FrameInspector: View {
                 .menuStyle(.borderlessButton)
                 .fixedSize()
             }
+            // The menu itself is opened with a `panelMenu` step, by the size it
+            // is showing; the row names it so a `panel` step says where it is.
+            .playtestField("Size")
 
             Toggle(isOn: Binding(get: { clips },
                                  set: { editorState.setFrameClips(id: layer.id, $0) })) {
@@ -49,6 +52,7 @@ struct FrameInspector: View {
                     .font(.callout)
             }
             .toggleStyle(.checkbox)
+            .playtestControl("Clip contents", detail: clips ? "Frame, on" : "Frame, off")
             // The surface is NOT here: it is the Fill row in the Color
             // section, with every other color, and its checkbox is what used
             // to be the "No background" button in this section's popover.

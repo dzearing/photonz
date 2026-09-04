@@ -1,0 +1,27 @@
+{
+  "feature": "The right hand panel says who its controls are",
+  "epic": "unmanned-loop",
+  "summary": "A scripted playtest can now press the eye and the lock on a layer row, open a group, open any colour well, put back a copy's own opacity and tick a frame's Clip contents. Before this it could press the Layout section and nothing else, so a feature living anywhere else in the panel got handed over as a photograph.",
+  "setup": "Nothing to turn on. This is machinery the unmanned loop uses: run Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json and read /tmp/photonz-playtest/panel-controls. The pictures below came out of that run on a probe with Screen Recording granted, so they are the window as a person would see it.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json.", "shot": "2026-09-04-panel-controls-1.png" },
+    { "do": "Open panel-1-named.json and read the controls list: every layer row carries a Visibility and a Lock, and each says which row it is on." },
+    { "do": "Look at panel-controls-2-hidden-sc.png: the eye on the row called Rectangle was pressed and only that layer went." },
+    { "do": "Read the two press lines for Visibility in the log: same name both times, and the detail flips from shown to hidden." },
+    { "do": "Look at panel-controls-4-picker-sc.png: pressing the Fill row's well opened the colour picker.", "shot": "2026-09-04-panel-controls-2.png" },
+    { "do": "Compare panel-8-own-opacity.json with panel-9-following-again.json: Revert Opacity is there, then pressed, then gone." },
+    { "do": "Read the table in docs/design/playtest-harness.md under \"A control's name holds still\" and check it against what the walk actually pressed." }
+  ],
+  "evaluate": [
+    "An eye is called Visibility whichever way it is pointing, and the state lives in its detail. Does that read right, or would you rather a walk said press \"Hide Layer\" and press \"Show Layer\"?",
+    "Twist is the word for the triangle that opens a group. Is that the word you would reach for, or is it jargon that needs a plainer name?",
+    "The colour row's checkbox is called Switch, so a walk says press \"Switch\" in \"Background\". Does naming controls generically and letting the row say which one feel right, or should each carry its own full name?",
+    "Is a walk that can press these worth more to you than one that photographs them, or is the photograph what you actually read?"
+  ],
+  "rough": [
+    "Sliders are still only photographable. Opacity, Blur, Corner Radius, Border and the five shadow rows have their rows named, so panel lists them, but a press on a slider track is not a drag of its knob. The action steps (dragOpacity, dragCornerRadius, addShadow) remain the way to set one.",
+    "The colour picker a well opens is a window of its own, so its Solid/Linear/Radial tabs, its sliders and its Save style button are outside the panel inventory and still cannot be pressed. A walk can open the picker, photograph it, and close it. Filed as its own task.",
+    "Two layers wearing the same name make each other's controls unpressable: a component called Card and a copy of it both answer to \"in\": \"Card\", so press refuses rather than guessing. It now says so in those words instead of telling the walk to add an in it already has, but there is no way to say the second Card.",
+    "The Frame section's Size control is a menu, not a button, so it is opened with panelMenu rather than pressed. Only its row got named."
+  ]
+}

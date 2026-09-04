@@ -1,0 +1,28 @@
+{
+  "id": "the-colour-picker-names-its-own-controls-so-a-wa",
+  "title": "The colour picker names its own controls so a walk can pick a colour",
+  "goal": "A scripted playtest can now open the colour picker by pressing a colour well, but once it is open it can only photograph it: the Solid, Linear, Radial and Angular tabs, the shade swatches, the HSL/RGB/HEX rows and the Save style button cannot be pressed. That means any feature inside the picker still gets handed to you as a picture. This names them so a walk can pick a colour the way a person does.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 1100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T14:11:50.549Z",
+  "updated": "2026-09-04T14:11:50.550Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The picker is a SwiftUI .popover, so it is a separate NSWindow: PlaytestHarness.panelTargets walks down from requireWindow().contentView and never reaches it. Either widen the search to the app's popover windows (NSApp.windows filtered to those owned by the editor window) or give the picker its own target search. Files: Sources/Photonz/ColorPickerPopover.swift, DesignedColorPicker.swift, Playtest/PlaytestHarness.swift (panelTargets, pressTargets, pressControl's in-window check, which also assumes the editor window's bounds). Raised by the 2026-09-04 panel-controls audit.",
+  "acceptance": [
+    "A walk can press the Solid, Linear, Radial and Angular tabs by the words on them",
+    "A walk can press one of the shade swatches and the colour lands on the picked layers",
+    "A panel step lists the picker's controls while it is open, alongside the panel's own",
+    "Scripts/test.sh passes and every existing walk still finishes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T14:11:50.550Z",
+      "note": "created (manual)"
+    }
+  ]
+}

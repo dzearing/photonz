@@ -1402,6 +1402,7 @@ private struct LayersRow: View, Equatable {
                     .foregroundStyle(display.isLocked ? .primary : .tertiary)
             }
             .help(display.isLocked ? "Unlock Layer" : "Lock Layer")
+            .playtestControl("Lock", detail: place(display.isLocked ? "locked" : "unlocked"))
             Button {
                 editorState.toggleLayerVisibility(id: id)
             } label: {
@@ -1410,6 +1411,7 @@ private struct LayersRow: View, Equatable {
                     .foregroundStyle(display.isVisible ? .primary : .tertiary)
             }
             .help(display.isVisible ? "Hide Layer" : "Show Layer")
+            .playtestControl("Visibility", detail: place(display.isVisible ? "shown" : "hidden"))
         }
         .buttonStyle(.borderless)
         .padding(.horizontal, 6)
@@ -1465,9 +1467,25 @@ private struct LayersRow: View, Equatable {
                     }
                 })
                 .help(panelRow.isExpanded ? "Hide what is inside" : "Show what is inside")
+                // The only way a walk has of opening a group: every row inside
+                // a shut one is unbuilt, so nothing below it can be named until
+                // this has been pressed.
+                .playtestControl("Twist", detail: place(panelRow.isExpanded ? "open" : "shut"))
         } else {
             Color.clear.frame(width: 12, height: 12)
         }
+    }
+
+    /// Where a control on this row lives, in the words a walk names it by: the
+    /// list, this row, and what the control is saying right now.
+    ///
+    /// The NAME of an eye stays "Visibility" whichever way it is pointing, so a
+    /// walk can press the same thing twice; the part that changes under it goes
+    /// here, the way a picker segment says "already on Fixed". It is also what
+    /// a press step's `in` matches, so `in: "Label"` reaches this row's eye and
+    /// no other row's.
+    private func place(_ state: String) -> String {
+        "Layers, \(display.name), \(state)"
     }
 
     private var thumbnailView: some View {
@@ -2031,6 +2049,8 @@ struct ShadowInspector: View {
                 .toggleStyle(.switch)
                 .controlSize(.mini)
                 .help(shadowSwitchHelp(selection))
+                .playtestControl("Enable Shadow",
+                                 detail: selection.hasShadowEverywhere ? "Shadow, on" : "Shadow, off")
                 // A shadow is ONE part of the look: its softness, size,
                 // distance, direction, opacity and colour are six controls for
                 // the one thing a person means by "the shadow", so there is one
@@ -2230,6 +2250,9 @@ struct LayerStyleSlider: View {
             .controlSize(.small)
             .disabled(layerIDs.isEmpty)
         }
+        // The row lends its word to whatever sits on it, so the revert arrow on
+        // a Blur row reads as Blur's and not as the Border row's.
+        .playtestField(label)
     }
 }
 
@@ -2389,6 +2412,7 @@ private struct CornerRadiusRow: View {
             .controlSize(.small)
             .disabled(ids.isEmpty)
         }
+        .playtestField("Corner Radius")
     }
 }
 

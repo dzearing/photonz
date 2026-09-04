@@ -308,6 +308,10 @@ struct ColorPartRow: View {
             if let accessory { accessory }
             Spacer(minLength: 0)
         }
+        // Every color row holds a control called Color and one called Switch,
+        // so the row's own word is what tells Fill's from Background's:
+        // `press "Color" in "Fill"`.
+        .playtestField(part)
     }
 }
 
@@ -435,6 +439,7 @@ struct ColorStyleRow<Well: View>: View {
             Button("Save", action: save)
                 .controlSize(.small)
                 .help("Saves this \(ColorStyleNaming.subject(savedPaint)) under that name")
+                .playtestControl("Save")
         }
         .padding(.top, 2)
     }
@@ -488,6 +493,9 @@ struct SelectionColorWell: View {
             .onHover { isHovering = $0 }
             .help(help(selection))
             .accessibilityLabel("\(part) of \(selection.count) selected layers")
+            // The same word every color well in the panel answers to, its row
+            // saying which color it paints. Pressing it opens the picker.
+            .playtestControl("Color", detail: part)
             .popover(isPresented: editorState.colorWellBinding(wellKey), arrowEdge: .top) {
                 ColorPickerContent(editorState: editorState,
                                    paint: openingPaint(selection),
@@ -645,6 +653,10 @@ struct SelectionColorInspector: View {
             .labelsHidden()
             .controlSize(.small)
             .help(switchHelp(slot, part))
+            // It wears no word of its own, so it takes the row's: a walk says
+            // `press "Switch" in "Background"`.
+            .playtestControl("Switch",
+                             detail: editorState.colorSwitch(slot: slot).isOn ? "on" : "off")
     }
 
     private func switchHelp(_ slot: ColorSlot, _ part: String) -> String {

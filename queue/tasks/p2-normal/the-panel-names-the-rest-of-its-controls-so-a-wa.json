@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1080,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:36:38.527Z",
-  "updated": "2026-09-04T12:36:38.528Z",
+  "updated": "2026-09-04T14:12:09.481811Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Use playtestControl(name) on the control and playtestField(title) on the row that holds it (Sources/Photonz/Playtest/PanelTarget.swift). Segmented pickers need nothing: PlaytestPanelPress reads NSSegmentedControl segments straight off the view tree. Files: LayersPanel.swift (eye, lock), ColorStylePanel.swift, FrameInspector.swift, GeometryInspector.swift. Docs: docs/design/playtest-harness.md, Reaching into the right hand panel.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-04T12:36:38.528Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T13:52:49.601Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T14:12:09.481811Z",
+      "note": "Adversarial review before building. The mock here is the task's own list, and two of its four items were thinner than they looked. The Effects section is almost entirely SLIDERS: its only real buttons are the revert arrows a copy of a component grows, so \"press the Effects buttons\" means those, and a slider stays photograph-only. The Frame section's Size is a Menu, already reachable with panelMenu, so only its Clip contents checkbox was missing. What the list did NOT have was the twist that opens a group, which turned out to matter most: the layers list builds a row only once it is on screen, so every row inside a shut group is invisible to panel, press and dragRow until the twist has been pressed, and there is no action step for it. Built that too."
+    },
+    {
+      "t": "2026-09-04T14:12:09.481811Z",
+      "note": "Naming rule settled and written down: a control's name holds still and whatever changes about it goes in its detail. An eye is Visibility whether it is showing or hidden and the detail says which, which is the promise a picker segment already makes when it says \"already on Fixed\", and it is what lets a walk press the same thing twice to toggle it. Tooltip-shaped names (Hide Layer / Show Layer) were the alternative and were rejected: the second press would be a different step from the first."
+    },
+    {
+      "t": "2026-09-04T14:12:09.481811Z",
+      "note": "Named: Visibility, Lock and Twist on every layer row (detail \"Layers, <row>, <state>\"); Color and Switch and Save on every colour row, with the row lending its word; Color on every ColorWellButton, so the shadow and backdrop wells came along; Revert <field> on the component revert arrows; Enable Shadow; Clip contents; and the four editable Position & Size numbers, which used to vanish from the listing whenever they were typeable. Rows named with playtestField: every Effects slider, Corner Radius, the colour rows, Frame's Size."
+    },
+    {
+      "t": "2026-09-04T14:12:09.481811Z",
+      "note": "Two harness fixes the naming forced. `in` now prefers a whole comma-separated item of a control's detail over a substring, because \"Rectangle\" is a substring of \"Rectangle 2\" and the second shape you draw would otherwise make the first one unpressable. And a marked control's detail now puts the ROW first and the state second (\"Fill, on\", not \"on, Fill\"), matching how a picker segment already reads."
+    },
+    {
+      "t": "2026-09-04T14:12:09.481811Z",
+      "note": "Verified live on the probe, Screen Recording granted. New walk Scripts/playtest/panel-controls-walk.json, 75 steps, status ok: presses Visibility twice on one named row, Lock twice on another, Color in Fill (the picker really opens, see the capture), Twist open and shut, Revert Opacity on a faded copy of a component, Clip contents on a frame. Every press line in the log names its row. Re-ran panel-press, stack-padding, readout-fields, panel-reach, layers-lazy-rows, locked-layer, open-groups-remembered and select-click-perf: all ok. Scripts/test.sh green (2999 tests)."
+    },
+    {
+      "t": "2026-09-04T14:12:09.481811Z",
+      "note": "Left undone, on purpose: the colour picker a well opens is a window of its own, so nothing inside it is pressable. Filed as \"the-colour-picker-names-its-own-controls-so-a-wa\". Audit: queue/audits/2026-09-04-panel-controls.json."
     }
-  ]
+  ],
+  "started": "2026-09-04T13:52:49.600Z"
 }

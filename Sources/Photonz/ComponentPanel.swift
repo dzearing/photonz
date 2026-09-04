@@ -579,6 +579,10 @@ struct InstanceStyleRevert: View {
             .buttonStyle(.borderless)
             .controlSize(.small)
             .help("This copy's own \(field.label.lowercased()). Follow the original again")
+            // Named for what it puts back, so the three or four that can be on
+            // screen at once are told apart by their own words rather than by
+            // which row a walk remembered to say.
+            .playtestControl("Revert \(field.label)")
         }
     }
 }
