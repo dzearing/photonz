@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:37.991Z",
-  "updated": "2026-09-04T22:16:00.005152Z",
+  "updated": "2026-09-04T22:34:31.843Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective gap, not a rough line. Sources/PhotonzCore/ComponentProperties.swift:28 holds exactly three knob kinds today (text, visible, variant) and ComponentPropertyValue matches; docs/design/ui-building.md line 552 lists this as a deliberate first-version limit, and the epic promises create once, reuse everywhere, override safely. Reuse ColorStyles.swift and ColorStyleSelection.swift for the value and the mixed reading rather than writing a second one. Panel rows: Sources/Photonz/ComponentPanel.swift.",
@@ -57,7 +57,12 @@
     {
       "t": "2026-09-04T22:16:00.005152Z",
       "note": "(5) what the plan did not cover: a fill switched OFF in the original. Only a slot that has a colour can be exposed, and a knob whose colour later goes away sits out rather than dragging every copy's answer down with it."
+    },
+    {
+      "t": "2026-09-04T22:34:31.842Z",
+      "note": "A colour is the fourth kind of knob. An original exposes one slot of one layer (fill, outline, ink, border) through the Add menu; a copy answers with the app's own picker or with a saved colour, and a copy that has not answered follows the original. The answer carries a paint AND an optional saved-colour pointer, so editing that colour moves every copy pointing at it and deleting it leaves each copy the colour it wears. Core in Sources/PhotonzCore/ComponentProperties.swift + new ComponentColorKnob.swift, 24 new tests written first; panel row in Sources/Photonz/ComponentPanel.swift (InstanceColorKnob). Mixed over several copies is built and tested in the model and deliberately not on screen: the Component section is gated on one selected layer, so it would be a state nobody can reach; split out as the-knobs-panel-speaks-for-several-copies-at-onc. Verified in the probe app with the new Scripts/playtest/copy-own-color-walk.json (real window captures) and 3157 tests green. Audit: queue/audits/2026-09-04-copy-own-color.json. Committed cd66144, pushed to main."
     }
   ],
-  "started": "2026-09-04T22:10:11.221Z"
+  "started": "2026-09-04T22:10:11.221Z",
+  "completed": "2026-09-04T22:34:31.843Z"
 }
