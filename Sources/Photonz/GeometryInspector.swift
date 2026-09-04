@@ -149,8 +149,12 @@ private struct GeometryNumberField: View {
                 .disabled(!isEditable)
                 .monospacedDigit()
                 // Mixed is a word among numbers, so it reads as the quieter
-                // thing it is rather than as a value someone typed.
-                .foregroundStyle(reading.isMixed ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+                // thing it is rather than as a value someone typed. A number
+                // you cannot type — how tall a paragraph came out, where the
+                // stack put a row — reads quiet for the same reason: it is
+                // there to be read, not to be edited.
+                .foregroundStyle(reading.isMixed || !isEditable
+                                 ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
                 // Tab, and anything else that moves the keyboard on by itself,
                 // still lands the draft; Return goes through the key rule
                 // below so it can hand the keyboard back as well.

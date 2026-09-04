@@ -1,0 +1,29 @@
+{
+  "feature": "A text box says how tall it turned out",
+  "epic": "ui-layout",
+  "summary": "The H field for a piece of text used to be blank. It now shows the height the words actually came out to, dimmed, and it follows every re-wrap. You still cannot type into it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Pick the text tool and click on a blank canvas.", "shot": "2026-09-04-text-height-readout-one-line-sc.png" },
+    { "do": "Type \"Sign in to continue to your account\" and press Command-Return." },
+    { "do": "Read the Position & Size section: H says 21 in grey, where it used to say nothing." },
+    { "do": "Switch to the select tool and drag the right edge of the label leftwards until the words wrap onto three lines.", "shot": "2026-09-04-text-height-readout-wrapped-sc.png" },
+    { "do": "Read H again: it has grown to 55 on its own." },
+    { "do": "Click into H and try to type a number. Nothing lands, the same as before." },
+    { "do": "Hover H and read the tip: \"Height follows the text. Change the width to re-wrap it, or the font size in the Text section.\"" },
+    { "do": "Type 400 into W and press Return: H drops back to 21 as the words fall onto one line." }
+  ],
+  "evaluate": [
+    "Is a grey number in a normal-looking field enough to say you cannot type here, or does it read as broken?",
+    "When you click H and nothing happens, do you know why without hovering for the tip?",
+    "Is the height the number you actually wanted off a wrapped paragraph, or were you after the line height or the line count?",
+    "Should the same treatment reach the other numbers you cannot type: a locked layer's four, a stacked row's X and Y, a component copy's size?"
+  ],
+  "rough": [
+    "H still wears the same rounded box as the fields you can type in. Only the grey tells you apart, and a box that looks like an input but refuses the keyboard is the clumsiest part of this. Losing its border would say it louder, but that is a visual call worth your eye first.",
+    "Clicking a read-only field gives no feedback at all. The tip explains it, but only after a hover delay.",
+    "A line, an arrow and a caliper still show nothing for W and H on purpose: their box is padding around a stroke, so a width there would be a number about nothing you drew.",
+    "The same change makes a locked layer and a stacked row report their numbers too, instead of four blanks. That is covered by tests but is not in the screenshots here: a walk that tried to build a stack did not get one, so only the text case was photographed live.",
+    "Screen Recording was granted for this run, so both shots are real captures of the window, not offscreen renders."
+  ]
+}

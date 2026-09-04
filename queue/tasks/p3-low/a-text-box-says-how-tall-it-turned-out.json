@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 610,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T18:09:56.702Z",
-  "updated": "2026-09-03T18:09:56.703Z",
+  "updated": "2026-09-04T06:46:26.667Z",
   "deps": [],
   "blockedBy": [],
   "notes": "GeometryInspector renders nothing for a field LayerGeometryEditing says is not allowed; LayerGeometryEditing.textHeightReason already carries the sentence. Found while building a-label-grows-to-fit-what-it-says.",
@@ -22,6 +22,39 @@
     {
       "t": "2026-09-03T18:09:56.703Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T06:46:26.667Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T07:20:00.000Z",
+      "note": "Adversarial read before building: the blank H is not just a missing number, it is the ONE number you would want off a wrapped paragraph in a redlining tool. Shortest honest version is a read-only number in the field that is already there, not a new control."
+    },
+    {
+      "t": "2026-09-04T07:22:00.000Z",
+      "note": "The narrow fix would be self-inconsistent: lock the text layer and the height you just gained would vanish again, because the same code path blanks every field no layer can type into. So the rule went in generally: LayerGeometryEditing.shows(_:) says whether a number is worth reading when it cannot be typed, and LayerGeometrySelection.reading falls back to it. Locked layers, stacked rows and component copies report their numbers too."
+    },
+    {
+      "t": "2026-09-04T07:23:00.000Z",
+      "note": "Lines, arrows and calipers deliberately stay blank: their frame is padding around a stroke, so a width there was never a number about the shape (the existing design note in LayerGeometry says so and it still holds)."
+    },
+    {
+      "t": "2026-09-04T07:24:00.000Z",
+      "note": "A read-only number speaks for every selected layer or none: pick a paragraph and an arrow together and H stays blank rather than quietly showing one layer's height, which is the same rule Mixed exists for."
+    },
+    {
+      "t": "2026-09-04T07:35:00.000Z",
+      "note": "Six tests added to LayerGeometrySelectionTests; full suite 2773 tests green. UI: GeometryInspector dims any field that cannot be typed, the same quiet the word Mixed already gets."
+    },
+    {
+      "t": "2026-09-04T07:50:00.000Z",
+      "note": "Verified live on Photonz Probe (Screen Recording granted, real captures). Scripts/playtest/text-height-readout-walk.json: H reads 21 for a one-line label, 55 once dragged to three lines, back to 21 when 400 is typed into W. A separate run forced the keyboard into H and the field handed it straight back to the window, so typing is still refused."
+    },
+    {
+      "t": "2026-09-04T07:52:00.000Z",
+      "note": "Adversarial read after building: H still wears the same bordered box as a typeable field and clicking it gives no feedback at all. Recorded in the audit rather than changed, because dropping the border is a visual call for the user."
     }
-  ]
+  ],
+  "started": "2026-09-04T06:46:26.667Z"
 }

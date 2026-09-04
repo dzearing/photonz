@@ -9,7 +9,8 @@ import Foundation
 /// type. So the field either shows the number they agree on or says out loud
 /// that they differ.
 public enum LayerGeometryReading: Hashable, Sendable {
-    /// No selected layer takes this field at all, so there is nothing to show.
+    /// There is no number to show: no selected layer takes this field, and none
+    /// of them has a number here worth reading either.
     case empty
     /// Every layer this field acts on has the same number.
     case agreed(CGFloat)
@@ -82,11 +83,34 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     }
 
     /// What the field shows.
+    ///
+    /// The layers that TAKE the field decide the number, because that is what
+    /// typing there would change. When none of them takes it the field is not
+    /// automatically blank: a number nobody can type is still a number worth
+    /// reading, so a wrapped paragraph reports the height it turned out to be
+    /// instead of leaving the one number you might want off the panel.
     public func reading(_ field: LayerGeometryField) -> LayerGeometryReading {
         let taking = members(taking: field)
-        guard let first = taking.first else { return .empty }
+        return reading(field, over: taking.isEmpty ? readable(field) : taking)
+    }
+
+    /// The layers a read-only number would speak for: all of them, or none.
+    ///
+    /// Half a selection is nobody. Pick a paragraph and an arrow and the height
+    /// the paragraph came out to is not the selection's height, and a number
+    /// standing quietly for one of two layers is the exact confusion the Mixed
+    /// rule exists to prevent — so the field stays blank and the hover tip does
+    /// the explaining.
+    private func readable(_ field: LayerGeometryField) -> [Member] {
+        let showing = members.filter { $0.editing.shows(field) }
+        return showing.count == members.count ? showing : []
+    }
+
+    private func reading(_ field: LayerGeometryField,
+                         over members: [Member]) -> LayerGeometryReading {
+        guard let first = members.first else { return .empty }
         let value = LayerGeometry.displayValue(field, of: first.frame)
-        for member in taking.dropFirst()
+        for member in members.dropFirst()
         where LayerGeometry.displayValue(field, of: member.frame) != value {
             return .mixed
         }

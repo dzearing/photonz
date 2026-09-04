@@ -1,0 +1,123 @@
+{
+  "out": "/tmp/photonz-playtest/text-height-readout",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        140
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in to continue to your account"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-line",
+      "note": "a label on one line: H must now read that one line's height as a dimmed number, not sit blank"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-one-line"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        384,
+        150
+      ],
+      "to": [
+        250,
+        150
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-wrapped",
+      "note": "the right edge dragged in so the words re-wrap: H must have grown to the taller number the paragraph turned out to be"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-wrapped"
+    },
+    {
+      "do": "focus",
+      "field": "H"
+    },
+    {
+      "do": "describe",
+      "stage": "3-h-reads",
+      "note": "the line above says what H is showing for the wrapped paragraph. The keyboard does not stay here: a run that tried to type into H found the field had already handed focus back to the window, so H reads and never takes"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "400"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-rewrapped-wider",
+      "note": "400 typed into W: the words fall back onto fewer lines and H must have shrunk to the new height on its own"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-rewrapped-wider"
+    },
+    {
+      "do": "focus",
+      "field": "H"
+    },
+    {
+      "do": "describe",
+      "stage": "5-h-follows",
+      "note": "the line above is H after the re-wrap: it must be the shorter number, not the one it read before"
+    }
+  ]
+}

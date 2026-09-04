@@ -160,6 +160,10 @@ public enum LayerGeometry {
 /// edited by its feet, so neither takes a typed width — a number that never
 /// matched what is on screen is worse than no number at all. Text takes a
 /// width, which is its wrap width, but its height follows the re-wrap.
+///
+/// A field that takes nothing is not always a field with nothing to say:
+/// `shows(_:)` is the second question, and it is how a wrapped paragraph
+/// reports the height it turned out to be.
 public struct LayerGeometryEditing: Hashable, Sendable {
 
     /// Why nothing on a locked layer can be typed.
@@ -189,6 +193,12 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     public let canSetWidth: Bool
     public let canSetHeight: Bool
 
+    /// Whether the layer's box is the thing you see. It is for nearly
+    /// everything, and it is not for a line, an arrow or a caliper: those are
+    /// drawn between two points and their box is padding around the stroke, so
+    /// its width was never a number about the shape.
+    private let frameIsTheShape: Bool
+
     /// The narrowest a typed width may make this layer, and the shortest a
     /// typed height may. A text box stops at the width its drag stops at, so
     /// the two ways of setting a width land in the same place; everything else
@@ -211,6 +221,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         minimumWidth = layer.resizeWidthOnly ? TextMeasurement.minimumWidth
                                              : LayerGeometry.minimumSide
         minimumHeight = LayerGeometry.minimumSide
+        frameIsTheShape = !layer.hasEndpointHandles
         if layer.isLocked {
             canMove = false
             canSetWidth = false
@@ -250,6 +261,21 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         case .x, .y: canMove
         case .width: canSetWidth
         case .height: canSetHeight
+        }
+    }
+
+    /// Whether this field's number is worth showing when it cannot be typed.
+    ///
+    /// A number you cannot change is still a number you may want to read: how
+    /// tall a paragraph came out once it wrapped, where the stack put a row,
+    /// how big the original a copy follows is. It is only worth showing when
+    /// the box really is what you see, which is why a line, an arrow or a
+    /// caliper still shows no size — its box is padding around a stroke, and a
+    /// width that never matched the shape you drew is worse than a blank.
+    public func shows(_ field: LayerGeometryField) -> Bool {
+        switch field {
+        case .x, .y: return true
+        case .width, .height: return frameIsTheShape
         }
     }
 

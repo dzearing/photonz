@@ -246,6 +246,63 @@ struct LayerGeometrySelectionTests {
         #expect(sel.landing(60, in: .width) == .empty)
     }
 
+    // MARK: Numbers you can read but not type
+
+    @Test("A text box shows how tall it turned out, even though the height cannot be typed")
+    func textHeightIsReadableWithoutBeingTypeable() {
+        let words = CGRect(x: 0, y: 0, width: 200, height: 74)
+        let sel = LayerGeometrySelection([member(text(words), words)])
+        #expect(sel.reading(.height) == .agreed(74))
+        #expect(!sel.allows(.height))
+        #expect(sel.fixedReason(for: .height) == LayerGeometryEditing.textHeightReason)
+    }
+
+    @Test("Two text boxes of different heights read as Mixed, the same as any other field would")
+    func textHeightsThatDifferReadMixed() {
+        let a = CGRect(x: 0, y: 0, width: 200, height: 74)
+        let b = CGRect(x: 0, y: 90, width: 200, height: 40)
+        let sel = LayerGeometrySelection([member(text(a), a), member(text(b), b)])
+        #expect(sel.reading(.height) == .mixed)
+        #expect(LayerGeometrySelection([member(text(a), a),
+                                        member(text(a), a)]).reading(.height) == .agreed(74))
+    }
+
+    @Test("A locked layer still says where it is and how big it is")
+    func lockedLayerStillReadsItsNumbers() {
+        let frame = CGRect(x: 5, y: 6, width: 50, height: 60)
+        let sel = LayerGeometrySelection([member(rectangle(frame, locked: true), frame)])
+        #expect(sel.reading(.x) == .agreed(5))
+        #expect(sel.reading(.width) == .agreed(50))
+        #expect(!sel.allows(.width))
+    }
+
+    @Test("A shape dragged by its ends still shows nothing, because its box is padding and not the shape")
+    func endpointShapesStayBlank() {
+        let box = CGRect(x: 0, y: 0, width: 100, height: 40)
+        let sel = LayerGeometrySelection([member(arrow(box), box)])
+        #expect(sel.reading(.width) == .empty)
+        #expect(sel.reading(.height) == .empty)
+        // ...but where it sits is still a real number.
+        #expect(sel.reading(.x) == .agreed(0))
+    }
+
+    @Test("A number only some of the selected layers could show is shown for none of them")
+    func aReadOnlyNumberSpeaksForEveryoneOrNobody() {
+        let words = CGRect(x: 0, y: 0, width: 200, height: 74)
+        let box = CGRect(x: 0, y: 0, width: 200, height: 74)
+        let sel = LayerGeometrySelection([member(text(words), words), member(arrow(box), box)])
+        #expect(sel.reading(.height) == .empty)
+    }
+
+    @Test("A field some layer takes still reads over just those layers, not the ones sitting out")
+    func typeableFieldsIgnoreTheReadOnlyOnes() {
+        let box = CGRect(x: 0, y: 0, width: 120, height: 40)
+        let words = CGRect(x: 0, y: 60, width: 200, height: 74)
+        let sel = LayerGeometrySelection([member(rectangle(box), box), member(text(words), words)])
+        #expect(sel.reading(.height) == .agreed(40))
+        #expect(sel.allows(.height))
+    }
+
     @Test("The hover tip says where a width stops, so a number that changes on its own is explained")
     func theTipNamesTheFloor() {
         let words = CGRect(x: 0, y: 0, width: 200, height: 30)
