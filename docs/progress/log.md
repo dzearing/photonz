@@ -7301,3 +7301,64 @@ behavior.
 
 Verified: `Scripts/test.sh` green (2626 tests), two walks on the probe with real
 screen captures. Audit: `queue/audits/2026-09-04-panel-arrival.json`.
+
+## 2026-09-04 — A layers list with many rows costs no more per click than a short one
+
+Follow-up from the selection-latency work: every row of the layers list re-ran
+its body on every click, and while re-running it asked the document for its own
+layer by id, which searches the whole tree. Drawing the list therefore cost the
+square of its own length, on every click, whatever the click was.
+
+Measured first, on the probe, with a new walk
+(`Scripts/playtest/layers-row-count-perf-walk.json`): three rectangles in
+corners the duplicate band never reaches, the same four clicks five times over,
+then 116 copies of a seed rectangle and the same four clicks again. Each stage
+runs twice, once with the inspector shown and once hidden, so subtracting gives
+the dock's own share of a click rather than the whole app's. Two runs each side.
+
+Before: dock share 36.3/38.4ms at 4 layers, 45.5/45.9ms at 121. Per target, the
+same click cost 82 → 102ms (select), 19 → 36ms, 27 → 39ms, 41 → 48ms (deselect).
+About 0.14ms of main thread per row per click, which is invisible at ten layers
+and a dropped frame at a hundred and twenty.
+
+After: 28.9/40.5ms at 4 layers, 29.0/29.0ms at 121. The growth with row count is
+gone — the long list is now no more expensive than the short one, and cheaper
+than it was before at both sizes.
+
+Three changes, all of them the same idea:
+
+- `PhotonzDocument.layerRows(expanded:selected:)` in `PhotonzCore` (new,
+  7 tests) walks the tree ONCE and hands back a `LayerRowDisplay` per row: the
+  row's place in the tree plus the handful of facts the row draws. No row ever
+  looks its own layer up again.
+- `LayersRow` in `LayersPanel.swift` is a separate `Equatable` view used with
+  `.equatable()`, and nothing in its `body` reads the editor state. The actions
+  do, but they run on a click, long after the row was drawn, so they never make
+  the row an observer. A click that moves the selection changes the value of the
+  two rows whose highlight changed and skips the rest whole.
+- `EditorState.thumbnails(for:)` gathers the pictures in one pass and the list
+  hands each row its own. A row that read the thumbnail cache itself became an
+  observer of it, so every thumbnail that landed redrew every row.
+
+Keep the row's `body` free of `editorState`. Reaching for it there quietly puts
+every row back on the list of things a click has to redraw, and nothing will
+fail — it will just get slow again.
+
+Shared between Current and Next rather than forked: this is how the list draws,
+not what it does.
+
+Behaviour checked by A/B rather than assumed: `panel-reach-walk.json` (row drag,
+drop lines above and inside, group disclosure, rows found by name) and
+`name-field-handback.json` (the rename field in a row, Return, Escape, undo) run
+on both builds. The row-drag walk matched exactly; the rename walk differed only
+in two transient timings, both of them the dock settling a beat sooner on the
+faster build.
+
+Left undone, queued: the list still builds a view value for every row even
+though five fit in the panel. A `LazyVStack` would skip the rest, but the panel
+measures its own height from the rows so it can hug a short list, and a lazy
+stack reports no height for rows it has not made
+("the-layers-list-only-builds-the-rows-you-can-see").
+
+Verified: `Scripts/test.sh` green (2633 tests), four walks on the probe with
+real screen captures. Audit: `queue/audits/2026-09-04-layers-row-count.json`.

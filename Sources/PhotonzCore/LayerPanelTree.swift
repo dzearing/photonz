@@ -240,3 +240,80 @@ extension PhotonzDocument {
         }
     }
 }
+
+// MARK: - What a row draws
+
+/// One row of the layers panel and the handful of facts about its layer that
+/// the row actually draws. Nothing else: the row is a small value, so two
+/// equal values mean the panel can leave that row exactly as it is.
+///
+/// This exists because the panel used to hold only the row's id and ask the
+/// document for the layer again while drawing, once per row. That search walks
+/// the whole tree, so a list of 120 layers did 120 walks of 120 layers every
+/// time anything in the dock changed.
+public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
+    /// Where the row sits in the tree: depth, group-ness, child count, whether
+    /// it is open.
+    public let row: LayerPanelRow
+    public let name: String
+    public let isVisible: Bool
+    public let isLocked: Bool
+    /// Part of the current selection, so the row draws its highlight.
+    public let isSelected: Bool
+    public let isMainComponent: Bool
+    public let isComponentInstance: Bool
+    /// Whether the row's menu offers "Rasterize Layer".
+    public let isRasterizable: Bool
+
+    public var id: UUID { row.id }
+
+    public init(row: LayerPanelRow, name: String, isVisible: Bool, isLocked: Bool,
+                isSelected: Bool, isMainComponent: Bool, isComponentInstance: Bool,
+                isRasterizable: Bool) {
+        self.row = row
+        self.name = name
+        self.isVisible = isVisible
+        self.isLocked = isLocked
+        self.isSelected = isSelected
+        self.isMainComponent = isMainComponent
+        self.isComponentInstance = isComponentInstance
+        self.isRasterizable = isRasterizable
+    }
+}
+
+extension PhotonzDocument {
+
+    /// Every row the layers panel shows, in the order it shows them, each one
+    /// carrying what it draws — from a single walk of the tree.
+    ///
+    /// `selected` is the whole selection, the single pick and the marquee's
+    /// rows alike. Only the rows in it come back marked, which is the point:
+    /// a click that moves the selection changes exactly two of these values,
+    /// so the panel redraws exactly two rows.
+    public func layerRows(expanded: Set<UUID>, selected: Set<UUID>) -> [LayerRowDisplay] {
+        var rows: [LayerRowDisplay] = []
+        func walk(_ list: [Layer], depth: Int, parent: UUID?) {
+            for layer in list.reversed() {
+                // A copy of a component has no twist open: what is inside it
+                // belongs to its original, so a row you could open would show
+                // pieces nobody can keep an edit to.
+                let openable = layer.isOpenableGroup
+                let open = openable && expanded.contains(layer.id)
+                rows.append(LayerRowDisplay(
+                    row: LayerPanelRow(id: layer.id, depth: depth, isGroup: openable,
+                                       childCount: openable ? layer.children.count : 0,
+                                       isExpanded: open, parentID: parent),
+                    name: layer.name,
+                    isVisible: layer.isVisible,
+                    isLocked: layer.isLocked,
+                    isSelected: selected.contains(layer.id),
+                    isMainComponent: layer.isMainComponent,
+                    isComponentInstance: layer.isComponentInstance,
+                    isRasterizable: layer.isRasterizable))
+                if open { walk(layer.children, depth: depth + 1, parent: layer.id) }
+            }
+        }
+        walk(layers, depth: 0, parent: nil)
+        return rows
+    }
+}

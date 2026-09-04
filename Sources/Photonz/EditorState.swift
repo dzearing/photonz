@@ -3105,6 +3105,23 @@ final class EditorState {
             ?? []
     }
 
+    /// The same rows, each carrying what it draws — name, visibility, lock,
+    /// whether it is selected, its component marks — from a single walk of the
+    /// tree.
+    ///
+    /// The layers list reads THIS rather than holding ids and asking for each
+    /// layer again while it draws: a lookup by id searches the whole document,
+    /// so a hundred rows meant a hundred walks of a hundred layers on every
+    /// click. It also makes each row a small value the list can compare, which
+    /// is what lets an untouched row skip its redraw entirely.
+    var layerRows: [LayerRowDisplay] {
+        var selected = multiSelectedLayerIDs
+        if let selectedLayerID { selected.insert(selectedLayerID) }
+        return document?.layerRows(
+            expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [],
+            selected: selected) ?? []
+    }
+
     /// The twist-open control on a group row.
     func toggleGroupExpanded(id: UUID) {
         if expandedGroupIDs.contains(id) { expandedGroupIDs.remove(id) } else { expandedGroupIDs.insert(id) }
@@ -5042,6 +5059,24 @@ final class EditorState {
             }
         }
         return thumbnailCache[layer.id]?.image
+    }
+
+    /// The picture for every row the layers list is about to draw, gathered in
+    /// one walk of the tree. Rows inside a shut group are not asked for, so a
+    /// closed group still costs nothing to keep closed.
+    ///
+    /// The list hands each row its own image rather than letting the row ask:
+    /// a row that reads the thumbnail cache becomes an observer of it, and
+    /// then every thumbnail that lands redraws every row.
+    func thumbnails(for rows: [LayerRowDisplay]) -> [UUID: CGImage] {
+        guard let document, !rows.isEmpty else { return [:] }
+        let wanted = Set(rows.map(\.id))
+        var out: [UUID: CGImage] = [:]
+        out.reserveCapacity(wanted.count)
+        for layer in document.allLayers where wanted.contains(layer.id) {
+            if let image = thumbnail(for: layer) { out[layer.id] = image }
+        }
+        return out
     }
 
     /// The Library shelf's picture of a component, sharp enough to be blown up

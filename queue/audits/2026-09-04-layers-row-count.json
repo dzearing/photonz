@@ -1,0 +1,28 @@
+{
+  "feature": "A long layers list costs no more per click than a short one",
+  "epic": "ui-components",
+  "summary": "Clicking a layer used to get slower as a document collected layers, because every row in the list redrew itself on every click. Now only the rows whose look actually changed do any work, so a document with a hundred and twenty layers costs the same per click as one with four.",
+  "setup": "Photonz Dev, any release. Nothing to turn on: this is how the layers list draws now.",
+  "try": [
+    { "do": "Open a new blank canvas and draw three rectangles in different corners.", "shot": "2026-09-04-layers-row-count-4-layers.png" },
+    { "do": "Click each rectangle in turn a few times and notice how the click feels." },
+    { "do": "Draw one more small rectangle, then hold Command and press D about a hundred times to fill the list." , "shot": "2026-09-04-layers-row-count-121-layers.png" },
+    { "do": "Click the same three rectangles again, the same way." },
+    { "do": "Scroll the layers list and drag a row onto another row to reorder it." },
+    { "do": "Double-click a row's name, type a new one, and press Return." }
+  ],
+  "evaluate": [
+    "Does the second round of clicks feel the same as the first, or can you still feel the long list?",
+    "Does the blue highlight land on the row you clicked with no lag behind the canvas?",
+    "Does dragging a row still show the drop line in the same places it used to?",
+    "Does renaming a row still type smoothly with a hundred rows below it?",
+    "Is there anything else about the panel that got slower or stranger as the list grew?"
+  ],
+  "rough": [
+    "Measured on the probe with Scripts/playtest/layers-row-count-perf-walk.json: the dock's share of a click (total minus the same click with the inspector hidden) was 36-38ms at 4 layers and 45-46ms at 121 layers. It is now 29ms at both. The gap that grew with the list is gone; what is left does not depend on how many layers there are.",
+    "The clicks are still not fast in absolute terms: about 29ms of main thread inside the dock, most of it the inspector sections rather than the layers list. That is separate work.",
+    "The list still builds a view value for every row even though only about five fit in the panel at once. Making it build only the visible ones would be the next real win, but the panel measures its own height from the rows so it can hug a short list, and a lazy list cannot report a height for rows it has not made yet. Filed rather than guessed at.",
+    "Screen Recording was granted for this run, so both pictures are real captures of the window, not offscreen renders.",
+    "Verified against the old build by running two existing walks on both: the row drag walk matched exactly, and the rename walk differed only in two transient timings."
+  ]
+}

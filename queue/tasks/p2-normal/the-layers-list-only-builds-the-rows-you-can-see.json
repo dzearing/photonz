@@ -1,0 +1,27 @@
+{
+  "id": "the-layers-list-only-builds-the-rows-you-can-see",
+  "title": "The layers list only builds the rows you can see",
+  "goal": "The layers panel shows about five rows at a time but builds every row in the document, so a hundred-layer file does twenty times the work needed just to draw the five you are looking at. It should build the visible ones and make the rest as you scroll to them.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1030,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T02:45:45.942Z",
+  "updated": "2026-09-04T02:45:45.943Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the equatable-rows work merged 2026-09-04 (Scripts/playtest/layers-row-count-perf-walk.json). LayersListView.rows is a plain VStack inside a bounded ScrollView; the VStack is eager. A LazyVStack would skip offscreen rows entirely, but the list measures contentHeight from a GeometryReader over the rows so the area can hug short content, and a lazy stack reports no height for rows it has not materialised. Needs a different height source (row count times measured row height, say) before the swap is safe.",
+  "acceptance": [
+    "A document with a hundred layers builds no more layers-list rows than one with ten, measured on the probe",
+    "The layers area still hugs a short list and only starts scrolling once it passes the height you set",
+    "Dragging a row to reorder, the drop lines, and the resize grabber all behave exactly as they do now"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T02:45:45.943Z",
+      "note": "created (manual)"
+    }
+  ]
+}

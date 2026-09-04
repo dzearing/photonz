@@ -870,7 +870,7 @@ struct LayersListView: View {
             guard let id, editorState.panelRows.contains(where: { $0.id == id }),
                   let layer = editorState.document?.layer(id: id) else { return }
             editorState.layerAwaitingRename = nil
-            beginRename(layer)
+            beginRename(id: layer.id, name: layer.name)
         }
     }
 
@@ -891,32 +891,47 @@ struct LayersListView: View {
         }
     }
 
+    /// The list, built from ONE read of the document: `editorState.layerRows`
+    /// walks the tree once and hands back what each row draws, and the
+    /// thumbnails come in one pass beside it. Each row is then an `.equatable()`
+    /// view over plain values, so a click that moves the selection redraws the
+    /// two rows whose highlight changed and leaves the rest alone. Before this,
+    /// every row re-ran its body on every click and looked its own layer up by
+    /// searching the whole tree, which cost the list the square of its length
+    /// (measured 2026-09-04: about 0.14ms of main thread per row per click).
     private var rows: some View {
-        let panelRows = editorState.panelRows
+        let displays = editorState.layerRows
         // The twist column appears only once there is something to twist open,
         // so a document with no groups is the list it always was.
-        let showsTwist = Experiments.shared.layersListShowsGroups && panelRows.contains(where: \.isGroup)
+        let showsTwist = Experiments.shared.layersListShowsGroups && displays.contains { $0.row.isGroup }
+        let componentsEnabled = Experiments.shared.componentsEnabled
+        // Both component menu items also need the row to be the selected one,
+        // so folding that in here keeps every OTHER row's value unchanged when
+        // these flip.
+        let canMakeComponent = componentsEnabled && editorState.canMakeComponent
+        let canDetachInstance = componentsEnabled && editorState.canDetachInstance
+        let thumbnails = editorState.thumbnails(for: displays)
+        let target = dropTarget
         return VStack(spacing: 2) {
-            ForEach(panelRows) { panelRow in
-                if let layer = editorState.document?.layer(id: panelRow.id) {
-                    // One closure for picking this row up, so a scripted walk
-                    // and a pointer start the very same drag.
-                    let pickUp: @MainActor () -> NSItemProvider = {
-                        draggingLayerID = panelRow.id
-                        dropTarget = nil
-                        return NSItemProvider(object: panelRow.id.uuidString as NSString)
-                    }
-                    row(panelRow, layer, showsTwist: showsTwist)
-                        .onDrag(pickUp)
-                        .onDrop(of: [.text], delegate: LayerRowDropDelegate(
-                            row: panelRow, dragging: $draggingLayerID, target: $dropTarget,
-                            rowHeight: rowHeight, editorState: editorState))
-                        .playtestTarget(layer.name, kind: .row,
-                                        detail: panelRow.isGroup
-                                            ? (panelRow.isExpanded ? "group, open" : "group, shut")
-                                            : "layer",
-                                        payload: pickUp)
-                }
+            ForEach(displays) { display in
+                LayersRow(display: display,
+                          thumbnail: thumbnails[display.id],
+                          showsTwist: showsTwist,
+                          componentsEnabled: componentsEnabled,
+                          offersMakeComponent: canMakeComponent && display.isSelected,
+                          offersDetachInstance: canDetachInstance && display.isSelected,
+                          drop: target?.targetID == display.id ? target : nil,
+                          draftName: renamingLayerID == display.id ? renameText : nil,
+                          rowHeight: rowHeight,
+                          editorState: editorState,
+                          renameText: $renameText,
+                          draggingLayerID: $draggingLayerID,
+                          dropTarget: $dropTarget,
+                          renameFieldFocused: $renameFieldFocused,
+                          beginRename: beginRename(id:name:),
+                          commitRename: commitRename(id:),
+                          cancelRename: cancelRename)
+                    .equatable()
             }
             // The Canvas pseudo-layer: pinned at the very bottom (beneath the
             // Background it frames). Not a real layer — no eye/lock/delete/
@@ -927,8 +942,9 @@ struct LayersListView: View {
         .padding(.bottom, 2)
         .onPreferenceChange(LayerRowHeightKey.self) { rowHeight = max(1, $0) }
         // Rows slide/fade on add, delete, duplicate, reorder, and on a group
-        // opening or closing.
-        .animation(.spring(duration: 0.25), value: panelRows)
+        // opening or closing. Keyed on the SHAPE of the list only: a selection
+        // change is not a layout change and never was animated here.
+        .animation(.spring(duration: 0.25), value: displays.map(\.row))
     }
 
     /// A grabber under the list — drag to resize the layer area's max height.
@@ -976,67 +992,140 @@ struct LayersListView: View {
         .help("Select to resize the canvas by its edges")
     }
 
-    /// The twist-open control, in a fixed slot so every row's thumbnail lines
-    /// up whether or not the row is a group. The column exists only once the
+    private func beginRename(id: UUID, name: String) {
+        renameText = name
+        renamingLayerID = id
+        renameFieldFocused = true
+    }
+
+    private func commitRename(id: UUID) {
+        guard renamingLayerID == id else { return }
+        renamingLayerID = nil
+        editorState.renameLayer(id: id, to: renameText)
+    }
+
+    /// Escape: the row keeps the name it had and nothing reaches history, the
+    /// same thing Escape does to a frame's name on the canvas.
+    private func cancelRename() {
+        renamingLayerID = nil
+    }
+}
+
+/// One row of the layers list, as a view that can tell when nothing about it
+/// changed.
+///
+/// Everything the row draws arrives as a plain value and NOTHING in `body`
+/// reads the editor state. The actions do, but they run on a click, long after
+/// the row was drawn, so they never make the row an observer. That is what lets
+/// `.equatable()` mean something: a click that moves the selection changes the
+/// value of the two rows whose highlight changed, and every other row in the
+/// list is skipped whole.
+///
+/// Keep it that way. Reaching for `editorState.something` inside `body` here
+/// quietly puts every row back on the list of things a click has to redraw.
+private struct LayersRow: View, Equatable {
+    let display: LayerRowDisplay
+    /// The picture beside the name. Compared by identity: the cache hands back
+    /// the very same image until the layer itself changes.
+    let thumbnail: CGImage?
+    /// Whether the list draws a twist column at all — it appears only once the
     /// document HOLDS a group, so a screenshot with a few annotations on it
     /// reads exactly as it always has.
-    @ViewBuilder
-    private func twistControl(_ row: LayerPanelRow) -> some View {
-        if row.isGroup {
-            Image(systemName: "chevron.right")
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .rotationEffect(.degrees(row.isExpanded ? 90 : 0))
-                .frame(width: 12, height: 12)
-                .contentShape(Rectangle())
-                // High priority so the twist wins over the row's own tap: a
-                // click on the chevron opens the group, it does not also
-                // reselect the row under the pointer.
-                .highPriorityGesture(TapGesture().onEnded {
-                    withAnimation(.spring(duration: 0.2)) {
-                        editorState.toggleGroupExpanded(id: row.id)
-                    }
-                })
-                .help(row.isExpanded ? "Hide what is inside" : "Show what is inside")
-        } else {
-            Color.clear.frame(width: 12, height: 12)
+    let showsTwist: Bool
+    let componentsEnabled: Bool
+    /// The two component menu items, already decided by the list.
+    let offersMakeComponent: Bool
+    let offersDetachInstance: Bool
+    /// Where a drag hovering over THIS row would land, nil when none is.
+    let drop: LayerDrop?
+    /// The draft name while this row is being renamed, nil the rest of the
+    /// time. It is here so the row being typed into redraws on every keystroke
+    /// and no other row does.
+    let draftName: String?
+    let rowHeight: CGFloat
+
+    // Not compared. These are the ways back out to the app and they point at
+    // the same state for as long as the list is on screen, so a row still
+    // holding last draw's copy behaves exactly like one holding this draw's.
+    let editorState: EditorState
+    @Binding var renameText: String
+    @Binding var draggingLayerID: UUID?
+    @Binding var dropTarget: LayerDrop?
+    @FocusState.Binding var renameFieldFocused: Bool
+    let beginRename: (UUID, String) -> Void
+    let commitRename: (UUID) -> Void
+    let cancelRename: () -> Void
+
+    nonisolated static func == (a: LayersRow, b: LayersRow) -> Bool {
+        a.display == b.display
+            && a.thumbnail === b.thumbnail
+            && a.showsTwist == b.showsTwist
+            && a.componentsEnabled == b.componentsEnabled
+            && a.offersMakeComponent == b.offersMakeComponent
+            && a.offersDetachInstance == b.offersDetachInstance
+            && a.drop == b.drop
+            && a.draftName == b.draftName
+            && a.rowHeight == b.rowHeight
+    }
+
+    private var id: UUID { display.id }
+    private var panelRow: LayerPanelRow { display.row }
+    private var indent: CGFloat { CGFloat(display.row.depth) * 14 }
+
+    /// One closure for picking this row up, so a scripted walk and a pointer
+    /// start the very same drag.
+    private var pickUp: @MainActor () -> NSItemProvider {
+        {
+            draggingLayerID = id
+            dropTarget = nil
+            return NSItemProvider(object: id.uuidString as NSString)
         }
     }
 
-    private func row(_ panelRow: LayerPanelRow, _ layer: Layer, showsTwist: Bool) -> some View {
-        let isSelected = editorState.isLayerSelected(layer.id)
-        let indent = CGFloat(panelRow.depth) * 14
-        return HStack(spacing: 8) {
-            if showsTwist { twistControl(panelRow) }
-            thumbnail(layer)
-            if renamingLayerID == layer.id {
+    var body: some View {
+        content
+            .onDrag(pickUp)
+            .onDrop(of: [.text], delegate: LayerRowDropDelegate(
+                row: panelRow, dragging: $draggingLayerID, target: $dropTarget,
+                rowHeight: rowHeight, editorState: editorState))
+            .playtestTarget(display.name, kind: .row,
+                            detail: panelRow.isGroup
+                                ? (panelRow.isExpanded ? "group, open" : "group, shut")
+                                : "layer",
+                            payload: pickUp)
+    }
+
+    private var content: some View {
+        HStack(spacing: 8) {
+            if showsTwist { twistControl }
+            thumbnailView
+            if draftName != nil {
                 TextField("Layer name", text: $renameText)
                     .textFieldStyle(.plain)
                     .font(.callout)
                     .focused($renameFieldFocused)
-                    .onSubmit { commitRename(layer) }
+                    .onSubmit { commitRename(id) }
                     // The field does not just close on Return, it hands the
                     // keyboard to the picture. Closing alone leaves the
                     // keyboard on the window, where a tool letter does nothing
                     // at all — a quieter version of the same trap.
-                    .nameFieldKeys(commit: { commitRename(layer) }, revert: cancelRename)
+                    .nameFieldKeys(commit: { commitRename(id) }, revert: cancelRename)
                     .onChange(of: renameFieldFocused) { _, focused in
-                        if !focused { commitRename(layer) }
+                        if !focused { commitRename(id) }
                     }
             } else {
-                Text(layer.name)
+                Text(display.name)
                     .font(.callout)
                     .lineLimit(1)
-                    .foregroundStyle(layer.isVisible ? .primary : .tertiary)
-                    .onTapGesture(count: 2) { beginRename(layer) }
+                    .foregroundStyle(display.isVisible ? .primary : .tertiary)
+                    .onTapGesture(count: 2) { beginRename(id, display.name) }
             }
             // The mark that says this group is a component. It sits with the
             // name rather than out at the edge, because it is part of what the
             // row IS, not one more thing you can do to it. Filled is the
             // original, outlined is a copy that follows it.
-            if Experiments.shared.componentsEnabled,
-               layer.isMainComponent || layer.isComponentInstance {
-                ComponentMark(isInstance: layer.isComponentInstance)
+            if componentsEnabled, display.isMainComponent || display.isComponentInstance {
+                ComponentMark(isInstance: display.isComponentInstance)
             }
             Spacer(minLength: 4)
             // A shut group says how much it is hiding, so the row is not a
@@ -1049,41 +1138,41 @@ struct LayersListView: View {
                     .help(panelRow.childCount == 1 ? "1 layer inside" : "\(panelRow.childCount) layers inside")
             }
             Button {
-                editorState.toggleLayerLock(id: layer.id)
+                editorState.toggleLayerLock(id: id)
             } label: {
-                Image(systemName: layer.isLocked ? "lock.fill" : "lock.open")
+                Image(systemName: display.isLocked ? "lock.fill" : "lock.open")
                     .font(.system(size: 11))
-                    .foregroundStyle(layer.isLocked ? .primary : .tertiary)
+                    .foregroundStyle(display.isLocked ? .primary : .tertiary)
             }
-            .help(layer.isLocked ? "Unlock Layer" : "Lock Layer")
+            .help(display.isLocked ? "Unlock Layer" : "Lock Layer")
             Button {
-                editorState.toggleLayerVisibility(id: layer.id)
+                editorState.toggleLayerVisibility(id: id)
             } label: {
-                Image(systemName: layer.isVisible ? "eye" : "eye.slash")
+                Image(systemName: display.isVisible ? "eye" : "eye.slash")
                     .font(.system(size: 11))
-                    .foregroundStyle(layer.isVisible ? .primary : .tertiary)
+                    .foregroundStyle(display.isVisible ? .primary : .tertiary)
             }
-            .help(layer.isVisible ? "Hide Layer" : "Show Layer")
+            .help(display.isVisible ? "Hide Layer" : "Show Layer")
         }
         .buttonStyle(.borderless)
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
         .padding(.leading, indent)
         .background {
-            if isSelected {
+            if display.isSelected {
                 RoundedRectangle(cornerRadius: 8).fill(Color.accentColor.opacity(0.25))
             }
         }
         .background(GeometryReader { proxy in
             Color.clear.preference(key: LayerRowHeightKey.self, value: proxy.size.height)
         })
-        .overlay(alignment: .top) { dropLine(.above(panelRow.id), indent: indent) }
-        .overlay(alignment: .bottom) { dropLine(.below(panelRow.id), indent: indent) }
+        .overlay(alignment: .top) { dropLine(.above(id)) }
+        .overlay(alignment: .bottom) { dropLine(.below(id)) }
         .overlay {
             // Dropping INSIDE outlines the group itself, so the promise is
             // "this one swallows what you are carrying", never a line that
             // could be read as "next to it".
-            if dropTarget == .inside(panelRow.id) {
+            if drop == .inside(id) {
                 RoundedRectangle(cornerRadius: 8)
                     .strokeBorder(Color.accentColor, lineWidth: 2)
             }
@@ -1093,53 +1182,43 @@ struct LayersListView: View {
         // anchor row, command toggles the row, plain selects it. The
         // thumbnail's own command gesture (Select Pixels) sits above this.
         .onTapGesture {
-            editorState.clickRow(layer.id, RowClick(modifiers: NSEvent.modifierFlags),
+            editorState.clickRow(id, RowClick(modifiers: NSEvent.modifierFlags),
                                  in: editorState.panelRows.map(\.id))
         }
-        .contextMenu {
-            Button("Duplicate") { editorState.duplicateLayer(id: layer.id) }
-                .keyboardShortcut("d", modifiers: .command)
-            Button("Select Pixels") { editorState.selectLayerPixels(id: layer.id) }
-            Button("Merge Down") { editorState.mergeDown(id: layer.id) }
-                .keyboardShortcut("e", modifiers: .command)
-            if layer.isRasterizable {
-                Button("Rasterize Layer") { editorState.rasterizeLayer(id: layer.id) }
-            }
-            Divider()
-            Button("Bring to Front") { editorState.bringLayerToFront(id: layer.id) }
-                .keyboardShortcut("]", modifiers: [.command, .shift])
-            Button("Bring Forward") { editorState.bringLayerForward(id: layer.id) }
-                .keyboardShortcut("]", modifiers: .command)
-            Button("Send Backward") { editorState.sendLayerBackward(id: layer.id) }
-                .keyboardShortcut("[", modifiers: .command)
-            Button("Send to Back") { editorState.sendLayerToBack(id: layer.id) }
-                .keyboardShortcut("[", modifiers: [.command, .shift])
-            Divider()
-            Button("Rename") { beginRename(layer) }
-            if Experiments.shared.componentsEnabled, editorState.canMakeComponent,
-               editorState.isLayerSelected(layer.id) {
-                Button("Make Component") { editorState.makeComponent() }
-                    .keyboardShortcut("k", modifiers: [.command, .option])
-            }
-            if Experiments.shared.componentsEnabled, editorState.canDetachInstance,
-               editorState.isLayerSelected(layer.id) {
-                Button("Detach Instance") { editorState.detachInstance() }
-                    .keyboardShortcut("b", modifiers: [.command, .option])
-            }
-            Button(layer.isVisible ? "Hide" : "Show") { editorState.toggleLayerVisibility(id: layer.id) }
-            Button(layer.isLocked ? "Unlock" : "Lock") { editorState.toggleLayerLock(id: layer.id) }
-            Divider()
-            Button("Delete", role: .destructive) { editorState.deleteLayer(id: layer.id) }
-                .keyboardShortcut(.delete, modifiers: .command)
+        .contextMenu { menu }
+    }
+
+    /// The twist-open control, in a fixed slot so every row's thumbnail lines
+    /// up whether or not the row is a group.
+    @ViewBuilder
+    private var twistControl: some View {
+        if panelRow.isGroup {
+            Image(systemName: "chevron.right")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .rotationEffect(.degrees(panelRow.isExpanded ? 90 : 0))
+                .frame(width: 12, height: 12)
+                .contentShape(Rectangle())
+                // High priority so the twist wins over the row's own tap: a
+                // click on the chevron opens the group, it does not also
+                // reselect the row under the pointer.
+                .highPriorityGesture(TapGesture().onEnded {
+                    withAnimation(.spring(duration: 0.2)) {
+                        editorState.toggleGroupExpanded(id: id)
+                    }
+                })
+                .help(panelRow.isExpanded ? "Hide what is inside" : "Show what is inside")
+        } else {
+            Color.clear.frame(width: 12, height: 12)
         }
     }
 
-    private func thumbnail(_ layer: Layer) -> some View {
+    private var thumbnailView: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 4)
                 .fill(.quaternary)
-            if let cg = editorState.thumbnail(for: layer) {
-                Image(decorative: cg, scale: 1)
+            if let thumbnail {
+                Image(decorative: thumbnail, scale: 1)
                     .resizable()
                     .scaledToFit()
                     .clipShape(RoundedRectangle(cornerRadius: 3))
@@ -1152,7 +1231,7 @@ struct LayersListView: View {
         // selection (Photoshop's load-transparency lives on the thumbnail
         // too); on the rest of the row command-click toggles the row instead.
         .highPriorityGesture(
-            TapGesture().modifiers(.command).onEnded { editorState.selectLayerPixels(id: layer.id) }
+            TapGesture().modifiers(.command).onEnded { editorState.selectLayerPixels(id: id) }
         )
         .help("Command-click to select the layer's pixels")
     }
@@ -1162,8 +1241,8 @@ struct LayersListView: View {
     /// layers are about to join: a line at the far left means back out on the
     /// canvas.
     @ViewBuilder
-    private func dropLine(_ drop: LayerDrop, indent: CGFloat) -> some View {
-        if dropTarget == drop {
+    private func dropLine(_ wanted: LayerDrop) -> some View {
+        if drop == wanted {
             Capsule()
                 .fill(Color.accentColor)
                 .frame(height: 2)
@@ -1172,22 +1251,40 @@ struct LayersListView: View {
         }
     }
 
-    private func beginRename(_ layer: Layer) {
-        renameText = layer.name
-        renamingLayerID = layer.id
-        renameFieldFocused = true
-    }
-
-    private func commitRename(_ layer: Layer) {
-        guard renamingLayerID == layer.id else { return }
-        renamingLayerID = nil
-        editorState.renameLayer(id: layer.id, to: renameText)
-    }
-
-    /// Escape: the row keeps the name it had and nothing reaches history, the
-    /// same thing Escape does to a frame's name on the canvas.
-    private func cancelRename() {
-        renamingLayerID = nil
+    @ViewBuilder
+    private var menu: some View {
+        Button("Duplicate") { editorState.duplicateLayer(id: id) }
+            .keyboardShortcut("d", modifiers: .command)
+        Button("Select Pixels") { editorState.selectLayerPixels(id: id) }
+        Button("Merge Down") { editorState.mergeDown(id: id) }
+            .keyboardShortcut("e", modifiers: .command)
+        if display.isRasterizable {
+            Button("Rasterize Layer") { editorState.rasterizeLayer(id: id) }
+        }
+        Divider()
+        Button("Bring to Front") { editorState.bringLayerToFront(id: id) }
+            .keyboardShortcut("]", modifiers: [.command, .shift])
+        Button("Bring Forward") { editorState.bringLayerForward(id: id) }
+            .keyboardShortcut("]", modifiers: .command)
+        Button("Send Backward") { editorState.sendLayerBackward(id: id) }
+            .keyboardShortcut("[", modifiers: .command)
+        Button("Send to Back") { editorState.sendLayerToBack(id: id) }
+            .keyboardShortcut("[", modifiers: [.command, .shift])
+        Divider()
+        Button("Rename") { beginRename(id, display.name) }
+        if offersMakeComponent {
+            Button("Make Component") { editorState.makeComponent() }
+                .keyboardShortcut("k", modifiers: [.command, .option])
+        }
+        if offersDetachInstance {
+            Button("Detach Instance") { editorState.detachInstance() }
+                .keyboardShortcut("b", modifiers: [.command, .option])
+        }
+        Button(display.isVisible ? "Hide" : "Show") { editorState.toggleLayerVisibility(id: id) }
+        Button(display.isLocked ? "Unlock" : "Lock") { editorState.toggleLayerLock(id: id) }
+        Divider()
+        Button("Delete", role: .destructive) { editorState.deleteLayer(id: id) }
+            .keyboardShortcut(.delete, modifiers: .command)
     }
 }
 

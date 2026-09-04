@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T01:26:57.451Z",
-  "updated": "2026-09-04T01:26:57.510Z",
+  "updated": "2026-09-04T02:46:16.820365Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the selection latency work merged 2026-09-04. Every LayersPanel row re-runs its body per click, O(rows). Small at todays row counts, but it scales with the users documents, and components and groups make documents deeper. The Library panel was fixed the same way in that work: conform the view to Equatable and give it an equatable() so SwiftUI can skip it. Measure with Scripts/playtest/select-click-perf-walk.json.",
@@ -26,6 +26,39 @@
     {
       "t": "2026-09-04T01:26:57.510Z",
       "note": "seq 1010 -> 120"
+    },
+    {
+      "t": "2026-09-04T02:20:24.240Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T02:46:16.820365Z",
+      "note": "Reproduced first. New walk Scripts/playtest/layers-row-count-perf-walk.json: three rectangles clicked five times each, then 116 more layers and the same clicks, every stage run twice (inspector shown, inspector hidden) so the dock's own share can be subtracted out. Two runs per side."
+    },
+    {
+      "t": "2026-09-04T02:46:16.820365Z",
+      "note": "Baseline: dock share of a click 36.3/38.4ms at 4 layers vs 45.5/45.9ms at 121. Per target 82->102ms, 19->36ms, 27->39ms, 41->48ms. About 0.14ms per row per click. The premise holds, and it is small today exactly as the task said."
+    },
+    {
+      "t": "2026-09-04T02:46:16.820365Z",
+      "note": "Adversarial review before building: a LazyVStack is the bigger win (five rows fit, 121 get built) but the panel measures its own height from the rows to hug a short list, and a lazy stack reports no height for rows it has not made. Filed as its own task rather than risked here."
+    },
+    {
+      "t": "2026-09-04T02:46:16.820365Z",
+      "note": "Built: PhotonzCore layerRows(expanded:selected:) walks the tree once (7 new tests); LayersRow is an Equatable view used with .equatable() whose body never reads editor state; EditorState.thumbnails(for:) gathers pictures in one pass so no row observes the thumbnail cache."
+    },
+    {
+      "t": "2026-09-04T02:46:16.820365Z",
+      "note": "After: dock share 28.9/40.5ms at 4 layers vs 29.0/29.0ms at 121. The growth with row count is gone and both sizes are cheaper than before."
+    },
+    {
+      "t": "2026-09-04T02:46:16.820365Z",
+      "note": "Behaviour A/B rather than assumed: panel-reach-walk (row drag, drop lines above and inside, group disclosure, rows found by name) matched the old build exactly; name-field-handback (rename field in a row, Return, Escape, undo) differed only in two transient timings."
+    },
+    {
+      "t": "2026-09-04T02:46:16.820365Z",
+      "note": "Scripts/test.sh green, 2633 tests. Audit queue/audits/2026-09-04-layers-row-count.json with two real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-04T02:20:24.240Z"
 }
