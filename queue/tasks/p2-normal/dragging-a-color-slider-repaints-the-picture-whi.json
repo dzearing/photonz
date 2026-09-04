@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1020,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T02:04:00.083Z",
-  "updated": "2026-09-04T03:53:52.018Z",
+  "updated": "2026-09-04T03:54:01.839Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Named in the picker audit (queue/audits/2026-09-04-one-color-picker.json) as the thing that still feels clumsy. The picker (Sources/Photonz/DesignedColorPicker.swift) already has the split: SaturationValueField and ChannelSlider call onCommit only on drag end. What is missing is a coalescing path in EditorState like the one dragCornerRadius and dragOpacity already use for the Effects sliders (see PlaytestHarness .dragOpacity) so the live frames preview and the release commits once. Reuse that rather than inventing a second one.",
@@ -52,7 +52,12 @@
     {
       "t": "2026-09-04T03:53:52.018Z",
       "note": "What is NOT proved by a walk, and why: the picker gestures calling the live path. A walk cannot put a pointer inside a popover. Tried three ways, mouse events to the popover window, to its hosting view, and through the app event queue, and none reaches SwiftUI while the probe is not the active app; the diagnostic showed the hit view is PopoverHostingView with no gesture recognizers on it. That scaffolding was removed rather than left in as a step that silently does nothing. The wiring itself is three onDrag() calls added to existing onChanged handlers and the closure is non-optional in every subview, so the compiler carries most of it."
+    },
+    {
+      "t": "2026-09-04T03:54:01.839Z",
+      "note": "A colour drag now repaints the selected layers on every frame and still lands as one undo step and one Recent entry. EditorState.previewSelectionPaint/commitSelectionPaint (the colour twin of previewLayerStyle/commitLayerStyle), an optional onPreview through DesignedColorPicker to the square, the channel sliders, the gradient aim pad and the ramp keys, and the Shadow well on the existing style preview path. Verified by Scripts/test.sh (2673 tests) and Scripts/playtest/live-color-drag-walk.json on the probe with real screen captures. Audit: queue/audits/2026-09-04-live-color-drag.json. Commit 2f0ca95."
     }
   ],
-  "started": "2026-09-04T03:27:25.407Z"
+  "started": "2026-09-04T03:27:25.407Z",
+  "completed": "2026-09-04T03:54:01.839Z"
 }
