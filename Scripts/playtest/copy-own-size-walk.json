@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/copy-own-size",
+  "seed": "A copy can be given a size of its own now. The walk drops the nav bar twice, so the first is the original and the second is a copy, then resizes the copy by its handle and by typing, puts it back with the one button that does that, and finally changes the ORIGINAL's height to prove the copy keeps the width it was given and takes the height it was not.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "dragTile", "tile": "Nav Bar", "to": [400, 200] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "dragTile", "tile": "Nav Bar", "to": [400, 400] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-copy-selected",
+      "note": "the second drop is a COPY of the first, and it lands selected. Position & Size should show W 320 and H 48 as live fields rather than greyed readouts, and the copy should be wearing the eight resize handles." },
+    { "do": "snapshot", "name": "copy-own-size-1-copy-selected" },
+
+    { "do": "drag", "from": [560, 424], "to": [700, 460], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-dragged",
+      "note": "THE TEST: the copy's bottom right handle dragged out. A group offers the four corners, so this claims both sides at once. The bar should be about 460 by 84 with its surface spread across the new box, and the Component section should have grown an Its own size row reading both numbers." },
+    { "do": "snapshot", "name": "copy-own-size-2-dragged" },
+    { "do": "render", "name": "copy-own-size-2-dragged-doc" },
+
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "1200" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-wide",
+      "note": "1200 typed into W. The copy is a desktop-width bar while the original above it is still 320. Its own size should read 1200 wide." },
+    { "do": "snapshot", "name": "copy-own-size-3-wide" },
+    { "do": "render", "name": "copy-own-size-3-wide-doc" },
+
+    { "do": "press", "control": "Revert Size" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-reverted",
+      "note": "the one way back, in the Component section: the copy is 320 wide again and the Its own size row has gone, because there is nothing left to say." },
+    { "do": "snapshot", "name": "copy-own-size-4-reverted" },
+    { "do": "render", "name": "copy-own-size-4-reverted-doc" },
+
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "375" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-phone-width",
+      "note": "the same bar at a phone's width. Its own size should read 375 wide." },
+    { "do": "snapshot", "name": "copy-own-size-5-phone-width" },
+
+    { "do": "action", "action": "selectComponentOriginal" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "focus", "field": "H" },
+    { "do": "type", "text": "72" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-original-taller",
+      "note": "THE OTHER TEST: the ORIGINAL is now 72 tall. The copy below it should be 375 wide, the width it was given, and 72 tall, the height it never was: one axis stopped following and the other did not." },
+    { "do": "snapshot", "name": "copy-own-size-6-original-taller" },
+    { "do": "render", "name": "copy-own-size-6-original-taller-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-undone",
+      "note": "one undo puts the original's height back to 48, and the copy follows it back down while keeping its 375." },
+    { "do": "render", "name": "copy-own-size-7-undone-doc" }
+  ]
+}

@@ -250,17 +250,28 @@ struct LayerScalingTests {
         #expect(editing.fixedReason(for: .height) == nil)
     }
 
-    @Test("A copy of a component says its size comes from the original")
-    func aComponentCopyIsNotResizable() {
+    /// A copy offers the handles too now, and what a drag on one of them means
+    /// is different: nothing inside is scaled, the copy is simply told how big
+    /// it is and remembers being told (`ComponentInstanceSizeTests`).
+    @Test("A copy of a component offers the handles and keeps the size it is given")
+    func aComponentCopyTakesItsOwnSize() {
         var content = GroupContent(children: card().children)
         content.instanceOf = UUID()
         let copy = Layer(name: "Card", content: .group(content), frame: .zero)
-        #expect(!copy.allowsFrameResize)
+        #expect(copy.allowsFrameResize)
         let editing = LayerGeometryEditing(layer: copy)
-        #expect(editing.allows(.x))
-        #expect(!editing.allows(.width))
-        #expect(!editing.allows(.height))
-        #expect(editing.fixedReason(for: .width) == LayerGeometryEditing.instanceSizeReason)
+        for field in LayerGeometryField.allCases { #expect(editing.allows(field)) }
+        let before = copy.localBounds
+        let wider = copy.resized(to: CGRect(x: before.minX, y: before.minY,
+                                            width: 400, height: before.height))
+        #expect(wider.instanceSize?.width == 400)
+        // Only the side that changed is claimed: the height still follows.
+        #expect(wider.instanceSize?.height == nil)
+        // What is inside lines up in the new box the same way it would if the
+        // ORIGINAL had been dragged to 400: these pieces carry no rule of their
+        // own, so they scale with it, and none of them is any taller.
+        #expect(wider.localBounds.width == 400)
+        #expect(wider.children.map(\.frame.height) == copy.children.map(\.frame.height))
     }
 
     @Test("A main component resizes like any other group, so its copies follow")

@@ -1504,3 +1504,6 @@
 {"t":"2026-09-04T22:43:48.411Z","ev":"task_resequenced","id":"the-editor-state-splits-its-layout-and-component","from":8,"to":6}
 {"t":"2026-09-04T22:43:48.442Z","ev":"task_resequenced","id":"the-tool-says-when-a-saved-color-cannot-come-wit","from":7,"to":7}
 {"t":"2026-09-04T22:44:39.107Z","ev":"manager","filed":4,"readyBefore":10,"readyAfter":13,"report":"queue/manager/2026-09-04-1543.md"}
+{"t":"2026-09-04T22:45:08.313Z","ev":"manager_pass","exit":0,"ready":13}
+{"t":"2026-09-04T22:45:08.345Z","ev":"task_started","id":"a-copy-can-be-given-its-own-size","title":"A copy can be given its own size","priority":"p1-high"}
+{"t":"2026-09-04T23:09:52.763Z","ev":"task_created","id":"the-layout-section-says-a-copy-stays-where-the-o","priority":"p3-low","title":"The Layout section says a copy stays where the original put it, which a resized copy does not"}

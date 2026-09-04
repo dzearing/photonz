@@ -426,6 +426,14 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// saved before the look followed — and the next sync adopts the
     /// original's look as the memory without changing one pixel.
     public var followedStyle: LayerStyle?
+    /// Set on an **instance**: the width and height this copy has been given
+    /// for itself, where it has been given them (`InstanceSize`). Nil, or a nil
+    /// side, is a copy that is the size of its original on that side — which is
+    /// every copy until somebody drags its handle or types a number. It is
+    /// written OVER the original's layout after every edit rather than refilled
+    /// from it, which is what makes the same nav bar 1200 wide on a desktop
+    /// screen and 375 on a phone without either one leaving the family.
+    public var instanceSize: InstanceSize?
     /// How everything inside this group lines up when the group is resized —
     /// the container's default, which any one child may override with its own
     /// `Layer.placement` (`docs/design/ui-building.md`, "Resizing places the
@@ -458,7 +466,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
-        case properties, overrides, followedStyle, contentPlacement, layout
+        case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -476,6 +484,11 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // Only a copy remembers a look, so a group that is not one encodes
         // exactly as it did before the look followed.
         if instanceOf != nil { try c.encodeIfPresent(followedStyle, forKey: .followedStyle) }
+        // ...and only a copy somebody has resized writes a size of its own, so
+        // a copy that follows its original is byte for byte what it always was.
+        if instanceOf != nil, instanceSize?.isFollowing == false {
+            try c.encode(instanceSize, forKey: .instanceSize)
+        }
         // A group that never had a placement set writes no key, so a document
         // saved before placement existed is byte for byte what it was.
         try c.encodeIfPresent(contentPlacement?.normalized, forKey: .contentPlacement)
@@ -502,6 +515,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         properties = try c.decodeIfPresent([ComponentProperty].self, forKey: .properties) ?? []
         overrides = try c.decodeIfPresent([ComponentOverride].self, forKey: .overrides) ?? []
         followedStyle = try c.decodeIfPresent(LayerStyle.self, forKey: .followedStyle)
+        instanceSize = try c.decodeIfPresent(InstanceSize.self, forKey: .instanceSize)
         contentPlacement = try c.decodeIfPresent(LayerPlacement.self, forKey: .contentPlacement)
         layout = try c.decodeIfPresent(GroupLayout.self, forKey: .layout)
     }

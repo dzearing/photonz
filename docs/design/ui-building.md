@@ -2109,17 +2109,59 @@ again. The section was offering something it could not keep.
 - **An axis the arrangement decides says so in the same words on both**: a copy
   reads "Set by the stack" where the original does, rather than reading back the
   answer underneath that the stack is overriding.
-- Everything a copy really does own is untouched: where it sits, its size, its
-  knobs, its own placement rule inside whatever holds it.
+- Everything a copy really does own is untouched: where it sits, its knobs, its
+  own placement rule inside whatever holds it, and (since 2026-09-04) its size.
 
 `PhotonzDocument.instanceArrangementReason` is the one sentence, shared by the
 rows' tooltips and the caption. Tested in `ComponentInstanceLayoutTests`, walked
 by `Scripts/playtest/copy-layout-walk.json`.
 
-Not in this slice: a per-copy layout override. Padding that one copy may set for
-itself is a real feature (Figma has it), but it needs an override that survives
-the sync and a way to reset it, which is the same machinery as C6's knobs. Until
-then, refusing is honest and losing it silently was not.
+Since then a copy HAS been given one of these for itself: its size, below.
+Padding a copy may set for itself is still not in, and still for the same
+reason it was refused here: nobody hits it daily, and refusing is honest.
+
+## Landed: a copy can be given its own size (Next, `next-components`, 2026-09-04)
+
+The same nav bar is 1200 points wide on a desktop screen and 375 on a phone.
+Until now the only way to say that was Detach, which throws away every future
+edit to the original: the W and H boxes on a copy were greyed, because a number
+typed there was overwritten by the next sync.
+
+A copy now takes a width and a height like any other layer, and keeps them.
+
+- **The eight handles are back on a copy, and the boxes take typing.** Drag a
+  copy's edge or type 1200 into W and it is 1200 wide. One undo puts it back.
+- **Nothing inside the copy is scaled.** A copy told how big it is flows its
+  contents into that box exactly as the original would at that size: a bar
+  that stretches spreads across 1200, a title pinned left stays 16 in from the
+  left, a control that hugs its label keeps the label the size it is. Scaling
+  the contents would have been work the next sync threw away.
+- **One axis at a time.** Widen a copy and its height still follows the
+  original, which is the ordinary case rather than a special one: a nav bar
+  owns its width and takes its height, its colour, its wording and its spacing
+  from the original as before.
+- **The Component section says so, and is the way back.** A copy that owns a
+  side shows an "Its own size" row reading `1200 wide` (or `48 tall`, or both)
+  with the same u-turn button "Its own look" carries. One press puts both sides
+  back on the original. Without the row, a copy that quietly ignores the
+  original's width is a copy nobody can explain, because the W box looks the
+  same whether the number in it is the copy's answer or the original's.
+- **A copy PLACED by the thing it sits in claims nothing.** A copy stretched
+  across a stack or a screen goes through the same resize a handle drag does,
+  so without a guard every stretched copy would silently and permanently stop
+  following its original. The container's answer is passed through as such
+  (`Layer.resized(to:placedByContainer:)`) and recorded nowhere.
+- **The size is the ONE thing this hands over.** Arrangement, gap, columns,
+  padding and where the contents sit are still the original's, still refused on
+  a copy, and still say so at the foot of the Layout section.
+
+The record is `GroupContent.instanceSize` (`InstanceSize`: a width and a height,
+either of them nil for "follows the original"), written OVER the original's
+layout by `syncComponentInstances` through `InstanceSizing`, and over the frame
+box for a copy of a screen. It is dropped on detach, and saved only by a copy
+that has one, so a document written before this is byte for byte what it was.
+`LayerScaling.resizingCopy` is the resize. Tested in
+`ComponentInstanceSizeTests`; the refusal it replaces is documented above.
 
 ## Landed: dragging onto a screen puts it in the screen (Next, `next-frames`, 2026-09-03)
 

@@ -307,7 +307,11 @@ enum GroupFlow {
                          height: current.height > 0 ? max(1, full.height) : full.height)
         guard current != box else { return layer }
         guard current.size == box.size else {
-            return layer.resized(to: box, fillingHeight: fillingHeight)
+            // The flow is the CONTAINER deciding, so a copy placed here is not
+            // being given a size of its own: it goes on following its original
+            // and this width is worked out again next time the container moves.
+            return layer.resized(to: box, fillingHeight: fillingHeight,
+                                 placedByContainer: true)
         }
         var out = layer
         out.frame = layer.frame.offsetBy(dx: box.minX - current.minX, dy: box.minY - current.minY)

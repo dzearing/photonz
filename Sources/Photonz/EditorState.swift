@@ -5050,6 +5050,24 @@ final class EditorState {
         perform(announcing: false) { $0.clearInstanceStyleOverrides(instance: instance) }
     }
 
+    /// What this copy owns about its own box, in words: `1200 wide`, `48 tall`,
+    /// or both. Nil for a copy that is the size of its original, which is what
+    /// keeps the row off the section until there is something to say.
+    func instanceOwnSizeLabel(instance: UUID) -> String? {
+        guard componentsEnabled else { return nil }
+        return document?.instanceOwnSizeLabel(instance: instance)
+    }
+
+    /// Puts a copy back on its original's size, both sides at once.
+    ///
+    /// Like the way back on a knob, it lands without the "copies followed"
+    /// pill: the change reaches the one copy whose panel is on screen.
+    func clearInstanceSize(instance: UUID) {
+        guard componentsEnabled else { return }
+        discardDragPreview()
+        perform(announcing: false) { $0.clearInstanceSize(instances: [instance]) }
+    }
+
     /// Whether Layer ▸ Detach Instance would do anything: one unlocked copy is
     /// selected.
     var canDetachInstance: Bool {

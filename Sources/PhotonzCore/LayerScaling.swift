@@ -63,6 +63,93 @@ enum LayerScaling {
         return GroupFlow.flowing(out)
     }
 
+    /// A COPY of a component, resized. Nothing inside it is touched: its
+    /// contents are refilled from its original after every edit, so scaling
+    /// them is work that is thrown away and a stretched copy would snap back.
+    ///
+    /// Instead the box it was given is kept as the copy's OWN size, one axis at
+    /// a time, and written back over the original's after every sync
+    /// (`InstanceSizing`). Only the side that actually changed is claimed, so
+    /// dragging a copy wider leaves its height still following the original.
+    ///
+    /// The size is also put straight onto the copy's working layout — or onto
+    /// its frame, where it is a copy of a screen — so the drag is on screen
+    /// before the sync that confirms it has run.
+    static func resizingCopy(_ layer: Layer, to box: CGRect) -> Layer {
+        let current = layer.localBounds
+        var own = layer.instanceSize ?? .following
+        if box.width != current.width { own.width = max(0, box.width) }
+        if box.height != current.height { own.height = max(0, box.height) }
+        var out = layer
+        out.setInstanceSize(own)
+        if layer.isFrame {
+            out.frame = CGRect(origin: box.origin,
+                               size: CGSize(width: own.usedWidth ?? layer.frame.width,
+                                            height: own.usedHeight ?? layer.frame.height))
+        } else {
+            var layout = layer.group?.layout ?? layer.workingLayout
+            if let width = own.usedWidth { layout.width = width }
+            if let height = own.usedHeight { layout.height = height }
+            out.setGroupLayout(layout)
+            out.frame.origin = box.origin
+        }
+        // What is inside lines up in the new box by the same rules it would
+        // follow on the original: a bar that stretches spreads, a title that
+        // centres re-centres, a button pinned to the right stays pinned. The
+        // sync works the same answer out again from the original's contents
+        // (`InstanceSizing.fitted`); this is what makes the drag look right
+        // while it is still in the hand.
+        out.children = placingContents(out.children,
+                                       from: CGRect(origin: .zero, size: current.size),
+                                       to: CGRect(origin: .zero, size: out.localBounds.size),
+                                       container: layer.group?.contentPlacement,
+                                       unsetHoldsStill: layer.isFrame)
+        return GroupFlow.flowing(out)
+    }
+
+    /// The children of a container moved from one box into another, both given
+    /// in the children's OWN space.
+    ///
+    /// `resizing` is this plus working the two boxes out from a layer and where
+    /// its handle was dragged to. A copy of a component knows them already
+    /// without a drag, because the box its contents arrive in is its original's
+    /// and the box they belong in is its own (`InstanceSizing.fitted`).
+    static func placingContents(_ children: [Layer], from before: CGRect, to after: CGRect,
+                                container: LayerPlacement?,
+                                unsetHoldsStill: Bool = false) -> [Layer] {
+        let sx = factor(from: before.width, to: after.width)
+        let sy = factor(from: before.height, to: after.height)
+        return children.map { child in
+            let resolved = LayerPlacement.resolving(child: child.placement, container: container)
+            let placement = unsetHoldsStill ? resolved.onAScreen : resolved
+            let target = placing(child.localBounds, from: before, to: after,
+                                 sx: sx, sy: sy, as: placement,
+                                 canScaleX: before.width > 0, canScaleY: before.height > 0)
+            // A text box normally throws away a height handed to it, so a
+            // child STRETCHED down the container says so: the height in
+            // `target` is the container's answer, not a guess.
+            guard child.isGroup else {
+                return child.resized(to: target,
+                                     fillingHeight: before.height > 0
+                                         && placement.vertical == .stretch)
+            }
+            // A child that arranges itself is told its new size rather than
+            // scaled, so a stack stretched across a screen dragged wider fills
+            // the width with its own rows instead of magnifying them.
+            //
+            // A COPY in here is placed the same way and claims nothing: this is
+            // the container's answer, not somebody choosing a size for that
+            // copy, so it goes on following its original.
+            if child.isComponentInstance {
+                return child.resized(to: target, placedByContainer: true)
+            }
+            if child.group?.layout != nil, !child.isFrame {
+                return rearranging(child, to: target)
+            }
+            return resizing(child, to: target)
+        }
+    }
+
     static func resizing(_ layer: Layer, to box: CGRect,
                          unsetHoldsStill: Bool = false) -> Layer {
         let current = layer.localBounds
@@ -75,30 +162,10 @@ enum LayerScaling {
                              y: box.minY + (layer.frame.minY - current.minY) * sy)
         let before = current.offsetBy(dx: -layer.frame.minX, dy: -layer.frame.minY)
         let after = box.offsetBy(dx: -anchor.x, dy: -anchor.y)
-        let container = layer.group?.contentPlacement
         var out = layer
-        out.children = layer.children.map { child in
-            let resolved = LayerPlacement.resolving(child: child.placement, container: container)
-            let placement = unsetHoldsStill ? resolved.onAScreen : resolved
-            let target = placing(child.localBounds, from: before, to: after,
-                                 sx: sx, sy: sy, as: placement,
-                                 canScaleX: current.width > 0, canScaleY: current.height > 0)
-            // A text box normally throws away a height handed to it, so a
-            // child STRETCHED down the container says so: the height in
-            // `target` is the container's answer, not a guess.
-            guard child.isGroup else {
-                return child.resized(to: target,
-                                     fillingHeight: current.height > 0
-                                         && placement.vertical == .stretch)
-            }
-            // A child that arranges itself is told its new size rather than
-            // scaled, so a stack stretched across a screen dragged wider fills
-            // the width with its own rows instead of magnifying them.
-            if child.group?.layout != nil, !child.isFrame {
-                return rearranging(child, to: target)
-            }
-            return resizing(child, to: target)
-        }
+        out.children = placingContents(layer.children, from: before, to: after,
+                                       container: layer.group?.contentPlacement,
+                                       unsetHoldsStill: unsetHoldsStill)
         // A frame's stored size IS its box, so it takes the box exactly rather
         // than a multiply that rounds; an ordinary group's stored size is
         // unused and only rides along.

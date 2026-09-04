@@ -190,10 +190,6 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// Why a shape drawn end to end has no typeable size.
     public static let endpointReason = "Drag this shape's ends on the canvas to change its size."
 
-    /// Why a copy of a component has no typeable size: it is the size of the
-    /// original it follows, and a stretched copy would snap straight back.
-    public static let instanceSizeReason = "A copy is the size of the original. Resize the original component and every copy follows."
-
     /// Why a measurement has no typeable size.
     public static let measurementReason = "Drag this measurement's ends on the canvas to change what it measures."
 
@@ -299,10 +295,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         } else {
             canSetWidth = false
             canSetHeight = false
-            let reason: String
-            if layer.isGroup { reason = Self.instanceSizeReason }
-            else if layer.measure != nil { reason = Self.measurementReason }
-            else { reason = Self.endpointReason }
+            let reason = layer.measure != nil ? Self.measurementReason : Self.endpointReason
             widthReason = reason
             heightReason = reason
         }

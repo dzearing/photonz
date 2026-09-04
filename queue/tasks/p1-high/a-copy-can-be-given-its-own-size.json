@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:42:17.784Z",
-  "updated": "2026-09-04T22:43:48.183Z",
+  "updated": "2026-09-04T23:09:43.099Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/manager/shots/2026-09-04-1543-starter-copy.png, a real window capture of a selected copy, shows X and Y typable and W 78 / H 36 greyed. The refusal is in the model, not the panel: GroupLayoutEditing.canSetGroupLayout and ownsContentRules both say no to isComponentInstance, and ComponentInstances.swift line ~439 does group.layout = main.group?.layout on every sync, so a stack copy's width and height come from the original every time. docs/design/ui-building.md, the 'Not in this slice' paragraph under 'a copy is not asked to decide what its original decides', names a per copy layout override as a real feature waiting on an override that survives the sync and a way to reset it. That machinery now exists: the colour knob landed on 2026-09-04 with per copy answers, saved colour links and unlink, in ComponentProperties.swift and ComponentColorKnob.swift. Keep the size override in the same shape so there is one story about what a copy owns. Padding is deliberately NOT in this slice: size is the one people hit daily. Flow maths is GroupFlow.swift; Bounds.of reads layout.usedWidth / usedHeight, so a per copy size has to reach it.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-09-04T22:43:48.182Z",
       "note": "seq 180 -> 1"
+    },
+    {
+      "t": "2026-09-04T22:45:08.345Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T22:50:28.620Z",
+      "note": "Adversarial review before building. Walked it as a first-time user: the W and H boxes are already there and already dead, so unlocking them is the whole gesture and there is nothing new to learn. Three things the task did not settle, decided here: (1) a copy needs a visible sign it has stopped following, so the reset rides an \"Its own size\" row in the Component section, the same shape \"Its own look\" already has, rather than two u-turn buttons crammed beside W and H in a 264pt dock; (2) the size is owned per axis, so a nav bar copy can own its width and still follow the original height; (3) the danger case is a copy sitting in a stack or on a screen that STRETCHES it, because the flow calls the same resize path a handle drag does: without a guard every stretched copy would silently and permanently gain a size of its own. Cut from the slice: a per-axis reset button, and any floor on how small a copy may go, since a copy at 40 wide should behave exactly as the original would at 40 wide."
+    },
+    {
+      "t": "2026-09-04T22:50:28.620Z",
+      "note": "Shape: GroupContent gains instanceSize (per axis, optional), written over the original layout by syncComponentInstances and by the frame-size line for a copy of a screen. Layer.resized gains placedByContainer so GroupFlow can place a copy without claiming the size for it. allowsFrameResize opens up for copies, which turns on both the eight handles and the W/H fields at once."
+    },
+    {
+      "t": "2026-09-04T23:09:43.099Z",
+      "note": "Built and green. GroupContent.instanceSize (per axis, optional, saved only by a copy that has one) is written over the original layout by syncComponentInstances through InstanceSizing, and over the frame box for a copy of a screen. LayerScaling.resizingCopy is the resize: it records the side that changed and lays the contents out for the new box. Layer.resized gained placedByContainer so GroupFlow and a container scaling its children can place a copy without claiming the size for it. allowsFrameResize opened up for copies, which turned on the handles and the W/H fields together and made LayerGeometryEditing.instanceSizeReason dead, so it went. 16 new tests in ComponentInstanceSizeTests, two old tests rewritten where they held the refusal; whole suite 3173 green."
+    },
+    {
+      "t": "2026-09-04T23:09:43.099Z",
+      "note": "Adversarial review of the BUILT thing, on the real app (Scripts/playtest/copy-own-size-walk.json, probe, Screen Recording granted). It found a real bug the tests had not: a widened copy kept its title where 320 put it. A copy is REBUILT from its original after every edit, so its contents always arrive laid out for the original box, and a group that arranges nothing does not re-place what it holds when it is given a size. Fixed with InstanceSizing.fitted, which places the contents from the original box into the copy box by the same rules a resize of the original follows; LayerScaling.placingContents was factored out of resizing so there is one implementation. A regression test now holds it. Verified in the app afterwards: handle drag 320x48 to 460x84, typed W 1200, Revert Size back to 320x48, typed W 375, original H to 72 leaves the copy 375x72, one undo leaves it 375x48."
+    },
+    {
+      "t": "2026-09-04T23:09:43.099Z",
+      "note": "Audit at queue/audits/2026-09-04-copy-own-size.json with two real window captures. Doc updated: new \"A copy can be given its own size\" section in docs/design/ui-building.md, and the older \"Not in this slice\" paragraph amended, since a per copy size is no longer not in it."
     }
-  ]
+  ],
+  "started": "2026-09-04T22:45:08.345Z"
 }

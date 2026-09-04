@@ -364,7 +364,7 @@ extension PhotonzDocument {
         guard let gb = b.group, ga.isFrame == gb.isFrame, ga.clipsContents == gb.clipsContents,
               ga.backgroundHex == gb.backgroundHex, ga.componentID == gb.componentID,
               ga.instanceOf == gb.instanceOf, ga.properties == gb.properties,
-              ga.overrides == gb.overrides,
+              ga.overrides == gb.overrides, ga.instanceSize == gb.instanceSize,
               ga.contentPlacement == gb.contentPlacement else { return false }
         return !differsBeyondIdentity(ga.children, gb.children)
     }
@@ -425,6 +425,9 @@ extension PhotonzDocument {
                         group.instanceOf = nil
                         group.overrides = []
                         group.followedStyle = nil
+                        // The size it was wearing is already in its layout, so
+                        // letting go of the record changes nothing on screen.
+                        group.instanceSize = nil
                         group.children = copy.children
                         copy.content = .group(group)
                         return copy
@@ -436,7 +439,10 @@ extension PhotonzDocument {
                     // How the original arranges its contents follows too, so a
                     // copy of a stack closes up around a row that changed size
                     // rather than leaving a hole where the row used to end.
-                    group.layout = main.group?.layout
+                    // A side this copy was given for itself is written back
+                    // over the top, which is the one thing about the box that
+                    // is the copy's (`InstanceSizing`).
+                    group.layout = InstanceSizing.layout(main: main, own: group.instanceSize)
                     group.contentPlacement = main.group?.contentPlacement
                     group.children = snapshot.resolvedChildren(of: componentID, instance: layer.id,
                                                                overrides: group.overrides,
@@ -449,7 +455,16 @@ extension PhotonzDocument {
                                                       lastSeen: group.followedStyle)
                     group.followedStyle = main.style
                     copy.content = .group(group)
-                    if main.isFrame { copy.frame.size = main.frame.size }
+                    if main.isFrame {
+                        copy.frame.size = InstanceSizing.frameSize(main: main,
+                                                                   own: group.instanceSize)
+                    }
+                    // The contents arrived laid out for the ORIGINAL's box, so
+                    // a copy with a box of its own places them into it the way
+                    // the original would have if it were that size.
+                    if group.instanceSize?.isFollowing == false {
+                        copy = InstanceSizing.fitted(copy, filling: main.localBounds.size)
+                    }
                     if Self.differsBeyondIdentity(copy.children, layer.children)
                         || copy.style != layer.style {
                         report.updatedInstances += 1

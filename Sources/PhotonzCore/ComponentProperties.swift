@@ -858,6 +858,10 @@ extension PhotonzDocument {
             guard var group = layer.group else { return }
             group.instanceOf = nil
             group.overrides = []
+            // A size of its own is a fact about following an original, and it
+            // has already been written into the layout the copy is wearing, so
+            // letting go of the record changes nothing on screen.
+            group.instanceSize = nil
             layer.content = .group(group)
         }
         return true

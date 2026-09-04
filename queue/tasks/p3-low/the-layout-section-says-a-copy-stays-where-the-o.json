@@ -1,0 +1,27 @@
+{
+  "id": "the-layout-section-says-a-copy-stays-where-the-o",
+  "title": "The Layout section says a copy stays where the original put it, which a resized copy does not",
+  "goal": "When you pick a copy that has been given its own width or height, the Layout section still tells you everything in it stays where the original put it. That sentence was written when a copy could not be resized, and next to a title that just re-centred itself in a wider copy it reads wrong. It should say what the copy is actually doing.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1240,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T23:09:52.762Z",
+  "updated": "2026-09-04T23:09:52.763Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The caption is built for the Arrangement row in the copy branch of ArrangementInspector.swift / PlacementInspector.swift, reading Layer.workingLayout. Landed 2026-09-04 alongside a-copy-can-be-given-its-own-size, which made a copy resizable; the caption was not revisited then because rewriting it blind was worse than leaving a sentence that is only half wrong. See queue/audits/2026-09-04-copy-own-size.json, first rough line.",
+  "acceptance": [
+    "Picking a copy that has its own size shows a sentence that describes a copy at that size, not one that says its contents stay where the original put them",
+    "Picking a copy that has NOT been resized still reads exactly as it does today",
+    "The sentence is checked by a test next to the words it describes, the way the rest of the Layout captions are"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T23:09:52.763Z",
+      "note": "created (manual)"
+    }
+  ]
+}

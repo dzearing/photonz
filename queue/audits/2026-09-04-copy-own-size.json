@@ -1,0 +1,31 @@
+{
+  "feature": "A copy can be given its own size",
+  "epic": "ui-components",
+  "summary": "A copy of a component can now be made wider or taller on its own, by dragging its handles or typing into W and H, and it keeps that size while everything else about it still follows the original. One row in the Component section says which sides it owns and puts them back.",
+  "setup": "Photonz Dev, release Next, next-components and next-starter-components on (both default). Show the Library and use the starter Nav Bar.",
+  "try": [
+    { "do": "Open the Library and drag the Nav Bar tile onto the canvas. This first one is the original." },
+    { "do": "Drag the Nav Bar tile out a second time, lower down. This one is a copy, and it lands selected." },
+    { "do": "Look at Position & Size: W and H are typeable fields now, not greyed readouts." },
+    { "do": "Drag the copy's bottom right handle out, then type 1200 into W and press Return.", "shot": "2026-09-04-copy-own-size-wide.png" },
+    { "do": "Read the Its own size row at the foot of the Component section, and press its back arrow to put the copy on the original's size again." },
+    { "do": "Type 375 into the copy's W, then press Edit Original and type 72 into the original's H.", "shot": "2026-09-04-copy-own-size-original-taller.png" },
+    { "do": "Look at the copy: 375 wide, the width you gave it, and 72 tall, the height you did not." },
+    { "do": "Press ⌘Z once and watch the original go back to 48 while the copy keeps its 375." }
+  ],
+  "evaluate": [
+    "When you widen a copy, do the pieces inside land where you expected, or does something look pushed out of place?",
+    "Is Its own size, at the foot of the Component section, where you would look for the way back? Or did you look beside the W field first?",
+    "Does one side following the original while the other does not read as helpful, or as the copy being half broken?",
+    "A copy at 1200 with an original at 320 is a real difference. Do you want the shelf tile, the layers row or the canvas to say that copy is not the size of its original?",
+    "Is dragging a handle the way you would resize a copy, or would you always type the number?"
+  ],
+  "rough": [
+    "The Layout section still says 'Everything in this copy stays where the original put it. It is 1200 wide and 84 tall.' That sentence was written when a copy could not be resized, and beside a title that just re-centred itself it reads slightly wrong. Left as is rather than rewritten blind.",
+    "Padding is deliberately still refused on a copy, so a copy cannot have its own room at the edges. The task scoped it out and nothing here changed that.",
+    "The first build of this got the placement wrong: a widened copy kept its title where 320 put it, because a copy is rebuilt from its original after every edit and a group that arranges nothing does not re-place what it holds. Caught by looking at the real window rather than by a test, and now covered by one.",
+    "A group shows only its four corner handles until its box is big enough for the edge ones, so a small copy can only be resized on both axes at once by dragging. Typing into W alone is the one-axis gesture. That is existing behaviour, not something this added.",
+    "Nothing here is gated by a flag of its own. It rides on next-components, since a copy only exists when components do.",
+    "Screen Recording was granted for the probe, so every picture here is a real window capture, not an offscreen render."
+  ]
+}

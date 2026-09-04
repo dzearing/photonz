@@ -214,8 +214,12 @@ struct LayerGeometryTests {
         #expect(editing.fixedReason(for: .height) == nil)
     }
 
-    @Test("A copy of a component says its size comes from the original it follows")
-    func aComponentCopyExplainsWhyItsSizeIsFixed() {
+    /// A copy used to be the one group whose size was read-only, on the grounds
+    /// that a stretched copy would snap back to its original. It keeps the size
+    /// it is given now (`InstanceSize`), so all four numbers are typeable and
+    /// there is no sentence to explain a refusal that no longer happens.
+    @Test("A copy of a component takes all four numbers, like any other group")
+    func aComponentCopyTakesEveryNumber() {
         let child = Layer(name: "Box", content: .image(ImageRef(pixelSize: CGSize(width: 20, height: 10))),
                           frame: CGRect(x: 0, y: 0, width: 20, height: 10))
         var content = GroupContent(children: [child])
@@ -223,13 +227,10 @@ struct LayerGeometryTests {
         let copy = Layer(name: "Group", content: .group(content),
                          frame: CGRect(x: 5, y: 5, width: 0, height: 0))
         let editing = LayerGeometryEditing(layer: copy)
-        // A copy moves, so X and Y stay typeable; its size comes from elsewhere.
-        #expect(editing.allows(.x))
-        #expect(editing.allows(.y))
-        #expect(!editing.allows(.width))
-        #expect(!editing.allows(.height))
-        #expect(editing.fixedReason(for: .width) == LayerGeometryEditing.instanceSizeReason)
-        #expect(editing.fixedReason(for: .height) == LayerGeometryEditing.instanceSizeReason)
+        for field in LayerGeometryField.allCases {
+            #expect(editing.allows(field))
+            #expect(editing.fixedReason(for: field) == nil)
+        }
     }
 
     @Test("Every reason a field is fixed reads as a plain sentence, not a code word")
@@ -238,7 +239,8 @@ struct LayerGeometryTests {
                                             from: .zero, to: CGPoint(x: 10, y: 10))
         let reasons = [LayerGeometryEditing.lockedReason,
                        LayerGeometryEditing(layer: arrow).fixedReason(for: .width) ?? "",
-                       LayerGeometryEditing.instanceSizeReason]
+                       LayerGeometryEditing.measurementReason,
+                       LayerGeometryEditing.textHeightReason]
         for reason in reasons {
             #expect(!reason.isEmpty)
             #expect(reason.first!.isUppercase)

@@ -71,7 +71,13 @@ extension Layer {
         // that cannot: its contents are refilled from its original after every
         // edit, so a stretched copy would snap straight back — resize the
         // original instead and every copy follows.
-        case .group(let g): g.instanceOf == nil
+        // A COPY of a component takes its own size rather than scaling its
+        // contents: they are refilled from the original after every edit, so a
+        // stretched copy would snap straight back. The box it is given is kept
+        // as the copy's own and written back over the original's after every
+        // sync (`InstanceSize`), which is what lets one nav bar be 1200 wide on
+        // a desktop screen and 375 on a phone.
+        case .group: true
         case .image, .zoomCallout, .collage: true
         }
     }
@@ -115,11 +121,24 @@ extension Layer {
     /// this layer down its box, because then the height in `frame` is the
     /// container's answer rather than a guess, and only the two places that
     /// know that rule (`GroupFlow`, `LayerScaling`) ever pass it.
-    public func resized(to frame: CGRect, fillingHeight: Bool = false) -> Layer {
+    /// `placedByContainer` is the other thing a layer cannot work out for
+    /// itself: whether this box is a size somebody chose or a size the stack,
+    /// grid or screen around it worked out while flowing. Only the two places
+    /// that know that rule (`GroupFlow`, `LayerScaling`) ever pass it, and it
+    /// matters for exactly one thing — a copy stretched across the shelf it
+    /// sits in must not go on claiming that width as its own answer once the
+    /// shelf changes.
+    public func resized(to frame: CGRect, fillingHeight: Bool = false,
+                        placedByContainer: Bool = false) -> Layer {
         if annotation != nil { return AnnotationBuilder.resized(self, to: frame) }
         if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
         if let group {
+            // A copy is told how big it is and remembers being told, because
+            // scaling what is inside one is work the next sync throws away.
+            if group.instanceOf != nil, !placedByContainer {
+                return LayerScaling.resizingCopy(self, to: frame)
+            }
             if group.isFrame { return LayerScaling.refitting(self, to: frame) }
             // A group that arranges itself takes the size it is given: its flow
             // fills the new box, so typing a width on a stack makes the stack

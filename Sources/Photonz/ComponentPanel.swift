@@ -503,6 +503,7 @@ struct ComponentInstanceInspector: View {
                     .fixedSize(horizontal: false, vertical: true)
                 ComponentInstanceProperties(instance: layer.id, componentID: componentID)
                 offer
+                ownSize
                 ownLook
                 HStack(spacing: 6) {
                     Button("Edit Original") {
@@ -539,6 +540,45 @@ struct ComponentInstanceInspector: View {
                 .controlSize(.small)
                 .help("Adds a Wording knob for \(name) on the original, so every copy can say something different")
                 .playtestControl("Make \(name) Adjustable")
+        }
+    }
+
+    /// The size this copy was given for itself, and the one way back to the
+    /// original's.
+    ///
+    /// A copy takes a width and a height like any other layer now, one axis at
+    /// a time, so the same nav bar is 1200 wide on a desktop screen and 375 on
+    /// a phone without either one leaving the family. That is worth saying out
+    /// loud somewhere: a copy that quietly ignores the original's width is a
+    /// copy nobody can explain, and the W and H boxes look the same whether the
+    /// number in them is the copy's answer or the original's.
+    ///
+    /// It is one row and one press rather than a way back on each of W and H,
+    /// because "make it the size the original is" is the whole errand, and the
+    /// row above the button already says which sides are the copy's.
+    @ViewBuilder private var ownSize: some View {
+        if let own = editorState.instanceOwnSizeLabel(instance: layer.id) {
+            Divider().padding(.vertical, 2)
+            HStack(spacing: 6) {
+                Text("Its own size")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 74, alignment: .leading)
+                Text(own)
+                    .font(.caption)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button {
+                    editorState.clearInstanceSize(instance: layer.id)
+                } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                }
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+                .help("Be the size of the original again")
+                .playtestControl("Revert Size")
+            }
         }
     }
 
