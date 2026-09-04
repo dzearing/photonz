@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 40,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:10:10.682Z",
-  "updated": "2026-09-04T21:38:29.878Z",
+  "updated": "2026-09-04T21:38:54.457Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Evidence: queue/audits/2026-09-03-auto-layout.json rough 6 (\"A locked layer inside a stack is still moved by the stack. Lock stops you dragging it; it does not opt out of the arrangement\"). Lock was the theme of 2026-09-04: locked layers stopped drawing resize handles (2026-09-04-locked-layer-handles.json) and the Position and Size caption stopped claiming a locked layer can be nudged (2026-09-04-locked-caption.json), which leaves the stack as the last place lock does not hold. There is a real design question inside this one: a locked layer that leaves the flow may need to be treated as an obstacle rather than a member, so read those two audits before choosing. Related: one-rule-for-a-control-that-cannot-do-anything.",
@@ -46,6 +46,10 @@
     {
       "t": "2026-09-04T21:38:29.878Z",
       "note": "Acceptance status: items 1-3 and 5 wait on the decision. Item 4 is half done - the Layout rows now say who owns the position; the Layers list is unchanged and is noted in the audit as rough. Item 7 done: queue/audits/2026-09-04-locked-in-stack.json with two real screenshots."
+    },
+    {
+      "t": "2026-09-04T21:38:54.456Z",
+      "note": "Waiting on the decision: should locking a row inside a stack stop the stack from moving it? Reproduced the behaviour first (real screenshots), then shipped the undisputed half - the Position and Size panel no longer promises that unlocking a locked row in a stack gives its position back. Audit: queue/audits/2026-09-04-locked-in-stack.json"
     }
   ],
   "started": "2026-09-04T21:27:23.805Z"
