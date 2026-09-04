@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 680,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T01:00:02.794Z",
-  "updated": "2026-09-04T08:38:03.731607Z",
+  "updated": "2026-09-04T08:38:23.429Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CanvasView.trackImageDrag currently returns .copy for any file URL and only skips the landing outline when ImageCodec.pixelSize(ofFileAt:) is nil. Returning [] in that case is nearly the whole fix, but keep .photonz and the no-document-open case accepted since both open a window rather than landing on the canvas. Found while building the drop landing preview on 2026-09-03.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-04T08:38:03.731607Z",
       "note": "acceptance 2 (.photonz unchanged) is covered by the unit tests and the extension path, not by the walk: there is no .photonz fixture in the repo and inventing a fake one would be a file that drags fine and cannot be opened."
+    },
+    {
+      "t": "2026-09-04T08:38:23.429Z",
+      "note": "The canvas now refuses any file it cannot place (text, archive, folder, a picture too broken to read), so the pointer shows the no-entry sign instead of a copy badge that led nowhere; pictures and .photonz documents are unchanged. CanvasFileDrop in PhotonzRender does the reading (9 tests), CanvasView refuses in both the tracking and the drop. Verified by Scripts/test.sh (2832 green) and a probe walk, Scripts/playtest/refused-file-walk.json, with real screen captures. Audit: queue/audits/2026-09-04-refused-file.json. Follow-up filed for the panel and chrome, which still take a file the app cannot use."
     }
   ],
-  "started": "2026-09-04T08:23:42.142Z"
+  "started": "2026-09-04T08:23:42.142Z",
+  "completed": "2026-09-04T08:38:23.429Z"
 }
