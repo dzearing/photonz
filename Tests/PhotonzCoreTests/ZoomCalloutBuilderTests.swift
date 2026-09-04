@@ -41,6 +41,35 @@ struct ZoomCalloutBuilderTests {
         #expect(layer.frame == expected)
     }
 
+    @Test func aSecondCalloutDoesNotLandOnTheFirst() {
+        // Two details magnified one after the other, drawn from nearly the same
+        // spot: before this, the second box landed exactly on the first and
+        // neither could be read until one was dragged off.
+        let first = ZoomCalloutBuilder.layer(from: CGPoint(x: 20, y: 30),
+                                             to: CGPoint(x: 80, y: 90), canvas: canvas)!
+        let second = ZoomCalloutBuilder.layer(from: CGPoint(x: 22, y: 32),
+                                              to: CGPoint(x: 82, y: 92), canvas: canvas,
+                                              avoiding: [first.frame])!
+        #expect(!second.frame.intersects(first.frame))
+        #expect(CGRect(origin: .zero, size: canvas).contains(second.frame))
+    }
+
+    @Test func calloutsAlreadyOnThePictureAreWhatANewOneAvoids() {
+        // What the editor hands to `avoiding`: the callouts already placed, in
+        // canvas coordinates, including one drawn inside a frame.
+        var document = PhotonzDocument(canvasSize: canvas, layers: [])
+        let callout = ZoomCalloutBuilder.layer(from: CGPoint(x: 20, y: 30),
+                                               to: CGPoint(x: 80, y: 90), canvas: canvas)!
+        document.layers = [Layer.frameLayer(name: "Screen", origin: CGPoint(x: 100, y: 20),
+                                            size: CGSize(width: 200, height: 200),
+                                            children: [callout])]
+        #expect(document.placedZoomCalloutRects
+            == [callout.frame.offsetBy(dx: 100, dy: 20)])
+        // A hidden callout is not in the way of anything.
+        document.layers[0].children[0].isVisible = false
+        #expect(document.placedZoomCalloutRects.isEmpty)
+    }
+
     @Test func tinyDragReturnsNil() {
         let layer = ZoomCalloutBuilder.layer(from: CGPoint(x: 20, y: 30),
                                              to: CGPoint(x: 22, y: 31), canvas: canvas)

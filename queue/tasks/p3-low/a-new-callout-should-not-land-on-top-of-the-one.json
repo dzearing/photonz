@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1180,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T09:36:55.120Z",
-  "updated": "2026-09-04T09:36:55.121Z",
+  "updated": "2026-09-04T11:47:08.320Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Geometry.zoomCalloutPlacement takes source, magnification and canvas only. It has no view of the document, so it cannot avoid what is already there. Seen while running Scripts/playtest/callout-shape-walk.json: the second circle callout landed over the first.",
+  "notes": "Geometry.zoomCalloutPlacement takes source, magnification and canvas only. It has no view of the document, so it cannot avoid what is already there. Seen while running Scripts/playtest/callout-shape-walk.json: the second circle callout landed over the first. FIXED 2026-09-04: Geometry.zoomCalloutPlacement gained an `avoiding: [CGRect]` parameter (default empty, so old callers are unchanged) and now scores candidates through LabelPlacer. ZoomCalloutBuilder.layer forwards it; PhotonzDocument.placedZoomCalloutRects is the list the app passes. Both call sites must pass the same list or the flight animation lands somewhere the layer does not.",
   "acceptance": [
     "Drawing a second callout near an existing one places it clear of that callout",
     "A callout that has nowhere clear to go still lands somewhere on the canvas rather than off it",
@@ -22,6 +22,24 @@
     {
       "t": "2026-09-04T09:36:55.121Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T11:35:39.222Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T11:38:08.464117Z",
+      "note": "Adversarial review before building. Walked it as a first-time user: drag a detail, a magnified box flies out to the right; drag a second detail nearby and the new box lands exactly on the first, so neither reads and you must drag one off before you can carry on. The fix is placement counting what is already on the picture. Scope calls I made rather than guessing: (1) only other zoom callouts count as occupied, not every layer - the base image covers the whole canvas, so counting all layers would block every candidate and change nothing; (2) the thin source outlines of earlier callouts do NOT count, since treating them as obstacles sends a new callout hopping far from what it magnifies for very little gain; (3) when the picture is genuinely full the callout keeps today's spot rather than hunting the least-bad one, so a crowded canvas stays predictable. No UX ambiguity worth a decision card: nothing here changes visual direction, only where a second box lands."
+    },
+    {
+      "t": "2026-09-04T11:47:08.287414Z",
+      "note": "Shipped. Placement now takes a list of what is already on the picture: each side of the source offers the centred spot plus spots slid a box either way along it, and the first one clear of the callouts already placed wins, scored through LabelPlacer like the measurement readout and the arrow caption. Wired from EditorState.addZoomCallout and from the flight animation in CanvasView, both reading PhotonzDocument.placedZoomCalloutRects (canvas coordinates, reaches into frames, skips hidden). Verified in the real app, not just in tests: Scripts/playtest/callout-crowding-walk.json draws three details in a column, and the same walk run against the pre-fix code stacks all three magnified circles on each other while the fixed run spreads them clear. The lone-callout snapshot is byte-identical before and after, so acceptance 3 holds on pixels rather than on argument. Scripts/test.sh green, 2947 tests. Audit: queue/audits/2026-09-04-callout-crowding.json."
+    },
+    {
+      "t": "2026-09-04T11:47:08.319Z",
+      "note": "A second zoom callout now steps clear of the ones already placed instead of landing on top. Geometry.zoomCalloutPlacement takes the occupied rects and scores side/slid candidates through LabelPlacer; EditorState and the flight animation both feed it PhotonzDocument.placedZoomCalloutRects. Verified with Scripts/playtest/callout-crowding-walk.json run against both the old and new code (three stacked circles before, three clear after) and a byte-identical lone-callout snapshot. Scripts/test.sh green. Audit: queue/audits/2026-09-04-callout-crowding.json"
     }
-  ]
+  ],
+  "started": "2026-09-04T11:35:39.222Z",
+  "completed": "2026-09-04T11:47:08.320Z"
 }

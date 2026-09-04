@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 1170,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T09:24:23.707Z",
-  "updated": "2026-09-04T11:34:49.208586Z",
+  "updated": "2026-09-04T11:35:12.141Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Layer.contentsWithTheirOwnPlacement (PhotonzCore/LayerPlacement.swift) reads child.placement without knowing the group layout; PlacementEditing(arrangement:) added 2026-09-04 answers which axis is dead. PlacementInspector.exceptions renders the list. The clearing half is the harder question: the childRows menu for the owned axis is gone now, which is what makes the stale rule unreachable.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-04T11:34:49.208586Z",
       "note": "Scripts/test.sh green (2942 tests). placement-exceptions-walk and stack-owns-axis-walk both still ok."
+    },
+    {
+      "t": "2026-09-04T11:35:12.140Z",
+      "note": "A layer whose only placement rule is on the direction its stack decides is no longer counted or named as a rule of its own, and the row that owns that direction offers to clear the rule left on it. Core: contentsWithTheirOwnPlacement(arrangement:) plus PlacementEditing.inertRule; app: PlacementInspector. Verified by real capture on the probe (Scripts/playtest/inert-rule-walk.json), Scripts/test.sh green at 2942 tests, both existing placement walks still ok. Audit: queue/audits/2026-09-04-inert-placement-rule.json"
     }
   ],
-  "started": "2026-09-04T11:14:21.005Z"
+  "started": "2026-09-04T11:14:21.005Z",
+  "completed": "2026-09-04T11:35:12.141Z"
 }

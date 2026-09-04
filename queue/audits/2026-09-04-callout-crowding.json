@@ -1,0 +1,26 @@
+{
+  "feature": "Zoom callouts make room for each other",
+  "epic": "ui-building",
+  "summary": "A new zoom callout now lands clear of the callouts already on the picture instead of dropping on top of the last one. Draw three details in a row and you get three readable boxes, not a pile you have to untangle by hand.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. Open any screenshot.",
+  "try": [
+    { "do": "Press the Zoom Callout tool in the tool bar." },
+    { "do": "Drag a box around a detail near the left of the picture." },
+    { "do": "Press the Zoom Callout tool again and drag a box around the detail just below the first one." },
+    { "do": "Check that the second magnified box landed somewhere clear rather than on the first.", "shot": "2026-09-04-callout-crowding-after.png" },
+    { "do": "Repeat once more, a third detail below the second." },
+    { "do": "Drag one of the callouts away by hand, then draw a fourth: the new one steers around where you just put it." }
+  ],
+  "evaluate": [
+    "When the second box appears, can you read both callouts without moving anything?",
+    "Does the box fly to a spot you would have chosen yourself, or does it feel like it ran away from the detail it is magnifying?",
+    "On the third and fourth callout, is the picture still legible, or is it time for callouts to line up in a column instead of hunting free space?",
+    "Is the flight from the source box to the placed box still easy to follow now that it sometimes travels further?"
+  ],
+  "rough": [
+    "On a crowded picture a callout can end up a fair distance from the detail it magnifies: staying readable beats staying close, and the leader lines are what carry the connection. Worth judging whether that trade reads right at four or more callouts.",
+    "Only the magnified boxes count as occupied. The thin outline drawn around a source detail does not, so a new box can cover an earlier callout's source ring. Treating those as obstacles too would send new callouts much further away for a small gain, so it was left out on purpose.",
+    "When the picture is genuinely full, the box keeps the spot it would have taken before rather than hunting the least-buried one. That keeps a crowded canvas predictable, but it does mean the very last callout on a busy picture can still land on another one.",
+    "Screen Recording was granted for this run, so the picture above is the real window, taken by a scripted walk (Scripts/playtest/callout-crowding-walk.json). The same walk against the old code is saved beside it as 2026-09-04-callout-crowding-before.png: three magnified circles stacked on each other."
+  ]
+}

@@ -67,16 +67,21 @@ public enum ZoomCalloutBuilder {
     /// `shape` is what the tool in your hand is set to draw: a box, or a
     /// circle. It reaches the new callout here so the choice is made BEFORE the
     /// drag rather than corrected after it.
+    /// `avoiding` is the callouts already on the picture, in canvas
+    /// coordinates — `PhotonzDocument.placedZoomCalloutRects` is what the
+    /// editor passes — so a second callout steps clear of the first instead of
+    /// burying it.
     public static func layer(from start: CGPoint, to end: CGPoint, canvas: CGSize,
                              magnification: CGFloat = ZoomCalloutBuilder.defaultMagnification,
                              style: LayerStyle = ZoomCalloutBuilder.defaultStyle,
-                             shape: ZoomCalloutShape = .rectangle) -> Layer? {
+                             shape: ZoomCalloutShape = .rectangle,
+                             avoiding occupied: [CGRect] = []) -> Layer? {
         let box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
                          width: abs(end.x - start.x), height: abs(end.y - start.y))
         let source = Geometry.pixelAligned(box.intersection(CGRect(origin: .zero, size: canvas)))
         guard source.width >= minimumSourceSide, source.height >= minimumSourceSide else { return nil }
         let frame = Geometry.zoomCalloutPlacement(source: source, magnification: magnification,
-                                                  canvas: canvas)
+                                                  canvas: canvas, avoiding: occupied)
         return Layer(name: "Zoom",
                      content: .zoomCallout(ZoomCalloutContent(sourceRect: source,
                                                               magnification: magnification,
@@ -108,5 +113,21 @@ public enum ZoomCalloutBuilder {
             layer.content = .zoomCallout(callout)
         }
         return layer
+    }
+}
+
+extension PhotonzDocument {
+
+    /// Every zoom callout already on the picture, in canvas coordinates, with
+    /// the ones inside frames reached into and the hidden ones left out — a
+    /// callout you cannot see is not in anyone's way.
+    ///
+    /// This is the list a new callout steers around. It is callouts only, not
+    /// every layer: the picture underneath covers the whole canvas, so counting
+    /// everything would leave a new callout nowhere to go and change nothing.
+    public var placedZoomCalloutRects: [CGRect] {
+        flattenedLayers.compactMap { layer in
+            layer.isVisible && layer.zoomCallout != nil ? layer.frame : nil
+        }
     }
 }

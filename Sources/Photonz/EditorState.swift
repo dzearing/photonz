@@ -1344,11 +1344,15 @@ final class EditorState {
     /// Completed source-box drag from the zoom tool. One undo step adds the
     /// callout (placement picked by Geometry), then the editor returns to select
     /// with it selected.
+    ///
+    /// Placement is handed the callouts already on the picture, so the new box
+    /// steps clear of them rather than landing on the last one drawn.
     func addZoomCallout(from start: CGPoint, to end: CGPoint) {
         guard let document,
               let layer = ZoomCalloutBuilder.layer(from: start, to: end,
                                                    canvas: document.canvasSize,
-                                                   shape: calloutToolShape) else { return }
+                                                   shape: calloutToolShape,
+                                                   avoiding: document.placedZoomCalloutRects) else { return }
         perform { $0.addLayerDrawnOnFrame(layer) }
         finishCreating(layer.id)
     }

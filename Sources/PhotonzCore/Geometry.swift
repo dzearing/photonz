@@ -54,30 +54,72 @@ public enum Geometry {
             .concatenating(CGAffineTransform(translationX: center.x, y: center.y))
     }
 
-    /// Where a zoom-callout's magnified box should land given the source box and canvas.
-    /// Picks the quadrant with the most free space and returns the placed rect.
-    public static func zoomCalloutPlacement(source: CGRect, magnification: CGFloat, canvas: CGSize, margin: CGFloat = 24) -> CGRect {
+    /// Where a zoom-callout's magnified box should land given the source box,
+    /// the canvas, and the callouts already on the picture.
+    ///
+    /// The box goes to the side of the source with the most free space, which
+    /// is where it has always gone. `avoiding` is what changed on 2026-09-04:
+    /// placement used to see the picture as empty, so a second callout drawn
+    /// near the first landed squarely on top of it and neither could be read
+    /// until one was dragged away. Now each side also offers spots slid a box
+    /// further along it, and the first one clear of everything in `avoiding`
+    /// wins.
+    ///
+    /// Scoring is `LabelPlacer`'s, the same ladder the measurement readout, the
+    /// arrow caption and the legend go through, so "never cover what is already
+    /// there" stays one rule in one place. Every candidate is clamped onto the
+    /// canvas first, so the answer is always somewhere you can see it; when
+    /// they are all covered the box keeps the spot it would have taken anyway,
+    /// rather than hopping to whichever candidate happens to be least buried.
+    public static func zoomCalloutPlacement(source: CGRect, magnification: CGFloat,
+                                            canvas: CGSize, margin: CGFloat = 24,
+                                            avoiding occupied: [CGRect] = []) -> CGRect {
         let target = CGSize(width: source.width * magnification, height: source.height * magnification)
-        let spaceRight = canvas.width - source.maxX
-        let spaceLeft = source.minX
-        let spaceBelow = canvas.height - source.maxY
-        let spaceAbove = source.minY
-        let best = max(spaceRight, spaceLeft, spaceBelow, spaceAbove)
-
-        var origin: CGPoint
-        if best == spaceRight {
-            origin = CGPoint(x: source.maxX + margin, y: source.midY - target.height / 2)
-        } else if best == spaceLeft {
-            origin = CGPoint(x: source.minX - margin - target.width, y: source.midY - target.height / 2)
-        } else if best == spaceBelow {
-            origin = CGPoint(x: source.midX - target.width / 2, y: source.maxY + margin)
-        } else {
-            origin = CGPoint(x: source.midX - target.width / 2, y: source.minY - margin - target.height)
+        /// Each side of the source: how much room it has, where the box sits
+        /// centred on it, and which way the box steps to make room for another.
+        let sides: [(space: CGFloat, origin: CGPoint, step: CGPoint)] = [
+            (canvas.width - source.maxX,
+             CGPoint(x: source.maxX + margin, y: source.midY - target.height / 2),
+             CGPoint(x: 0, y: target.height + margin)),
+            (source.minX,
+             CGPoint(x: source.minX - margin - target.width, y: source.midY - target.height / 2),
+             CGPoint(x: 0, y: target.height + margin)),
+            (canvas.height - source.maxY,
+             CGPoint(x: source.midX - target.width / 2, y: source.maxY + margin),
+             CGPoint(x: target.width + margin, y: 0)),
+            (source.minY,
+             CGPoint(x: source.midX - target.width / 2, y: source.minY - margin - target.height),
+             CGPoint(x: target.width + margin, y: 0)),
+        ]
+        // Roomiest side first, and ties broken by the listed order — right,
+        // left, below, above — which is the order the tool has always used.
+        // (Sorting on space alone is not stable, so the tie is spelled out.)
+        let ranked = sides.enumerated().sorted {
+            $0.element.space == $1.element.space ? $0.offset < $1.offset
+                                                 : $0.element.space > $1.element.space
         }
-        // Keep the callout on-canvas.
-        origin.x = min(max(0, origin.x), max(0, canvas.width - target.width))
-        origin.y = min(max(0, origin.y), max(0, canvas.height - target.height))
-        return CGRect(origin: origin, size: target)
+        // Centred on the source first, then a box out either way, then two.
+        let steps: [CGFloat] = [0, 1, -1, 2, -2]
+        var candidates: [LabelCandidate<CGRect>] = []
+        for (sideRank, side) in ranked.enumerated() {
+            for (stepRank, step) in steps.enumerated() {
+                let origin = CGPoint(x: side.element.origin.x + side.element.step.x * step,
+                                     y: side.element.origin.y + side.element.step.y * step)
+                let rect = onCanvas(origin: origin, size: target, canvas: canvas)
+                candidates.append(LabelCandidate(rect: rect, payload: rect,
+                                                 cost: CGFloat(sideRank * steps.count + stepRank) * LabelPlacer.rankCost))
+            }
+        }
+        let firstChoice = candidates.first?.rect ?? CGRect(origin: .zero, size: target)
+        let avoid = [LabelAvoidance(rects: occupied, weight: .flat(LabelPlacer.subjectCost))]
+        return LabelPlacer.best(among: candidates, avoiding: avoid) ?? firstChoice
+    }
+
+    /// A `size` box at `origin`, slid the least it can be to sit on the canvas.
+    private static func onCanvas(origin: CGPoint, size: CGSize, canvas: CGSize) -> CGRect {
+        CGRect(x: min(max(0, origin.x), max(0, canvas.width - size.width)),
+               y: min(max(0, origin.y), max(0, canvas.height - size.height)),
+               width: size.width, height: size.height)
     }
 
     /// Distance from `p` to the closest point on segment `a`–`b`.

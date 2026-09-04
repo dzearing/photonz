@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/callout-crowding",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "drag", "from": [300, 300], "to": [420, 400], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-first-callout", "note": "one detail magnified: the box flies out to the side of the source with the most room" },
+    { "do": "snapshot", "name": "calloutcrowd-1-first" },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "drag", "from": [300, 430], "to": [420, 530], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "2-second-callout", "note": "a second detail right below the first: the new box must land clear of the one already there, not on top of it" },
+    { "do": "snapshot", "name": "calloutcrowd-2-second" },
+    { "do": "render", "name": "calloutcrowd-3-two" },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "drag", "from": [300, 560], "to": [420, 660], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-third-callout", "note": "a third one in the same column: three readable boxes, none buried" },
+    { "do": "snapshot", "name": "calloutcrowd-4-third" },
+    { "do": "render", "name": "calloutcrowd-5-three" }
+  ]
+}

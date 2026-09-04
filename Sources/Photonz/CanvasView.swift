@@ -2215,7 +2215,8 @@ final class CanvasNSView: NSView {
                 // flight animation from source box to placed frame.
                 if let layer = ZoomCalloutBuilder.layer(from: drag.anchor, to: end,
                                                         canvas: viewport.documentSize,
-                                                        shape: calloutShape) {
+                                                        shape: calloutShape,
+                                                        avoiding: document?.placedZoomCalloutRects ?? []) {
                     beginCalloutFlight(for: layer)
                     onZoomCalloutCommit(drag.anchor, end)
                 }

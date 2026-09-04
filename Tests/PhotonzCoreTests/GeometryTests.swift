@@ -68,6 +68,40 @@ struct GeometryTests {
         #expect(placed.minX > 60)
     }
 
+    @Test func zoomCalloutStepsClearOfACalloutAlreadyPlaced() {
+        let canvas = CGSize(width: 1000, height: 300)
+        let source = CGRect(x: 10, y: 100, width: 50, height: 50)
+        let first = Geometry.zoomCalloutPlacement(source: source, magnification: 2, canvas: canvas)
+        // A second callout drawn from the very same box must not land on the first.
+        let second = Geometry.zoomCalloutPlacement(source: source, magnification: 2,
+                                                   canvas: canvas, avoiding: [first])
+        #expect(!second.intersects(first))
+        #expect(CGRect(origin: .zero, size: canvas).contains(second))
+    }
+
+    @Test func zoomCalloutWithNothingInTheWayKeepsItsOldSpot() {
+        let canvas = CGSize(width: 1000, height: 300)
+        let source = CGRect(x: 10, y: 100, width: 50, height: 50)
+        let plain = Geometry.zoomCalloutPlacement(source: source, magnification: 2, canvas: canvas)
+        #expect(Geometry.zoomCalloutPlacement(source: source, magnification: 2,
+                                              canvas: canvas, avoiding: []) == plain)
+        // An occupied list that is nowhere near the callout changes nothing either.
+        #expect(Geometry.zoomCalloutPlacement(source: source, magnification: 2, canvas: canvas,
+                                              avoiding: [CGRect(x: 900, y: 250, width: 40, height: 40)]) == plain)
+    }
+
+    @Test func zoomCalloutWithNowhereClearStaysOnCanvas() {
+        let canvas = CGSize(width: 300, height: 300)
+        let source = CGRect(x: 120, y: 120, width: 40, height: 40)
+        let whole = [CGRect(origin: .zero, size: canvas)]
+        let placed = Geometry.zoomCalloutPlacement(source: source, magnification: 2,
+                                                   canvas: canvas, avoiding: whole)
+        #expect(CGRect(origin: .zero, size: canvas).contains(placed))
+        // Everything is covered, so it keeps the spot it would have taken anyway
+        // rather than hopping to whichever candidate is least buried.
+        #expect(placed == Geometry.zoomCalloutPlacement(source: source, magnification: 2, canvas: canvas))
+    }
+
     @Test func zoomCalloutStaysOnCanvas() {
         let canvas = CGSize(width: 400, height: 300)
         let placed = Geometry.zoomCalloutPlacement(source: CGRect(x: 10, y: 10, width: 100, height: 100),
