@@ -1,0 +1,26 @@
+{
+  "feature": "A scripted walk can frame the selection",
+  "epic": "ui-building",
+  "summary": "An unmanned run can now put a frame around whatever is selected, the way the Layer menu does, and read back what the frame ended up holding. Any walk with a mistake in it also reports that mistake in about a second instead of running out the clock in silence.",
+  "setup": "No app setup. This is the scripted walk harness the task loop uses; nothing changes for someone using Photonz by hand.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/frame-selection-walk.json" },
+    { "do": "Watch it finish all 31 steps and print status ok." },
+    { "do": "Open the picture it took of two shapes framed together.", "shot": "2026-09-04-scripted-frame-selection.png" },
+    { "do": "Open /tmp/photonz-playtest/frame-selection/log.json and find the three frameSelection lines." },
+    { "do": "Read that they say \"Frame 300x250 holds 1 of 1 selected\", \"Frame 2 250x520 holds 2 of 2 selected\", and \"refused: nothing in the selection can be framed\"." },
+    { "do": "Now break a walk on purpose: copy it, change one step to { \"do\": \"frameSelection\" }, and run it." },
+    { "do": "Watch it come back in about a second saying that is an action, not a step, and printing the line to write instead." }
+  ],
+  "evaluate": [
+    "Does the log line say enough to tell a good frame from a wrong one without opening a picture?",
+    "Is \"refused: nothing in the selection can be framed\" the right thing for a walk to see, rather than the step failing outright?",
+    "When you break a walk on purpose, does the error tell you enough to fix it in one go?",
+    "Should every action that can quietly do nothing report a refusal like this one, or only the ones a walk usually gets wrong?"
+  ],
+  "rough": [
+    "The premise in the task was wrong and worth saying plainly: framing the selection from a walk was never broken. What was broken was that a walk with any typo in it wrote its explanation into the wrong folder, so the launcher waited out its full three minute timeout on an empty folder and it looked like a hang. There was already a misfiled failure report from another walk committed in the repo, which is how long this had been silently swallowing errors.",
+    "The state tree in a walk log prints a frame's CONTENT bounds, not the frame's own box, so it shows 251 where the frame is really 250. That is true of every group, not just frames, and every existing walk reads those numbers, so I left it alone. The new frameSelection log line gives the frame's real size, which is what a walk actually wants.",
+    "Screen Recording was granted for this run, so the picture above is a real capture of the window, not an offscreen render."
+  ]
+}

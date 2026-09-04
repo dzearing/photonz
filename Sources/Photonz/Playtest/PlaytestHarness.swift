@@ -86,16 +86,22 @@ private final class Run {
     }
 
     func start() async {
+        // Where to write is settled from the raw file FIRST, so a script that
+        // does not parse still reports why in the folder the launcher is
+        // watching. Resolving it after decoding meant a single typo left the
+        // launcher waiting out its whole timeout on an empty folder while the
+        // explanation sat in a default folder beside the script.
+        let data = try? Data(contentsOf: scriptURL)
+        out = PlaytestScript.outputDirectory(besides: scriptURL, in: data ?? Data())
+        prepareOutput()
         let script: PlaytestScript
         do {
-            script = try PlaytestScript.decode(try Data(contentsOf: scriptURL))
+            guard let data else { throw Failure(description: "could not read \(scriptURL.path)") }
+            script = try PlaytestScript.decode(data)
         } catch {
-            prepareOutput()
             finish(status: "failed", steps: 0, error: "\(error)")
             return
         }
-        out = script.outputDirectory(besides: scriptURL)
-        prepareOutput()
         note(0, "start", "script \(scriptURL.path); \(script.steps.count) steps; release \(Experiments.shared.release.rawValue)")
         var completed = 0
         for (index, step) in script.steps.enumerated() {
@@ -738,7 +744,22 @@ private final class Run {
                     editor.setFrameBackground(id: id, hex: "#3B82F6")
                 }
             case .newFrameDialog: editor.isNewFrameDialogPresented = true
-            case .frameSelection: editor.frameSelection()
+            case .frameSelection:
+                // The log has to say what the frame ended up holding, because
+                // Frame Selection quietly does nothing when the selection
+                // cannot be framed, and a walk that only prints the step name
+                // reads exactly the same either way.
+                let asked = editor.actionableLayerIDs.count
+                let refused = !editor.canFrameSelection
+                editor.frameSelection()
+                if refused {
+                    actionDetail = "refused: nothing in the selection can be framed"
+                } else if let id = editor.selectedLayerID, let frame = editor.document?.layer(id: id) {
+                    actionDetail = "\(frame.name) \(Int(frame.frame.width.rounded()))x\(Int(frame.frame.height.rounded()))"
+                        + " holds \(frame.children.count) of \(asked) selected"
+                } else {
+                    actionDetail = "no frame was made"
+                }
             case .makeComponent: editor.makeComponent()
             case .exposeWording: editor.exposeFirstProperty(kind: .text)
             case .exposeChoice: editor.exposeFirstProperty(kind: .variant)

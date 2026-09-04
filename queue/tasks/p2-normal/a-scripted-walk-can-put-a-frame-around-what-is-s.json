@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1090,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T13:01:19.379Z",
-  "updated": "2026-09-04T13:01:19.379Z",
+  "updated": "2026-09-04T14:23:22.706748Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-09-04 while writing Scripts/playtest/panel-shows-landing-walk.json. A walk containing {\"do\":\"frameSelection\"} produces no log.json and no done.json at all: the run hangs inside the step, so Scripts/playtest.sh times out with an empty output folder. Bisected: the identical walk with that one step removed completes. Harness site: PlaytestHarness.swift case .frameSelection -> editor.frameSelection(). Suspect a sheet or an alert put up on the main actor that nothing dismisses, or a wait on something the harness never satisfies. Workaround in use: pick the frame tool and drag a rectangle in document space.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-04T13:01:19.379Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T14:13:09.661Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T14:23:22.706748Z",
+      "note": "Adversarial pass on the premise first: reproduced with a minimal walk. {\"do\":\"action\",\"action\":\"frameSelection\"} ALREADY works and always did (frames the selection, log state tree shows the layer nested inside the new frame). So the step is not broken and there is no sheet or hang."
+    },
+    {
+      "t": "2026-09-04T14:23:22.706748Z",
+      "note": "Real defect found and reproduced: the reported step was written {\"do\":\"frameSelection\"}, which is an action name in the step slot. That fails to parse, and the harness resolved the script's out folder only AFTER decoding, so the explanation was written into a default out folder BESIDE the script while playtest.sh sat watching the folder the script asked for. Result for any parse error at all: a 180s timeout on an empty folder with no message. Committed evidence of the same trap: Scripts/playtest/out/done.json, a misfiled failure from another walk on 2026-09-04."
+    },
+    {
+      "t": "2026-09-04T14:23:22.706748Z",
+      "note": "Fixed: PlaytestScript.outputDirectory(besides:in:) reads out straight from the raw bytes, and the harness resolves it before decoding. A bad walk now reports in about a second, in the right folder, exit 1."
+    },
+    {
+      "t": "2026-09-04T14:23:22.706748Z",
+      "note": "Also: the unknown-step error now recognises an action name and prints the exact line to write instead; selectRow was missing from the step name list the error offers; the frameSelection action now writes a detail line saying what the frame holds (\"Frame 2 250x520 holds 2 of 2 selected\") or that it refused, since Frame Selection is silent when nothing can be framed."
+    },
+    {
+      "t": "2026-09-04T14:23:22.706748Z",
+      "note": "The new detail line earned its keep immediately: it caught that the second rectangle in my own walk was never drawn, because a shape tool reverts to Select after one draw."
+    },
+    {
+      "t": "2026-09-04T14:23:22.706748Z",
+      "note": "Verified: Scripts/playtest/frame-selection-walk.json, 31 steps, all complete. One layer framed, two layers framed into one frame, then a refusal reported out loud. Two real screen captures. Scripts/test.sh green, 3002 tests."
     }
-  ]
+  ],
+  "started": "2026-09-04T14:13:09.660Z"
 }

@@ -1,0 +1,43 @@
+{
+  "out": "/tmp/photonz-playtest/frame-selection",
+  "seed": "Proves a scripted walk can ask for Frame Selection, the way the Layer menu does, and see what it made. One shape is drawn and framed on its own; two more are drawn, both picked, and framed together; then nothing is picked and the same request is refused out loud. Every frameSelection line in the log says what the frame ended up holding, and the state tree beside it shows the framed layers nested inside it.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1400, "canvasHeight": 1000, "width": 1180, "height": 860 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 220], "to": [500, 470] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "1-one-picked", "note": "one rectangle drawn and picked, no frames in the document yet" },
+
+    { "do": "action", "action": "frameSelection" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-one-framed", "note": "the rectangle is now inside a frame fitted to it" },
+    { "do": "snapshot", "name": "frame-selection-1-one-framed" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [760, 220], "to": [1010, 420] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [760, 540], "to": [1010, 740] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [880, 320] },
+    { "do": "click", "at": [880, 640], "modifiers": ["shift"] },
+    { "do": "describe", "stage": "3-two-picked", "note": "two more rectangles, both picked" },
+
+    { "do": "action", "action": "frameSelection" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-two-framed", "note": "one frame around both, fitted to the pair" },
+    { "do": "snapshot", "name": "frame-selection-2-two-framed" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "5-nothing-picked", "note": "nothing picked, so there is nothing to frame" },
+
+    { "do": "action", "action": "frameSelection" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "6-refused", "note": "the log should say it refused rather than going quiet" }
+  ]
+}

@@ -47,6 +47,22 @@ public struct PlaytestScript: Sendable, Equatable {
     /// The folder renders and the log land in, resolved against the script's
     /// own location so a script folder can travel with its output.
     public func outputDirectory(besides scriptURL: URL) -> URL {
+        Self.outputDirectory(besides: scriptURL, out: out)
+    }
+
+    /// The same folder, read straight out of the file before it is parsed.
+    ///
+    /// A run has to know where to write BEFORE it knows whether the script is
+    /// any good, because the report a bad script most needs to leave is the one
+    /// saying why it was bad. Anything unreadable falls back to the default
+    /// folder beside the script rather than throwing: this answers a question
+    /// about a path, not about whether the walk is valid.
+    public static func outputDirectory(besides scriptURL: URL, in data: Data) -> URL {
+        let top = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        return outputDirectory(besides: scriptURL, out: top?["out"] as? String)
+    }
+
+    private static func outputDirectory(besides scriptURL: URL, out: String?) -> URL {
         let folder = scriptURL.deletingLastPathComponent()
         guard let out, !out.isEmpty else { return folder.appendingPathComponent("out") }
         if out.hasPrefix("/") { return URL(fileURLWithPath: out) }
@@ -65,7 +81,12 @@ public enum PlaytestScriptError: Error, CustomStringConvertible, Sendable, Equat
         case .invalidJSON(let why):
             "playtest script is not valid: \(why)"
         case .unknownStep(let index, let name):
-            "step \(index + 1): \"\(name)\" is not a step; use one of \(PlaytestStep.names.joined(separator: ", "))"
+            if PlaytestAction(rawValue: name) != nil {
+                "step \(index + 1): \"\(name)\" is an action, not a step; write it as "
+                    + "{ \"do\": \"action\", \"action\": \"\(name)\" }"
+            } else {
+                "step \(index + 1): \"\(name)\" is not a step; use one of \(PlaytestStep.names.joined(separator: ", "))"
+            }
         case .invalidField(let index, let step, let field, let reason):
             "step \(index + 1) (\(step)): \"\(field)\" \(reason)"
         }
@@ -668,7 +689,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragFile", "dragRow", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
         "panel", "panelMenu", "press",
-        "readClipboard", "render", "scrollPanel", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
+        "readClipboard", "render", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.

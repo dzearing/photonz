@@ -773,4 +773,48 @@ struct PlaytestScriptTests {
         guard case .action(let released) = script.steps[1] else { Issue.record("release"); return }
         #expect(released == .releaseColorDrag)
     }
+
+    // A walk that does not parse used to be invisible: the harness resolved its
+    // output folder only AFTER decoding, so the failure landed in a default
+    // "out" folder beside the script while the launcher sat watching the folder
+    // the script had asked for, and timed out after three minutes with nothing
+    // in it. The folder is a property of the file, not of it being correct.
+    @Test func theOutputFolderIsKnownEvenWhenTheScriptDoesNotParse() throws {
+        let request = URL(fileURLWithPath: "/tmp/photonz-playtest/walk.json")
+        let broken = Data("""
+        { "out": "/tmp/photonz-playtest/frames", "steps": [ { "do": "frameSelection" } ] }
+        """.utf8)
+        #expect(throws: PlaytestScriptError.self) { try PlaytestScript.decode(broken) }
+        #expect(PlaytestScript.outputDirectory(besides: request, in: broken).path
+                == "/tmp/photonz-playtest/frames")
+        // A relative `out` still resolves against the script, and a file that is
+        // not JSON at all falls back to the folder beside it.
+        let relative = Data("{ \"out\": \"renders\", \"steps\": [ { \"do\": \"nope\" } ] }".utf8)
+        #expect(PlaytestScript.outputDirectory(besides: request, in: relative).path
+                == "/tmp/photonz-playtest/renders")
+        #expect(PlaytestScript.outputDirectory(besides: request, in: Data("not json".utf8)).path
+                == "/tmp/photonz-playtest/out")
+    }
+
+    // Actions are written `{ "do": "action", "action": "frameSelection" }`, but
+    // the natural mistake is to write the action name as the step. There are far
+    // more actions than steps, so the generic "not a step" list is no help:
+    // the error names the exact line to write instead.
+    @Test func anActionNameWrittenAsAStepSaysHowToWriteIt() throws {
+        do {
+            _ = try PlaytestScript.decode(Data("{ \"steps\": [ { \"do\": \"frameSelection\" } ] }".utf8))
+            Issue.record("expected the bare action name to be refused")
+        } catch let error as PlaytestScriptError {
+            let text = error.description
+            #expect(text.contains("\"do\": \"action\""))
+            #expect(text.contains("\"action\": \"frameSelection\""))
+        }
+    }
+
+    // The list the error prints is what a walk author reads to fix a typo, so a
+    // step missing from it is a step nobody can discover.
+    @Test func everyStepNameIsListedForTheErrorText() throws {
+        #expect(PlaytestStep.names.contains("selectRow"))
+        #expect(PlaytestStep.names == PlaytestStep.names.sorted())
+    }
 }
