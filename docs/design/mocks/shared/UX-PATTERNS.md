@@ -1,6 +1,10 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v1.1. §1 and §3 now describe the LEAN, SCALABLE shell (PRODUCT-MODEL.md
+**Status: v1.2. Scrubbed 2026-09-04 against what the app actually ships: §3 gains
+the reveal rule, §4 gains "a property keeps its home", and §5's component-copy row
+is rewritten to match. Every rule that changed names the audit or commit that
+overtook it, and where the app is the thing that is wrong, the rule stands and a
+task was filed. §1 and §3 describe the LEAN, SCALABLE shell (PRODUCT-MODEL.md
 §4b): canvas-first, a floating bottom tool bar, one right dock of collapsible /
 resizable / scrollable panel groups, rails, overlays, and a real responsive
 contract. D1/D2 are amended (Library is a right-dock group or an overlay, not a
@@ -168,6 +172,20 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   inside Layers and never pushes Effects or Library off screen. Exactly one group
   per dock may be `.grow` and take the leftover space. **New capability is a new
   group.**
+  **Reveal** (added 2026-09-04 to describe shipped behavior: commit `4a6aac7`,
+  audit `2026-09-03-library-reveal`): when the app brings a group into view for
+  you it scrolls the DOCK, by the shortest move that puts the whole group on
+  screen, and a group already fully visible must not twitch. The reveal stops at
+  the group; it reaches INSIDE the group's own scroller only when the command
+  named a particular thing in it, the way making a component scrolls the shelf on
+  to that tile (commit `17dca1e`, audit `2026-09-03-shelf-tile-reveal`).
+  **Only a command the user just issued about that group may re-open a group they
+  collapsed on purpose** (Show Library, or making the thing the group holds).
+  Ambient changes never may: a selection moving, a document loading, a background
+  update leave a shut header shut and do not scroll. The Library reveal audit put
+  the remaining question to the user, whether even a direct command should
+  overrule a deliberate collapse; until they answer, it does, because scrolling
+  to a shut header shows a title and nothing else.
 - **Splitter** (`.splitter.v` / `.splitter.h`) — the drag-to-resize handle.
   Vertical between canvas and dock, horizontal between stacked groups. Visible
   grip at rest, accent on hover and drag, keyboard-resizable, bounded by
@@ -220,6 +238,18 @@ the dock, or a `.sheet.down` overlay.
   component instance selected = instance props + overrides + variant. Multi-select
   = shared properties only. This is the pattern users learn: *look right to see
   what the current selection can do.*
+- **A property keeps its home, whatever the count.** The section a property sits
+  in must not change with how many layers are picked. Fill is under the same
+  heading for one layer as for five; picking a second layer changes what a row
+  ANSWERS FOR (all of them, or "Mixed"), never where that row lives. A section
+  that appears only during multi-select is for properties with no single-layer
+  home at all, such as aligning and distributing, and never for re-homing ones
+  that already have a home. Selecting a second layer must not move the control
+  you were just using. *(Written 2026-09-04. The app does not do this yet:
+  commit `0af62a5` adds a Color section that exists only while several layers are
+  picked and takes Fill out of the per-kind section, which audit
+  `2026-09-03-multi-style` flags in its own rough. Filed as a task against the
+  app rather than written into this rule.)*
 - **Selection is shown in one consistent way**: the frame on canvas, the matching
   `.lrow.sel` in Layers, and a selection label. One object selected in three
   places reads as one selection.
@@ -240,8 +270,16 @@ the dock, or a `.sheet.down` overlay.
   (`.lgroup`) when structure exists (a component is a group; a frame with children
   is a group). Do not show a flat list on one page and an arbitrarily grouped one
   on another for the same kind of content.
-- A **component instance** always renders in Layers as a single collapsed group
-  with the component glyph; expandable to show overrides, not its full internals.
+- A **component instance** renders in Layers as a single row with the component
+  glyph, and that row does **not** twist open. What is inside a copy belongs to
+  its original, so a row you could open would show pieces nobody can keep an edit
+  to. The knobs a copy does have, its exposed properties, its own look, Edit
+  Original and Detach, live in the Component section of the dock beside the
+  copy's name, not in the layers tree. *(Revised 2026-09-04 to match what
+  shipped: commit `fcdb672` makes the row non-openable, and audit
+  `2026-09-03-component-overrides` records cutting the mock's separate instance
+  props section for the same reason. This rule previously promised a row
+  expandable to show overrides.)*
 - Visibility (eye), lock, and reorder affordances are identical on every row.
 
 ---

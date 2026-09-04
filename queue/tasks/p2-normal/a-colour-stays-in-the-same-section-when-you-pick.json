@@ -1,0 +1,29 @@
+{
+  "id": "a-colour-stays-in-the-same-section-when-you-pick",
+  "title": "A colour stays in the same section when you pick a second layer",
+  "goal": "Right now, picking one box puts its fill colour in one part of the panel and picking a second box moves that same colour to a different part with a different name. The control you were just using jumps somewhere else the moment you add to the selection. It should stay put and simply start answering for everything you picked.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1060,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T06:13:36.706Z",
+  "updated": "2026-09-04T06:13:36.707Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed 2026-09-04 by the UX-PATTERNS scrub task. UX-PATTERNS.md section 4 now states the rule: a property keeps its home whatever the count, and a multi-select-only section is reserved for properties with no single-layer home (Arrange). The app violates it: InspectorSectionID.color (Sources/Photonz/LayersPanel.swift) is present only while several layers are picked and is documented in place as being on screen INSTEAD of the per-kind sections; SelectionColorInspector lives in Sources/Photonz/ColorStylePanel.swift, landed by commit 0af62a5. Audit queue/audits/2026-09-03-multi-style.json flags the same thing in its own rough: \"the colour you were just editing moves to a different section when you shift-click a second layer\". Likely shape of the fix: keep the per-kind section (Annotation/Text/Frame) on screen for a homogeneous multi-selection and make its colour rows answer for all of them, falling back to the whole-selection section only when the picked layers span kinds. Multi-layer colour logic already exists in core and should be reused, not rewritten.",
+  "acceptance": [
+    "Picking one shape and then shift-clicking a second leaves the fill row under the same section heading it was already under, in the same place on screen",
+    "A row that describes several layers wearing different colours says Mixed, and setting it paints every one of them in one undo step, exactly as it does today",
+    "Saving a colour as a style and applying a style to everything picked are still reachable from that row, wherever it now lives",
+    "Picking layers of different kinds still shows a sensible place to set their shared colour, and that place is not a section that only exists during multi-select",
+    "docs/design/mocks/shared/UX-PATTERNS.md section 4 no longer carries the note saying the app does not follow this rule yet"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T06:13:36.707Z",
+      "note": "created (manual)"
+    }
+  ]
+}

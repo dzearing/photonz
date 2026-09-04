@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:07:01.600Z",
-  "updated": "2026-09-03T12:08:27.473Z",
+  "updated": "2026-09-04T06:14:52.571743Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review finding, 2026-09-03. The document is docs/design/mocks/shared/UX-PATTERNS.md. Three specific spots. Section 3 (Panels and surfaces taxonomy) defines each panel group as having its own bounded scroller, but says nothing about reveal: the Library reveal work now scrolls the DOCK to a group and re-opens a group the user had collapsed, which queue/audits/2026-09-03-library-reveal.json flags itself as overruling a deliberate collapse. Section 4 (Selection model) says multi-select shows shared properties only, and never says a property keeps its home, which is how colours ended up in a different section depending on the number of layers picked (queue/audits/2026-09-03-multi-style.json). Section 5 (Layers representation) says a component instance renders as a collapsed group expandable to show its overrides; LayerPanelTree.panelRows deliberately makes a copy non-openable and puts its knobs in the Component section instead.",
@@ -28,6 +28,39 @@
     {
       "t": "2026-09-03T12:08:27.473Z",
       "note": "seq 620 -> 90"
+    },
+    {
+      "t": "2026-09-04T06:10:09.123Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T06:14:52.571743Z",
+      "note": "Read the three spots against the real code before touching the doc, not against the audits alone. Section 3: DockReveal.action scrolls the dock by the shortest move and returns .none when the group is already whole on screen; LayersPanel.requestLibraryReveal calls expand(.library) first, so a deliberate collapse IS overruled; LibraryShelfLayout.tileReveal scrolls INSIDE the shelf, but only when a command named a tile, which shipped after the audit that said it had not. Section 4: InspectorSectionID.color is documented in place as being on screen INSTEAD of the per-kind sections, so Fill really does change section on the second click. Section 5: Layer.isOpenableGroup is isGroup && !isComponentInstance, and ComponentInstanceInspector holds the exposed properties, own look, Edit Original and Detach."
+    },
+    {
+      "t": "2026-09-04T06:14:52.571743Z",
+      "note": "Adversarial pass on the rules before writing them. The reveal rule is not decoration: two runners independently invented an answer (DockReveal, then LibraryShelfLayout.tileReveal) because no rule existed, so the shortest useful version is one paragraph naming who may open a collapsed group and where a reveal stops. Did NOT open a decision card about re-opening a deliberate collapse: audit 2026-09-03-library-reveal already put that exact question to the user in its evaluate list, so a second card would be noise. The doc records the shipped answer and says plainly that the question is still open."
+    },
+    {
+      "t": "2026-09-04T06:14:52.571743Z",
+      "note": "Section 3 (Panels): added the Reveal rule to the Panel group bullet. A reveal scrolls the dock by the shortest move that puts the whole group on screen, never twitches a group already visible, stops at the group unless the command named a particular thing inside it, and only a command the user just issued about that group may re-open a group they collapsed on purpose. Names commit 4a6aac7 / audit 2026-09-03-library-reveal and commit 17dca1e / audit 2026-09-03-shelf-tile-reveal."
+    },
+    {
+      "t": "2026-09-04T06:14:52.571743Z",
+      "note": "Section 4 (Selection): added 'A property keeps its home, whatever the count'. The section a property sits in must not change with how many layers are picked; multi-select changes what a row answers for, never where it lives; a multi-select-only section is reserved for properties with no single-layer home, such as Arrange. Judged the APP wrong here rather than the rule, so the rule stands and the drift is filed: new task a-colour-stays-in-the-same-section-when-you-pick (p2-normal, ui-components). Names commit 0af62a5 / audit 2026-09-03-multi-style, which flags the same thing in its own rough."
+    },
+    {
+      "t": "2026-09-04T06:14:52.571743Z",
+      "note": "Section 5 (Layers): rewrote the component-instance bullet. A copy is a single row that does not twist open, and its knobs live in the Component section of the dock, not in the layers tree. Judged the app right and the rule stale. Names commit fcdb672 / audit 2026-09-03-component-overrides, which records cutting the mock's separate instance props section for the same reason."
+    },
+    {
+      "t": "2026-09-04T06:14:52.571743Z",
+      "note": "Status line bumped to v1.2 with a one-line summary of the scrub. Checked the rest of the doc for contradictions: section 4's 'instance props + overrides + variant' now agrees with the new section 5, and no other doc in docs/ carried the stale 'expandable to show overrides' promise. No em dashes added. No audit written: this is a documentation scrub, not a feature a person can playtest."
+    },
+    {
+      "t": "2026-09-04T06:14:52.571743Z",
+      "note": "Scripts/test.sh green (2749 tests, 249 suites). Docs-only change, no code touched, so nothing to port to Next."
     }
-  ]
+  ],
+  "started": "2026-09-04T06:10:09.122Z"
 }

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:06:09.122Z",
-  "updated": "2026-09-04T06:09:28.961859Z",
+  "updated": "2026-09-04T06:09:43.498Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Residue of the placed image naming work that shipped on 2026-09-03 (PlacedImageNaming in PhotonzCore, called from EditorState.pasteImage). PlacedImageNaming.layerName has no idea what is already in the document, so the de-dup has to happen at the call site or the function has to take the names already in use. freshGroupName in EditorState is the existing shape for this. Named in queue/audits/2026-09-03-placed-image-names.json: \"Nothing dedupes names: two copies of the same file give two identical rows.\"",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-04T06:09:28.961859Z",
       "note": "audit: queue/audits/2026-09-03-placed-image-dedupe.json with two real window captures."
+    },
+    {
+      "t": "2026-09-04T06:09:43.497Z",
+      "note": "A second copy of the same file now arrives as 'Hero banner 2'. PlacedImageNaming.layerName(fileName:taken:) in PhotonzCore (5 new tests) called from EditorState.pasteImage, the funnel for Finder drops, Library places and clipboard pastes. Verified live in the probe with real window captures; Scripts/test.sh green at 2749 tests. Audit: queue/audits/2026-09-03-placed-image-dedupe.json."
     }
   ],
-  "started": "2026-09-04T06:02:57.913Z"
+  "started": "2026-09-04T06:02:57.913Z",
+  "completed": "2026-09-04T06:09:43.498Z"
 }
