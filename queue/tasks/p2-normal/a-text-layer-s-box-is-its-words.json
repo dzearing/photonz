@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1150,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:59:19.735Z",
-  "updated": "2026-09-04T18:00:37.347Z",
+  "updated": "2026-09-04T18:27:32.214Z",
   "deps": [],
   "blockedBy": [],
   "notes": "TextMeasurement.slack (4pt, = TextRasterizer.frameInset * 2) sits inside Layer.frame on the far edges. Layer.contentBounds already names the visible box and GroupFlow now flows by it (2026-09-04). Everything else - selection rendering, LayerGeometryEditing, Measure, snapping - still reads localBounds. Options: keep the slack in the frame and make the UI read contentBounds everywhere, or take the slack out of the frame entirely and have DocumentRenderer/TextRasterizer outset when rasterizing (bigger: needs a document migration or every saved text box re-wraps).",
@@ -35,7 +35,12 @@
     {
       "t": "2026-09-04T18:08:07.384Z",
       "note": "Plan: Layer.withoutSlack/withSlack in PhotonzCore as the one pair of primitives; contentBounds made public on top of them. Selection outline, handles, resize drag, snapping peers, multi-select outline and rubber band read the words box; EditorState puts the slack back at previewCanvasFrame/commitCanvasFrame/commitCanvasDrop; LayerGeometrySelection.Member carries the slack so W/H show the words and typing puts it back. Caliper: checked, measure feet snap only to detected image edges and to other calipers, never to layer frames, so the number a caliper reads between two labels is already the space on screen once GroupFlow flows by contentBounds (2026-09-04); acceptance 3 gets a test rather than a change."
+    },
+    {
+      "t": "2026-09-04T18:27:32.213Z",
+      "note": "The canvas, the W and H fields, the magnets, the sweep band and the Arrange row all read a label's words now, not the 4pt of room its stored box carries on its far edges; the room goes back on at one door each (EditorState.storedCanvasFrame, LayerGeometrySelection.Member.slack), so no stored frame moves and nothing saved re-wraps. Verified live in the probe with Screen Recording: outline flush on all four sides, typing 100 into W reads 100 back with the words unmoved, a caliper between two labels reads 44 against a reported H of 16, a right-handle drag re-wraps to two lines with the box still flush. 3092 tests green. Audit queue/audits/2026-09-04-text-box-words.json; commit dd233b2."
     }
   ],
-  "started": "2026-09-04T18:00:37.346Z"
+  "started": "2026-09-04T18:00:37.346Z",
+  "completed": "2026-09-04T18:27:32.214Z"
 }
