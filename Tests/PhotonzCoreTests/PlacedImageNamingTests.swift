@@ -50,6 +50,44 @@ struct PlacedImageNamingTests {
                 == "Screenshot of the cat at night")
     }
 
+    // MARK: Two copies of the same file
+
+    /// Dropping one file in twice used to leave two rows reading the exact
+    /// same word, and the only way out was to rename one by hand. The second
+    /// one takes the next free number, the way a second drawn rectangle does.
+    @Test func numbersASecondCopyOfTheSameFile() {
+        #expect(PlacedImageNaming.layerName(fileName: "hero.png", taken: []) == "hero")
+        #expect(PlacedImageNaming.layerName(fileName: "hero.png", taken: ["hero"]) == "hero 2")
+        #expect(PlacedImageNaming.layerName(fileName: "hero.png",
+                                            taken: ["hero", "hero 2"]) == "hero 3")
+    }
+
+    /// Nothing is numbered until there is something to tell apart, so a file
+    /// nobody else in the document shares keeps its plain name.
+    @Test func leavesTheOnlyCopyOfAFileAlone() {
+        #expect(PlacedImageNaming.layerName(fileName: "hero.png",
+                                            taken: ["login-screen", "Card"]) == "hero")
+    }
+
+    /// The picture arriving is the one that moves aside: a layer somebody
+    /// named themselves is never renumbered behind their back.
+    @Test func stepsAsideRatherThanRenamingWhatIsAlreadyThere() {
+        #expect(PlacedImageNaming.layerName(fileName: "hero.png", taken: ["hero"]) == "hero 2")
+    }
+
+    /// A capture is numbered by the short name it actually wears in the list,
+    /// not by the long file name behind it.
+    @Test func numbersACaptureByItsShortenedName() {
+        #expect(PlacedImageNaming.layerName(fileName: "Screenshot 2026-06-21 at 10.30.45.png",
+                                            taken: ["Screenshot 10.30.45"])
+                == "Screenshot 10.30.45 2")
+    }
+
+    @Test func numbersRepeatedClipboardPastes() {
+        #expect(PlacedImageNaming.layerName(fileName: nil, taken: ["Pasted Image"])
+                == "Pasted Image 2")
+    }
+
     // MARK: Nothing to name it after
 
     @Test func fallsBackToPastedImageWithNoFile() {

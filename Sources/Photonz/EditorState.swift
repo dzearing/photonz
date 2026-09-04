@@ -5520,7 +5520,9 @@ final class EditorState {
     ///
     /// `fileName` is the file the picture came out of, so the layer can carry
     /// its name instead of a generic one. nil for the clipboard, which has no
-    /// file behind it (`PlacedImageNaming`).
+    /// file behind it (`PlacedImageNaming`). A name already in use here takes
+    /// the next free number, so placing the same file twice reads as two rows
+    /// rather than one word repeated.
     private func pasteImage(_ image: CGImage, at point: CGPoint? = nil,
                             fileName: String? = nil) {
         guard let document else {
@@ -5530,8 +5532,11 @@ final class EditorState {
         let ref = store.register(image)
         let frame = document.placementForIncomingImage(size: ref.pixelSize, at: point)
         guard !frame.isEmpty else { return }
-        let layer = Layer(name: PlacedImageNaming.layerName(fileName: fileName),
-                          content: .image(ref), frame: frame)
+        // Numbered against what is already here, so dropping one file in twice
+        // gives two rows you can tell apart instead of the same word twice.
+        let name = PlacedImageNaming.layerName(fileName: fileName,
+                                               taken: Set(document.allLayers.map(\.name)))
+        let layer = Layer(name: name, content: .image(ref), frame: frame)
         discardDragPreview()
         perform { $0.addLayerDrawnOnFrame(layer) }
         selectedLayerID = layer.id

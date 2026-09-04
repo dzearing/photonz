@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T12:06:09.122Z",
-  "updated": "2026-09-03T12:08:27.443Z",
+  "updated": "2026-09-04T06:09:28.961859Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Residue of the placed image naming work that shipped on 2026-09-03 (PlacedImageNaming in PhotonzCore, called from EditorState.pasteImage). PlacedImageNaming.layerName has no idea what is already in the document, so the de-dup has to happen at the call site or the function has to take the names already in use. freshGroupName in EditorState is the existing shape for this. Named in queue/audits/2026-09-03-placed-image-names.json: \"Nothing dedupes names: two copies of the same file give two identical rows.\"",
@@ -26,6 +26,31 @@
     {
       "t": "2026-09-03T12:08:27.443Z",
       "note": "seq 610 -> 80"
+    },
+    {
+      "t": "2026-09-04T06:02:57.913Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T06:09:28.961859Z",
+      "note": "adversarial review before building: the app already has one idiom for this (Rectangle, Rectangle 2, and freshGroupName), so numbering is the consistent answer and needs no decision. Rejected widening PhotonzDocument.uniquelyNamed, which is deliberately limited to LayerNaming.autoStems because component copies are meant to SHARE a name and measurements read better unnumbered; widening it would break both. Rejected leaning on the row thumbnail to disambiguate: two copies of one file have the identical thumbnail. Shortest version that delivers the value is one core function plus one call site."
+    },
+    {
+      "t": "2026-09-04T06:09:28.961859Z",
+      "note": "shipped: PlacedImageNaming.layerName(fileName:taken:) in PhotonzCore (tests first, 5 new cases in PlacedImageNamingTests), called from EditorState.pasteImage with the document's names. That one call site is the funnel for every way a picture arrives: Finder drop, Library place, and clipboard paste."
+    },
+    {
+      "t": "2026-09-04T06:09:28.961859Z",
+      "note": "verified live in the probe (Screen Recording granted). Scripts/playtest/placed-image-dedupe-walk.json drops one file three times: rows read Hero banner, Hero banner 2, Hero banner 3. Renaming a row to Renamed Layer leaves it alone and the next drop takes the freed number. Scripts/test.sh green, 2749 tests."
+    },
+    {
+      "t": "2026-09-04T06:09:28.961859Z",
+      "note": "review after building found an adjacent defect this task does not cover: copy a layer and paste it and both rows read the same word, because pasteLayer restores the source name and uniquelyNamed only numbers auto stems. Different mechanism, different right answer (duplicating says \"copy\"), so filed as copying-a-layer-and-pasting-it-gives-the-copy-it rather than widened into here."
+    },
+    {
+      "t": "2026-09-04T06:09:28.961859Z",
+      "note": "audit: queue/audits/2026-09-03-placed-image-dedupe.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-04T06:02:57.913Z"
 }

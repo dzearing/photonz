@@ -30,6 +30,20 @@ public enum PlacedImageNaming {
         return shortenedCaptureName(stem) ?? stem
     }
 
+    /// The layer name for a picture from `fileName`, given every name already
+    /// spoken for in the document.
+    ///
+    /// Two copies of one file used to land as two rows carrying the identical
+    /// word, and the only way to tell which was which was to rename one by
+    /// hand. The second one takes the next free number instead, exactly as a
+    /// second drawn rectangle does (`LayerNaming`). Nothing is numbered until
+    /// there is something to tell apart, so the first copy keeps the plain
+    /// file name; and it is always the picture ARRIVING that steps aside, so a
+    /// layer somebody named themselves is never renumbered behind their back.
+    public static func layerName(fileName: String?, taken: Set<String>) -> String {
+        LayerNaming.firstFree(base: layerName(fileName: fileName), taken: taken)
+    }
+
     /// The file's own name, without its folders and without its extension.
     private static func stem(of fileName: String?) -> String {
         guard let fileName else { return "" }

@@ -1,0 +1,27 @@
+{
+  "id": "copying-a-layer-and-pasting-it-gives-the-copy-it",
+  "title": "Copying a layer and pasting it gives the copy its own name",
+  "goal": "Copy a layer and paste it and you get two rows in the layers list reading the exact same word, with no way to tell which is which until you rename one. Duplicating the same layer instead already reads \"Hero banner copy\", so the two ways of making a copy disagree.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T06:09:02.343Z",
+  "updated": "2026-09-04T06:09:02.344Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Verified in the probe on 2026-09-03: drop Hero banner.png, copyLayer, pasteLayer, two rows both read \"Hero banner\". EditorState.pasteLayer sets layer.name = transfer.layer.name, which deliberately undoes the \" copy\" that Layer.duplicated appends, and PhotonzDocument.uniquelyNamed only numbers names built from LayerNaming.autoStems, which a file-derived name is not. The duplicate path (nameDuplicates -> LayerNaming.copyName) is the shape to match. Sibling of two-pictures-with-the-same-name-get-told-apart-i, which fixed the same defect for placing a file twice.",
+  "acceptance": [
+    "Copying a layer and pasting it leaves two rows with different names",
+    "The pasted row is named the same way duplicating that layer names it",
+    "A name a person typed is never changed on the layer that was already there"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T06:09:02.344Z",
+      "note": "created (manual)"
+    }
+  ]
+}

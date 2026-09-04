@@ -1,0 +1,26 @@
+{
+  "feature": "Two copies of the same picture get told apart",
+  "epic": "ui-building",
+  "summary": "Drop one file into a document twice and the second layer arrives as \"Hero banner 2\" instead of a second row reading \"Hero banner\". The first copy keeps the plain file name, and a name you typed yourself is never renumbered.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. You need any image file in the Finder.",
+  "try": [
+    { "do": "Open any picture, then drag an image file in from the Finder and drop it on the canvas." },
+    { "do": "Read the top row of the Layers list: it should be the file's name with no number on it." },
+    { "do": "Drag the same file in again and drop it somewhere else.", "shot": "2026-09-03-placed-image-dedupe-3.png" },
+    { "do": "Read the Layers list: the new row carries a 2 and the first row is untouched." },
+    { "do": "Drop it a third time and confirm the number counts on." },
+    { "do": "Double click the top row and type a name of your own, then drop the file once more.", "shot": "2026-09-03-placed-image-dedupe-4.png" },
+    { "do": "Confirm your typed name is still exactly what you typed." }
+  ],
+  "evaluate": [
+    "Is a trailing number the right way to tell two copies apart, or would you rather see something about the picture itself?",
+    "Does the first copy staying plain feel right, or would you rather every copy carried a number from the start?",
+    "When you rename one row and drop the file again, the freed number gets reused rather than counting past it. Does that read as tidy or as confusing?",
+    "Screenshots become names like \"Screenshot 10.30.45\", so a second one reads \"Screenshot 10.30.45 2\". Is that legible enough in a narrow panel?"
+  ],
+  "rough": [
+    "A file whose name already ends in a number is doubled up: dropping \"icon 2.png\" twice gives \"icon 2\" and \"icon 2 2\". Rare, and it still tells them apart, so it was left alone rather than guessed at.",
+    "Copying a layer and pasting it still gives two identical rows: that goes through a different path with a different right answer (duplicating already says \"copy\"), so it is filed separately as copying-a-layer-and-pasting-it-gives-the-copy-it.",
+    "Verified live in the probe app with Screen Recording granted, so both pictures here are real window captures, not offscreen renders."
+  ]
+}
