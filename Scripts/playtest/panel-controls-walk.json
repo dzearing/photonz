@@ -1,5 +1,9 @@
 {
   "out": "/tmp/photonz-playtest/panel-controls",
+  "seed": "Every control the right hand panel names for itself is pressed by the words on it. The walk starts from the shape and colour settings a fresh machine would have, because the look a shape is drawn in is remembered and decides which rows the panel shows.",
+  "setup": {
+    "forget": ["shapes", "color"]
+  },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1 },

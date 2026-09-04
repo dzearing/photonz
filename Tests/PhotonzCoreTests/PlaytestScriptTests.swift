@@ -817,4 +817,101 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("selectRow"))
         #expect(PlaytestStep.names == PlaytestStep.names.sorted())
     }
+
+    // MARK: - Setup a walk can ask for
+
+    // Two walks only ever passed on their first run on a machine: one changed
+    // the remembered text size and looked for the old one next time, and the
+    // other needed a picture copied into the Screenshots folder by hand and
+    // said so only in a note for a person. A walk says what it needs, and the
+    // harness puts it right.
+    @Test("A walk asks for remembered settings to be forgotten first")
+    func setupNamesTheMemoriesToForget() throws {
+        let script = try decode("""
+        { "setup": { "forget": ["text", "color"] },
+          "steps": [ { "do": "blank" } ] }
+        """)
+        #expect(script.setup.forget == [.text, .color])
+        #expect(script.setup.captures.isEmpty)
+        #expect(!script.setup.isEmpty)
+    }
+
+    @Test("A walk with no setup block asks for nothing")
+    func noSetupBlockIsEmptySetup() throws {
+        let script = try decode("{ \"steps\": [ { \"do\": \"blank\" } ] }")
+        #expect(script.setup.isEmpty)
+        #expect(script.setup.forget.isEmpty)
+        #expect(script.setup.captures.isEmpty)
+    }
+
+    @Test("A walk asks for the pictures its shelf needs")
+    func setupNamesTheCapturesToPlace() throws {
+        let script = try decode("""
+        { "setup": { "captures": ["fixtures/probe.png"] },
+          "steps": [ { "do": "blank" } ] }
+        """)
+        #expect(script.setup.captures == ["fixtures/probe.png"])
+    }
+
+    // A misspelled memory is the whole point of naming them: it has to come
+    // back naming the ones that exist, not silently forget nothing.
+    @Test("An unknown memory says which ones there are")
+    func unknownMemoryListsTheRealOnes() throws {
+        do {
+            _ = try decode("{ \"setup\": { \"forget\": [\"fonts\"] }, \"steps\": [] }")
+            Issue.record("expected \"fonts\" to be refused")
+        } catch let error as PlaytestScriptError {
+            #expect(error.description.contains("fonts"))
+            #expect(error.description.contains("text"))
+            #expect(error.description.contains("color"))
+        }
+    }
+
+    @Test("A setup block with a key nobody knows says so")
+    func unknownSetupKeyIsRefused() throws {
+        do {
+            _ = try decode("{ \"setup\": { \"seed\": \"copy a file first\" }, \"steps\": [] }")
+            Issue.record("expected \"seed\" inside setup to be refused")
+        } catch let error as PlaytestScriptError {
+            #expect(error.description.contains("seed"))
+            #expect(error.description.contains("forget"))
+            #expect(error.description.contains("captures"))
+        }
+    }
+
+    @Test("Setup has to be an object, and forget and captures have to be lists of words")
+    func setupShapeIsChecked() throws {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try PlaytestScript.decode(Data("{ \"setup\": \"forget text\", \"steps\": [] }".utf8))
+        }
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try PlaytestScript.decode(Data("{ \"setup\": { \"forget\": \"text\" }, \"steps\": [] }".utf8))
+        }
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try PlaytestScript.decode(Data("{ \"setup\": { \"captures\": [\"\"] }, \"steps\": [] }".utf8))
+        }
+    }
+
+    // A walk that misspelled "setup" would otherwise be heard as a walk that
+    // asked for nothing, and fail on its second run with no clue why.
+    @Test("A top level key nobody knows is refused, so a misspelled setup cannot go unheard")
+    func unknownTopLevelKeyIsRefused() throws {
+        do {
+            _ = try decode("{ \"setups\": { \"forget\": [\"text\"] }, \"steps\": [] }")
+            Issue.record("expected \"setups\" to be refused")
+        } catch let error as PlaytestScriptError {
+            #expect(error.description.contains("setups"))
+            #expect(error.description.contains("setup"))
+        }
+        // The three a walk really does use all still pass.
+        _ = try decode("{ \"out\": \"o\", \"seed\": \"what this walk is\", "
+                       + "\"setup\": { \"forget\": [\"text\"] }, \"steps\": [] }")
+    }
+
+    // The names are what a walk author types, so they are plain words and the
+    // list is discoverable from the error text.
+    @Test func everyMemoryNameIsAPlainWord() throws {
+        #expect(PlaytestMemory.allCases.map(\.rawValue)
+                == ["text", "color", "shapes", "measure", "tools", "groups", "panel"])
+    }
 }

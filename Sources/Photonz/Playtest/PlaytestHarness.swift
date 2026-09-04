@@ -78,6 +78,9 @@ private final class Run {
     private var heldColorDrag: (slot: ColorSlot, paint: Paint)?
     /// Anything the action that just ran wants said in the log beside its name.
     private var actionDetail: String?
+    /// The walk's `setup` block, carried out before step one and undone when
+    /// the run ends however it ends.
+    private var setupRunner = PlaytestSetupRunner()
 
     init(scriptURL: URL, coordinator: AppCoordinator) {
         self.scriptURL = scriptURL
@@ -103,6 +106,15 @@ private final class Run {
             return
         }
         note(0, "start", "script \(scriptURL.path); \(script.steps.count) steps; release \(Experiments.shared.release.rawValue)")
+        // Whatever the walk said it needs, before step one — and, however this
+        // run ends, everything it borrowed goes back.
+        do {
+            let said = try setupRunner.perform(script.setup, besides: scriptURL)
+            note(0, "setup", said)
+        } catch {
+            finish(status: "failed", steps: 0, error: "setup: \(error)")
+            return
+        }
         var completed = 0
         for (index, step) in script.steps.enumerated() {
             let number = index + 1
@@ -141,6 +153,9 @@ private final class Run {
     }
 
     private func finish(status: String, steps: Int, error: String?) {
+        // Anything the setup lent goes back first, so a walk that failed
+        // halfway leaves nothing of its own in a person's Screenshots folder.
+        if let returned = setupRunner.returnCaptures() { note(steps, "setup", returned) }
         var done: [String: Any] = [
             "status": status, "steps": steps, "script": scriptURL.path, "out": out.path,
             "seconds": (Date().timeIntervalSince(startedAt) * 100).rounded() / 100,
@@ -1264,11 +1279,23 @@ private final class Run {
                  "inWindow": Self.isInReach(control),
                  "x": Int(control.point.x.rounded()), "y": Int(control.point.y.rounded())]
             },
+            // Read as "Size (24 pt)": the name a walk types, then what the
+            // menu is showing right now, the same way every control reads.
             "menus": try panelWindows().compactMap(\.contentView).flatMap { surface in
-                PlaytestPanelMenu.buttons(in: surface)
-                    .map { PlaytestPanelMenu.title(of: $0) }.filter { !$0.isEmpty }
+                let fields = Self.findAll(PanelTargetView.self, in: surface)
+                    .filter { $0.kind == .field && $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
+                return PlaytestPanelMenu.buttons(in: surface)
+                    .map { Self.menuName(of: $0, among: fields) }.filter { !$0.isEmpty }
             },
         ]
+    }
+
+    /// One menu as a list reads it: the name a walk types, then the words it
+    /// is showing, when those are not the same thing.
+    @MainActor private static func menuName(of button: NSPopUpButton,
+                                            among fields: [PanelTargetView]) -> String {
+        let naming = PlaytestPanelMenu.naming(of: button, among: fields)
+        return naming.detail.isEmpty ? naming.name : "\(naming.name) (\(naming.detail))"
     }
 
     private static func outlinePanel(_ inventory: [String: Any]) -> String {
@@ -1307,9 +1334,23 @@ private final class Run {
             throw Failure(description: "the window has no content view")
         }
         let buttons = PlaytestPanelMenu.buttons(in: content)
-        guard let button = buttons.first(where: { PlaytestPanelMenu.title(of: $0) == name })
+        let fields = Self.findAll(PanelTargetView.self, in: content)
+            .filter { $0.kind == .field && $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
+        // A menu is named by the row it sits on, which holds still, or by the
+        // words it happens to be showing, which do not. Both work, because a
+        // menu on no named row has nothing but its words — and the words win,
+        // so naming one exactly is never made ambiguous by a row elsewhere.
+        let byWords = buttons.first { PlaytestPanelMenu.title(of: $0) == name }
+        let byRow = buttons.filter { PlaytestPanelMenu.naming(of: $0, among: fields).name == name }
+        if byWords == nil, byRow.count > 1 {
+            let showing = byRow.map { PlaytestPanelMenu.title(of: $0) }
+            throw Failure(description: "\(byRow.count) menus sit on a row called \"\(name)\", "
+                + "so it does not say which one: they are showing \(showing.joined(separator: ", ")). "
+                + "Name the one you mean by its words instead.")
+        }
+        guard let button = byWords ?? byRow.first
                 ?? buttons.first(where: { PlaytestPanelMenu.title(of: $0).hasPrefix(name) }) else {
-            let seen = buttons.map { PlaytestPanelMenu.title(of: $0) }.filter { !$0.isEmpty }
+            let seen = buttons.map { Self.menuName(of: $0, among: fields) }.filter { !$0.isEmpty }
             throw Failure(description: "no menu called \"\(name)\" is in the window; the ones that are: "
                 + (seen.isEmpty ? "none" : seen.joined(separator: ", ")))
         }

@@ -172,10 +172,11 @@ final class EditorState {
     private(set) var selectionTargetsPixels = false
     /// Magic-wand color tolerance (Euclidean RGBA distance, 0–255 units).
     /// Persisted like the fill colors — a tuned tolerance outlives relaunch.
-    var wandTolerance: Double = UserDefaults.standard.object(forKey: "wand.tolerance")
+    var wandTolerance: Double = UserDefaults.standard.object(forKey: EditorState.wandToleranceKey)
         .flatMap { $0 as? Double } ?? 32 {
-        didSet { UserDefaults.standard.set(wandTolerance, forKey: "wand.tolerance") }
+        didSet { UserDefaults.standard.set(wandTolerance, forKey: Self.wandToleranceKey) }
     }
+    static let wandToleranceKey = "wand.tolerance"
     /// The active editor tool. Drawing tools are STICKY (Photoshop-style, 17.12):
     /// after a shape is drawn the tool stays active so you can draw more of them.
     /// Switch to `.select` (V) to adjust a placed shape.
@@ -988,9 +989,13 @@ final class EditorState {
     /// since the marquee slot was born, so nobody's remembered selector moves.
     private var lastGroupTools: [ToolGroup: Tool] = [:]
 
-    private static func groupMemoryKey(_ group: ToolGroup) -> String {
+    static func groupMemoryKey(_ group: ToolGroup) -> String {
         group == .selection ? "tool.marquee.last" : "tool.\(group.rawValue).last"
     }
+
+    /// Every family's remembered tool, for a walk that asks to start from the
+    /// tools a fresh machine would have.
+    static var toolMemoryKeys: [String] { ToolGroup.allCases.map(groupMemoryKey) }
 
     /// The tool `group`'s button stands for right now.
     func lastTool(in group: ToolGroup) -> Tool {
@@ -1537,7 +1542,7 @@ final class EditorState {
             showMeasureModeHint()
         }
     }
-    private static let measureModeKey = "tool.measure.mode"
+    static let measureModeKey = "tool.measure.mode"
     private var storedMeasureToolMode: MeasureToolMode = {
         let raw = UserDefaults.standard.string(forKey: EditorState.measureModeKey) ?? ""
         return MeasureToolMode(rawValue: raw) ?? .distance
@@ -2087,7 +2092,7 @@ final class EditorState {
         }
     }
 
-    private static let measureStylesKey = "measureStyles"
+    static let measureStylesKey = "measureStyles"
 
     private static func loadMeasureStyles() -> MeasureStyles {
         guard let data = UserDefaults.standard.data(forKey: measureStylesKey),
@@ -2097,7 +2102,7 @@ final class EditorState {
         return styles
     }
 
-    private static let calloutStylesKey = "calloutStyles"
+    static let calloutStylesKey = "calloutStyles"
 
     private static func loadCalloutStyles() -> CalloutStyles {
         guard let data = UserDefaults.standard.data(forKey: calloutStylesKey),
@@ -2558,7 +2563,7 @@ final class EditorState {
 
     // MARK: - Recent colors (13.2)
 
-    private static let recentColorsKey = "recentColors"
+    static let recentColorsKey = "recentColors"
 
     private static func loadRecentColors() -> RecentColors {
         guard let data = UserDefaults.standard.data(forKey: recentColorsKey),
@@ -2583,12 +2588,14 @@ final class EditorState {
 
     /// Photoshop-style foreground/background fill pair, shared across windows
     /// via UserDefaults. Defaults: black over white, like Photoshop's D.
-    var foregroundFillHex: String = UserDefaults.standard.string(forKey: "fill.foreground") ?? "#000000" {
-        didSet { UserDefaults.standard.set(foregroundFillHex, forKey: "fill.foreground") }
+    var foregroundFillHex: String = UserDefaults.standard.string(forKey: EditorState.foregroundFillKey) ?? "#000000" {
+        didSet { UserDefaults.standard.set(foregroundFillHex, forKey: Self.foregroundFillKey) }
     }
-    var backgroundFillHex: String = UserDefaults.standard.string(forKey: "fill.background") ?? "#FFFFFF" {
-        didSet { UserDefaults.standard.set(backgroundFillHex, forKey: "fill.background") }
+    var backgroundFillHex: String = UserDefaults.standard.string(forKey: EditorState.backgroundFillKey) ?? "#FFFFFF" {
+        didSet { UserDefaults.standard.set(backgroundFillHex, forKey: Self.backgroundFillKey) }
     }
+    static let foregroundFillKey = "fill.foreground"
+    static let backgroundFillKey = "fill.background"
 
     /// X — swap foreground and background, like Photoshop.
     func swapFillColors() {
@@ -2869,7 +2876,7 @@ final class EditorState {
         return context.makeImage()
     }
 
-    private static let annotationStylesKey = "annotationStyles"
+    static let annotationStylesKey = "annotationStyles"
 
     private static func loadAnnotationStyles() -> AnnotationStyles {
         guard let data = UserDefaults.standard.data(forKey: annotationStylesKey),
@@ -3159,7 +3166,7 @@ final class EditorState {
         rerender()
     }
 
-    private static let textStylesKey = "textStyles"
+    static let textStylesKey = "textStyles"
 
     private static func loadTextStyles() -> TextStyles {
         guard let data = UserDefaults.standard.data(forKey: textStylesKey),

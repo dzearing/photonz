@@ -82,6 +82,23 @@ enum PlaytestPanelMenu {
         return button.accessibilityLabel() ?? button.accessibilityTitle() ?? ""
     }
 
+    /// What a walk calls this menu, and what it is showing right now.
+    ///
+    /// A menu wears its own value — "24 pt", "Top" — so naming it by what it
+    /// says is naming it by something that changes the moment the walk uses
+    /// it. The row it sits on does not change, so that is its name, and its
+    /// value goes in the detail, the same promise every other control in the
+    /// panel makes. A menu on no named row keeps its words as its name.
+    @MainActor static func naming(of button: NSPopUpButton,
+                                  among fields: [PanelTargetView]) -> (name: String, detail: String) {
+        let showing = title(of: button)
+        let box = button.convert(button.bounds, to: nil)
+        guard let row = PlaytestPanelPress.field(at: box, among: fields), row != showing else {
+            return (showing, "")
+        }
+        return (row, showing)
+    }
+
     /// The visible window a menu is showing in, if one is up.
     @MainActor static func openMenuWindow() -> NSWindow? {
         NSApp.windows.first {

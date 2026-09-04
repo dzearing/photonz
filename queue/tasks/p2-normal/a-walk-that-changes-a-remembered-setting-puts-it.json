@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-04T14:46:32.315Z",
-  "updated": "2026-09-04T15:11:06.048Z",
+  "updated": "2026-09-04T15:45:06.764Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while regression-testing the colour picker walk work on 2026-09-04. type-menu-labels-walk step 17 is panelMenu {menu: 24 pt, choose: 48 pt}; the text size is remembered in the probe defaults, so on a second run the button reads 48 pt and the step fails with \"no menu called 24 pt\". drop-lands-here-walk has the same shape of problem from the other side: it carries a seed note saying to copy Scripts/playtest/fixtures/Photonz drop probe.png into ~/Pictures/Screenshots first, which nothing enforces, so it fails with \"no tile called Photonz drop probe\" unless a person read the note. Options: a reset step at the top of a walk, a walk-level setup block the runner performs, or the probe starting from clean defaults each launch.",
@@ -42,6 +42,22 @@
     {
       "t": "2026-09-04T15:11:06.048Z",
       "note": "The static test found a third case at once: text-fills-height-walk opened \"Top\", chose \"Stretch\", then opened \"Stretch\". Both steps now say \"Vertical\". Running the panel walks found a fourth and fifth: picker-controls-walk and panel-controls-walk each draw a rectangle and open its Fill colour, which does not exist when the shape tool was last left holding no fill. Both now forget shapes and color first, and both pass."
+    },
+    {
+      "t": "2026-09-04T15:45:06.764Z",
+      "note": "Ran the 55 state-sensitive walks (every walk with a press, panelMenu, panel, measureMode, dragTile or a Library/measure/style action) twice back to back with Scripts/playtest-all.sh. Pass 1: 53 of 55. Pass 2: 54 of 55. The one difference between the passes was picker-controls-walk, which is a timing flake: it waits 0.8s for the colour picker to appear after pressing the Fill swatch, which is not always enough while a second run is loading the machine. That wait is now 2.0s."
+    },
+    {
+      "t": "2026-09-04T15:45:06.764Z",
+      "note": "The walk that failed BOTH passes, identically, was a sixth instance of this bug and the run is how it was found. label-grows-walk types a label and then drags its right edge at a fixed point; the label's size comes from the remembered text style, so once anything had left the size at 48 the handle was not where the walk reached and the drag deselected instead of resizing, and the failure only showed six steps later as \"no field labelled W\". It now forgets text first. The failing before/passing after was checked on the real probe, not reasoned about."
+    },
+    {
+      "t": "2026-09-04T15:45:06.764Z",
+      "note": "Verified: label-grows, picker-controls, type-menu-labels and drop-lands-here each run twice in a row and pass all four times, with the probe rebuilt from the final source. text-fills-height and panel-reach still pass with the new menu naming. Scripts/test.sh green (3013 tests)."
+    },
+    {
+      "t": "2026-09-04T15:45:06.764Z",
+      "note": "Not verified: the other 77 walks in the folder were not double-run in this session. Two passes over all 132 is about three and a half hours of machine time and the user is playtesting on the same machine. Scripts/playtest-all.sh runs the whole folder for whoever wants that; the 55 chosen here are the ones that can read or write a remembered setting, which is the whole risk surface for this bug."
     }
   ],
   "started": "2026-09-04T14:51:12.817Z"

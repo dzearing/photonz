@@ -1,5 +1,9 @@
 {
   "out": "/tmp/photonz-playtest/type-menu-labels",
+  "seed": "Two labels are typed on a blank canvas, one is picked and resized, then both are picked at once so the Size menu has to say Mixed. The walk starts from the text settings a fresh machine would have, because it changes the remembered size on its way through.",
+  "setup": {
+    "forget": ["text"]
+  },
   "steps": [
     {
       "do": "blank",
@@ -90,7 +94,7 @@
     },
     {
       "do": "panelMenu",
-      "menu": "24 pt",
+      "menu": "Size",
       "shot": "2-size-menu",
       "choose": "48 pt"
     },

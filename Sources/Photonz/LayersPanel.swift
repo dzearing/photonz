@@ -1649,6 +1649,7 @@ struct MeasureToolInspector: View {
             Text(label).font(.caption).foregroundStyle(.secondary)
             content()
         }
+        .playtestField(label)
     }
 }
 
@@ -2661,6 +2662,7 @@ struct TextInspector: View {
             Text(label).font(.caption).foregroundStyle(.secondary)
             content()
         }
+        .playtestField(label)
     }
 
     /// What a menu says it is. Over a selection it says how far it reaches, so
@@ -2717,6 +2719,11 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
             .pickerStyle(.menu).labelsHidden().controlSize(.small)
             .accessibilityLabel(label)
         }
+        // The caption names the row, and the row names the menu for a walk.
+        // A menu wears its own value — "24 pt" one moment, "48 pt" the next —
+        // so a walk that named it by its words would stop working the first
+        // time it used it.
+        .playtestField(label)
         .help(help)
     }
 }
@@ -2993,6 +3000,7 @@ struct MeasureInspector: View {
             Text(label).font(.caption).foregroundStyle(.secondary)
             content()
         }
+        .playtestField(label)
     }
 
     /// One color row: caption on the left, swatch next to it, so the three
@@ -3150,5 +3158,6 @@ struct CollageInspector: View {
             Text(label).font(.caption).foregroundStyle(.secondary)
             content()
         }
+        .playtestField(label)
     }
 }

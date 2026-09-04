@@ -30,6 +30,7 @@ malformed script fails with a readable error before anything runs.
 
 ```bash
 Scripts/playtest.sh Scripts/playtest/redline-walk.json           # build, run, wait, quit
+Scripts/playtest-all.sh                                          # every walk, one line each
 Scripts/playtest.sh path/to/walk.json --no-build                 # reuse the built probe
 Scripts/playtest.sh path/to/walk.json --keep                     # leave the probe running
 PHOTONZ_PLAYTEST_TIMEOUT=300 Scripts/playtest.sh path/to/walk.json
@@ -89,6 +90,7 @@ typo comes back in a second rather than as a timeout on an empty folder:
 ```json
 {
   "out": "/tmp/photonz-playtest/my-walk",
+  "setup": { "forget": ["text"], "captures": ["fixtures/probe.png"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
     { "do": "measureMode", "mode": "size" },
@@ -108,6 +110,47 @@ the picture, like the right hand panel or the chrome beside it; the `blank` and
 `open` log lines report the window size and the canvas size, so you can work out
 where the panel starts. The `open` entry also states the document size and pixel
 scale so you can read coordinates straight off the fixture.
+
+### What a walk needs set up, in the walk
+
+The probe keeps its settings between runs on purpose: that is what a person's
+app does. The cost is that a walk which changes one of them passes the first
+time and fails the next, having gone looking for a value it moved itself. Two
+walks were doing exactly that on 2026-09-04 — one changed the remembered text
+size from 24 to 48 and then could not find the 24, and one needed a picture
+copied into the Screenshots folder by hand and said so only in a note.
+
+So a walk SAYS what it needs, in an optional `setup` block above `steps`, and
+the harness performs it before step one and undoes it when the run ends, pass
+or fail. The `setup` line is logged as step 0, so the log says what was done.
+
+| In `setup` | what it takes | what happens |
+| --- | --- | --- |
+| `forget` | a list of memories (below) | Those settings go back to the values a machine that had never run Photonz would have, before the first step. |
+| `captures` | picture files, relative to the script or absolute | Each is copied into the capture folder (`~/Pictures/Screenshots`) so the Library's Media shelf has it, and taken away again at the end. A name already taken there fails the walk rather than writing over someone's screenshot. |
+
+The memories a walk can forget, by the word it uses:
+
+| Word | What goes back to new |
+| --- | --- |
+| `text` | The font, size, weight and colour a new text block is made in. |
+| `color` | The recent colours, and the foreground and background fills. |
+| `shapes` | The look a new shape, arrow or callout is drawn in: paint, stroke, corner radius, and whether it has a fill at all. |
+| `measure` | The Measure mode and the saved measure looks. |
+| `tools` | Which tool each family in the toolbar stands for, and the wand's reach. |
+| `groups` | Which groups in the layers list are open. |
+| `panel` | Whether the dock and the Library are showing, how wide the dock is, and which shelf the Library is on. |
+
+A walk that reads a setting it never set is the one to think about here. Drawing
+a rectangle and then opening its Fill colour needs `"forget": ["shapes"]`,
+because the shape tool remembers the look it was last left holding, and a
+rectangle left with no fill at all has no Fill colour to open.
+
+`Scripts/playtest-all.sh` runs every walk in the folder and prints a line each.
+Run it twice in a row: the same answers both times is what says the set can be
+trusted. `PlaytestWalkSetupTests` holds the rest of the line — no walk may hide
+setup in prose, every borrowed picture has to exist, and no walk may name a menu
+by a value an earlier step of the same walk chose.
 
 | `do` | fields | what happens |
 | --- | --- | --- |
@@ -138,7 +181,7 @@ scale so you can read coordinates straight off the fixture.
 | `selectRow` | `row`, optional `modifiers` | Clicks a row in the layers list by the name it shows, the way a person picks a layer out of the list instead of off the picture. Modifiers read as they do under a pointer: shift ranges from the anchor row, command adds or removes. This is the only way to select a LOCKED layer, since a click on the picture falls straight through one. Fails with the list of rows that ARE there. |
 | `panel` | `stage` | Writes what the RIGHT HAND PANEL, and any popover open on top of it, are showing to the log and to `panel-<stage>.json`: every tile on the Library shelf, every row in the layers list, every control a `press` can land on (with the row it is on and whether it is far enough up the dock to be reached where it is), and every menu in the dock, by the names the steps below use for them. The `menus` step for the panel, and the first step to write when a walk cannot find something. |
 | `press` | `control`, optional `in` `count` `modifiers` | Presses something in the RIGHT HAND PANEL, or in a popover open on top of it, by the words on it: a button ("Clear Stretch"), one segment of a picker ("Row", "Fixed"), a row that goes somewhere. `in` names the row it sits on, for when the same word appears twice — the Layout section holds a Hug and a Fixed for Width and another pair for Height, so `{"control": "Fixed", "in": "Width"}`. The press is real mouse events posted to the app's queue, never the control's action called behind its back, so a control that is covered or wired to nothing fails the walk. Fails with the list of controls that ARE there; a `panel` step prints the same list. |
-| `panelMenu` | `menu`, optional `shot` `choose` | Opens a menu INSIDE the window by the words on its button ("Add"), writes its rows to the log, and closes it. `shot` names a real screen capture of the menu in place over the panel, written to `<shot>-sc.png` — the only kind of picture of a menu there is, since a menu is drawn outside this process and renders blank offscreen. `choose` picks one of its rows by title instead of closing with nothing chosen. Needs the Screen Recording grant for the picture; the rows reach the log either way. |
+| `panelMenu` | `menu`, optional `shot` `choose` | Opens a menu INSIDE the window by the row it sits on ("Size", "Vertical") or, for a menu on no named row, by the words on its button ("Add"). Name it by its row wherever there is one: a menu wears its own value, so a walk that called it "24 pt" is naming something the very next field changes. A `panel` step reads them "Size (24 pt)": the name first, then what it is showing. writes its rows to the log, and closes it. `shot` names a real screen capture of the menu in place over the panel, written to `<shot>-sc.png` — the only kind of picture of a menu there is, since a menu is drawn outside this process and renders blank offscreen. `choose` picks one of its rows by title instead of closing with nothing chosen. Needs the Screen Recording grant for the picture; the rows reach the log either way. |
 | `scrollPanel` | `by`, optional `row` | Scrolls the panel list `by` points, negative going DOWN the list. The log says how many rows were on screen before and after, which rows arrived, how many row bodies were built, and what it cost the main thread. Name a `row` to pick which list; leave it out for the layers list wherever it is sitting, which is what a walk crawling down a long list wants, since the row it started from scrolls away and stops being built. The layers list builds only the rows you can see, so this is the only way to reach the rest. A synthesised wheel is usually swallowed by a SwiftUI scroll area, so the step falls back to scrolling directly and SAYS which of the two happened. |
 | `dragTile` | `tile`, `to`, optional `space` `hold` | Picks a tile up off the Library shelf by its name and lets it go on the picture, through the canvas's own drag destination — the same calls a drop from the Finder makes, carrying the very payload the tile's own drag hands over. A capture tile can be named by the caption it shows ("10 hours ago") or, better for a walk that has to keep working, by its file name. `hold` names a picture taken while it is still in the air, which is the only moment the landing outline exists. |
 | `dragRow` | `row`, `onto`, optional `zone` `hold` | Picks a row up in the layers list by its name and lets go of it on another row: `above` it (the default), `below` it, or `inside` it when that row is a group. `hold` names a picture taken before letting go, which is the only moment the line that says what will happen is on screen. |
@@ -302,7 +345,10 @@ selection latency (numbers from 2026-09-03 in its commit).
 
 - **The probe remembers its settings between runs** (the last Measure mode,
   the style popover, flags). Say what you want (`measureMode`) instead of
-  assuming a fresh state, or the walk changes with whoever ran last.
+  assuming a fresh state, or the walk changes with whoever ran last. When the
+  walk itself CHANGES one of those settings, or reads one it never set, name it
+  in the walk's `setup` block (above) so it starts from the same place every
+  time.
 - **The Library shelf remembers its tab, so a walk says which shelf it wants.**
   `showLibrary` opens the Library on whatever scope it was last left on, which
   is what a person wants and what a walk cannot rely on: the search box is

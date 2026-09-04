@@ -14,12 +14,20 @@ public struct PlaytestScript: Sendable, Equatable {
     /// Where renders and the log go. Absolute, or relative to the script; nil
     /// means an `out` folder beside the script.
     public var out: String?
+    /// What has to be put right before the first step runs.
+    public var setup: PlaytestSetup
     public var steps: [PlaytestStep]
 
-    public init(out: String? = nil, steps: [PlaytestStep]) {
+    public init(out: String? = nil, setup: PlaytestSetup = PlaytestSetup(), steps: [PlaytestStep]) {
         self.out = out
+        self.setup = setup
         self.steps = steps
     }
+
+    /// Everything a walk file may say at the top level. `seed` is prose about
+    /// what the walk IS, for whoever reads it; anything it needs DONE goes in
+    /// `setup`, where the runner can act on it.
+    static let knownKeys = ["out", "seed", "setup", "steps"]
 
     /// Parses a script, naming the step and field of the first problem.
     public static func decode(_ data: Data) throws -> PlaytestScript {
@@ -35,13 +43,22 @@ public struct PlaytestScript: Sendable, Equatable {
         guard let rawSteps = top["steps"] as? [Any] else {
             throw PlaytestScriptError.invalidJSON("\"steps\" is missing or not an array")
         }
+        // A misspelled key would otherwise be ignored in silence, which for
+        // "setup" means a walk that says what it needs and is not heard.
+        if let stray = top.keys.sorted().first(where: { !Self.knownKeys.contains($0) }) {
+            throw PlaytestScriptError.invalidJSON(
+                "\"\(stray)\" is not something a walk can say; it takes "
+                    + Self.knownKeys.joined(separator: ", "))
+        }
         let steps = try rawSteps.enumerated().map { index, entry -> PlaytestStep in
             guard let fields = entry as? [String: Any] else {
                 throw PlaytestScriptError.invalidField(index: index, step: "?", field: "do", reason: "each step is an object")
             }
             return try PlaytestStep(index: index, fields: fields)
         }
-        return PlaytestScript(out: top["out"] as? String, steps: steps)
+        return PlaytestScript(out: top["out"] as? String,
+                              setup: try PlaytestSetup(fields: top["setup"]),
+                              steps: steps)
     }
 
     /// The folder renders and the log land in, resolved against the script's
@@ -75,6 +92,7 @@ public enum PlaytestScriptError: Error, CustomStringConvertible, Sendable, Equat
     case invalidJSON(String)
     case unknownStep(index: Int, name: String)
     case invalidField(index: Int, step: String, field: String, reason: String)
+    case invalidSetup(field: String, reason: String)
 
     public var description: String {
         switch self {
@@ -89,8 +107,97 @@ public enum PlaytestScriptError: Error, CustomStringConvertible, Sendable, Equat
             }
         case .invalidField(let index, let step, let field, let reason):
             "step \(index + 1) (\(step)): \"\(field)\" \(reason)"
+        case .invalidSetup(let field, let reason):
+            "setup: \"\(field)\" \(reason)"
         }
     }
+}
+
+/// What a walk needs put right before its first step, said in a way the runner
+/// can act on rather than in a note only a person can read.
+///
+/// Two walks used to pass only the first time they were ever run on a machine.
+/// One changed the remembered text size and then looked for the old size next
+/// time; the other needed a picture copied into the Screenshots folder first
+/// and said so only in prose. Both are now one line of the walk.
+public struct PlaytestSetup: Sendable, Equatable {
+    /// Areas of the app's memory to put back to the values a machine that had
+    /// never run Photonz would have, before the walk starts.
+    public var forget: [PlaytestMemory]
+    /// Pictures to place in the capture folder for the length of the walk, so
+    /// the Library's Media shelf has them, and take away again afterwards.
+    /// Paths are relative to the script, or absolute.
+    public var captures: [String]
+
+    public init(forget: [PlaytestMemory] = [], captures: [String] = []) {
+        self.forget = forget
+        self.captures = captures
+    }
+
+    public var isEmpty: Bool { forget.isEmpty && captures.isEmpty }
+
+    /// The known keys, named in the error when a walk uses another one.
+    static let knownKeys = ["forget", "captures"]
+
+    init(fields raw: Any?) throws {
+        guard let raw, !(raw is NSNull) else {
+            self.init()
+            return
+        }
+        guard let fields = raw as? [String: Any] else {
+            throw PlaytestScriptError.invalidSetup(
+                field: "setup", reason: "must be an object holding \(Self.knownKeys.joined(separator: " and/or "))")
+        }
+        if let stray = fields.keys.sorted().first(where: { !Self.knownKeys.contains($0) }) {
+            throw PlaytestScriptError.invalidSetup(
+                field: stray, reason: "is not something setup can ask for; it takes "
+                    + Self.knownKeys.joined(separator: " and "))
+        }
+        let forget = try Self.words(fields["forget"], field: "forget").map { word -> PlaytestMemory in
+            guard let memory = PlaytestMemory(rawValue: word) else {
+                throw PlaytestScriptError.invalidSetup(
+                    field: "forget", reason: "names \"\(word)\", which is not something the app remembers; "
+                        + "it remembers " + PlaytestMemory.allCases.map(\.rawValue).joined(separator: ", "))
+            }
+            return memory
+        }
+        self.init(forget: forget, captures: try Self.words(fields["captures"], field: "captures"))
+    }
+
+    private static func words(_ raw: Any?, field: String) throws -> [String] {
+        guard let raw, !(raw is NSNull) else { return [] }
+        guard let list = raw as? [Any] else {
+            throw PlaytestScriptError.invalidSetup(field: field, reason: "must be an array")
+        }
+        return try list.map { entry in
+            guard let word = entry as? String, !word.trimmingCharacters(in: .whitespaces).isEmpty else {
+                throw PlaytestScriptError.invalidSetup(field: field, reason: "takes words, and none of them empty")
+            }
+            return word
+        }
+    }
+}
+
+/// One area of the app's memory a walk can ask to have forgotten before it
+/// starts. The probe keeps its settings between runs on purpose — that is what
+/// a person's app does — so a walk that changes one of these says which.
+public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
+    /// The font, size, weight and colour a new text block is made in.
+    case text
+    /// The recent colours and the foreground and background fills.
+    case color
+    /// The look a new shape, arrow or callout is drawn in: its paint, its
+    /// stroke, its corner radius and whether it has a fill at all.
+    case shapes
+    /// The Measure mode and the saved measure looks.
+    case measure
+    /// Which tool each family in the toolbar stands for, and the wand's reach.
+    case tools
+    /// Which groups in the layers list are open.
+    case groups
+    /// Whether the dock and the Library are showing, how wide the dock is, and
+    /// which shelf the Library is on.
+    case panel
 }
 
 /// A key the script can press, named the way a person would type it: a single

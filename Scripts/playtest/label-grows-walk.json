@@ -1,5 +1,9 @@
 {
   "out": "/tmp/photonz-playtest/label-grows",
+  "seed": "A label is typed, then its right edge is dragged in so the words re-wrap and the box grows down to hold them, and the same thing is done again by typing a width. The walk starts from the text settings a fresh machine would have, because the size a label is made in decides where its edge handle is, and a walk that dragged at a fixed point would miss it.",
+  "setup": {
+    "forget": ["text"]
+  },
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
     { "do": "wait", "seconds": 1 },

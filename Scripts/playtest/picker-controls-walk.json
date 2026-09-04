@@ -1,5 +1,9 @@
 {
   "out": "/tmp/photonz-playtest/picker-controls",
+  "seed": "A rectangle is drawn and its Fill colour picker opened, then every control inside the picker is pressed by the words on it. The walk starts from the shape and colour settings a fresh machine would have, because the look a shape is drawn in is remembered and decides whether there is a Fill colour to open at all.",
+  "setup": {
+    "forget": ["shapes", "color"]
+  },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1 },
@@ -15,7 +19,7 @@
       "note": "the picker is not open, so nothing of it is in the listing" },
 
     { "do": "press", "control": "Color", "in": "Fill" },
-    { "do": "wait", "seconds": 0.8 },
+    { "do": "wait", "seconds": 2.0 },
     { "do": "panel", "stage": "2-open" },
     { "do": "describe", "stage": "2-open",
       "note": "the picker is a window of its own on top of the panel, and its controls now stand in the same list as the panel's" },

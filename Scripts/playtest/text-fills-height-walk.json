@@ -170,7 +170,7 @@
     },
     {
       "do": "panelMenu",
-      "menu": "Top",
+      "menu": "Vertical",
       "shot": "6-vertical-menu",
       "choose": "Stretch"
     },
@@ -189,7 +189,7 @@
     },
     {
       "do": "panelMenu",
-      "menu": "Stretch",
+      "menu": "Vertical",
       "choose": "Top"
     },
     {

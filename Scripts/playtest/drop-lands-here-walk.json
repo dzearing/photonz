@@ -1,6 +1,9 @@
 {
   "out": "/tmp/photonz-playtest/drop-lands-here",
-  "seed": "The shelf tile comes from the Screenshots folder, so before running: cp \"Scripts/playtest/fixtures/Photonz drop probe.png\" ~/Pictures/Screenshots/ (and delete it again afterwards).",
+  "seed": "A picture is dragged off the Library shelf onto the canvas, then the same file is let go the way the Finder hands it over, to prove both land on the point rather than in the middle of the canvas. The shelf tile has to come from the capture folder, so the walk borrows it for the length of the run and gives it back after.",
+  "setup": {
+    "captures": ["fixtures/Photonz drop probe.png"]
+  },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
     { "do": "action", "action": "showMediaShelf" },
