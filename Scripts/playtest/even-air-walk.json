@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/even-air",
+  "seed": "A gap of 8 used to mean 8 between two shapes and about 12 between two lines of type, because the box around words carries a few points of empty room under them. The card is the proof: its picture, its title and the line under it are all one gap apart, so the step from the picture to the title looks like the step from the title to the body.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "dragTile", "tile": "Card", "to": [420, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-card", "note": "THE TEST: the card arrives with even air in it. Picture to title is the same space as title to the line under it, and the room under the last line is the room the card keeps at its edges." },
+    { "do": "snapshot", "name": "even-air-1-card" },
+    { "do": "render", "name": "even-air-1-card-doc" },
+    { "do": "click", "at": [420, 240] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-gap-says-8", "note": "the card's Layout section says Gap 8, which is now the number a person can measure between the words on it" },
+    { "do": "snapshot", "name": "even-air-2-gap-says-8" },
+    { "do": "panel", "stage": "2-gap-says-8" }
+  ]
+}

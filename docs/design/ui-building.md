@@ -1831,6 +1831,17 @@ the spacing was uneven the average wins, which is the tidy-up you were about to
 do by hand. The group's own anchor moves with its contents, so nothing on the
 canvas jumps at the moment you press it.
 
+**The gap is the space you can see.** A gap of 8 puts 8 points between two
+shapes, and it puts 8 points between two lines of type as well. That is not
+free: the box around a piece of text is measured a few points bigger than its
+words, so that antialiased edges never clip, and a flow that counted that room
+put 12 points on screen where the field said 8. The stack and the grid flow by
+the words instead, and hand each text box its spare room back on the far side
+where it sits inside the gap and nobody can see it. The same rule centres a
+label on its words rather than on its box, stretches it so the words reach the
+padding rather than stopping short of it, and reads a hand-spaced column back as
+the gap you would have measured with a ruler.
+
 **The flow owns one axis; the placement rules own the other.** A column stack
 decides every Y, and whether a row sits Left, Centre, Right or Stretch across is
 the same Horizontal menu that was already in this section, which any one layer

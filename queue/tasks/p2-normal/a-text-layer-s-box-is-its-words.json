@@ -1,0 +1,28 @@
+{
+  "id": "a-text-layer-s-box-is-its-words",
+  "title": "A text layer's box is its words",
+  "goal": "Select a piece of text and the box drawn round it sits a few points wider and taller than the words, because a measured text box carries empty room on its far edges so the letters never clip. Make what you select, what you measure and what the W and H fields say all be the words.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1150,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T17:59:19.735Z",
+  "updated": "2026-09-04T17:59:19.736Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "TextMeasurement.slack (4pt, = TextRasterizer.frameInset * 2) sits inside Layer.frame on the far edges. Layer.contentBounds already names the visible box and GroupFlow now flows by it (2026-09-04). Everything else - selection rendering, LayerGeometryEditing, Measure, snapping - still reads localBounds. Options: keep the slack in the frame and make the UI read contentBounds everywhere, or take the slack out of the frame entirely and have DocumentRenderer/TextRasterizer outset when rasterizing (bigger: needs a document migration or every saved text box re-wraps).",
+  "acceptance": [
+    "Selecting a label draws its box flush to the words on all four sides",
+    "The W and H fields for a label report the size of the words, and typing into them still wraps the words to that width",
+    "Measuring the space between two stacked labels with the caliper reads the same number as the stack's Gap",
+    "Nothing about how text renders changes: no line is clipped and no wrap moves"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T17:59:19.736Z",
+      "note": "created (manual)"
+    }
+  ]
+}

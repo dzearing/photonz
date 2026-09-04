@@ -107,12 +107,15 @@ struct TextRefitTests {
 
         let flowed = doc.layers[0].children
         let wrapped = flowed[0]
-        #expect(wrapped.frame.width == 140)
+        // Stretched across the stack means the WORDS span it: the box keeps
+        // the slack it measured with on past the far edge, where nobody can
+        // see it, so the wrap width is the room the stack actually offers.
+        #expect(wrapped.contentBounds.width == 140)
         #expect(wrapped.frame.height > label.frame.height)
         #expect(wrapped.frame.height >= neededHeight(wrapped))
         // The row under the label starts one gap below the label's new bottom,
         // not below the height it used to have.
-        #expect(flowed[1].frame.minY == wrapped.frame.maxY + 10)
+        #expect(flowed[1].frame.minY == wrapped.contentBounds.maxY + 10)
         #expect(flowed[2].frame.minY == flowed[1].frame.maxY + 10)
     }
 
@@ -137,7 +140,7 @@ struct TextRefitTests {
     @Test func aLabelToldToFillTheHeightTakesTheHeightOfTheRow() {
         let label = hugging("Save", placement: LayerPlacement(vertical: .stretch))
         let filled = rowHolding(label).layers[0].children[0]
-        #expect(filled.frame.height == 80)
+        #expect(filled.contentBounds.height == 80)
         // Its width is still the width of its words: only the axis it was told
         // to fill changed.
         #expect(filled.frame.width == label.frame.width)
@@ -196,10 +199,10 @@ struct TextRefitTests {
     @Test func fillingTheHeightSurvivesAReWrap() {
         let label = hugging("Save", placement: LayerPlacement(vertical: .stretch))
         var doc = rowHolding(label)
-        #expect(doc.layers[0].children[0].frame.height == 80)
+        #expect(doc.layers[0].children[0].contentBounds.height == 80)
         doc.updateLayer(id: doc.layers[0].children[0].id) { $0.name = "Label" }
         doc.reflowLayouts()
-        #expect(doc.layers[0].children[0].frame.height == 80)
+        #expect(doc.layers[0].children[0].contentBounds.height == 80)
     }
 
     /// A grid cell is a box too: a label told to fill it is as tall as the
@@ -212,7 +215,7 @@ struct TextRefitTests {
         var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600),
                                   layers: [Layer(name: "Grid", content: .group(content), frame: .zero)])
         doc.reflowLayouts()
-        #expect(doc.layers[0].children[0].frame.height == 90)
+        #expect(doc.layers[0].children[0].contentBounds.height == 90)
     }
 
     /// A document already carrying the choice opens exactly as it was saved.
@@ -245,7 +248,7 @@ struct TextRefitTests {
         let label = hugging("Save", placement: LayerPlacement(vertical: .stretch))
         var doc = rowHolding(label)
         let id = doc.layers[0].children[0].id
-        #expect(doc.layers[0].children[0].frame.height == 80)
+        #expect(doc.layers[0].children[0].contentBounds.height == 80)
         doc.setPlacement(id: id, vertical: .top)
         doc.reflowLayouts()
         #expect(doc.layers[0].children[0].frame.height == label.frame.height)
@@ -263,7 +266,7 @@ struct TextRefitTests {
         var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600),
                                   layers: [Layer(name: "Row", content: .group(content), frame: .zero)])
         doc.reflowLayouts()
-        #expect(doc.layers[0].children[0].frame.height == 80)
+        #expect(doc.layers[0].children[0].contentBounds.height == 80)
         doc.setContentPlacement(id: doc.layers[0].id, vertical: .top)
         doc.reflowLayouts()
         #expect(doc.layers[0].children[0].frame.height == label.frame.height)
@@ -330,11 +333,11 @@ struct TextRefitTests {
         let rows = copied.children
         #expect(rows.count == 3)
         let label = rows[0]
-        #expect(label.frame.width == 150)
+        #expect(label.contentBounds.width == 150)
         #expect(label.frame.height >= neededHeight(label))
         // The rows under it sit one gap below the label's NEW bottom, so the
         // longer wording pushed them down instead of running over them.
-        #expect(rows[1].frame.minY == label.frame.maxY + 10)
+        #expect(rows[1].frame.minY == label.contentBounds.maxY + 10)
         #expect(rows[2].frame.minY == rows[1].frame.maxY + 10)
         // ...and the original, which answered nothing, still says the short
         // thing on one line.

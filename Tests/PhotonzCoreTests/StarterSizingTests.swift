@@ -75,7 +75,7 @@ struct StarterSizingTests {
         // The words wrapped inside the room the card keeps, rather than
         // running out past its right-hand edge.
         #expect(grown.frame.minX == room.left)
-        #expect(grown.frame.maxX <= after.localBounds.width - room.right + 0.01)
+        #expect(words(grown).maxX <= after.localBounds.width - room.right + 0.01)
         #expect(grown.frame.height > title.frame.height)
         // The line under it came down by what the title gained instead of
         // being written over.
@@ -133,6 +133,26 @@ struct StarterSizingTests {
         #expect(picture.frame.minX == room.left)
         #expect(picture.frame.width == card.localBounds.width - room.horizontal)
         #expect(picture.frame.height < card.localBounds.height)
+    }
+
+    /// A card reads as one thing only if the air in it is even. The gap it is
+    /// built with has to mean the space between what a person can see, so the
+    /// step from the picture to the title looks like the step from the title
+    /// to the line under it.
+    @Test("A card breathes evenly: picture to title is the same air as title to body")
+    func theCardBreathesEvenly() {
+        let card = StarterComponents.layer(.card)
+        let gap = card.group?.layout?.usedGap ?? 0
+        guard let picture = piece(card, "Picture"), let title = piece(card, "Title"),
+              let body = piece(card, "Body") else {
+            Issue.record("no card pieces")
+            return
+        }
+        #expect(gap > 0)
+        #expect(title.frame.minY - picture.frame.maxY == gap)
+        #expect(body.frame.minY - words(title).maxY == gap)
+        #expect(card.localBounds.maxY - words(body).maxY
+                == (card.group?.layout?.usedPadding.bottom ?? 0))
     }
 
     /// Hiding the picture closes the space it held rather than leaving a gap:
@@ -195,7 +215,7 @@ struct StarterSizingTests {
         // The wording sits in from the left by the room the field keeps, and
         // reaches the room on the other side rather than its own last letter.
         #expect(placeholder.frame.minX == room.left)
-        #expect(placeholder.frame.width == before.localBounds.width - room.horizontal)
+        #expect(words(placeholder).width == before.localBounds.width - room.horizontal)
 
         reword(&history, placeholder.id,
                "Search for anything at all in this document", anchor: .stretch)
@@ -203,7 +223,7 @@ struct StarterSizingTests {
         guard let after = history.current.layer(id: fieldID),
               let wrapped = piece(after, "Placeholder") else { Issue.record("no field"); return }
         #expect(after.localBounds.width == before.localBounds.width)
-        #expect(wrapped.frame.maxX <= after.localBounds.width - room.right + 0.01)
+        #expect(words(wrapped).maxX <= after.localBounds.width - room.right + 0.01)
         #expect(after.localBounds.height >= before.localBounds.height)
         // The box around it grew by exactly what the words grew by.
         #expect(after.localBounds.height

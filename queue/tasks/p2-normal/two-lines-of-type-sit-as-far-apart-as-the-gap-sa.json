@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1140,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:45:28.020Z",
-  "updated": "2026-09-04T17:45:28.020Z",
+  "updated": "2026-09-04T17:59:38.256101Z",
   "deps": [],
   "blockedBy": [],
   "notes": "GroupFlow.arranged builds each Item from Layer.localBounds, while GroupFlow.size measures with Layer.contentBounds (localBounds minus TextMeasurement.slack, 4 points on the far edges). So the flow advances the cursor by the slack as well as the gap. Fixing it means the Item carrying both boxes: advance by the content box, hand the layer a target built from the full box. TextRefitTests.aStretchedLabelInAStackPushesTheRowsBelowItDown asserts the current arithmetic and will need updating. Found while giving the starter card its column stack (2026-09-04).",
@@ -22,6 +22,39 @@
     {
       "t": "2026-09-04T17:45:28.020Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T17:47:39.583Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T17:59:38.256101Z",
+      "note": "Adversarial review before building: the idea holds. A redlining tool whose own Gap field disagrees with its own caliper is the worst kind of wrong, and the fix is small. The one thing the task notes did not say: the same slack also pushed a centred label two points off centre and made a stretched label wrap four points early, so fixing the flow fixes three symptoms, not one. Shortest version that delivers it: Item flows by contentBounds and moved() hands the slack back, four lines of real change."
+    },
+    {
+      "t": "2026-09-04T17:59:38.256101Z",
+      "note": "Built it. GroupFlow.Item.box is now the visible box (Layer.contentBounds) everywhere - arranged, closedAround and the surface fill - and GroupFlow.moved takes the box a person can see and adds the layer's own slack back before setting the frame. GroupLayoutEditing reads contentBounds when it infers a layout off a hand-arranged group, so turning a column of labels into a stack still moves nothing."
+    },
+    {
+      "t": "2026-09-04T17:59:38.256101Z",
+      "note": "Tests first, all red before the change: 6 new in GroupLayoutTests (column, row, shapes unchanged, mixed stack, room under the last line, centring, grid rows) and 1 in StarterSizingTests (the card breathes evenly). Seven existing tests asserted the old arithmetic on a stretched or filled label's FRAME and now assert on its words: TextRefitTests x6, StarterSizingTests x2 lines. Full suite green, 3076 tests."
+    },
+    {
+      "t": "2026-09-04T17:59:38.256101Z",
+      "note": "Decided without a card: a label told to stretch now has its WORDS span the room, so its frame runs four points past the padding edge (invisible slack). The other reading left the words stopping four points short of the right padding while the left padding was exact, which is the same asymmetry this task exists to remove. It also wraps at the room the container really offers instead of four points less."
+    },
+    {
+      "t": "2026-09-04T17:59:38.256101Z",
+      "note": "Verified in the probe app, Screen Recording granted: dropped a Card starter, measured the render. Picture bottom 323, title box 331 (8), title bottom 350, body box 358 (8), body bottom 374, card inner bottom 386 (12 padding). The card is now 171 tall rather than 175. Capture at queue/audits/2026-09-04-even-air-1-card.png."
+    },
+    {
+      "t": "2026-09-04T17:59:38.256101Z",
+      "note": "Review of the built thing: one thing is now inconsistent and I could not fix it inside this task. A text layer's own box still carries the four points of slack, so selecting two stacked labels and measuring box to box reads 4 while the words are 8 apart. That was always wrong (the selection box always hung past the words) but the flow used to hide it. Filed as 'A text layer's box is its words' (p2-normal, ui-layout)."
+    },
+    {
+      "t": "2026-09-04T17:59:38.256101Z",
+      "note": "Documented in docs/design/ui-building.md under the stack and grid section: 'The gap is the space you can see.' Audit at queue/audits/2026-09-04-gap-means-visible-space.json."
     }
-  ]
+  ],
+  "started": "2026-09-04T17:47:39.583Z"
 }

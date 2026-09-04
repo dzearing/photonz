@@ -26,6 +26,14 @@ enum GroupFlow {
 
     /// One thing being placed: the box it occupies in the group's own space,
     /// and what it does on the axis the flow is NOT deciding.
+    ///
+    /// The box is the box a person can SEE (`Layer.contentBounds`), never the
+    /// layer's own frame, because a measured text box carries a few points of
+    /// empty room on its far edges. Flow by the frame and a gap of 8 between
+    /// two lines of type reads as 12, and a label centred beside a shape sits
+    /// two points off centre. `moved` hands the slack back when it puts the
+    /// layer at the box, so the words land where the flow put them and the box
+    /// still has the room its measurement asked for.
     struct Item {
         var box: CGRect
         var horizontal: PlacementSpan
@@ -137,7 +145,7 @@ enum GroupFlow {
             // wherever the room is bigger than the size the group was given,
             // and a shape with no height cannot be given one back.
             guard !rules[index].isSurface else { continue }
-            let current = children[index].localBounds
+            let current = children[index].contentBounds
             // A piece told to stretch takes the room inside the edges, which on
             // a hugging axis is exactly as much room as the rest of the
             // contents made.
@@ -254,7 +262,7 @@ enum GroupFlow {
         let taking = children.indices.filter { children[$0].isVisible && !rules[$0].isSurface }
         guard !taking.isEmpty else { return children }
         let items = taking.map { index in
-            Item(box: children[index].localBounds,
+            Item(box: children[index].contentBounds,
                  horizontal: rules[index].horizontal.span,
                  vertical: rules[index].vertical.span)
         }
@@ -272,19 +280,31 @@ enum GroupFlow {
         return out
     }
 
-    /// A layer put at a box. A move is a move — the layer is shifted, not
-    /// re-fitted — because a caliper's feet and an arrow's ends are remapped by
-    /// a resize and there is nothing to remap when only the corner changed.
-    private static func moved(_ layer: Layer, to box: CGRect,
+    /// A layer put at a box a person can see. A move is a move — the layer is
+    /// shifted, not re-fitted — because a caliper's feet and an arrow's ends
+    /// are remapped by a resize and there is nothing to remap when only the
+    /// corner changed.
+    ///
+    /// `visible` is what the flow decided, so it is measured in what can be
+    /// seen. The layer's own box is that plus whatever empty room it carries
+    /// beyond its content, which is nothing at all for everything but a
+    /// measured text box: put the words at the box and the slack goes on past
+    /// the far edges, into the gap, where it was always sitting and where
+    /// nobody can see it.
+    private static func moved(_ layer: Layer, to visible: CGRect,
                               fillingHeight: Bool = false) -> Layer {
         let current = layer.localBounds
+        let content = layer.contentBounds
+        let full = CGRect(x: visible.minX, y: visible.minY,
+                          width: visible.width + (current.width - content.width),
+                          height: visible.height + (current.height - content.height))
         // Nothing that HAS a size is ever squashed to none: a shape with no
         // height cannot be given one back (its own resize has nothing to scale
         // from), so a group keeping more room than the size it was given leaves
         // what is inside it a point rather than losing it for good.
-        let box = CGRect(x: box.minX, y: box.minY,
-                         width: current.width > 0 ? max(1, box.width) : box.width,
-                         height: current.height > 0 ? max(1, box.height) : box.height)
+        let box = CGRect(x: full.minX, y: full.minY,
+                         width: current.width > 0 ? max(1, full.width) : full.width,
+                         height: current.height > 0 ? max(1, full.height) : full.height)
         guard current != box else { return layer }
         guard current.size == box.size else {
             return layer.resized(to: box, fillingHeight: fillingHeight)

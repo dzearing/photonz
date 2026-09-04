@@ -65,8 +65,12 @@ extension PhotonzDocument {
             }
             return
         }
-        var boxes = layer.children.filter(\.isVisible).map(\.localBounds)
-        if boxes.isEmpty { boxes = layer.children.map(\.localBounds) }
+        // Read off the boxes a person can SEE, because that is what the gap
+        // this infers will mean once the stack flows: measure a column of
+        // labels by their frames and it comes back with a gap four points
+        // tighter than the one somebody spaced by eye.
+        var boxes = layer.children.filter(\.isVisible).map(\.contentBounds)
+        if boxes.isEmpty { boxes = layer.children.map(\.contentBounds) }
         var inferred = GroupLayout.inferred(from: boxes, kind: kind, container: container)
         // Everything a group already carries about how it flows is kept, so
         // turning a stack into a grid and back does not forget the gap.

@@ -19,6 +19,17 @@ struct GroupLayoutTests {
         Layer(name: name, content: .image(ImageRef(pixelSize: frame.size)), frame: frame)
     }
 
+    /// A text layer exactly as big as the words in it, which is what every
+    /// label on the canvas is: a measured box carrying a few points of slack on
+    /// its far edges that nobody can see.
+    private func label(_ string: String, _ origin: CGPoint = .zero,
+                       placement: LayerPlacement? = nil) -> Layer {
+        let content = TextContent(string: string, fontSize: 14)
+        return Layer(name: string, content: .text(content),
+                     frame: CGRect(origin: origin, size: TextMeasurement.size(of: content)),
+                     placement: placement)
+    }
+
     /// A plain group holding the boxes, with an optional layout on it.
     private func group(_ children: [Layer], layout: GroupLayout? = nil,
                        contents: LayerPlacement? = nil,
@@ -368,6 +379,92 @@ struct GroupLayoutTests {
             box("C", CGRect(x: 0, y: 60, width: 40, height: 20)),
         ], layout: GroupLayout(kind: .stack, direction: .column, gap: 10)))
         #expect(stacked.children.first { $0.name == "C" }?.frame.minY == 30)
+    }
+
+    // MARK: - The gap is the space you can see
+
+    /// The complaint this section answers: two lines of type with a gap of 8
+    /// between them read as about 12 on screen, because the box around words
+    /// carries a few points of empty room under them and the flow was
+    /// advancing by that room as well as by the gap. A gap means the space
+    /// between the things you can SEE.
+
+    @Test("Two labels in a column sit exactly the gap apart on screen")
+    func twoLabelsAreAsFarApartAsTheGapSays() {
+        let stacked = GroupFlow.flowing(group([
+            label("One"), label("Two", CGPoint(x: 0, y: 300)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 8)))
+        let rows = stacked.children
+        #expect(rows[1].frame.minY - rows[0].contentBounds.maxY == 8)
+        // The box each label keeps is still the box its words measured: the
+        // flow moved it, it did not squeeze the slack out of it.
+        #expect(rows[0].frame.size == label("One").frame.size)
+        #expect(rows[1].frame.size == label("Two").frame.size)
+    }
+
+    @Test("Two labels in a row sit exactly the gap apart on screen")
+    func twoLabelsAcrossAreAsFarApartAsTheGapSays() {
+        let stacked = GroupFlow.flowing(group([
+            label("One"), label("Two", CGPoint(x: 300, y: 0)),
+        ], layout: GroupLayout(kind: .stack, direction: .row, gap: 8)))
+        let cells = stacked.children
+        #expect(cells[1].frame.minX - cells[0].contentBounds.maxX == 8)
+    }
+
+    @Test("A stack of shapes keeps the spacing it always had")
+    func shapesAreUntouchedByTheWordRule() {
+        let stacked = GroupFlow.flowing(group([
+            box("A", CGRect(x: 0, y: 0, width: 60, height: 20)),
+            box("B", CGRect(x: 0, y: 200, width: 60, height: 30)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 8)))
+        #expect(frames(stacked) == [CGRect(x: 0, y: 0, width: 60, height: 20),
+                                    CGRect(x: 0, y: 28, width: 60, height: 30)])
+    }
+
+    @Test("A shape over a label, and a label over a shape, are both one gap apart")
+    func aMixedStackIsAGapApartEitherWay() {
+        let flowed = GroupFlow.flowing(group([
+            box("Picture", CGRect(x: 0, y: 0, width: 60, height: 40)),
+            label("Title", CGPoint(x: 0, y: 100)),
+            box("Rule", CGRect(x: 0, y: 300, width: 60, height: 2)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 8)))
+        let picture = flowed.children[0], title = flowed.children[1], rule = flowed.children[2]
+        #expect(title.frame.minY - picture.contentBounds.maxY == 8)
+        #expect(rule.frame.minY - title.contentBounds.maxY == 8)
+    }
+
+    @Test("A stack keeps the room at its far edge clear of the words, not of the slack")
+    func theRoomUnderTheLastLineIsTheRoomYouSee() {
+        var doc = document([group([
+            label("One"), label("Two", CGPoint(x: 0, y: 300)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 8, padding: 12))])
+        doc.reflowLayouts()
+        let stack = doc.layers[0]
+        let last = stack.children[1]
+        #expect(stack.localBounds.maxY - last.contentBounds.maxY == 12)
+    }
+
+    @Test("A label centred in a column is centred on its words")
+    func aCentredLabelIsCentredOnItsWords() {
+        let stacked = GroupFlow.flowing(group([
+            box("Wide", CGRect(x: 0, y: 0, width: 200, height: 20)),
+            label("Two", CGPoint(x: 0, y: 100)),
+        ], layout: GroupLayout(kind: .stack, direction: .column, gap: 8),
+           contents: LayerPlacement(horizontal: .center)))
+        let words = stacked.children[1].contentBounds
+        // Centred on the words, which is the same sum the flow does for a
+        // shape: half the room left over, rounded to a whole point.
+        #expect(words.minX == ((200 - words.width) / 2).rounded())
+    }
+
+    @Test("A grid of labels puts its rows a row gap apart on screen")
+    func aGridOfLabelsIsAGapApart() {
+        let grid = GroupFlow.flowing(group([
+            label("One"), label("Two", CGPoint(x: 200, y: 0)),
+            label("Three", CGPoint(x: 0, y: 300)), label("Four", CGPoint(x: 200, y: 300)),
+        ], layout: GroupLayout(kind: .grid, columns: 2, gap: 8, rowGap: 12)))
+        let cells = grid.children
+        #expect(cells[2].frame.minY - cells[0].contentBounds.maxY == 12)
     }
 
     // MARK: - The other axis is the placement rules we already have

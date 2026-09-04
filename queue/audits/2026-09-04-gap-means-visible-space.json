@@ -1,0 +1,27 @@
+{
+  "feature": "The gap is the space you can see",
+  "epic": "ui-layout",
+  "summary": "A stack's Gap now means the space between the things you can see, so two lines of type sit as far apart as the number says instead of a few points further. It used to count the empty room a measured text box carries under its words.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this is how every stack and grid flows now.",
+  "try": [
+    { "do": "Open a blank canvas and show the component shelf.", "shot": "2026-09-04-even-air-1-card.png" },
+    { "do": "Drag the Card tile onto the canvas." },
+    { "do": "Look at the three steps down it: picture to title, title to the line under it, line to the bottom edge." },
+    { "do": "Select the card and open the inspector: its Layout says Gap 8, Padding 12." },
+    { "do": "Measure the space between the title and the line under it with the caliper. It should read 8, not 12." },
+    { "do": "Draw two text layers, group them, set Arrangement to Stack and type a gap of 8." },
+    { "do": "Set the same gap on two rectangles and compare: the two pairs should sit the same distance apart." }
+  ],
+  "evaluate": [
+    "Does the card now read as one thing, with the same air above the title as below it?",
+    "When you type 8 into Gap, is 8 what you measure on screen between two labels?",
+    "Turning a column you spaced by hand into a stack still moves nothing, including a column of labels?",
+    "A title stretched across a card reaches the same distance from the right edge as from the left?",
+    "Is anything in your own documents noticeably tighter than it was, in a way you did not want?"
+  ],
+  "rough": [
+    "Documents made before today shift: any stack holding text closes up by about four points per text row. That is the fix, but it means an old file does not open pixel for pixel the same.",
+    "A text layer's own selection box still hangs about four points past its words on the right and the bottom, because that empty room lives in the layer's box. So selecting two stacked labels and measuring box to box now reads four rather than eight, even though the words are eight apart. Filed as its own task: the box a text layer shows should be its words.",
+    "The starter card got four points shorter, which is the same fix showing up in its height."
+  ]
+}

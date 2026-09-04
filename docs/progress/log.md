@@ -8279,3 +8279,43 @@ text field should get sizing of their own.
 
 **Open questions.** In the audit: whether anyone ever wants ONE copy to have its
 own padding, which is the feature this task deliberately did not build.
+
+## 2026-09-04 — The gap is the space you can see
+
+Two lines of type in a stack with a gap of 8 sat about 12 apart on screen. The
+box a piece of text is measured into carries four points of empty room on its
+far edges so antialiased letters never clip, and the flow was advancing its
+cursor by that room as well as by the gap: the app's own Gap field disagreed
+with the app's own caliper, in a tool whose whole job is measuring.
+
+`GroupFlow` now flows by the box a person can SEE. Every `Item` carries
+`Layer.contentBounds` rather than the layer's frame, `closedAround` reads the
+same box, and `moved` takes a visible box and hands the layer its own slack
+back on the far side before setting the frame, so the words land where the flow
+put them and the box keeps the room its measurement asked for. Two more
+symptoms of the same arithmetic went with it: a label centred beside a shape sat
+two points left of centre, and a label told to stretch wrapped four points early
+because it was handed a wrap width four short of the room it had.
+`GroupLayoutEditing` reads the same box when it infers a layout off a
+hand-arranged group, so turning a column of labels into a stack still moves
+nothing.
+
+TDD, red first: six new tests in `GroupLayoutTests` (column, row, shapes
+unchanged, a mixed stack either way, the room under the last line, centring on
+the words, grid rows) and one in `StarterSizingTests` — the starter card now
+breathes evenly, picture to title the same air as title to the line under it,
+and it came out four points shorter. Seven existing tests were asserting the old
+arithmetic on a stretched or filled label's FRAME and now assert on its words.
+3076 tests green. Walked in the probe app with
+`Scripts/playtest/even-air-walk.json`: measured off the render, 8 above the
+title and 8 below it, 12 of padding under the last line. Audit:
+`queue/audits/2026-09-04-gap-means-visible-space.json`.
+
+**Next.** The other half of the same slack: a text layer's own box still hangs
+four points past its words, so its selection rectangle and its W and H fields
+are four points generous, and measuring two stacked labels box to box now reads
+4 where the words are 8 apart. Queued as "A text layer's box is its words".
+
+**Open questions.** Old documents holding a stack of text close up by about four
+points per row when they are opened. That is the fix, but it is not a no-op on
+work somebody already saved.
