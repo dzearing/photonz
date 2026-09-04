@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T08:37:45.119Z",
-  "updated": "2026-09-04T08:37:45.120Z",
+  "updated": "2026-09-04T10:39:51.846Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing the canvas refusal on 2026-09-04. The canvas (CanvasNSView) is the innermost drag destination over the picture and now returns [] for a file CanvasFileDrop reads as .unsupported. Behind it sits SwiftUI's window wide _PlatformDraggingDestinationView from EditorView's .dropDestination(for: URL.self) (registered for public.data/public.item), which accepts anything and calls addImageLayerOrOpen, which silently does nothing for a non-picture. It is a sibling BEHIND the canvas, not an ancestor, so it never sees a drag over the picture (verified with a view tree dump in a probe walk). Fixing it means swapping .dropDestination for .onDrop(of:delegate:) with a validateDrop that checks hasItemsConforming(to: [.image, EditorState.photonzType]); check the history overlay thumbnail drag (CaptureThumbnailView uses NSItemProvider(contentsOf:), so it carries the image UTI) still lands. The new dragFile playtest step asks the whole destination chain and names the view that answered, so a walk can prove it.",
@@ -22,6 +22,28 @@
     {
       "t": "2026-09-04T08:37:45.120Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T10:20:45.488Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T10:39:51.813303Z",
+      "note": "Adversarial pass before building: mapped what the window actually answers today, by holding files at eight heights down the panel with a new window-space playtest point. Two different bugs sat behind the one report. Below the last section the window took ANY file and did nothing with it, which is the reported lie. Over the sections themselves the panel refused EVERYTHING, pictures included, because the layers panel's own section and row drop targets shadow the window destination and SwiftUI does not fall through to it. Only the first is this task; the second is older, is not a broken promise (the pointer says no and nothing happens, which is honest), and touching the layers reorder drag to fix it is real risk for a small gain, so it is filed as its own task."
+    },
+    {
+      "t": "2026-09-04T10:39:51.813303Z",
+      "note": "Built: EditorView's window-wide .dropDestination(for: URL.self) (registered for anything a URL can be read from) is now .onDrop(of: [.fileURL, .image, photonzType], delegate: WindowFileDrop), whose validateDrop asks hasItemsConforming(to: [.image, photonzType]). First attempt used .onDrop(of:perform:) with the picture types alone: the pointer was right but nothing landed, because SwiftUI hands perform a provider filtered to the MATCHING types only (types=[public.png], no file URL) so loadObject(ofClass: URL.self) returned nil. Registering .fileURL as well and gating in validateDrop keeps the refusal and gets the file back. Caught by the new release flag on dragFile, not by reading the code."
+    },
+    {
+      "t": "2026-09-04T10:39:51.813303Z",
+      "note": "Verified with Scripts/playtest/refused-file-panel-walk.json (7 holds, screen captures): text file, Package.swift and a folder all refused over the panel and over the strip beside the picture; a picture over the panel accepted and, on release, the layer count goes 1 to 2; a picture after the refusals still accepted. A .photonz package is still accepted over the panel and over the picture (checked in a throwaway walk with an empty package, since the pointer only reads the file type). Scripts/test.sh: 2910 tests pass."
+    },
+    {
+      "t": "2026-09-04T10:39:51.846Z",
+      "note": "The whole editor window now refuses a file it cannot use, not just the picture: EditorView's window-wide drop is a delegate gated on pictures and Photonz documents. Verified by Scripts/playtest/refused-file-panel-walk.json (text file, source file and folder refused over the panel and the chrome; a picture still lands, layer count 1 to 2) and Scripts/test.sh (2910 pass). Audit: queue/audits/2026-09-04-panel-refuses-file.json. Follow-up filed for pictures being refused over the panel's sections."
     }
-  ]
+  ],
+  "started": "2026-09-04T10:20:45.488Z",
+  "completed": "2026-09-04T10:39:51.846Z"
 }

@@ -126,7 +126,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [300, 200], "hold": "refused" } ] }
         """)
-        guard case .dragFile(let file, let at, let hold) = script.steps[0] else {
+        guard case .dragFile(let file, let at, let hold, _) = script.steps[0] else {
             Issue.record("dragFile"); return
         }
         #expect(file == "notes.txt")
@@ -136,12 +136,40 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("dragFile"))
     }
 
+    @Test("A dragFile step can let go, so a walk can prove the file landed")
+    func dragFileStepCanLetGo() throws {
+        let script = try decode("""
+        { "steps": [
+            { "do": "dragFile", "file": "shot.png", "at": [1050, 620], "space": "window", "release": true },
+            { "do": "dragFile", "file": "shot.png", "at": [1050, 620] }
+        ] }
+        """)
+        guard case .dragFile(_, _, _, let released) = script.steps[0],
+              case .dragFile(_, _, _, let held) = script.steps[1] else {
+            Issue.record("dragFile"); return
+        }
+        #expect(released)
+        #expect(!held)
+    }
+
+    @Test("A point can be given in window coordinates, for the chrome outside the picture")
+    func aPointCanBeInWindowSpace() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [1100, 200], "space": "window" } ] }
+        """)
+        guard case .dragFile(_, let at, _, _) = script.steps[0] else {
+            Issue.record("dragFile"); return
+        }
+        #expect(at.point == CGPoint(x: 1100, y: 200))
+        #expect(at.space == .window)
+    }
+
     @Test("A dragFile step can hold a file without taking a picture of it")
     func dragFileStepDoesNotNeedAHold() throws {
         let script = try decode("""
         { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [10, 10] } ] }
         """)
-        guard case .dragFile(_, _, let hold) = script.steps[0] else {
+        guard case .dragFile(_, _, let hold, _) = script.steps[0] else {
             Issue.record("dragFile"); return
         }
         #expect(hold == nil)

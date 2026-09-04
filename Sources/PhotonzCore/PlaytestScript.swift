@@ -148,9 +148,12 @@ public enum PlaytestModifier: String, CaseIterable, Hashable, Codable, Sendable 
 }
 
 /// Which coordinates a point is in: the document's pixels (top-left origin,
-/// what a person reads off the image) or the canvas view's points.
+/// what a person reads off the image), the canvas view's points, or the whole
+/// window's points, measured from its top-left corner — the only way to name a
+/// spot that is NOT on the picture, like the right hand panel or the bar above
+/// it.
 public enum PlaytestSpace: String, Hashable, Codable, Sendable {
-    case document, view
+    case document, view, window
 }
 
 public struct PlaytestPoint: Hashable, Sendable {
@@ -569,7 +572,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// is the only way a walk can record the no-entry pointer a text file or an
     /// archive gets. `file` is relative to the script, like `open`; `hold`
     /// names a picture taken while it is still in the air.
-    case dragFile(file: String, at: PlaytestPoint, hold: String?)
+    case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool)
     /// Render the window's content offscreen to `<out>/<name>.png`.
     ///
     /// `window` names another of the app's windows to photograph instead of the
@@ -781,7 +784,8 @@ public enum PlaytestStep: Sendable, Equatable {
                               hold: try f.optionalString("hold"))
         case "dragFile":
             self = .dragFile(file: try f.string("file"), at: try f.point("at"),
-                             hold: try f.optionalString("hold"))
+                             hold: try f.optionalString("hold"),
+                             release: try f.optionalFlag("release") ?? false)
         case "render":
             self = .render(name: try f.string("name"),
                            scale: CGFloat(try f.optionalNumber("scale") ?? 1))
@@ -856,6 +860,12 @@ public enum PlaytestStep: Sendable, Equatable {
             return value.doubleValue
         }
 
+        func optionalFlag(_ field: String) throws -> Bool? {
+            guard let raw = fields[field] else { return nil }
+            guard let value = raw as? NSNumber else { throw invalid(field, "must be true or false") }
+            return value.boolValue
+        }
+
         func point(_ field: String) throws -> PlaytestPoint {
             guard let pair = fields[field] as? [NSNumber], pair.count == 2 else {
                 throw invalid(field, "must be a pair of numbers, [x, y]")
@@ -863,7 +873,7 @@ public enum PlaytestStep: Sendable, Equatable {
             let space: PlaytestSpace
             if let rawSpace = fields["space"] {
                 guard let text = rawSpace as? String, let parsed = PlaytestSpace(rawValue: text) else {
-                    throw invalid("space", "must be document or view")
+                    throw invalid("space", "must be document, view or window")
                 }
                 space = parsed
             } else {

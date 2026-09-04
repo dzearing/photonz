@@ -1,0 +1,28 @@
+{
+  "id": "a-picture-dropped-on-the-panel-sections-is-refus",
+  "title": "A picture dropped on the panel sections is refused",
+  "goal": "Dropping a picture on the right hand panel adds it to the document, but only in the empty space below the last section. Over the Layers, Position and Size or Library sections the panel refuses it, so the same panel answers two different ways depending on how far down you let go.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1190,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T10:39:35.164Z",
+  "updated": "2026-09-04T10:39:35.165Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-04 while making the window refuse files it cannot use. Cause: the layers panel puts .onDrop(of: [.text], delegate: SectionDropDelegate) on every CollapsibleSection and .onDrop(of: [.text], delegate: LayerRowDropDelegate) on every row. SwiftUI routes a drag to the innermost drop target under the pointer and does NOT fall through to the window-wide destination behind it, so a picture over a section is refused by a delegate that only understands a section id. Mapped with Scripts/playtest/refused-file-panel-walk.json style steps: refused at window y<=320 with two layers, accepted below. Fix is probably to add [.image, EditorState.photonzType] to those two onDrop type lists and forward a picture to editorState.addImageLayerOrOpen, refusing anything else; decide first whether a picture dropped ON a layer row should insert at that position, which is a UX question worth asking.",
+  "acceptance": [
+    "Dragging a picture over any part of the right hand panel shows the copy pointer",
+    "Letting a picture go anywhere on the panel adds it as a layer, the same way the empty space below the sections already does",
+    "Dragging a layer row or a section header to reorder still works exactly as before",
+    "A scripted walk records a picture accepted over a section and over the empty space below it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T10:39:35.165Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -7874,3 +7874,43 @@ the old-style enlargement of the same patch stacked in one picture.
 
 Next / open: the Export dialog still says nothing about what 2x buys, and 3x is
 not offered. Both are questions for the user rather than gaps in this change.
+
+## 2026-09-04 — The whole window says no to a file it cannot use
+
+The picture already refused a text file, an archive or a folder while it was
+still in the air (the no-entry pointer, from `CanvasFileDrop`). The rest of the
+window did not: `EditorView` carried a window-wide
+`.dropDestination(for: URL.self)`, which registers for anything a URL can be
+read from, so a drag of any file at all over the right hand panel or the chrome
+promised a copy and then silently did nothing. It is now
+`.onDrop(of: [.fileURL, .image, EditorState.photonzType], delegate: WindowFileDrop)`,
+whose `validateDrop` asks `hasItemsConforming(to: [.image, photonzType])`. The
+file URL type has to stay registered even though it is not what decides the
+answer: SwiftUI hands `performDrop` a provider filtered to the types that
+matched, so gating on the picture types alone gets you a `public.png` item with
+no path and nothing lands. The first version of this change did exactly that,
+and the pointer looked right the whole time.
+
+Two harness additions made it provable. A playtest point can now be written in
+`"space": "window"` (down from the top-left corner), which is the only way to
+name a spot that is not on the picture; and `dragFile` takes `"release": true`,
+which lets go on whichever destination answered, so a walk can show a file
+LANDING rather than only being promised. `Scripts/playtest/refused-file-panel-walk.json`
+holds a text file, a source file and a folder over the panel and over the strip
+beside the picture (all refused), then drops a picture there and watches the
+layer count go from 1 to 2.
+
+Adversarial pass found a second, older bug behind the same report, and left it
+alone on purpose: over the panel's SECTIONS a picture is refused too, because
+each `CollapsibleSection` and each layer row carries its own `.onDrop(of: [.text])`
+for reordering and SwiftUI does not fall through to the window destination
+behind it. That one is honest (the pointer says no and nothing happens), and
+fixing it means touching the layers reorder drag, so it is filed as its own
+task with the mapping data.
+
+Audit: `queue/audits/2026-09-04-panel-refuses-file.json`. No render path
+touched, so no perf note.
+
+Next / open: whether a picture dropped on the panel should land in the middle of
+the canvas (what it does today) or at the top of the layers list is a question
+for the user, and it is on the audit.

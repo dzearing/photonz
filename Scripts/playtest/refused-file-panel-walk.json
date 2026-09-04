@@ -1,0 +1,28 @@
+{
+  "out": "/tmp/photonz-playtest/refused-file-panel",
+  "seed": "Nothing to set up: every file held over the window lives in the repo. Points are in window coordinates, measured down from the top-left corner, so they name spots that are NOT on the picture: the right hand panel, and the strip of chrome beside it.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1400, "canvasHeight": 1000, "width": 1180, "height": 860 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "0-panel-open" },
+
+    { "do": "dragFile", "file": "fixtures/Redline notes.txt", "at": [1050, 620], "space": "window", "hold": "1-text-file-over-panel" },
+    { "do": "describe", "stage": "1-text-file-over-panel", "note": "a text file held over the right hand panel: the window refuses it and the pointer shows the no-entry sign. Before this task it promised a copy and then nothing happened on release" },
+
+    { "do": "dragFile", "file": "../../Package.swift", "at": [1050, 800], "space": "window", "hold": "2-source-file-over-panel" },
+    { "do": "describe", "stage": "2-source-file-over-panel", "note": "any other file the app cannot place reads the same way, anywhere down the panel" },
+
+    { "do": "dragFile", "file": "../../Sources", "at": [1050, 620], "space": "window", "hold": "3-folder-over-panel" },
+    { "do": "describe", "stage": "3-folder-over-panel", "note": "a folder is refused too, the way the picture itself already refuses one" },
+
+    { "do": "dragFile", "file": "fixtures/Redline notes.txt", "at": [917, 400], "space": "window", "hold": "4-text-file-beside-picture" },
+    { "do": "describe", "stage": "4-text-file-beside-picture", "note": "the strip of chrome between the picture and the panel answers the same, so there is no corner of the window left that promises something it will not do" },
+
+    { "do": "dragFile", "file": "fixtures/Photonz drop probe.png", "at": [1050, 620], "space": "window", "hold": "5-picture-over-panel", "release": true },
+    { "do": "snapshot", "name": "6-picture-landed" },
+    { "do": "describe", "stage": "5-picture-over-panel", "note": "a picture over the same spot is still taken, and letting go there adds it as a layer: the state line after this step counts one more layer than the step before it" },
+
+    { "do": "dragFile", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [1050, 830], "space": "window", "hold": "7-picture-still-accepted" },
+    { "do": "describe", "stage": "7-picture-still-accepted", "note": "and a picture straight after four refusals and a drop is taken normally, in the panel below the sections, so nothing about a refused file poisons the next drag" }
+  ]
+}

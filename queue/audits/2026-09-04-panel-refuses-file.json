@@ -1,0 +1,26 @@
+{
+  "feature": "The window refuses a file it cannot use",
+  "epic": "ui-building",
+  "summary": "Dragging a text file, a source file, an archive or a folder anywhere in an editor window now shows the no-entry pointer, instead of promising a copy over the panel and the chrome and then silently doing nothing. Pictures and Photonz documents are taken exactly as before.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. You need a Finder window beside Photonz with a picture and a text file in it.",
+  "try": [
+    { "do": "Open any picture in Photonz, so the right hand panel is showing." },
+    { "do": "Drag a .txt file from the Finder over the middle of the picture and watch the pointer. It says no, as it already did." },
+    { "do": "Without letting go, keep dragging right, onto the empty part of the right hand panel below the last section." },
+    { "do": "Watch the pointer there. It should keep saying no, and letting go should do nothing." },
+    { "do": "Do the same with a folder, and with a .zip." },
+    { "do": "Now drag a PNG onto that same empty part of the panel and let go. It lands as a new layer.", "shot": "2026-09-04-panel-refuses-file.png" },
+    { "do": "Drag a .photonz document onto the panel and let go. It opens in its own window." }
+  ],
+  "evaluate": [
+    "Does the pointer read the same over the panel as it does over the picture, so the window answers with one voice?",
+    "Was the old behavior actually confusing to you, or did you never notice it?",
+    "Dropping a picture on the panel adds it to the middle of the picture. Is that what you expect, or should a picture dropped on the panel land somewhere else, like the top of the layers list?",
+    "Over the panel's SECTIONS (Layers, Position and Size, Library) a picture is refused too, and only the empty space below them takes one. Is that worth fixing?"
+  ],
+  "rough": [
+    "A picture is only accepted over the part of the panel BELOW the last section. Over the sections themselves the panel's own row-and-section reordering swallows the drag and refuses everything, pictures included. That was already true before this task and this change does not touch it, but it makes the panel read as two different surfaces. Filed as its own task.",
+    "No screenshot here shows the no-entry pointer. An unmanned run drives a drag by handing the window the same calls a real drag makes, and the pointer picture itself lives in the window server, so there is nothing to photograph. What the walk records instead is the answer the window gave, which is what decides the pointer. The screenshot shows the picture that landed after the drop.",
+    "The very top strip of the window (the title bar) takes no drops at all and never did, so a file let go there does nothing. That is the same as most Mac apps and was left alone."
+  ]
+}

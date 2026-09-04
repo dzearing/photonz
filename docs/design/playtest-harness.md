@@ -99,9 +99,13 @@ script; a relative path is relative to the script):
 ```
 
 Points are in **document units** (what the `open` log line reports, for a 2x
-capture that is device pixels) unless a step says `"space": "view"`. The
-`open` entry in the log states the document size and pixel scale so you can
-read coordinates straight off the fixture.
+capture that is device pixels) unless a step says `"space": "view"` (the canvas
+view's own points) or `"space": "window"` (the whole window, measured down from
+its top-left corner). Window space is the only way to name a spot that is NOT on
+the picture, like the right hand panel or the chrome beside it; the `blank` and
+`open` log lines report the window size and the canvas size, so you can work out
+where the panel starts. The `open` entry also states the document size and pixel
+scale so you can read coordinates straight off the fixture.
 
 | `do` | fields | what happens |
 | --- | --- | --- |
@@ -122,7 +126,7 @@ read coordinates straight off the fixture.
 | `waitFor` | `condition`, optional `value`, `timeout` | Polls until `edgeMap` (element detection done), `captionField` (a caption field has the keyboard), `tool` = `value`, or `measureMode` = `value`. Times out as a failure. |
 | `dragComponent` | `at` | Holds the component picked on the Library shelf over a point WITHOUT letting go, so a `snapshot` taken next photographs the landing box and the dashed frame it would join. The log line says what the canvas answered: whether it would place a copy or refuse, how big the box is, and whether it is joining a frame. A synthesized mouse drag cannot start a real drag session, so this is the only way to see a component drag in flight. |
 | `dropComponent` | `at` | Lets go of the component picked on the Library shelf at a point, the way dropping its tile on the canvas does, through the same pasteboard the real drag writes. |
-| `dragFile` | `file`, `at`, `hold` | Holds a file over the canvas at a point WITHOUT letting go (path relative to the script or absolute). The log line says what the canvas answered: that it would place a copy, or that it refuses the file and the pointer shows the no-entry sign, which is the only way a walk can record a refusal, since letting go of a refused file does nothing to see. `hold` names a picture taken while it is in the air. |
+| `dragFile` | `file`, `at`, optional `space` `hold` `release` | Holds a file over a point WITHOUT letting go (path relative to the script or absolute). The log line says what answered: that it would place a copy, or that it refuses the file and the pointer shows the no-entry sign, which is the only way a walk can record a refusal, since letting go of a refused file does nothing to see. It names every destination the drag was offered to, innermost first, and the one that took it, so a walk can tell the picture's answer from the window's. With `"space": "window"` the point can be anywhere in the window, not just on the picture. `hold` names a picture taken while it is in the air. `release` lets go on the view that answered, so a step can prove a file the pointer promised actually lands rather than only that it was promised. |
 | `dropImage` | `file`, `at`, `hold` | Lets go of a file over the canvas at a point, the way one arrives from the Finder (path relative to the script or absolute). The picture lands where you let go, fitted to the frame under the pointer or to the canvas. `hold` names a picture taken while the file is still in the air, which is the only moment the landing outline exists. |
 | `snapshot` | `name`, optional `window` | Renders the window's content offscreen to `<name>.png`. While a sheet is up the SHEET is what gets photographed, since that is what a person is looking at. When the probe holds Screen Recording it also writes `<name>-sc.png`, the window as the screen shows it; read that one for anything judged by color or weight (see below). `window` names another of the app's windows to photograph instead, by its title ("Capture History"), which is the only way to picture a floating panel. |
 | `render` | `name` | Composites the document itself to `<name>.png`. |

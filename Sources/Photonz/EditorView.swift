@@ -3,6 +3,52 @@ import PhotonzCore
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// What the window takes when a file is let go anywhere except on the picture
+/// itself: the panel, the bar, the chrome around the edges.
+///
+/// Only pictures and Photonz documents are taken. Everything else — a text
+/// file, an archive, a folder — is refused while it is still in the air, so the
+/// pointer shows the no-entry sign over the whole window exactly as it already
+/// does over the picture. The window used to take any file at all, promise a
+/// copy, and then silently do nothing with it.
+///
+/// It registers for file URLs as well, because that is the type the file itself
+/// arrives as: without it the drop would be handed a picture with no name and
+/// no path, and a Photonz document could not be opened at all.
+private struct WindowFileDrop: DropDelegate {
+    let editorState: EditorState
+
+    func validateDrop(info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: [.image, EditorState.photonzType])
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: validateDrop(info: info) ? .copy : .forbidden)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        guard validateDrop(info: info),
+              let provider = info.itemProviders(for: [.fileURL]).first else { return false }
+        Task { @MainActor in
+            guard let url = await Self.fileURL(from: provider) else { return }
+            editorState.addImageLayerOrOpen(at: url)
+        }
+        return true
+    }
+
+    /// The file a drag is carrying. The provider answers on a queue of its own,
+    /// so this waits for it rather than blocking the pointer. Nil when the item
+    /// turns out not to be a file after all, which is the same as dropping
+    /// nothing.
+    @MainActor private static func fileURL(from provider: NSItemProvider) async -> URL? {
+        await withCheckedContinuation { continuation in
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                continuation.resume(returning: url)
+            }
+        }
+    }
+}
+
 struct EditorView: View {
     @Environment(EditorState.self) private var editorState
     /// Capture/history live on the resident agent now; the in-editor history
@@ -177,13 +223,11 @@ struct EditorView: View {
                 if scoped { url.stopAccessingSecurityScopedResource() }
             }
         }
-        // Drop an image (history overlay thumbnail, Finder file, …): into an
-        // open document it becomes a new layer; otherwise it opens as a document.
-        .dropDestination(for: URL.self) { urls, _ in
-            guard let url = urls.first else { return false }
-            editorState.addImageLayerOrOpen(at: url)
-            return true
-        }
+        // Drop an image (history overlay thumbnail, Finder file, …) anywhere in
+        // the window that is not the picture itself: into an open document it
+        // becomes a new layer; otherwise it opens as a document.
+        .onDrop(of: [.fileURL, .image, EditorState.photonzType],
+                delegate: WindowFileDrop(editorState: editorState))
         // Finder double-click / `open` with a document (image or .photonz).
         .onOpenURL { editorState.openImage(at: $0) }
         .sheet(isPresented: $editorState.isResizeDialogPresented) {

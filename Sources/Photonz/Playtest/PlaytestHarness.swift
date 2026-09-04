@@ -492,7 +492,7 @@ private final class Run {
                  "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
                  state: describe())
 
-        case .dragFile(let file, let at, let hold):
+        case .dragFile(let file, let at, let hold, let release):
             // A file held over the canvas with the button still down, so the
             // step can write down the answer the pointer is showing. It is the
             // only way to record a refusal: letting go of a file the canvas
@@ -510,8 +510,7 @@ private final class Run {
                 throw Failure(description: "\(url.lastPathComponent) cannot be carried on a drag")
             }
             let board = try await PlaytestPanelDrag.pasteboard(from: provider, named: "file")
-            let viewPoint = try self.viewPoint(at)
-            let windowPoint = canvas.convert(viewPoint, to: nil)
+            let windowPoint = try self.windowPoint(at)
             let info = PlaytestDraggingInfo(pasteboard: board,
                                             location: windowPoint,
                                             window: window)
@@ -545,6 +544,15 @@ private final class Run {
                 await screenCapture(window, name: hold)
                 held = ", held \(hold).png"
             }
+            // Letting go, when the walk asked for it: the drag goes down on the
+            // very view that answered, so a step can prove a file the pointer
+            // promised actually lands, not just that it was promised.
+            var landed = ""
+            if release, operation != [], let taker = chain.first(where: { $0.draggingUpdated(info) != [] }) {
+                let took = taker.performDragOperation(info)
+                await sleep(0.4)
+                landed = took ? ", let go and \(type(of: taker)) took it" : ", let go and nothing took it"
+            }
             for view in chain { view.draggingExited(info) }
             await sleep(0.1)
             let answer = operation.contains(.copy)
@@ -555,7 +563,7 @@ private final class Run {
                 ?? "no landing box"
             note(number, step.name,
                  "\(url.lastPathComponent) held over \(short(at.point)) \(at.space.rawValue): \(answer), \(shown)"
-                    + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)",
+                    + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)\(landed)",
                  state: describe())
 
         case .snapshot(let name, let wanted):
@@ -1688,7 +1696,24 @@ private final class Run {
         case .document:
             guard let viewport = try requireEditor().viewport else { throw Failure(description: "the editor has no viewport yet") }
             return viewport.viewPoint(fromDocument: at.point)
+        case .window:
+            return try requireCanvas().convert(windowPoint(at), from: nil)
         }
+    }
+
+    /// The same point in WINDOW coordinates, which is the space a drag is
+    /// offered in. A window-space point is written the way a person reads the
+    /// window — down from the top-left corner — and turned here into the
+    /// bottom-left origin AppKit hands a destination.
+    private func windowPoint(_ at: PlaytestPoint) throws -> CGPoint {
+        guard case .window = at.space else {
+            return try requireCanvas().convert(viewPoint(at), to: nil)
+        }
+        guard let content = try requireWindow().contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let y = content.isFlipped ? at.point.y : content.bounds.height - at.point.y
+        return content.convert(CGPoint(x: at.point.x, y: y), to: nil)
     }
 
     /// The same point in DOCUMENT coordinates, which is the space a drop
@@ -1697,9 +1722,9 @@ private final class Run {
         switch at.space {
         case .document:
             return at.point
-        case .view:
+        case .view, .window:
             guard let viewport = try requireEditor().viewport else { throw Failure(description: "the editor has no viewport yet") }
-            return viewport.documentPoint(fromView: at.point)
+            return viewport.documentPoint(fromView: try viewPoint(at))
         }
     }
 
