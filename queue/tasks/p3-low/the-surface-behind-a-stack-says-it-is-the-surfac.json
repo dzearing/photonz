@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 1210,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:45:33.370Z",
-  "updated": "2026-09-04T22:01:39.422944Z",
+  "updated": "2026-09-04T22:02:00.012Z",
   "deps": [],
   "blockedBy": [],
   "notes": "ArrangementInspector summarises each child by the cross axis only inside a stack, so a child resolving to stretch on both axes reads as Stretch across, identical to the rows around it. ResolvedPlacement.isSurface already knows the answer. Seen on the starter Card after it became a column stack (2026-09-04).",
@@ -34,7 +34,12 @@
     {
       "t": "2026-09-04T22:01:39.422944Z",
       "note": "Shipped. Core: PlacementOverride carries isSurface and reads 'Surface behind the rest'; contentsWithTheirOwnPlacement now resolves each child against the group's own default before asking the flow, so a piece that is the surface only because the group supplies the other stretch is listed too; new PlacementEditing(arrangement:placing:) says the flow owns neither direction of a piece it is not arranging. App: PlacementInspector uses it for the child rows and the Contents rows, and a surface's caption says what it is. Nine new tests in LayerPlacementTests, 3133 pass. Verified in the probe app with Scripts/playtest/surface-in-a-stack-walk.json (real window captures, Screen Recording granted): a column stack lists 'Rectangle - Surface behind the rest'; selecting it shows Horizontal Stretch and Vertical Stretch as live menus with the surface sentence under them and no Clear Stretch; the same three pieces in a Free group still read 'Stretch both ways'. Ran inert-rule-walk.json as a regression: a genuinely dead rule still says 'Set by the stack' and still offers Clear Stretch. No new control - the surface's Vertical is the same menu every other layer has, restored where it was wrongly frozen, and a misleading Clear link was removed. Audit at queue/audits/2026-09-04-surface-in-a-stack.json."
+    },
+    {
+      "t": "2026-09-04T22:02:00.011Z",
+      "note": "In a stack or a grid, the piece stretched both ways is now listed as 'Surface behind the rest' instead of reading like the rows around it, and selecting it explains what it is rather than offering to clear the Stretch that puts it there. Core in LayerPlacement.swift (PlacementOverride.isSurface, PlacementEditing(arrangement:placing:)), app in PlacementInspector.swift. 3133 tests pass; verified in the probe app with a new playtest walk plus inert-rule-walk as a regression. Audit: queue/audits/2026-09-04-surface-in-a-stack.json"
     }
   ],
-  "started": "2026-09-04T21:50:13.483Z"
+  "started": "2026-09-04T21:50:13.483Z",
+  "completed": "2026-09-04T22:02:00.012Z"
 }
