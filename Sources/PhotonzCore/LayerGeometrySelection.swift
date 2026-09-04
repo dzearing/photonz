@@ -74,8 +74,9 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         }
     }
 
-    /// What the field shows in place of a number when the layers differ.
-    public static let mixedText = "Mixed"
+    /// What the field shows in place of a number when the layers differ. One
+    /// word for the whole app, so no two controls can spell it differently.
+    public static let mixedText = MixedValue.text
 
     public let members: [Member]
 

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:39.562Z",
-  "updated": "2026-09-04T12:09:39.562Z",
+  "updated": "2026-09-04T21:26:07.304Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Evidence: queue/audits/2026-09-04-type-menu-labels.json rough 1 (\"The word Mixed sits in the menu at full strength, while a Mixed readout on an Effects slider is dimmed. Matching them would need the closed menus own text styled, which AppKit does not hand over cheaply, so it is left as is\") and rough 2 (the alignment rows go blank on a mixed selection and say nothing at all, which is a third answer). AppKit will not style a closed pop-up buttons title cheaply, so the likely answer is to match the menu rather than dim it, or to draw the title. docs/design/mocks/shared/UX-PATTERNS.md line 244 says a row answers Mixed but never says what Mixed looks like.",
@@ -25,6 +25,40 @@
     {
       "t": "2026-09-04T12:09:39.562Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T20:58:03.440Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T21:25:57.544136Z",
+      "note": "Adversarial review before building. Counted what the panel actually does today: a menu says Mixed at full strength (measured 236 of 236 in a real capture), a slider two steps down (tertiary), a field one step down (secondary), the Layout padding box as a placeholder (paler again), the colour rows one step down, and the alignment rows say nothing at all. Six sites, four different answers. Rejected the note's suggestion to match the menu upward: Mixed is not a value someone chose, four of the six sites already read it quieter, and the platform's own inspectors treat it as a placeholder. Rejected 'one step quieter than whatever THIS control's value is' too, which is the rule the code had accidentally grown into: it is defensible but it is not what the task asked for, since the word then appears at three brightnesses down one panel."
+    },
+    {
+      "t": "2026-09-04T21:25:57.544136Z",
+      "note": "Rule picked and written down: one word (MixedValue.text, PhotonzCore), one weight (MixedLook.style = secondary), in the value's own place, and a control with no room for a word says it beside its caption. Never absent. Now in docs/design/mocks/shared/UX-PATTERNS.md section 4."
+    },
+    {
+      "t": "2026-09-04T21:25:57.544136Z",
+      "note": "The menu was the risky part: AppKit draws a closed pop-up's title itself. Tried .foregroundStyle on the Picker, built it, photographed it: no effect, the word stayed white. Styling the Text on the tag DOES reach the closed title. So the menu now dims without drawing the title by hand and without giving up the pop-up look."
+    },
+    {
+      "t": "2026-09-04T21:25:57.544136Z",
+      "note": "First build put the alignment row's Mixed at the trailing edge, to line up with the slider readout above it. Photographed it and it was wrong: Across and Down are two columns on one line, so it read 'Across      Mixed  Down' and said nothing about which of the two differs. Moved beside its own caption."
+    },
+    {
+      "t": "2026-09-04T21:25:57.544136Z",
+      "note": "Two harness capabilities were needed to VERIFY rather than assume, and both are worth keeping: a style slider is now pressable ({\"control\":\"Slider\",\"in\":\"Corner Radius\"}), and a segmented picker whose segments are pictures is named by what the system calls the picture (align left/center/right). Both are documented in docs/design/playtest-harness.md."
+    },
+    {
+      "t": "2026-09-04T21:25:57.544136Z",
+      "note": "Verified in the probe with Screen Recording granted, Scripts/playtest/mixed-one-look-walk.json and mixed-padding-walk.json. In one capture a field, a colour chip, a slider, a menu and a segmented row all say Mixed. Measured off the capture: every one is secondaryLabelColor, and the small luminance differences (158 in a field, 169 on a slider and a caption, 172 in a menu, 204 on the colour chip) are the different surfaces behind the word, not different styles. Setting a value from each Mixed control in turn reached both labels: size 32 x2, across center x2, cornerRadius 11 x2, and both widths landed together. Typing 12 straight over the word in the padding box set all four sides. Scripts/test.sh green, 3116 tests."
+    },
+    {
+      "t": "2026-09-04T21:26:07.303Z",
+      "note": "One word, one weight, in the value's own place: Mixed now reads the same in a menu, a slider, a field, a colour chip and a segmented row. New MixedValue (PhotonzCore) and MixedLook (app) hold the word and the weight; the rule is in UX-PATTERNS section 4. Verified in the probe with Screen Recording granted (Scripts/playtest/mixed-one-look-walk.json, mixed-padding-walk.json): one capture shows all five kinds saying it, every one measured as secondaryLabelColor, and a value set from each in turn reached both picked layers. Audit queue/audits/2026-09-04-mixed-one-look.json. Scripts/test.sh green, 3116 tests."
     }
-  ]
+  ],
+  "started": "2026-09-04T20:58:03.440Z",
+  "completed": "2026-09-04T21:26:07.304Z"
 }

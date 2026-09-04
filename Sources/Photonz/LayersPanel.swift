@@ -2263,8 +2263,7 @@ struct LayerStyleSlider: View {
                 Spacer()
                 Text(reading.isMixed ? LayerStyleSelection.mixedText : format(knob))
                     .font(.caption.monospacedDigit())
-                    .foregroundStyle(reading.isMixed ? AnyShapeStyle(.tertiary)
-                                                     : AnyShapeStyle(.secondary))
+                    .foregroundStyle(MixedLook.style(reading.isMixed, otherwise: .secondary))
             }
             Slider(value: Binding(
                 get: { knob },
@@ -2274,6 +2273,10 @@ struct LayerStyleSlider: View {
             }
             .controlSize(.small)
             .disabled(layerIDs.isEmpty)
+            // Named so a walk can move it: a press lands in the middle of the
+            // track, which is what putting the knob there by hand does. Without
+            // this, everything in Effects could be photographed and never used.
+            .playtestControl("Slider", detail: label)
         }
         // The row lends its word to whatever sits on it, so the revert arrow on
         // a Blur row reads as Blur's and not as the Border row's.
@@ -2420,8 +2423,7 @@ private struct CornerRadiusRow: View {
                 Spacer()
                 Text(showsMixed ? LayerStyleSelection.mixedText : points(knob))
                     .font(.caption.monospacedDigit())
-                    .foregroundStyle(showsMixed ? AnyShapeStyle(.tertiary)
-                                                : AnyShapeStyle(.secondary))
+                    .foregroundStyle(MixedLook.style(showsMixed, otherwise: .secondary))
             }
             Slider(value: Binding(
                 get: { knob },
@@ -2436,6 +2438,7 @@ private struct CornerRadiusRow: View {
             }
             .controlSize(.small)
             .disabled(ids.isEmpty)
+            .playtestControl("Slider", detail: "Corner Radius")
         }
         .playtestField("Corner Radius")
     }
@@ -2478,8 +2481,7 @@ private struct ShapeSlider: View {
                 Spacer()
                 Text(showsMixed ? LayerStyleSelection.mixedText : format(knob))
                     .font(.caption.monospacedDigit())
-                    .foregroundStyle(showsMixed ? AnyShapeStyle(.tertiary)
-                                                : AnyShapeStyle(.secondary))
+                    .foregroundStyle(MixedLook.style(showsMixed, otherwise: .secondary))
             }
             Slider(value: Binding(
                 get: { knob },
@@ -2494,7 +2496,9 @@ private struct ShapeSlider: View {
             }
             .controlSize(.small)
             .disabled(layerIDs.isEmpty)
+            .playtestControl("Slider", detail: label)
         }
+        .playtestField(label)
     }
 }
 
@@ -2647,7 +2651,7 @@ struct TextInspector: View {
         let across = selection.reading { $0.usedAlignment }
         let down = selection.reading { $0.usedVerticalAlignment }
         return HStack(alignment: .top, spacing: 8) {
-            captioned("Across") {
+            captioned("Across", isMixed: across.isMixed) {
                 Picker("Words across the box", selection: Binding<TextAlign?>(
                     get: { across.isMixed ? nil : across.value },
                     set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
@@ -2660,7 +2664,7 @@ struct TextInspector: View {
                       ? "The picked layers sit their words differently across the box. Choosing one sets all of them."
                       : "Where the words sit across the box")
             }
-            captioned("Down") {
+            captioned("Down", isMixed: down.isMixed) {
                 Picker("Words down the box", selection: Binding<TextVerticalAlign?>(
                     get: { down.isMixed ? nil : down.value },
                     set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
@@ -2680,10 +2684,27 @@ struct TextInspector: View {
     /// this dock labels things. Both alignment controls show nothing picked
     /// when the layers differ, so without a caption a blank row of buttons
     /// cannot say which of the two is the one that differs.
+    ///
+    /// And the caption is where the word Mixed goes, because a row of picture
+    /// buttons has nowhere else to put it: lighting no segment says the layers
+    /// differ and says a value was never set in exactly the same way, and those
+    /// are different answers.
+    ///
+    /// It sits right after the row's own word rather than out at the trailing
+    /// edge, where a slider's readout sits. Across and Down are two columns on
+    /// one line, and a trailing Mixed lands hard against the next column's
+    /// caption: the first build of this read "Across      Mixed  Down", which
+    /// says nothing about which of the two differs. Beside its own word it can
+    /// only mean one of them.
     @ViewBuilder private func captioned<Content: View>(_ label: String,
+                                                       isMixed: Bool = false,
                                                        @ViewBuilder _ content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 6) {
+                Text(label).font(.caption).foregroundStyle(.secondary)
+                if isMixed { MixedWord() }
+                Spacer(minLength: 0)
+            }
             content()
         }
         .playtestField(label)
@@ -2734,7 +2755,15 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
                 get: { reading.isMixed ? nil : reading.value },
                 set: { if let value = $0 { choose(value) } })) {
                 if reading.isMixed {
-                    Text(LayerStyleSelection.mixedText).tag(Value?.none)
+                    // A closed pop-up button draws its own title, and
+                    // `.foregroundStyle` on the Picker does not reach it (tried
+                    // in the probe and photographed: the word stayed white).
+                    // Styling the Text on the row does reach it, which is the
+                    // only way this menu can say Mixed at the same strength the
+                    // field and the slider beside it do.
+                    Text(LayerStyleSelection.mixedText)
+                        .foregroundStyle(MixedLook.style)
+                        .tag(Value?.none)
                 }
                 ForEach(options, id: \.self) { option in
                     Text(title(option)).tag(Value?.some(option))

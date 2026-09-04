@@ -70,8 +70,9 @@ public struct LayerStyleSelection: Hashable, Sendable {
         }
     }
 
-    /// What a row shows in place of a number when the layers differ.
-    public static let mixedText = "Mixed"
+    /// What a row shows in place of a number when the layers differ. One
+    /// word for the whole app, so no two controls can spell it differently.
+    public static let mixedText = MixedValue.text
 
     public let members: [Member]
     /// How many layers are picked altogether, including the ones this row

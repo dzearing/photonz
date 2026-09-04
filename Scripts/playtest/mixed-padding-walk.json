@@ -1,0 +1,179 @@
+{
+  "out": "/tmp/photonz-playtest/mixed-padding",
+  "seed": "Two labels are stacked into a group and then given different room on different sides, so the Layout section's Padding field has no one number to show. It is the one field in the dock that used to say Mixed as a placeholder, a paler grey again, and this is the walk that watches it say it the way every other control does and still take a number typed over it.",
+  "setup": {
+    "forget": [
+      "text"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1360,
+      "height": 1180
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        130
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        260
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Use your account"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        180,
+        145
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        272
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panel",
+      "stage": "stacked"
+    },
+    {
+      "do": "describe",
+      "stage": "0-stacked",
+      "note": "the two labels are one stack, so the Layout section is on screen with its Padding field"
+    },
+    {
+      "do": "press",
+      "control": "Each side",
+      "in": "Padding"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panel",
+      "stage": "sides-open"
+    },
+    {
+      "do": "focus",
+      "field": "Top"
+    },
+    {
+      "do": "type",
+      "text": "24"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-sides-differ",
+      "note": "the top has 24 points of room and the other three have none, so Padding has no one number and must say Mixed the way every other control does"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-padding-mixed"
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "12"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-typed-over-mixed",
+      "note": "a number typed straight over the word Mixed has to replace it and reach all four sides, not land beside it"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-padding-typed"
+    }
+  ]
+}

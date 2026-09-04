@@ -57,8 +57,9 @@ public struct ColorStyleSelection: Hashable, Sendable {
         }
     }
 
-    /// What the row shows in place of a color when the layers differ.
-    public static let mixedText = "Mixed"
+    /// What the row shows in place of a color when the layers differ. One
+    /// word for the whole app, so no two controls can spell it differently.
+    public static let mixedText = MixedValue.text
 
     public let slot: ColorSlot
     public let members: [Member]

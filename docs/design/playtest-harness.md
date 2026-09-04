@@ -217,7 +217,15 @@ Four steps close it, and one more makes them writable:
   a link drawn by SwiftUI says who it is through a marker behind it, and a
   segmented picker — Free / Stack / Grid, Row / Column, Hug / Fixed, which is
   most of the Layout section — is a real AppKit control underneath, so its
-  segments name themselves and need no marker. Either way the press is real
+  segments name themselves and need no marker. A segment that is a PICTURE
+  rather than words is named by what the system calls that picture: the text
+  alignment rows come out as `align left`, `align center`, `align right`, and
+  the vertical ones as `align vertical top` and so on. (A SwiftUI
+  `.accessibilityLabel` on the Image does not reach the segment; the symbol's
+  own name does.) A style slider takes a press too — it is called `Slider` and
+  named by its row, so `{"control": "Slider", "in": "Corner Radius"}` puts the
+  knob in the middle of that track, which is how a walk makes two layers differ
+  in something only a slider can set. Either way the press is real
   mouse events POSTED to the app's queue. That last word is the whole trick:
   SwiftUI answers a press from inside its own tracking loop, which pulls the
   release out of that queue, so a walk that called `mouseDown` on the view
@@ -313,12 +321,16 @@ What is still only photographable in the picker is the saturation square and
 the channel sliders, for the same reason as the panel's sliders: a press is not
 a drag.
 
-What is still only photographable is the SLIDERS — Opacity, Blur, Corner
-Radius, Border and the five shadow rows. Their rows are named, so a `panel`
-step lists them, but a press on a slider track is not a drag of its knob; use
-the `action` steps (`dragOpacity`, `dragCornerRadius`, `addShadow`, …) for the
-outcome. The Frame's Size menu is a menu, so it is opened with `panelMenu`
-rather than pressed.
+The SLIDERS — Opacity, Blur, Corner Radius, Border and the five shadow rows —
+are pressed, not dragged. Each is called `Slider` and named by its row, so
+`{"control": "Slider", "in": "Corner Radius"}` puts the knob where the press
+lands, which for the middle of the track is the middle of the range. That is a
+real click on the real control, so it is the way to make two layers differ in
+something only a slider can set. What a press still is not is a DRAG, so a walk
+that needs the live preview frames between mouse-down and release uses the
+`action` steps (`dragOpacity`, `dragCornerRadius`, `addShadow`, …) instead. The
+Frame's Size menu is a menu, so it is opened with `panelMenu` rather than
+pressed.
 
 Two things a press cannot tell you. It cannot say whether a SwiftUI control is
 DIMMED — `disabled` leaves no mark on the view tree — so a press on a dead

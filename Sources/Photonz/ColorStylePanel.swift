@@ -402,7 +402,7 @@ struct ColorStyleRow<Well: View>: View {
             } else {
                 Text(ColorStyleSelection.mixedText)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(MixedLook.style)
                     .help("The picked layers do not share one \(part.lowercased()). "
                           + "Choosing a color or a style sets all of them.")
             }
@@ -536,7 +536,10 @@ struct SelectionColorWell: View {
             // still looks like a row with something to press.
             Text(ColorStyleSelection.mixedText)
                 .font(.caption)
-                .foregroundStyle(isHovering ? .primary : .secondary)
+                // At rest the one strength every Mixed in the dock wears; under
+                // the pointer it firms up, which is this chip saying it is a
+                // button as well as a readout.
+                .foregroundStyle(isHovering ? AnyShapeStyle(.primary) : MixedLook.style)
                 .padding(.horizontal, 6)
                 .frame(height: 18)
                 .background(RoundedRectangle(cornerRadius: 4).fill(.quaternary))

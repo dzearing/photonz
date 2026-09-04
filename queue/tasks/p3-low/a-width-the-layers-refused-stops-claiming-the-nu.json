@@ -1,0 +1,28 @@
+{
+  "id": "a-width-the-layers-refused-stops-claiming-the-nu",
+  "title": "A width the layers refused stops claiming the number you typed",
+  "goal": "Pick two labels and type 200 into W. Both boxes go to 204, because a text box will not go narrower than its own words, but the W field goes on showing 200. The number in the box has to be the number the layers actually took, or the next arrow key steps from a width nothing has.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1230,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T21:25:38.283Z",
+  "updated": "2026-09-04T21:25:38.284Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/GeometryInspector.swift, GeometryField.land(): it already calls landing(parsed) and shows display(landed), so the miss is that landing() is computed before commit and does not see the per-layer clamp for a multi-layer selection. Reproduced in Scripts/playtest/mixed-one-look-walk.json (step focus W, type 200): the tree reports both text layers at 204 while the field reads 200. Found while doing mixed-reads-the-same-way-in-every-control.",
+  "acceptance": [
+    "Typing a width the layers refuse leaves the field showing what they took, not what was asked for",
+    "An arrow key pressed straight after steps from that same number",
+    "Nothing changes when the layers accept the number as typed",
+    "Verified in the probe with a real screen capture"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T21:25:38.284Z",
+      "note": "created (manual)"
+    }
+  ]
+}

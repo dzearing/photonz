@@ -379,7 +379,11 @@ private struct LayoutNumberField: View {
     /// than picking one of them and lying.
     let value: CGFloat?
     var minimum: CGFloat = 0
-    /// What stands in the empty field when there is no number.
+    /// What stands in the field when there is no one number to show: the word
+    /// Mixed. It is the field's TEXT, not its placeholder, so it is drawn at
+    /// the one strength every other Mixed in the dock is drawn at; a
+    /// placeholder is a paler grey again, which made this the fifth answer to
+    /// the same question (`MixedLook.swift`).
     var placeholder: String = ""
     let help: String
     let commit: (CGFloat) -> Void
@@ -388,25 +392,41 @@ private struct LayoutNumberField: View {
     @State private var isFinishing = false
     @FocusState private var isFocused: Bool
 
+    /// True while the field is standing in for four sides that disagree.
+    private var showsMixed: Bool { !placeholder.isEmpty && text == placeholder }
+
     var body: some View {
-        // The field's own word, until there is no one number to show: then it
-        // stands in for the four, and says so where the number would be.
-        TextField(value == nil && !placeholder.isEmpty ? placeholder : title, text: $text)
+        // The field wears its own word until there is no one number to show:
+        // then the word Mixed sits where the number would be, which is what
+        // every other control in the dock does with a value the picked things
+        // do not agree on.
+        TextField(title, text: $text)
             .textFieldStyle(.roundedBorder)
             .controlSize(.small)
             .multilineTextAlignment(.trailing)
             .monospacedDigit()
+            .foregroundStyle(MixedLook.style(showsMixed, otherwise: .primary))
             .frame(width: 62)
             .focused($isFocused)
             .help(help)
             .accessibilityLabel(title)
-            .onAppear { text = Self.format(value) }
-            .onChange(of: value) { if !isFocused { text = Self.format(value) } }
+            .onAppear { text = display(value) }
+            .onChange(of: value) { if !isFocused { text = display(value) } }
             .onChange(of: isFocused) { _, focused in
-                if focused { isFinishing = false } else if !isFinishing { land() }
+                if focused {
+                    isFinishing = false
+                    // Typing over a word has to replace it, not append to it.
+                    // Only the word: a number in the box still takes a caret
+                    // where it was clicked, the way it always did.
+                    if showsMixed {
+                        DispatchQueue.main.async {
+                            NSApp.keyWindow?.firstResponder?.trySelectAllText()
+                        }
+                    }
+                } else if !isFinishing { land() }
             }
             .numberFieldKeys(commit: { isFinishing = true; land() },
-                             revert: { isFinishing = true; text = Self.format(value) },
+                             revert: { isFinishing = true; text = display(value) },
                              step: { direction, coarse in
                                  step(direction: direction, coarse: coarse)
                              })
@@ -416,11 +436,11 @@ private struct LayoutNumberField: View {
     /// the group really has rather than being guessed at.
     private func land() {
         guard let typed = Double(text.trimmingCharacters(in: .whitespaces)) else {
-            text = Self.format(value)
+            text = display(value)
             return
         }
         let clamped = max(minimum, CGFloat(typed).rounded())
-        text = Self.format(clamped)
+        text = display(clamped)
         guard clamped != value else { return }
         commit(clamped)
     }
@@ -432,12 +452,14 @@ private struct LayoutNumberField: View {
         let typed = Double(text.trimmingCharacters(in: .whitespaces))
         guard let base = typed.map({ CGFloat($0) }) ?? value else { return }
         let next = max(minimum, (base + CGFloat(direction * (coarse ? 10 : 1))).rounded())
-        text = Self.format(next)
+        text = display(next)
         guard next != value else { return }
         commit(next)
     }
 
-    private static func format(_ value: CGFloat?) -> String {
-        value.map { "\(Int($0.rounded()))" } ?? ""
+    /// What the box shows: the number the sides agree on, or the word that says
+    /// they do not, or nothing at all on a row that has no word to fall back on.
+    private func display(_ value: CGFloat?) -> String {
+        value.map { "\(Int($0.rounded()))" } ?? placeholder
     }
 }

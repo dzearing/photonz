@@ -294,6 +294,43 @@ the dock, or a `.sheet.down` overlay.
 - **A control that cannot act is answered by what kind of control it is**, not
   case by case: commands dim in place, choosers are replaced by their answer,
   fields keep their number, bare handles go away. The rule is right below.
+- **Mixed is one word, one weight, in the value's own place.** The rule is
+  written out below.
+
+### What Mixed looks like
+
+Added 2026-09-04 (task `mixed-reads-the-same-way-in-every-control`, audit
+`2026-09-04-mixed-one-look`). Every control in the inspector has to answer the
+same question — the picked layers do not agree, so what goes where the value
+would be — and before this each answered it differently: a menu said Mixed at
+full strength, like a choice someone had made; a slider said it two steps down;
+a field said it one step down; a padding field said it as a placeholder, paler
+again; and the alignment rows said nothing at all and simply went blank.
+
+One rule now, and every new control follows it:
+
+- **One word.** `Mixed`, spelled and capitalised that way, from
+  `MixedValue.text`. Never `Multiple`, never a dash, never blank.
+- **One weight.** One step quieter than a real value, `MixedLook.style`. Mixed
+  is not something you chose, so it must not read as loud as something you did;
+  it is not a hint either, so it must not fade into the captions around it.
+- **In the value's own place.** In the box for a field, as the closed title for
+  a menu, in the readout for a slider, as the chip for a color well.
+- **A control with no room for a word says it beside its caption.** A segmented
+  row of pictures has no text in it at all. The word goes next to that row's own
+  caption — `Across  Mixed` — never out at the trailing edge, where it lands
+  against the next column's caption and stops saying which of the two differs.
+- **Mixed is never absence.** A control that goes blank says "the layers differ"
+  and "nothing is set here" in exactly the same way, and those are different
+  answers.
+- **A control saying Mixed is still a control.** Whatever you set from it
+  reaches every picked layer, in one undo step.
+
+Known exception, on purpose: a read-only number is dim all over, so its Mixed is
+dimmer than the rule (`H` over a text layer). The word is not being singled out
+there; the whole box is quiet. Whether a read-only number should look like that
+at all is the pending decision
+`a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for`.
 
 ### A control that cannot act
 

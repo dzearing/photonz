@@ -54,7 +54,7 @@ enum PlaytestPanelPress {
             let chosen = control.selectedSegment
             let row = field(at: box, among: fields)
             return (0..<control.segmentCount).compactMap { index in
-                guard let label = control.label(forSegment: index), !label.isEmpty else { return nil }
+                guard let label = name(ofSegment: index, in: control) else { return nil }
                 var detail = row ?? "a picker"
                 if index == chosen { detail += ", already on \(label)" }
                 return PlaytestPressTarget(
@@ -64,6 +64,22 @@ enum PlaytestPanelPress {
                     window: control.window)
             }
         }
+    }
+
+    /// What a walk calls one segment. A segment with words on it says them; a
+    /// segment that is a PICTURE — the alignment rows are three little pictures
+    /// each — has no words at all, so it was skipped and could never be pressed.
+    /// Its image's accessibility description is the name a person hears for it,
+    /// so that is the name a walk uses too: the alignment rows come out as
+    /// "align left", "align center", "align right", which is what the system
+    /// itself calls those pictures. (A SwiftUI `.accessibilityLabel` on the
+    /// Image does NOT reach the segment — tried, and the symbol's own name came
+    /// through instead — so a picture segment is named by its symbol.)
+    @MainActor static func name(ofSegment index: Int, in control: NSSegmentedControl) -> String? {
+        if let label = control.label(forSegment: index), !label.isEmpty { return label }
+        if let described = control.image(forSegment: index)?.accessibilityDescription,
+           !described.isEmpty { return described }
+        return nil
     }
 
     /// The row a thing at this point sits on: the smallest labelled row it

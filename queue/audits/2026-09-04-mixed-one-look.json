@@ -1,0 +1,30 @@
+{
+  "feature": "Mixed reads the same way in every control",
+  "epic": "ui-components",
+  "summary": "Pick two layers that differ and every control in the inspector now says Mixed the same way: one word, one weight, sitting where that control's value would be. A menu used to say it at full strength like a choice you had made, a slider said it two steps down, a field one step down, the padding box said it as a faint placeholder, and the alignment rows said nothing at all and simply went blank.",
+  "setup": "Photonz Dev, Experiments window, release Next. Build on a frame and Type a layer's position and size are on by default; nothing to turn on.",
+  "try": [
+    { "do": "Pick the text tool, click on a blank canvas, type \"Sign in\" and press Command-Return." },
+    { "do": "Pick the text tool again, click lower down, type \"Use your account\" and press Command-Return." },
+    { "do": "Switch to the select tool, click the first label, and set its Size menu to 48 pt." },
+    { "do": "With it still picked, drag its Corner Radius slider, press the centre button under Across, and give it a different colour." },
+    { "do": "Click the first label, then Shift-click the second so both are picked.", "shot": "2026-09-04-mixed-one-look-1-every-control-sc.png" },
+    { "do": "Read straight down the dock: Y, W and H, the Text colour, Corner Radius, Size and Across all say Mixed, and they all say it the same." },
+    { "do": "Set a value from each one in turn: choose 32 pt in Size, press the centre button under Across, click the middle of the Corner Radius track, type 200 into W.", "shot": "2026-09-04-mixed-one-look-2-after-setting-sc.png" },
+    { "do": "Select both labels, press Layer then Stack Selection, open Padding's four sides and give Top 24, and read the Padding box above them.", "shot": "2026-09-04-mixed-one-look-3-padding-sc.png" }
+  ],
+  "evaluate": [
+    "Reading down the dock in one pass, does Mixed now look like one thing rather than four?",
+    "One step quieter than a real value: is that the right amount, or should Mixed be as loud as a number since it is a state you can act on?",
+    "On the Effects sliders the word is now the same weight as a real number, because that is the weight Mixed wears everywhere. Does it still read as \"no one value\" at a glance?",
+    "The alignment rows say it as \"Across  Mixed\" beside their own caption rather than out at the right. Does that read as one caption of two words, or as a caption and an answer?",
+    "The Colour row is the one place the word wears a box, because there the word is also the button you press to stop them differing. Is that worth it, or should it look like every other Mixed?"
+  ],
+  "rough": [
+    "Screen Recording was granted for this run, so all three shots are real captures of the window, not offscreen renders. The dock in the first two has Layers and Arrange collapsed so the whole panel fits on one screen; that was my probe's setting for the run and has been put back.",
+    "A read-only number is dim all over, so the H box over a text layer says Mixed dimmer than every other Mixed. The word is not being singled out there, the whole box is quiet, and whether a read-only number should look like that at all is the pending decision a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for.",
+    "The Colour row's Mixed sits on a filled chip, so it reads brighter than the others even though it is the same style. The chip is not decoration: on that row the word replaces the swatch and IS the button, so taking the box away would leave nothing that looks pressable.",
+    "The shadow switch was not touched and still answers this question its own way: with some picked layers shadowed and some not, it shows plain off and explains itself in a sentence underneath. A switch has no mixed position on the Mac, so that is a real design question rather than an oversight. Filed as a follow-up.",
+    "Typing 200 into W set both labels, but they landed on 204 because a text box will not go below the width of its own words, and the field went on showing 200. That is older than this change and is filed as a follow-up."
+  ]
+}

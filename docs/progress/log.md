@@ -8452,3 +8452,45 @@ Also corrected UX-PATTERNS.md section 4, which named the duplicate task id as
 where the read-only-field exception was filed.
 
 Next: the decision card is still the blocker for the border question.
+
+## 2026-09-04 — one look for Mixed, in every kind of control
+
+Ran `mixed-reads-the-same-way-in-every-control`. Counted the panel first
+rather than trusting the task's note: six places say Mixed and they said it
+four different ways. A menu at full strength (measured 236 of 236 off a real
+capture), a slider two steps down, a field one step down, the Layout padding
+box as a placeholder paler again, and the alignment rows not at all, going
+blank instead.
+
+Picked one look and wrote the rule down: one word (`MixedValue.text`,
+PhotonzCore), one weight (`MixedLook.style`, one step quieter than a real
+value), in the value's own place, and a control with no room for a word says
+it beside its caption. Never absent, because a blank control says "they
+differ" and "nothing is set" in exactly the same way. It is now section 4 of
+`docs/design/mocks/shared/UX-PATTERNS.md`.
+
+The task's note said AppKit would not let a closed pop-up's title be styled
+cheaply, and that the likely answer was to match the menu upward. Both turned
+out wrong. `.foregroundStyle` on the Picker really does nothing — built it,
+photographed it, the word stayed white — but styling the `Text` on the tag
+reaches the closed title. So the menu came down to meet the others rather than
+the other way round.
+
+Two things went in to make this verifiable rather than assumed, and both stay:
+a style slider now takes a `press` (`{"control":"Slider","in":"Corner
+Radius"}`), and a segmented picker whose segments are pictures is named by what
+the system calls the picture (`align left`, `align center`, …). Between them a
+walk can now make two layers differ in a slider value and in an alignment, which
+is the only way to photograph those two saying Mixed at all.
+
+One thing the first build got wrong and the capture caught: the alignment row's
+Mixed was trailing-aligned to match the slider readout above it, which put it
+hard against the next column and read "Across      Mixed  Down". It sits beside
+its own caption now.
+
+Audit `queue/audits/2026-09-04-mixed-one-look.json`, three real captures.
+3116 tests green. Filed two follow-ups: the shadow switch still answers this
+question its own way (a Mac switch has no mixed position), and a width the
+layers refused still shows the number that was typed.
+
+Next: the queue's own order decides. Both follow-ups are p3.

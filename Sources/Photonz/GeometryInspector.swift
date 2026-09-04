@@ -187,9 +187,10 @@ private struct GeometryNumberField: View {
                 .focused($isFocused)
                 .monospacedDigit()
                 // Mixed is a word among numbers, so it reads as the quieter
-                // thing it is rather than as a value someone typed.
-                .foregroundStyle(reading.isMixed ? AnyShapeStyle(.secondary)
-                                                 : AnyShapeStyle(.primary))
+                // thing it is rather than as a value someone typed. The one
+                // strength every control in the dock says it at
+                // (`MixedLook.swift`).
+                .foregroundStyle(MixedLook.style(reading.isMixed, otherwise: .primary))
                 // Tab, and anything else that moves the keyboard on by itself,
                 // still lands the draft; Return goes through the key rule
                 // below so it can hand the keyboard back as well.

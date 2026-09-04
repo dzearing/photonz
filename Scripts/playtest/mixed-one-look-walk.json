@@ -1,0 +1,223 @@
+{
+  "out": "/tmp/photonz-playtest/mixed-one-look",
+  "seed": "Two labels are typed on a blank canvas. One is made bigger, given a corner radius, centred and repainted, so that picking both makes every kind of control in the dock answer Mixed at once: a menu, a slider, a field and a segmented row of pictures. The walk photographs the whole dock in that state, which is the only way to see whether the word reads the same way in all four. It starts from the text settings a fresh machine would have, because it changes the remembered size on its way through. Then a value is set from each Mixed control in turn, to prove a control saying Mixed is still a control: what you choose reaches every picked layer and the word goes away.",
+  "setup": {
+    "forget": [
+      "text"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1360,
+      "height": 1180
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        130
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        300
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Use your account"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        180,
+        145
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panel",
+      "stage": "one-picked"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Size",
+      "choose": "48 pt"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Corner Radius"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "align center",
+      "in": "Across"
+    },
+    {
+      "do": "action",
+      "action": "holdColorDrag"
+    },
+    {
+      "do": "action",
+      "action": "releaseColorDrag"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-first-label-changed",
+      "note": "the first label is 48 pt, rounded and centred; the second is untouched"
+    },
+    {
+      "do": "click",
+      "at": [
+        180,
+        145
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        312
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panel",
+      "stage": "two-picked"
+    },
+    {
+      "do": "describe",
+      "stage": "2-two-picked-mixed",
+      "note": "two labels picked that differ in size, roundness and alignment: a menu, a slider, four fields and a segmented row all have to say Mixed at once, and say it the same way"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-mixed-dock"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Size",
+      "choose": "32 pt"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "align center",
+      "in": "Across"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Corner Radius"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "200"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-set-from-mixed",
+      "note": "a value chosen from each Mixed control in turn: the menu, the segmented row, the slider and a field. Every one of them has to have reached BOTH labels, and every control has to have stopped saying Mixed"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-after-setting"
+    }
+  ]
+}
