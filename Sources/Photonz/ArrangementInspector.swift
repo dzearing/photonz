@@ -23,6 +23,12 @@ struct ArrangementInspector: View {
     @Environment(EditorState.self) private var editorState
     let layer: Layer
 
+    /// Whether the four sides were opened or closed by hand, and nil while
+    /// nobody has said: room that already differs shows itself, and even room
+    /// stays one field. Forgotten when the selection moves on, so arriving at a
+    /// card with 24 at the bottom always shows the 24.
+    @State private var sidesOpen: Bool?
+
     private var current: Layer { editorState.document?.layer(id: layer.id) ?? layer }
     private var layout: GroupLayout? { current.group?.layout }
 
@@ -49,6 +55,7 @@ struct ArrangementInspector: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .onChange(of: layer.id) { sidesOpen = nil }
     }
 
     @ViewBuilder
@@ -93,13 +100,81 @@ struct ArrangementInspector: View {
             }
         }
         // A group that arranges itself has edges of its own, whether it was
-        // given a size or takes the one its contents make, so it can keep
-        // space clear inside them the same way a screen does.
-        number("Padding", value: layout.usedPadding,
-               help: current.isFrame ? "The space kept clear inside the screen's edges."
-                                     : "The space kept clear inside the group's edges.") { value in
-            editorState.updateArrangement(id: layer.id) { $0.padding = value }
+        // given a size or takes the one its contents make, so it can keep room
+        // clear inside them the same way a screen does.
+        padding(layout)
+    }
+
+    /// The room kept clear inside the edges.
+    ///
+    /// One field, because one number all round is what most things want, and a
+    /// chevron beside it that opens the four sides for the things that do not:
+    /// a card 16 in from the left, 12 down from the top and 24 up from the
+    /// bottom is ordinary, and it used to be buildable only by nudging pieces
+    /// the stack then put back. The sides open themselves whenever they
+    /// disagree, so room typed on one side is never hidden behind a chevron
+    /// and never shows as a single number that is not true.
+    @ViewBuilder
+    private func padding(_ layout: GroupLayout) -> some View {
+        let room = layout.usedPadding
+        let noun = current.isFrame ? "screen" : "group"
+        HStack(spacing: 6) {
+            Text("Padding")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+            // The same twist-open every section in this panel already uses,
+            // beside the word it opens rather than in front of it, so Padding
+            // still starts where Gap and Width start and the number still ends
+            // where theirs end.
+            Button {
+                sidesOpen = !showsSides(room)
+            } label: {
+                Image(systemName: showsSides(room) ? "chevron.down" : "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 12, height: 12)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .help(showsSides(room)
+                ? "Hide the four sides and keep the room they were given."
+                : "Give this \(noun) different room on each of its four sides.")
+            .playtestControl("Each side", detail: "Layout")
+            Spacer(minLength: 8)
+            LayoutNumberField(
+                title: "Padding", value: room.uniform, placeholder: "Mixed",
+                help: room.isUniform
+                    ? "The room kept clear inside the \(noun)'s edges, on all four sides."
+                    : "\(sides(room)). Type one number to give every side the same."
+            ) { value in
+                editorState.updateArrangement(id: layer.id) { $0.padding = GroupPadding(value) }
+            }
         }
+        .playtestField("Padding")
+        if showsSides(room) {
+            ForEach(GroupPadding.Side.allCases, id: \.self) { side in
+                number(side.title, value: room[side], indent: 20,
+                       help: "The room kept clear inside the \(noun)'s \(side.title.lowercased()) edge.") { value in
+                    editorState.updateArrangement(id: layer.id) { $0.padding[side] = value }
+                }
+            }
+        }
+    }
+
+    /// Whether the four sides are showing. Until somebody says otherwise, room
+    /// that already differs side to side shows itself: the single field has no
+    /// honest number to put in that case, and a chevron is not where a person
+    /// should have to go looking for the 24 they typed.
+    private func showsSides(_ room: GroupPadding) -> Bool {
+        sidesOpen ?? !room.isUniform
+    }
+
+    /// The four numbers in words, for the field that cannot show them.
+    private func sides(_ room: GroupPadding) -> String {
+        GroupPadding.Side.allCases
+            .map { "\(Int(room[$0].rounded())) \($0.rawValue)" }
+            .joined(separator: ", ")
     }
 
     /// One axis' Hug-or-Fixed row. Choosing Fixed starts from the size the
@@ -165,8 +240,12 @@ struct ArrangementInspector: View {
     /// One labelled row. The label never wraps: "Arrangement" broken over two
     /// lines is the panel telling you it has run out of room, and the control
     /// beside it can give up the points instead.
-    private func row(_ title: String, @ViewBuilder control: () -> some View) -> some View {
+    private func row(_ title: String, indent: CGFloat = 0,
+                     @ViewBuilder control: () -> some View) -> some View {
         HStack(spacing: 8) {
+            // The sides of a padding sit under the word they belong to, so a
+            // Top on its own could never read as a rule about the whole group.
+            if indent > 0 { Spacer().frame(width: indent) }
             Text(title)
                 .font(.callout)
                 .foregroundStyle(.secondary)
@@ -180,9 +259,9 @@ struct ArrangementInspector: View {
     }
 
     private func number(_ title: String, value: CGFloat, minimum: CGFloat = 0,
-                        help: String,
+                        indent: CGFloat = 0, help: String,
                         commit: @escaping (CGFloat) -> Void) -> some View {
-        row(title) {
+        row(title, indent: indent) {
             LayoutNumberField(title: title, value: value, minimum: minimum,
                               help: help, commit: commit)
         }
@@ -202,8 +281,13 @@ private struct LayoutNumberField: View {
     /// it is the placeholder and the accessibility label, so a walk can put
     /// the keyboard in "Gap" the way a person puts the pointer there.
     let title: String
-    let value: CGFloat
-    let minimum: CGFloat
+    /// The number this field holds, or nil where there is no one number to
+    /// show — four sides that disagree have none, and the field says so rather
+    /// than picking one of them and lying.
+    let value: CGFloat?
+    var minimum: CGFloat = 0
+    /// What stands in the empty field when there is no number.
+    var placeholder: String = ""
     let help: String
     let commit: (CGFloat) -> Void
 
@@ -212,7 +296,9 @@ private struct LayoutNumberField: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        TextField(title, text: $text)
+        // The field's own word, until there is no one number to show: then it
+        // stands in for the four, and says so where the number would be.
+        TextField(value == nil && !placeholder.isEmpty ? placeholder : title, text: $text)
             .textFieldStyle(.roundedBorder)
             .controlSize(.small)
             .multilineTextAlignment(.trailing)
@@ -246,14 +332,19 @@ private struct LayoutNumberField: View {
         commit(clamped)
     }
 
+    /// Up and down step the number in the field. An empty field with no one
+    /// number behind it has nothing to step from, so the keys do nothing there
+    /// rather than inventing a nought and flattening four sides into one.
     private func step(direction: Int, coarse: Bool) {
         let typed = Double(text.trimmingCharacters(in: .whitespaces))
-        let base = typed.map { CGFloat($0) } ?? value
+        guard let base = typed.map({ CGFloat($0) }) ?? value else { return }
         let next = max(minimum, (base + CGFloat(direction * (coarse ? 10 : 1))).rounded())
         text = Self.format(next)
         guard next != value else { return }
         commit(next)
     }
 
-    private static func format(_ value: CGFloat) -> String { "\(Int(value.rounded()))" }
+    private static func format(_ value: CGFloat?) -> String {
+        value.map { "\(Int($0.rounded()))" } ?? ""
+    }
 }

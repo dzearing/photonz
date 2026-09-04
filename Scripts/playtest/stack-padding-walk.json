@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/stack-padding",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 120], "to": [420, 180], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 210], "to": [420, 270], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 300], "to": [420, 360], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "drag", "from": [120, 80], "to": [520, 420], "steps": 10 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-stacked", "note": "three rows are one stack. The Layout section should show a single Padding field reading 0, with a chevron beside it." },
+    { "do": "snapshot", "name": "padding-1-stacked" },
+    { "do": "render", "name": "padding-1-stacked-doc" },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "16" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-even", "note": "one number typed once: the stack should have grown 32 wider and 32 taller, with the rows 16 in from every edge" },
+    { "do": "snapshot", "name": "padding-2-even-16" },
+    { "do": "render", "name": "padding-2-even-16-doc" },
+
+    { "do": "press", "control": "Each side" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-open", "note": "the chevron opens Top, Right, Bottom and Left, each reading 16" },
+    { "do": "snapshot", "name": "padding-3-four-sides" },
+
+    { "do": "focus", "field": "Bottom" },
+    { "do": "type", "text": "24" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-bottom", "note": "24 at the bottom only: the stack should have grown 8 taller at the bottom and nothing else should have moved" },
+    { "do": "snapshot", "name": "padding-4-bottom-24" },
+    { "do": "render", "name": "padding-4-bottom-24-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-undone", "note": "one undo puts the bottom back to 16 and the stack back to the size it was" },
+    { "do": "render", "name": "padding-5-undone-doc" },
+    { "do": "panel", "stage": "6-panel" }
+  ]
+}

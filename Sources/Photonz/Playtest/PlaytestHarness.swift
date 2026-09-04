@@ -354,10 +354,17 @@ private final class Run {
             let window = try requireWindow()
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
             let fields = Self.findAll(NSTextField.self, in: content).filter(\.isEditable)
-            func label(_ field: NSTextField) -> String {
-                field.placeholderString ?? field.accessibilityLabel() ?? ""
+            // Either word finds it. A field usually shows its own name when it
+            // is empty, so the placeholder is the word on screen; a field that
+            // stands in for something else while it has no number to show
+            // ("Mixed") would otherwise stop answering to its own name.
+            func labels(_ field: NSTextField) -> [String] {
+                [field.placeholderString, field.accessibilityLabel()].compactMap { $0 }
             }
-            guard let match = fields.first(where: { label($0).caseInsensitiveCompare(name) == .orderedSame }) else {
+            func label(_ field: NSTextField) -> String { labels(field).first ?? "" }
+            guard let match = fields.first(where: { field in
+                labels(field).contains { $0.caseInsensitiveCompare(name) == .orderedSame }
+            }) else {
                 let seen = fields.map(label).filter { !$0.isEmpty }
                 throw Failure(description: "no editable field labelled \"\(name)\" is on screen; the ones that are: \(seen.isEmpty ? "none" : seen.joined(separator: ", "))")
             }

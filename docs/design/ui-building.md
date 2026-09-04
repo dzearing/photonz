@@ -1881,8 +1881,8 @@ document saved before this decodes and draws unchanged.
 `updateArrangement` / `stackSelection` in the app. Walked by
 `Scripts/playtest/stack-and-grid-walk.json`.
 
-Not in this slice: wrapping as a fourth direction, per-side padding, and
-binding gaps to spacing tokens.
+Not in this slice: wrapping as a fourth direction and binding gaps to spacing
+tokens. Per-side padding landed on 2026-09-04, below.
 
 ## Landed: a stack can be a size of its own (Next, `next-auto-layout`, 2026-09-03)
 
@@ -1924,9 +1924,53 @@ no key, so every document saved before this is byte for byte what it was),
 for the per-axis room the flow shares out, and `LayerScaling.rearranging` for a
 resize that sizes rather than scales. `ArrangementInspector` holds the two rows.
 
-Not in this slice: a minimum or maximum size, per-side padding, and a stack
-that spreads its contents along the axis it flows on (distribution) when it is
-longer than they are.
+Not in this slice: a minimum or maximum size, and a stack that spreads its
+contents along the axis it flows on (distribution) when it is longer than they
+are. Per-side padding landed on 2026-09-04, below.
+
+## Landed: room on each of a stack's four sides (Next, `next-auto-layout`, 2026-09-04)
+
+Padding was one number, so a card whose contents sit 16 in from the left, 12
+down from the top and 24 up from the bottom could not be built: the only way to
+get uneven room was to nudge a piece, which the stack then put back. Now the
+room is four numbers, and one of them can still be typed once.
+
+**One field, and a chevron beside it.** The Layout section still shows a single
+**Padding** field, because the same room all round is what most things want:
+type 16 and every side gets 16. The chevron next to the word opens **Top**,
+**Right**, **Bottom** and **Left** underneath it, indented, each its own typed
+number with the same keys as every other. Clockwise from the top, the order
+anybody who has written a CSS shorthand already carries.
+
+**Uneven room shows itself.** Arrive at a stack whose sides differ and the four
+are already open, because the single field has no honest number to put in that
+case: it goes empty and reads **Mixed**, with the four numbers in its tooltip,
+and typing one number there evens them all out again. Closing the four by hand
+is allowed and remembered until the selection moves on.
+
+**The box grows to hold it.** A stack that is as big as its contents adds the
+near edge's room where the contents start and the far edge's to the size, so
+24 at the bottom makes the stack 8 taller than 16 did and nothing inside it
+moves. A stack with a size of its own hands its rows what is left between its
+sides instead, so a 320-wide stack with 16 left and 8 right stretches its rows
+to 296. A grid does the same with its cells.
+
+**Reading it off a screen.** Turning a screen's contents into a stack reads the
+left and top margins the contents already sit at and mirrors them onto the
+right and bottom. Only the near edges are real: the space below the last row is
+just the rest of the screen, and reading that as room would leave a stack
+claiming three hundred points of bottom padding.
+
+**Where it lives.** `GroupPadding` in `PhotonzCore` (four sides, floored at
+nought, and Codable as a single number for as long as they agree, so every
+document written before this is byte for byte what it was),
+`GroupLayout.padding`, `GroupFlow.stacked` / `.gridded` for the flow and
+`Layer.localBounds` for the box. `ArrangementInspector` holds the field, the
+chevron and the four rows. Tested in `GroupPaddingTests`, walked by
+`Scripts/playtest/stack-padding-walk.json`.
+
+Not in this slice: a paddings-are-tokens link to a spacing scale, and dragging
+the room out on the canvas rather than typing it.
 
 ## Landed: dragging onto a screen puts it in the screen (Next, `next-frames`, 2026-09-03)
 

@@ -7968,3 +7968,48 @@ Next / open: the fill-over-border swatch pair (rectangles, ellipses) has no room
 for the palette mark, so there it lives only in the hover tip. If the mark turns
 out to be too quiet the answer is probably the name in the toolbar, which costs
 width. That is on the audit.
+
+## 2026-09-04 — A stack can be given room on each of its four sides
+
+Padding on a group that arranges itself was one number, so a card whose
+contents sit 16 in from the left, 12 down from the top and 24 up from the
+bottom could not be built: the only way to get uneven room was to nudge a
+piece, which the stack then put back. It is four numbers now.
+
+`GroupPadding` (PhotonzCore) holds top, right, bottom and left, floors each at
+nought, and encodes as a SINGLE number for as long as the four agree, so every
+document written before this opens with the room it had and saves to the same
+bytes. It is `ExpressibleByIntegerLiteral`, so `padding: 16` still reads as 16
+all round everywhere it was already written. `GroupFlow` starts the contents
+inside the near edges and shares out what is left between both, and
+`Layer.localBounds` grows a hugging stack by the far edge, so 24 at the bottom
+makes the stack 8 taller than 16 did and nothing inside it moves.
+
+The panel keeps one **Padding** field, because the same room all round is what
+most things want, with a chevron beside the word that opens **Top**, **Right**,
+**Bottom** and **Left** indented underneath. The chevron sits after the label
+rather than in front of it so Padding still starts where Gap and Width start
+and its number still ends where theirs end. Room that already differs opens
+itself; the single field then goes empty and reads `Mixed`, with the four
+numbers in its tooltip, and typing one number there evens them all out.
+
+Cut from the mock: four boxes across one row. Four 62pt fields do not fit the
+152pt control column and would have been unreadable. Cut on purpose too:
+reading a screen's real bottom margin when its contents become a stack. On a
+tall screen that margin is the rest of the screen, and a later switch to a row
+stack would then squash everything, so the left and top margins are read and
+mirrored onto the right and bottom.
+
+Verified live: `Scripts/playtest/stack-padding-walk.json` on the probe app with
+Screen Recording granted, so the pictures are real window captures. A stack of
+three rows went 240x240 to 272x272 on Padding 16, then to 272x280 on Bottom 24
+with nothing inside moving, and one undo put it back. 2999 tests green. No
+render path touched, so no perf note.
+
+Audit: `queue/audits/2026-09-04-stack-padding.json`.
+
+Next / open: closing the four sides while they differ leaves only the word
+`Mixed` on screen, so the 24 is not visible anywhere until they are reopened.
+Filed as `a-stack-with-uneven-room-shows-its-numbers-even`. Still unbuilt:
+dragging the room out on the canvas, and any link between a padding and a
+spacing scale.

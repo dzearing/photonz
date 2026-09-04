@@ -1,0 +1,27 @@
+{
+  "id": "a-stack-with-uneven-room-shows-its-numbers-even",
+  "title": "A stack with uneven room shows its numbers even when the sides are closed",
+  "goal": "A stack can be given different room on each of its four sides. When someone closes the four side fields, the one field left says only \"Mixed\", so the 24 they typed at the bottom is not visible anywhere on screen until they open them again. Show the four numbers on the closed row instead.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 1200,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T13:51:38.166Z",
+  "updated": "2026-09-04T13:51:38.167Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/ArrangementInspector.swift, the padding(_:) row. Today the single LayoutNumberField shows room.uniform and falls back to a Mixed placeholder with the four numbers in .help. Options: a compact 16 / 16 / 24 / 16 read-only summary in place of the field, or keep the field and put the summary in the caption under the section. Named in queue/audits/2026-09-04-stack-padding.json rough 1.",
+  "acceptance": [
+    "A stack with uneven room, with its sides closed, shows all four numbers on the Padding row",
+    "Opening the sides and typing still works exactly as it does now",
+    "A stack with the same room all round still shows one number and nothing else"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T13:51:38.167Z",
+      "note": "created (manual)"
+    }
+  ]
+}

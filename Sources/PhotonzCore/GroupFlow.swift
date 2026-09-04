@@ -132,27 +132,29 @@ enum GroupFlow {
         }
     }
 
-    /// The room across one axis, once the padding is taken off both edges, or
-    /// nil where the group is as big as what is in it and there is no room to
-    /// share out.
-    private static func room(_ side: CGFloat?, padding: CGFloat) -> CGFloat? {
-        side.map { max(0, $0 - padding * 2) }
+    /// The room across one axis, once the padding on both of that axis' edges
+    /// is taken off, or nil where the group is as big as what is in it and
+    /// there is no room to share out.
+    private static func room(_ side: CGFloat?, between padding: CGFloat) -> CGFloat? {
+        side.map { max(0, $0 - padding) }
     }
 
     private static func stacked(_ items: [Item], layout: GroupLayout,
                                 bounds: Bounds) -> [CGRect] {
         let horizontal = layout.direction.isHorizontal
         let padding = layout.usedPadding
-        // Everything starts one padding in from the corner the group flows
+        // Everything starts inside the near edges of the corner the group flows
         // from, whether that corner belongs to a screen, to a stack with a size
         // of its own, or to a stack that is exactly as big as its contents.
-        let crossStart = padding
-        // The cross axis runs across the room inside the group's own width;
-        // where it has none of its own, across the widest thing in it, which is
-        // what that group's box IS.
-        let crossExtent = room(horizontal ? bounds.height : bounds.width, padding: padding)
+        let crossStart = horizontal ? padding.top : padding.left
+        // The cross axis runs across the room inside the group's own width, once
+        // both of that axis' edges have taken theirs; where the group has no
+        // size of its own, across the widest thing in it, which is what that
+        // group's box IS.
+        let crossExtent = room(horizontal ? bounds.height : bounds.width,
+                               between: horizontal ? padding.vertical : padding.horizontal)
             ?? (items.map { horizontal ? $0.box.height : $0.box.width }.max() ?? 0)
-        var cursor = padding
+        var cursor = horizontal ? padding.left : padding.top
         var out: [CGRect] = []
         for item in items {
             let along = horizontal ? item.box.width : item.box.height
@@ -177,12 +179,12 @@ enum GroupFlow {
         // cards with one taller card keeps its rows straight. Where the grid
         // has a width of its own the columns share it instead, which is what
         // makes a grid on a screen a grid rather than a huddle in the corner.
-        let cellWidth = room(bounds.width, padding: padding)
+        let cellWidth = room(bounds.width, between: padding.horizontal)
             .map { max(0, ($0 - gap * CGFloat(columns - 1)) / CGFloat(columns)) }
             ?? (items.map(\.box.width).max() ?? 0)
         let cellHeight = items.map(\.box.height).max() ?? 0
-        let originX = padding
-        let originY = padding
+        let originX = padding.left
+        let originY = padding.top
         return items.enumerated().map { index, item in
             let column = index % columns
             let row = index / columns

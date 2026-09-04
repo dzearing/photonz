@@ -816,8 +816,9 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
 
     /// The box a group that arranges its own contents occupies: the size it was
     /// given on each axis, and on an axis it was given none, its contents plus
-    /// its padding. Measured from the corner it flows from, never from the
-    /// leftmost thing in it, so hiding the first row cannot slide the box.
+    /// the room it keeps on both of that axis' edges. Measured from the corner
+    /// it flows from, never from the leftmost thing in it, so hiding the first
+    /// row cannot slide the box.
     private func arrangedBounds(_ group: GroupContent, _ layout: GroupLayout) -> CGRect {
         let padding = layout.usedPadding
         var contentWidth: CGFloat = 0
@@ -827,14 +828,17 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             contentWidth = max(contentWidth, box.maxX)
             contentHeight = max(contentHeight, box.maxY)
         }
-        // An empty stack still keeps its padding clear on both sides; a stack
-        // with something in it already carries one padding in that far edge.
-        let hugged = { (content: CGFloat) in
-            group.children.isEmpty ? padding * 2 : content + padding
+        // An empty stack still keeps both edges clear; one with something in it
+        // already carries the near edge's room in where its contents start, so
+        // only the far edge is still to be added.
+        let hugged = { (content: CGFloat, near: CGFloat, far: CGFloat) in
+            group.children.isEmpty ? near + far : content + far
         }
-        return CGRect(origin: frame.origin,
-                      size: CGSize(width: layout.usedWidth ?? hugged(contentWidth),
-                                   height: layout.usedHeight ?? hugged(contentHeight)))
+        return CGRect(
+            origin: frame.origin,
+            size: CGSize(
+                width: layout.usedWidth ?? hugged(contentWidth, padding.left, padding.right),
+                height: layout.usedHeight ?? hugged(contentHeight, padding.top, padding.bottom)))
     }
 
     /// The box this layer's DRAWING can touch in its parent's space, which is

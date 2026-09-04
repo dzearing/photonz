@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:10:00.522Z",
-  "updated": "2026-09-04T12:10:00.523Z",
+  "updated": "2026-09-04T13:51:54.321Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04, and named as unbuilt by the feature that shipped: queue/audits/2026-09-03-auto-layout.json rough 2 (\"Padding is one number and only on a screen, because a plain group has no edges of its own. Per-side padding is not built\"). The related rough 1 from that audit (no Hug / Fill / Fixed on the container) was answered on 2026-09-03 by a-stack-can-be-a-fixed-size-and-its-rows-fill-it, so a stack can now have a size of its own, which is what makes room on the sides mean something. The Layout section is where the Gap field already lives.",
@@ -27,6 +27,40 @@
     {
       "t": "2026-09-04T12:10:00.523Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T13:32:50.433Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T13:51:54.286984Z",
+      "note": "Adversarial review before building: the mock's four boxes in one row would be 62pt fields four across in a 152pt control column, unreadable. Cut to one field plus a chevron, four indented rows underneath, because one number all round is the common case and four rows of panel should be opt in. Also cut: reading a screen's real bottom margin as padding (on a tall screen that is the rest of the screen, and a later switch to a row stack would then squash everything) - the near edges are read and mirrored instead."
+    },
+    {
+      "t": "2026-09-04T13:51:54.286984Z",
+      "note": "Core: new GroupPadding (top/right/bottom/left, floored at nought, Codable as a single number for as long as the four agree, ExpressibleByIntegerLiteral so padding: 16 still reads). GroupLayout.padding is now that type; GroupFlow.stacked/gridded start at the near edges and share out what is left between both; Layer.arrangedBounds grows the hugging box by the far edge. 26 new tests in GroupPaddingTests, whole suite 2999 green."
+    },
+    {
+      "t": "2026-09-04T13:51:54.286984Z",
+      "note": "App: ArrangementInspector shows Padding with a chevron beside the word (label column stays aligned with Gap and Width, number column stays aligned right), four indented rows when open, and Mixed in the field when the sides differ with the four numbers in its tooltip. Sides open themselves while the room is uneven until somebody closes them, and that choice is forgotten when the selection moves on."
+    },
+    {
+      "t": "2026-09-04T13:51:54.286984Z",
+      "note": "Harness: a playtest focus step now matches a field's accessibility label as well as its placeholder, so a field showing Mixed still answers to Padding. Probe only."
+    },
+    {
+      "t": "2026-09-04T13:51:54.286984Z",
+      "note": "Verified on the running probe app with Screen Recording granted: Scripts/playtest/stack-padding-walk.json. Stack of three rows, Padding 16 took it from 240x240 to 272x272; Bottom 24 took it to 272x280 with nothing inside moving; one undo put it back."
+    },
+    {
+      "t": "2026-09-04T13:51:54.286984Z",
+      "note": "Audit queue/audits/2026-09-04-stack-padding.json with three real captures. Follow-up filed: a-stack-with-uneven-room-shows-its-numbers-even."
+    },
+    {
+      "t": "2026-09-04T13:51:54.320Z",
+      "note": "Per-side padding on a stack, grid and screen: one Padding field with a chevron that opens Top, Right, Bottom and Left. GroupPadding in PhotonzCore saves as a single number while the sides agree, so older documents are byte for byte what they were. 2999 tests green; verified on the probe app with real captures; audit queue/audits/2026-09-04-stack-padding.json"
     }
-  ]
+  ],
+  "started": "2026-09-04T13:32:50.432Z",
+  "completed": "2026-09-04T13:51:54.321Z"
 }

@@ -1,0 +1,30 @@
+{
+  "feature": "Room on each of a stack's four sides",
+  "epic": "ui-layout",
+  "summary": "A stack can now be given different room on each of its four sides, so a card whose contents sit 16 in from the left and 24 up from the bottom gets built by typing rather than by nudging pieces the stack put back. One number typed once still means the same room all round.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Groups that arrange their own contents\" is on by default.",
+  "try": [
+    { "do": "On a blank canvas draw three rectangles roughly in a column." },
+    { "do": "Rubber-band all three and press ⌃⌘G (Layer ▸ Stack Selection)." },
+    { "do": "In the Layout section type 16 into Padding and press Return. The stack should grow 32 wider and 32 taller, rows 16 in from every edge.", "shot": "2026-09-04-stack-padding-1.png" },
+    { "do": "Click the chevron beside the word Padding.", "shot": "2026-09-04-stack-padding-2.png" },
+    { "do": "Type 24 into Bottom and press Return. H should go from 272 to 280 and nothing inside should move.", "shot": "2026-09-04-stack-padding-3.png" },
+    { "do": "Press ⌘Z once: the bottom goes back to 16 and the stack back to the size it was." },
+    { "do": "Type 8 into Padding while the four are open: all four take 8 at once." },
+    { "do": "Press Fixed on Width, type 320 into W, set Horizontal to Stretch, then type 40 into Left." }
+  ],
+  "evaluate": [
+    "Is the chevron beside the word Padding findable, or would you have looked for four boxes straight away?",
+    "Top, Right, Bottom, Left down the panel: is that the order you reach for, or do you want Top and Bottom paired and Left and Right paired?",
+    "When the sides differ the single field goes empty and reads Mixed. Does that read as honest or as broken?",
+    "Four extra rows is four rows of panel. Does the Layout section still feel readable with them open?",
+    "Typing a number into Padding flattens all four sides at once. Is that what you expect, or would you want it to leave a side you had set on purpose?"
+  ],
+  "rough": [
+    "Closing the four while they differ leaves only the word Mixed on screen. The four numbers are in the field's tooltip, and reopening is one click, but there is a moment where the 24 you typed is not visible anywhere.",
+    "Turning a screen's contents into a stack reads the left and top margins and MIRRORS them onto the right and bottom. It does not read the actual space below the last row, because on a tall screen that is the rest of the screen rather than room anybody asked for. So a screen with a wide right margin comes back symmetric and has to be typed.",
+    "The room cannot be dragged out on the canvas, only typed. That was true of the gap before it and nobody has asked yet.",
+    "Nothing links the room to a spacing scale, so 16 here and 16 there are two unrelated numbers.",
+    "Screenshots here are real captures of the running app (Screen Recording was granted), taken by Scripts/playtest/stack-padding-walk.json."
+  ]
+}

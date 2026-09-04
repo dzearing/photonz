@@ -65,11 +65,12 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// The space between a grid's rows. Kept apart from `gap` because a card
     /// grid usually wants more air above than beside.
     public var rowGap: CGFloat
-    /// The space kept clear inside the edges. A group that arranges itself has
-    /// edges of its own — whether it was given a size or takes the one its
-    /// contents make — so the contents start this far in and the box carries
-    /// this much on every side.
-    public var padding: CGFloat
+    /// The room kept clear inside the edges, on each of the four sides. A group
+    /// that arranges itself has edges of its own — whether it was given a size
+    /// or takes the one its contents make — so the contents start this far in
+    /// and the box carries this much on each side. One number typed once still
+    /// means the same room all round.
+    public var padding: GroupPadding
     /// How wide this group is, or nil for a group that is as wide as whatever
     /// is inside it. A number here is what lets a menu be 320 points wide and
     /// every row stretch to that width without building it on a screen.
@@ -88,7 +89,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
                 columns: Int = GroupLayout.defaultColumns,
                 gap: CGFloat = GroupLayout.defaultGap,
                 rowGap: CGFloat = GroupLayout.defaultGap,
-                padding: CGFloat = 0,
+                padding: GroupPadding = .none,
                 width: CGFloat? = nil,
                 height: CGFloat? = nil) {
         self.kind = kind
@@ -111,7 +112,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// below nought means, so the model holds the floor.
     public var usedGap: CGFloat { max(0, gap) }
     public var usedRowGap: CGFloat { max(0, rowGap) }
-    public var usedPadding: CGFloat { max(0, padding) }
+    public var usedPadding: GroupPadding { padding.used }
 
     /// The size actually used on each axis: the number given, never negative,
     /// or nil where the group is the size of what is in it. A number that is
@@ -155,12 +156,147 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         columns = try c.decodeIfPresent(Int.self, forKey: .columns) ?? GroupLayout.defaultColumns
         gap = try c.decodeIfPresent(CGFloat.self, forKey: .gap) ?? GroupLayout.defaultGap
         rowGap = try c.decodeIfPresent(CGFloat.self, forKey: .rowGap) ?? GroupLayout.defaultGap
-        padding = try c.decodeIfPresent(CGFloat.self, forKey: .padding) ?? 0
+        // Either shape of room: the single number older documents hold, or the
+        // four sides a card with uneven room needs.
+        padding = try c.decodeIfPresent(GroupPadding.self, forKey: .padding) ?? .none
         // A group saved before a stack could be given a size of its own opens
         // as one that is the size of its contents, which is what it was.
         width = try c.decodeIfPresent(CGFloat.self, forKey: .width)
         height = try c.decodeIfPresent(CGFloat.self, forKey: .height)
     }
+}
+
+// MARK: - The space kept clear inside the edges
+
+/// The room a group leaves inside its own four edges.
+///
+/// One number is the common case and stays one number: type 16 and every side
+/// gets 16. Real cards are not symmetric though — contents 16 in from the left,
+/// 12 down from the top and 24 up from the bottom is an ordinary card — so each
+/// side is its own number underneath, and a card like that gets built by typing
+/// rather than by nudging pieces about.
+///
+/// It SAVES as a single number for as long as all four agree, which is exactly
+/// what every document written before there were four sides holds. Those
+/// documents open with the room they had and save again unchanged.
+public struct GroupPadding: Hashable, Codable, Sendable {
+    public var top: CGFloat
+    public var right: CGFloat
+    public var bottom: CGFloat
+    public var left: CGFloat
+
+    /// No room on any side: what a group has until somebody asks for some, and
+    /// what every document written before this existed comes back as.
+    public static let none = GroupPadding(0)
+
+    public init(top: CGFloat, right: CGFloat, bottom: CGFloat, left: CGFloat) {
+        self.top = top
+        self.right = right
+        self.bottom = bottom
+        self.left = left
+    }
+
+    /// The same room on all four sides.
+    public init(_ all: CGFloat) {
+        self.init(top: all, right: all, bottom: all, left: all)
+    }
+
+    /// Which edge, in the order they are shown and typed: clockwise from the
+    /// top, the order anybody who has written a CSS shorthand already carries.
+    public enum Side: String, CaseIterable, Hashable, Sendable {
+        case top, right, bottom, left
+
+        /// What the inspector calls it.
+        public var title: String {
+            switch self {
+            case .top: "Top"
+            case .right: "Right"
+            case .bottom: "Bottom"
+            case .left: "Left"
+            }
+        }
+    }
+
+    public subscript(side: Side) -> CGFloat {
+        get {
+            switch side {
+            case .top: top
+            case .right: right
+            case .bottom: bottom
+            case .left: left
+            }
+        }
+        set {
+            switch side {
+            case .top: top = newValue
+            case .right: right = newValue
+            case .bottom: bottom = newValue
+            case .left: left = newValue
+            }
+        }
+    }
+
+    /// The one number all four sides are, or nil where they disagree. What the
+    /// single Padding field shows, and what it goes blank for.
+    public var uniform: CGFloat? {
+        top == right && right == bottom && bottom == left ? top : nil
+    }
+
+    public var isUniform: Bool { uniform != nil }
+
+    /// The room actually kept. Negative room is not a thing anyone means, and
+    /// typing over a field passes through odd values on the way to a number,
+    /// so the model holds the floor rather than refusing the typing.
+    public var used: GroupPadding {
+        GroupPadding(top: Self.usedSide(top), right: Self.usedSide(right),
+                     bottom: Self.usedSide(bottom), left: Self.usedSide(left))
+    }
+
+    private static func usedSide(_ side: CGFloat) -> CGFloat {
+        side.isFinite ? max(0, side) : 0
+    }
+
+    /// The room taken out of the width, and out of the height.
+    public var horizontal: CGFloat { left + right }
+    public var vertical: CGFloat { top + bottom }
+
+    private enum CodingKeys: String, CodingKey { case top, right, bottom, left }
+
+    /// Read either shape: the single number every older document holds, or the
+    /// four sides a card with uneven room needs.
+    public init(from decoder: Decoder) throws {
+        if let single = try? decoder.singleValueContainer().decode(CGFloat.self) {
+            self.init(single)
+        } else {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            self.init(top: try c.decodeIfPresent(CGFloat.self, forKey: .top) ?? 0,
+                      right: try c.decodeIfPresent(CGFloat.self, forKey: .right) ?? 0,
+                      bottom: try c.decodeIfPresent(CGFloat.self, forKey: .bottom) ?? 0,
+                      left: try c.decodeIfPresent(CGFloat.self, forKey: .left) ?? 0)
+        }
+    }
+
+    /// Written as one number while the sides agree, so a document that never
+    /// asked for uneven room is byte for byte the file it always was.
+    public func encode(to encoder: Encoder) throws {
+        if let uniform {
+            var c = encoder.singleValueContainer()
+            try c.encode(uniform)
+            return
+        }
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(top, forKey: .top)
+        try c.encode(right, forKey: .right)
+        try c.encode(bottom, forKey: .bottom)
+        try c.encode(left, forKey: .left)
+    }
+}
+
+/// One number where four are wanted: `padding: 16` still means 16 all round,
+/// so nothing that only ever wanted even room has to say so four times.
+extension GroupPadding: ExpressibleByIntegerLiteral, ExpressibleByFloatLiteral {
+    public init(integerLiteral value: Int) { self.init(CGFloat(value)) }
+    public init(floatLiteral value: Double) { self.init(CGFloat(value)) }
 }
 
 // MARK: - Reading a layout off what somebody already arranged by hand
@@ -218,12 +354,19 @@ extension GroupLayout {
         return max(0, (total / CGFloat(rows.count - 1)).rounded())
     }
 
-    /// The space already being kept clear inside a screen's edges. A plain
-    /// group has no edges of its own, so it has none.
-    private static func inferredPadding(_ boxes: [CGRect], _ container: CGRect?) -> CGFloat {
-        guard let container, !boxes.isEmpty else { return 0 }
-        let left = (boxes.map(\.minX).min() ?? 0) - container.minX
-        let top = (boxes.map(\.minY).min() ?? 0) - container.minY
-        return max(0, min(left, top).rounded())
+    /// The room already being kept clear inside a screen's edges. A plain group
+    /// starts life exactly as big as its contents, so it is keeping none.
+    ///
+    /// Only the two edges the contents START at can be read off them: the left
+    /// margin of a column and the top of it are real, while the space below the
+    /// last row is just the rest of the screen and reading it as room would
+    /// leave a stack claiming three hundred points of bottom padding. So the
+    /// far sides mirror the near ones, which is the even card somebody who
+    /// spaced a screen by eye was drawing anyway, and either can be typed over.
+    private static func inferredPadding(_ boxes: [CGRect], _ container: CGRect?) -> GroupPadding {
+        guard let container, !boxes.isEmpty else { return .none }
+        let left = max(0, ((boxes.map(\.minX).min() ?? 0) - container.minX).rounded())
+        let top = max(0, ((boxes.map(\.minY).min() ?? 0) - container.minY).rounded())
+        return GroupPadding(top: top, right: left, bottom: top, left: left)
     }
 }
