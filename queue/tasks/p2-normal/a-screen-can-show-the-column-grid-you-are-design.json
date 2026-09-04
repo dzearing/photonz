@@ -4,12 +4,12 @@
   "goal": "Real UI is laid out on columns: twelve columns with a gutter, or a four column phone layout. Photonz can arrange things in a stack or a grid container, but there is no way to put a column guide behind a whole screen and see whether the pieces on it land on the columns. This puts an optional column overlay on a screen, set by its number of columns, its gutter and its margin.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 900,
+  "seq": 20,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:31:39.166Z",
-  "updated": "2026-09-03T17:32:19.453Z",
+  "updated": "2026-09-04T12:08:54.664Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED on its decision card until the user answers, because it puts something new on screen. From the ui-grid mock, and named as unbuilt in the rough list of queue/audits/2026-09-03-auto-layout.json: the mock layout grid is a column overlay you eyeball against, not a container that positions what it holds, and only the container was built. Ships behind next-frames since only a screen carries one, or its own Next flag if the runner prefers; either way on by default in Next. The overlay is chrome, not content: it belongs with the canvas overlays in CanvasView, not in the render path, so it can never reach an export. Whether it also snaps is the card question, and the answer decides whether LayerSnapping is touched at all.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-03T17:32:19.453Z",
       "note": "Waiting on the column grid decision card: whether to build a column overlay on a screen at all, and whether it should pull at a drag"
+    },
+    {
+      "t": "2026-09-04T12:08:54.663Z",
+      "note": "seq 900 -> 20"
     }
   ]
 }

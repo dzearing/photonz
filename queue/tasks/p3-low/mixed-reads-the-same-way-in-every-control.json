@@ -1,0 +1,30 @@
+{
+  "id": "mixed-reads-the-same-way-in-every-control",
+  "title": "Mixed reads the same way in every control",
+  "goal": "Pick two layers that differ and the panel says Mixed. In a menu it says it at full strength, like a real choice you made; on a slider it says it dimmed, like a value that is not there. Same word, same situation, two different looks, so the panel reads as two panels. Pick one and use it everywhere.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T12:09:39.562Z",
+  "updated": "2026-09-04T12:09:39.562Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-04. Evidence: queue/audits/2026-09-04-type-menu-labels.json rough 1 (\"The word Mixed sits in the menu at full strength, while a Mixed readout on an Effects slider is dimmed. Matching them would need the closed menus own text styled, which AppKit does not hand over cheaply, so it is left as is\") and rough 2 (the alignment rows go blank on a mixed selection and say nothing at all, which is a third answer). AppKit will not style a closed pop-up buttons title cheaply, so the likely answer is to match the menu rather than dim it, or to draw the title. docs/design/mocks/shared/UX-PATTERNS.md line 244 says a row answers Mixed but never says what Mixed looks like.",
+  "acceptance": [
+    "Mixed looks the same in a menu, on a slider, in a field and on a segmented row",
+    "A control showing Mixed is still usable: setting a value from it sets all the picked layers",
+    "Nothing that is not Mixed changes appearance",
+    "Try it with Build on a frame turned on in Experiments: pick a 24pt label and a 12pt label, then read Font, Size, Weight, alignment and the Effects sliders in one pass",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T12:09:39.562Z",
+      "note": "created (manual)"
+    }
+  ]
+}

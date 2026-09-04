@@ -1,0 +1,31 @@
+{
+  "id": "a-locked-layer-inside-a-stack-is-left-where-it-i",
+  "title": "A locked layer inside a stack is left where it is",
+  "goal": "Locking a layer is how you say leave this alone. Inside a stack it only half means that: you cannot drag the layer yourself, but the stack still picks it up and moves it whenever anything around it changes. So the one thing you locked is the one thing that keeps moving. Three separate fixes in the last day made lock mean what it says everywhere else; this is the piece left over.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T12:10:10.682Z",
+  "updated": "2026-09-04T12:10:10.683Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-04. Evidence: queue/audits/2026-09-03-auto-layout.json rough 6 (\"A locked layer inside a stack is still moved by the stack. Lock stops you dragging it; it does not opt out of the arrangement\"). Lock was the theme of 2026-09-04: locked layers stopped drawing resize handles (2026-09-04-locked-layer-handles.json) and the Position and Size caption stopped claiming a locked layer can be nudged (2026-09-04-locked-caption.json), which leaves the stack as the last place lock does not hold. There is a real design question inside this one: a locked layer that leaves the flow may need to be treated as an obstacle rather than a member, so read those two audits before choosing. Related: one-rule-for-a-control-that-cannot-do-anything.",
+  "acceptance": [
+    "A locked layer inside a stack keeps its place when a layer above it is added, removed or resized",
+    "The rest of the stack still flows around it rather than piling on top of it",
+    "Unlocking the layer puts it back into the flow, in one undo step",
+    "The Layers list and the Layout rows say that this layer is opting out, rather than leaving it a mystery",
+    "Try it with Groups that arrange their own contents turned on in Experiments: stack three rows, lock the middle one, then delete the first",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T12:10:10.683Z",
+      "note": "created (manual)"
+    }
+  ]
+}

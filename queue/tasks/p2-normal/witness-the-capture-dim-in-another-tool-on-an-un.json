@@ -4,12 +4,12 @@
   "goal": "The screen darkening that a region capture puts up is supposed to show up in screen recordings and shared screens from the first instant, and the code that makes it do that has shipped. Nobody has actually seen it happen yet, because the Mac was locked when it was built and a locked Mac photographs as the lock screen. Watch it work once on a real screen, so the fix is witnessed rather than argued.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 110,
+  "seq": 10,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:58:36.959Z",
-  "updated": "2026-09-03T19:09:43.785Z",
+  "updated": "2026-09-04T12:08:54.631Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked only on an unlocked screen. Everything else is ready: ONE command answers all four acceptance items now.\n\nRun:\n  ioreg -n Root -d1 -a | plutil -extract IOConsoleLocked raw -   # must print false\n  Scripts/probe-app.sh --quit; open -a \"$PWD/dist/Photonz Probe.app\" --args --capture-diag\n  cat /tmp/photonz-capture-diag.txt\nNote the ABSOLUTE path: `open -a \"dist/Photonz Probe.app\"` fails to resolve.\n\nReport lines map to the acceptance items in order: line 1 says unlocked; the \"dim shows up in another tool's screenshot\" line wants about 0.75 of clean; the \"frozen picture under the overlay\" line wants 1.00 of clean; the \"window shadow below a test window\" line wants the freeze path within 75% of the old path's depth.\n\nThe shadow line is still the real risk. The freeze moved from SCScreenshotManager.captureImage(in:) to SCContentFilter(display:excludingWindows:) with ignoreShadows = false, and the comment on ScreenCapturer.capture(screen:) records a 2026-07-03 measurement that the filter path synthesizes NO window shadows at all (filter path delta-0 luma under every window edge). ignoreShadows = false is supposed to have fixed that and it has never been checked. If the line says SHADOW LOST, the fallback is to keep the filter path only while the overlay is up and note it.\n\nGeometry and mean luma already match the old path exactly (3456x2234, 0.4887 both ways on this run).\n\nAlso worth a real screenshot for queue/audits/2026-09-03-capture-dim-in-recordings.json, which ships without one and says why; /tmp/photonz-capture-diag-drag.png is written every run but is only worth shipping from an unlocked one.",
@@ -43,6 +43,10 @@
     {
       "t": "2026-09-03T19:09:43.785Z",
       "note": "waiting, but no decision card was opened against this task. Nothing returns a task to the queue except an answer, so this will sit here until someone opens one."
+    },
+    {
+      "t": "2026-09-04T12:08:54.630Z",
+      "note": "seq 110 -> 10"
     }
   ],
   "started": "2026-09-03T19:02:25.163Z"

@@ -1,0 +1,31 @@
+{
+  "id": "a-picture-held-over-the-right-hand-panel-shows-w",
+  "title": "A picture held over the right hand panel shows where it will land",
+  "goal": "Drag a picture over the canvas and the app draws the box where it is about to land, so you can aim it. Drag the same picture over the panel down the right side and the app draws nothing at all: the only sign it will be taken is the shape of the pointer, and the only sign it was refused is the same pointer wearing a different sign. The panel should say what it is about to do with what you are holding, the way the canvas already does.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T12:09:08.695Z",
+  "updated": "2026-09-04T12:09:08.695Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-04. Evidence: queue/audits/2026-09-04-panel-takes-picture.json rough 2 (\"There is no highlight, no drop line, no glow while a picture is held over the panel. The only feedback is the pointer.\") and rough 1 (a picture let go on a layer row lands on top of the stack, not at that row); queue/audits/2026-09-04-panel-refuses-file.json rough 2 (nothing an unmanned run can photograph, because the only feedback lives in the window server); queue/audits/2026-09-04-refused-file.json rough 1. The canvas side already exists and is the model to copy: queue/audits/2026-09-04-drop-lands-here.json and 2026-09-03-drop-preview.json. docs/design/mocks/shared/UX-PATTERNS.md section 3 has no rule for what a drop target looks like while something is held over it, which is why each surface answered differently; whoever does this should add that rule in the same sitting.",
+  "acceptance": [
+    "Holding a picture over the right hand panel shows a visible sign the panel will take it, not just a pointer",
+    "Holding a file the app cannot use over the panel shows it will be refused, without waiting for the pointer to be read",
+    "Holding a picture over a layer row says whether it will land at that row or on top of the stack, and then does what it said",
+    "The canvas landing box is unchanged",
+    "Try it with Build on a frame turned on in Experiments: drag a PNG from the Finder slowly across the canvas, the Layers rows, and the empty space below them",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T12:09:08.695Z",
+      "note": "created (manual)"
+    }
+  ]
+}

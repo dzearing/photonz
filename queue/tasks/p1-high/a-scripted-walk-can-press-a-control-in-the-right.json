@@ -1,0 +1,40 @@
+{
+  "id": "a-scripted-walk-can-press-a-control-in-the-right",
+  "title": "A scripted walk can press a control in the right hand panel",
+  "goal": "The unmanned playtest can only click on the picture. Anything in the panel down the right side, a button, a checkbox, a slider, cannot be pressed by a walk, so a feature that lives there can only be photographed and never actually used before it is handed over. This makes those controls pressable. It is what unblocks the feature in focus: almost everything a person does to a component or a stack happens in that panel (Layout, Frame, the colour rows, Clear), so today those features are verified by looking at a picture of the control rather than by pressing it. Three audits in the last day said so out loud.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T11:34:49.242Z",
+  "updated": "2026-09-04T12:08:41.755Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Clicks are dispatched straight to CanvasNSView (PlaytestHarness case .click), so a window-space point silently lands on the canvas behind the panel and reads as a click on nothing. Hit-testing the content view and sending mouseDown to the SwiftUI hosting view under it hangs the walk (tried 2026-09-04, reverted). PlaytestPanelMenu solved the same class of problem for menus with a tracking-mode hop; likely the same shape of answer, or drive the control through its accessibility element instead.",
+  "acceptance": [
+    "A walk step can press a named button in the right hand panel and the walk finishes instead of hanging",
+    "The step reports what it pressed in log.json",
+    "A walk can press one of the Layout rows on a layer inside a stack, which is the case three audits could not verify",
+    "An existing walk that clicks on the picture behaves exactly as it did"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T11:34:49.242Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T12:08:41.691Z",
+      "note": "triage 2026-09-04: promoted p3 -> p1. It serves unmanned-loop, a next epic, but it unblocks the focus: 2026-09-04-inert-placement-rule, 2026-09-04-panel-arms-tool and 2026-09-04-typed-width-floor all had to hand back a photograph instead of a press."
+    },
+    {
+      "t": "2026-09-04T12:08:41.724Z",
+      "note": "priority p3-low -> p1-high"
+    },
+    {
+      "t": "2026-09-04T12:08:41.755Z",
+      "note": "seq 1200 -> 10"
+    }
+  ]
+}

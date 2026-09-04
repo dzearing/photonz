@@ -1,0 +1,29 @@
+{
+  "id": "one-rule-for-a-control-that-cannot-do-anything",
+  "title": "One rule for a control that cannot do anything",
+  "goal": "Six separate fixes in one day were all the same shape: the app offered a control that could not do anything, and someone had to decide case by case whether to hide it, grey it, or leave it and explain. The answer came out different each time. Write down the one rule, so the next fix does not have to invent it, and say which of the six is the example to copy.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "docs",
+  "created": "2026-09-04T12:09:19.657Z",
+  "updated": "2026-09-04T12:09:19.658Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-04. The six, all landed the same day, all answered differently: a locked layer stopped drawing resize handles (2026-09-04-locked-layer-handles.json, control removed); the Position and Size caption started saying the layer is locked (2026-09-04-locked-caption.json, control stays and explains); a layer in a stack reads \"Set by the stack\" instead of a menu (2026-09-04-stack-owns-axis.json, control replaced by a sentence); a placement rule on the axis a stack owns stopped being counted as an exception (2026-09-04-inert-placement-rule.json, made invisible on purpose); Stretch on a text layer was made to actually do something instead of being removed (2026-09-04-text-fills-height.json); the H field for text shows a dimmed number you cannot type into (2026-09-04-text-height-readout.json, and its own rough line calls that box the clumsiest part). Two of them say the reason is only on hover and that this is too quiet. Target: docs/design/mocks/shared/UX-PATTERNS.md, section 4 (selection and contextual controls), which today says nothing about a control that cannot act. Serves the focus by giving every ui-building and ui-layout runner one call instead of six.",
+  "acceptance": [
+    "The patterns doc says what to do when a control cannot act: when it disappears, when it stays and says who owns it, and when it stays live",
+    "The rule names the wording to use, so two places do not invent two sentences for the same situation",
+    "It says where the explanation goes, given that a reason only on hover is not read",
+    "Each of the six fixes from 2026-09-04 either matches the rule or is listed as an exception with its reason",
+    "No app code changes in this task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T12:09:19.658Z",
+      "note": "created (manual)"
+    }
+  ]
+}

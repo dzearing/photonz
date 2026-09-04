@@ -1,0 +1,31 @@
+{
+  "id": "the-settings-for-the-tool-in-your-hand-are-reach",
+  "title": "The settings for the tool in your hand are reachable with the panel hidden",
+  "goal": "Some things belong to the tool you are holding rather than to anything you have picked: how much a zoom callout magnifies, whether it is a box or a circle, how forgiving the wand is, what shape the crop keeps. Every one of them lives in the right hand panel. Hide the panel, which is a normal thing to do while you work on a picture, and there is no way to reach any of them. The tool in your hand should carry its own settings with it.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T12:09:51.061Z",
+  "updated": "2026-09-04T12:09:51.062Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-04. Named as a house rule by the audit that added the newest one: queue/audits/2026-09-04-callout-shape.json rough 1 (\"With the inspector hidden there is no way to the choice at all. Every other tool setting has the same gap (the wands tolerance, crops aspect), so this follows the house rule rather than fixing it\"). queue/audits/2026-09-04-callout-one-home.json is the same story from the other side: the popover that used to hold tool settings was unreachable code, because picking up a drawing tool clears the layer selection, so the settings were moved into the panel with nowhere else to go. This is also a documented rule that reality has moved past: docs/design/mocks/shared/UX-PATTERNS.md section 6 says tool options are \"shown in the options bar or the top of the Inspector\", and there is no options bar in the app. Either build the strip the doc promises or change the doc; do not leave them disagreeing. Worth a decision card with shots before building, since it puts new chrome on screen.",
+  "acceptance": [
+    "With the right hand panel hidden, the settings for the tool in your hand can still be reached and changed",
+    "The settings shown are the ones for the tool actually in your hand, and they change when the tool changes",
+    "Nothing that belongs to a selected layer moves out of the panel",
+    "With the panel shown, the panel keeps working exactly as it does now",
+    "Try it with Next: pick the Zoom Callout tool, hide the panel, and change its shape from Rectangle to Circle",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T12:09:51.062Z",
+      "note": "created (manual)"
+    }
+  ]
+}

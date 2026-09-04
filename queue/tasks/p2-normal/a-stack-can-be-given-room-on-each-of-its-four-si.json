@@ -1,0 +1,32 @@
+{
+  "id": "a-stack-can-be-given-room-on-each-of-its-four-si",
+  "title": "A stack can be given room on each of its four sides",
+  "goal": "A stack spaces the things inside it, but there is no way to say how much room to leave around them: a card whose contents should sit 16 in from the left, 12 down from the top and 24 up from the bottom cannot be built. Today there is one padding number and only on a screen, so every real card is still made by nudging pieces by hand, which the stack then undoes. Give a stack padding on each of its four sides.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T12:10:00.522Z",
+  "updated": "2026-09-04T12:10:00.523Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-04, and named as unbuilt by the feature that shipped: queue/audits/2026-09-03-auto-layout.json rough 2 (\"Padding is one number and only on a screen, because a plain group has no edges of its own. Per-side padding is not built\"). The related rough 1 from that audit (no Hug / Fill / Fixed on the container) was answered on 2026-09-03 by a-stack-can-be-a-fixed-size-and-its-rows-fill-it, so a stack can now have a size of its own, which is what makes room on the sides mean something. The Layout section is where the Gap field already lives.",
+  "acceptance": [
+    "A stack can be given room on the left, right, top and bottom, each typed separately",
+    "One number can still be typed once and applied to all four, for the common case",
+    "The stack grows to hold the room it was given and its contents re-flow in one undo step",
+    "A stack inside a component keeps its room when a copy of that component is resized",
+    "A document saved before this change opens with no room on any side and is byte for byte what it was",
+    "Try it with Groups that arrange their own contents turned on in Experiments: stack three rows, give the stack 16 all round then 24 at the bottom only",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T12:10:00.523Z",
+      "note": "created (manual)"
+    }
+  ]
+}

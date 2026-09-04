@@ -1,0 +1,31 @@
+{
+  "id": "a-number-you-cannot-type-into-stops-looking-like",
+  "title": "A number you cannot type into stops looking like one you can",
+  "goal": "In the Position and Size panel, the height of a piece of text is worked out for you and cannot be typed into. It is shown in the same rounded box as the width beside it, which you can type into, and the only difference is that the number is a little greyer. So you click it, nothing happens, and nothing tells you why until you have hovered long enough for a tip. A field you cannot edit should not look like a field you can.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T12:09:31.741Z",
+  "updated": "2026-09-04T12:09:31.741Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-04. Straight from the audit that shipped the readout: queue/audits/2026-09-04-text-height-readout.json rough 1 (\"H still wears the same rounded box as the fields you can type in. Only the grey tells you apart, and a box that looks like an input but refuses the keyboard is the clumsiest part of this. Losing its border would say it louder, but that is a visual call worth your eye first\") and rough 2 (\"Clicking a read-only field gives no feedback at all. The tip explains it, but only after a hover delay\"). The same audit notes a locked layer and a stacked layer produce more read-only fields, so this is not one field. Losing the border is a look change, so open a decision card with two shots rather than guessing. docs/design/mocks/shared/UX-PATTERNS.md has no read-only field treatment at all; add it once the call is made. Related: one-rule-for-a-control-that-cannot-do-anything is the general version of this.",
+  "acceptance": [
+    "A field whose number is worked out for the user reads as a readout at a glance, without hovering",
+    "Clicking one gives an immediate answer rather than silence",
+    "The fields you can type into look exactly as they did",
+    "The same treatment covers every read-only number in the panel, not just the height of text",
+    "Try it with Build on a frame turned on in Experiments: draw a label, read its H, then click it; compare with W beside it",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T12:09:31.741Z",
+      "note": "created (manual)"
+    }
+  ]
+}
