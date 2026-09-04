@@ -51,6 +51,51 @@ public enum PastePlacement {
     }
 }
 
+/// Where each paste of one thing lands when you paste it again and again.
+///
+/// Pasting a copied layer steps it down and right off the layer it came from,
+/// so the copy is visible instead of hiding exactly on top of its original.
+/// Pasting the same thing again used to take that same single step every time,
+/// which stacked every copy in one spot: the picture looked unchanged and only
+/// the layers list showed that anything had happened. Each paste now steps past
+/// the last one, the way duplicating a duplicate walks down the picture.
+///
+/// The ladder is anchored to where the FIRST paste went, not to wherever a copy
+/// has since been dragged, so a run of pastes stays beside the layer it came
+/// from. And because the caller passes the previous landing only while that copy
+/// is still in the document, undoing a paste frees its spot for the next one
+/// instead of leaving a hole in the ladder.
+public enum PasteCascade {
+
+    /// How far each paste steps, in canvas points.
+    public static let step = CGPoint(x: 16, y: 16)
+
+    /// One step down and right: where a copy goes so it does not hide the thing
+    /// it was made from.
+    public static func stepped(_ frame: CGRect) -> CGRect {
+        frame.offsetBy(dx: step.x, dy: step.y)
+    }
+
+    /// The frame the next paste should take.
+    ///
+    /// `first` is where the first paste of this clipboard belongs — beside the
+    /// layer it was copied from, or the middle of the canvas for a picture that
+    /// came from outside. `previous` is where this same clipboard's last paste
+    /// actually landed in this window, and is nil when there has not been one
+    /// or that copy is gone again.
+    ///
+    /// A ladder that has walked off the picture starts over at the first rung,
+    /// so pasting can never march a copy somewhere nobody can see it.
+    public static func frame(landingAt first: CGRect, after previous: CGRect?,
+                             canvas: CGSize) -> CGRect {
+        guard let previous else { return first }
+        let box = CGRect(origin: .zero, size: canvas)
+        let candidate = stepped(previous)
+        if candidate.intersects(box) { return candidate }
+        return first.intersects(box) ? first : candidate
+    }
+}
+
 extension PhotonzDocument {
 
     /// A layer ready to leave the document: itself, with its position moved

@@ -1,0 +1,29 @@
+{
+  "feature": "A second paste lands where you can see it",
+  "epic": "ui-building",
+  "summary": "Pasting the same copied layer again and again now walks each copy one step further down and right, so you can see what you just made instead of stacking every copy invisibly in one spot.",
+  "setup": "Photonz Dev, any document. Works in both releases: this is shared editor behaviour, not a Next-only flag.",
+  "try": [
+    { "do": "Open a screenshot, then drag a second picture onto the canvas so there is a layer to copy." },
+    { "do": "Click that layer and press Cmd C." },
+    { "do": "Press Cmd V three times." },
+    { "do": "Look at the canvas: the three copies should form a staircase down and to the right, not one lump.", "shot": "2026-09-04-paste-cascade-1.png" },
+    { "do": "Press Cmd Z once and watch exactly one copy disappear." },
+    { "do": "Press Cmd V again: it lands back in the spot the undone copy had." },
+    { "do": "Press Cmd Z twice, then Cmd V once: it lands one step past the copy that is still standing.", "shot": "2026-09-04-paste-cascade-2.png" },
+    { "do": "Copy a different layer and paste it: the staircase starts over beside that layer." }
+  ],
+  "evaluate": [
+    "Is one step of 16 points far enough to see at the zoom you actually work at, or does a paste still look like nothing happened?",
+    "Does the staircase going down and to the right feel like the direction you expect a copy to appear in?",
+    "After an undo, is landing the next paste back in the spot you just cleared what you expected, or would you rather it kept counting on?",
+    "When you drag a pasted copy somewhere else and paste again, the new one lands beside the ORIGINAL rather than beside the copy you moved. Is that the right anchor?",
+    "Pasting the same screenshot from another app twice now steps the second one too. Does that help, or should pictures from outside always land dead centre?"
+  ],
+  "rough": [
+    "The step is 16 points because that is what a single paste and a duplicate already used, so all three agree. On a 2x capture viewed fitted, that is only about 8 points on screen: visible, but not loud.",
+    "The staircase is anchored to the layer the copy came from, so a long run of pastes never marches off the picture. If a run does walk off the canvas edge, it starts over at the first rung rather than continuing into nowhere.",
+    "The ladder is remembered per window and keyed to the clipboard, so copying anything else, anywhere, starts it over. Two windows pasting the same clipboard each keep their own staircase.",
+    "Verified on the real app with a scripted playtest (Scripts/playtest/paste-cascade-walk.json); Screen Recording was granted, so both shots here are real window captures, not offscreen renders."
+  ]
+}

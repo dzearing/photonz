@@ -1,0 +1,167 @@
+{
+  "out": "/tmp/photonz-playtest/paste-cascade",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1340,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Photonz drop probe.png",
+      "at": [
+        420,
+        380
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-placed",
+      "note": "one picture placed, ready to copy"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-placed"
+    },
+    {
+      "do": "action",
+      "action": "copyLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "pasteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-paste-one",
+      "note": "first paste: one step down and right of the original"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-paste-one"
+    },
+    {
+      "do": "action",
+      "action": "pasteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "3-paste-two",
+      "note": "second paste must step PAST the first, not hide under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-paste-two"
+    },
+    {
+      "do": "action",
+      "action": "pasteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "4-paste-three",
+      "note": "third paste continues the staircase"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-paste-three"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-undone",
+      "note": "undo takes the third copy away, one paste at a time"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-undone"
+    },
+    {
+      "do": "action",
+      "action": "pasteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "6-paste-after-undo",
+      "note": "pasting again reuses the spot the undone copy had, no hole in the staircase"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-paste-after-undo"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone-twice",
+      "note": "two more undos leave just the original and the first copy"
+    },
+    {
+      "do": "action",
+      "action": "pasteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "8-paste-again",
+      "note": "pasting now lands one step past the copy that is still there"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-paste-again"
+    }
+  ]
+}

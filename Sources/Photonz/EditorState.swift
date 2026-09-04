@@ -5694,8 +5694,41 @@ final class EditorState {
         }
     }
 
+    /// Every copy this window has pasted off the clipboard as it stands now,
+    /// in the order they landed. Pasting again steps past the last of them, so
+    /// a run of ⌘V walks down the picture instead of stacking every copy in one
+    /// spot where only the layers list shows anything happened (`PasteCascade`).
+    ///
+    /// The clipboard's change count is what makes it "the same paste again":
+    /// copying anything else, here or in another app, starts the ladder over.
+    private var pasteLadder: (clipboard: Int, rungs: [(layer: UUID, frame: CGRect)])?
+
+    /// Where the next paste goes, given where the first one belongs.
+    ///
+    /// Undoing a paste takes its copy back out of the document, so the ladder
+    /// is trimmed to the copies that are still there and the next paste lands
+    /// exactly where the undone one did — undo then paste puts back what you
+    /// just took away, rather than opening a hole or landing on top of a copy
+    /// that is still standing.
+    private func cascadedPasteFrame(landingAt first: CGRect) -> CGRect {
+        if pasteLadder?.clipboard != NSPasteboard.general.changeCount { pasteLadder = nil }
+        while let last = pasteLadder?.rungs.last, document?.layer(id: last.layer) == nil {
+            pasteLadder?.rungs.removeLast()
+        }
+        return PasteCascade.frame(landingAt: first, after: pasteLadder?.rungs.last?.frame,
+                                  canvas: document?.canvasSize ?? .zero)
+    }
+
+    /// Remembers a paste so the next one can step past it. The frame is in
+    /// canvas coordinates, which is the space the ladder is built in.
+    private func recordPaste(_ id: UUID, at frame: CGRect) {
+        let clipboard = NSPasteboard.general.changeCount
+        if pasteLadder?.clipboard != clipboard { pasteLadder = (clipboard, []) }
+        pasteLadder?.rungs.append((id, frame))
+    }
+
     private func pasteLayer(_ transfer: LayerTransfer) {
-        var layer = transfer.layer.duplicated(offsetBy: CGPoint(x: 16, y: 16))
+        var layer = transfer.layer.duplicated()
         if case .image = transfer.layer.content {
             guard let data = transfer.imageData, let cg = ImageCodec.decode(data) else { return }
             // The payload's ImageRef belonged to the source window's store.
@@ -5707,6 +5740,10 @@ final class EditorState {
             return
         }
         guard let document else { return }
+        // Each paste of one clipboard steps past the last, so pasting twice
+        // leaves two copies you can see and tell apart rather than one hidden
+        // exactly under the other.
+        layer.frame = cascadedPasteFrame(landingAt: PasteCascade.stepped(transfer.layer.frame))
         // Named the way duplicating this layer names it, so the two ways of
         // making a copy agree and the pasted row can be told from the one it
         // came from. A name nothing here is using is kept as it is, so a layer
@@ -5720,6 +5757,7 @@ final class EditorState {
         // way a shape drawn there does.
         perform { [layer] in $0.addLayerDrawnOnFrame(layer) }
         selectedLayerID = layer.id
+        recordPaste(layer.id, at: layer.frame)
     }
 
     /// `point` is where a drag let go, in canvas coordinates; nil for ⌘V,
@@ -5737,8 +5775,13 @@ final class EditorState {
             return
         }
         let ref = store.register(image)
-        let frame = document.placementForIncomingImage(size: ref.pixelSize, at: point)
+        var frame = document.placementForIncomingImage(size: ref.pixelSize, at: point)
         guard !frame.isEmpty else { return }
+        // ⌘V has no pointer, so the same picture keeps arriving in the middle
+        // of the canvas: each one after the first steps past the last so you
+        // can see the one you just made. A drop lands where you let go, which
+        // is already somewhere you chose, so it never cascades.
+        if point == nil { frame = cascadedPasteFrame(landingAt: frame) }
         // Numbered against what is already here, so dropping one file in twice
         // gives two rows you can tell apart instead of the same word twice.
         let name = PlacedImageNaming.layerName(fileName: fileName,
@@ -5747,6 +5790,7 @@ final class EditorState {
         discardDragPreview()
         perform { $0.addLayerDrawnOnFrame(layer) }
         selectedLayerID = layer.id
+        if point == nil { recordPaste(layer.id, at: frame) }
     }
 
     // MARK: - Layer selection & move

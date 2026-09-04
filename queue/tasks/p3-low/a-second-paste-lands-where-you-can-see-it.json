@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1160,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T09:12:08.878Z",
-  "updated": "2026-09-04T09:12:08.878Z",
+  "updated": "2026-09-04T11:13:42.940260Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "EditorState.pasteLayer offsets a fixed CGPoint(x: 16, y: 16) from transfer.layer.frame, so every paste of one clipboard payload lands identically. Duplicate cascades because each duplicate offsets from its own source. Options: cascade off the topmost layer that already carries the pasted name, or track a per-clipboard paste count. Found while fixing copying-a-layer-and-pasting-it-gives-the-copy-it (see queue/audits/2026-09-04-pasted-layer-name.json).",
+  "notes": "EditorState.pasteLayer offsets a fixed CGPoint(x: 16, y: 16) from transfer.layer.frame, so every paste of one clipboard payload lands identically. Duplicate cascades because each duplicate offsets from its own source. Options: cascade off the topmost layer that already carries the pasted name, or track a per-clipboard paste count. Found while fixing copying-a-layer-and-pasting-it-gives-the-copy-it (see queue/audits/2026-09-04-pasted-layer-name.json).\n\n- Before building: walked it as a first-time user. The mock-free complaint holds up - a second paste really does hide exactly under the first, so the only evidence is a new row in the layers list. Shortest version that fixes it is a ladder, not a new UI, so nothing was added to the shell.\n- Rejected: cascading off the topmost layer carrying the pasted name (breaks the moment anyone renames a row). Rejected: cascading off wherever the last copy has since been DRAGGED (a copy moved across the picture would drag the next paste with it, breaking 'still near the layer it came from').\n- Built: PasteCascade in PhotonzCore (pure, tested first) plus a per-window, per-clipboard ladder in EditorState. Each paste steps 16,16 past the last landing; the same step a single paste and a duplicate already used, so all three agree.\n- Undo: first cut reset the ladder when the last copy vanished, which made a paste after undo land on top of a copy that was still standing (caught in the playtest, not in tests). Fixed by trimming the ladder to the copies still in the document, so undo then paste puts back exactly what was taken away.\n- Also covers the system clipboard: pasting the same outside picture twice used to centre both. The first still lands dead centre, only the ones after it step. A drop never cascades, since letting go already chose a spot.\n- Files: Sources/PhotonzCore/Clipboard.swift (PasteCascade), Tests/PhotonzCoreTests/PasteCascadeTests.swift, Sources/Photonz/EditorState.swift (pasteLadder, cascadedPasteFrame, recordPaste, pasteLayer, pasteImage), Scripts/playtest/paste-cascade-walk.json.\n- EditorState is shared by both releases, so Current and Next both get this; no release fork needed.",
   "acceptance": [
     "Pasting the same copied layer twice leaves two copies at different places on the canvas",
     "The place a paste lands is still near the layer it came from, not across the picture",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-04T09:12:08.878Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T11:03:27.441Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T11:13:42.940260Z",
+      "note": "pre-build review done: ladder anchored to the source, no new UI"
+    },
+    {
+      "t": "2026-09-04T11:13:42.940260Z",
+      "note": "PasteCascade added to PhotonzCore, tests written first, 2936 tests green"
+    },
+    {
+      "t": "2026-09-04T11:13:42.940260Z",
+      "note": "playtest on the probe app: copies land 276 / 292 / 308, undo removes one at a time"
+    },
+    {
+      "t": "2026-09-04T11:13:42.940260Z",
+      "note": "post-build review caught a paste after undo landing on a surviving copy; ladder now trims to what is still in the document, re-run verified 276 / 292 / 308 then back to 308, then 292"
+    },
+    {
+      "t": "2026-09-04T11:13:42.940260Z",
+      "note": "audit queue/audits/2026-09-04-paste-cascade.json with two real window captures"
     }
-  ]
+  ],
+  "started": "2026-09-04T11:03:27.440Z"
 }
