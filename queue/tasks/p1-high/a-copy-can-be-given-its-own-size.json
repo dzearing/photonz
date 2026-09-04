@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:42:17.784Z",
-  "updated": "2026-09-04T23:09:43.099Z",
+  "updated": "2026-09-04T23:10:21.098Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/manager/shots/2026-09-04-1543-starter-copy.png, a real window capture of a selected copy, shows X and Y typable and W 78 / H 36 greyed. The refusal is in the model, not the panel: GroupLayoutEditing.canSetGroupLayout and ownsContentRules both say no to isComponentInstance, and ComponentInstances.swift line ~439 does group.layout = main.group?.layout on every sync, so a stack copy's width and height come from the original every time. docs/design/ui-building.md, the 'Not in this slice' paragraph under 'a copy is not asked to decide what its original decides', names a per copy layout override as a real feature waiting on an override that survives the sync and a way to reset it. That machinery now exists: the colour knob landed on 2026-09-04 with per copy answers, saved colour links and unlink, in ComponentProperties.swift and ComponentColorKnob.swift. Keep the size override in the same shape so there is one story about what a copy owns. Padding is deliberately NOT in this slice: size is the one people hit daily. Flow maths is GroupFlow.swift; Bounds.of reads layout.usedWidth / usedHeight, so a per copy size has to reach it.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-04T23:09:43.099Z",
       "note": "Audit at queue/audits/2026-09-04-copy-own-size.json with two real window captures. Doc updated: new \"A copy can be given its own size\" section in docs/design/ui-building.md, and the older \"Not in this slice\" paragraph amended, since a per copy size is no longer not in it."
+    },
+    {
+      "t": "2026-09-04T23:10:21.097Z",
+      "note": "A copy takes a width and a height like any other layer and keeps them: GroupContent.instanceSize written over the original's layout by the sync (InstanceSizing), LayerScaling.resizingCopy for the resize, placedByContainer so a copy stretched by a stack claims nothing, and an Its own size row in the Component section that puts both sides back. Verified on the probe end to end (handle drag 320x48 to 460x84, typed 1200, revert, 375, original H 72 leaves the copy 375x72, one undo leaves it 375x48). 3173 tests green. Audit queue/audits/2026-09-04-copy-own-size.json with two real captures; follow-up filed for the Layout section's now half-wrong sentence."
     }
   ],
-  "started": "2026-09-04T22:45:08.345Z"
+  "started": "2026-09-04T22:45:08.345Z",
+  "completed": "2026-09-04T23:10:21.098Z"
 }
