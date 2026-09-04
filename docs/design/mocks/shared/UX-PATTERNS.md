@@ -1,6 +1,8 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v1.2. Scrubbed 2026-09-04 against what the app actually ships: §3 gains
+**Status: v1.3. §4 gains "a control that cannot act", one rule replacing the six
+different answers six fixes gave the same question on 2026-09-04, with an audit
+gate in §9. Scrubbed 2026-09-04 against what the app actually ships: §3 gains
 the reveal rule, §4 gains "a property keeps its home", and §5's component-copy row
 is rewritten to match. Every rule that changed names the audit or commit that
 overtook it, and where the app is the thing that is wrong, the rule stands and a
@@ -289,6 +291,102 @@ the dock, or a `.sheet.down` overlay.
   breaks the promise.
 - Tools are global; the *tool options* are contextual to the active tool (shown
   in the options bar or the top of the Inspector).
+- **A control that cannot act is answered by what kind of control it is**, not
+  case by case: commands dim in place, choosers are replaced by their answer,
+  fields keep their number, bare handles go away. The rule is right below.
+
+### A control that cannot act
+
+Six fixes landed on 2026-09-04 that were all the same shape: the app offered
+something that could not do anything, and each one was answered a different way.
+Take it away, dim it, replace it with words, leave it and explain. This is the
+one rule, written so the seventh does not have to invent it.
+
+**Ask these in order. The first answer that applies wins.**
+
+**0. Could it be made to work instead?** A control is not inert because of a law
+of nature; usually it is inert because nobody finished it. Stretch on a text
+layer did nothing for months and the tempting fix was to hide it. The fix that
+shipped was to make Stretch fill the height, and it is the best of the six. Ask
+this first, every time, and only go down the ladder once the answer is a real
+constraint you can name in a sentence.
+
+**Then answer by what kind of control it is**, because that, not the feature, is
+what decides:
+
+| Kind of control | What it is | The answer |
+| --- | --- | --- |
+| **A command** | a verb with something to act on: a button, a menu item, a toolbar item | **Stays in place, dimmed.** Never hidden. A command that disappears takes the map with it, and you cannot learn an app whose menus change shape. This is what the app already does in about a hundred places, and it is the platform convention. |
+| **A chooser whose value is decided elsewhere** | a menu, a segmented row, a toggle, where something above has already answered the question | **Replaced by the answer, in the same row.** Show the value in plain words and name who owns it. Keep the row in its place and its column so the section still reads as a set of settings. |
+| **A field that still has a number to report** | a width, a height, a position the layer really has, that you cannot type | **Keeps the number, read only.** A number you can read is worth more than an empty box, even when it is not yours to set. It must not look like something the keyboard will accept. A field with nothing true to report is the one that stays blank: a line or a caliper has no width of its own, so a number there would be about nothing you drew. |
+| **A bare affordance** | a resize handle, a rotate knob, a drag target: something with no label, grabbed rather than read | **Removed.** There is nowhere on a handle to say why it refuses, and a handle you can see but not drag teaches the wrong thing about the state that froze it. Take it away and make sure the state itself is visible somewhere with words, such as the padlock on the layer's row. Only the grabs go: the frame that says what is selected stays, because that answers a different question. |
+
+**A corollary, for things that are not controls.** A count or a list that
+reports state ("1 layer has a rule of its own") reports only what has an effect.
+A rule that changes nothing is not an exception and is not counted. The place a
+dead rule shows is on the layer that carries it, with a way to clear it.
+
+#### The wording, so two places do not invent two sentences
+
+Every reason is **one sentence in two halves: who owns this now, and the one
+thing to do about it.** Never "Not available", never "This control is disabled",
+never a bare "cannot".
+
+- "This layer is locked. Unlock it in the Layers list to change its position or size."
+- "Height follows the text. Change the width to re-wrap it, or the font size in the Text section."
+- "A copy is the size of the original. Resize the original component and every copy follows."
+- "The stack this is in lays its contents out top to bottom, so it decides where each one sits down the page. Change the group's Gap or Direction in the Layout section."
+
+Name the owner with the noun the user already sees on screen: *the stack*, *the
+row*, *the Layers list*, *the Layout section*, *the original*. A replaced
+chooser is labelled **`Set by <owner>`** ("Set by the stack", "Set by the row"),
+using the same noun its sentence uses.
+
+**Write the sentence once, in `PhotonzCore`, next to the state that causes it**,
+and have every place that says it read that constant:
+`LayerGeometryEditing.lockedReason`, `.textHeightReason`, `.stackedReason`,
+`.instanceSizeReason`, `PlacementEditing.stackReason` / `.rowReason` /
+`.stackTitle` / `.rowTitle`. The caption under a section and the tip on a
+control saying the identical words is the point, not duplication. This is the
+mechanical half of the rule: if the sentence lives in one place, two surfaces
+cannot drift.
+
+#### Where the explanation goes (hover is never the only place)
+
+**The "who owns this" half is always on screen. Only the "what to do" half may
+live in a tip.** Three of the six left a reason living only on hover and all three
+audits flagged it: a tip that needs a 400ms hover on a control you have already
+decided is broken is a reason nobody reads.
+
+- **One state that takes a whole section at once** (a lock takes all four
+  numbers): one line under that section, always visible. Not a tip per field.
+- **One dead control among live siblings**: the control's own appearance carries
+  the first half, and the tip carries the rest.
+- **A chooser replaced by its answer**: the words in the row are the first half,
+  already on screen, and the tip adds what to do.
+
+#### The six from 2026-09-04, scored against this
+
+**The example to copy is "Set by the stack"** (`2026-09-04-stack-owns-axis`): a
+dead chooser replaced by its answer, in place, owner named on screen in the
+user's own nouns, sentence and label both from one constant.
+
+| The fix | What could not act | What was done | Verdict |
+| --- | --- | --- | --- |
+| `2026-09-04-text-fills-height` | Stretch on a text layer | made to actually fill the height | rung 0, and the reason rung 0 is first |
+| `2026-09-04-stack-owns-axis` | the axis menu a stack has already decided | replaced by "Set by the stack" plus a tip | chooser. **The exemplar.** |
+| `2026-09-04-locked-caption` | X, Y, W and H on a locked layer | numbers stay, one line under the section says locked and how to unlock | field, and the exemplar for a state that takes a whole section at once. |
+| `2026-09-04-locked-layer-handles` | eight resize handles and a rotate knob on a locked layer | removed | bare affordance |
+| `2026-09-04-inert-placement-rule` | a placement rule on the axis the stack owns | stopped being counted as an exception, Clear offered on the layer itself | the corollary |
+| `2026-09-04-text-height-readout` | the H field for text | shows the height, dimmed, still refuses the keyboard | **the one exception.** Right as a field, wrong on where the reason goes. |
+
+The exception, stated plainly: a text layer's H keeps its number, which is
+right, but it still wears the rounded box of a field you can type in, so the
+only thing saying it is read only is the grey, and the "who owns this" half of
+its reason is on hover alone. Its own audit calls that box the clumsiest part of
+the feature. It is not grandfathered: it is filed as
+`a-number-you-cannot-type-into-does-not-wear-a-ty`, and losing the border is a
+visual call the user should see both ways before it lands.
 
 ---
 
@@ -402,6 +500,9 @@ Every editor/scenario page must satisfy:
       rows list the whole catalogue, not only the keyed ones.
 - [ ] **Both docks collapse** (D9): the side dock to a rail, the bottom dock to
       one row that names the selection.
+- [ ] **Nothing inert without an answer** (§4): every control that cannot act
+      is dimmed, replaced by its answer, or gone per its kind, and the "who owns
+      this" half of its reason is on screen rather than only on hover.
 - [ ] Copy: plain, no em dashes, "agent" not "Claude".
 
 ---

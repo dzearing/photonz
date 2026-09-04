@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "docs",
   "created": "2026-09-04T12:09:19.657Z",
-  "updated": "2026-09-04T12:09:19.658Z",
+  "updated": "2026-09-04T20:46:50.622Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. The six, all landed the same day, all answered differently: a locked layer stopped drawing resize handles (2026-09-04-locked-layer-handles.json, control removed); the Position and Size caption started saying the layer is locked (2026-09-04-locked-caption.json, control stays and explains); a layer in a stack reads \"Set by the stack\" instead of a menu (2026-09-04-stack-owns-axis.json, control replaced by a sentence); a placement rule on the axis a stack owns stopped being counted as an exception (2026-09-04-inert-placement-rule.json, made invisible on purpose); Stretch on a text layer was made to actually do something instead of being removed (2026-09-04-text-fills-height.json); the H field for text shows a dimmed number you cannot type into (2026-09-04-text-height-readout.json, and its own rough line calls that box the clumsiest part). Two of them say the reason is only on hover and that this is too quiet. Target: docs/design/mocks/shared/UX-PATTERNS.md, section 4 (selection and contextual controls), which today says nothing about a control that cannot act. Serves the focus by giving every ui-building and ui-layout runner one call instead of six.",
@@ -24,6 +24,40 @@
     {
       "t": "2026-09-04T12:09:19.658Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T20:42:15.144Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T20:46:42.981044Z",
+      "note": "Adversarial review of the idea, before writing. Risk 1: a rule invented from six cases in one day over-fits the six. Answered by keying the rule to WHAT KIND OF CONTROL it is (command, chooser, field, bare affordance), which is the variable that actually differed, rather than to the feature. Risk 2: a doc nobody reads. Answered by putting it in section 4 where a runner already looks for contextual-control rules, adding a one-line pointer to the section 4 bullets, and adding a section 9 audit gate. Risk 3: read as 'hide inert things', which would make menus change shape. Answered by making 'stays in place, dimmed' the answer for every named command, and 'removed' only for unlabelled grabs. Shortest version that delivers the value: no new taxonomy, reuse the wording already shipped ('Set by the stack') and the constants already in PhotonzCore."
+    },
+    {
+      "t": "2026-09-04T20:46:42.981044Z",
+      "note": "Checked the rule against cases outside the six before calling it right: Align and Distribute dimmed on a single selection (command, matches what the app already does in ~99 .disabled call sites), Mixed on a multi-selection (not inert at all, stays live at full strength, so the rule does not touch the pending Mixed task), a component copy's size and a hugged layer's position (fields, both currently hover-only, both covered by the new follow-up). Two gaps the six did not cover got clauses: a field with nothing true to report stays blank (a line or caliper has no width of its own), and removing handles never removes the selection frame."
+    },
+    {
+      "t": "2026-09-04T20:46:42.981044Z",
+      "note": "Wrote section 4 'A control that cannot act' in docs/design/mocks/shared/UX-PATTERNS.md: rung 0 (make it work first), then a table of four answers by kind of control, a corollary for counts and lists that report state, the wording rule (one sentence, two halves: who owns this and the one thing to do, written once as a PhotonzCore constant that every surface reads), the placement rule (the 'who owns this' half is always on screen, only 'what to do' may live in a tip), and a table scoring all six 2026-09-04 fixes. Example to copy: 'Set by the stack' from 2026-09-04-stack-owns-axis. Also added a section 4 bullet pointer, a section 9 audit gate, and bumped the doc to v1.3."
+    },
+    {
+      "t": "2026-09-04T20:46:42.981044Z",
+      "note": "Three of the six flagged a hover-only reason in their own rough lines (locked-layer-handles, locked-caption, text-height-readout), which is why the placement rule is stated as a hard half-on-screen rule rather than a preference."
+    },
+    {
+      "t": "2026-09-04T20:46:42.981044Z",
+      "note": "One of the six does not conform: the text H field keeps its number (right) but still wears a typeable box and puts the whole reason on hover (wrong). Listed in the doc as the exception with its reason rather than quietly excused, and filed as queue task a-number-you-cannot-type-into-does-not-wear-a-ty (p2, ui-building). Losing the border is a visual call, so that task says it may want a decision card with both looks before it is built."
+    },
+    {
+      "t": "2026-09-04T20:46:42.981044Z",
+      "note": "No audit file: this task changed no app code and there is nothing to playtest. Acceptance item 5 was 'no app code changes' and none were made; the only edits are the patterns doc and the queue."
+    },
+    {
+      "t": "2026-09-04T20:46:50.621Z",
+      "note": "Wrote 'A control that cannot act' into docs/design/mocks/shared/UX-PATTERNS.md section 4: rung 0 make it work first, then four answers by kind of control (command dims in place, chooser is replaced by its answer, field keeps its number, bare handle goes away), a corollary for counts and lists, the wording rule with the canonical sentence shape and the PhotonzCore constants that carry it, and the rule that the 'who owns this' half is always on screen and never hover-only. All six 2026-09-04 fixes scored in a table; 'Set by the stack' named as the example to copy; the text H field listed as the one exception and filed as a-number-you-cannot-type-into-does-not-wear-a-ty. Section 9 gained an audit gate, doc bumped to v1.3. No app code changed, so no build or audit."
     }
-  ]
+  ],
+  "started": "2026-09-04T20:42:15.143Z",
+  "completed": "2026-09-04T20:46:50.622Z"
 }

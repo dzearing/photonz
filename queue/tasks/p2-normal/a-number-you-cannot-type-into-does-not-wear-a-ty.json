@@ -1,0 +1,29 @@
+{
+  "id": "a-number-you-cannot-type-into-does-not-wear-a-ty",
+  "title": "A number you cannot type into does not wear a typing box",
+  "goal": "When a field shows a number the app worked out for you rather than one you set, the only thing telling you so is that the number is grey. The box around it still looks exactly like the boxes you can click into and type in, so you click, nothing happens, and the app looks broken. Make a read-only number look like a number, not like an empty invitation.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1180,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T20:44:36.175Z",
+  "updated": "2026-09-04T20:44:36.176Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Comes out of the 2026-09-04 review of six inert-control fixes and is the one case that does not conform to the new rule in docs/design/mocks/shared/UX-PATTERNS.md section 4 (\"A control that cannot act\"). Rung 3 of that rule says a field that still has a number to report keeps the number, but the first half of the reason (who owns the number) must be on screen, not on hover. Today only the grey says it. The audit 2026-09-04-text-height-readout.json rough line calls the bordered box the clumsiest part and says losing the border is a visual call worth the users eye first, so this may want a decision card with a picture of both before it is built. Reason strings already exist as constants: LayerGeometryEditing.textHeightReason, lockedReason, stackedReason, instanceSizeReason in Sources/PhotonzCore/LayerGeometry.swift; the field is GeometryInspector.swift (disabled(true) around line 363).",
+  "acceptance": [
+    "A number the app owns is visibly not a text field before you click it, not only after you hover it",
+    "Clicking one gives an immediate answer on screen rather than silence",
+    "The reason the number is not yours to set is readable without hovering",
+    "A text layer height, a locked layer position and size, a stacked row X and Y, and a component copy size all read the same way",
+    "Fields you can type into look exactly as they do today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T20:44:36.176Z",
+      "note": "created (manual)"
+    }
+  ]
+}
