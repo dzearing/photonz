@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 610,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T18:09:56.702Z",
-  "updated": "2026-09-04T06:46:26.667Z",
+  "updated": "2026-09-04T06:55:18.629Z",
   "deps": [],
   "blockedBy": [],
   "notes": "GeometryInspector renders nothing for a field LayerGeometryEditing says is not allowed; LayerGeometryEditing.textHeightReason already carries the sentence. Found while building a-label-grows-to-fit-what-it-says.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-04T07:52:00.000Z",
       "note": "Adversarial read after building: H still wears the same bordered box as a typeable field and clicking it gives no feedback at all. Recorded in the audit rather than changed, because dropping the border is a visual call for the user."
+    },
+    {
+      "t": "2026-09-04T06:55:18.628Z",
+      "note": "Text height now reads as a dimmed number instead of a blank field, and follows every re-wrap. Shipped in Next: LayerGeometryEditing.shows(_:) + LayerGeometrySelection.reading fallback (PhotonzCore) and dimming in GeometryInspector; locked layers, stacked rows and component copies report their numbers too, while lines/arrows/calipers stay blank on purpose. 6 new tests, 2773 green. Verified live on Photonz Probe with real captures (H 21 -> 55 -> 21; forcing the keyboard into H hands it straight back). Audit: queue/audits/2026-09-04-text-height-readout.json"
     }
   ],
-  "started": "2026-09-04T06:46:26.667Z"
+  "started": "2026-09-04T06:46:26.667Z",
+  "completed": "2026-09-04T06:55:18.629Z"
 }
