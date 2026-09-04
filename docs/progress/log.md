@@ -8095,3 +8095,54 @@ and a drag on it drags the whole copy.
 **Open questions.** In the audit: whether double clicking a copy's words should
 select them all rather than putting the caret at the end, and whether the
 refusal notice reads in time.
+
+## 2026-09-04 — A container closes around its contents
+
+Queue task "A button grows to fit the words in it" (p1-high, epic
+ui-components).
+
+**Reproduced first.** Dropping a starter Button and re-wording its label showed
+exactly what was reported: the label re-measured to 189 wide and the 128-wide
+pill behind it did not move, so the words hung out both sides. Two things were
+missing, not one — nothing told a plain group to close around its contents, and
+nothing told a background to follow a box that had grown.
+
+**What changed.** `GroupLayout.kind` is optional now: nil is **Free**, a group
+that arranges nothing and simply closes around what is in it. Free gets the
+Width and Height (Hug or Fixed) rows and the Padding field that used to be a
+stack's alone, so being as big as your contents is no longer something only a
+stack can do. A group that has never been given a layout shows Hug with the
+room its contents already have (`Layer.workingLayout`), so pressing nothing
+changes nothing.
+
+The rule the whole thing rests on, which the task asked to have written down: a
+container that hugs has no spare room, so **a piece that stretches along an
+axis is not measured on that axis**, and **a piece that stretches BOTH ways is
+the surface behind everything** — it steps out of the arrangement and is
+painted to the container's own edges, because padding is room inside a button's
+fill, not around it (`ResolvedPlacement.isSurface`, `GroupFlow.closedAround`,
+`GroupFlow.size`, which `Layer.localBounds` now measures with so the box and
+the flow can never disagree).
+
+The starter **Button** (16 either side, 36 tall) and **Badge** are built on it,
+so re-wording either one widens it with no dragging. Two things found on the
+way: containers must measure the WORDS rather than the four points of slack a
+measured text box carries on its far edges, or a centred label sits two points
+off (`Layer.contentBounds`); and `StarterComponents.estimatedTextSize` now goes
+through `TextMeasurement`, because two estimates disagreeing by one point made
+a starter's label read as a paragraph somebody had narrowed, so a longer word
+wrapped down the page instead of widening the button.
+
+Walked with `Scripts/playtest/button-hug-walk.json` against the probe app
+(Screen Recording granted, so the audit carries real captures). 3050 tests
+green. Design: `docs/design/ui-building.md`, "A container closes around its
+contents". Audit: `queue/audits/2026-09-04-ui-hug.json`.
+
+**Next.** Three follow-ups filed: typing over a word should replace it rather
+than append, a copy should not be offered a Layout section whose numbers get
+thrown away, and the card, nav bar and text field should get sizing of their
+own.
+
+**Open questions.** In the audit: whether a hugging control should grow to the
+right or out from its middle, and whether the surface rule needs saying
+somewhere louder than the section's caption.

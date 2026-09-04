@@ -96,6 +96,24 @@ public enum TextMeasurement {
 
 extension Layer {
 
+    /// The box this layer's CONTENT fills, which is its own box for everything
+    /// but text.
+    ///
+    /// A measured text box carries the slack its measurement leaves for
+    /// antialiased edges, and the words are drawn flush to the near corner, so
+    /// the slack all sits on the far edges. A container closing around its
+    /// contents has to close around the WORDS: leave the slack in and a
+    /// centred label sits two points left of the middle of the button it is
+    /// in, which is exactly the kind of wrongness nobody can name but everyone
+    /// can see.
+    var contentBounds: CGRect {
+        let box = localBounds
+        guard text != nil else { return box }
+        return CGRect(x: box.minX, y: box.minY,
+                      width: max(0, box.width - TextMeasurement.slack),
+                      height: max(0, box.height - TextMeasurement.slack))
+    }
+
     /// Whether this box is as wide as its words want to be.
     ///
     /// A box nobody has narrowed hugs its words: re-wording it should stay on

@@ -647,7 +647,11 @@ struct GroupLayoutTests {
         let arranged = frames(doc.layers[0])
         doc.setGroupLayout(id: doc.layers[0].id, kind: nil)
         doc.reflowLayouts()
-        #expect(doc.layers[0].group?.layout == nil)
+        // Free arranges nothing, so nothing moves. It keeps the numbers it was
+        // given, because going Stack, Free, Stack must not forget the gap.
+        #expect(doc.layers[0].group?.layout?.kind == nil)
+        #expect(doc.layers[0].group?.layout?.arranges == false)
+        #expect(doc.layers[0].group?.layout?.usedGap == 10)
         #expect(frames(doc.layers[0]) == arranged)
     }
 

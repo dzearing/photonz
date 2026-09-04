@@ -1,0 +1,31 @@
+{
+  "feature": "A container closes around its contents",
+  "epic": "ui-components",
+  "summary": "A button is now as wide as its label plus the room either side, so giving it longer words makes it wider on its own, with the fill behind following. Every group, not just a stack, can be told to be the size of what is inside it, with room on all four sides.",
+  "setup": "Photonz Dev, release Next, flag \"Groups that arrange their own contents\" (on by default). Open a blank document.",
+  "try": [
+    { "do": "Open the Library and drag the Button onto the canvas.", "shot": "2026-09-04-container-hug-1.png" },
+    { "do": "Drag a second Button out of the Library, below the first one." },
+    { "do": "Double click the second one's word and type a much longer label, then press Return and click empty canvas." },
+    { "do": "Look at the pill: it should have grown around the new words with the same room either side.", "shot": "2026-09-04-container-hug-1.png" },
+    { "do": "Click the first Button and read the Layout section: Free, Width Hug, Height Fixed, Padding." },
+    { "do": "Type 28 into Padding and watch the button open up around the same word.", "shot": "2026-09-04-container-hug-2.png" },
+    { "do": "Press Width Fixed, then drag the button's right handle: the word stays in the middle of the pill." },
+    { "do": "Drag out a Badge and re-word its count to 128: it gets wider too." }
+  ],
+  "evaluate": [
+    "When the words get longer, does the button grow the way you expected, or did you want it to grow out from its middle instead of to the right?",
+    "Is 16 either side and 36 tall the button you would have drawn, now that it is no longer 128 wide?",
+    "Does the Layout section read as one thing, with Free, Stack and Grid all offering Width, Height and Padding?",
+    "Is \"a piece set to Stretch both ways is the surface behind the rest\" something you would have guessed, or does it need saying somewhere louder than the caption?",
+    "Should the card, the nav bar and the text field close around their contents too, or are they right to hold the size they were drawn at?"
+  ],
+  "rough": [
+    "Double clicking a copy's word puts the caret at the end instead of selecting the words, so typing appends: the pill in the screenshot reads \"ButtonSave all the changes\" because the walk typed without clearing first. Filed as its own task.",
+    "A copy still shows the Layout section and lets you type a padding into it, and the next time the original changes that number is thrown away. Filed as its own task.",
+    "The starter button keeps 10 of room top and bottom and 16 left and right, so the Padding field reads Mixed and opens the four sides. That is honest but noisier than one number.",
+    "Hug for a SCREEN was deliberately not built: a screen's box is the box you drew, and something hanging off its edge must never resize it.",
+    "The card, the nav bar and the text field still hold the size they were drawn at, so a long card title still runs past the card. Filed as its own task.",
+    "There is no minimum width, so a button with one letter in it is as narrow as one letter plus its room."
+  ]
+}

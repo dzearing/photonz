@@ -1972,6 +1972,84 @@ chevron and the four rows. Tested in `GroupPaddingTests`, walked by
 Not in this slice: a paddings-are-tokens link to a spacing scale, and dragging
 the room out on the canvas rather than typing it.
 
+## Landed: a container closes around its contents (Next, `next-auto-layout`, 2026-09-04)
+
+Give a button a longer label and the button stayed the width it was, so the
+words hung out of the pill on both sides. Being as big as what is inside you
+was something only a stack could do, and a button is not a stack: it is a word
+with a fill behind it. Now every group can close around its contents, and the
+fill behind them follows.
+
+**Every group takes a size and room at its edges.** The Layout section's
+**Width** and **Height** rows (Hug or Fixed) and its **Padding** field are no
+longer a stack's alone: a group set to **Free** has them too. Free still means
+what it always meant — things stay where you put them — and Hug adds the one
+thing it was missing: the box is as big as the pieces plus the room at the
+edges, so wording that grows makes the container grow. A group nobody has
+touched shows Hug with the room its contents already have, so arriving at a
+plain group and arriving at one somebody set up read the same, and pressing
+nothing changes nothing.
+
+**Stretch inside a hugging container means surface.** This is the rule the
+whole thing rests on. A container that hugs has no spare room to share out, so
+a piece told to Stretch inside one cannot be placed against anything and cannot
+be measured — it is trying to be the size of the box, and the box is trying to
+be the size of it. So:
+
+- **A piece that stretches along an axis is not measured on that axis.** The
+  pieces that are not stretching decide the size; the stretched one takes it.
+- **A piece that stretches BOTH ways is the surface behind everything.** It
+  steps out of the arrangement entirely: no turn in a stack, no gap, and it is
+  painted to the container's own edges rather than to the room inside them,
+  because padding is room INSIDE a button's fill, not around it.
+- **Where every piece stretches** there is nothing else to go on, so they are
+  measured after all and the group keeps the size it had.
+
+**A hugging axis takes that axis over.** There is no spare room on it, so the
+contents keep the arrangement they already have and move as one to the room at
+the near edge; the group's own corner holds still, so a control grows to the
+right and downward. Typed X and Y are closed on that axis, with the reason
+pointing at Padding, the same way a stack closes the axis it flows along. An
+axis with a size of its own is untouched: the placement rules still answer it,
+which is why a button dragged wider keeps its label in the middle.
+
+**Dragging a handle still sizes rather than scales**, and it pins only the axis
+that changed: drag a hugging button wider and it holds that width while its
+height still follows its label.
+
+**The two controls that are a word with room around it now say so.** The
+starter **Button** is 16 either side of its label and 36 tall, and the
+**Badge** is 8 either side of its count. Re-word either one — by typing on the
+canvas, or by answering a copy's knob — and the control gets wider on its own,
+with the same room it had. The other three starters are boxes with a shape of
+their own (a card is 260 wide because that is the card), so they hold the size
+they were drawn at.
+
+**Closing around the WORDS, not the measuring slack.** A measured text box
+carries four points of slack for antialiased edges, and the glyphs are drawn
+flush to its near corner, so the slack all sits on the far edges. A container
+measures its text children without it, or every centred label sits two points
+off the middle of the control it is in. The same reasoning made
+`StarterComponents.estimatedTextSize` go through `TextMeasurement`: two
+estimates that disagreed by a single point were enough to make a starter's
+label look like a paragraph somebody had already narrowed, so a longer word
+wrapped down the page instead of widening the button.
+
+**Where it lives.** `GroupLayout.kind` is optional now (nil is Free, and writes
+no key, so a document saved before this is byte for byte what it was);
+`GroupFlow.closedAround` is the free flow, `GroupFlow.size` the one sum both
+the flow and `Layer.localBounds` measure with, `ResolvedPlacement.isSurface`
+the rule above, and `Layer.contentBounds` the words-not-slack measurement.
+`LayerScaling.rearranging` pins the dragged axis. `StarterComponents.layout`
+gives the button and the badge theirs. `ArrangementInspector` shows the rows
+for Free. Tested in `GroupHugTests`, walked by
+`Scripts/playtest/button-hug-walk.json`.
+
+Not in this slice: hug for a SCREEN, which is deliberate — a screen's box is
+the box you drew, and something hanging off its edge must never resize it. Nor
+a minimum or maximum size, so a hugging button with one letter in it is as
+narrow as one letter plus its room.
+
 ## Landed: dragging onto a screen puts it in the screen (Next, `next-frames`, 2026-09-03)
 
 Drawing a shape on a screen already put the shape on that screen, and dropping

@@ -141,7 +141,11 @@ struct LayerPlacementTests {
     func aStarterButtonSurvivesBeingWidened() {
         let button = StarterComponents.layer(.button)
         let start = button.localBounds
-        #expect(start.width == 128)
+        // It arrives as wide as its label plus the room either side, not at
+        // some width somebody picked: 16, the word, 16.
+        let words = button.children.last.map { $0.frame.width - StarterComponents.textSlack } ?? 0
+        #expect(start.width == 16 + words + 16)
+        #expect(start.height == 36)
         for width in [96.0, 128.0, 260.0] as [CGFloat] {
             let resized = button.resized(to: CGRect(x: 0, y: 0, width: width, height: start.height))
             let background = piece(resized, "Background")

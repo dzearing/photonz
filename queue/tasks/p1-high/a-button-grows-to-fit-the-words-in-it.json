@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T15:25:54.789Z",
-  "updated": "2026-09-04T15:25:54.855Z",
+  "updated": "2026-09-04T17:02:16.880Z",
   "deps": [
     "you-change-a-copy-through-its-knobs-and-nothing"
   ],
@@ -31,6 +31,27 @@
     {
       "t": "2026-09-04T15:25:54.854Z",
       "note": "seq 180 -> 4"
+    },
+    {
+      "t": "2026-09-04T16:24:56.770Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T16:34:04.301Z",
+      "note": "Reproduced first, in a test: drop a starter Button (128x36), re-word its Label to 'Save all the changes now' and reflow. The label re-measures to 189 wide and lands at x=-29; the Background pill stays 128 wide at x=0. So the words really do spill out both sides. The pieces that were missing are (1) nothing tells a plain group to close around its contents, and (2) nothing tells a background to follow a box that grew."
+    },
+    {
+      "t": "2026-09-04T16:34:13.494Z",
+      "note": "Adversarial pass on the idea before building. (1) The mock's per-child Hug/Fill/Fixed row stays cut: the Horizontal and Vertical placement rows already say it, and a second control that says the same thing is how two controls start disagreeing. (2) Hug for a SCREEN is deliberately not built: a screen's box is the box you drew, and something hanging off its edge must never resize it, which is the whole point of a screen. Cards and buttons are groups, so the feature lands where it is actually wanted. (3) The one real question the task named, answered: a container that hugs has no spare room, so a piece told to Stretch inside one cannot be measured (it would be sizing itself to itself) and cannot be placed (there is nothing to place it against). So a stretched piece is not measured on the axis it stretches, and a piece that stretches BOTH ways is the surface behind everything, painted to the box's edges rather than taking a turn in the arrangement. That is exactly what a button's background is. (4) Shortest version that delivers it: Free groups gain the Hug/Fixed and Padding rows a Stack already has, the surface rule lands once for every kind, and the starter Button is rebuilt on it. The card, nav bar and text field need real layout decisions of their own and get a follow-up task rather than being redrawn blind."
+    },
+    {
+      "t": "2026-09-04T17:02:16.853Z",
+      "note": "Built it. GroupLayout.kind is optional now: nil is Free, a group that arranges nothing and closes around what is in it, and Free gains the Hug/Fixed rows and the Padding field that used to belong to a stack alone. The spec the task asked for is written into docs/design/ui-building.md and into the code: a stretched piece is not measured on the axis it stretches, and a piece that stretches both ways is the surface behind everything, painted to the container's own edges rather than to the room inside them. The starter Button (16 either side, 36 tall) and Badge are built on it. Two things found on the way and fixed: a container has to measure the WORDS, not the four points of slack a measured text box carries on its far edges, or a centred label sits two points off; and StarterComponents had a second text estimate that disagreed with TextMeasurement by one point, which made a starter's label read as a paragraph somebody had narrowed, so a longer word wrapped down the page instead of widening the button. 3050 tests green."
+    },
+    {
+      "t": "2026-09-04T17:02:16.879Z",
+      "note": "Adversarial pass on the built thing, in the probe app (Scripts/playtest/button-hug-walk.json, Screen Recording granted so the audit carries real captures). Found a real break: typing a padding bigger than the height the group was given squashed the pill to nothing, and a shape squashed to no height can never be given one back, so the button and its copy vanished. Fixed twice over: the surface is placed once from the box rather than being squeezed into the room inside the edges first, and nothing that has a size is ever handed a box with none. Covered by a test. Two papercuts I could not fix inside this task, both filed: double clicking a copy's words puts the caret at the end so typing appends (the walk's button reads 'ButtonSave all the changes'), and a copy still offers a Layout section whose numbers are thrown away at the next sync. Also filed: the card, nav bar and text field still hold the size they were drawn at."
     }
-  ]
+  ],
+  "started": "2026-09-04T16:24:56.769Z"
 }

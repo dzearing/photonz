@@ -100,11 +100,16 @@ struct StarterComponentRenderTests {
 
     /// The same drawing at twice the size, for a Retina capture, not a
     /// stretched copy of the one-to-one one.
+    ///
+    /// The button closes around its label, and the system face is not exactly
+    /// twice as wide at twice the point size (it is optically sized), so twice
+    /// the button is within a few percent of twice as wide rather than exactly
+    /// it. Its height is a number it was given, so that IS exactly double.
     @Test func aRetinaDocumentDrawsThemAtTwiceTheSize() throws {
         let one = try #require(render(.button, scale: 1))
         let two = try #require(render(.button, scale: 2))
-        #expect(two.width == one.width * 2)
         #expect(two.height == one.height * 2)
+        #expect(abs(two.width - one.width * 2) <= one.width / 10)
     }
 
     /// A contact sheet of all five, for looking at rather than asserting on.

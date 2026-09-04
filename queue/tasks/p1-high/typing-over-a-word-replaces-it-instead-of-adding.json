@@ -1,0 +1,27 @@
+{
+  "id": "typing-over-a-word-replaces-it-instead-of-adding",
+  "title": "Typing over a word replaces it instead of adding to it",
+  "goal": "Double clicking the words inside a button opens them for typing with the cursor sitting at the end, so typing a new label leaves you with the old one and the new one stuck together. Opening words for typing should offer them ready to be replaced, the way every other app does.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 170,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T17:00:57.617Z",
+  "updated": "2026-09-04T17:00:57.618Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while walking the container-hug task on 2026-09-04 (Scripts/playtest/button-hug-walk.json): the walk typed \"Save all the changes\" into a copy of the starter Button and got \"ButtonSave all the changes\". The inline editor is in CanvasView (beginTextEdit / commitTextEdit, EditorState); select-all on entry, and let a subsequent click place the caret.",
+  "acceptance": [
+    "Double clicking a piece of text on the canvas opens it with all of its words selected, so the first thing typed replaces them",
+    "Clicking a second time inside the words puts the cursor where you clicked instead of selecting everything",
+    "Nothing is lost: undo after typing brings back the original wording"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T17:00:57.618Z",
+      "note": "created (manual)"
+    }
+  ]
+}

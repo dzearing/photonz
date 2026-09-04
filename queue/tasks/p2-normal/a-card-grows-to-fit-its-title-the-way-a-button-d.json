@@ -1,0 +1,28 @@
+{
+  "id": "a-card-grows-to-fit-its-title-the-way-a-button-d",
+  "title": "A card grows to fit its title the way a button does",
+  "goal": "A button and a badge now get wider when their words get longer. The card, the nav bar and the text field do not, so a long card title still runs past the edge of the card. Give the remaining starter components the same behaviour, in whichever direction actually makes sense for each one.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1130,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T17:00:57.684Z",
+  "updated": "2026-09-04T17:00:57.685Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follows the container-hug work landed 2026-09-04 (docs/design/ui-building.md, \"A container closes around its contents\"). The card needs a real layout decision: its Picture is currently placement .fill, which the new rules would read as the surface behind everything, so it likely wants a column stack (Background as the surface, Picture stretched across, Title and Body as rows) rather than a free hug. StarterComponents.layout is where each ones sizing lives.",
+  "acceptance": [
+    "A card given a longer title or body grows taller and keeps its room, rather than the words running past it",
+    "A nav bar keeps its width and its title stays centred when the title gets longer",
+    "A text field keeps its width, and its placeholder does not run past the box",
+    "Each starter says in one sentence which of its sides is the size of its contents and which is a number it was given"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T17:00:57.685Z",
+      "note": "created (manual)"
+    }
+  ]
+}

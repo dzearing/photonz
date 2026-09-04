@@ -20,7 +20,9 @@ extension PhotonzDocument {
 
     /// Makes a group arrange itself, or stops it. Nothing moves at the moment
     /// you press it: the layout is READ off where the contents already are, so
-    /// a row you spaced by eye at 16 points becomes a row with a gap of 16.
+    /// a row you spaced by eye at 16 points becomes a row with a gap of 16, and
+    /// a group asked only to close around its contents keeps exactly the room
+    /// they already have.
     ///
     /// A group's box is whatever its contents add up to, so the flow lays out
     /// from the group's own corner. That is only a stable place to start from
@@ -29,12 +31,24 @@ extension PhotonzDocument {
     /// same sum grouping already does, and nothing on the canvas shifts.
     public mutating func setGroupLayout(id: UUID, kind: GroupLayoutKind?) {
         guard let layer = layer(id: id), let group = layer.group else { return }
-        guard let kind else {
-            updateLayer(id: id) { $0.setGroupLayout(nil) }
-            return
-        }
         let container = group.isFrame ? CGRect(origin: .zero, size: layer.frame.standardized.size)
                                       : nil
+        // Free: it arranges nothing, so there is nothing to read off but the
+        // room its contents already have. Everything else it carries — the
+        // gap, the columns, a size of its own — stays where it is, so going
+        // Stack, Free, Stack does not forget the numbers on the way.
+        guard let kind else {
+            var free = group.layout ?? GroupLayout.free(
+                padding: GroupFlow.room(around: layer.children,
+                                        contentPlacement: group.contentPlacement,
+                                        inside: container))
+            free.kind = nil
+            updateLayer(id: id) { layer in
+                if !group.isFrame, group.layout == nil { layer.pullContentsToItsCorner() }
+                layer.setGroupLayout(free)
+            }
+            return
+        }
         var boxes = layer.children.filter(\.isVisible).map(\.localBounds)
         if boxes.isEmpty { boxes = layer.children.map(\.localBounds) }
         var inferred = GroupLayout.inferred(from: boxes, kind: kind, container: container)
@@ -58,8 +72,15 @@ extension PhotonzDocument {
     }
 
     /// One number on a group's layout, typed in the inspector.
+    ///
+    /// A group that has never been given a layout gets one here, keeping the
+    /// room its contents already have, so typing a size or a padding into a
+    /// plain group is the moment it starts closing around them — and the group
+    /// does not move while that happens.
     public mutating func updateGroupLayout(id: UUID, _ change: (inout GroupLayout) -> Void) {
-        guard let existing = layer(id: id)?.group?.layout else { return }
+        guard let layer = layer(id: id), let group = layer.group else { return }
+        if group.layout == nil { setGroupLayout(id: id, kind: nil) }
+        guard let existing = self.layer(id: id)?.group?.layout else { return }
         var next = existing
         change(&next)
         guard next != existing else { return }
@@ -112,6 +133,20 @@ extension PhotonzDocument {
 }
 
 extension Layer {
+    /// The layout this group is working to, including the one a group nobody
+    /// has touched is already working to: it arranges nothing, it is as big as
+    /// what is inside it, and the room it keeps at its edges is the room its
+    /// contents already have. What the Layout section shows, so arriving at a
+    /// plain group and arriving at one somebody has set up read the same.
+    public var workingLayout: GroupLayout {
+        if let layout = group?.layout { return layout }
+        guard let group else { return .free() }
+        let box = group.isFrame ? CGRect(origin: .zero, size: frame.standardized.size) : nil
+        return .free(padding: GroupFlow.room(around: group.children,
+                                             contentPlacement: group.contentPlacement,
+                                             inside: box))
+    }
+
     /// This group's layout, set or cleared, leaving everything else about the
     /// group alone.
     mutating func setGroupLayout(_ layout: GroupLayout?) {

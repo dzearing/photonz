@@ -814,31 +814,22 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         return union.offsetBy(dx: frame.origin.x, dy: frame.origin.y)
     }
 
-    /// The box a group that arranges its own contents occupies: the size it was
-    /// given on each axis, and on an axis it was given none, its contents plus
-    /// the room it keeps on both of that axis' edges. Measured from the corner
-    /// it flows from, never from the leftmost thing in it, so hiding the first
-    /// row cannot slide the box.
+    /// The box a group with a layout occupies: the size it was given on each
+    /// axis, and on an axis it was given none, its contents plus the room it
+    /// keeps on both of that axis' edges. Measured from the corner it flows
+    /// from, never from the leftmost thing in it, so hiding the first row
+    /// cannot slide the box.
+    ///
+    /// The sum itself lives in `GroupFlow.size`, with the flow that puts the
+    /// contents there, so the box and the arrangement can never disagree about
+    /// what counts (`docs/design/ui-building.md`, "A container closes around
+    /// its contents").
     private func arrangedBounds(_ group: GroupContent, _ layout: GroupLayout) -> CGRect {
-        let padding = layout.usedPadding
-        var contentWidth: CGFloat = 0
-        var contentHeight: CGFloat = 0
-        for child in group.children {
-            let box = child.localBounds
-            contentWidth = max(contentWidth, box.maxX)
-            contentHeight = max(contentHeight, box.maxY)
-        }
-        // An empty stack still keeps both edges clear; one with something in it
-        // already carries the near edge's room in where its contents start, so
-        // only the far edge is still to be added.
-        let hugged = { (content: CGFloat, near: CGFloat, far: CGFloat) in
-            group.children.isEmpty ? near + far : content + far
-        }
-        return CGRect(
-            origin: frame.origin,
-            size: CGSize(
-                width: layout.usedWidth ?? hugged(contentWidth, padding.left, padding.right),
-                height: layout.usedHeight ?? hugged(contentHeight, padding.top, padding.bottom)))
+        CGRect(origin: frame.origin,
+               size: GroupFlow.size(of: group.children, layout: layout,
+                                    contentPlacement: group.contentPlacement,
+                                    bounds: GroupFlow.Bounds.of(self, group, layout),
+                                    onAScreen: group.isFrame))
     }
 
     /// The box this layer's DRAWING can touch in its parent's space, which is

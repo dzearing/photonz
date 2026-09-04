@@ -53,7 +53,12 @@ public enum StackDirection: String, CaseIterable, Hashable, Codable, Sendable {
 /// shape it. Every number is typed, never dragged for, because "12 points
 /// between the rows" is the thing being built to.
 public struct GroupLayout: Hashable, Codable, Sendable {
-    public var kind: GroupLayoutKind
+    /// Which shape this group arranges its contents in, or nil for a group
+    /// that arranges nothing and simply closes around what is inside it. A
+    /// group that has never been given a layout at all has none of this and is
+    /// left exactly as it was drawn; the moment somebody asks for room at its
+    /// edges or a size of its own, it gets one of these with no kind.
+    public var kind: GroupLayoutKind?
     /// Which way a stack runs. A grid always fills rows left to right, so this
     /// is ignored there and kept, so flipping between the two does not lose it.
     public var direction: StackDirection
@@ -84,7 +89,18 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     public static let defaultGap: CGFloat = 12
     public static let defaultColumns = 3
 
-    public init(kind: GroupLayoutKind,
+    /// What the Arrangement row calls a group that arranges nothing.
+    public static let freeTitle = "Free"
+
+    /// A group that arranges nothing and closes around what is inside it:
+    /// everything stays where it was put, and the box is as big as the pieces
+    /// plus the room at the edges, on either axis that was given no size.
+    public static func free(padding: GroupPadding = .none,
+                            width: CGFloat? = nil, height: CGFloat? = nil) -> GroupLayout {
+        GroupLayout(kind: nil, padding: padding, width: width, height: height)
+    }
+
+    public init(kind: GroupLayoutKind?,
                 direction: StackDirection = .column,
                 columns: Int = GroupLayout.defaultColumns,
                 gap: CGFloat = GroupLayout.defaultGap,
@@ -136,12 +152,21 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// changes nothing.
     public var flowsHorizontally: Bool { kind == .stack && direction.isHorizontal }
 
+    /// Whether this group puts its contents somewhere at all. A stack and a
+    /// grid do; a group that only closes around what is in it leaves them
+    /// where they were put, so Scale, dragging and typed positions all still
+    /// mean what they always did.
+    public var arranges: Bool { kind != nil }
+
+    /// What the Arrangement row shows for this layout.
+    public var title: String { kind?.title ?? Self.freeTitle }
+
     /// Whether the flow itself decides how TALL the things in it are. A grid
     /// shares its cell height out and a row hands every item the height of the
     /// row, so a Stretch down the box means something in both. A column runs
     /// down the page, where each item's height is its own and there is nothing
     /// for that choice to fill.
-    public var decidesHeight: Bool { kind == .grid || direction.isHorizontal }
+    public var decidesHeight: Bool { kind != .stack || direction.isHorizontal }
 
     private enum CodingKeys: String, CodingKey {
         case kind, direction, columns, gap, rowGap, padding, width, height
@@ -151,7 +176,10 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// numbers opens with this build's defaults rather than refusing to open.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        kind = try c.decodeIfPresent(GroupLayoutKind.self, forKey: .kind) ?? .stack
+        // No kind at all is a group that arranges nothing and only closes
+        // around what is in it. Every document written before that existed
+        // names its kind, so nothing already saved reads as one.
+        kind = try c.decodeIfPresent(GroupLayoutKind.self, forKey: .kind)
         direction = try c.decodeIfPresent(StackDirection.self, forKey: .direction) ?? .column
         columns = try c.decodeIfPresent(Int.self, forKey: .columns) ?? GroupLayout.defaultColumns
         gap = try c.decodeIfPresent(CGFloat.self, forKey: .gap) ?? GroupLayout.defaultGap

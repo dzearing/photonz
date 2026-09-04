@@ -73,22 +73,190 @@ enum GroupFlow {
 
     // MARK: - One group's contents
 
-    /// The children of one stack or grid, moved to where the layout puts them.
-    /// A hidden layer takes no place in the flow and is not moved: hiding a row
-    /// closes the space it held, and showing it again puts it back.
+    /// The children of one group, moved to where its layout puts them.
+    ///
+    /// Two shapes, and the second one is why a button can be as wide as its
+    /// label: a stack or a grid ARRANGES what it holds, and a group with no
+    /// kind simply CLOSES around what is already there. Either way the surface
+    /// behind everything is dealt with last, once there is a box for it to
+    /// take.
     private static func placed(_ children: [Layer], layout: GroupLayout,
                                contentPlacement: LayerPlacement?,
                                bounds: Bounds, onAScreen: Bool) -> [Layer] {
-        let taking = children.indices.filter { children[$0].isVisible }
-        guard !taking.isEmpty else { return children }
-        let items = taking.map { index -> Item in
-            let child = children[index]
+        let rules = resolving(children, contentPlacement, onAScreen: onAScreen)
+        var out = layout.arranges
+            ? arranged(children, rules: rules, layout: layout, bounds: bounds)
+            : closedAround(children, rules: rules, layout: layout, bounds: bounds)
+        // A piece told to stretch BOTH ways is not one of the things being
+        // arranged: it is the surface behind them, painted to the box's own
+        // edges. The room at the edges is room INSIDE that surface, which is
+        // what a button's fill is, so it takes the whole box rather than the
+        // part left over.
+        let box = CGRect(origin: .zero,
+                         size: size(of: out, layout: layout,
+                                    contentPlacement: contentPlacement,
+                                    bounds: bounds, onAScreen: onAScreen))
+        for index in out.indices where rules[index].isSurface {
+            out[index] = moved(out[index], to: box, fillingHeight: true)
+        }
+        return out
+    }
+
+    /// What each child does on each axis, once its own rule and the group's
+    /// default have been put together.
+    private static func resolving(_ children: [Layer], _ contentPlacement: LayerPlacement?,
+                                  onAScreen: Bool) -> [ResolvedPlacement] {
+        children.map { child in
             let resolved = LayerPlacement.resolving(child: child.placement,
                                                     container: contentPlacement)
-            let effective = onAScreen ? resolved.onAScreen : resolved
-            return Item(box: child.localBounds,
-                        horizontal: effective.horizontal.span,
-                        vertical: effective.vertical.span)
+            return onAScreen ? resolved.onAScreen : resolved
+        }
+    }
+
+    // MARK: - A group that closes around what is inside it
+
+    /// The children of a group that arranges nothing: everything stays where
+    /// it was put, and on an axis the group was given no size, the whole lot
+    /// moves as one to the room kept at that edge so the box can close around
+    /// it. Moving them as one is the point — a hugging axis has no spare room
+    /// to place anything in, so the arrangement somebody made by hand is kept
+    /// exactly and only the box changes.
+    private static func closedAround(_ children: [Layer], rules: [ResolvedPlacement],
+                                     layout: GroupLayout, bounds: Bounds) -> [Layer] {
+        let padding = layout.usedPadding
+        let box = hugged(children, rules: rules, layout: layout, bounds: bounds)
+        let dx = bounds.width == nil
+            ? padding.left - near(children, rules, horizontal: true) : 0
+        let dy = bounds.height == nil
+            ? padding.top - near(children, rules, horizontal: false) : 0
+        var out = children
+        for index in children.indices {
+            // The surface behind everything is placed once, at the end, from
+            // the box the rest of the contents made. Squeezing it into the room
+            // inside the edges first would hand it a box with nothing in it
+            // wherever the room is bigger than the size the group was given,
+            // and a shape with no height cannot be given one back.
+            guard !rules[index].isSurface else { continue }
+            let current = children[index].localBounds
+            // A piece told to stretch takes the room inside the edges, which on
+            // a hugging axis is exactly as much room as the rest of the
+            // contents made.
+            let x = rules[index].horizontal == .stretch
+                ? (padding.left, max(0, box.width - padding.horizontal))
+                : (current.minX + dx, current.width)
+            let y = rules[index].vertical == .stretch
+                ? (padding.top, max(0, box.height - padding.vertical))
+                : (current.minY + dy, current.height)
+            out[index] = moved(children[index],
+                               to: CGRect(x: x.0, y: y.0, width: x.1, height: y.1),
+                               fillingHeight: rules[index].vertical == .stretch)
+        }
+        return out
+    }
+
+    // MARK: - How big the group ends up
+
+    /// The size a group with a layout occupies: the number it was given on an
+    /// axis, and on an axis it was given none, its contents plus the room it
+    /// keeps at both of that axis' edges.
+    ///
+    /// A piece that stretches along an axis is not measured on that axis. It is
+    /// trying to be the size of the box, so measuring it would make the box the
+    /// size of the thing sizing itself to the box. Where every piece stretches
+    /// there is nothing else to go on, so they are measured after all and the
+    /// group keeps the size it had.
+    static func size(of children: [Layer], layout: GroupLayout,
+                     contentPlacement: LayerPlacement?, bounds: Bounds,
+                     onAScreen: Bool) -> CGSize {
+        let rules = resolving(children, contentPlacement, onAScreen: onAScreen)
+        guard layout.arranges else {
+            return hugged(children, rules: rules, layout: layout, bounds: bounds)
+        }
+        let padding = layout.usedPadding
+        // A stack and a grid flow from their own corner, so the room at the
+        // near edge is already in where the contents start and only the far
+        // edge is still to be added.
+        return CGSize(
+            width: bounds.width ?? (children.isEmpty
+                ? padding.horizontal : far(children, rules, horizontal: true) + padding.right),
+            height: bounds.height ?? (children.isEmpty
+                ? padding.vertical : far(children, rules, horizontal: false) + padding.bottom))
+    }
+
+    /// The box of a group that closes around its contents: the room at both
+    /// edges plus however much room the contents themselves take up.
+    private static func hugged(_ children: [Layer], rules: [ResolvedPlacement],
+                               layout: GroupLayout, bounds: Bounds) -> CGSize {
+        let padding = layout.usedPadding
+        return CGSize(
+            width: bounds.width ?? (padding.horizontal + span(children, rules, horizontal: true)),
+            height: bounds.height ?? (padding.vertical + span(children, rules, horizontal: false)))
+    }
+
+    /// The children that decide the size on one axis: everything that is not
+    /// stretching along it, or everything there is when they all are.
+    private static func measurable(_ children: [Layer], _ rules: [ResolvedPlacement],
+                                   horizontal: Bool) -> [CGRect] {
+        let boxes = children.indices
+            .filter { horizontal ? rules[$0].horizontal != .stretch : rules[$0].vertical != .stretch }
+            .map { children[$0].contentBounds }
+        return boxes.isEmpty ? children.map(\.contentBounds) : boxes
+    }
+
+    /// Where the contents begin on one axis, and how much room they take.
+    private static func near(_ children: [Layer], _ rules: [ResolvedPlacement],
+                             horizontal: Bool) -> CGFloat {
+        let boxes = measurable(children, rules, horizontal: horizontal)
+        return boxes.map { horizontal ? $0.minX : $0.minY }.min() ?? 0
+    }
+
+    private static func far(_ children: [Layer], _ rules: [ResolvedPlacement],
+                            horizontal: Bool) -> CGFloat {
+        let boxes = measurable(children, rules, horizontal: horizontal)
+        return boxes.map { horizontal ? $0.maxX : $0.maxY }.max() ?? 0
+    }
+
+    private static func span(_ children: [Layer], _ rules: [ResolvedPlacement],
+                             horizontal: Bool) -> CGFloat {
+        let boxes = measurable(children, rules, horizontal: horizontal)
+        guard !boxes.isEmpty else { return 0 }
+        let low = boxes.map { horizontal ? $0.minX : $0.minY }.min() ?? 0
+        let high = boxes.map { horizontal ? $0.maxX : $0.maxY }.max() ?? 0
+        return max(0, high - low)
+    }
+
+    /// The room a group's contents already have inside it, which is what a
+    /// group asked to close around them starts with: read it off where things
+    /// already sit and nothing moves at the moment it starts hugging. A piece
+    /// that fills the box is the box, not something with room around it, so it
+    /// is what the room is measured FROM.
+    static func room(around children: [Layer], contentPlacement: LayerPlacement?,
+                     inside box: CGRect?) -> GroupPadding {
+        let rules = resolving(children, contentPlacement, onAScreen: false)
+        guard !children.isEmpty else { return .none }
+        let outer = box ?? children.dropFirst()
+            .reduce(children[0].localBounds) { $0.union($1.localBounds) }
+        return GroupPadding(
+            top: max(0, near(children, rules, horizontal: false) - outer.minY),
+            right: max(0, outer.maxX - far(children, rules, horizontal: true)),
+            bottom: max(0, outer.maxY - far(children, rules, horizontal: false)),
+            left: max(0, near(children, rules, horizontal: true) - outer.minX))
+    }
+
+    // MARK: - A group that arranges its own contents
+
+    /// The children of one stack or grid, moved to where the layout puts them.
+    /// A hidden layer takes no place in the flow and is not moved: hiding a row
+    /// closes the space it held, and showing it again puts it back. Neither
+    /// does the surface behind everything, which is not a row at all.
+    private static func arranged(_ children: [Layer], rules: [ResolvedPlacement],
+                                 layout: GroupLayout, bounds: Bounds) -> [Layer] {
+        let taking = children.indices.filter { children[$0].isVisible && !rules[$0].isSurface }
+        guard !taking.isEmpty else { return children }
+        let items = taking.map { index in
+            Item(box: children[index].localBounds,
+                 horizontal: rules[index].horizontal.span,
+                 vertical: rules[index].vertical.span)
         }
         let order = flowOrder(items.map(\.box), layout: layout)
         let targets = laidOut(order.map { items[$0] }, layout: layout, bounds: bounds)
@@ -110,6 +278,13 @@ enum GroupFlow {
     private static func moved(_ layer: Layer, to box: CGRect,
                               fillingHeight: Bool = false) -> Layer {
         let current = layer.localBounds
+        // Nothing that HAS a size is ever squashed to none: a shape with no
+        // height cannot be given one back (its own resize has nothing to scale
+        // from), so a group keeping more room than the size it was given leaves
+        // what is inside it a point rather than losing it for good.
+        let box = CGRect(x: box.minX, y: box.minY,
+                         width: current.width > 0 ? max(1, box.width) : box.width,
+                         height: current.height > 0 ? max(1, box.height) : box.height)
         guard current != box else { return layer }
         guard current.size == box.size else {
             return layer.resized(to: box, fillingHeight: fillingHeight)
@@ -124,12 +299,8 @@ enum GroupFlow {
     /// Where each box lands, in the order handed in.
     static func laidOut(_ items: [Item], layout: GroupLayout, bounds: Bounds) -> [CGRect] {
         guard !items.isEmpty else { return [] }
-        switch layout.kind {
-        case .stack:
-            return stacked(items, layout: layout, bounds: bounds)
-        case .grid:
-            return gridded(items, layout: layout, bounds: bounds)
-        }
+        return layout.kind == .grid ? gridded(items, layout: layout, bounds: bounds)
+                                    : stacked(items, layout: layout, bounds: bounds)
     }
 
     /// The room across one axis, once the padding on both of that axis' edges

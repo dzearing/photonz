@@ -3828,6 +3828,12 @@ final class EditorState {
         arrangingGroupID.flatMap { document?.layer(id: $0)?.group?.layout }
     }
 
+    /// The same, including what a group nobody has touched is already working
+    /// to: it arranges nothing and closes around what is inside it.
+    var workingArrangement: GroupLayout? {
+        arrangingGroupID.flatMap { document?.layer(id: $0)?.workingLayout }
+    }
+
     /// Whether Layer ▸ Stack Selection would do anything: one group to convert,
     /// or several layers to wrap up and arrange.
     var canStackSelection: Bool {
@@ -3849,7 +3855,10 @@ final class EditorState {
     /// One typed number on a group's arrangement: the gap, the columns, the
     /// padding. Lands as one undo step, like every other typed number.
     func updateArrangement(id: UUID, _ change: @escaping (inout GroupLayout) -> Void) {
-        guard document?.layer(id: id)?.group?.layout != nil else { return }
+        // A group that has never been given a layout gets one on the first
+        // number typed into it, keeping the room its contents already have, so
+        // nothing moves at the moment the section starts meaning something.
+        guard document?.layer(id: id)?.isGroup == true else { return }
         perform { $0.updateGroupLayout(id: id, change) }
     }
 

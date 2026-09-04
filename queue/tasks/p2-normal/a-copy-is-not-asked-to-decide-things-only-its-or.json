@@ -1,0 +1,27 @@
+{
+  "id": "a-copy-is-not-asked-to-decide-things-only-its-or",
+  "title": "A copy is not asked to decide things only its original can",
+  "goal": "Picking a copy of a component shows a Layout section offering to change how that copy arranges and pads its contents, but anything typed there is quietly thrown away the next time the original changes. A copy should either not offer the setting or should keep what you typed.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T17:00:57.651Z",
+  "updated": "2026-09-04T17:00:57.652Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-04 while auditing the container-hug work. ComponentInstances refill copies the original main group layout onto every copy (group.layout = main.group?.layout), so a copy padding edit is overwritten by the next syncComponentInstances. Same family as the lost-typing bug fixed on 2026-09-04. Simplest answer: EditorState.arrangingGroupID excludes an instance root, the way handles already do.",
+  "acceptance": [
+    "The Layout section is not offered on a copy, or what is typed into it survives the original changing",
+    "A copy still shows its own knobs and its own position and size",
+    "Picking the original still offers the whole Layout section"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T17:00:57.652Z",
+      "note": "created (manual)"
+    }
+  ]
+}

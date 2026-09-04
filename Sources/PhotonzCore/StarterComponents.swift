@@ -259,7 +259,7 @@ public enum StarterComponents {
     /// The slack `TextRasterizer.naturalSize` leaves around the glyphs
     /// (`frameInset` on each side). Centring reads the ink, not the slack,
     /// or every centred label sits two points right of centre.
-    public static let textSlack: CGFloat = 4
+    public static let textSlack: CGFloat = TextMeasurement.slack
 
     /// A starter's subtree, ready to be dropped into a document.
     ///
@@ -280,21 +280,52 @@ public enum StarterComponents {
         case .navBar: children = navBar(pen)
         case .badge: children = badge(pen)
         }
-        return Layer(name: kind.name,
-                     content: .group(GroupContent(children: children,
-                                                  componentID: kind.componentID,
-                                                  contentPlacement: kind.contentPlacement)),
-                     frame: .zero)
+        var content = GroupContent(children: children,
+                                   componentID: kind.componentID,
+                                   contentPlacement: kind.contentPlacement)
+        content.layout = layout(kind, pen)
+        // A control that closes around its label is drawn already closed, so
+        // the shelf tile, the drop outline and the thing that lands on the
+        // canvas are all the same size before anything has been edited.
+        return GroupFlow.flowing(Layer(name: kind.name, content: .group(content), frame: .zero))
     }
 
-    /// About how big a piece of text is, without CoreText. Only used where the
-    /// real thing is not available: it is close enough that a test can check
-    /// the ordering of the pieces, and never what the app draws with.
+    /// How a starter sizes itself.
+    ///
+    /// The two controls that are really "a word with room around it" close
+    /// around that word: give a button a longer label and the button gets
+    /// wider, with the same room either side, and nothing has to be dragged.
+    /// Their height is the height a control that size is, so a button is not a
+    /// different height from the field beside it because of its type.
+    ///
+    /// The other three are boxes with a shape of their own — a card is 260
+    /// wide because that is the card, not because of what its title says — so
+    /// they hold the size they were drawn at, exactly as before.
+    private static func layout(_ kind: StarterComponent, _ pen: Pen) -> GroupLayout? {
+        switch kind {
+        case .button:
+            .free(padding: GroupPadding(top: pen.px(10), right: pen.px(16),
+                                        bottom: pen.px(10), left: pen.px(16)),
+                  height: pen.px(36))
+        case .badge:
+            .free(padding: GroupPadding(top: pen.px(3), right: pen.px(8),
+                                        bottom: pen.px(3), left: pen.px(8)),
+                  height: pen.px(20))
+        case .textField, .card, .navBar:
+            nil
+        }
+    }
+
+    /// How big a piece of text is: the real measurement where the app has
+    /// installed one, and the same estimate every other piece of this module
+    /// falls back to where it has not.
+    ///
+    /// It goes through `TextMeasurement` rather than guessing on its own,
+    /// because two estimates that disagree by a single point is enough to make
+    /// a label look like a paragraph somebody had already narrowed — and then
+    /// a longer word wraps down the page instead of making the control wider.
     public static func estimatedTextSize(_ text: TextContent) -> CGSize {
-        let perGlyph: CGFloat = text.weight == .regular ? 0.52 : 0.55
-        let width = CGFloat(text.string.count) * text.fontSize * perGlyph
-        return CGSize(width: max(width, text.fontSize / 2).rounded() + textSlack,
-                      height: (text.fontSize * 1.22).rounded() + textSlack)
+        TextMeasurement.size(of: text)
     }
 
     /// An id that is the same in every launch and every document, built from
@@ -377,14 +408,16 @@ public enum StarterComponents {
 
     // MARK: The five drawings
 
-    /// 128 × 36. One filled box and a word in the middle of it. The button
-    /// centres everything by default, and the fill behind the word stretches,
-    /// so dragging it wider keeps the word in the middle of a full-width pill.
+    /// A word with 16 points either side of it, 36 tall. The fill behind the
+    /// word stretches both ways, which makes it the SURFACE: it takes whatever
+    /// box the word and its room add up to rather than deciding that box. So a
+    /// longer label makes a wider button on its own, and dragging the button
+    /// wider still keeps the word in the middle of a full-width pill.
     private static func button(_ pen: Pen) -> [Layer] {
         [pen.box("Background", x: 0, y: 0, width: 128, height: 36, radius: 8, fill: .accent,
                  placement: .fill),
-         pen.centeredLabel("Label", "Button", across: 128, centerY: 18, size: 14,
-                           weight: .semibold, color: .surface)]
+         pen.label("Label", "Button", x: pen.px(16), centerY: 18, size: 14,
+                   weight: .semibold, color: .surface)]
     }
 
     /// 220 × 32. A hairline box with quiet wording sitting in from the left.
@@ -427,13 +460,14 @@ public enum StarterComponents {
                            placement: LayerPlacement(horizontal: .center))]
     }
 
-    /// 26 × 20. The smallest thing on the shelf, and the one that shows a
-    /// component does not have to be big.
+    /// The smallest thing on the shelf, 20 tall and as wide as the number in
+    /// it: a count going from 3 to 128 is the plainest case there is for a
+    /// control that closes around what it says.
     private static func badge(_ pen: Pen) -> [Layer] {
         [pen.box("Background", x: 0, y: 0, width: 26, height: 20, radius: 10, fill: .accent,
                  placement: .fill),
-         pen.centeredLabel("Count", "3", across: 26, centerY: 10, size: 12,
-                           weight: .semibold, color: .surface)]
+         pen.label("Count", "3", x: pen.px(8), centerY: 10, size: 12,
+                   weight: .semibold, color: .surface)]
     }
 }
 

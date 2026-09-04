@@ -122,6 +122,17 @@ extension LayerPlacement {
 }
 
 extension ResolvedPlacement {
+    /// Whether this piece is the SURFACE behind everything else rather than one
+    /// of the things being arranged.
+    ///
+    /// Stretching both ways is the one rule that cannot mean "be a row in this
+    /// stack" or "be one of the pieces this box closes around": it says be the
+    /// size of the box, and something that is the size of the box cannot also
+    /// be the thing that decides how big the box is. So it steps out of the
+    /// arrangement, is measured by nobody, and is painted to the container's
+    /// own edges — which is exactly what a button's fill is.
+    public var isSurface: Bool { horizontal == .stretch && vertical == .stretch }
+
     /// The same answer as a SCREEN honours it. Dragging a frame's edge moves
     /// where it clips rather than magnifying what is on it, so nothing on a
     /// screen ever scales: a piece nobody gave a rule to holds still, which in
@@ -142,7 +153,7 @@ extension Layer {
     /// the proportional Scale a layer starts on means nothing, so it is neither
     /// offered nor reported: what an unset piece really does is hold to the
     /// leading edge.
-    public var placesItsContents: Bool { isFrame || group?.layout != nil }
+    public var placesItsContents: Bool { isFrame || group?.layout?.arranges == true }
 
     /// How this layer behaves when the group holding it is resized, resolved
     /// against that group's default.
@@ -186,6 +197,7 @@ extension Layer {
     public func heightIsFilled(in container: Layer?) -> Bool {
         guard let container else { return false }
         if let layout = container.group?.layout, !layout.decidesHeight { return false }
+
         return resolvedPlacement(in: container).vertical == .stretch
     }
 

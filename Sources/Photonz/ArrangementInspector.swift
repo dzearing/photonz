@@ -4,9 +4,13 @@ import SwiftUI
 /// A group that arranges its own contents (Next, `next-auto-layout`).
 ///
 /// Three words at the top of the Layout section — Free, Stack, Grid — and then
-/// the two or three numbers that shape whichever one is picked. Free is what
-/// every group has always been: things stay where you put them. Stack lays
-/// them along one axis with an even gap. Grid fills rows of equal cells.
+/// the numbers that shape whichever one is picked. Free is what every group has
+/// always been: things stay where you put them. Stack lays them along one axis
+/// with an even gap. Grid fills rows of equal cells.
+///
+/// All three take a size and room at the edges, because being as big as what is
+/// inside you is not something only a stack does: a button is a word with room
+/// around it, and it has to grow when the word does.
 ///
 /// The mock (`ui-autolayout`) draws eight controls here, including a
 /// distribution row and a per-child hug/fill/fixed row. Both are cut on
@@ -30,12 +34,14 @@ struct ArrangementInspector: View {
     @State private var sidesOpen: Bool?
 
     private var current: Layer { editorState.document?.layer(id: layer.id) ?? layer }
-    private var layout: GroupLayout? { current.group?.layout }
+    /// What this group is working to, including what a group nobody has touched
+    /// is already working to, so the rows read the same either way.
+    private var layout: GroupLayout { current.workingLayout }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             row("Arrangement") {
-                Picker("", selection: Binding(get: { layout?.kind },
+                Picker("", selection: Binding(get: { layout.kind },
                                               set: { editorState.setArrangement(id: layer.id,
                                                                                 kind: $0) })) {
                     Text("Free").tag(GroupLayoutKind?.none)
@@ -47,20 +53,20 @@ struct ArrangementInspector: View {
                 .labelsHidden()
                 .frame(maxWidth: 152)
             }
-            if let layout {
-                numbers(layout)
-                Text(caption(layout) + (sizeSentence(layout).map { " " + $0 } ?? ""))
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            numbers(layout)
+            Text(caption(layout) + (sizeSentence(layout).map { " " + $0 } ?? ""))
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .onChange(of: layer.id) { sidesOpen = nil }
     }
 
     @ViewBuilder
     private func numbers(_ layout: GroupLayout) -> some View {
-        if layout.kind == .stack {
+        if layout.kind == nil {
+            EmptyView()
+        } else if layout.kind == .stack {
             row("Direction") {
                 Picker("", selection: Binding(get: { layout.direction },
                                               set: { direction in
@@ -89,9 +95,13 @@ struct ArrangementInspector: View {
                 editorState.updateArrangement(id: layer.id) { $0.height = size }
             }
         }
-        number(layout.kind == .grid ? "Column gap" : "Gap", value: layout.usedGap,
-               help: "The space between one thing and the next.") { value in
-            editorState.updateArrangement(id: layer.id) { $0.gap = value }
+        // A gap is the space the flow leaves BETWEEN things, so it belongs to
+        // the two arrangements that put things one after another.
+        if layout.arranges {
+            number(layout.kind == .grid ? "Column gap" : "Gap", value: layout.usedGap,
+                   help: "The space between one thing and the next.") { value in
+                editorState.updateArrangement(id: layer.id) { $0.gap = value }
+            }
         }
         if layout.kind == .grid {
             number("Row gap", value: layout.usedRowGap,
@@ -204,6 +214,11 @@ struct ArrangementInspector: View {
     private func caption(_ layout: GroupLayout) -> String {
         let noun = current.isFrame ? "screen" : "group"
         switch layout.kind {
+        case nil:
+            return "Everything in this \(noun) stays where you put it. "
+                + "Horizontal and Vertical below say what each one does when the \(noun) "
+                + "changes size, and a piece set to Stretch both ways is the surface behind "
+                + "the rest."
         case .stack:
             let axis = layout.direction.isHorizontal ? "across" : "down"
             let owned = layout.direction.isHorizontal ? "Horizontal" : "Vertical"
@@ -224,7 +239,17 @@ struct ArrangementInspector: View {
     /// is rather than leaving somebody staring at a 320-wide stack of 40-wide
     /// rows wondering what they got wrong.
     private func sizeSentence(_ layout: GroupLayout) -> String? {
-        guard !current.isFrame, layout.kind == .stack else { return nil }
+        guard !current.isFrame else { return nil }
+        // A group that arranges nothing says the plainer half of the same
+        // thing: which of its two sides is the size of what is inside it.
+        guard layout.arranges else {
+            let hugs = [layout.hugsWidth ? "wide" : nil, layout.hugsHeight ? "tall" : nil]
+                .compactMap { $0 }
+            guard !hugs.isEmpty else { return nil }
+            return "It is as \(hugs.joined(separator: " and as ")) as what is inside it, "
+                + "plus the room at its edges."
+        }
+        guard layout.kind == .stack else { return nil }
         let flowsAcross = layout.direction.isHorizontal
         guard let across = flowsAcross ? layout.usedHeight : layout.usedWidth else { return nil }
         let word = flowsAcross ? "tall" : "wide"

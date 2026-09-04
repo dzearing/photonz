@@ -166,6 +166,10 @@ public enum LayerGeometry {
 /// reports the height it turned out to be.
 public struct LayerGeometryEditing: Hashable, Sendable {
 
+    /// Why a piece inside a group that closes around its contents has no typed
+    /// position: the room around it is the group's Padding.
+    public static let huggedReason = "The group this is in is as big as what is inside it, so the room around this is the group's Padding in the Layout section."
+
     /// Why nothing on a locked layer can be typed.
     public static let lockedReason = "This layer is locked. Unlock it in the Layers list to change its position or size."
 
@@ -243,9 +247,17 @@ public struct LayerGeometryEditing: Hashable, Sendable {
             moveReason = Self.lockedReason
             return
         }
-        if let layout = container?.group?.layout {
+        // A container that arranges its contents, or that closes around them,
+        // owns where they sit; one that was given a size on both axes and
+        // arranges nothing leaves them exactly where you put them.
+        if let layout = container?.group?.layout,
+           layout.arranges || layout.hugsWidth || layout.hugsHeight {
             canMove = false
-            moveReason = layout.kind == .grid ? Self.griddedReason : Self.stackedReason
+            moveReason = switch layout.kind {
+            case .grid: Self.griddedReason
+            case .stack: Self.stackedReason
+            case nil: Self.huggedReason
+            }
         } else {
             canMove = true
             moveReason = nil

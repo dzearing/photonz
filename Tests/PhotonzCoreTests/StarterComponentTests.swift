@@ -46,11 +46,20 @@ struct StarterComponentTests {
 
     /// A control drawn at 36 points would land half size on a Retina capture,
     /// whose canvas is measured in image pixels.
+    ///
+    /// A control that closes around its words is as wide as those words are AT
+    /// THAT SIZE, and type is not exactly twice as wide at twice the point
+    /// size, so the width lands within a couple of points of double rather than
+    /// exactly on it. The height, which is a number the control was given, is
+    /// exactly double.
     @Test func aStarterIsBuiltAtTheDocumentsScale() {
-        let one = StarterComponents.layer(.button, scale: 1)
-        let two = StarterComponents.layer(.button, scale: 2)
-        #expect(two.localBounds.width == one.localBounds.width * 2)
-        #expect(two.localBounds.height == one.localBounds.height * 2)
+        for kind in StarterComponent.allCases {
+            let one = StarterComponents.layer(kind, scale: 1)
+            let two = StarterComponents.layer(kind, scale: 2)
+            #expect(two.localBounds.height == one.localBounds.height * 2, "\(kind.name)")
+            let doubled = one.localBounds.width * 2
+            #expect(abs(two.localBounds.width - doubled) <= doubled / 20, "\(kind.name)")
+        }
     }
 
     /// The redline contrast halo belongs on a caption over a screenshot, not on

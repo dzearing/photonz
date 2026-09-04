@@ -70,7 +70,7 @@ extension PhotonzDocument {
               let parentID = parentID(of: id),
               let parent = layer(id: parentID),
               let group = parent.group,
-              group.layout == nil else { return nil }
+              group.layout?.arranges != true else { return nil }
         if group.isFrame {
             guard let bounds = canvasBounds(of: parentID) else { return nil }
             return ArrangeContainer(id: parentID, bounds: bounds)

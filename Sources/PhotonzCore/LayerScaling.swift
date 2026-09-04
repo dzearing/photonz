@@ -52,7 +52,12 @@ enum LayerScaling {
         let current = layer.localBounds
         if box.width != current.width { layout.width = max(0, box.width) }
         if box.height != current.height { layout.height = max(0, box.height) }
-        var out = layer
+        // A group that arranges nothing still places its contents the way it
+        // always did when its handle is dragged: the rules on each piece say
+        // whether it holds an edge, keeps its offset from the middle or grows.
+        // The drag simply also gives the group that size of its own, so an
+        // axis that was closing around its contents stops.
+        var out = layout.arranges ? layer : resizing(layer, to: box)
         out.frame.origin = box.origin
         out.setGroupLayout(layout)
         return GroupFlow.flowing(out)

@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/button-hug",
+  "seed": "The reported bug: giving a button a longer label leaves the button the width it was, so the words hang out of the pill. The walk drops a Button, gives a copy of it a much longer label, and the picture at the end is the only proof that matters.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [420, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-arrives", "note": "the starter Button arrives as wide as the word Button plus 16 either side, not at some width somebody picked" },
+    { "do": "snapshot", "name": "hug-1-arrives" },
+    { "do": "render", "name": "hug-1-arrives-doc" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [420, 520] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-copy", "note": "a copy of the Button, the same size as the original" },
+    { "do": "render", "name": "hug-2-copy-doc" },
+
+    { "do": "click", "at": [420, 520], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Save all the changes" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "click", "at": [1000, 760] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-grown", "note": "THE TEST: the copy's pill grew with its words, with the same 16 either side, and nothing was dragged. The original above it still says Button and is still its own size." },
+    { "do": "snapshot", "name": "hug-3-grown" },
+    { "do": "render", "name": "hug-3-grown-doc" },
+
+    { "do": "click", "at": [420, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-layout-section", "note": "the Button's Layout section: Arrangement Free, Width Hug, Height Fixed, and Padding showing the room it keeps" },
+    { "do": "snapshot", "name": "hug-4-layout-section" },
+    { "do": "panel", "stage": "4-layout-section" },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "28" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-more-room", "note": "more room typed once: the button gets wider around the same word, and the fill behind it follows" },
+    { "do": "snapshot", "name": "hug-5-more-room" },
+    { "do": "render", "name": "hug-5-more-room-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-undone", "note": "one undo puts the room back and the button back to the size it was" },
+    { "do": "render", "name": "hug-6-undone-doc" }
+  ]
+}
