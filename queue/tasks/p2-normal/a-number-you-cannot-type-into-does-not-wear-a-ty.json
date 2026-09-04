@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1180,
-  "status": "in_progress",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T20:44:36.175Z",
-  "updated": "2026-09-04T20:47:23.803Z",
+  "updated": "2026-09-04T20:57:22.955Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of the 2026-09-04 review of six inert-control fixes and is the one case that does not conform to the new rule in docs/design/mocks/shared/UX-PATTERNS.md section 4 (\"A control that cannot act\"). Rung 3 of that rule says a field that still has a number to report keeps the number, but the first half of the reason (who owns the number) must be on screen, not on hover. Today only the grey says it. The audit 2026-09-04-text-height-readout.json rough line calls the bordered box the clumsiest part and says losing the border is a visual call worth the users eye first, so this may want a decision card with a picture of both before it is built. Reason strings already exist as constants: LayerGeometryEditing.textHeightReason, lockedReason, stackedReason, instanceSizeReason in Sources/PhotonzCore/LayerGeometry.swift; the field is GeometryInspector.swift (disabled(true) around line 363).",
@@ -52,6 +52,10 @@
     {
       "t": "2026-09-04T20:57:08.606417Z",
       "note": "Dropped as a duplicate. Opening a second decision asking the same visual question would just be noise on the dashboard; the existing card already has four real captures of both looks."
+    },
+    {
+      "t": "2026-09-04T20:57:22.954Z",
+      "note": "Duplicate of a-number-you-cannot-type-into-stops-looking-like, which is already blocked on decision a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for (pending, four real captures of both looks). Four of the five acceptance items already ship; only losing the border is open, and that is the user's call, not a second card. Landed the one ungated part on the way past: a blank read-only box no longer shows the field's letter as a placeholder (commit 2421ae0), verified in the probe, 3114 tests green. Also fixed UX-PATTERNS.md section 4, which pointed at this task id instead of the real one."
     }
   ],
   "started": "2026-09-04T20:47:23.803Z"
