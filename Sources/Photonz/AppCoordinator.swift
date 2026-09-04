@@ -106,6 +106,9 @@ final class AppCoordinator {
             self?.isHistoryShown = false
             self?.highlightedCaptureURL = nil
             self?.tooltip.hide()
+            // Esc and click-away take the overlay down without going through
+            // hideHistory(), so the menu has to be told here too.
+            MainMenuTitles.retitleHistory(isShown: false)
         }
         // Record every non-Photonz app that comes forward, most-recent-first.
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -410,6 +413,7 @@ final class AppCoordinator {
         historyOverlay.show(content: HistoryOverlay(coordinator: self), on: activeScreen(),
                             reserveForPermissionHint: capture.needsScreenRecordingPermission)
         isHistoryShown = true
+        MainMenuTitles.retitleHistory(isShown: true)
     }
 
     func hideHistory() {
@@ -417,6 +421,7 @@ final class AppCoordinator {
         isHistoryShown = false
         highlightedCaptureURL = nil
         tooltip.hide()
+        MainMenuTitles.retitleHistory(isShown: false)
     }
 
     /// History-icon tooltips (their own floating window). Anchored to the icon's

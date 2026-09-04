@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T22:25:34.438Z",
-  "updated": "2026-09-03T12:08:27.357Z",
+  "updated": "2026-09-04T05:14:11.961982Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the playtest menus step. Walk: press key h with command+shift, then a menus step on Capture. Observed: log says the chord was taken by menu, no history window appears in the menus step window list, and the title stays Show History (Sources/Photonz/EditorCommands.swift:127 and PhotonzApp.swift:191 both key off coordinator.isHistoryShown). Likely the shortcut not landing on an unfocused app rather than a stale title. This is what leaves 2026-09-02-capture-menu-names try step 5 unverified.\n\nSequenced after scripted-walks-can-press-shifted-letter-shortcut on purpose: the chord here is Command Shift H, and that task is fixing a playtest harness bug where a shifted letter never matches its key equivalent. Re-run the walk after that lands before digging into the app, because it may already be the whole story.\n\nObjective: measure-redline (retriaged 2026-09-02 from unmanned-loop: the loop only found it, the defect is in the app Capture menu). Capture history is part of the redline hand off.",
@@ -30,6 +30,47 @@
     {
       "t": "2026-09-03T12:08:27.356Z",
       "note": "seq 40 -> 50"
+    },
+    {
+      "t": "2026-09-04T04:55:10.002Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T05:01:09.691207Z",
+      "note": "reproduced first, and the report is half right. With the shifted-letter harness fix in, a walk's Command Shift H DOES reach Capture > Show History and the history overlay DOES open: the probe's window list gains a panel that was not there before, and a second press closes it again. So acceptance 1 was already true; what the old note read as \"no history window\" was the harness never landing the chord."
+    },
+    {
+      "t": "2026-09-04T05:01:09.691207Z",
+      "note": "the live defect is the title, and it is exactly one toggle behind. Walk /tmp/exp-walk.json: closed reads Show History (right), then open reads Show History (wrong), then closed again reads Hide History (wrong). Five menu reads over six seconds with the overlay open never caught up, so it is not a settling delay."
+    },
+    {
+      "t": "2026-09-04T05:01:09.691207Z",
+      "note": "cause: SwiftUI rebuilds a Commands body only while it is processing an event, not when the observed value changes. The key equivalent itself triggers the rebuild, and that rebuild reads isHistoryShown BEFORE the item's action flips it, so the menu is left one state behind and nothing later disturbs it. Not the frozen-menu-bar artifact: Edit Last Capture's enabled state updated live in the same reads."
+    },
+    {
+      "t": "2026-09-04T05:01:09.691207Z",
+      "note": "adversarial review before building: the Show/Hide title flip is the right macOS idiom (Show/Hide Sidebar), so the fix is to make it truthful, not to redesign it. Shortest version that delivers the value: keep the SwiftUI button for the shortcut and the action, and write the true title onto the live menu item whenever history opens or closes. Nothing decorative to cut. Left alone deliberately: the item stays enabled with an empty history, because the overlay is also where the screen recording hint lives."
+    },
+    {
+      "t": "2026-09-04T05:14:11.961982Z",
+      "note": "fix: CaptureMenuNames (PhotonzCore, 4 tests) is now the one place the capture commands are named, and both menus read from it. AppCoordinator writes the true title straight onto the live menu item (MainMenuTitles) the moment history opens or closes, including the Esc and click-away dismissal, so the menu no longer waits for SwiftUI to re-run the Commands body."
+    },
+    {
+      "t": "2026-09-04T05:14:11.961982Z",
+      "note": "acceptance 1 verified: in Scripts/playtest/history-menu-title-walk.json the probe is never the front app (no window is key for the whole walk) and Command Shift H still puts the overlay on screen. The panel is now titled Capture History so the walk can name it instead of reading (untitled). Driving the shortcut from INSIDE another app was not tried: that needs an Accessibility grant this terminal does not have. It goes through the same Carbon global hotkey as Capture Region."
+    },
+    {
+      "t": "2026-09-04T05:14:11.961982Z",
+      "note": "acceptance 2 and 3 verified: the walk asserts the reading rather than only recording it. Each press is a shortcut step naming the title it must reach, so the walk FAILS if the menu lies. Green now; against the pre-fix binary it fails at step 8 with \"command+shift+h is Capture > Show History, not Hide History\". Four menu readings: closed Show, open Hide, closed again Show, dismissed by Esc Show."
+    },
+    {
+      "t": "2026-09-04T05:14:11.961982Z",
+      "note": "harness additions this needed, both additive and documented in docs/design/playtest-harness.md: an appKey step (a press handed to the application rather than posted into a window, the only way to reach the app-wide event monitor the overlay's Esc lives on) and a window field on snapshot (photograph any of the app's windows by title, the only way to picture a floating panel). 2727 tests green; menu-bar, undo-shortcut and shift-letter-shortcut walks re-run green."
+    },
+    {
+      "t": "2026-09-04T05:14:11.961982Z",
+      "note": "adversarial review of the built thing: the four readings are right and the item is never a step behind. Left rough, and said so in the audit: no picture of the open menu exists, because photographing one needs the app in front and macOS will not give a script-launched process focus; and the menu bar icon's own drop-down was reasoned about rather than read, since it is rebuilt each time it opens. The audit's screenshot is a real screen capture of the overlay with the capture thumbnails pixelated by hand, because they are the user's real history and this repo is public."
     }
-  ]
+  ],
+  "started": "2026-09-04T04:55:10.002Z"
 }

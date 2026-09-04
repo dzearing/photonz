@@ -178,11 +178,11 @@ struct MenuBarMenu: View {
 
     var body: some View {
         // Capture
-        Button("Capture Region") { coordinator.capture.beginRectCapture() }
+        Button(CaptureMenuNames.captureRegion) { coordinator.capture.beginRectCapture() }
             .keyboardShortcut("4", modifiers: [.command, .shift])
-        Button("Capture Full Screen") { coordinator.capture.captureFullScreen() }
+        Button(CaptureMenuNames.captureFullScreen) { coordinator.capture.captureFullScreen() }
             .keyboardShortcut("3", modifiers: [.command, .shift])
-        Button(coordinator.capture.isRecording ? "Stop Recording" : "Record Screen / Video…") {
+        Button(CaptureMenuNames.recording(isRecording: coordinator.capture.isRecording)) {
             coordinator.capture.toggleRecording()
         }
         .keyboardShortcut("5", modifiers: [.command, .shift])
@@ -192,10 +192,10 @@ struct MenuBarMenu: View {
         // History. Edit Last Capture is the keyboard path from a capture to
         // its editor once the toast has faded (a recording opens the video
         // editor); the shortcut is also a global hotkey (CaptureCenter).
-        Button("Edit Last Capture") { coordinator.editLastCapture() }
+        Button(CaptureMenuNames.editLastCapture) { coordinator.editLastCapture() }
             .keyboardShortcut("6", modifiers: [.command, .shift])
             .disabled(coordinator.lastCapture == nil)
-        Button(coordinator.isHistoryShown ? "Hide History" : "Show History") {
+        Button(CaptureMenuNames.history(isShown: coordinator.isHistoryShown)) {
             coordinator.toggleHistory()
         }
         .keyboardShortcut("h", modifiers: [.command, .shift])

@@ -1,0 +1,26 @@
+{
+  "out": "/tmp/photonz-playtest/history-menu-title",
+  "steps": [
+    { "do": "blank", "canvasWidth": 800, "canvasHeight": 600, "width": 1100, "height": 800 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "menus", "stage": "1-closed", "menu": "Capture" },
+
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "menus", "stage": "2-open", "menu": "Capture" },
+    { "do": "snapshot", "name": "history-menu-title-2-open", "window": "Capture History" },
+
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Hide History" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "menus", "stage": "3-closed-again", "menu": "Capture" },
+
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "appKey", "key": "escape" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "menus", "stage": "4-dismissed-by-escape", "menu": "Capture" },
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "menus", "stage": "5-open-again", "menu": "Capture" }
+  ]
+}

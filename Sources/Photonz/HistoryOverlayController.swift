@@ -61,6 +61,11 @@ final class HistoryOverlayController {
             contentRect: layout.hiddenFrame,
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered, defer: false)
+        // Borderless panels draw no title bar, so nobody sees this — but a
+        // scripted walk lists the open windows by title, and "Capture History"
+        // is the difference between proving the overlay came up and reading
+        // "(untitled)".
+        panel.title = "Capture History"
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.backgroundColor = .clear

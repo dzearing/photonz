@@ -220,6 +220,21 @@ private final class Run {
             await sleep(0.2)
             note(number, step.name, "\(chord) reached \(destination.path) and it ran", state: describe())
 
+        case .appKey(let key, let modifiers):
+            // Handed to the application, not posted into the window, because an
+            // application-wide event monitor is the only thing that sees a
+            // press this way — and that is what takes the history overlay down
+            // on Esc or on a click outside it.
+            let window = try requireWindow()
+            let flags = eventFlags(modifiers)
+            for down in [true, false] {
+                guard let event = keyEvent(key, flags: flags, down: down, in: window) else { continue }
+                NSApp.sendEvent(event)
+            }
+            await sleep(0.2)
+            note(number, step.name, "\(Self.chord(key, modifiers)) sent through the app",
+                 state: describe())
+
         case .move(let at):
             let canvas = try requireCanvas()
             let p = try viewPoint(at)
@@ -477,11 +492,14 @@ private final class Run {
                  "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
                  state: describe())
 
-        case .snapshot(let name):
+        case .snapshot(let name, let wanted):
             // A sheet is its own window on top of the editor's, so while one is
             // up it IS what a person is looking at, and it is what gets
-            // photographed.
-            let window = try requireWindow().attachedSheet ?? (try requireWindow())
+            // photographed. `window` overrides that with any of the app's own
+            // windows by title, which is the only way to photograph a floating
+            // panel like the history overlay.
+            let window = try wanted.map { try requireWindow(titled: $0) }
+                ?? (try requireWindow().attachedSheet ?? (try requireWindow()))
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
             try snapshot(content, name: name)
             await screenCapture(window, name: name)
@@ -1540,6 +1558,18 @@ private final class Run {
     private func requireWindow() throws -> NSWindow {
         guard let window else { throw Failure(description: "no editor window is open; add an \"open\" step first") }
         return window
+    }
+
+    /// One of the app's own windows, by title. Exact first, then a prefix, so
+    /// "Untitled 1" finds "Untitled 1 (Next)".
+    private func requireWindow(titled title: String) throws -> NSWindow {
+        let open = NSApp.windows.filter(\.isVisible)
+        guard let found = open.first(where: { $0.title == title })
+                ?? open.first(where: { $0.title.hasPrefix(title) }) else {
+            let names = open.map { $0.title.isEmpty ? "(untitled)" : $0.title }.joined(separator: ", ")
+            throw Failure(description: "no window called \"\(title)\" is open; these are: \(names)")
+        }
+        return found
     }
 
     private func requireCanvas() throws -> CanvasNSView {

@@ -493,6 +493,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// only then presses. `menuItem` names the item the chord must reach
     /// ("Undo"), so a walk fails when a shortcut is quietly reassigned.
     case shortcut(PlaytestKey, [PlaytestModifier], menuItem: String?)
+    /// Press and release a key by handing it to the APPLICATION rather than
+    /// straight to a window.
+    ///
+    /// `key` posts into the window, which is right for typing and for menu
+    /// shortcuts but invisible to anything watching the app as a whole. The
+    /// history overlay is exactly that: Esc and click-away take it down through
+    /// an application-wide event monitor, and a monitor only ever sees what
+    /// goes through the app. This step is how a walk reaches those.
+    case appKey(PlaytestKey, [PlaytestModifier])
     case move(PlaytestPoint)
     /// Rest the pointer on a control (named by the label its tooltip shows,
     /// or by a point) long enough for its tooltip to appear. A point over no
@@ -531,7 +540,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// only moment the landing outline exists.
     case dropImage(file: String, at: PlaytestPoint, hold: String?)
     /// Render the window's content offscreen to `<out>/<name>.png`.
-    case snapshot(name: String)
+    ///
+    /// `window` names another of the app's windows to photograph instead of the
+    /// editor's, by its title: the history overlay is its own floating panel,
+    /// so it is the only way to get a picture of it at all.
+    case snapshot(name: String, window: String?)
     /// Composite the document itself to `<out>/<name>.png`.
     case render(name: String)
     /// Open a menu that lives INSIDE the window — the Add menu on a
@@ -594,7 +607,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
+        "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
         "dragRow", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
         "panel", "panelMenu",
@@ -610,6 +623,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .wait: "wait"
         case .key: "key"
         case .shortcut: "shortcut"
+        case .appKey: "appKey"
         case .move: "move"
         case .hover: "hover"
         case .click: "click"
@@ -672,6 +686,12 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("key", "\"\(keyName)\" is not a key; use a single character or return, escape, tab, space, delete, left, right, up, down")
             }
             self = .shortcut(key, try f.modifiers(), menuItem: try f.optionalString("menuItem"))
+        case "appKey":
+            let keyName = try f.string("key")
+            guard let key = PlaytestKey(keyName) else {
+                throw f.invalid("key", "\"\(keyName)\" is not a key; use a single character or return, escape, tab, space, delete, left, right, up, down")
+            }
+            self = .appKey(key, try f.modifiers())
         case "move":
             self = .move(try f.point("at"))
         case "hover":
@@ -708,7 +728,7 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "snapshot":
-            self = .snapshot(name: try f.string("name"))
+            self = .snapshot(name: try f.string("name"), window: try f.optionalString("window"))
         case "dropComponent":
             self = .dropComponent(at: try f.point("at"))
         case "dragComponent":

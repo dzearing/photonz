@@ -140,19 +140,23 @@ struct EditorCommands: Commands {
             // disabled in System Settings.
             // Same names and order as the menu bar menu (MenuBarMenu), so a
             // command learned in one menu is found in the other.
-            Button("Capture Region") { coordinator.capture.beginRectCapture() }
+            Button(CaptureMenuNames.captureRegion) { coordinator.capture.beginRectCapture() }
                 .keyboardShortcut("4", modifiers: [.command, .shift])
-            Button("Capture Full Screen") { coordinator.capture.captureFullScreen() }
+            Button(CaptureMenuNames.captureFullScreen) { coordinator.capture.captureFullScreen() }
                 .keyboardShortcut("3", modifiers: [.command, .shift])
-            Button(coordinator.capture.isRecording ? "Stop Recording" : "Record Screen / Video…") {
+            Button(CaptureMenuNames.recording(isRecording: coordinator.capture.isRecording)) {
                 coordinator.capture.toggleRecording()
             }
             .keyboardShortcut("5", modifiers: [.command, .shift])
             Divider()
-            Button("Edit Last Capture") { coordinator.editLastCapture() }
+            Button(CaptureMenuNames.editLastCapture) { coordinator.editLastCapture() }
                 .keyboardShortcut("6", modifiers: [.command, .shift])
                 .disabled(coordinator.lastCapture == nil)
-            Button(coordinator.isHistoryShown ? "Hide History" : "Show History") {
+            // The title is also written straight onto the live item whenever
+            // history opens or closes (MainMenuTitles): SwiftUI re-runs this
+            // body only while handling an event, and ⇧⌘H rebuilds it from the
+            // state before the toggle ran, which left the menu a step behind.
+            Button(CaptureMenuNames.history(isShown: coordinator.isHistoryShown)) {
                 coordinator.toggleHistory()
             }
             .keyboardShortcut("h", modifiers: [.command, .shift])

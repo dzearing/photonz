@@ -7581,3 +7581,53 @@ Audit: `queue/audits/2026-09-04-tool-gradient.json`.
 Not changed, and worth a decision: painting a shape from the docked Colour panel
 still does not arm the tool, only the toolbar swatch does. That is the split
 flat colours have always had, so it was left alone rather than widened here.
+
+## 2026-09-04 — Show History and Hide History tell the truth
+
+The Capture menu's history item was one toggle behind: press ⇧⌘H, the capture
+history slides down, and the menu still offered to show it. Reproduced first,
+which corrected half the report. With the shifted-letter harness fix in place
+the shortcut DOES reach the item and the overlay DOES open, whether or not
+Photonz is the front app; the "no history window" in the original note was the
+harness never landing the chord.
+
+Cause: SwiftUI re-runs a `Commands` body only while it is handling an event, not
+when the value a title reads changes. The key equivalent is that event, and the
+rebuild it triggers reads `isHistoryShown` BEFORE the item's action flips it, so
+the menu is left a state behind and nothing later disturbs it. Five menu
+readings over six seconds with the overlay up never caught up. Not the frozen
+menu bar artifact: `Edit Last Capture`'s enabled state updated live in the same
+readings.
+
+Fix: `CaptureMenuNames` (PhotonzCore) is now the one place the capture commands
+are named, and both the editor's Capture menu and the menu bar icon's drop-down
+read from it. `MainMenuTitles` writes the true title straight onto the live menu
+item whenever history opens or closes, including the Esc and click-away
+dismissal, so the menu never waits for SwiftUI. A later rebuild reads the same
+state and writes the same string, so the two never fight. The overlay panel is
+also titled "Capture History" now — invisible on a borderless panel, but it is
+what lets a walk name it instead of reading "(untitled)".
+
+Verified: `Scripts/test.sh` green (2727 tests, 4 new in
+`Tests/PhotonzCoreTests/CaptureMenuNamesTests.swift` and 2 in
+`PlaytestScriptTests`). `Scripts/playtest/history-menu-title-walk.json` asserts
+each reading rather than recording it — every press is a `shortcut` step naming
+the title it must reach — so it fails against the pre-fix binary at step 8 with
+"command+shift+h is Capture ▸ Show History, not Hide History". Four readings:
+closed Show, open Hide, closed again Show, dismissed by Esc Show. `menu-bar`,
+`undo-shortcut` and `shift-letter-shortcut` walks re-run green.
+Audit: `queue/audits/2026-09-04-history-menu-title.json`.
+
+Two additive playtest steps this needed: `appKey`, a press handed to the
+application instead of posted into a window, which is the only way to reach the
+app-wide event monitor the overlay's Esc lives on; and a `window` field on
+`snapshot`, which photographs any of the app's own windows by title and is the
+only way to picture a floating panel. Both documented in
+`docs/design/playtest-harness.md`.
+
+Not proven, and said so in the audit: there is no picture of the open menu,
+because photographing one needs the app in front and macOS will not give a
+script-launched process focus, so the proof is the exact strings read off the
+live menu bar. The menu bar icon's drop-down was reasoned about rather than
+read — it is rebuilt every time it opens — and the audit asks for that one by
+hand.

@@ -175,7 +175,7 @@ struct PlaytestScriptTests {
         guard case .waitFor(let modeCondition, let defaultTimeout) = script.steps[11] else { Issue.record("waitFor"); return }
         #expect(modeCondition == .measureMode(.gap))
         #expect(defaultTimeout == PlaytestStep.defaultTimeout)
-        guard case .snapshot(let name) = script.steps[12] else { Issue.record("snapshot"); return }
+        guard case .snapshot(let name, _) = script.steps[12] else { Issue.record("snapshot"); return }
         #expect(name == "3-distance")
         guard case .render(let render) = script.steps[13] else { Issue.record("render"); return }
         #expect(render == "final")
@@ -361,6 +361,33 @@ struct PlaytestScriptTests {
         #expect(at.point == CGPoint(x: 300, y: 800) && at.space == .view)
         #expect(throws: PlaytestScriptError.self) {
             try decode(#"{ "steps": [ { "do": "hover" } ] }"#)
+        }
+    }
+
+    @Test func anAppKeyStepGoesThroughTheAppNotTheWindow() throws {
+        // Esc takes the history overlay down through an application-wide event
+        // monitor, and a monitor never sees a press handed straight to a
+        // window, so a walk that wants to prove that path asks for this step.
+        let script = try decode("""
+        { "steps": [
+            { "do": "appKey", "key": "escape" },
+            { "do": "appKey", "key": "h", "modifiers": ["command", "shift"] }
+          ]
+        }
+        """)
+        guard case .appKey(let plain, let noModifiers) = script.steps[0] else { Issue.record("appKey"); return }
+        #expect(plain == PlaytestKey("escape"))
+        #expect(noModifiers.isEmpty)
+        guard case .appKey(let letter, let modifiers) = script.steps[1] else { Issue.record("appKey"); return }
+        #expect(letter == PlaytestKey("h"))
+        #expect(modifiers == [.command, .shift])
+        #expect(script.steps[0].name == "appKey")
+        #expect(PlaytestStep.names.contains("appKey"))
+    }
+
+    @Test func anAppKeyStepNeedsAKeyItKnows() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode(#"{ "steps": [ { "do": "appKey", "key": "wiggle" } ] }"#)
         }
     }
 

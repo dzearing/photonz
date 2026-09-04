@@ -1,0 +1,27 @@
+{
+  "feature": "Show History and Hide History tell the truth",
+  "epic": "measure-redline",
+  "summary": "The Capture menu's history item now says what pressing it will do: Hide History while the capture history is on screen, Show History when it is not. It used to be one toggle behind, so the app offered to show a history that was already up.",
+  "setup": "Photonz Dev, any release. The menu names live in shared code, so Current and Next both have it.",
+  "try": [
+    { "do": "Press ⇧⌘H. The capture history slides down from the top of the screen.", "shot": "2026-09-04-history-overlay-open-sc.png" },
+    { "do": "Open the Capture menu in the editor's menu bar and read the history item. It should say Hide History." },
+    { "do": "Choose Hide History. The overlay goes away." },
+    { "do": "Open the Capture menu again. It should be back to Show History." },
+    { "do": "Press ⇧⌘H once more, then press Esc to dismiss the overlay instead of using the menu." },
+    { "do": "Open the Capture menu. It should say Show History, not Hide History." },
+    { "do": "Click the viewfinder icon in the menu bar with the history up, and check that its history item agrees with the Capture menu." }
+  ],
+  "evaluate": [
+    "Does Hide History read right while the overlay is up, or would you rather the item never renamed itself and just said History?",
+    "When you dismiss the overlay by clicking somewhere else, does the menu still agree the next time you open it?",
+    "Is ⇧⌘H reaching the history from inside another app the behavior you want, or should it only work when Photonz is in front?",
+    "The overlay does not bring Photonz forward when it appears. Is that still what you want now that the menu keeps up with it?"
+  ],
+  "rough": [
+    "The screenshot is a real capture of the overlay on screen, taken by the loop with the Screen Recording grant. The capture thumbnails in it are pixelated by hand because they are your real history and this repo is public; nothing else in the picture is altered.",
+    "There is no picture of the menu itself. Photographing an open menu needs the app to be the front app, and macOS will not give a script-launched process focus, so the proof for the menu is the exact strings the walk read off the live menu bar (Scripts/playtest/history-menu-title-walk.json).",
+    "The menu bar icon's own drop-down was left as it was. It is rebuilt every time it opens, so it was never stale, but that is reasoning rather than a reading: try step 7 is there to check it by hand.",
+    "The report this came from also said the shortcut did not open the history at all when Photonz was not in front. That turned out to be the playtest harness never landing the chord, fixed on 2026-09-04; the overlay does open, and the walk shows it appearing and going away again."
+  ]
+}
