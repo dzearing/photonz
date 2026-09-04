@@ -2185,3 +2185,56 @@ walk's pointer reach: the actions `openColorPicker`, `openShadowColorPicker`
 and `closeColorPicker`, and an `appearance` step that puts the probe into light
 or dark for the shots that follow without touching the machine's own setting.
 Walk: `Scripts/playtest/one-color-picker-walk.json`.
+
+## Landed: every starter says what it is the size of (Next, `next-auto-layout`, 2026-09-04)
+
+The button and the badge closed around their words that morning; the card, the
+nav bar and the text field still held the size they had been drawn at, so a
+long card title ran past the edge of the card. Now all five answer the same
+question, and none of them answers it the same way, because the honest answer
+depends on what the thing IS:
+
+| Starter | What it is the size of |
+| --- | --- |
+| Button | As wide as its label with the room either side, and 36 points tall. |
+| Badge | As wide as its count with the room either side, and 20 points tall. |
+| Text Field | 220 points wide, and as tall as its placeholder with the room above and below. |
+| Card | 260 points wide, and as tall as everything on it with the room above and below. |
+| Nav Bar | A box 320 points wide and 48 points tall. |
+
+Those sentences are not typed out beside the drawings: `StarterComponent.sizing`
+writes them FROM the layout each one is built with, so they cannot drift into
+describing a card that no longer exists. The Layout section says the same thing
+live for whatever is selected, which is where a person actually reads it.
+
+**A field and a bar keep their width on purpose.** A field 74 points wide
+because "Name" is short is not a place to type, and a bar is as wide as the
+screen it sits on, never as wide as its title. So the width is a number, the
+wording wraps inside it, and a nav bar title too long for its bar stays centred
+and overhangs — which is what a person building that screen needs to see.
+
+**The card is the one that ARRANGES.** It is a column stack, not a box that
+closes around what is in it, and that is the whole reason it works: a title
+long enough to wrap has to push the line under it DOWN. A free group leaves
+every piece where it was put, so the second line of the title would have grown
+straight through the first line of the body. It would have looked right on the
+first title and broken on the second.
+
+**Stretch across, not fill.** The card's picture well used to say "stretch both
+ways", which the container rules now read as "I am the surface behind
+everything" — so the well would have been painted to the card's own edges and
+covered the card. It says stretch ACROSS now, and keeps its own height. The
+title and the line under it say the same, which is what makes them wrap into
+the card's room instead of running out of its right-hand side.
+
+**Where it lives.** `StarterComponents.layout` gives each of the five its two
+sides, `StarterComponents.sizing` writes the sentence from that layout, and the
+drawings themselves carry the placement each piece needs. Tested in
+`StarterSizingTests`, walked by `Scripts/playtest/starter-sizing-walk.json`.
+
+Not in this slice, and both worth knowing: a starter already sitting in a
+document keeps the shape it was dropped with, because a starter is a drawing
+made at drop time and nothing rewrites one in place. And a text field with a
+long placeholder WRAPS rather than truncating with an ellipsis, because a text
+layer has nothing that clips; growing downward is the honest shape when nothing
+can be hidden.

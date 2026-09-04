@@ -1,0 +1,27 @@
+{
+  "id": "the-surface-behind-a-stack-says-it-is-the-surfac",
+  "title": "The surface behind a stack says it is the surface",
+  "goal": "Pick a card and the list at the bottom of the Layout section names the white shape behind everything alongside the title and the body, described exactly the same way, so nothing tells you it is the background rather than another row. Say what it is.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1210,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-04T17:45:33.370Z",
+  "updated": "2026-09-04T17:45:33.371Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "ArrangementInspector summarises each child by the cross axis only inside a stack, so a child resolving to stretch on both axes reads as Stretch across, identical to the rows around it. ResolvedPlacement.isSurface already knows the answer. Seen on the starter Card after it became a column stack (2026-09-04).",
+  "acceptance": [
+    "Selecting a group whose background is set to stretch both ways shows that piece described as the surface, not as an ordinary row",
+    "The same piece in a group that arranges nothing still reads the way it does today",
+    "No new control is added: this is what the row says, not something else to set"
+  ],
+  "log": [
+    {
+      "t": "2026-09-04T17:45:33.371Z",
+      "note": "created (manual)"
+    }
+  ]
+}

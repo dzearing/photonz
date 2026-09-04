@@ -216,6 +216,27 @@ public enum StarterComponent: String, CaseIterable, Identifiable, Hashable, Send
         }
     }
 
+    /// One plain sentence saying which of this one's sides is the size of what
+    /// is inside it and which is a number it was given.
+    ///
+    /// Written FROM the layout it is actually built with rather than typed out
+    /// beside it, so it can never drift into describing a card that no longer
+    /// exists. The Layout section says the same thing live for whatever is
+    /// selected; this is the sentence for a page that has to explain the set.
+    public var sizing: String { StarterComponents.sizing(self) }
+
+    /// What the sentence above calls the things inside this one, on a side
+    /// that is the size of them.
+    var contentsNoun: String {
+        switch self {
+        case .button: "its label"
+        case .textField: "its placeholder"
+        case .card: "everything on it"
+        case .navBar: "its title"
+        case .badge: "its count"
+        }
+    }
+
     private var index: UInt8 {
         switch self {
         case .button: return 1
@@ -290,17 +311,33 @@ public enum StarterComponents {
         return GroupFlow.flowing(Layer(name: kind.name, content: .group(content), frame: .zero))
     }
 
-    /// How a starter sizes itself.
+    /// How a starter sizes itself: which of its sides is a number somebody
+    /// chose, and which is the size of what is inside it.
     ///
-    /// The two controls that are really "a word with room around it" close
-    /// around that word: give a button a longer label and the button gets
-    /// wider, with the same room either side, and nothing has to be dragged.
-    /// Their height is the height a control that size is, so a button is not a
-    /// different height from the field beside it because of its type.
+    /// Every one of the five answers that question, and none of them answers
+    /// it the same way, because the honest answer depends on what the thing
+    /// IS:
     ///
-    /// The other three are boxes with a shape of their own — a card is 260
-    /// wide because that is the card, not because of what its title says — so
-    /// they hold the size they were drawn at, exactly as before.
+    /// - A **button** and a **badge** are a word with room around it, so they
+    ///   are as wide as that word and as tall as a control that size is. Give
+    ///   either a longer label and it gets wider on its own.
+    /// - A **text field** is a place to type into, and how wide it is, is a
+    ///   decision the person building the screen makes — a field 74 points
+    ///   wide because "Name" is short is not a field. So the width is a
+    ///   number, the wording wraps inside it, and the box grows downward to
+    ///   hold whatever it wraps to.
+    /// - A **card** is the same bargain one step up: 260 wide because that is
+    ///   the card, and as tall as the picture, the title and the line under
+    ///   them add up to. It is the one that ARRANGES rather than just closing
+    ///   around things, because a title that wraps to two lines has to push
+    ///   the line under it down rather than grow through it.
+    /// - A **nav bar** is a box on both sides. A bar is as wide as the screen
+    ///   it sits on and as tall as a bar is; neither is anything to do with
+    ///   what its title says, and a title too long for it stays centred and
+    ///   overhangs, exactly as it would in a real one.
+    ///
+    /// `pen` scales every number to the document, so a Retina capture gets a
+    /// card 520 pixels wide rather than a half-size one.
     private static func layout(_ kind: StarterComponent, _ pen: Pen) -> GroupLayout? {
         switch kind {
         case .button:
@@ -311,9 +348,50 @@ public enum StarterComponents {
             .free(padding: GroupPadding(top: pen.px(3), right: pen.px(8),
                                         bottom: pen.px(3), left: pen.px(8)),
                   height: pen.px(20))
-        case .textField, .card, .navBar:
-            nil
+        case .textField:
+            .free(padding: GroupPadding(top: pen.px(8), right: pen.px(10),
+                                        bottom: pen.px(8), left: pen.px(10)),
+                  width: pen.px(220))
+        case .card:
+            GroupLayout(kind: .stack, direction: .column, gap: pen.px(8),
+                        padding: GroupPadding(pen.px(12)), width: pen.px(260))
+        case .navBar:
+            .free(width: pen.px(320), height: pen.px(48))
         }
+    }
+
+    /// The layout a starter is built with, at the size it is drawn at. What
+    /// `StarterComponent.sizing` reads to write its sentence, and what a test
+    /// checks that sentence against.
+    public static func layout(_ kind: StarterComponent, scale: CGFloat = 1) -> GroupLayout? {
+        layout(kind, Pen(scale: max(scale, 0.01), palette: .standard, measure: estimatedTextSize))
+    }
+
+    /// One sentence about one starter's two sides, written from the layout
+    /// above so the words and the thing can never disagree.
+    static func sizing(_ kind: StarterComponent) -> String {
+        let layout = layout(kind)
+        let noun = kind.contentsNoun
+        let width = layout?.usedWidth
+        let height = layout?.usedHeight
+        switch (width, height) {
+        case (let w?, let h?):
+            return "A box \(number(w)) points wide and \(number(h)) points tall."
+        case (let w?, nil):
+            return "\(number(w)) points wide, and as tall as \(noun) "
+                + "with the room above and below."
+        case (nil, let h?):
+            return "As wide as \(noun) with the room either side, and \(number(h)) points tall."
+        case (nil, nil):
+            return "As wide as \(noun) with the room either side, "
+                + "and as tall as it with the room above and below."
+        }
+    }
+
+    /// A measurement as somebody would say it out loud: no trailing nought on
+    /// a number that is a whole one, which all of these are.
+    private static func number(_ value: CGFloat) -> String {
+        value == value.rounded() ? String(Int(value)) : String(format: "%.1f", Double(value))
     }
 
     /// How big a piece of text is: the real measurement where the app has
@@ -420,33 +498,47 @@ public enum StarterComponents {
                    weight: .semibold, color: .surface)]
     }
 
-    /// 220 × 32. A hairline box with quiet wording sitting in from the left.
+    /// 220 wide, and as tall as its wording needs. A hairline box with quiet
+    /// words sitting in from the left; the words stretch across the room
+    /// inside it, so a long placeholder wraps into the field rather than
+    /// running out of the right-hand edge.
     private static func textField(_ pen: Pen) -> [Layer] {
         [pen.box("Background", x: 0, y: 0, width: 220, height: 32, radius: 6,
                  fill: .surface, stroke: .border, strokeWidth: 1, placement: .fill),
          pen.label("Placeholder", "Placeholder", x: pen.px(10), centerY: 16, size: 13,
-                   color: .muted)]
+                   color: .muted, placement: LayerPlacement(horizontal: .stretch))]
     }
 
-    /// 260 × 180. A picture well, a title and a line under it — the shape most
-    /// cards are, and the one that shows what a show-or-hide knob is for.
+    /// 260 wide and as tall as what is on it: a picture well, a title and a
+    /// line under it — the shape most cards are, and the one that shows what a
+    /// show-or-hide knob is for.
+    ///
+    /// It is a COLUMN, unlike the other four, and that is the whole reason it
+    /// works: a title long enough to wrap has to push the line under it down.
+    /// A box that only closes around its contents would leave everything where
+    /// it was put and let the second line of the title run through the first
+    /// line of the body.
+    ///
+    /// The well says "stretch across", not "fill": a piece that stretches BOTH
+    /// ways is read as the surface behind everything and painted to the card's
+    /// own edges, which for the picture would mean covering the card.
     private static func card(_ pen: Pen) -> [Layer] {
         [pen.box("Background", x: 0, y: 0, width: 260, height: 180, radius: 12,
                  fill: .surface, stroke: .border, strokeWidth: 1, placement: .fill),
-         // The well takes whatever room the card gains; the two lines under it
-         // keep their distance from the bottom, so they never drift apart.
          pen.box("Picture", x: 12, y: 12, width: 236, height: 96, radius: 8, fill: .border,
-                 placement: .fill),
-         pen.label("Title", "Card title", x: pen.px(14), centerY: 126, size: 16,
+                 placement: LayerPlacement(horizontal: .stretch)),
+         pen.label("Title", "Card title", x: pen.px(12), centerY: 126, size: 16,
                    weight: .semibold, color: .text,
-                   placement: LayerPlacement(horizontal: .left, vertical: .bottom)),
-         pen.label("Body", "Supporting text goes here.", x: pen.px(14), centerY: 152,
+                   placement: LayerPlacement(horizontal: .stretch)),
+         pen.label("Body", "Supporting text goes here.", x: pen.px(12), centerY: 152,
                    size: 13, color: .muted,
-                   placement: LayerPlacement(horizontal: .left, vertical: .bottom))]
+                   placement: LayerPlacement(horizontal: .stretch))]
     }
 
-    /// 320 × 48. A surface, a hairline along the bottom, a centred title and a
-    /// back label you can turn off.
+    /// 320 × 48, both of them numbers. A bar is as wide as the screen it sits
+    /// on and as tall as a bar is, so a longer title stays centred in it
+    /// rather than stretching it. A surface, a hairline along the bottom, that
+    /// centred title, and a back label you can turn off.
     private static func navBar(_ pen: Pen) -> [Layer] {
         [pen.box("Background", x: 0, y: 0, width: 320, height: 48, fill: .surface,
                  placement: .fill),

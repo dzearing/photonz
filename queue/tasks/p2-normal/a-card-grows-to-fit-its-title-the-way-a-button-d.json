@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T17:00:57.684Z",
-  "updated": "2026-09-04T17:00:57.685Z",
+  "updated": "2026-09-04T17:46:53.884Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the container-hug work landed 2026-09-04 (docs/design/ui-building.md, \"A container closes around its contents\"). The card needs a real layout decision: its Picture is currently placement .fill, which the new rules would read as the surface behind everything, so it likely wants a column stack (Background as the surface, Picture stretched across, Title and Body as rows) rather than a free hug. StarterComponents.layout is where each ones sizing lives.",
@@ -23,6 +23,56 @@
     {
       "t": "2026-09-04T17:00:57.685Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T17:30:46.102Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T17:35:04.398Z",
+      "note": "Adversarial review, before building. (1) The task note suggests the card wants a column stack rather than a free hug, and walking it agrees: a free group keeps every piece where it was put, so a title that wrapped to two lines would grow DOWN THROUGH the body under it. Only a stack moves the rows below. Building the free version would look right on the first title and break on the second."
+    },
+    {
+      "t": "2026-09-04T17:35:04.398Z",
+      "note": "Adversarial review (2): the card already carries a latent bug the hug rules would expose. Background AND Picture are both placement .fill, and under the surface rule a piece that stretches both ways is painted to the container edges, so the picture well would cover the whole card. Picture must say stretch ACROSS and keep its own height."
+    },
+    {
+      "t": "2026-09-04T17:35:04.398Z",
+      "note": "Adversarial review (3): a text field or a nav bar that hugged its width would be wrong, not just different. A field 74 points wide because its placeholder is short is not a place to type; a bar is as wide as the screen it sits on, never as wide as its title. Both keep width as a number and let the words wrap inside it."
+    },
+    {
+      "t": "2026-09-04T17:35:04.398Z",
+      "note": "Adversarial review (4): a real single-line field truncates its placeholder with an ellipsis, and the model has no clipping on a text layer. Growing taller when the words wrap is the honest shape here: nothing hidden, nothing past the edge. Recorded for the audit rather than faked."
+    },
+    {
+      "t": "2026-09-04T17:35:04.398Z",
+      "note": "Adversarial review (5), shortest version: no new model machinery. Free layouts, stacks, stretch and the surface rule all landed this morning. This is three layout declarations plus four placement corrections, and anything more is scope creep. Cut: showing the sizing sentence on the shelf tile, since the Layout section already says Fixed/Hug live for whatever is selected."
+    },
+    {
+      "t": "2026-09-04T17:45:49.275Z",
+      "note": "Built. StarterComponents.layout now answers for all five: text field free, 220 wide, height hugs its wording; card a COLUMN STACK, 260 wide, gap 8, padding 12, height hugs; nav bar free, 320 x 48 both given. The card Picture, Title and Body say stretch ACROSS rather than fill, so the well stays a well and the two lines of type wrap into the card room instead of running past it. StarterComponent.sizing writes each ones sentence FROM its layout, so the words cannot drift from the thing."
+    },
+    {
+      "t": "2026-09-04T17:45:49.276Z",
+      "note": "Tests first: Tests/PhotonzCoreTests/StarterSizingTests.swift, seven of them, covering the card growing downward, a copy growing on its own knob, the picture not becoming the surface, hiding the picture closing its space, the bar holding width with a centred title, the field holding width with a wrapped placeholder, and the sentence agreeing with the layout. One existing test needed relaxing honestly: aStarterIsBuiltAtTheDocumentsScale held every height to exactly double at scale 2, which is only true of a side that is a NUMBER; a side that is the size of its words is about double, so each side is now held to whichever it actually is. 3068 tests green."
+    },
+    {
+      "t": "2026-09-04T17:45:49.276Z",
+      "note": "Adversarial review of the built thing, walked in the probe app (Scripts/playtest/starter-sizing-walk.json, Screen Recording granted so the pictures are the real window). Card grew 176 to 193 with a two-line title, still 260 wide, body pushed down not written over. Bar held 320 and the longer title measures dead centre. Field held 220 and wrapped inside its box. Layout section reads Stack / Column / Width Fixed / Height Hug / Gap 8 / Padding 12."
+    },
+    {
+      "t": "2026-09-04T17:45:49.276Z",
+      "note": "Two things found in the walk that I did not fix here, both filed: (a) a stack advances by the four points of measuring slack under a text box as well as the gap, so the card reads about 12 between title and body against the 8 typed in Gap, and tightening that moves every stack of type in the app; (b) inside a stack the Layout row for the surface behind everything reads Stretch across, identical to an ordinary row. Tasks: two-lines-of-type-sit-as-far-apart-as-the-gap-sa (p2), the-surface-behind-a-stack-says-it-is-the-surfac (p3)."
+    },
+    {
+      "t": "2026-09-04T17:45:49.276Z",
+      "note": "Audit: queue/audits/2026-09-04-starter-sizing.json, with three real captures beside it. Design doc: docs/design/ui-building.md, \"Every starter says what it is the size of\", carrying the table of all five."
+    },
+    {
+      "t": "2026-09-04T17:46:53.884Z",
+      "note": "All five starters now say which of their sides is a number and which is the size of their contents: card 260 wide as a column stack hugging its height, text field 220 wide hugging its height, nav bar 320x48 both given. StarterComponent.sizing writes each sentence from its own layout. 7 new tests in StarterSizingTests, 3068 green, walked in the probe with real captures. Audit queue/audits/2026-09-04-starter-sizing.json."
     }
-  ]
+  ],
+  "started": "2026-09-04T17:30:46.102Z",
+  "completed": "2026-09-04T17:46:53.884Z"
 }

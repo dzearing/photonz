@@ -2,6 +2,63 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-04 — Every starter says what it is the size of (go loop)
+
+Queue task `a-card-grows-to-fit-its-title-the-way-a-button-d` (epic
+`ui-components`). Follow-on to the container-hug work landed the same morning,
+which left the button and the badge closing around their words and the other
+three holding whatever size they were drawn at.
+
+**All five starters now answer the same question, and none the same way.** A
+card is 260 wide and as tall as what is on it; a text field is 220 wide and as
+tall as its placeholder; a nav bar is 320 by 48, both of them numbers. The
+sentences are written FROM each one's layout (`StarterComponent.sizing`), so
+they cannot drift into describing a card that no longer exists, and the Layout
+section says the same thing live for whatever is selected.
+
+**The card had to become a column stack, not a box that closes around its
+contents.** A free group leaves every piece where it was put, so a title long
+enough to wrap would have grown its second line straight through the first line
+of the body: right on the first title, broken on the second. As a column the
+line under the title moves down by exactly what the title gained.
+
+**Two `.fill` children was a latent bug the new rules would have exposed.** The
+card's picture well said "stretch both ways", which the container rules read as
+"I am the surface behind everything" — so the well would have been painted to
+the card's own edges and covered the card. It says stretch ACROSS now, as do
+the title and the line under it, which is what makes them wrap into the card's
+room instead of running out of its right-hand side.
+
+**A field and a bar keep their width on purpose**, which is a product call, not
+an omission: a field 74 points wide because "Name" is short is not a place to
+type, and a bar is as wide as the screen it sits on. So the words wrap inside
+them, and a nav bar title too long for its bar stays centred and overhangs.
+
+Tests first, `StarterSizingTests` (7). One existing test needed relaxing
+honestly: `aStarterIsBuiltAtTheDocumentsScale` held every height to exactly
+double at scale 2, which is only true of a side that is a NUMBER, so each side
+is now held to whichever it actually is. 3068 green. Walked in the probe with
+`Scripts/playtest/starter-sizing-walk.json`; Screen Recording was granted, so
+the audit's pictures are the real window.
+
+Renderer note: no change to the composite path. This is model geometry only,
+and the flow still settles inside its existing pass cap.
+
+**Found and filed rather than fixed here.** A stack advances by the four points
+of measuring slack under a text box as well as by the gap, so the card reads
+about 12 between its title and the line under it against the 8 typed into Gap
+(`two-lines-of-type-sit-as-far-apart-as-the-gap-sa`, p2) — tightening it moves
+every stack of type in the app, so it is its own task. And inside a stack the
+Layout row for the surface behind everything reads "Stretch across", the same
+as an ordinary row (`the-surface-behind-a-stack-says-it-is-the-surfac`, p3).
+
+**Open question for the user**, in the audit: a long placeholder wraps and the
+field gets taller instead of being cut off, because a text layer has nothing
+that clips it. Honest, but it does make the field read as a text area.
+
+Audit: `queue/audits/2026-09-04-starter-sizing.json`. Design:
+`docs/design/ui-building.md`, "Every starter says what it is the size of".
+
 ## 2026-09-04 — The layers list only builds the rows you can see (go loop)
 
 Queue task `the-layers-list-only-builds-the-rows-you-can-see` (epic

@@ -1,0 +1,29 @@
+{
+  "feature": "Every starter says what it is the size of",
+  "epic": "ui-components",
+  "summary": "Give a card a longer title and the card now grows downward with the title wrapped inside it, instead of the words running off the edge. The nav bar and the text field hold their width on purpose and keep their wording inside the box.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. Show the Library (Components) and drag the tiles onto the picture.",
+  "try": [
+    { "do": "Drag the Card tile onto the picture." },
+    { "do": "Double click the card, then double click its title, and type a title long enough to need two lines." },
+    { "do": "Press Return, then click empty picture to come back out.", "shot": "2026-09-04-starter-sizing-card.png" },
+    { "do": "Drag the Nav Bar tile on, and do the same to its title." },
+    { "do": "Drag the Text Field tile on, and type a long placeholder into it.", "shot": "2026-09-04-starter-sizing-field.png" },
+    { "do": "Click the card once and open the Layout section on the right.", "shot": "2026-09-04-starter-sizing-layout.png" },
+    { "do": "Drag the card's bottom handle down, then undo." }
+  ],
+  "evaluate": [
+    "When the card's title wraps, does the line under it move down by the right amount, or does the gap between them look loose?",
+    "The card is 260 wide and as tall as what is on it. Is width-is-a-number, height-follows-the-words the right bargain for a card?",
+    "The nav bar title stays centred and will overhang the bar if it gets long enough. Is overhanging what you want to see, or should the bar grow?",
+    "A long placeholder wraps and the field gets taller, so the field turns into a two-line box. Is that better or worse than the words being cut off?",
+    "Selecting the card shows Arrangement Stack, Direction Column. Does calling a card a stack read right, or does it look like something you did not ask for?"
+  ],
+  "rough": [
+    "In a stack, the gap counts the four points of slack a measured text box carries below its words, so the space between the title and the line under it reads about 12 rather than the 8 typed into Gap. The picture and the title, neither of which is a text box below the other, sit at a true 8. Filed as its own task rather than changed here, because tightening it moves every stack of type in the app.",
+    "A text field with a long placeholder wraps and gets taller instead of truncating with an ellipsis, because a text layer has nothing that clips it. Growing downward is the honest shape when nothing can be hidden, but it does make the field read as a text area.",
+    "A card already sitting in a document from before today keeps the shape it was dropped with. A starter is a drawing made at drop time and nothing rewrites one in place, so only newly dropped cards grow.",
+    "In the card's Layout section the Background reads Stretch across, exactly like the title and the body, so nothing there says it is the surface behind them rather than one of the rows. Filed separately.",
+    "Screen Recording was granted, so every picture here is the real window, taken by Scripts/playtest/starter-sizing-walk.json."
+  ]
+}
