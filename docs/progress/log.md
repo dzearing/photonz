@@ -7679,3 +7679,38 @@ stadium (the ring rounds by half the short side, unchanged), and the word Border
 appears twice in the panel for a callout, once in Color for the ring's colour and
 once in Effects for its width, which is the app-wide pattern rather than anything
 about callouts.
+
+## 2026-09-04 — The Crop tool says which corner you are about to drag
+
+Crop was the last place on the canvas where a handle stayed silent. Every other
+handle in Next already shows the platform's resize arrows on hover, but crop
+mode kept a flat crosshair over its eight squares, so the only way to learn what
+a press would do there was to press.
+
+`CanvasPointer.cropCue(at:cropRect:zoom:)` (PhotonzCore, pure, test first)
+answers a `.resize` cue on the crop box's handles and nil everywhere else, at
+`CanvasPointer.cropTolerance` (8 screen points) — the same slop the crop press
+uses, which now reads that constant instead of a loose literal. Five tests: the
+eight handles, inside, outside, the slop at two zooms, and no rect at all.
+
+`CanvasView.pointerCue` takes a crop branch ahead of the `tool == .select`
+guard and hands identity as the transform (the crop box is axis-aligned).
+`refreshGrabCursor` now bails while a crop drag is in flight, so nothing
+switches under way, and the crop mouse-up re-reads the pointer so the arrows
+settle on wherever the box landed. The crop resize press sets the arrows itself,
+for a click that arrives straight onto a handle with no hover before it.
+
+Deliberately unchanged: inside the box (a press moves it) and the dimmed
+surround (a press draws a fresh box) both keep the Crop crosshair. A layer's
+body gets no hand in Select either, and a second pointer in crop would make the
+crosshair look like it meant nothing. Also unchanged: the press takes the eight
+squares, not the whole crop edge the way Photoshop does — the cue mirrors the
+press rather than over-promising. Both are written into the audit as questions.
+
+Next only, gated on the "Every handle says what it does" flag, whose text now
+mentions the crop box. `Scripts/playtest/crop-cue-walk.json` walks all eight
+handles plus inside, outside and three drags; every stop matched on the real
+pointer. `Scripts/test.sh` green (2794). Audit:
+`queue/audits/2026-09-04-crop-handle-cue.json`, two real screen captures.
+
+Next: back to the queue.
