@@ -382,11 +382,20 @@ user's own nouns, sentence and label both from one constant.
 
 The exception, stated plainly: a text layer's H keeps its number, which is
 right, but it still wears the rounded box of a field you can type in, so the
-only thing saying it is read only is the grey, and the "who owns this" half of
-its reason is on hover alone. Its own audit calls that box the clumsiest part of
-the feature. It is not grandfathered: it is filed as
-`a-number-you-cannot-type-into-does-not-wear-a-ty`, and losing the border is a
-visual call the user should see both ways before it lands.
+only thing saying it is read only is the grey. Its own audit calls that box the
+clumsiest part of the feature.
+
+Half of it is already fixed. Clicking a number you cannot type now answers in
+the line under the fields, unflagged, so no reason lives on hover alone any
+more. The other half, losing the border, is BUILT and waiting on the user:
+it sits behind the `next-readout-fields` flag, off by default, because which of
+the two looks the app should wear is a visual call they should see both ways
+before it lands. The card is
+`a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for`,
+with four real captures, and the task holding it is
+`a-number-you-cannot-type-into-stops-looking-like`. Until that is answered, the
+default still shows the box, so treat this row as open, not as a pattern to
+copy.
 
 ---
 

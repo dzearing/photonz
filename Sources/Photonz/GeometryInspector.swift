@@ -354,7 +354,12 @@ private struct GeometryReadout: View {
     @ViewBuilder
     private var number: some View {
         if isBoxed {
-            TextField(field.label, text: .constant(text))
+            // No placeholder. A field's placeholder is a promise that typing
+            // that thing here would work, and on a readout it does not: an
+            // arrow has no width, so a blank W box wearing a faint "W" put the
+            // letter on the row twice and made the empty box look like it was
+            // waiting for a number.
+            TextField("", text: .constant(text))
                 .textFieldStyle(.roundedBorder)
                 .controlSize(.small)
                 .multilineTextAlignment(.trailing)

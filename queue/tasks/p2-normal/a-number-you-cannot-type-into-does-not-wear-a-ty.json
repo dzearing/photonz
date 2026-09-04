@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1180,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T20:44:36.175Z",
-  "updated": "2026-09-04T20:44:36.176Z",
+  "updated": "2026-09-04T20:47:23.803Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of the 2026-09-04 review of six inert-control fixes and is the one case that does not conform to the new rule in docs/design/mocks/shared/UX-PATTERNS.md section 4 (\"A control that cannot act\"). Rung 3 of that rule says a field that still has a number to report keeps the number, but the first half of the reason (who owns the number) must be on screen, not on hover. Today only the grey says it. The audit 2026-09-04-text-height-readout.json rough line calls the bordered box the clumsiest part and says losing the border is a visual call worth the users eye first, so this may want a decision card with a picture of both before it is built. Reason strings already exist as constants: LayerGeometryEditing.textHeightReason, lockedReason, stackedReason, instanceSizeReason in Sources/PhotonzCore/LayerGeometry.swift; the field is GeometryInspector.swift (disabled(true) around line 363).",
@@ -24,6 +24,35 @@
     {
       "t": "2026-09-04T20:44:36.176Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-04T20:47:23.803Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-04T20:57:08.606417Z",
+      "note": "Adversarial review, before building: found this task is a duplicate. The work it asks for was already done today by a-number-you-cannot-type-into-stops-looking-like, which is sitting blocked. Four of its five acceptance items already ship: clicking a number you cannot type answers in the line under the fields, the reason no longer lives on hover alone, every read-only number (text height, locked X/Y/W/H, stacked position, component copy size) goes through one GeometryReadout, and typeable fields are untouched. Only item 1, losing the border, is open, and it is open because it is a visual call the user was asked about and has not answered yet."
+    },
+    {
+      "t": "2026-09-04T20:57:08.606417Z",
+      "note": "Verified rather than assumed, on the real app. Ran Scripts/playtest/readout-fields-walk.json in the probe with Screen Recording granted. Confirmed live in the shipping default: a text layer's H shows 17 in the same rounded box as W, only greyer. So the problem this task describes is real and still on screen, and the fix for it is built behind next-readout-fields, off, pending the card."
+    },
+    {
+      "t": "2026-09-04T20:57:08.606417Z",
+      "note": "A trap worth recording: a walk does NOT clear its output directory, so crop-*.png and ship-*.png from an earlier session survive into a new run and can be read as if they were fresh. That is what first made the default look unboxed to me. Comparing a fresh -sc.png against explicit flag-on and flag-off runs settled it: the flag works exactly as documented, and the stale crops were lying. Crop the run's own -sc.png, never a crop-* file you did not just make."
+    },
+    {
+      "t": "2026-09-04T20:57:08.606417Z",
+      "note": "Landed the one part that is not gated on the decision: an empty read-only box was showing the field's own letter as a placeholder, so an arrow read \"W [ W ]  H [ H ]\" and the two empty boxes looked like they were waiting for a number. This was rough 4 of the 2026-09-04-readout-fields audit. The placeholder is gone, which is right in either look. Verified in the probe: the letter now appears once per row. Scripts/test.sh green, 3114 tests."
+    },
+    {
+      "t": "2026-09-04T20:57:08.606417Z",
+      "note": "Also corrected docs/design/mocks/shared/UX-PATTERNS.md section 4, which named THIS task id as where the exception was filed. It now names the real blocked task and the pending decision card, and says the half that already shipped is the click answer, so the row reads as open rather than as a pattern to copy."
+    },
+    {
+      "t": "2026-09-04T20:57:08.606417Z",
+      "note": "Dropped as a duplicate. Opening a second decision asking the same visual question would just be noise on the dashboard; the existing card already has four real captures of both looks."
     }
-  ]
+  ],
+  "started": "2026-09-04T20:47:23.803Z"
 }
