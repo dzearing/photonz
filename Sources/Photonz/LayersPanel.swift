@@ -1820,8 +1820,15 @@ private struct LayersRow: View, Equatable {
             Button("Detach Instance") { editorState.detachInstance() }
                 .keyboardShortcut("b", modifiers: [.command, .option])
         }
-        Button(display.isVisible ? "Hide" : "Show") { editorState.toggleLayerVisibility(id: id) }
-        Button(display.isLocked ? "Unlock" : "Lock") { editorState.toggleLayerLock(id: id) }
+        // Settings, not actions: the row says what it IS and wears a checkmark,
+        // so the menu reads the same whichever state the layer is in and the
+        // Delete below it never shifts under the pointer (MenuToggleNames).
+        Toggle(MenuToggleNames.layerVisible, isOn: Binding(
+            get: { display.isVisible },
+            set: { _ in editorState.toggleLayerVisibility(id: id) }))
+        Toggle(MenuToggleNames.layerLocked, isOn: Binding(
+            get: { display.isLocked },
+            set: { _ in editorState.toggleLayerLock(id: id) }))
         Divider()
         Button("Delete", role: .destructive) { editorState.deleteLayer(id: id) }
             .keyboardShortcut(.delete, modifiers: .command)
@@ -2165,9 +2172,9 @@ struct MeasurementsListView: View {
             Button("Copy Measurement") { editorState.copyMeasurement(id: layer.id) }
             Divider()
             Button("Rename") { beginRename(layer) }
-            Button(layer.isVisible ? "Hide" : "Show") {
-                editorState.toggleLayerVisibility(id: layer.id)
-            }
+            Toggle(MenuToggleNames.layerVisible, isOn: Binding(
+                get: { layer.isVisible },
+                set: { _ in editorState.toggleLayerVisibility(id: layer.id) }))
             Divider()
             Button("Delete", role: .destructive) { editorState.deleteLayer(id: layer.id) }
         }

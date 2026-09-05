@@ -1,0 +1,37 @@
+{
+  "out": "/tmp/photonz-playtest/menu-checkmarks",
+  "steps": [
+    { "do": "blank", "canvasWidth": 700, "canvasHeight": 500, "width": 1000, "height": 900 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "what-this-proves", "note": "A menu item that is simply on or off keeps ONE name and says its state with a checkmark. Every menuShot photographs the real menu over the window and names the rows that must, and must not, be ticked, so the walk fails if a checkmark lies. The pictures are real screen captures: a menu draws outside this process, so no offscreen render can show one." },
+
+    { "do": "menuShot", "menu": "Capture", "name": "capture-menu-history-off",
+      "ticked": [], "unticked": ["Show History"] },
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": false },
+    { "do": "wait", "seconds": 1 },
+    { "do": "menuShot", "menu": "Capture", "name": "capture-menu-history-on",
+      "ticked": ["Show History"], "unticked": [] },
+
+    { "do": "describe", "stage": "why-the-history-stays-open", "note": "The View menu's rows read the FOCUSED window, and macOS will not give a background app the front spot. The history overlay does take key when it opens, and that is enough for every row below to read the real document instead of its own default. So it stays up for the rest of the walk." },
+
+    { "do": "action", "action": "showInspector" },
+    { "do": "action", "action": "showGrid" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "menuShot", "menu": "View", "name": "view-menu-grid-on",
+      "ticked": ["Show Grid", "Show Layers"], "unticked": [] },
+
+    { "do": "action", "action": "hideGrid" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "menuShot", "menu": "View", "name": "view-menu-grid-off",
+      "ticked": ["Show Layers"], "unticked": ["Show Grid"] },
+
+    { "do": "action", "action": "hideInspector" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "menuShot", "menu": "View", "name": "view-menu-layers-hidden",
+      "ticked": [], "unticked": ["Show Grid", "Show Layers"] },
+
+    { "do": "action", "action": "showInspector" },
+    { "do": "action", "action": "showGrid" },
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": true }
+  ]
+}

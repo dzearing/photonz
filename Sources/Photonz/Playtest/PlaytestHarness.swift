@@ -196,9 +196,9 @@ private final class Run {
 
         case .key(let key, let modifiers):
             let window = try requireWindow()
-            // Look the item up BEFORE the press: after it, a menu that renames
-            // itself ("Show History" becoming "Hide History") reports the new
-            // title and the log names the wrong thing.
+            // Look the item up BEFORE the press: after it, an item that has
+            // just been ticked or unticked reports its new state and the log
+            // describes the wrong thing.
             let destination = modifiers.isEmpty ? nil : Self.menuItem(carrying: key, modifiers: modifiers)
             let takenBy = press(key, modifiers: modifiers, in: window)
             await sleep(0.05)
@@ -214,7 +214,7 @@ private final class Run {
             }
             note(number, step.name, detail, state: describe())
 
-        case .shortcut(let key, let modifiers, let wanted):
+        case .shortcut(let key, let modifiers, let wanted, let checked):
             let window = try requireWindow()
             let chord = Self.chord(key, modifiers)
             guard let destination = Self.menuItem(carrying: key, modifiers: modifiers) else {
@@ -223,6 +223,16 @@ private final class Run {
             let title = destination.item.title
             if let wanted, title.caseInsensitiveCompare(wanted) != .orderedSame {
                 throw Failure(description: "\(chord) is \(destination.path), not \"\(wanted)\"")
+            }
+            // A setting's item never renames itself, so its checkmark is the
+            // whole reading. Checked BEFORE the press, since that is the state
+            // a person would see when they went looking for the item.
+            if let checked {
+                let isOn = destination.item.state == .on
+                guard isOn == checked else {
+                    throw Failure(description: "\(destination.path) is \(isOn ? "ticked" : "not ticked") "
+                        + "and it should be \(checked ? "ticked" : "not ticked") before \(chord)")
+                }
             }
             // SwiftUI hangs a target and an action on a command item only while
             // it is live; a dimmed one is a bare title with nothing behind it.
@@ -727,6 +737,10 @@ private final class Run {
         case .panelMenu(let menu, let shot, let choose):
             try await openPanelMenu(menu, shot: shot, choose: choose, number: number)
 
+        case .menuShot(let menu, let name, let ticked, let unticked):
+            try await photographMenuBarMenu(menu, name: name, ticked: ticked,
+                                            unticked: unticked, number: number)
+
         case .dragTile(let tile, let to, let hold):
             try await dragTile(tile, to: to, hold: hold, number: number)
 
@@ -820,7 +834,7 @@ private final class Run {
             let outline = Self.outline(tree["menus"] as? [[String: Any]] ?? [], dimming: focused)
             let heading = focused
                 ? "\(tree["focus"] as? String ?? "a window") has focus; menu bar reads:"
-                : "nothing in the probe has focus, so this menu bar is frozen at the state it was built in at launch: what is dimmed, and any title that renames itself with the document, is NOT what a person would see. Order and shortcuts are exact. Menu bar reads:"
+                : "nothing in the probe has focus, so this menu bar is frozen at the state it was built in at launch: what is dimmed, and any checkmark on a window's own setting, is NOT what a person would see. Order, names and shortcuts are exact. Menu bar reads:"
             let open = (tree["windows"] as? [[String: Any]] ?? [])
                 .map { $0["title"] as? String ?? "?" }.joined(separator: ", ")
             let reading = "\(heading)\n\(outline)\n  windows open: \(open)"
@@ -1085,6 +1099,8 @@ private final class Run {
             case .placeLibraryPick: editor.placeLibraryPick()
             case .insertPickedComponent: editor.insertPickedComponent()
             case .toggleGrid: editor.toggleCanvasGrid()
+            case .showGrid: if !editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
+            case .hideGrid: if editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
             case .showGridSettings: editor.showGridSettings()
             case .selectCanvas: editor.selectCanvas()
             case .duplicateLayer: editor.duplicateSelectedLayers()
@@ -1511,6 +1527,135 @@ private final class Run {
     /// arranged before the click: a hop onto the main thread that names the
     /// tracking run loop mode by hand, which is the one thing that still runs
     /// while a menu is up.
+    /// Open one of the app's own menu-bar menus over the probe window and
+    /// photograph it.
+    ///
+    /// A menu bar menu cannot be pulled down the way a person does it: that
+    /// needs the app to be the front app, and macOS will not give a
+    /// script-launched process focus (`Self.frozenMenuBar`). So the menu is
+    /// popped up inside the window instead. It is the SAME `NSMenu` the bar
+    /// holds, so every row, key, dimming and checkmark in the picture is the
+    /// real one — only its position on screen is arranged.
+    ///
+    /// Everything about waiting for a menu's own event loop, and about why the
+    /// picture has to be a real screen capture, is `PlaytestPanelMenu`.
+    private func photographMenuBarMenu(_ name: String, name shotName: String,
+                                       ticked: [String], unticked: [String],
+                                       number: Int) async throws {
+        let host = try requireWindow()
+        guard let content = host.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        guard let bar = NSApp.mainMenu else {
+            throw Failure(description: "the app has no menu bar")
+        }
+        bar.update()
+        guard let top = bar.items.first(where: { $0.title == name }), let menu = top.submenu else {
+            let names = bar.items.map(\.title).joined(separator: ", ")
+            throw Failure(description: "no menu called \"\(name)\"; the menu bar has: \(names)")
+        }
+        // A window scoped row (View ▸ Show Grid) reads its words and its
+        // checkmark off the FOCUSED window, so with nothing key it reports the
+        // default it would have with no document at all: Show Grid unticked and
+        // Snap to Grid ticked whatever the document says.
+        //
+        // macOS will not give a background app the front spot
+        // (`Self.frozenMenuBar`), and asking the editor window to take key
+        // itself does not work — it was tried here on 2026-09-05 and it only
+        // took key AWAY from whatever had it, leaving the whole bar dead. What
+        // does work is the Capture History overlay: it takes key when it opens,
+        // and once ANY of the app's windows is key SwiftUI fills the focused
+        // value in and every row reads the real document. So a walk that wants
+        // a live View menu opens the history first (⇧⌘H is app level, so it
+        // always lands) and leaves it up.
+        menu.update()
+        let shotURL = out.appendingPathComponent("\(shotName)-sc.png")
+        let noteURL = out.appendingPathComponent("menu-shot.txt")
+        try? FileManager.default.removeItem(at: noteURL)
+        var rows: [String] = []
+        // Not "ticked": the parameter of that name is what the step REQUIRES,
+        // and a local shadowing it made the requirement check itself and pass.
+        var tickedRows: [String] = []
+        // The rows with something behind them. SwiftUI hangs a target and an
+        // action on a command item only while it is live, so a row with neither
+        // is one whose state is a leftover default, not this document's.
+        var liveRows: [String] = []
+        var shot: String?
+
+        let hop = PlaytestTrackingHop {
+            rows = menu.items.map { $0.isSeparatorItem ? "" : $0.title }
+            tickedRows = menu.items.filter { $0.state == .on }.map(\.title)
+            liveRows = menu.items.filter { $0.action != nil }.map(\.title)
+            if let menuWindow = PlaytestPanelMenu.openMenuWindow() {
+                let finished = DispatchSemaphore(value: 0)
+                PlaytestPanelMenu.capture(menuWindow: menuWindow.windowNumber,
+                                          over: host.windowNumber,
+                                          host: Self.screenFrame(of: host),
+                                          to: shotURL) { outcome in
+                    try? Data(outcome.utf8).write(to: noteURL)
+                    finished.signal()
+                }
+                _ = finished.wait(timeout: .now() + 3)
+                shot = shotURL.lastPathComponent
+            } else {
+                try? Data("the menu opened in no window this app can see".utf8).write(to: noteURL)
+            }
+            menu.cancelTracking()
+        }
+        hop.schedule(after: 0.55)
+        // Near the top left of the window, so a long menu has room to draw
+        // downward and the picture keeps the window around it for context. A
+        // SwiftUI content view is flipped, so "the top" is whichever end of
+        // its bounds the view says it is.
+        let corner = NSPoint(x: 24, y: content.isFlipped ? 24 : content.bounds.height - 24)
+        menu.popUp(positioning: nil, at: corner, in: content)
+        await sleep(0.25)
+
+        var outcome = "the picture never finished"
+        for _ in 0..<40 {
+            if let data = try? Data(contentsOf: noteURL), let text = String(data: data, encoding: .utf8) {
+                outcome = text
+                break
+            }
+            await sleep(0.1)
+        }
+        try? FileManager.default.removeItem(at: noteURL)
+        // The picture is the deliverable, but a picture nobody checks proves
+        // nothing, so the rows the step named are held to what they wore.
+        // Read off what the OPEN menu was wearing, not off the menu now that it
+        // has closed: closing it is another event, and another chance for the
+        // words to change under the reading.
+        //
+        // A dead row's checkmark is a leftover default, and an assertion against
+        // that would be a walk agreeing with itself. Refuse it rather than pass.
+        if let dead = (ticked + unticked).first(where: { !liveRows.contains($0) }) {
+            throw Failure(description: "\(name) ▸ \(dead) has nothing behind it, so its checkmark is the default "
+                + "it would wear with no document at all, not this one's. \(Self.frozenMenuBar) "
+                + "Open the Capture History first (a `shortcut` step on ⇧⌘H): it takes key, and that is enough "
+                + "for every window scoped row to read the real document.")
+        }
+        for row in ticked + unticked where !rows.contains(row) {
+            throw Failure(description: "no row called \"\(row)\" in the \(name) menu; the rows are: "
+                + rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", "))
+        }
+        if let missing = ticked.first(where: { !tickedRows.contains($0) }) {
+            throw Failure(description: "\(name) ▸ \(missing) should be ticked and it is not; "
+                + "ticked: \(tickedRows.isEmpty ? "none" : tickedRows.joined(separator: ", "))")
+        }
+        if let extra = unticked.first(where: { tickedRows.contains($0) }) {
+            throw Failure(description: "\(name) ▸ \(extra) should NOT be ticked and it is")
+        }
+        note(number, "menuShot",
+             "\(name) menu, photographed over the window: \(outcome). "
+             + (rows.filter { !$0.isEmpty && !liveRows.contains($0) }.isEmpty ? ""
+                : "Rows with nothing behind them, whose state is a default rather than this document's: "
+                + rows.filter { !$0.isEmpty && !liveRows.contains($0) }.joined(separator: ", ") + ". ")
+             + "Rows: \(rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: " | ")). "
+             + "Ticked: \(tickedRows.isEmpty ? "none" : tickedRows.joined(separator: ", "))",
+             state: ["menu": name, "rows": rows, "ticked": tickedRows, "live": liveRows,
+                     "shot": shot ?? NSNull()])
+    }
+
     private func openPanelMenu(_ name: String, shot: String?, choose: String?, number: Int) async throws {
         let host = try requireWindow()
         guard let content = host.contentView else {
@@ -1848,9 +1993,9 @@ private final class Run {
         // anyway. With nothing focused, SwiftUI's window-scoped commands all
         // report themselves disabled, so the step says so instead of pretending.
         let focus = NSApp.keyWindow.map { $0.title.isEmpty ? "an untitled window" : $0.title }
-        // The open windows come along because half of what a menu title says
-        // depends on them ("Show History" versus "Hide History"), and a reader
-        // who cannot see the screen otherwise has no way to tell.
+        // The open windows come along because half of what a menu item says
+        // depends on them (whether Show History is ticked), and a reader who
+        // cannot see the screen otherwise has no way to tell.
         let windows = NSApp.windows.filter(\.isVisible).map { window -> [String: Any] in
             ["title": window.title.isEmpty ? "(untitled)" : window.title,
              "key": window.isKeyWindow, "panel": window is NSPanel]

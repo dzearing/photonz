@@ -5,29 +5,21 @@
 /// findable by the same name in the other, so the strings live here rather than
 /// being typed out twice.
 ///
-/// `history` and `recording` are the two names that change with what is on
-/// screen. `historyNames` lists both readings of the history item, which is how
-/// the app finds that item in a live menu whichever way it currently reads.
+/// `recording` is the one name here that changes with what is on screen, and it
+/// changes because starting a recording and stopping one are two different
+/// actions. `history` is a setting, so it keeps one name and wears a checkmark
+/// while the overlay is up (see `MenuToggleNames`).
 public enum CaptureMenuNames {
     public static let captureRegion = "Capture Region"
     public static let captureFullScreen = "Capture Full Screen"
     public static let startRecording = "Record Screen / Video…"
     public static let stopRecording = "Stop Recording"
     public static let editLastCapture = "Edit Last Capture"
-    public static let showHistory = "Show History"
-    public static let hideHistory = "Hide History"
-
-    /// What the history item offers to do next: hide the overlay while it is
-    /// up, show it while it is not.
-    public static func history(isShown: Bool) -> String {
-        isShown ? hideHistory : showHistory
-    }
+    /// One name whichever way the overlay is. The checkmark says which.
+    public static let history = "Show History"
 
     /// What the recording item offers to do next.
     public static func recording(isRecording: Bool) -> String {
         isRecording ? stopRecording : startRecording
     }
-
-    /// Every reading the history item can carry.
-    public static let historyNames = [showHistory, hideHistory]
 }

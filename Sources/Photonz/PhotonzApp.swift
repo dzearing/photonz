@@ -195,9 +195,10 @@ struct MenuBarMenu: View {
         Button(CaptureMenuNames.editLastCapture) { coordinator.editLastCapture() }
             .keyboardShortcut("6", modifiers: [.command, .shift])
             .disabled(coordinator.lastCapture == nil)
-        Button(CaptureMenuNames.history(isShown: coordinator.isHistoryShown)) {
-            coordinator.toggleHistory()
-        }
+        // Same item as the editor's Capture menu, same one name, same checkmark.
+        Toggle(CaptureMenuNames.history, isOn: Binding(
+            get: { coordinator.isHistoryShown },
+            set: { $0 ? coordinator.showHistory() : coordinator.hideHistory() }))
         .keyboardShortcut("h", modifiers: [.command, .shift])
 
         Divider()

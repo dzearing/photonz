@@ -19,13 +19,42 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" } ] }
         """)
-        guard case .shortcut(let key, let modifiers, let item) = script.steps[0] else {
+        guard case .shortcut(let key, let modifiers, let item, let checked) = script.steps[0] else {
             Issue.record("shortcut"); return
         }
         #expect(key.characters == "z")
         #expect(modifiers == [.command])
         #expect(item == "Undo")
+        #expect(checked == nil)
         #expect(script.steps[0].name == "shortcut")
+    }
+
+    /// A setting's menu item keeps one name and says its state with a
+    /// checkmark, so the only way a walk can prove the state is to read the
+    /// checkmark. `checked` is what the item must be wearing BEFORE the press.
+    @Test("A shortcut step can require the item to be ticked, or not, before it presses")
+    func shortcutStepCanRequireTheCheckmark() throws {
+        let script = try decode("""
+        { "steps": [
+            { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": false },
+            { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": true }
+        ] }
+        """)
+        guard case .shortcut(_, _, _, let first) = script.steps[0],
+              case .shortcut(_, _, _, let second) = script.steps[1] else {
+            Issue.record("shortcut"); return
+        }
+        #expect(first == false)
+        #expect(second == true)
+    }
+
+    @Test("A shortcut step's checkmark must be true or false, not a word")
+    func shortcutCheckmarkMustBeAFlag() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "shortcut", "key": "h", "modifiers": ["command"], "checked": "on" } ] }
+            """)
+        }
     }
 
     @Test("A shortcut step may leave the menu item unnamed and just require the chord to land")
@@ -33,11 +62,55 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "shortcut", "key": "z", "modifiers": ["command", "shift"] } ] }
         """)
-        guard case .shortcut(_, let modifiers, let item) = script.steps[0] else {
+        guard case .shortcut(_, let modifiers, let item, let checked) = script.steps[0] else {
             Issue.record("shortcut"); return
         }
         #expect(modifiers == [.command, .shift])
         #expect(item == nil)
+        #expect(checked == nil)
+    }
+
+    // MARK: Photographing a menu bar menu
+
+    /// A checkmark is a picture, and until now no audit could show one: a menu
+    /// draws outside this process, so only a real screen capture sees it.
+    @Test("A menuShot step names the menu to open and what to call the picture")
+    func menuShotStepNamesTheMenuAndThePicture() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "menuShot", "menu": "Capture", "name": "capture-menu" } ] }
+        """)
+        guard case .menuShot(let menu, let name, let ticked, let unticked) = script.steps[0] else {
+            Issue.record("menuShot"); return
+        }
+        #expect(menu == "Capture")
+        #expect(name == "capture-menu")
+        #expect(ticked.isEmpty)
+        #expect(unticked.isEmpty)
+        #expect(script.steps[0].name == "menuShot")
+    }
+
+    /// The picture is the point, but a picture nobody checks proves nothing, so
+    /// the step can also require which rows are wearing a checkmark.
+    @Test("A menuShot step can require which rows are ticked and which are not")
+    func menuShotStepCanRequireTheCheckmarks() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "menuShot", "menu": "View", "name": "view-menu",
+                       "ticked": ["Show Grid"], "unticked": ["Show Library"] } ] }
+        """)
+        guard case .menuShot(_, _, let ticked, let unticked) = script.steps[0] else {
+            Issue.record("menuShot"); return
+        }
+        #expect(ticked == ["Show Grid"])
+        #expect(unticked == ["Show Library"])
+    }
+
+    @Test("A menuShot step with no menu named is refused with a readable reason")
+    func menuShotStepNeedsAMenu() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "menuShot", "name": "capture-menu" } ] }
+            """)
+        }
     }
 
     @Test("A shortcut step with no key is refused with a readable reason")

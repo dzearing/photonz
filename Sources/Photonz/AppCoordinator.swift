@@ -105,7 +105,7 @@ final class AppCoordinator {
             HintTooltipController.shared.dismiss()
             // Esc and click-away take the overlay down without going through
             // hideHistory(), so the menu has to be told here too.
-            MainMenuTitles.retitleHistory(isShown: false)
+            MainMenuState.markHistory(isShown: false)
         }
         // Record every non-Photonz app that comes forward, most-recent-first.
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -410,7 +410,7 @@ final class AppCoordinator {
         historyOverlay.show(content: HistoryOverlay(coordinator: self), on: activeScreen(),
                             reserveForPermissionHint: capture.needsScreenRecordingPermission)
         isHistoryShown = true
-        MainMenuTitles.retitleHistory(isShown: true)
+        MainMenuState.markHistory(isShown: true)
     }
 
     func hideHistory() {
@@ -418,7 +418,7 @@ final class AppCoordinator {
         isHistoryShown = false
         highlightedCaptureURL = nil
         HintTooltipController.shared.dismiss()
-        MainMenuTitles.retitleHistory(isShown: false)
+        MainMenuState.markHistory(isShown: false)
     }
 
     /// "Clear All" in the history overlay: confirm, then move every capture to

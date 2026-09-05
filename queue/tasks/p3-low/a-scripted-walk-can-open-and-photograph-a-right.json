@@ -1,0 +1,28 @@
+{
+  "id": "a-scripted-walk-can-open-and-photograph-a-right",
+  "title": "A scripted walk can open and photograph a right click menu",
+  "goal": "An agent checking its own work can open the menu you get by right clicking a layer, a measurement or the canvas, read every row, and take a real picture of it. Today it can only do that for menus that hang off a button, so anything reached by right click gets described rather than shown.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 1250,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T22:46:33.535Z",
+  "updated": "2026-09-05T22:46:33.535Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/Playtest/PlaytestPanelMenu.swift already solves the hard half: PlaytestTrackingHop reaches the main thread while a menu tracking loop holds it, and capture() photographs a menu window over its host. What is missing is opening a SwiftUI .contextMenu: those are attached to the row NSView as its menu property and SwiftUI builds the content lazily, so the step has to find the row (PanelTarget) and post a right click or call NSMenu.popUp on view.menu. The menuShot step added on 2026-09-05 is the closest model.",
+  "acceptance": [
+    "A walk step opens the menu on a named row and writes its rows, dimming and checkmarks to the log",
+    "The step writes a real screen capture of the open menu beside the walk output",
+    "The step can require which rows are ticked and fails when one lies",
+    "An audit uses it to show the layer row menu"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T22:46:33.535Z",
+      "note": "created (manual)"
+    }
+  ]
+}

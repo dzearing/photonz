@@ -152,13 +152,15 @@ struct EditorCommands: Commands {
             Button(CaptureMenuNames.editLastCapture) { coordinator.editLastCapture() }
                 .keyboardShortcut("6", modifiers: [.command, .shift])
                 .disabled(coordinator.lastCapture == nil)
-            // The title is also written straight onto the live item whenever
-            // history opens or closes (MainMenuTitles): SwiftUI re-runs this
-            // body only while handling an event, and ⇧⌘H rebuilds it from the
-            // state before the toggle ran, which left the menu a step behind.
-            Button(CaptureMenuNames.history(isShown: coordinator.isHistoryShown)) {
-                coordinator.toggleHistory()
-            }
+            // A setting, so one name and a checkmark rather than a title that
+            // rewrites itself. The checkmark is also written straight onto the
+            // live item whenever history opens or closes (MainMenuState):
+            // SwiftUI re-runs this body only while handling an event, and ⇧⌘H
+            // rebuilds it from the state before the toggle ran, which left the
+            // menu a step behind.
+            Toggle(CaptureMenuNames.history, isOn: Binding(
+                get: { coordinator.isHistoryShown },
+                set: { _ in coordinator.toggleHistory() }))
             .keyboardShortcut("h", modifiers: [.command, .shift])
             Divider()
             Button("Request Screen Recording Access…") {
@@ -489,9 +491,22 @@ struct EditorCommands: Commands {
 
         CommandGroup(after: .sidebar) {
             let hasDocument = editor?.document != nil
-            Button((editor?.isLayersPanelVisible ?? false) ? "Hide Layers" : "Show Layers") {
-                if let editor { editor.setInspectorVisible(!editor.isLayersPanelVisible) }
-            }
+            // A setting, so one name and a checkmark: the item never renames
+            // itself and never changes width under the pointer, and it reports
+            // its own on/off to accessibility (MenuToggleNames).
+            //
+            // Every `set` below FLIPS what the state says right now rather than
+            // storing the value SwiftUI hands it. A Commands body is re-run
+            // only while an event is being handled, so the value the item was
+            // drawn from can be a toggle behind; flipping the live reading is
+            // what the plain Button did and it cannot be talked into a press
+            // that does nothing. `set` runs only when a person picks the item,
+            // so there is no other writer to disagree with.
+            Toggle(MenuToggleNames.layersPanel, isOn: Binding(
+                get: { editor?.isLayersPanelVisible ?? false },
+                set: { _ in
+                    if let editor { editor.setInspectorVisible(!editor.isLayersPanelVisible) }
+                }))
             .keyboardShortcut("l", modifiers: [.command, .option])
             .disabled(!hasDocument)
             // The Library shelf, right under Show Layers because they are the
@@ -500,9 +515,11 @@ struct EditorCommands: Commands {
             // A flagged command is absent, not greyed, so the row is simply
             // not there when the flag is off.
             if Experiments.shared.libraryEnabled {
-                Button((editor?.isLibraryVisible ?? false) ? "Hide Library" : "Show Library") {
-                    if let editor { editor.setLibraryVisible(!editor.isLibraryVisible) }
-                }
+                Toggle(MenuToggleNames.library, isOn: Binding(
+                    get: { editor?.isLibraryVisible ?? false },
+                    set: { _ in
+                        if let editor { editor.setLibraryVisible(!editor.isLibraryVisible) }
+                    }))
                 .disabled(!hasDocument)
             }
             Button("Zoom In") { editor?.zoomIn() }
@@ -525,9 +542,9 @@ struct EditorCommands: Commands {
             // the tool bar while it is showing.
             if Experiments.shared.canvasGridEnabled {
                 Divider()
-                Button((editor?.canvasGrid.isVisible ?? false) ? "Hide Grid" : "Show Grid") {
-                    editor?.toggleCanvasGrid()
-                }
+                Toggle(MenuToggleNames.grid, isOn: Binding(
+                    get: { editor?.canvasGrid.isVisible ?? false },
+                    set: { _ in editor?.toggleCanvasGrid() }))
                 .keyboardShortcut("'", modifiers: .command)
                 .disabled(!hasDocument)
                 // Right under the switch, because the menu you turn the grid on
@@ -542,10 +559,9 @@ struct EditorCommands: Commands {
                 // Photoshop's own key for Snap, next to the grid it pulls to.
                 // Dimmed with the grid hidden, because with no lines on the
                 // picture there is nothing to pull to.
-                Button((editor?.canvasGrid.snapsToGrid ?? true)
-                        ? "Stop Snapping to Grid" : "Snap to Grid") {
-                    editor?.toggleSnapToGrid()
-                }
+                Toggle(MenuToggleNames.snapToGrid, isOn: Binding(
+                    get: { editor?.canvasGrid.snapsToGrid ?? true },
+                    set: { _ in editor?.toggleSnapToGrid() }))
                 .keyboardShortcut(";", modifiers: [.command, .shift])
                 .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false))
                 // Where the grid starts. It takes the canvas over, so it reads

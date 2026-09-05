@@ -387,6 +387,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the grid on the way a person does — without touching the Canvas row,
     /// which is the whole point of the settings being reachable elsewhere.
     case toggleGrid
+    /// Put the grid ON, or OFF, whichever it already is. `toggleGrid` flips,
+    /// which leaves a walk's outcome depending on what the last walk left
+    /// behind; these two make a starting point a walk can rely on.
+    case showGrid, hideGrid
     /// View ▸ Grid Settings. Opens the grid's settings on the canvas, switching
     /// the grid on first if it was off, exactly as the menu row does.
     case showGridSettings
@@ -676,7 +680,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the item up first, says which one it is, refuses a dimmed one, and
     /// only then presses. `menuItem` names the item the chord must reach
     /// ("Undo"), so a walk fails when a shortcut is quietly reassigned.
-    case shortcut(PlaytestKey, [PlaytestModifier], menuItem: String?)
+    /// `checked` is what a SETTING's item must be wearing before the press:
+    /// an item that is simply on or off keeps one name and says its state with
+    /// a checkmark, so the checkmark is the only thing left for a walk to read.
+    case shortcut(PlaytestKey, [PlaytestModifier], menuItem: String?, checked: Bool?)
     /// Press and release a key by handing it to the APPLICATION rather than
     /// straight to a window.
     ///
@@ -769,6 +776,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// never returns until the menu closes, and nothing was left running to
     /// close it. The driver arranges its own way out first.
     case panelMenu(menu: String, shot: String?, choose: String?)
+    /// Open one of the app's OWN menu-bar menus inside the probe window and
+    /// photograph it.
+    ///
+    /// A `menus` step reads the words and the checkmarks, which is exact but is
+    /// not a picture, and a menu draws outside this process so an offscreen
+    /// render of it comes back blank. This is the only way an audit can SHOW
+    /// what a menu looks like: a real screen capture of the menu, over the
+    /// window it belongs to. App-level menus (Capture) photograph honestly;
+    /// window-scoped rows come out dimmed and frozen at their launch state,
+    /// for the reason in `PlaytestHarness.frozenMenuBar`.
+    /// `ticked` and `unticked` name the rows that must, and must not, be
+    /// wearing a checkmark, so the step is a test and not only a picture.
+    case menuShot(menu: String, name: String, ticked: [String], unticked: [String])
     /// Pick a tile up off the Library shelf by its name, hold it over a point
     /// on the picture, and let go there. `hold` names a picture taken while it
     /// is still in hand, which is the only moment the landing outline exists.
@@ -860,7 +880,7 @@ public enum PlaytestStep: Sendable, Equatable {
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
         "dragFile", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
+        "dropImage", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelMenu", "pinch", "press",
         "readClipboard", "render", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
@@ -892,6 +912,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .snapshot: "snapshot"
         case .render: "render"
         case .panelMenu: "panelMenu"
+        case .menuShot: "menuShot"
         case .dragTile: "dragTile"
         case .dragRow: "dragRow"
         case .dragSection: "dragSection"
@@ -941,7 +962,8 @@ public enum PlaytestStep: Sendable, Equatable {
             guard let key = PlaytestKey(keyName) else {
                 throw f.invalid("key", "\"\(keyName)\" is not a key; use a single character or return, escape, tab, space, delete, left, right, up, down")
             }
-            self = .shortcut(key, try f.modifiers(), menuItem: try f.optionalString("menuItem"))
+            self = .shortcut(key, try f.modifiers(), menuItem: try f.optionalString("menuItem"),
+                             checked: try f.optionalFlag("checked"))
         case "appKey":
             let keyName = try f.string("key")
             guard let key = PlaytestKey(keyName) else {
@@ -1008,6 +1030,10 @@ public enum PlaytestStep: Sendable, Equatable {
         case "render":
             self = .render(name: try f.string("name"),
                            scale: CGFloat(try f.optionalNumber("scale") ?? 1))
+        case "menuShot":
+            self = .menuShot(menu: try f.string("menu"), name: try f.string("name"),
+                             ticked: try f.optionalStrings("ticked"),
+                             unticked: try f.optionalStrings("unticked"))
         case "panelMenu":
             self = .panelMenu(menu: try f.string("menu"),
                               shot: try f.optionalString("shot"),
@@ -1090,6 +1116,14 @@ public enum PlaytestStep: Sendable, Equatable {
             guard let raw = fields[field] else { return nil }
             guard let value = raw as? NSNumber else { throw invalid(field, "must be a number") }
             return value.doubleValue
+        }
+
+        func optionalStrings(_ field: String) throws -> [String] {
+            guard let raw = fields[field] else { return [] }
+            guard let values = raw as? [String], values.allSatisfy({ !$0.isEmpty }) else {
+                throw invalid(field, "must be a list of non-empty strings")
+            }
+            return values
         }
 
         func optionalFlag(_ field: String) throws -> Bool? {

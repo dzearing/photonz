@@ -305,6 +305,7 @@ final class EditorState {
 
     func toggleSnapToGrid() { canvasGrid.snapsToGrid.toggle() }
 
+
     func setCanvasGridAxes(_ axes: CanvasGridAxes) { canvasGrid.axes = axes }
 
     /// Typing a spacing switches the grid ON: nobody sets a number for a grid

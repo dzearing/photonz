@@ -8947,3 +8947,45 @@ Audit: `queue/audits/2026-09-05-panel-section-drag.json`.
 
 Next: the queue. Open question in the audit — the carried card is opaque, so
 the section under it is hidden while you carry one; too heavy?
+
+## 2026-09-05 — Menu items that are settings wear a checkmark
+
+Every menu item in the app that is simply on or off now keeps ONE name and says
+its state with a checkmark, instead of rewriting itself. Seven of them: View's
+Show Layers, Show Library, Show Grid and Snap to Grid; Capture's Show History,
+in the editor's menu bar and the agent's drop-down both; and a right click on a
+layer row, where Hide/Show and Lock/Unlock became `Visible` and `Locked`, with
+`Visible` on a measurement row too. Each is a SwiftUI `Toggle`, so the state
+reaches accessibility as well as the eye. `MenuToggleNames` (PhotonzCore) names
+them all in one place and a test refuses any name that announces its own state.
+`CaptureMenuNames.history` lost its `isShown:` parameter, and `MainMenuTitles`
+became `MainMenuState`: it writes the true `state` onto the live item now rather
+than a title, for exactly the reason it wrote titles before.
+
+Every `set` FLIPS the live reading rather than storing the value SwiftUI hands
+it. A `Commands` body is re-run only while an event is being handled, so the
+value an item was drawn from can be a toggle behind; storing `!stale` is a press
+that does nothing, which is what the plain Button never was.
+
+Left flipping on purpose, each being two actions rather than one setting: Play /
+Pause, Crop to Region / Finish Crop, Record Screen / Video / Stop Recording,
+Copy Measurement / Copy Measurements. Show Tab Bar and Show All Tabs still flip
+and always will: they are macOS's own rows.
+
+Harness: a `menuShot` step opens one of our OWN menu-bar menus over the probe
+window and photographs it — the first time anything in this repo could show a
+menu, since a menu draws outside the process and renders blank offscreen. It
+takes `ticked`/`unticked`, so it is a test and not only a picture, and it
+REFUSES to assert a row with no action behind it, whose checkmark is a default
+rather than the document's. Two findings worth keeping: a window scoped row
+reads live once ANY of the app's windows is key, and the Capture History overlay
+takes key, so a walk that wants a live View menu opens it first and leaves it
+up; and `makeKey()` on the editor window is worse than nothing, taking key away
+from whatever had it. `shortcut` steps also take `checked` now, and two new
+actions `showGrid`/`hideGrid` SET the grid so a walk's starting point does not
+depend on the last walk. Walk: `Scripts/playtest/menu-checkmarks-walk.json`.
+3399 tests green; ten adjacent walks re-run green.
+Audit: `queue/audits/2026-09-05-menu-checkmarks.json`.
+
+Next: the queue. Open question in the audit — Show Grid keeps the word "Show"
+beside its tick; would the row read better as just "Grid"?

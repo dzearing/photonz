@@ -1,0 +1,29 @@
+{
+  "feature": "Menu items that are settings wear a checkmark",
+  "epic": "ui-building",
+  "summary": "A menu item that is simply on or off now keeps one name and shows a checkmark when it is on, instead of rewriting itself. Show Grid stays Show Grid, Snap to Grid stays Snap to Grid, and neither the name nor the row below it moves under the pointer as you switch them.",
+  "setup": "Photonz Dev, Experiments window, release Next. The grid rows need the canvas grid flag and the Library row needs the Library flag; both are on by default in Next.",
+  "try": [
+    { "do": "Open a picture, then open the View menu and look at Show Layers, Show Library, Show Grid and Snap to Grid.", "shot": "2026-09-05-menu-checkmarks-view-grid-on.png" },
+    { "do": "Pick Show Grid, then open View again: the same row, now without its tick.", "shot": "2026-09-05-menu-checkmarks-view-grid-off.png" },
+    { "do": "Press Command apostrophe twice and open View again, to see the tick follow the keyboard too." },
+    { "do": "Open the Capture menu and read Show History.", "shot": "2026-09-05-menu-checkmarks-history-off.png" },
+    { "do": "Press Shift Command H, then open Capture again.", "shot": "2026-09-05-menu-checkmarks-history-on.png" },
+    { "do": "Click the viewfinder in the menu bar and read its Show History row, which should agree with the one in the window." },
+    { "do": "Right click a layer in the Layers panel and read Visible and Locked, which used to say Hide and Lock." }
+  ],
+  "evaluate": [
+    "Is a checkmark faster to read than the old sentence was, or did the old wording tell you something the tick does not?",
+    "Show Grid keeps the word Show. Does that read right with a tick beside it, or would you rather the row just said Grid?",
+    "On a layer row, Visible and Locked replace Hide and Lock. Does a row menu read better as what the layer IS?",
+    "With the grid hidden, Snap to Grid is dimmed but still ticked. Is that honest or is it noise?",
+    "Anything left in these menus that still rewrites itself and should not?"
+  ],
+  "rough": [
+    "Seven items changed: View has Show Layers, Show Library, Show Grid and Snap to Grid; Capture has Show History, in the window menu and the menu bar drop-down both; and a right click on a layer row has Visible and Locked, with Visible on a measurement row too.",
+    "Left flipping on purpose, because each pair is two different actions and not one setting: Play and Pause, Crop to Region and Finish Crop, Record Screen / Video and Stop Recording, Copy Measurement and Copy Measurements, and Check for Updates while it is checking. Show All Measurements and Hide All Measurements stay as two rows, since both are offered at once and each dims when it would change nothing.",
+    "Show Tab Bar and Show All Tabs still flip their wording. Those two rows are macOS's own, not ours.",
+    "The pictures are real screen captures of the real menus, which nothing in this repo could take before today: a menu draws outside the app's own process, so an offscreen render of one comes back blank. A walk now opens one of our menus over the window and photographs it, and names the rows that must and must not be ticked, so it fails when a checkmark lies (Scripts/playtest/menu-checkmarks-walk.json).",
+    "The two row menus, Visible and Locked, are the one thing with no picture and no walk behind them: a right click menu is still out of a walk's reach. They use exactly the same control as the four rows that ARE proven, and a follow-up task is filed to give a walk that reach."
+  ]
+}

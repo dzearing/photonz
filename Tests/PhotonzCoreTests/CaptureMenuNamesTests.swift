@@ -2,26 +2,18 @@ import Testing
 @testable import PhotonzCore
 
 @Suite struct CaptureMenuNamesTests {
-    // MARK: The name follows what is on screen
+    // MARK: The history item is a setting, so it keeps one name
 
-    @Test func historyOffersToShowWhenItIsHidden() {
-        #expect(CaptureMenuNames.history(isShown: false) == "Show History")
+    /// It used to read "Hide History" while the overlay was up. Now it always
+    /// reads the same and carries a checkmark instead (see MenuToggleNames).
+    @Test func historyKeepsOneNameWhicheverWayItIs() {
+        #expect(CaptureMenuNames.history == "Show History")
     }
 
-    @Test func historyOffersToHideWhenItIsShowing() {
-        #expect(CaptureMenuNames.history(isShown: true) == "Hide History")
-    }
+    // MARK: Recording is an action pair, not a setting
 
     @Test func recordingOffersToStopWhileItIsRecording() {
-        #expect(CaptureMenuNames.recording(isRecording: false) == "Record Screen / Video…")
+        #expect(CaptureMenuNames.recording(isRecording: false) == "Record Screen / Video\u{2026}")
         #expect(CaptureMenuNames.recording(isRecording: true) == "Stop Recording")
-    }
-
-    // MARK: Both readings are known, so a menu item can be found by either
-
-    @Test func historyNamesCoversBothReadings() {
-        #expect(CaptureMenuNames.historyNames == ["Show History", "Hide History"])
-        #expect(CaptureMenuNames.historyNames.contains(CaptureMenuNames.history(isShown: false)))
-        #expect(CaptureMenuNames.historyNames.contains(CaptureMenuNames.history(isShown: true)))
     }
 }

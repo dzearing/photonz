@@ -383,7 +383,7 @@ with the third of them.
 | 2 | Layer | New Frame… | none | a document is open |
 | 2 | Layer | Frame Selection | none | one or more layers are selected |
 | 2 | File | Export… (the existing row grows a frame scope) | ⇧⌘E | unchanged |
-| 3 The Library panel | View | Show Library / Hide Library | none | a document is open |
+| 3 The Library panel | View | Show Library (a checkmark while it is up) | none | a document is open |
 | 4 Make component | Layer | Make Component | ⌥⌘K | the selection is a group that does not already contain a main |
 | 5 Insert an instance | Layer | Insert Component | none | a component is selected in the Library |
 | 6 Overrides and detach | Layer | Detach Instance | ⌥⌘B | the selection is an instance |
