@@ -1,0 +1,184 @@
+{
+  "out": "/tmp/photonz-playtest/caliper-chip-join",
+  "seed": "The user reported that a measurement chip never touches the line that produced it: on a short measurement two bare lines stop either side of the pill with a space and no curve, on a long one the curve is drawn but stops a few points short. This walk places a long measurement and a small gap on a real screenshot, at 100% and zoomed in, so both joins can be looked at.",
+  "setup": {
+    "forget": [
+      "measure",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 20
+    },
+    {
+      "do": "measureMode",
+      "mode": "gap"
+    },
+    {
+      "do": "move",
+      "at": [
+        258,
+        589
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        258,
+        589
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "small-gap",
+      "note": "the gap between Reset and Save Changes: a measurement narrower than its own number, so the legs run into the pill and must stop on its outline"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-small-gap"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "measureMode",
+      "mode": "size"
+    },
+    {
+      "do": "move",
+      "at": [
+        356,
+        786
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        356,
+        786
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "long-size",
+      "note": "a wide element measured: the head bar curves in and should MEET the pill, not stop short of it"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-long"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "measureMode",
+      "mode": "gap"
+    },
+    {
+      "do": "move",
+      "at": [
+        700,
+        465
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        465
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "row-gap",
+      "note": "the gap between the two text fields: a measurement narrower than its own number, where the legs run into the pill"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-row-gap"
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "zoomed",
+      "note": "the same joins with the caliper baked at a zoomed-in resolution"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-zoomed"
+    }
+  ]
+}

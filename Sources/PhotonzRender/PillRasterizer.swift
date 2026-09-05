@@ -24,6 +24,14 @@ enum PillRasterizer {
         return CGSize(width: size.width + 2 * padding, height: size.height + 2 * padding)
     }
 
+    /// The pill's corner radius: half its short side, so a readout (always
+    /// wider than it is tall) is a capsule with semicircular caps. Anything
+    /// that has to MEET the pill's outline reads it from here, so the curve a
+    /// line stops on is the same curve the pill is drawn with.
+    static func cornerRadius(for chipSize: CGSize) -> CGFloat {
+        min(chipSize.width, chipSize.height) / 2
+    }
+
     /// How many pixels one point of `context` covers: 1 for a document-sized
     /// raster, more when a zoomed-in canvas is baking the pill at the
     /// resolution it is about to be shown at. The rasterizers scale their
@@ -51,7 +59,7 @@ enum PillRasterizer {
         let pixelsPerPoint = Self.pixelsPerPoint(of: context)
         let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
                           width: chipSize.width, height: chipSize.height)
-        let radius = chipSize.height / 2
+        let radius = cornerRadius(for: chipSize)
         let pill = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
         context.saveGState()
         if let shadow {

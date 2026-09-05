@@ -1,0 +1,28 @@
+{
+  "feature": "A measurement touches its own number",
+  "epic": "measure-redline",
+  "summary": "A caliper's line now runs all the way to the edge of the number it produced and stops exactly there, instead of halting a few points short of it or sliding underneath it. Short measurements get the same join long ones do.",
+  "setup": "Photonz Dev, release Next (the drawing is shared, so Current gets it too). No flags. Any picture with something to measure.",
+  "try": [
+    { "do": "Press I for Measure, pick Size, and click a wide element like Save Changes." },
+    { "do": "Look where the line meets the pill: it should touch the edge, with the curve running into it.", "shot": "2026-09-05-caliper-chip-join-1.png" },
+    { "do": "Press I again, pick Gap, and click a narrow gap between two rows." },
+    { "do": "Look at that one: the number is wider than the thing it measures, so the two short lines run into the top of the pill and stop on it." },
+    { "do": "Zoom to 200% and look at both joins again." },
+    { "do": "Select one measurement and drag Label size up in the inspector until the pill is far wider than the span." },
+    { "do": "Set Thickness to 3 px and check the join once more." }
+  ],
+  "evaluate": [
+    "Does the number now read as part of the measurement rather than as a separate label sitting near it?",
+    "At the join, does the line look like it becomes the pill's outline, or can you still see where one ends and the other starts?",
+    "On a measurement narrower than its own number, do two short lines poking into the top of the pill read as a caliper, or does it look broken?",
+    "Is there any zoom or thickness at which a hairline of daylight comes back?",
+    "When the number sits past the end of the line instead of on it, should that one touch as well, or is the small standoff right there?"
+  ],
+  "rough": [
+    "A number placed PAST the end of its line (which is what a short vertical measurement usually gets) still keeps a five point standoff and was deliberately left alone: it sits beside the caliper rather than on it, and welding it on would read as a lollipop. If you disagree, say so here and it becomes the next task.",
+    "On a measurement much narrower than its own number there is no head bar left to curve into, so the join is two straight stubs entering the top of the pill with no curve. That is honest about the geometry, but it may be a sign the number should move off the line entirely at that size, which is a placement question rather than a join one.",
+    "When the number is wider than the whole caliper, feet included (a 2 px gap, for instance), the caliper now draws nothing but the pill: any line there could only ever be seen through the pill's fill. That is new behavior and worth a look.",
+    "Verified on the probe build with Screen Recording granted, so the pictures here are real screen captures rather than offscreen renders."
+  ]
+}

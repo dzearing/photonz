@@ -5,11 +5,12 @@ import PhotonzCore
 
 /// Rasterizes a caliper (`MeasureContent`) into a transparent-background CGImage:
 /// the squared-U outline (two legs + head bar) with lightly rounded corners, plus
-/// the label pill. While the pill still rides the line, the line is **split
-/// around it** (a gap), so a translucent pill never reveals a stroke behind it.
+/// the label pill. While the pill still rides the line, the line **stops on the
+/// pill's outline** from either side, so a translucent pill never reveals a
+/// stroke behind it and the number still reads as part of the line that made it.
 /// When the pill has moved out of the way of what the measurement describes
 /// (`MeasureLabelPlacement`, UX-PATTERNS D14) the line draws whole and a leader
-/// keeps the pill attached.
+/// keeps the pill attached, ending on that same outline.
 ///
 /// The pill used to be omitted here and drawn as an AppKit overlay on the live
 /// canvas instead (a Liquid-Glass capsule). That made the chip unreachable by
@@ -82,15 +83,9 @@ public enum MeasureRasterizer {
                              attachments: [(g.footA, g.headA), (g.headA, g.headB),
                                            (g.headB, g.footB)])
 
-        // Two rounded L legs; the head line is cut only where the chip still
-        // rides it.
-        let mid = g.labelAnchor
-        func gapEdge(toward p: CGPoint) -> CGPoint {
-            guard let split = plan.splitCenter, plan.gapHalf > 0 else { return mid }
-            return along(from: split, toward: p, distance: plan.gapHalf)
-        }
-        drawLeg(foot: g.footA, head: g.headA, toward: gapEdge(toward: g.headA), in: context)
-        drawLeg(foot: g.footB, head: g.headB, toward: gapEdge(toward: g.headB), in: context)
+        // Two rounded L legs, each running as far as the chip and no further.
+        drawSide(foot: g.footA, head: g.headA, mid: g.labelAnchor, plan: plan, in: context)
+        drawSide(foot: g.footB, head: g.headB, mid: g.labelAnchor, plan: plan, in: context)
 
         if let leader = plan.leader { drawLeader(leader, in: context) }
 
@@ -123,10 +118,11 @@ public enum MeasureRasterizer {
         // rides it: once the verdict has moved out of the way of the rows it is
         // judging (D14), a gap in the guide would be decoration.
         context.setLineDash(phase: 0, lengths: [6, 4])
-        if let split = plan.splitCenter, plan.gapHalf > 0 {
+        if let pill = plan.pill {
             for foot in [g.footA, g.footB] {
+                guard let cut = pill.entry(from: foot, toward: pill.center) else { continue }
                 context.move(to: foot)
-                context.addLine(to: along(from: split, toward: foot, distance: plan.gapHalf))
+                context.addLine(to: cut)
                 context.strokePath()
             }
         } else {
@@ -144,9 +140,10 @@ public enum MeasureRasterizer {
         // solid runs below have to leave it alone for the same reason the dashes
         // do — a translucent pill must never show a stroke through it.
         let gap: ClosedRange<CGFloat>? = {
-            guard let split = plan.splitCenter, plan.gapHalf > 0 else { return nil }
-            let centre = vertical ? split.y : split.x
-            return (centre - plan.gapHalf)...(centre + plan.gapHalf)
+            guard let pill = plan.pill else { return nil }
+            let centre = vertical ? pill.center.y : pill.center.x
+            let half = vertical ? pill.rect.height / 2 : pill.rect.width / 2
+            return (centre - half)...(centre + half)
         }()
         for (index, item) in check.items.enumerated() {
             let spanMid = (item.spanStart + item.spanEnd) / 2
@@ -198,15 +195,65 @@ public enum MeasureRasterizer {
     // MARK: - Where the readout lands (UX-PATTERNS D14)
 
     /// Everything drawing needs to know about the readout: where the pill
-    /// centres, whether the measurement's own line still splits around it, and
-    /// the leader that keeps a relocated pill attached to its subject.
+    /// centres, the outline the measurement's own line has to stop on while the
+    /// pill still rides it, and the leader that keeps a relocated pill attached
+    /// to its subject.
     private struct LabelPlan {
         var center: CGPoint
         var size: CGSize
-        /// The point on the line the split is centred on; nil = draw it whole.
-        var splitCenter: CGPoint?
-        var gapHalf: CGFloat
+        /// The pill's outline while it still rides the line; nil = the line is
+        /// drawn whole, because the readout has moved off it.
+        var pill: Pill?
         var leader: (from: CGPoint, to: CGPoint)?
+    }
+
+    /// The pill as a shape to run into: the capsule `PillRasterizer` draws, so
+    /// a line meeting it lands on the actual curve rather than on a bounding
+    /// box corner that is not there.
+    private struct Pill {
+        var rect: CGRect
+        var radius: CGFloat
+
+        var center: CGPoint { CGPoint(x: rect.midX, y: rect.midY) }
+
+        /// True while `p` is within the outline.
+        ///
+        /// A capsule is every point no further than `radius` from the rect
+        /// shrunk by `radius`, which is one test for the flat sides and the
+        /// round caps alike.
+        func contains(_ p: CGPoint) -> Bool {
+            let r = clampedRadius
+            let core = rect.insetBy(dx: r, dy: r)
+            let dx = max(core.minX - p.x, 0, p.x - core.maxX)
+            let dy = max(core.minY - p.y, 0, p.y - core.maxY)
+            return dx * dx + dy * dy <= r * r
+        }
+
+        private var clampedRadius: CGFloat {
+            max(0, min(radius, rect.width / 2, rect.height / 2))
+        }
+
+        /// Where the straight run `from → toward` crosses the outline, or nil
+        /// when there is no crossing to find — `from` is already inside, which
+        /// is the caller's signal that the pill has swallowed it.
+        ///
+        /// The shape is convex and `toward` is inside it, so there is exactly
+        /// one crossing and halving the run converges straight onto it. Thirty
+        /// odd containment tests per line is nothing beside the thousands of
+        /// pixels the same raster is about to paint, and it keeps the caps and
+        /// the sides on one code path.
+        func entry(from: CGPoint, toward: CGPoint) -> CGPoint? {
+            guard !contains(from), contains(toward) else { return nil }
+            func point(_ t: CGFloat) -> CGPoint {
+                CGPoint(x: from.x + (toward.x - from.x) * t, y: from.y + (toward.y - from.y) * t)
+            }
+            var outside: CGFloat = 0, inside: CGFloat = 1
+            for _ in 0..<32 {
+                let mid = (outside + inside) / 2
+                if contains(point(mid)) { inside = mid } else { outside = mid }
+            }
+            return point(inside)
+        }
     }
 
     /// A relocated readout has to keep reading as part of its measurement. Up
@@ -218,47 +265,56 @@ public enum MeasureRasterizer {
                                   text: String,
                                   attachments: [(CGPoint, CGPoint)]) -> LabelPlan {
         guard measure.showLabel else {
-            return LabelPlan(center: g.labelAnchor, size: .zero, splitCenter: nil,
-                             gapHalf: 0, leader: nil)
+            return LabelPlan(center: g.labelAnchor, size: .zero, pill: nil, leader: nil)
         }
         let size = chipFootprint(for: text, fontSize: measure.labelPointSize,
                                  padding: measure.labelPadding)
         let center = measure.labelPosition(chipSize: size)
-        let rect = CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
-                          width: size.width, height: size.height)
+        let outline = Pill(rect: CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
+                                        width: size.width, height: size.height),
+                           radius: PillRasterizer.cornerRadius(for: size))
 
-        // The split exists so a translucent pill never reveals a stroke behind
-        // it — only meaningful while the pill is still on the line.
-        var splitCenter: CGPoint?
-        var gapHalf: CGFloat = 0
-        if measure.labelRidesTheLine(chipSize: size) {
-            let offset = measure.labelOffset(chipSize: size)
-            splitCenter = CGPoint(x: g.labelAnchor.x + offset.x, y: g.labelAnchor.y + offset.y)
-            gapHalf = min(measure.chipAxisHalfExtent(chipSize: size) + MeasureContent.chipLineGap,
-                          measure.rawDistance / 2)
-        }
+        // The measurement's own line stops on the outline only while the pill
+        // is still riding it; once the readout has moved, the line is whole.
+        let rides = measure.labelRidesTheLine(chipSize: size)
 
         // Attach: from the closest point of the measurement's own strokes to
-        // where that line enters the pill.
+        // where that line meets the pill.
         var leader: (from: CGPoint, to: CGPoint)?
-        if splitCenter == nil, let anchor = nearestPoint(on: attachments, to: center),
-           !rect.contains(anchor), let entry = entryPoint(from: anchor, to: center, rect: rect),
+        if !rides, let anchor = nearestPoint(on: attachments, to: center),
+           let entry = outline.entry(from: anchor, toward: center),
            hypot(entry.x - anchor.x, entry.y - anchor.y) > adjacencyReach {
             leader = (anchor, entry)
         }
-        return LabelPlan(center: center, size: size, splitCenter: splitCenter,
-                         gapHalf: gapHalf, leader: leader)
+        return LabelPlan(center: center, size: size, pill: rides ? outline : nil, leader: leader)
     }
 
-    /// The point `distance` away from `origin` in the direction of `target`,
-    /// never overshooting `target` itself.
-    private static func along(from origin: CGPoint, toward target: CGPoint,
-                              distance: CGFloat) -> CGPoint {
-        let dx = target.x - origin.x, dy = target.y - origin.y
-        let len = hypot(dx, dy)
-        guard len > 0 else { return origin }
-        let t = min(distance / len, 1)
-        return CGPoint(x: origin.x + dx * t, y: origin.y + dy * t)
+    /// One side of the caliper, drawn as far as the readout and no further.
+    ///
+    /// The head bar runs in from `head` toward the chip and ends ON the pill's
+    /// outline, so its round cap tucks under the pill's own border — same ink,
+    /// same width — and the two read as one line with nothing showing through
+    /// the fill. There used to be five points of daylight there instead, which
+    /// is what made the number look like it was floating.
+    ///
+    /// When the chip is wider than the span it describes there is no head bar
+    /// left to arrive on: the pill has swallowed the corner, so the LEG ends on
+    /// the outline instead and there is no corner to round. Wider still and it
+    /// swallows the foot too, and this side draws nothing at all — a stroke
+    /// there could only ever be seen through the pill.
+    private static func drawSide(foot: CGPoint, head: CGPoint, mid: CGPoint,
+                                 plan: LabelPlan, in context: CGContext) {
+        guard let pill = plan.pill else {
+            drawLeg(foot: foot, head: head, toward: mid, in: context)
+            return
+        }
+        if let armEnd = pill.entry(from: head, toward: pill.center) {
+            drawLeg(foot: foot, head: head, toward: armEnd, in: context)
+        } else if let legEnd = pill.entry(from: foot, toward: head) {
+            context.move(to: foot)
+            context.addLine(to: legEnd)
+            context.strokePath()
+        }
     }
 
     /// Closest point on any of the measurement's own segments to `p`.
@@ -276,23 +332,6 @@ public enum MeasureRasterizer {
             if d < bestDistance { bestDistance = d; best = q }
         }
         return best
-    }
-
-    /// Where the segment `from → to` first crosses into `rect` (`to` is the
-    /// rect's centre, so there is always a crossing unless `from` is inside).
-    private static func entryPoint(from: CGPoint, to: CGPoint, rect: CGRect) -> CGPoint? {
-        let dx = to.x - from.x, dy = to.y - from.y
-        var enter: CGFloat = 0, exit: CGFloat = 1
-        func clip(_ origin: CGFloat, _ delta: CGFloat, _ lo: CGFloat, _ hi: CGFloat) -> Bool {
-            if abs(delta) < 1e-9 { return origin >= lo && origin <= hi }
-            let t1 = (lo - origin) / delta, t2 = (hi - origin) / delta
-            enter = max(enter, min(t1, t2))
-            exit = min(exit, max(t1, t2))
-            return enter <= exit
-        }
-        guard clip(from.x, dx, rect.minX, rect.maxX),
-              clip(from.y, dy, rect.minY, rect.maxY) else { return nil }
-        return CGPoint(x: from.x + dx * enter, y: from.y + dy * enter)
     }
 
     /// The leader: a plain solid line, never dashed, so it reads as "this label

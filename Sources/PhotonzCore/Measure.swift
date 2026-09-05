@@ -434,8 +434,16 @@ extension MeasureContent {
     public static let labelScaleRange: ClosedRange<CGFloat> = 0.5...5
     /// The label-size slider's range in effective PIXELS (what the inspector shows).
     public static let labelSizeRangePx: ClosedRange<CGFloat> = 8...64
-    /// Extra clearance between the head line's cut ends and the chip, so a
-    /// translucent pill never reveals a stroke behind it.
+    /// The standoff a readout keeps from the measurement when it has stepped
+    /// off the line — past an end, or pushed sideways — so the pill reads as
+    /// sitting beside the caliper rather than welded to it.
+    ///
+    /// It is NOT clearance for a chip that still rides the line. That one is
+    /// drawn ON the line and the line stops exactly on its outline
+    /// (`MeasureRasterizer`), which is what keeps a translucent pill from
+    /// revealing a stroke behind it while still looking joined: five points of
+    /// daylight there made the number look like it was floating between two
+    /// unrelated lines.
     public static let chipLineGap: CGFloat = 5
     /// Nominal rounded-corner radius at the two head↔leg joins (clamped to the
     /// caliper's size at draw time).

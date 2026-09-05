@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 6,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T16:55:56.968Z",
-  "updated": "2026-09-05T16:55:57.006Z",
+  "updated": "2026-09-05T23:15:00.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 with two screenshots, a 22px measurement showing no curve at all and a 34px one showing the curve with a gap. Both causes are in MeasureRasterizer.labelPlan around line 225. The short case: when the chip rides the line, splitCenter is set and the line is simply cut with gapHalf equal to chipAxisHalfExtent plus MeasureContent.chipLineGap, and the leader that draws the curve is skipped entirely by the guard if splitCenter == nil, so a riding chip can never be connected. The long case: the leader runs from the nearest point on the measurements own strokes to entryPoint on the chip rect, which should touch, so measure why it does not before changing it; suspects are the chip rect used for the entry not matching the pill actually drawn once its own stroke and chipRenderPadding are added, and the line cap ending short. The five point clearance is MeasureContent.chipLineGap, documented as existing so a translucent pill never reveals a stroke behind it; that reason is still valid, so the fix is to end the line exactly ON the pill outline rather than short of it, which satisfies both.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-09-05T16:55:57.006Z",
       "note": "seq 1240 -> 6"
+    },
+    {
+      "t": "2026-09-05T22:49:23.896Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T23:15:00.000Z",
+      "note": "Adversarial review BEFORE building. Reproduced both of the user's screenshots exactly with offscreen renders, so the causes are known rather than guessed. There are three regimes, not two, and the task notes had one of them wrong: the leader line is not involved at all. Writing half = chipAxisHalfExtent and d = rawDistance/2, (1) d > half + 5: the head bar arm is drawn with the corner curve but ends 5pt short, the user's 'curve, but never touches'; (2) half < d <= half + 5: gapHalf is clamped to d so the arm has ZERO length, the corner curve is skipped and two bare lines end either side of the pill with a space, the user's 'no curve' shot; (3) d <= half, the chip is wider than the span: the legs run on under the pill and show through its fill. Judgment: the 5pt clearance's stated reason (a translucent pill must never reveal a stroke) is still valid, but ending ON the outline satisfies it too, because the pill's border is stroked in the same ink at the same width centred on that outline, so the line's round cap tucks under it. Shortest version that fixes all three: one rule, the caliper's ink stops on the pill's outline, wherever it arrives from."
+    },
+    {
+      "t": "2026-09-05T23:15:00.000Z",
+      "note": "Built. Sources/PhotonzRender/MeasureRasterizer.swift: LabelPlan now carries a Pill (rect + radius + a capsule entry test) instead of splitCenter/gapHalf, and drawSide replaces the old gapEdge maths: the head bar ends on the outline; when the pill has swallowed the head there is no bar left, so the LEG ends on the outline and there is no corner to round; when it has swallowed the foot too, that side draws nothing, since a stroke there could only be seen through the pill. The alignment guide's dashes and the relocated readout's leader run through the same entry, so the leader now stops on the capsule rather than on a bounding-box corner that is not there. PillRasterizer gained cornerRadius(for:), so the curve a line stops on is the curve the pill is drawn with. MeasureContent.chipLineGap keeps its value and its off-the-line jobs; its doc no longer claims to be head-line clearance."
+    },
+    {
+      "t": "2026-09-05T23:15:00.000Z",
+      "note": "Tests written first: Tests/PhotonzRenderTests/MeasureChipJoinTests.swift. Two properties, both regime-agnostic so they hold for every span rather than for hand-picked numbers. (a) the caliper's ink and the pill's border are ONE connected island of ink (8-connected flood from the foot must reach the far side of the pill's border); (b) no caliper ink anywhere inside the pill past what its own border can account for. Run over spans 22/40/70/100/200, both orientations, stroke widths 1/2/6, plus a 2x bake. Confirmed they fail on the old renderer (stashed it and re-ran: 9 issues across both families) and pass on the new. Full suite green, 3403 tests."
+    },
+    {
+      "t": "2026-09-05T23:15:00.000Z",
+      "note": "Adversarial review AFTER building, on the real app. Ran Scripts/playtest/caliper-chip-join-walk.json on the probe (Grants line said Screen Recording granted, so these are real screen captures). A 124 px width and a 624 px width caliper: head bar meets the pill exactly, curve intact, no seam. A 30 px height caliper, chip wider than the span: legs run in and stop on the pill, nothing under the fill. A 2 px gap: the pill swallows the whole caliper and only the pill draws, which is new and is called out in the audit. Left alone deliberately: a readout placed PAST the end of its line keeps its 5pt standoff (labelOffset), because that pill sits beside the caliper rather than on it and welding it on would read as a lollipop; the audit asks the user about it rather than deciding for them. Still rough: a measurement much narrower than its own number joins with two straight stubs and no curve, because there is no head bar left to curve into. That is honest, but it may argue for moving the readout off the line at that size, which is a placement decision and a separate task."
+    },
+    {
+      "t": "2026-09-05T23:15:00.000Z",
+      "note": "Acceptance verified, not assumed: (1) short measurement, line meets the chip: nothingShowsThroughTheChip + theCaliperReachesItsChip at spans 22/40, and the live 30 px height caliper. (2) long measurement, curve reaches the edge: same tests at 70/100/200 and the live 124 px and 624 px calipers. (3) nothing shows through a translucent chip: the tests render with chipOpacity 0 and a BLUE readout, so any red inside the pill is leaking line; zero found. (4) same on both sides and in both orientations: both tests run horizontal and vertical, both sides. (5) numbers, positions and values unchanged: only the ink's stopping point moved, no model or placement change; theReadoutKeepsItsValueAndItsPlace plus the whole existing measure suite still green. (6) pixel tests written before the change: yes, and shown failing on the old code. (7) audit: queue/audits/2026-09-05-caliper-chip-join.json with two real screen captures."
+    },
+    {
+      "t": "2026-09-05T23:15:00.000Z",
+      "note": "Release note: the caliper raster lives in PhotonzRender and is shared by Current and Next, so both get the fix. That is right rather than a slip: the user reported this from the app they playtest with, the join is wrong in both, and PhotonzCore/PhotonzRender are pure modules with no access to the release flags. Nothing under Sources/Photonz/Releases changed, so there is nothing to port."
     }
-  ]
+  ],
+  "started": "2026-09-05T22:49:23.895Z"
 }
