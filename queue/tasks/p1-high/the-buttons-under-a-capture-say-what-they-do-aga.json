@@ -1,0 +1,34 @@
+{
+  "id": "the-buttons-under-a-capture-say-what-they-do-aga",
+  "title": "The buttons under a capture say what they do again",
+  "goal": "Hovering the copy, edit, reveal and delete buttons under a capture in the history overlay shows nothing, so the only way to know what a glyph does is to press it. These had labels on hover before. Bring them back, and make sure the rest of the overlay has them too.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T16:53:01.962Z",
+  "updated": "2026-09-05T16:53:01.997Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05 with a screenshot of the history overlay: these buttons do not have tooltips, I thought we had them at one point. The machinery is all present, which is why this is a bug and not a feature: HistoryOverlay.iconButton (line 323) attaches historyTooltip for Copy, Show in Finder and Delete; HistoryTooltipModifier (line 334) reads the button frame through a preference in the overlay coordinate space and calls AppCoordinator.showCaptureTooltip on hover; that method (AppCoordinator.swift line 430) converts the frame to screen coordinates and shows a floating NSPanel through TooltipController. Suspects to check rather than guess: the preference may never deliver a frame so rect stays zero and the panel is positioned off screen; historyOverlay.panelFrame may be nil at hover time so the guard returns silently; the flip from the overlay top down coordinates to screen bottom up at line 433 may be wrong now the overlay layout has changed; or the panel may be ordered behind the overlay window. Note the tool bar took a different route when tooltips landed there, so check whether one shared way to show a tooltip is now warranted rather than two. The edit button in the screenshot is not one of the three that call iconButton, so also confirm every button in that row goes through the same helper.",
+  "acceptance": [
+    "Reproduce the failure first and record in the log what actually happens: whether the hover is never seen, the position is computed wrong so the label appears off screen, or the label is drawn behind the overlay",
+    "Hovering any button under a capture shows its label within the usual delay: copy, edit, reveal and delete",
+    "The label appears just below the button it belongs to, fully on screen, including for the leftmost and rightmost buttons and for a capture at the edge of the row",
+    "The filter and clear all controls at the top of the overlay keep their labels",
+    "A short walk or test guards it, so the labels cannot disappear again without something failing",
+    "Audit written under queue/audits/ with a picture of a label showing, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T16:53:01.962Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T16:53:01.997Z",
+      "note": "seq 180 -> 5"
+    }
+  ]
+}
