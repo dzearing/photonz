@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 7,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T16:56:53.127Z",
-  "updated": "2026-09-05T23:12:33.860Z",
+  "updated": "2026-09-05T23:24:00.656Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 with a screenshot of a nearly empty caption drawn as a lens. Cause found by reading: PillRasterizer line 54 takes the corner radius as chipSize.height / 2 unconditionally and builds a rounded rect with it. When the width is less than the height the two rounded ends overlap and the path degenerates into two arcs meeting at points, which is exactly the shape in the screenshot. Two changes, both needed: clamp the radius to half the SMALLER side so the path can never degenerate, and give the pill a minimum width of its height times about 1.2 so a short label still reads as a pill rather than a circle. The size comes from AnnotationContent.estimatedCaptionSize (Layer.swift line 262), which is a generous estimate used for frame reservation, while the rasterizer measures the real text and draws a smaller pill from the same attachment; apply the minimum in BOTH so the reserved box still contains what is drawn. Note the related task an-arrow-can-wear-a-different-head-and-its-pill makes the corner radius adjustable; the clamp has to hold for every radius that task allows, so whichever lands second should keep the other rule.",
@@ -61,7 +61,12 @@
     {
       "t": "2026-09-05T23:23:38.893794Z",
       "note": "Two follow-ups filed instead of scope creep: a-one-or-two-digit-measurement-stays-a-pill-inst (a caliper reading 4 is 32x42, the same defect on the measure chip, but widening it moves geometry that the chip-join and callout-clearance suites assert against) and words-sit-in-the-middle-of-their-pill-not-two-po (text sits 2.5px left of centre in every pill, pre-existing, measured identical on widened and natural pills)."
+    },
+    {
+      "t": "2026-09-05T23:24:00.655Z",
+      "note": "Caption pills now carry a minimum width (AnnotationContent.captionMinPillWidth, a fifth wider than the pill is tall), applied in both captionPillSize and estimatedCaptionSize so the reserved frame still contains what is drawn. Long captions unchanged. 11 new tests written first (6 pixel tests in CaptionPillShapeTests over empty/one-character/long at 10/20/48pt, including one pinning the corner-radius clamp so no point can form; 5 model tests). Full suite green (3414). Verified on the probe build with Scripts/playtest/short-caption-pill-walk.json and real window captures. Audit: queue/audits/2026-09-05-caption-pill-shape.json. Two follow-ups filed: the same defect on measure chips, and text sitting 2.5px left of centre in every pill. Pushed as 58b9c89."
     }
   ],
-  "started": "2026-09-05T23:12:33.859Z"
+  "started": "2026-09-05T23:12:33.859Z",
+  "completed": "2026-09-05T23:24:00.656Z"
 }
