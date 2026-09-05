@@ -1,0 +1,27 @@
+{
+  "id": "the-mixed-look-walk-reaches-the-alignment-button",
+  "title": "The mixed look walk reaches the alignment buttons it presses",
+  "goal": "A scripted playtest that checks a mixed selection can be given one look stops halfway through, because it presses an alignment button that is scrolled out of sight. Fixing it means the loop can trust that walk again as a regression check for layout work.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 1230,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T16:43:44.710Z",
+  "updated": "2026-09-05T16:43:44.711Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Fails at step 35: press \"align center\" -> the control is not in the window; scroll to it with a scrollPanel step first. Confirmed pre-existing on 2026-09-05 by running it against the pre-split EditorState.swift, so it is not fallout from the extension split. Likely just needs a scrollPanel step before the press, but check first whether the panel grew and pushed the row off.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json exits 0",
+    "The walk still checks the same thing it was written to check: a mixed selection taking one look",
+    "No app code changes are needed, or if they are, the walk failure is shown to be a real app bug and that bug is fixed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T16:43:44.711Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:16.029Z",
-  "updated": "2026-09-05T14:05:05.274Z",
+  "updated": "2026-09-05T16:44:05.072692Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/EditorState.swift is 6810 lines and 341 KB, up about 90 KB in one day; CanvasView.swift is 4417 lines. The 2026-09-03 manager pass said to file the extraction once a third feature landed in the same file, and several have. This de-risks a-copy-can-be-given-its-own-color and a-row-can-push-its-contents-to-its-two-ends, which both add intents there. Suggested seams: the group layout intents, the component and instance intents, and the color and style intents. LayersPanel.swift at 3216 lines is not in scope.",
@@ -42,6 +42,47 @@
     {
       "t": "2026-09-05T14:05:05.273Z",
       "note": "seq 20 -> 30"
+    },
+    {
+      "t": "2026-09-05T16:21:11.841Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T16:44:05.072692Z",
+      "note": "Adversarial review before building: the risk in a pure move is silent behaviour change, not compile failure. Three ways this could have gone wrong and what was done about each. (1) An extension cannot hold an instance stored property, so a naive move breaks the build or, worse, tempts you to convert one into a computed property and change behaviour. Every stored property was left inside the class instead, gathered under one new MARK. (2) @Observable rewrites stored properties declared in the class body; none moved, so observation is untouched. (3) private means this file in Swift, so a move silently forces access widening. That was done last, driven only by compiler errors, and re-checked: all 79 widened declarations were restored to private and the build re-run, and the compiler asked for exactly the same 79 back, so nothing was widened that did not need to be."
+    },
+    {
+      "t": "2026-09-05T16:44:05.072692Z",
+      "note": "Shortest version considered: moving only the layout and component intents (about 1100 lines) would have left the file at 5800 and failed the under-3000 item, and the next three tasks would still be editing a 5800 line file. The full split was the right size."
+    },
+    {
+      "t": "2026-09-05T16:44:05.072692Z",
+      "note": "Done: EditorState.swift 6965 -> 1839 lines. 14 new files in Sources/Photonz: +Annotations, +Clipboard, +ColorStyles, +Components, +Crop, +Frames, +LayerDrag, +LayerOps, +LayersPanel, +Layout, +Measure, +MeasurePanel, +Regions, +Text (126 to 683 lines each). The main file keeps the state, opening/saving, viewport, tools, layer selection and move, undo/redo and rendering."
+    },
+    {
+      "t": "2026-09-05T16:44:05.072692Z",
+      "note": "Layout intents (align, distribute, group, ungroup, auto-layout stacks, and how pieces sit when a container resizes) are in EditorState+Layout.swift. Component intents (make an original, place copies, knobs and overrides, editing a piece inside a copy) are in EditorState+Components.swift. Those are the two the queued row/fill/clip tasks add to."
+    },
+    {
+      "t": "2026-09-05T16:44:05.072692Z",
+      "note": "Verification, not assumption. (a) Every non-blank line of the original file still appears, exactly once, across the 15 files; the only 79 differences are lines that lost a private or private(set) modifier, checked programmatically. (b) swift build clean, one pre-existing warning in WelcomeController.swift and no new ones. (c) Scripts/test.sh: 3229 tests in 279 suites pass, no test edited. (d) Seven playtest walks pass on a freshly built probe: redline, copy-own-color, styled-row, size-limits, text-height-readout, canvas-grid, handles-fit."
+    },
+    {
+      "t": "2026-09-05T16:44:05.072692Z",
+      "note": "Cost worth knowing: 79 declarations went from private (or private-set) to module-internal, because two extension files now share them. EditorState is still the only thing that mutates its own state; the compiler just cannot enforce it as narrowly. The class doc comment says so."
+    },
+    {
+      "t": "2026-09-05T16:44:05.072692Z",
+      "note": "Perf: PhotonzRender and the composite path were not touched at all, so re-render cost is unchanged by construction. The budget test measured 12MP/10 layers at median 5.6ms (min 5.2, max 5.8) against the 16ms target."
+    },
+    {
+      "t": "2026-09-05T16:44:05.072692Z",
+      "note": "Rough, filed as follow-ups: the-canvas-splits-its-drawing-and-its-gestures-i (CanvasView.swift is 4417 lines and is the next hot file; LayersPanel.swift at 3216 after it) and the-mixed-look-walk-reaches-the-alignment-button (mixed-one-look-walk.json fails at step 35, confirmed pre-existing by running it against the unsplit file)."
+    },
+    {
+      "t": "2026-09-05T16:44:05.072692Z",
+      "note": "No audit: nothing a person can see or try changed."
     }
-  ]
+  ],
+  "started": "2026-09-05T16:21:11.841Z"
 }

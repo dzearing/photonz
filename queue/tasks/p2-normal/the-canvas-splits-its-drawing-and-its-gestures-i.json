@@ -1,0 +1,28 @@
+{
+  "id": "the-canvas-splits-its-drawing-and-its-gestures-i",
+  "title": "The canvas splits its drawing and its gestures into their own files",
+  "goal": "Nothing a person sees changes. The other file every canvas change lands in is broken into named pieces, the same way the editor state just was, so the next auto layout work is not rewriting one 4400 line file. It de-risks the queued tasks that add snapping, guides and drag behaviour to the canvas.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1230,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T16:43:37.351Z",
+  "updated": "2026-09-05T16:43:37.352Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/CanvasView.swift is 4417 lines / 237 KB. Same recipe as the 2026-09-05 EditorState split: pick seams at MARK boundaries, move whole members verbatim into extension files, leave stored properties behind in the main type (an extension cannot hold them), then let the compiler name every private that two files now share and widen only those. Verify by checking every original non-blank line still appears exactly once across the new files. Sources/Photonz/LayersPanel.swift (3216 lines) is the next one after this.",
+  "acceptance": [
+    "CanvasView.swift is under 2000 lines, with the drawing, the hit testing and the drag gestures each moved into their own file in Sources/Photonz alongside it",
+    "No logic changes: the split is moves plus the extensions that hold them together, and nothing moves into PhotonzCore or PhotonzRender",
+    "Scripts/test.sh passes with no test edited, and at least three playtest walks that drive the canvas still pass",
+    "Swift 6 strict concurrency stays clean and no @preconcurrency is added"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T16:43:37.352Z",
+      "note": "created (manual)"
+    }
+  ]
+}
