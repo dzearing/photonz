@@ -63,8 +63,11 @@ struct CaptionMetricsTests {
             return
         }
         let metric = CaptionMetrics.pillSize(for: caption, in: content)
-        // The tail sits at the layer's right end; the pill starts a gap past it.
-        let tailX = content.start.x + 2
+        // The tail sits at the layer's right end and the pill's near edge lands
+        // ON it, so the scan starts half a border to the left of the tail —
+        // where the pill's own straddling border begins — and everything
+        // further left is the shaft.
+        let tailX = content.start.x - content.captionBorderWidth / 2
         guard let box = drawnPillBox(content, image: image, clearOfX: tailX) else {
             Issue.record("expected pill ink past the arrow's tail")
             return

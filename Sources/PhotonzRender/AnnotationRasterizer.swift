@@ -127,6 +127,49 @@ public enum AnnotationRasterizer {
         return context.makeImage()
     }
 
+    /// JUST the caption pill, on its own transparent bitmap, for chrome that
+    /// has to show a live label the composite cannot: the vector preview held
+    /// over an endpoint drag draws the arrow but has no way to draw type, so
+    /// the pill it shows is this bitmap, moved. Baked once at the start of a
+    /// drag — the words and their size do not change while an endpoint moves,
+    /// only where the pill lands.
+    ///
+    /// Returns the image and the bitmap's size in DOCUMENT POINTS. The pill is
+    /// centred in it with `captionShadowPadding` of room all round, so the drop
+    /// shadow is inside the picture rather than clipped at its edge.
+    public static func captionPill(_ annotation: AnnotationContent,
+                                   scale: CGFloat = 1) -> (image: CGImage, size: CGSize)? {
+        guard annotation.hasCaption, scale > 0, scale.isFinite else { return nil }
+        let text = CaptionMetrics.committedText(annotation.caption ?? "")
+        guard !text.isEmpty else { return nil }
+        let chip = CaptionMetrics.pillSize(for: text, in: annotation)
+        let slack = AnnotationContent.captionShadowPadding
+        let size = CGSize(width: chip.width + 2 * slack, height: chip.height + 2 * slack)
+        let width = Int((size.width * scale).rounded())
+        let height = Int((size.height * scale).rounded())
+        guard width >= 1, height >= 1,
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            return nil
+        }
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: scale, y: -scale)
+        let rgba = RGBA(hex: annotation.colorHex) ?? RGBA(r: 1, g: 0, b: 0)
+        let border = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        let tone = annotation.captionChipColor
+        let fill = CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
+                           alpha: AnnotationContent.captionChipOpacity)
+        PillRasterizer.draw(text, at: CGPoint(x: size.width / 2, y: size.height / 2),
+                            chipSize: chip, fontSize: annotation.captionFontSize,
+                            borderWidth: annotation.captionBorderWidth,
+                            fill: fill, border: border,
+                            textColorHex: AnnotationContent.captionTextColorHex,
+                            shadow: PillRasterizer.Shadow(), in: context)
+        return context.makeImage().map { ($0, size) }
+    }
+
     /// The caption pill at the arrow's tail: the measure chip's legibility
     /// treatment (dark tone of the arrow's ink, white text, bordered capsule)
     /// plus a soft drop shadow so the label reads over any screenshot. Baked

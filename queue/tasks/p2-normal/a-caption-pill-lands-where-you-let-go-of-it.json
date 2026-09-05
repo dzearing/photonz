@@ -1,0 +1,27 @@
+{
+  "id": "a-caption-pill-lands-where-you-let-go-of-it",
+  "title": "A caption pill lands where you let go of it",
+  "goal": "Drag an arrow's label pill somewhere and let go: a short label lands about a centimetre from where you dropped it, because the app works out the drop using a guess at how wide the pill is rather than measuring it. Short labels are the ones people use most, so this is the case it gets most wrong.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1210,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T15:09:22.798Z",
+  "updated": "2026-09-05T15:09:22.798Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-05 while fixing the tail-meets-pill geometry. AnnotationBuilder.placingCaption converts the dropped CENTRE into the stored attachment with CaptionPlanner.attachment(forPillCenter:of:size:) passing a.estimatedCaptionSize, but the rasterizer hangs the MEASURED pill (CaptionMetrics.pillSize) off that attachment. For \"ok\" the estimate is 63pt wide and the measurement 44, so the pill lands (63-44)/2 = 9.5pt back toward the tail. The same guess drives CaptionPlanner.keepingOnCanvas and plan(). The fix is to let the app pass the measured size in, since only PhotonzRender can measure type: give placingCaption and planningCaption an optional pill size and thread CaptionMetrics.pillSize from EditorState (call sites around EditorState.swift 1241, 1281, 1308, 1325, 1350, 6292, 6616, 6667). Layer.drawnBounds already takes the measured pill this way.",
+  "acceptance": [
+    "Dropping a pill anywhere puts its centre within a point of where you let go, for a two-letter label and a long one",
+    "The pill still holds that spot when the arrow is later moved or its ends dragged",
+    "A scripted walk drops a short label at a named point and the log shows the pill centred there"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T15:09:22.798Z",
+      "note": "created (manual)"
+    }
+  ]
+}

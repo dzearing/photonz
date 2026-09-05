@@ -1,0 +1,32 @@
+{
+  "feature": "A captioned arrow that holds together",
+  "epic": "epic-uehjr1",
+  "summary": "An arrow's label pill now hangs straight off the tail, touching it in the middle of its near edge, and it stays on screen while you drag either end. The blue box round a selected arrow hugs the arrow and its pill instead of a padded rectangle several times their size.",
+  "setup": "Photonz Dev, Experiments window, release Next. Arrow captions are on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press A and drag a short arrow, then type ok and press Return.", "shot": "2026-09-05-arrow-caption-selected-sc.png" },
+    { "do": "Look at the blue selection box: it should stop at the pill on one side and the arrowhead on the other." },
+    { "do": "Drag the round handle at the tail across the picture and watch the pill mid drag, before you let go.", "shot": "2026-09-05-arrow-caption-mid-drag-sc.png" },
+    { "do": "Let go, and check that nothing jumped." },
+    { "do": "Draw four short-labelled arrows pointing four different ways.", "shot": "2026-09-05-arrow-caption-four-angles-sc.png" },
+    { "do": "Draw one with a long label to see the pill run away from the tail rather than around it.", "shot": "2026-09-05-arrow-caption-long-label-sc.png" },
+    { "do": "Draw an arrow starting about 40 pixels in from the left edge and give it a long label.", "shot": "2026-09-05-arrow-caption-left-margin-sc.png" },
+    { "do": "Point an arrow at a hard edge and zoom in to check the tip.", "shot": "2026-09-05-arrow-tip-edge-4x.png" }
+  ],
+  "evaluate": [
+    "Does the arrow read as one object with its label now, rather than a label parked near an arrow?",
+    "Is the selection box tight enough that a small captioned arrow no longer looks like it owns half the screen?",
+    "Watching the pill move with the tail mid drag: does it help, or is it busy?",
+    "When there is no room beside the tail the pill takes the near end of the shaft and the arrow runs out of its far edge. Does that read as a labelled arrow, or as a pill covering the arrow?",
+    "The pill now sits ON the tail with no breathing space at all. Too tight, or right?",
+    "You said the tail stops a few pixels short of what it points at. Measured against a hard edge the tip lands exactly on it (see the two tip pictures). Does the picture match what you saw, or is your case different?"
+  ],
+  "rough": [
+    "The 'stops a few pixels short' complaint did not reproduce. The tip lands exactly on the target at every zoom, every pixel scale, every stroke width and every head size; the only thing between ink and target is the one antialiased pixel every shape has. Two things could still explain what you saw and both are worth a look: the old selection box sat 16 points past the tip, which is fixed here, and at 100% on a Retina capture one point of pointer travel is two image pixels, so aiming at an edge by eye lands a couple of pixels off. A task is filed for the real answer to the second one: the tip should snap to the edge it is pointing at, the way a caliper's foot already does.",
+    "The pill can now sit on the near end of the shaft when the tail is too close to an edge for the pill to hang beside it. It reads as a labelled arrow (see the left-margin picture) but it does cover the first stretch of the line. The alternative was the old behaviour, which slid the pill away and left it floating.",
+    "A pill you drag by hand still lands up to about 12 points from where you let go, because the drop is converted using a guess at the pill's width rather than its measured width. Pre-existing, filed as a follow-up.",
+    "The planner still picks the pill's side against that same generous guess (423 points reserved for a pill that measures 261), so it moves the pill off its first choice more often than it needs to. Filed as a follow-up.",
+    "The two tip pictures are offscreen renders of the document at 1x and 4x, not window captures: zooming the window in a scripted walk zooms toward the centre and the tip scrolled out of frame. Every other picture here is a real screen capture.",
+    "Considered and cut: drawing the selection as two shapes, one round the arrow and one round the pill. One tight box keeps the chrome the same as every other object."
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "out": "/tmp/photonz-playtest/arrow-tip-edge",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [1000, 190], "to": [1260, 190] },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "tip-on-edge",
+      "note": "arrow tip placed exactly on the toggle's left edge, document x = 1260" },
+    { "do": "render", "name": "tip-1x", "scale": 1 },
+    { "do": "render", "name": "tip-4x", "scale": 4 },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "tip-zoomed", "note": "same tip, zoomed in on screen" },
+    { "do": "snapshot", "name": "tip-zoomed" }
+  ]
+}

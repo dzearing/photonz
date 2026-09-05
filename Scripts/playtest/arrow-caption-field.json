@@ -1,0 +1,31 @@
+{
+  "out": "/tmp/photonz-playtest/arrow-caption-field",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [900, 560], "to": [1180, 660] },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "type", "text": "Padding is 12" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-typing", "note": "field open, bubble should sit on the tail" },
+    { "do": "snapshot", "name": "1-typing" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-committed", "note": "nothing should have moved on Return" },
+    { "do": "snapshot", "name": "2-committed" },
+
+    { "do": "key", "key": "a" },
+    { "do": "drag", "from": [40, 400], "to": [900, 400] },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "type", "text": "No room to the left of this one" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-left-margin",
+      "note": "tail 40pt from the left edge: the pill has to take the near end of the shaft" },
+    { "do": "render", "name": "3-left-margin" },
+    { "do": "snapshot", "name": "3-left-margin" }
+  ]
+}

@@ -52,18 +52,17 @@ struct AnnotationCaptionModelTests {
 @Suite("Annotation caption geometry")
 struct AnnotationCaptionGeometryTests {
 
-    @Test func anchorSitsBeyondTheTailOppositeTheHead() {
+    @Test func anchorSitsBehindTheTailOppositeTheHead() {
         // Arrow pointing right: tail at start, head at end. The pill hangs off
-        // the tail, past the caption gap, level with the shaft.
+        // the tail, level with the shaft, and its near edge lands ON the tail.
         var content = arrowContent(caption: "Here")
         content.start = CGPoint(x: 100, y: 100)
         content.end = CGPoint(x: 200, y: 100)
         let anchor = content.captionAnchor()
         #expect(anchor.y == 100)
-        #expect(anchor.x < 100 - AnnotationContent.captionGap)
-        // The pill's near edge clears the tail by exactly the gap.
+        #expect(anchor.x < 100)
         let size = content.estimatedCaptionSize
-        #expect(abs((anchor.x + size.width / 2) - (100 - AnnotationContent.captionGap)) < 0.5)
+        #expect(abs((anchor.x + size.width / 2) - 100) < 0.5)
     }
 
     @Test func anchorForVerticalArrowUsesChipHeight() {
@@ -75,7 +74,7 @@ struct AnnotationCaptionGeometryTests {
         let anchor = content.captionAnchor()
         let size = content.estimatedCaptionSize
         #expect(anchor.x == 50)
-        #expect(abs((anchor.y - size.height / 2) - (100 + AnnotationContent.captionGap)) < 0.5)
+        #expect(abs((anchor.y - size.height / 2) - 100) < 0.5)
     }
 
     @Test func degenerateArrowAnchorsAboveTheTail() {
@@ -211,9 +210,13 @@ struct AnnotationCaptionPlacementTests {
         let planned = AnnotationBuilder.planningCaption(layer, canvas: canvas)
         let pill = pillRect(planned)
         #expect(CGRect(origin: .zero, size: canvas).contains(pill))
-        // Clear of the shaft (y = 496) and nowhere near the head at x = 880.
-        #expect(pill.minY > 496 + 2 || pill.maxY < 496 - 2)
+        // There is no room beside a tail 24pt from the edge for a pill that
+        // has to hang off it, so the pill takes the near end of the shaft and
+        // the arrow runs out of its far edge. What it may never do is reach
+        // the head at x = 880.
         #expect(pill.maxX < 800)
+        #expect(abs(pill.minX - 24) < 0.001)
+        #expect(abs(pill.midY - 496) < 0.001)
         // The frame still reserves room for wherever the pill went.
         #expect(planned.frame.contains(pill))
         // Endpoints did not move.
@@ -227,9 +230,12 @@ struct AnnotationCaptionPlacementTests {
         let planned = AnnotationBuilder.planningCaption(layer, canvas: canvas)
         let pill = pillRect(planned)
         #expect(CGRect(origin: .zero, size: canvas).contains(pill))
-        // Not sitting on the shaft (x = 136 between y 830 and 940).
-        let onShaft = pill.minX <= 136 && pill.maxX >= 136 && pill.maxY >= 830 && pill.minY <= 940
-        #expect(!onShaft)
+        // It may take the near end of the shaft (there is no room below the
+        // tail), but never the head it is pointing at.
+        let head = CGRect(x: 136 - 20, y: 830 - 20, width: 40, height: 40)
+        #expect(!pill.intersects(head))
+        // And it is still hanging off the tail.
+        #expect(abs(pill.maxY - 940) < 0.001)
     }
 
     @Test func topRightCornerArrowStaysInsideBothEdges() {
@@ -248,9 +254,12 @@ struct AnnotationCaptionPlacementTests {
     }
 
     @Test func endpointRebuildKeepsTheOffsetRelativeToTheTail() {
+        // A hand-placed spot is stored against the tail, so rebuilding the
+        // layer around new endpoints carries it along untouched.
         let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
-                                            from: CGPoint(x: 24, y: 496), to: CGPoint(x: 880, y: 496))
-        let planned = AnnotationBuilder.planningCaption(layer, canvas: canvas)
+                                            from: CGPoint(x: 300, y: 496), to: CGPoint(x: 880, y: 496))
+        let planned = AnnotationBuilder.placingCaption(layer, at: CGPoint(x: 500, y: 300),
+                                                       canvas: canvas)
         let offset = planned.annotation?.captionOffset
         #expect(offset != nil)
         let moved = AnnotationBuilder.updating(planned, start: CGPoint(x: 60, y: 300), end: CGPoint(x: 700, y: 300))
@@ -295,12 +304,13 @@ struct AnnotationCaptionPlacementTests {
         // Which side of the tail the pill sits on: the planner may slide the
         // pill along the edge as the tail keeps moving, but it must not hop
         // between sides from one key press to the next.
+        // Which side of the tail the pill hangs off: the direction it grows,
+        // which is exactly the side its near edge is attached on.
         func side(_ layer: Layer) -> String {
-            let tail = layer.annotationEndpoint(.start)!
-            let pill = pillRect(layer)
-            if pill.maxX < tail.x { return "left" }
-            if pill.minX > tail.x { return "right" }
-            return pill.midY < tail.y ? "above" : "below"
+            let d = layer.annotation!.captionGrowthDirection()
+            if d.width < 0 { return "left" }
+            if d.width > 0 { return "right" }
+            return d.height < 0 ? "above" : "below"
         }
         var sides: [String] = []
         for step in 1...59 {
@@ -311,10 +321,16 @@ struct AnnotationCaptionPlacementTests {
             sides.append(side(layer))
         }
         #expect(layer.annotationEndpoint(.start) == CGPoint(x: 300, y: 959))
-        #expect(layer.annotation?.captionOffset != nil)
-        // Starts below the tail (the default), moves beside it once, and stays.
-        let hops = zip(sides, sides.dropFirst()).filter { $0 != $1 }.count
-        #expect(hops == 1, "sides: \(sides)")
+        // The pill is still hanging off the tail, wherever it went.
+        #expect(abs(pillRect(layer).midX - 300) < 0.001 || abs(pillRect(layer).midY - 959) < 0.001)
+        // Starts below the tail (the default), then moves beside it, then
+        // above it once the last 22 points of picture stop holding a pill
+        // centred on the tail's row. What it must never do is come BACK to a
+        // side it already left, which is the flicker this guards.
+        let runs = sides.reduce(into: [String]()) { runs, side in
+            if runs.last != side { runs.append(side) }
+        }
+        #expect(runs.count == Set(sides).count, "sides: \(runs)")
         #expect(sides.last != "below")
     }
 
@@ -342,10 +358,11 @@ struct AnnotationCaptionPlacementTests {
             AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
                                     from: CGPoint(x: 24, y: 496), to: CGPoint(x: 880, y: 496)),
             canvas: canvas)
-        #expect(edge.annotation?.captionOffset != nil)
+        #expect(edge.annotation?.captionGrowth != nil)
         let planned = AnnotationBuilder.planningCaption(
             edge.resized(to: edge.frame.offsetBy(dx: 300, dy: 0)), canvas: canvas)
         #expect(planned.annotation?.captionOffset == nil)
+        #expect(planned.annotation?.captionGrowth == nil)
         #expect(planned.annotationEndpoint(.start) == CGPoint(x: 324, y: 496))
         #expect(CGRect(origin: .zero, size: canvas).contains(pillRect(planned)))
     }
@@ -644,8 +661,8 @@ struct AnnotationCaptionGrowthTests {
         let content = arrow("A", from: CGPoint(x: 600, y: 400), to: CGPoint(x: 900, y: 400))
         let short = pill(content, size: CGSize(width: 80, height: 34))
         let long = pill(content, size: CGSize(width: 320, height: 34))
-        #expect(abs(short.maxX - (600 - gap)) < 0.001)
-        #expect(abs(long.maxX - (600 - gap)) < 0.001)
+        #expect(abs(short.maxX - 600) < 0.001)
+        #expect(abs(long.maxX - 600) < 0.001)
         #expect(long.minX < short.minX) // it grew AWAY from the arrow
         #expect(short.midY == 400 && long.midY == 400)
     }
@@ -658,7 +675,8 @@ struct AnnotationCaptionGrowthTests {
         for head in heads {
             let content = arrow("A", from: tail, to: head)
             let attachment = content.captionAttachment()
-            #expect(abs(hypot(attachment.x - tail.x, attachment.y - tail.y) - gap) < 0.001)
+            // The pill hangs straight off the tail: no space between them.
+            #expect(abs(hypot(attachment.x - tail.x, attachment.y - tail.y)) < 0.001)
             let direction = content.captionGrowthDirection()
             // The pill's support plane on the arrow's side is the attachment,
             // whatever the pill measures.
@@ -689,8 +707,7 @@ struct AnnotationCaptionGrowthTests {
         // stays centred over the tail as it grows.
         let steep = arrow("A", from: CGPoint(x: 600, y: 400), to: CGPoint(x: 700, y: 100))
         #expect(steep.captionGrowthDirection() == CGSize(width: 0, height: 1))
-        #expect(abs(pill(steep, size: CGSize(width: 420, height: 44)).minY
-                    - (400 + gap)) < 0.001)
+        #expect(abs(pill(steep, size: CGSize(width: 420, height: 44)).minY - 400) < 0.001)
     }
 
     @Test func anchorMatchesThePillCenterForTheEstimatedSize() {
@@ -713,14 +730,12 @@ struct AnnotationCaptionGrowthTests {
         content.captionOffset = placement.attach
         content.captionGrowth = placement.growth
         #expect(bounds.contains(pill(content, size: content.estimatedCaptionSize)))
-        // Rightward, into the open half of the picture, hung from the tail's
-        // own column and clear of the shaft: growing the caption from here
-        // never has to slide it back.
+        // Rightward, into the open half of the picture, hung off the tail
+        // itself: growing the caption from here never has to slide it back.
         #expect(placement.growth == CGSize(width: 1, height: 0))
         let attachment = content.captionAttachment()
         #expect(abs(attachment.x - 24) < 0.5)
-        let row = gap + content.estimatedCaptionSize.height / 2
-        #expect(abs(abs(attachment.y - 400) - row) < 0.5)
+        #expect(abs(attachment.y - 400) < 0.5)
     }
 
     @Test func theDirectionPickedAtOpenHasRoomForARealSentence() {

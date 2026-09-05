@@ -1,0 +1,28 @@
+{
+  "id": "an-arrow-tip-lands-on-the-edge-it-is-pointing-at",
+  "title": "An arrow tip lands on the edge it is pointing at",
+  "goal": "When you point an arrow at something in a screenshot, the tip should land on that edge rather than a couple of pixels short of it. At the size a Retina capture opens at, one step of the mouse moves the tip two pixels, so hitting an edge by eye is luck. The arrow should magnetize to the edges the app has already found, exactly the way a measurement caliper does.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1200,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T15:09:22.762Z",
+  "updated": "2026-09-05T15:09:22.762Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Raised on 2026-09-05 while auditing the captioned-arrow fixes. The user reported the tail stopping a few pixels short of what it points at; measured, the tip lands exactly on the endpoint at every zoom, pixel scale, stroke width and head scale, so the geometry is right and the AIM is what is short. At 100% on a pixelScale 2 capture, viewport zoom is 0.5, so one pointer point is two image pixels. EdgeSnapping already exists and MeasureHandleDrag uses it (CanvasView around line 2020, axisGated + EdgeSnapping.snap with the edgeMap); annotation endpoint drags and the create drag apply no snapping at all. Reuse the same call, the same guide layer, and the same modifier gate.",
+  "acceptance": [
+    "Dragging an arrow so its tip nears a detected edge snaps the tip onto that edge, with the same yellow guide a caliper shows",
+    "The snap can be refused: holding a modifier, or moving further away, leaves the tip exactly where the pointer is",
+    "The same snap works on the tail end and when dragging either end of an existing arrow",
+    "A picture at 4x shows the tip landing on the edge with no gap, taken by eye rather than by typed coordinates"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T15:09:22.762Z",
+      "note": "created (manual)"
+    }
+  ]
+}

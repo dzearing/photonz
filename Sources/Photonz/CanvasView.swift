@@ -500,6 +500,19 @@ final class CanvasNSView: NSView {
     /// Arrowheads are filled but never stroked (matching the rasterizer), so
     /// they need their own shape layer under the stroked shaft.
     let annotationPreviewHeadLayer = CAShapeLayer()
+    /// A captioned arrow's pill, held over the same preview. It is a picture
+    /// rather than a shape because a pill is mostly type, and the vector
+    /// preview has no way to set type. Dragging an end used to hide the label
+    /// for the whole drag, so you could not see where it would land until you
+    /// let go (reported 2026-09-05).
+    private let captionPreviewLayer = CALayer()
+    /// What `captionPreviewLayer.contents` was baked from, so the pill is
+    /// rasterized once per drag instead of once per mouse move: the words and
+    /// their size do not change while an endpoint moves, only where they land.
+    private var captionPreviewKey: String?
+    /// The baked pill bitmap's size in document points (the pill plus room for
+    /// its shadow), so it can be scaled to the zoom it is shown at.
+    private var captionPreviewSize: CGSize?
     /// A just-created zoom callout flying from its source box to its placed
     /// frame: the magnified sprite, plus the source outline and leader lines
     /// fading in underneath it.
@@ -986,6 +999,10 @@ final class CanvasNSView: NSView {
         annotationPreviewLayer.fillColor = nil
         annotationPreviewHeadLayer.strokeColor = nil
         annotationPreviewLayer.addSublayer(annotationPreviewHeadLayer)
+        // Over the shaft, exactly as the rasterizer draws it: the pill covers
+        // the round cap at the tail, so the arrow runs into the label.
+        captionPreviewLayer.isHidden = true
+        annotationPreviewLayer.addSublayer(captionPreviewLayer)
         layer?.addSublayer(annotationPreviewLayer)
 
         calloutFlightLeaderLayer.fillColor = nil
@@ -3339,7 +3356,7 @@ final class CanvasNSView: NSView {
         for id in captured.sorted(by: { $0.uuidString < $1.uuidString }) {
             guard let layer = document.canvasLayer(id: id) else { continue }
             let shift = travelling.contains(id) ? delta : .zero
-            let corners = layer.transformedCorners.map {
+            let corners = inkCorners(of: layer).map {
                 viewport.viewPoint(fromDocument: CGPoint(x: $0.x + shift.x, y: $0.y + shift.y))
             }
             outlines.addLines(between: corners)
@@ -3347,6 +3364,34 @@ final class CanvasNSView: NSView {
         }
         multiSelectOutlineLayer.path = outlines
         multiSelectOutlineLayer.isHidden = outlines.isEmpty
+    }
+
+    /// The box a selection outline hugs: the ink the layer actually puts down.
+    ///
+    /// A line or an arrow rasterizes into a frame padded on all four sides for
+    /// its round cap, its arrowhead's wings and a caption pill's shadow, and
+    /// the caption's share of that padding is a deliberately generous guess at
+    /// the pill's width — 423 points reserved for a pill that measures 261. A
+    /// blue box round THAT made a small captioned arrow look like it owned half
+    /// the screen (reported 2026-09-05). The pill goes in at the width it
+    /// really measures, which only this side of the app can ask for.
+    private func inkBox(of layer: Layer) -> CGRect {
+        guard let a = layer.annotation, a.hasCaption else { return layer.drawnBounds() }
+        return layer.drawnBounds(
+            captionPillSize: CaptionMetrics.pillSize(for: a.caption ?? "", in: a))
+    }
+
+    /// `inkBox` as the polygon a rotated or skewed layer's outline draws, the
+    /// same way `Layer.transformedCorners` turns its frame: about the centre of
+    /// the STORED box, which is the point the renderer turns the layer about.
+    private func inkCorners(of layer: Layer) -> [CGPoint] {
+        let box = inkBox(of: layer)
+        let corners = [CGPoint(x: box.minX, y: box.minY), CGPoint(x: box.maxX, y: box.minY),
+                       CGPoint(x: box.maxX, y: box.maxY), CGPoint(x: box.minX, y: box.maxY)]
+        guard !layer.transform.isIdentity else { return corners }
+        let t = layer.transform.affineTransform(
+            around: CGPoint(x: layer.frame.midX, y: layer.frame.midY))
+        return corners.map { $0.applying(t) }
     }
 
     private func refreshLayerSelectionDisplay() {
@@ -3442,16 +3487,23 @@ final class CanvasNSView: NSView {
             viewport.viewPoint(fromDocument: docPoint.applying(docToHandle))
         }
 
-        // Universal blue selection box around the frame, for every object type.
+        // Universal blue selection box around what the layer DRAWS, for every
+        // object type.
         if resizing {
             layerOutlineLayer.isHidden = true
         } else {
+            var box = inkBox(of: selectedLayer)
+            // The frame above may be an in-flight move; carry the ink with it.
+            if frame.origin != selectedLayer.frame.origin {
+                box = box.offsetBy(dx: frame.minX - selectedLayer.frame.minX,
+                                   dy: frame.minY - selectedLayer.frame.minY)
+            }
             let outline = CGMutablePath()
             outline.addLines(between: [
-                chromePoint(CGPoint(x: frame.minX, y: frame.minY)),
-                chromePoint(CGPoint(x: frame.maxX, y: frame.minY)),
-                chromePoint(CGPoint(x: frame.maxX, y: frame.maxY)),
-                chromePoint(CGPoint(x: frame.minX, y: frame.maxY)),
+                chromePoint(CGPoint(x: box.minX, y: box.minY)),
+                chromePoint(CGPoint(x: box.maxX, y: box.minY)),
+                chromePoint(CGPoint(x: box.maxX, y: box.maxY)),
+                chromePoint(CGPoint(x: box.minX, y: box.maxY)),
             ])
             outline.closeSubpath()
             layerOutlineLayer.path = outline
@@ -3625,6 +3677,9 @@ final class CanvasNSView: NSView {
         annotationPreviewLayer.isHidden = true
         annotationPreviewLayer.path = nil
         annotationPreviewHeadLayer.path = nil
+        captionPreviewLayer.isHidden = true
+        captionPreviewLayer.contents = nil
+        captionPreviewKey = nil
     }
 
     /// What the zoom tool's drag box previews with: a box in the callout's
@@ -3785,8 +3840,59 @@ final class CanvasNSView: NSView {
         annotationPreviewLayer.compositingFilter = compositing
         annotationPreviewHeadLayer.path = headPath
         annotationPreviewHeadLayer.fillColor = color
+        displayCaptionPreview(content: content, docStart: docStart, docEnd: docEnd,
+                              viewport: viewport)
         annotationPreviewLayer.isHidden = false
         CATransaction.commit()
+    }
+
+    /// The caption pill inside the held preview, planned for the endpoints the
+    /// drag is at RIGHT NOW. It goes through the same planner the commit does,
+    /// so the pill you watch during the drag is the pill that lands and letting
+    /// go changes nothing you can see.
+    private func displayCaptionPreview(content: AnnotationContent,
+                                       docStart: CGPoint, docEnd: CGPoint,
+                                       viewport: Viewport) {
+        guard content.shape == .arrow, content.hasCaption,
+              Experiments.shared.arrowCaptionsEnabled else {
+            captionPreviewLayer.isHidden = true
+            return
+        }
+        let scale = max(1, viewport.zoom * (window?.backingScaleFactor ?? 2))
+        let key = "\(content.caption ?? "")|\(content.captionFontSize)|\(content.colorHex)"
+            + "|\(content.strokeWidth)|\(scale)"
+        if key != captionPreviewKey {
+            guard let baked = AnnotationRasterizer.captionPill(content, scale: scale) else {
+                captionPreviewLayer.isHidden = true
+                return
+            }
+            captionPreviewLayer.contents = baked.image
+            captionPreviewLayer.contentsScale = scale
+            captionPreviewKey = key
+            captionPreviewSize = baked.size
+        }
+        guard let bitmap = captionPreviewSize else {
+            captionPreviewLayer.isHidden = true
+            return
+        }
+        var probe = content
+        probe.start = docStart
+        probe.end = docEnd
+        let canvas = viewport.documentSize
+        if probe.captionPinned, let pinned = probe.captionOffset {
+            probe.captionOffset = CaptionPlanner.keepingOnCanvas(pinned, for: probe, canvas: canvas)
+        } else {
+            let placement = CaptionPlanner.plan(for: probe, canvas: canvas)
+            probe.captionOffset = placement.attach
+            probe.captionGrowth = placement.growth
+        }
+        let pill = CaptionMetrics.pillSize(for: probe.caption ?? "", in: probe)
+        let center = viewport.viewPoint(fromDocument: probe.captionPillCenter(forPillSize: pill))
+        let size = CGSize(width: bitmap.width * viewport.zoom,
+                          height: bitmap.height * viewport.zoom)
+        captionPreviewLayer.bounds = CGRect(origin: .zero, size: size)
+        captionPreviewLayer.position = center
+        captionPreviewLayer.isHidden = false
     }
 
     // MARK: Zoom-callout creation flight

@@ -103,6 +103,62 @@ extension Layer {
         annotationEndpoint(endpoint) ?? measureEndpoint(endpoint)
     }
 
+    /// The box the layer's INK actually fills, in document coordinates — what
+    /// selection chrome should hug.
+    ///
+    /// A line or an arrow is a thin band inside a mostly empty frame: the frame
+    /// is padded on all four sides so a round cap, an arrowhead's wings and a
+    /// caption pill's shadow have room to rasterize into, and the caption's
+    /// share of it is a deliberately generous guess at the pill's width. A blue
+    /// outline drawn round THAT says a small arrow owns half the screen, which
+    /// is what the user reported on 2026-09-05. This walks the shapes the
+    /// rasterizer actually draws instead.
+    ///
+    /// `captionPillSize` is the pill as MEASURED (only PhotonzRender can
+    /// measure type). Without one the caption's own generous estimate stands
+    /// in, which is the same box the frame reserved.
+    ///
+    /// Everything that is not an open stroke already fills its frame, so it
+    /// gets the frame it always had.
+    public func drawnBounds(captionPillSize: CGSize? = nil) -> CGRect {
+        guard let a = annotation, a.shape == .line || a.shape == .arrow else {
+            return withoutSlack(frame)
+        }
+        let start = CGPoint(x: frame.minX + a.start.x, y: frame.minY + a.start.y)
+        let end = CGPoint(x: frame.minX + a.end.x, y: frame.minY + a.end.y)
+        // The stroke runs tail to tip for a line, and tail to inside the head
+        // for an arrow — exactly what the rasterizer draws.
+        let strokeEnd = a.shape == .arrow
+            ? Geometry.arrowShaftEnd(start: start, end: end, strokeWidth: a.strokeWidth,
+                                     scale: a.arrowheadScale)
+            : end
+        // A round cap reaches half a stroke past each end and half a stroke
+        // either side of the line.
+        let cap = a.strokeWidth / 2
+        var minX = min(start.x, strokeEnd.x) - cap, maxX = max(start.x, strokeEnd.x) + cap
+        var minY = min(start.y, strokeEnd.y) - cap, maxY = max(start.y, strokeEnd.y) + cap
+        func include(_ p: CGPoint) {
+            minX = min(minX, p.x); maxX = max(maxX, p.x)
+            minY = min(minY, p.y); maxY = max(maxY, p.y)
+        }
+        if a.shape == .arrow {
+            for wing in Geometry.arrowhead(start: start, end: end, strokeWidth: a.strokeWidth,
+                                           scale: a.arrowheadScale) {
+                include(wing)
+            }
+        }
+        if a.hasCaption {
+            let size = captionPillSize ?? a.estimatedCaptionSize
+            var probe = a
+            probe.start = start
+            probe.end = end
+            let center = probe.captionPillCenter(forPillSize: size)
+            include(CGPoint(x: center.x - size.width / 2, y: center.y - size.height / 2))
+            include(CGPoint(x: center.x + size.width / 2, y: center.y + size.height / 2))
+        }
+        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+    }
+
     /// The layer with its frame set to `frame`. Annotation content remaps its
     /// endpoints so the drawn shape scales with the frame (a bare frame
     /// assignment would clip or distort it); zoom callouts re-derive their
@@ -361,11 +417,17 @@ public struct CaptionPlacement: Hashable, Sendable {
 /// pill has to keep off.
 public enum CaptionPlanner {
     /// Nil-everything when the default spot behind the tail fits the canvas;
-    /// otherwise the spot the pill hangs from and the way it grows. Spots, in
-    /// order: back along the shaft, then above the tail, below it, and beside
-    /// it, each running whichever way has the room. Sitting on the head costs
-    /// more than any lower-ranked spot, and sitting on the shaft more than the
-    /// rank gap, so the label never hides what the arrow is pointing at.
+    /// otherwise the way the pill grows off the tail. Spots, in order: back
+    /// along the shaft, then above the tail, below it, and beside it. Sitting
+    /// on the head costs more than any lower-ranked spot, and sitting on the
+    /// shaft more than the rank gap, so the label never hides what the arrow
+    /// is pointing at.
+    ///
+    /// **Every spot hangs the pill straight off the tail**, so whichever one
+    /// wins, the tail is the middle of the pill's near edge and the shaft runs
+    /// into it. The spots used to sit one gap away and, above or below the
+    /// tail, off to one side as well, which left the tail floating past a
+    /// corner of the pill with a space between them (reported 2026-09-05).
     ///
     /// `reserving` is the pill the spot has to hold: the caption's own estimate
     /// by default, or `captionRoomProbeSize` when a field is opening and the
@@ -383,22 +445,12 @@ public enum CaptionPlanner {
         let tail = content.start
         let head = content.end
         let gap = AnnotationContent.captionGap
-        let right = CGSize(width: 1, height: 0)
-        let left = CGSize(width: -1, height: 0)
-        // Where the pill hangs from and which way it runs. A caption is one
-        // line, so it only ever grows sideways: a spot above or below the tail
-        // therefore starts AT the tail and runs off to one side, rather than
-        // straddling it and spreading both ways into whatever is beside it.
-        let row = gap + size.height / 2
-        let spots: [(attach: CGPoint, growth: CGSize?)] = [
-            (CGPoint(x: tail.x + shaft.width * gap, y: tail.y + shaft.height * gap), nil),
-            (CGPoint(x: tail.x, y: tail.y - row), right),
-            (CGPoint(x: tail.x, y: tail.y - row), left),
-            (CGPoint(x: tail.x, y: tail.y + row), right),
-            (CGPoint(x: tail.x, y: tail.y + row), left),
-            (CGPoint(x: tail.x - gap, y: tail.y), left),
-            (CGPoint(x: tail.x + gap, y: tail.y), right),
-        ]
+        // Which way the pill runs from the tail. Nil is the shaft's own
+        // direction (the first choice), and the three squared directions it is
+        // not are the fallbacks, in reading order.
+        let others = [CGSize(width: 0, height: -1), CGSize(width: 0, height: 1),
+                      CGSize(width: -1, height: 0), CGSize(width: 1, height: 0)]
+        let spots: [CGSize?] = [nil] + others.filter { $0 != shaft }.map { Optional($0) }
         // What the arrow is POINTING AT is the subject: the pill may never sit
         // on it. Its own shaft is softer — a pill on the shaft still reads as
         // this arrow's, it just crowds the line — so it is priced like any
@@ -406,32 +458,51 @@ public enum CaptionPlanner {
         let headRadius = content.strokeWidth * 3 * content.arrowheadScale + gap
         let headZone = CGRect(x: head.x - headRadius, y: head.y - headRadius,
                               width: 2 * headRadius, height: 2 * headRadius)
-        let candidates = spots.enumerated().map { rank, spot -> LabelCandidate<CaptionPlacement> in
+        // The shaft leaves the tail from INSIDE the pill now, so a crossing is
+        // judged from a gap's travel down the shaft, against the pill shrunk by
+        // a hair: touching the near edge is the point, not a collision.
+        let run = hypot(head.x - tail.x, head.y - tail.y)
+        let clear = run > gap
+            ? CGPoint(x: tail.x + (head.x - tail.x) / run * gap,
+                      y: tail.y + (head.y - tail.y) / run * gap)
+            : head
+        let candidates = spots.enumerated().map { rank, growth -> LabelCandidate<CaptionPlacement> in
             var probe = free
-            probe.captionGrowth = spot.growth
-            probe.captionOffset = CGSize(width: spot.attach.x - tail.x,
-                                         height: spot.attach.y - tail.y)
+            probe.captionGrowth = growth
             let wanted = rect(of: probe, size: size)
-            let pill = slidOntoCanvas(wanted, bounds: bounds)
-            // A caption grows sideways, so horizontal room is what a direction
-            // is worth: every point the pill has to slide left or right to fit
-            // is a point it will have to slide again on the next keystroke.
             var cost = CGFloat(rank) * LabelPlacer.rankCost
-            cost += abs(pill.minX - wanted.minX) * LabelPlacer.nudgeCost
-            if LabelPlacer.segment(from: tail, to: head,
-                                   crosses: [pill.insetBy(dx: -gap / 2, dy: -gap / 2)]) {
+            // Off the picture is already a flat charge in LabelPlacer; this
+            // says WHICH of two bad directions is less bad, so the pill that
+            // barely overhangs wins over the one that is half off.
+            cost += overflow(of: wanted, in: bounds) * LabelPlacer.nudgeCost
+            if LabelPlacer.segment(from: clear, to: head,
+                                   crosses: [wanted.insetBy(dx: 0.5, dy: 0.5)]) {
                 cost += LabelPlacer.crossingCost
             }
-            let anchor = slid(probe.captionAttachment(), by: pill, from: wanted)
-            let placement = CaptionPlacement(
-                attach: CGSize(width: anchor.x - tail.x, height: anchor.y - tail.y),
-                growth: spot.growth)
-            return LabelCandidate(rect: pill, payload: placement, cost: cost)
+            return LabelCandidate(rect: wanted, payload: CaptionPlacement(growth: growth),
+                                  cost: cost)
         }
         let avoid = [LabelAvoidance(rects: [headZone], weight: .flat(LabelPlacer.subjectCost))]
         guard let best = LabelPlacer.best(among: candidates, avoiding: avoid,
                                           within: bounds) else { return CaptionPlacement() }
-        return best
+        // Last resort: a pill that runs off the picture even in its best
+        // direction is slid back on, which does let go of the tail. A label
+        // half off the picture cannot be read at all, which is worse.
+        var winner = free
+        winner.captionGrowth = best.growth
+        let wanted = rect(of: winner, size: size)
+        let onCanvas = slidOntoCanvas(wanted, bounds: bounds)
+        guard onCanvas != wanted else { return best }
+        let anchor = slid(winner.captionAttachment(), by: onCanvas, from: wanted)
+        return CaptionPlacement(attach: CGSize(width: anchor.x - tail.x,
+                                               height: anchor.y - tail.y),
+                                growth: best.growth)
+    }
+
+    /// How far `rect` reaches outside `bounds`, added up over all four sides.
+    private static func overflow(of rect: CGRect, in bounds: CGRect) -> CGFloat {
+        max(0, bounds.minX - rect.minX) + max(0, rect.maxX - bounds.maxX)
+            + max(0, bounds.minY - rect.minY) + max(0, rect.maxY - bounds.maxY)
     }
 
     /// A hand-placed pill's attachment, pulled back onto the picture if the

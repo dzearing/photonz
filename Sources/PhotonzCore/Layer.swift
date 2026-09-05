@@ -190,7 +190,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
 extension AnnotationContent {
     /// Default caption text size (image pixels) — the measure label's default.
     public static let captionFontSizeDefault: CGFloat = 20
-    /// Clearance between the arrow's tail and the caption pill's near edge.
+    /// The breathing space the caption planner keeps: how far the pill has to
+    /// clear the arrowhead by, and how far past the tail the shaft has to run
+    /// before the pill counts as sitting ON it. NOT a gap between the tail and
+    /// the pill — the pill touches the tail (see `captionAttachment`).
     public static let captionGap: CGFloat = 6
     /// Extra frame slack around the chip reservation so the pill's drop shadow
     /// never clips at the layer edge.
@@ -299,17 +302,20 @@ extension AnnotationContent {
     }
 
     /// The point the pill hangs from (same coordinate space as `start`/`end`):
-    /// the middle of its near side, one `captionGap` past the tail along the
-    /// growth direction, or the picked/hand-placed spot. This point does NOT
-    /// move when the caption gets longer, which is what makes a caption being
-    /// typed grow away from the arrow instead of walking off it.
+    /// the middle of its near side. By default that point IS the tail, so the
+    /// shaft runs into the pill and the two read as one object; a planned or
+    /// hand-placed spot overrides it. This point does NOT move when the caption
+    /// gets longer, which is what makes a caption being typed grow away from
+    /// the arrow instead of walking off it.
+    ///
+    /// It used to sit one `captionGap` past the tail. The pill then floated
+    /// beside the arrow rather than being attached to it, which is what the
+    /// user reported on 2026-09-05.
     public func captionAttachment() -> CGPoint {
         if let captionOffset {
             return CGPoint(x: start.x + captionOffset.width, y: start.y + captionOffset.height)
         }
-        let d = captionGrowthDirection()
-        return CGPoint(x: start.x + d.width * Self.captionGap,
-                       y: start.y + d.height * Self.captionGap)
+        return start
     }
 
     /// Where a pill of `size` centers: the attachment plus half the pill's
