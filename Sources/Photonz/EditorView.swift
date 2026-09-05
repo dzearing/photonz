@@ -103,17 +103,23 @@ struct EditorView: View {
                         // stacks above it (EditorChromeLayout.aboveToolBar).
                         .padding(.bottom, EditorChromeLayout.toolBarInset)
                     }
-                    // Sidebar toggle, top-trailing — the in-window affordance to
-                    // collapse/reveal the inspector (Xcode/Finder-style), and the
-                    // way back when the panel has auto-collapsed on a narrow window.
+                    // The way back to a closed panel, top-trailing. ONLY while
+                    // the panel is closed: open, the same button lives in the
+                    // panel's own top-right corner, because a button floating
+                    // beside the panel reads as an unrelated blob in the middle
+                    // of the picture (reported 2026-09-05). Closed there is no
+                    // panel to put it in and this corner is the way back,
+                    // including after the shell auto-collapsed the panel on a
+                    // narrow window.
                     .overlay(alignment: .topTrailing) {
-                        if editorState.document != nil {
-                            inspectorToggle(isShown: inspectorShown)
+                        if editorState.document != nil, !inspectorShown {
+                            inspectorToggle(isShown: false)
                                 // The one corner inset, shared with the measure
                                 // legend, which parks under this button when it
                                 // takes the top-right corner
                                 // (EditorChromeLayout.inspectorToggleFrame).
                                 .padding(EditorChromeLayout.cornerInset)
+                                .transition(.opacity)
                         }
                     }
                     .clipped()  // keep a transient over-wide toolbar off the panel
@@ -873,9 +879,10 @@ struct EditorView: View {
         .toolTip("Resize Image", key: "⌥⌘I")
     }
 
-    /// The in-window sidebar toggle (top-trailing): collapse or reveal the
-    /// docked inspector. Also the way back when the panel has auto-collapsed on
-    /// a narrow window — tapping it forces the inspector open.
+    /// The canvas's sidebar toggle (top-trailing): the way back to a closed
+    /// inspector, including when the panel has auto-collapsed on a narrow
+    /// window — tapping it forces the inspector open. While the panel is open
+    /// its own corner carries the button instead (`InspectorPanel`).
     private func inspectorToggle(isShown: Bool) -> some View {
         Button {
             if isShown {
@@ -894,6 +901,11 @@ struct EditorView: View {
         .buttonStyle(.tool(diameter: EditorChromeLayout.inspectorToggleSize))
         .glassEffect(.regular, in: .capsule)
         .toolTip(isShown ? "Hide Inspector" : "Show Inspector", key: "⌥⌘L")
+        // Named for a scripted walk. A `click` step goes to the canvas view
+        // and falls straight through an overlay button, so a walk that wants
+        // the way back into a closed dock has to press this by name.
+        .playtestControl(isShown ? "Hide Inspector" : "Show Inspector",
+                         detail: "the canvas corner's way back to the dock")
     }
 
     /// Auto-collapse the inspector below the width threshold, and restore the

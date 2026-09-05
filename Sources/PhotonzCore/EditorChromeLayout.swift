@@ -86,13 +86,22 @@ public enum EditorChromeLayout {
     /// The inspector toggle's glass capsule, a square around its 14 pt glyph.
     public static let inspectorToggleSize: CGFloat = 30
 
-    /// Where the inspector toggle sits: `cornerInset` into the top-right
-    /// corner of a canvas of `canvasSize`. It is there whenever a document is
-    /// open, inspector shown or hidden, so the legend's top-right slot always
-    /// has to make room for it. Top-left origin.
-    public static func inspectorToggleFrame(canvasSize: CGSize) -> CGRect {
-        CGRect(x: canvasSize.width - cornerInset - inspectorToggleSize, y: cornerInset,
-               width: inspectorToggleSize, height: inspectorToggleSize)
+    /// Where the inspector toggle sits ON THE CANVAS: `cornerInset` into the
+    /// top-right corner of a canvas of `canvasSize`, so the legend's top-right
+    /// slot can make room for it. Top-left origin.
+    ///
+    /// Nil while the inspector is open, because the button is then in the
+    /// panel's own top-right corner instead — it belongs to the panel it
+    /// collapses, and floating it beside the panel read as an unrelated blob
+    /// in the middle of the picture (reported 2026-09-05). With the panel
+    /// open the canvas corner is simply free, and whatever wants it (the
+    /// measure legend) takes all of it rather than parking a gap below a
+    /// button that is no longer there.
+    public static func inspectorToggleFrame(canvasSize: CGSize,
+                                            isInspectorShown: Bool) -> CGRect? {
+        guard !isInspectorShown else { return nil }
+        return CGRect(x: canvasSize.width - cornerInset - inspectorToggleSize, y: cornerInset,
+                      width: inspectorToggleSize, height: inspectorToggleSize)
     }
 
     // MARK: Tool bar fit

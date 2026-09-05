@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 8,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T19:04:14.463Z",
-  "updated": "2026-09-05T19:04:14.501Z",
+  "updated": "2026-09-05T23:24:40.286Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-05 with a screenshot pointing at the panel's top right corner. Today the button is an overlay on the CANVAS at topTrailing (EditorView.swift line 109), inset by EditorChromeLayout.cornerInset, which is why it sits beside the panel rather than in it. Two things to carry across: EditorChromeLayout.inspectorToggleFrame (line 93) is the rect other chrome avoids, and the measure legend deliberately parks under this button when it takes the top right corner, so moving the button means that rect and the legend's parking rule both need revisiting rather than being left pointing at an empty corner. The closed state matters as much as the open one: with the panel collapsed the button is the only way back, including after the panel auto collapses on a narrow window, so keep an affordance there and say in the audit where it is.",
@@ -29,6 +29,27 @@
     {
       "t": "2026-09-05T19:04:14.500Z",
       "note": "seq 1270 -> 8"
+    },
+    {
+      "t": "2026-09-05T23:24:40.286Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T23:40:00.000Z",
+      "note": "Reviewed the idea before building. The dock is a scrolling column of section headers whose trailing end already carries a drag grip, so the corner is not empty: the topmost header now keeps 34pt clear for the button. Rejected adding a panel title bar above the sections (it pushes every section down a row for one button) and rejected letting the button ride the topmost header (it scrolls away, and the way out of the dock must not). Shortest version that delivers the value: move the existing button, keep the canvas capsule for the closed state, free the canvas corner."
+    },
+    {
+      "t": "2026-09-05T23:41:00.000Z",
+      "note": "Shipped. EditorChromeLayout.inspectorToggleFrame now takes isInspectorShown and returns nil while the dock is open, so the measure legend takes the whole freed corner instead of hanging a gap below a button that is not there (2 new PhotonzCore tests, 3416 green). EditorView shows the canvas capsule only while the dock is closed and names it for walks. InspectorPanel carries the button pinned at its top trailing corner, centred on the first header's row, on a small material circle once the list scrolls under it."
+    },
+    {
+      "t": "2026-09-05T23:42:00.000Z",
+      "note": "Verified on the probe with Screen Recording granted: panel-collapse-corner-walk (open, tooltip, close, shortcut, legend in the freed corner), panel-collapse-narrow-walk (620pt window auto-collapses, a real press on the canvas capsule reopens it, a real press on the dock's own button closes it), and legend-under-toggle (legend still tucks under the capsule while closed). Audit at queue/audits/2026-09-05-panel-collapse-corner.json with four real captures."
+    },
+    {
+      "t": "2026-09-05T23:43:00.000Z",
+      "note": "Shared code, not Next-only: the editor shell and the dock are shared files that Next has not forked, so Next gets this by construction and Current gets the same fix. This is a relocation of existing chrome, not a new feature, so no flag."
     }
-  ]
+  ],
+  "started": "2026-09-05T23:24:40.285Z"
 }

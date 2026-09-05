@@ -340,17 +340,28 @@ struct EditorChromeLayoutTests {
 
     // MARK: Corner chrome
 
-    @Test func theInspectorToggleSitsInTheTopRightCorner() {
-        // The 30 pt toggle floats one corner inset off the top and the right
-        // edge of the canvas, wherever the canvas edge is. Same inset as the
-        // legend, so the two line up when they stack.
+    @Test func theInspectorToggleSitsInTheTopRightCornerWhileThePanelIsClosed() {
+        // With the panel closed the toggle is the only way back, so it floats
+        // one corner inset off the top and the right edge of the canvas,
+        // wherever the canvas edge is. Same inset as the legend, so the two
+        // line up when they stack.
         let canvas = CGSize(width: 1015, height: 808)
-        let toggle = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas)
-        #expect(toggle.minY == EditorChromeLayout.cornerInset)
-        #expect(toggle.maxX == 1015 - EditorChromeLayout.cornerInset)
-        #expect(toggle.width == EditorChromeLayout.inspectorToggleSize)
-        #expect(toggle.height == EditorChromeLayout.inspectorToggleSize)
+        let toggle = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas,
+                                                             isInspectorShown: false)
+        #expect(toggle?.minY == EditorChromeLayout.cornerInset)
+        #expect(toggle?.maxX == 1015 - EditorChromeLayout.cornerInset)
+        #expect(toggle?.width == EditorChromeLayout.inspectorToggleSize)
+        #expect(toggle?.height == EditorChromeLayout.inspectorToggleSize)
         #expect(EditorChromeLayout.cornerInset == 12)
         #expect(EditorChromeLayout.inspectorToggleSize == 30)
+    }
+
+    @Test func theCanvasCornerIsFreeWhileThePanelIsOpen() {
+        // Open, the collapse button lives in the panel's own top-right corner,
+        // so nothing of it is left on the canvas and the corner is free for
+        // whatever wants it (the measure legend).
+        let canvas = CGSize(width: 1015, height: 808)
+        #expect(EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas,
+                                                        isInspectorShown: true) == nil)
     }
 }

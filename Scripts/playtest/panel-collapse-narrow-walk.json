@@ -1,0 +1,18 @@
+{
+  "out": "/tmp/photonz-playtest/panel-collapse-narrow",
+  "setup": { "forget": ["panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 620, "height": 700 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-narrow-auto-collapsed", "note": "620pt window, under the 680pt threshold: the dock collapses itself and the canvas corner keeps the way back" },
+    { "do": "snapshot", "name": "1-narrow-auto-collapsed" },
+    { "do": "press", "control": "Show Inspector" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-narrow-reopened", "note": "pressing it forces the dock back open even under the threshold" },
+    { "do": "snapshot", "name": "2-narrow-reopened" },
+    { "do": "press", "control": "Hide Inspector" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-narrow-closed-again", "note": "and the dock's own corner button sends it away again" },
+    { "do": "snapshot", "name": "3-narrow-closed-again" }
+  ]
+}

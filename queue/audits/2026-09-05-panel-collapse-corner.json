@@ -1,0 +1,30 @@
+{
+  "feature": "The dock's collapse button lives in the dock",
+  "epic": "ui-building",
+  "summary": "The button that closes the right hand panel now sits in the panel's own top right corner, on the first section header's line, instead of floating on the picture beside it. With the panel closed it is still the capsule in the canvas corner, which is the only way back.",
+  "setup": "Photonz Dev, any screenshot open, right hand panel showing. Nothing to turn on.",
+  "try": [
+    { "do": "Open a screenshot and make sure the right hand panel is showing.", "shot": "2026-09-05-panel-collapse-corner-1.png" },
+    { "do": "Look at the panel's top right corner, level with the word Layers: the collapse button is there and the picture beside it is clear." },
+    { "do": "Click it. The panel goes, and the way back appears as a round capsule in the picture's top right corner.", "shot": "2026-09-05-panel-collapse-corner-2.png" },
+    { "do": "Click that capsule to bring the panel back." },
+    { "do": "Press Option Command L twice to check the shortcut still closes and opens it." },
+    { "do": "Press I for Measure and measure something near the top left, with the panel open: the key panel now takes the whole top right corner instead of hanging below where the button used to be.", "shot": "2026-09-05-panel-collapse-corner-3.png" },
+    { "do": "Drag the window narrower than about 680 points wide: the panel closes itself and the capsule in the corner brings it back." },
+    { "do": "Select a shape so the panel fills up, then scroll the panel down: the button lifts onto a small round surface so the list passes behind it.", "shot": "2026-09-05-panel-collapse-corner-4.png" }
+  ],
+  "evaluate": [
+    "In the corner of the Layers row, does the button read as close the whole panel, or could it be mistaken for something that collapses just Layers?",
+    "Is it easy enough to hit at that size, or would you rather it were as big as the capsule on the picture?",
+    "With the panel closed, is the capsule in the picture's corner still an obvious way back, or does it now read as a stray button?",
+    "Scrolled, does the button sitting on its own little round surface look deliberate, or does the list sliding behind it look wrong?",
+    "Does the measure key filling the freed corner look better than the gap it used to leave?"
+  ],
+  "rough": [
+    "The topmost section's drag grip shifts about 34 points left to make room for the button, so the top row's grip is a little out of line with the grips below it. Nothing else moves.",
+    "Scrolled, the button is pinned and the list runs underneath it. It takes a small round surface and a shadow so it reads as floating, but a passing section's grip can still peek out from behind its edge. Worth a follow-up if it bothers you.",
+    "The button is 28 points inside the panel and 30 in the picture's corner, because in the panel it matches the eye and lock buttons beside it and on the picture it matches the tool bar.",
+    "The probe held Screen Recording, so every picture here is a real screen capture, not an offscreen render.",
+    "A scripted walk could never press the capsule on the picture, because a click meant for it fell through to the canvas. It is now named for walks, which is how the narrow window case above was actually driven rather than assumed."
+  ]
+}

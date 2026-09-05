@@ -402,15 +402,17 @@ extension EditorState {
         let chrome = EditorChromeLayout.bottomChrome(canvasSize: viewport.viewSize,
                                                      toolBarWidth: toolBarWidth,
                                                      noticeSize: MeasureModeHint.reservedSize)
-        // The inspector toggle already lives in the top-right corner. It is
-        // neither content to dodge nor chrome that takes the corner away: the
-        // top-right slot tucks in underneath it, one stack gap clear.
+        // With the panel closed the collapse button sits in the canvas's
+        // top-right corner. It is neither content to dodge nor chrome that
+        // takes the corner away: the top-right slot tucks in underneath it,
+        // one stack gap clear. With the panel open the button is in the
+        // panel and the corner is the legend's outright.
         return PanelPlacement.firstClear(size: Self.measureLegendSize(rows: rows),
                                           in: viewport.viewSize,
                                           inset: Self.measureLegendInset,
                                           avoiding: occupied,
                                           blocked: chrome,
-                                          clearing: Self.measureLegendCornerChrome(in: viewport.viewSize),
+                                          clearing: measureLegendCornerChrome(in: viewport.viewSize),
                                           gap: EditorChromeLayout.toolBarStackGap)
     }
 
@@ -427,15 +429,26 @@ extension EditorState {
                                     size: Self.measureLegendSize(rows: measureLegendEntries.count),
                                     in: viewport.viewSize,
                                     inset: Self.measureLegendInset,
-                                    clearing: Self.measureLegendCornerChrome(in: viewport.viewSize),
+                                    clearing: measureLegendCornerChrome(in: viewport.viewSize),
                                     gap: EditorChromeLayout.toolBarStackGap).minY
     }
 
     /// The chrome parked in a canvas corner that a corner slot tucks in
-    /// beside: today only the inspector toggle, which is up whenever a
-    /// document is open.
-    private static func measureLegendCornerChrome(in canvasSize: CGSize) -> [CGRect] {
-        [EditorChromeLayout.inspectorToggleFrame(canvasSize: canvasSize)]
+    /// beside: today only the collapse button, and only while the panel is
+    /// closed. Open, that button lives in the panel's own top-right corner,
+    /// so the canvas corner is empty and the legend takes all of it.
+    private func measureLegendCornerChrome(in canvasSize: CGSize) -> [CGRect] {
+        [EditorChromeLayout.inspectorToggleFrame(canvasSize: canvasSize,
+                                                 isInspectorShown: isInspectorShown)]
+            .compactMap { $0 }
+    }
+
+    /// Whether the docked panel is on screen, which is what decides where the
+    /// collapse button is. `isLayersPanelVisible` already goes false when the
+    /// shell auto-collapses the panel on a narrow window, so this covers that
+    /// case too: the button comes back to the canvas with the panel gone.
+    var isInspectorShown: Bool {
+        document != nil && isLayersPanelVisible
     }
 
     /// A generous reservation for the legend's glass panel. It is chrome laid

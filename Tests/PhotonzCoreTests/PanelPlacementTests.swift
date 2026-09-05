@@ -216,7 +216,8 @@ struct PanelPlacementTests {
         // the toggle's. This is the exact call the editor makes.
         let legend = CGSize(width: 140, height: 58)
         let canvas = CGSize(width: 1200, height: 800)
-        let toggle = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas)
+        let toggle = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas,
+                                                            isInspectorShown: false)!
         let piles = [CGRect(x: 0, y: 0, width: 300, height: 200)]
         let chrome = EditorChromeLayout.bottomChrome(
             canvasSize: canvas, toolBarWidth: 700,
@@ -236,12 +237,32 @@ struct PanelPlacementTests {
         #expect(frame.maxX == toggle.maxX)
     }
 
+    @Test func theLegendTakesTheWholeTopRightCornerOnceThePanelIsOpen() {
+        // The collapse button moved into the panel's own corner on 2026-09-05,
+        // so with the panel open there is nothing in the canvas's top-right
+        // corner to tuck under: the legend sits at the plain inset instead of
+        // leaving a button-shaped hole above itself.
+        let legend = CGSize(width: 140, height: 58)
+        let canvas = CGSize(width: 1200, height: 800)
+        let corner = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas,
+                                                             isInspectorShown: true)
+        #expect(corner == nil)
+        let frame = PanelPlacement.frame(for: .topTrailing, size: legend, in: canvas,
+                                         inset: EditorChromeLayout.cornerInset,
+                                         clearing: [corner].compactMap { $0 },
+                                         gap: EditorChromeLayout.toolBarStackGap)
+        #expect(frame == PanelPlacement.frame(for: .topTrailing, size: legend, in: canvas,
+                                              inset: EditorChromeLayout.cornerInset))
+        #expect(frame.minY == EditorChromeLayout.cornerInset)
+    }
+
     @Test func anEmptyTopRightCornerIsNotGivenUpBecauseOfTheToggle() {
         // The toggle is chrome the slot tucks under, not chrome that takes
         // the slot away: with the top-left busy the legend still lands
         // top-right, never skips ahead to a bottom corner.
         let canvas = CGSize(width: 1200, height: 800)
-        let toggle = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas)
+        let toggle = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas,
+                                                            isInspectorShown: false)!
         let topLeft = CGRect(x: 0, y: 0, width: 300, height: 200)
         #expect(PanelPlacement.firstClear(size: CGSize(width: 140, height: 58), in: canvas,
                                           inset: EditorChromeLayout.cornerInset,

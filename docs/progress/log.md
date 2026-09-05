@@ -8989,3 +8989,29 @@ Audit: `queue/audits/2026-09-05-menu-checkmarks.json`.
 
 Next: the queue. Open question in the audit — Show Grid keeps the word "Show"
 beside its tick; would the row read better as just "Grid"?
+
+## 2026-09-05 — the dock's collapse button moves into the dock
+
+The button that closes the right hand panel floated on the picture beside the
+panel, which read as an unrelated blob in the middle of the screenshot. It now
+sits in the panel's own top right corner, level with the first section header,
+as a plain icon button in the panel's language; the glass capsule in the
+canvas corner is kept for the closed state, since with no panel on screen it is
+the only way back (including after the shell auto-collapses the dock under 680pt
+of window width).
+
+- `EditorChromeLayout.inspectorToggleFrame` now takes `isInspectorShown` and is
+  nil while the dock is open, so the measure legend takes the whole freed
+  top-right corner instead of parking a gap below a button that is not there.
+- The topmost section header keeps 34pt of its trailing end clear for the
+  button. Scrolled, the button is pinned and takes a small material circle so
+  the list passes behind it rather than through it.
+- The canvas capsule is now named for scripted walks (`playtestControl`): a
+  `click` step falls through an overlay button to the canvas, so the narrow
+  window case could never be driven before.
+- Walks: `Scripts/playtest/panel-collapse-corner-walk.json` and
+  `panel-collapse-narrow-walk.json`. Audit:
+  `queue/audits/2026-09-05-panel-collapse-corner.json`.
+
+Next: the queue. Open question in the audit — scrolled, a passing section's grip
+can peek from behind the pinned button's edge.

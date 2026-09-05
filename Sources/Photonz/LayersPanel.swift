@@ -48,6 +48,19 @@ struct InspectorPanel: View {
     /// What the dock remembers about its own sections between launches, named
     /// so a scripted walk that rearranges them can put them back.
     static let sectionOrderKey = "inspector.sectionOrder"
+    /// The collapse button's metrics, and the room the topmost section header
+    /// keeps clear for it. The button sits in the panel's own top-right
+    /// corner, on the first header's line, so it reads as belonging to the
+    /// panel it collapses (2026-09-05) instead of floating on the canvas
+    /// beside it.
+    static let collapseButtonSize: CGFloat = 28
+    static let collapseButtonInset: CGFloat = 12
+    /// One section header's row: the height `CollapsibleSection` pins its
+    /// header to, so the button can be centred on that line without measuring
+    /// it. A 13 pt semibold title in 8 pt of padding each side.
+    static let headerRowHeight: CGFloat = 32
+    /// The dock's own padding above its first section.
+    static let listTopPadding: CGFloat = 6
     static let sectionOrderVersionKey = "inspector.sectionOrder.version"
     static let collapsedKey = "inspector.collapsed"
     /// Effects joined the Color section instead of trailing every per-kind one.
@@ -71,6 +84,11 @@ struct InspectorPanel: View {
     /// Bumped to draw the pass that mounts the sections held back above. The
     /// value means nothing; changing it is the whole point.
     @State private var arrivalPass = 0
+    /// Whether the dock has been scrolled off its top. The collapse button is
+    /// pinned in the corner, so once the list slides under it the button is
+    /// floating over content and needs a surface to sit on; at rest it is on
+    /// the first header's own line and needs none.
+    @State private var isDockScrolled = false
 
     var body: some View {
         // The sections the selection asks for, and the ones the dock may draw
@@ -94,7 +112,13 @@ struct InspectorPanel: View {
                                                        carriedBy: carriedBy, in: sections)
                                 },
                                 onReorderEnd: { endSectionDrag(in: sections) },
-                                accessory: sectionAccessory(id)
+                                accessory: sectionAccessory(id),
+                                // The topmost header shares its line with the
+                                // collapse button in the corner, so it keeps
+                                // that much of its trailing end clear rather
+                                // than running its grip underneath it.
+                                headerTrailingReserve: id == sections.first
+                                    ? Self.collapseButtonSize + 6 : 0
                             ) {
                                 sectionContent(id)
                             }
@@ -143,7 +167,13 @@ struct InspectorPanel: View {
                                 delegate: SectionFileDrop(item: id, editorState: editorState))
                     }
                 }
-                .padding(.vertical, 6)
+                .padding(.vertical, InspectorPanel.listTopPadding)
+                // How far the list has slid under the pinned collapse button.
+                // A Bool on purpose: the action fires when the answer changes,
+                // twice a scroll, not once a tick.
+                .onGeometryChange(for: Bool.self) {
+                    $0.frame(in: .named(inspectorDockSpace)).minY < -0.5
+                } action: { isDockScrolled = $0 }
                 // NO implicit animation on the section SET (10.7). Animating
                 // section insert/remove forces the whole .regularMaterial panel to
                 // re-blur and an NSColorWell to animate in/out every frame for the
@@ -185,6 +215,10 @@ struct InspectorPanel: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.regularMaterial)
+        // The panel's own collapse button, in its own top-right corner, on the
+        // first section header's line. Pinned rather than scrolled with the
+        // list: it is the way OUT of the panel and must not scroll away.
+        .overlay(alignment: .topTrailing) { collapseButton }
         // The panel answering for a file let go where it has no other target:
         // the empty space under the last section, and the gaps between them.
         // Registered for FILES ONLY, so a section header or a layer row dragged
@@ -217,6 +251,39 @@ struct InspectorPanel: View {
             end: { endSectionDrag(in: sections) },
             cancel: cancelSectionDrag,
             sections: sections)
+    }
+
+    /// Collapse the dock, from the dock's own top-right corner. Same button,
+    /// same tooltip and same shortcut as the one the canvas shows while the
+    /// panel is closed; only its home changes with the panel.
+    private var collapseButton: some View {
+        Button {
+            editorState.setInspectorVisible(false)
+        } label: {
+            Image(systemName: "sidebar.trailing")
+                .font(.system(size: 14, weight: .medium))
+        }
+        .buttonStyle(IconActionButtonStyle(diameter: InspectorPanel.collapseButtonSize,
+                                           keepsLabelFont: true,
+                                           squareHitTarget: true))
+        // Scrolled, the list runs underneath it, so it takes a surface of its
+        // own rather than crossing a section's grip. At rest it sits on the
+        // first header's line and stays bare, part of the row.
+        .background {
+            if isDockScrolled {
+                Circle().fill(.regularMaterial)
+                    .overlay(Circle().strokeBorder(.separator.opacity(0.7), lineWidth: 0.5))
+                    .shadow(color: .black.opacity(0.28), radius: 5, y: 1)
+            }
+        }
+        .animation(.easeOut(duration: 0.15), value: isDockScrolled)
+        .padding(.trailing, InspectorPanel.collapseButtonInset)
+        // Centred on the first header's row, so the button and the words
+        // beside it sit on one line.
+        .padding(.top, InspectorPanel.listTopPadding
+                 + (InspectorPanel.headerRowHeight - InspectorPanel.collapseButtonSize) / 2)
+        .toolTip("Hide Inspector", key: "⌥⌘L")
+        .playtestControl("Hide Inspector", detail: "the dock's collapse button")
     }
 
     // MARK: Bringing the Library into view
@@ -1124,6 +1191,10 @@ private struct CollapsibleSection<Content: View>: View {
     /// Optional header furniture between the title and the drag grip — the
     /// Measurements section puts its count badge and panel menu here.
     var accessory: AnyView?
+    /// Trailing room this header leaves empty for something parked over it —
+    /// the dock's collapse button, which sits in the corner of the topmost
+    /// header's line. Zero for every other header.
+    var headerTrailingReserve: CGFloat = 0
     @ViewBuilder var content: () -> Content
     /// Whether this header's press has travelled far enough to have picked the
     /// section up. See `headerGesture`.
@@ -1155,7 +1226,11 @@ private struct CollapsibleSection<Content: View>: View {
                 .foregroundStyle(.tertiary)
         }
         .padding(.horizontal, 12)
+        .padding(.trailing, headerTrailingReserve)
         .padding(.vertical, 8)
+        // The row the collapse button lines itself up on. A floor, not a
+        // fixed height: a header whose words grow still grows.
+        .frame(minHeight: InspectorPanel.headerRowHeight)
         .contentShape(Rectangle())
         .gesture(headerGesture)
         .help("Drag to reorder • click to collapse")
