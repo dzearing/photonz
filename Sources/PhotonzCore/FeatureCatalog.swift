@@ -91,6 +91,8 @@ public enum FeatureCatalog {
 
     public static let calloutShapeFlag = "next-callout-shape"
 
+    public static let canvasGridFlag = "next-canvas-grid"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -404,6 +406,15 @@ public enum FeatureCatalog {
                     name: calloutShapeFlag,
                     title: "Choose a zoom callout\u{2019}s shape before you draw it",
                     description: "Picking up the Zoom Callout tool puts a Zoom Callout Tool section in the inspector with one choice in it: Rectangle or Circle. The box you drag out previews in the shape you chose and the callout lands in it, and the tool keeps that choice for the next one and after a relaunch. Off means every callout is drawn as a rectangle and the only way to a circle is to draw one first and change it in the callout\u{2019}s own section.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: canvasGridFlag,
+                    title: "A grid to build against",
+                    description: "Switch on a grid over the whole canvas and build to it: View \u{25B8} Show Grid, or the Grid row in the Canvas section of the panel. It starts four points apart, with every eighth line stronger so you can count without measuring, and both numbers are typable; choose columns on their own or columns and rows. It thins and thickens as you zoom, so the lines are never closer together than you can read and never disappear: zoom out and the fine ones fade away leaving the coarse ones, zoom in and they fade back. The grid is drawn on the canvas, not into the picture, so it never lands in an export, a copied picture or a redline sheet, and it is remembered between launches rather than saved in any document. Off means the canvas has no grid and the View row and the Grid controls are gone.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

@@ -140,6 +140,7 @@ The memories a walk can forget, by the word it uses:
 | `tools` | Which tool each family in the toolbar stands for, and the wand's reach. |
 | `groups` | Which groups in the layers list are open. |
 | `panel` | Whether the dock and the Library are showing, how wide the dock is, and which shelf the Library is on. |
+| `grid` | Whether the canvas grid is on, how far apart its lines are, how often one is stronger, and whether it draws rows as well as columns. |
 
 A walk that reads a setting it never set is the one to think about here. Drawing
 a rectangle and then opening its Fill colour needs `"forget": ["shapes"]`,

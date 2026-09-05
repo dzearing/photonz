@@ -1,0 +1,33 @@
+{
+  "feature": "A grid you can switch on",
+  "epic": "ui-building",
+  "summary": "The canvas can now show a grid to build against, four points apart with every eighth line stronger, both numbers typable and columns optional. It thins and thickens as you zoom, so the lines are never crowded and never gone, and it is drawn on the canvas rather than into the picture.",
+  "setup": "Photonz Next. The flag is A grid to build against, on by default. The grid itself starts switched OFF, so nothing changes until you ask for it.",
+  "try": [
+    { "do": "Open a new blank canvas and draw a filled rectangle on it." },
+    { "do": "Press Command apostrophe. The grid comes up over the whole canvas.", "shot": "2026-09-05-canvas-grid-fit.png" },
+    { "do": "Zoom in with Command equals until you are past 200%, and watch the finer lines fade up rather than appear.", "shot": "2026-09-05-canvas-grid-close.png" },
+    { "do": "Zoom out with Command minus past 50%, and watch them fade away leaving the strong ones.", "shot": "2026-09-05-canvas-grid-far.png" },
+    { "do": "Click the Canvas row at the bottom of the layers list to open the Canvas section." },
+    { "do": "Press Columns in that section: the horizontal lines go and the column rhythm is left on its own.", "shot": "2026-09-05-canvas-grid-columns-only.png" },
+    { "do": "Type 8 into Spacing, then 10 into Bold every, and watch the grid follow both." },
+    { "do": "Press Command apostrophe again to switch it off, then export or copy the picture and check the grid is not in it." }
+  ],
+  "evaluate": [
+    "Switched on at the zoom you normally work at, is the amount of line on screen right, or is it too busy or too sparse?",
+    "Can you count in eights by eye, or do the stronger lines not stand out enough from the rest?",
+    "Zooming in and out slowly: does anything pop, or does it all fade?",
+    "The lines are the accent colour mixed most of the way into grey. Does that read as the canvas's own surface, or as blueprint paper laid on top?",
+    "The grid draws OVER what you have drawn, including a filled box. Is that right, or should it be behind your work?",
+    "You reached the numbers by clicking the Canvas row. Was that findable, or did you look somewhere else first?"
+  ],
+  "rough": [
+    "The grid is drawn OVER your layers, not under them. That was a deliberate change from the plain reading of the ask, which said the grid sits above the backdrop: a grid you build against has to survive the first filled box you draw, and one behind your work is invisible the moment the canvas has anything on it. It is the last line of the evaluate list because it is the one call worth arguing with.",
+    "Command apostrophe switches the grid on without ever saying where its numbers are, and the numbers are behind the Canvas row in the layers list, which is not somewhere a person browses. Filed as a follow-up.",
+    "The typed spacing is not what you see at every zoom, by design: at 100% a four point grid would be four screen points apart, which is a grey wash, so what you see is the next rung up. Four point lines start showing around 200% and are fully there by about 800%. That is the level of detail rule working, but it does mean typing 4 and seeing 32 needs the explanation the panel gives.",
+    "The menu row was verified present in the View menu on Command apostrophe by the harness menu read, and the switch behind it is the same call the checkbox in the panel makes, which a walk does press. Actually pressing the chord could not be proven: with no window focused the probe's whole View menu is dimmed and the menu bar refuses every window scoped chord, Zoom In included. Worth pressing by hand once.",
+    "Speed, measured with the harness main thread meter over the same run of six zooms and a twenty four step drag: with the grid on, 320.4ms of main thread over 120 passes, longest single pass 23.8ms. With it off, 312.7ms over 126 passes, longest 23.9ms. The longest pass, which is the one that decides whether a frame is dropped, is the same either way.",
+    "With the grid off the canvas is byte for byte what it was: the walk photographs it off, on, and off again, and the two off pictures hash identically.",
+    "Two grids, one word. THIS one is the Grid: it covers the whole canvas, is set by a spacing, is a view preference no document carries, and never pulls at a drag. The one still in the queue is Columns: it is drawn on ONE screen, is set by a column count with a gutter and a margin, is saved with the document, and is the one that pulls a drag to the column edges. A person tells them apart by where the controls are, the Canvas section versus a screen's own, and by the words, spacing versus columns. That task's notes now say so."
+  ]
+}

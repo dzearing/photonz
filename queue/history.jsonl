@@ -1567,3 +1567,9 @@
 {"t":"2026-09-05T14:07:49.012Z","ev":"task_resequenced","id":"a-grid-you-can-switch-on-that-thins-and-thickens","from":9,"to":10}
 {"t":"2026-09-05T14:07:49.046Z","ev":"task_resequenced","id":"a-colour-wearing-a-style-looks-different-from-on","from":10,"to":20}
 {"t":"2026-09-05T14:07:49.080Z","ev":"task_resequenced","id":"a-container-can-be-told-the-smallest-and-largest","from":20,"to":30}
+{"t":"2026-09-05T14:08:47.217Z","ev":"task_started","id":"a-grid-you-can-switch-on-that-thins-and-thickens","title":"A grid you can switch on, that thins and thickens as you zoom","priority":"p1-high"}
+{"t":"2026-09-05T14:13:58.274Z","ev":"task_created","id":"a-captioned-arrow-sits-right-tight-selection-a-p","priority":"p1-high","title":"A captioned arrow sits right: tight selection, a pill that follows the drag, a tail that touches"}
+{"t":"2026-09-05T14:13:58.309Z","ev":"task_created","id":"an-arrow-can-wear-a-different-head-and-its-pill","priority":"p2-normal","title":"An arrow can wear a different head, and its pill can be a badge or a pill"}
+{"t":"2026-09-05T14:13:58.344Z","ev":"task_resequenced","id":"a-captioned-arrow-sits-right-tight-selection-a-p","from":180,"to":4}
+{"t":"2026-09-05T14:13:58.379Z","ev":"task_resequenced","id":"an-arrow-can-wear-a-different-head-and-its-pill","from":1190,"to":5}
+{"t":"2026-09-05T14:37:52.181Z","ev":"task_created","id":"turning-the-grid-on-says-where-its-numbers-are","priority":"p2-normal","title":"Turning the grid on says where its numbers are"}

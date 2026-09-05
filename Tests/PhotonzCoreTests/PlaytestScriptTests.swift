@@ -912,6 +912,6 @@ struct PlaytestScriptTests {
     // list is discoverable from the error text.
     @Test func everyMemoryNameIsAPlainWord() throws {
         #expect(PlaytestMemory.allCases.map(\.rawValue)
-                == ["text", "color", "shapes", "measure", "tools", "groups", "panel"])
+                == ["text", "color", "shapes", "measure", "tools", "groups", "panel", "grid"])
     }
 }

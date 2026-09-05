@@ -39,6 +39,8 @@ extension PlaytestMemory {
         case .panel:
             [EditorState.inspectorVisibleKey, EditorState.libraryVisibleKey,
              EditorState.inspectorWidthKey, LibraryPanel.scopeKey]
+        case .grid:
+            [EditorState.canvasGridKey]
         }
     }
 }
@@ -60,6 +62,9 @@ struct PlaytestSetupRunner {
             let keys = setup.forget.flatMap(\.defaultsKeys)
             for key in keys { UserDefaults.standard.removeObject(forKey: key) }
             UserDefaults.standard.synchronize()
+            // Anything the app holds in memory rather than reading fresh has to
+            // be told, or it goes on drawing what was just thrown away.
+            if setup.forget.contains(.grid) { CanvasGridStore.shared.reload() }
             said.append("forgot \(setup.forget.map(\.rawValue).joined(separator: ", "))"
                         + " (\(keys.count) settings)")
         }

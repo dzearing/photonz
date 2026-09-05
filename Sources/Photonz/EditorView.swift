@@ -328,6 +328,7 @@ struct EditorView: View {
                            editorState.swapCollageSlots(collageID: collageID, from, to)
                        },
                        isCanvasSelected: editorState.isCanvasSelected,
+                       canvasGrid: editorState.drawnCanvasGrid,
                        onCanvasResize: { size, anchor in
                            editorState.setCanvasSize(to: size, anchor: anchor)
                        },

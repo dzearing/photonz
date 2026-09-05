@@ -3100,11 +3100,83 @@ struct CanvasInspector: View {
             Text("Drag the canvas edges to add or trim space; content stays put on the side you didn't move. Fields grow to the right/bottom.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
+            if Experiments.shared.canvasGridEnabled {
+                Divider().padding(.vertical, 2)
+                gridSection
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .onAppear { syncFields() }
         .onChange(of: canvasSize) { syncFields() }
+    }
+
+    // MARK: The grid you build against (Next, `next-canvas-grid`)
+
+    /// The grid's numbers live here, on the Canvas, because that is what the
+    /// grid belongs to. The switch is also on the View menu, on Command
+    /// apostrophe, so it can be flicked without coming here at all.
+    ///
+    /// Nothing here is saved in the document: it is a view preference the app
+    /// remembers between launches, and every window shows the same one.
+    @ViewBuilder private var gridSection: some View {
+        let grid = editorState.canvasGrid
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle("Grid", isOn: Binding(get: { grid.isVisible },
+                                         set: { editorState.canvasGrid.isVisible = $0 }))
+                .font(.callout)
+                .controlSize(.small)
+                .playtestControl("Grid", detail: "Canvas")
+            if grid.isVisible {
+                Picker("Lines", selection: Binding(
+                    get: { grid.axes },
+                    set: { editorState.setCanvasGridAxes($0) })) {
+                    ForEach(CanvasGridAxes.allCases, id: \.self) { Text($0.label).tag($0) }
+                }
+                .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                .playtestField("Lines")
+                HStack(spacing: 8) {
+                    gridNumberField("Spacing", suffix: "pt",
+                                    value: Double(grid.spacing),
+                                    set: { editorState.setCanvasGridSpacing(CGFloat($0)) })
+                    gridNumberField("Bold every", suffix: "lines",
+                                    value: Double(grid.majorEvery),
+                                    set: { editorState.setCanvasGridMajorEvery(Int($0.rounded())) })
+                }
+                Text("Zoom out and the fine lines fade away, zoom in and they come back, so the grid is always readable. It is drawn on the canvas, never into the picture.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    /// One of the grid's two numbers. It commits on Return and on losing the
+    /// keyboard, steps with the arrow keys like every other number in the
+    /// panel, and hands the keyboard back afterwards so the next letter picks
+    /// a tool.
+    @ViewBuilder private func gridNumberField(_ label: String, suffix: String,
+                                              value: Double,
+                                              set: @escaping (Double) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 4) {
+                TextField(label, value: Binding(get: { value }, set: { set($0) }),
+                          format: .number.precision(.fractionLength(0)).grouping(.never))
+                    .textFieldStyle(.roundedBorder)
+                    .controlSize(.small)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 48)
+                    .numberFieldKeys(
+                        commit: {},
+                        revert: {},
+                        step: { direction, coarse in
+                            set(Double(LayerGeometry.stepped(value, direction: direction,
+                                                             coarse: coarse)))
+                        })
+                Text(suffix).font(.caption2).foregroundStyle(.tertiary)
+            }
+        }
+        .playtestField(label)
     }
 
     private func syncFields() {

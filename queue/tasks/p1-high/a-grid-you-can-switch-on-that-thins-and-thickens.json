@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-05T14:06:30.562Z",
-  "updated": "2026-09-05T14:08:47.216Z",
+  "updated": "2026-09-05T14:38:33.228993Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-05. Distinct from the pending task a-screen-can-show-the-column-grid-you-are-design, which is a per SCREEN column guide with a count, gutter and margin, meant for laying out one screen and blocked on its own decision card. This one is a canvas wide grid you build against, spacing based rather than column count based, and belongs to the canvas rather than to any frame; the runner should read that task and make the two read as one idea rather than two grids with different words, and say in the audit how a person tells them apart. Drawing: the canvas is an AppKit view with CALayers (CanvasView.swift); a grid drawn as a repeating CGPattern or a tiled CALayer with contentsScale set will beat rebuilding a CGPath of every line on each frame, which at four points and a wide canvas is tens of thousands of segments. The fade is the important part: pick a level of detail so the on screen spacing stays inside a band, for example eight to thirty two points, and cross fade the finer level in as it approaches the top of the band rather than switching abruptly. Viewport.zoom in PhotonzCore is the input; keep the level of detail maths in PhotonzCore with tests, and leave only the drawing in the app. Grid tint: use the accent colour at a low alpha over the backdrop, and verify against both themes. Snapping to the grid is NOT part of this task; if it is wanted it is a follow up, and it should join the existing snapping rather than being a second idea.\n\nTriage 2026-09-05: the note above says the per screen column guide is blocked on its decision card. It is not any more. The user answered it minutes after this task was filed, and they chose the option WITH snapping: dragging on a screen that has a column overlay pulls to the column edges, with Command to drag free. So the line above saying snapping should join the existing snapping rather than being a second idea is now the standing instruction for both grids, not a hypothetical. Read a-screen-can-show-the-column-grid-you-are-design before starting, and whichever of the two lands first sets the shared vocabulary the other follows.",
@@ -40,6 +40,34 @@
     {
       "t": "2026-09-05T14:08:47.216Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T14:14:54.991330Z",
+      "note": "Adversarial review before building. (1) A first-time user has to be able to find this: the switch goes on the View menu as Show Grid on Command-quote, which is the key Photoshop uses, and the numbers live in the Canvas section of the dock (click the Canvas row) so there is one place that owns them. (2) Vocabulary clash with a-screen-can-show-the-column-grid-you-are-design: two features would both be called a grid. Settled here, and the other task follows: THIS one is the Grid, canvas wide, spacing based, a view preference that no document carries. THAT one is Columns, drawn on one screen, count plus gutter plus margin, saved with the document, and it is the only one that pulls at a drag. The audit says how a person tells them apart. (3) The mock note suggested a fade band of 8 to 32 points and a separate every-tenth rule. Two ladders that do not divide each other means the strong lines stop landing on grid lines the moment the fine level changes. Built instead as ONE ladder: the strong lines ARE the next level up, so every Nth line is always stronger by construction and the fade can never knock them out of step. (4) Cut: no grid colour picker, no per document grid, no snapping (explicitly out of scope, and snapping belongs to the Columns task per the answered decision)."
+    },
+    {
+      "t": "2026-09-05T14:14:54.991330Z",
+      "note": "Level of detail maths: levels are spacing x majorEvery^k. The finest level drawn is the smallest k whose on screen spacing is at least 8 points. Three levels at most, with opacities [A*r, A, A*(1-r)] where r is a smoothstep of how far the finest level has climbed its band. That is continuous at BOTH ends of the band, so nothing pops when the ladder shifts: the level being dropped is already at zero, and the level arriving at the top starts at zero."
+    },
+    {
+      "t": "2026-09-05T14:14:54.991330Z",
+      "note": "Default multiple is 8, not 10: with a 4 point unit that makes the strong lines land on 32 points, which is a real UI rhythm, where 10 would put them on 40. It is typable, so 10 is one field away. Acceptance says 'every tenth line, or another chosen multiple'."
+    },
+    {
+      "t": "2026-09-05T14:38:33.228993Z",
+      "note": "Built. PhotonzCore/CanvasGrid.swift holds the settings and the level of detail ladder with 19 tests; Sources/Photonz/CanvasGridChrome.swift draws it as three chrome shape layers on CanvasNSView; CanvasGridStore.swift is the one shared setting behind EditorState.canvasGrid; the switch is View > Show Grid on Command apostrophe and the numbers are the Grid rows in the Canvas section of the panel. Flag next-canvas-grid, Next only, on by default."
+    },
+    {
+      "t": "2026-09-05T14:38:33.228993Z",
+      "note": "Adversarial review of the built thing, on the real app through Scripts/playtest/canvas-grid-walk.json. Two things came out of it and both were fixed before finishing. (1) The first fade shape spread the rise over a whole ladder step, so a four point grid was still under one percent opaque at 247% and only fully there past 1600%: a rung now reaches full strength once its lines are 32 view points apart, which brings the typed spacing back at a zoom people actually use, and the fade still starts and ends at zero so nothing pops. (2) The ink was a half and half mix of the accent and a neutral, which read as blueprint paper laid on the canvas rather than the canvas's own surface; it is now 62% of the way to neutral. Also found and fixed: the grid was per window, so two windows open at once could disagree until the next launch. It is one shared store now."
+    },
+    {
+      "t": "2026-09-05T14:38:33.228993Z",
+      "note": "Verified, not assumed. Grid off is byte for byte identical: the walk photographs the window off, on, and off again and the two off pictures hash the same (03c8bc82a469). The grid is absent from the composite: a render step of the document with the grid on is pure white where the lines are, which covers export, copied picture and redline sheet since all three go through that renderer. Speed over the same six zooms and a 24 step drag, harness main thread meter: grid on 320.4ms over 120 passes, longest single pass 23.8ms; grid off 312.7ms over 126 passes, longest 23.9ms. The longest pass is what decides a dropped frame and it is the same either way. Settings persist as a plain JSON blob under canvas.grid in the app's settings, outside every document. Pictures at three zooms plus dark plus columns only are in queue/audits/."
+    },
+    {
+      "t": "2026-09-05T14:38:33.228993Z",
+      "note": "Could not verify: pressing Command apostrophe. With no window focused the probe's whole View menu is dimmed, so the menu bar refuses every window scoped chord, Zoom In included; the harness menu read does confirm the row is there on the right key, and the walk presses the same call through the panel switch. Said plainly in the audit's rough list. Also filed: turning-the-grid-on-says-where-its-numbers-are, because the key brings the grid up without ever saying where the spacing lives."
     }
   ],
   "started": "2026-09-05T14:08:47.216Z"

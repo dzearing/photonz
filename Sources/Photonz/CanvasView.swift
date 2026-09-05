@@ -188,6 +188,8 @@ struct CanvasView: NSViewRepresentable {
     let onAbsorbLayerIntoCollage: (UUID, UUID, Int) -> Void
     let onSwapCollageSlots: (UUID, Int, Int) -> Void
     let isCanvasSelected: Bool
+    /// The canvas grid to draw, or nil for the canvas exactly as it was.
+    let canvasGrid: CanvasGridSettings?
     let onCanvasResize: (CGSize, CanvasAnchor) -> Void
     let onFillAt: (CGPoint, UUID?, Bool) -> Void
     let onFillSelected: (Bool) -> Void
@@ -216,7 +218,8 @@ struct CanvasView: NSViewRepresentable {
                    measureToolMode: measureToolMode,
                    measureCandidateLevel: measureCandidateLevel,
                    measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
-                   lumaField: lumaField, isCanvasSelected: isCanvasSelected)
+                   lumaField: lumaField, isCanvasSelected: isCanvasSelected,
+                   canvasGrid: canvasGrid)
         view.applyCrispTile(crispTile, viewport: crispTileViewport)
     }
 
@@ -385,6 +388,14 @@ final class CanvasNSView: NSView {
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
     /// drags — positioned in pure Core Animation, no per-move rendering.
     private let previewSpriteLayer = CALayer()
+    /// The grid you build against (Next, `next-canvas-grid`): one shape layer
+    /// per rung of the level-of-detail ladder, coarsest last, each carrying its
+    /// own strength. Chrome, so it is above the picture and out of every
+    /// export. See `CanvasGridChrome.swift`.
+    let canvasGridLayers = [CAShapeLayer(), CAShapeLayer(), CAShapeLayer()]
+    /// What the grid should be, echoed from `EditorState`; nil when the
+    /// feature is off or the grid is switched off, and then nothing is drawn.
+    var canvasGrid: CanvasGridSettings?
     /// Marching ants: a solid white stroke underneath…
     private let selectionBaseLayer = CAShapeLayer()
     /// …and animated black dashes on top, giving the classic alternating crawl.
@@ -958,6 +969,17 @@ final class CanvasNSView: NSView {
         previewSpriteLayer.isHidden = true
         layer?.addSublayer(previewSpriteLayer)
 
+        // The grid sits on the canvas surface: above the picture, so it is
+        // still there once you have drawn something over it, and below every
+        // piece of chrome, so a selection outline or a measurement is never
+        // competing with it. Its colour and strength land per refresh.
+        for shape in canvasGridLayers {
+            shape.fillColor = nil
+            shape.lineWidth = 1
+            shape.isHidden = true
+            layer?.addSublayer(shape)
+        }
+
         annotationPreviewLayer.isHidden = true
         annotationPreviewLayer.lineCap = .round
         annotationPreviewLayer.lineJoin = .round
@@ -1110,6 +1132,13 @@ final class CanvasNSView: NSView {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("not used") }
+
+    /// Light to dark and back: the grid's ink is mixed against the window's
+    /// appearance, so it is drawn again rather than left in yesterday's theme.
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        refreshOverlays()
+    }
 
     // MARK: - Drag destination (drop an image to add it as a layer)
 
@@ -2767,7 +2796,9 @@ final class CanvasNSView: NSView {
                measureCandidateLevel: Int = 0,
                measureSnapsToCenters: Bool = false,
                edgeMap: EdgeMap, lumaField: LumaField,
-               isCanvasSelected: Bool = false) {
+               isCanvasSelected: Bool = false,
+               canvasGrid: CanvasGridSettings? = nil) {
+        self.canvasGrid = canvasGrid
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
         if self.isCanvasSelected != isCanvasSelected {
             self.isCanvasSelected = isCanvasSelected
@@ -2973,6 +3004,7 @@ final class CanvasNSView: NSView {
     }
 
     private func refreshOverlaysInsideTransaction() {
+        refreshCanvasGrid()
         refreshCrispDisplay()
         refreshMarqueeDisplay()
         refreshLayerSelectionDisplay()

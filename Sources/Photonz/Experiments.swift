@@ -354,6 +354,12 @@ extension Experiments {
     /// this off, and only the Arrangement rows and the two menu items go.
     var autoLayoutEnabled: Bool { isEnabled(FeatureCatalog.autoLayoutFlag) }
 
+    /// `next-canvas-grid`: whether the canvas can show a grid to build
+    /// against. It is a view preference, not document content, so a document
+    /// made with it on is byte for byte an ordinary document, and turning the
+    /// flag off only takes away the View row and the Grid controls.
+    var canvasGridEnabled: Bool { isEnabled(FeatureCatalog.canvasGridFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

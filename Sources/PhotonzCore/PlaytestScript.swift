@@ -198,6 +198,10 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// Whether the dock and the Library are showing, how wide the dock is, and
     /// which shelf the Library is on.
     case panel
+    /// Whether the canvas grid is switched on, how far apart its lines are,
+    /// how often one of them is stronger, and whether it draws rows as well as
+    /// columns.
+    case grid
 }
 
 /// A key the script can press, named the way a person would type it: a single

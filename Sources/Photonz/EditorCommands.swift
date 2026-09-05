@@ -517,6 +517,19 @@ struct EditorCommands: Commands {
             Button("Actual Size") { editor?.zoomToActualSize() }
                 .keyboardShortcut("1", modifiers: .command)
                 .disabled(!hasDocument)
+            // The grid you build against (Next, `next-canvas-grid`), on the key
+            // Photoshop uses for its own. It is a view preference, not part of
+            // the picture, so it belongs on this menu next to the zooms rather
+            // than anywhere near Layer or Image. Its numbers are in the Canvas
+            // section of the panel.
+            if Experiments.shared.canvasGridEnabled {
+                Divider()
+                Button((editor?.canvasGrid.isVisible ?? false) ? "Hide Grid" : "Show Grid") {
+                    editor?.toggleCanvasGrid()
+                }
+                .keyboardShortcut("'", modifiers: .command)
+                .disabled(!hasDocument)
+            }
             Divider()
         }
     }

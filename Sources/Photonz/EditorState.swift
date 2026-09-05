@@ -177,6 +177,45 @@ final class EditorState {
         didSet { UserDefaults.standard.set(wandTolerance, forKey: Self.wandToleranceKey) }
     }
     static let wandToleranceKey = "wand.tolerance"
+
+    /// The grid you build against (Next, `next-canvas-grid`). A VIEW
+    /// preference: remembered between launches, carried by no document, and
+    /// drawn by the canvas rather than the renderer, so it never reaches an
+    /// export, a copied picture or a redline sheet. Not the same thing as a
+    /// screen's column overlay, which belongs to one frame and is saved with
+    /// the document.
+    /// One grid for the whole app, so two windows open side by side are never
+    /// showing different ones, and switching it on in either switches it on in
+    /// both. See `CanvasGridStore`.
+    var canvasGrid: CanvasGridSettings {
+        get { CanvasGridStore.shared.settings }
+        set { CanvasGridStore.shared.settings = newValue }
+    }
+    static let canvasGridKey = CanvasGridStore.defaultsKey
+
+    /// What the canvas should actually draw: nothing at all unless the feature
+    /// is on AND the grid is switched on, so with either off the canvas is
+    /// exactly what it was.
+    var drawnCanvasGrid: CanvasGridSettings? {
+        guard Experiments.shared.canvasGridEnabled, canvasGrid.isVisible else { return nil }
+        return canvasGrid
+    }
+
+    func toggleCanvasGrid() { canvasGrid.isVisible.toggle() }
+
+    func setCanvasGridAxes(_ axes: CanvasGridAxes) { canvasGrid.axes = axes }
+
+    /// Typing a spacing switches the grid ON: nobody sets a number for a grid
+    /// they cannot see.
+    func setCanvasGridSpacing(_ spacing: CGFloat) {
+        canvasGrid.spacing = CanvasGridSettings.clamped(spacing: spacing)
+        canvasGrid.isVisible = true
+    }
+
+    func setCanvasGridMajorEvery(_ every: Int) {
+        canvasGrid.majorEvery = CanvasGridSettings.clamped(majorEvery: every)
+        canvasGrid.isVisible = true
+    }
     /// The active editor tool. Drawing tools are STICKY (Photoshop-style, 17.12):
     /// after a shape is drawn the tool stays active so you can draw more of them.
     /// Switch to `.select` (V) to adjust a placed shape.

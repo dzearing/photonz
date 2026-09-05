@@ -1,0 +1,28 @@
+{
+  "id": "turning-the-grid-on-says-where-its-numbers-are",
+  "title": "Turning the grid on says where its numbers are",
+  "goal": "Pressing Command apostrophe brings the canvas grid up, and nothing on screen says how to change how far apart its lines are. The numbers are in the Canvas section of the panel, which you only reach by clicking the Canvas row at the bottom of the layers list, and nobody browses there. Turning the grid on should point at its own settings, so the first thing a person does after seeing the grid is not hunt for it.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1190,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T14:37:52.180Z",
+  "updated": "2026-09-05T14:37:52.181Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-05-canvas-grid.json. The grid landed on 2026-09-05: View menu Show Grid on Command apostrophe (EditorCommands.swift), numbers in CanvasInspector inside LayersPanel.swift, drawing in CanvasGridChrome.swift, maths in PhotonzCore/CanvasGrid.swift. Candidates: a one line toast when it comes on that links to the section, an entry on the View menu that opens the Canvas section, or moving the numbers somewhere a person already looks. Do NOT auto select the Canvas row: that would throw away the selection the person had, which is worse than the problem.",
+  "acceptance": [
+    "Switching the grid on from the menu or the key leaves the person able to reach the spacing without hunting: the route is on screen, not remembered",
+    "Whatever the route is, it does not change what is selected, so turning the grid on never costs you the layer you had picked",
+    "Switching the grid off puts everything back exactly as it was",
+    "A person who has never used it can go from grid on to a changed spacing without being told where to look"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T14:37:52.181Z",
+      "note": "created (manual)"
+    }
+  ]
+}
