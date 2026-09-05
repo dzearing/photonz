@@ -1,0 +1,34 @@
+{
+  "id": "a-short-caption-stays-a-pill-instead-of-collapsi",
+  "title": "A short caption stays a pill instead of collapsing into a pointed oval",
+  "goal": "An arrow caption with very little in it draws as a pointed oval, two arcs meeting at a point on each side, because the rounded ends are wider than the pill itself. A caption should always read as a pill or a badge: never narrower than its own height plus a margin, and never able to form a point.",
+  "epic": "epic-uehjr1",
+  "priority": "p2-normal",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T16:56:53.127Z",
+  "updated": "2026-09-05T16:56:53.163Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05 with a screenshot of a nearly empty caption drawn as a lens. Cause found by reading: PillRasterizer line 54 takes the corner radius as chipSize.height / 2 unconditionally and builds a rounded rect with it. When the width is less than the height the two rounded ends overlap and the path degenerates into two arcs meeting at points, which is exactly the shape in the screenshot. Two changes, both needed: clamp the radius to half the SMALLER side so the path can never degenerate, and give the pill a minimum width of its height times about 1.2 so a short label still reads as a pill rather than a circle. The size comes from AnnotationContent.estimatedCaptionSize (Layer.swift line 262), which is a generous estimate used for frame reservation, while the rasterizer measures the real text and draws a smaller pill from the same attachment; apply the minimum in BOTH so the reserved box still contains what is drawn. Note the related task an-arrow-can-wear-a-different-head-and-its-pill makes the corner radius adjustable; the clamp has to hold for every radius that task allows, so whichever lands second should keep the other rule.",
+  "acceptance": [
+    "A caption pill is never narrower than its height plus about a fifth, however short the text is, including an empty one",
+    "No caption ever draws with a point on its side, at any font size, stroke width or zoom",
+    "A caption with plenty of text is exactly the size it is today",
+    "The text stays centred in the wider pill",
+    "Pixel tests in PhotonzRender cover an empty caption, a one character caption and a long one, written before the change",
+    "Audit written under queue/audits/ with a one character and an empty caption beside a normal one, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T16:56:53.128Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T16:56:53.162Z",
+      "note": "seq 1240 -> 7"
+    }
+  ]
+}
