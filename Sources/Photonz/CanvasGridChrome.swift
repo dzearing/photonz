@@ -146,7 +146,10 @@ extension CanvasNSView {
         guard !drawn.isEmpty else { return "zoom \(zoom) · nothing drawn" }
         let strengths = drawn.map { String(format: "%.3f", $0.opacity) }.joined(separator: " ")
         let side = canvasGrid?.isVisible == true ? "over" : "under"
-        return "zoom \(zoom) · \(drawn.count) rungs · \(strengths) · \(side)"
+        // What a drag would land on right now, beside what is being drawn, so
+        // one line of the log answers "does the pull match the picture".
+        let pull = canvasSnapSpacing.map { String(format: "%g", Double($0)) } ?? "nothing"
+        return "zoom \(zoom) · \(drawn.count) rungs · \(strengths) · \(side) · pulls to \(pull)"
     }
 
     /// Whether a person can see the grid at all at this instant: something

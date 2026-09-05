@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:38:05.136Z",
-  "updated": "2026-09-05T17:38:05.137Z",
+  "updated": "2026-09-05T20:41:32.577Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. CanvasGridLevels.minimumOnScreenSpacing is 8 view points and strength() is zero at the floor, so at zoom 1 a 4pt grid draws its first rung at 32. CanvasGridSettings.snapSpacing deliberately returns the configured spacing rather than the finest drawn rung, because a pull that changed with the zoom would be its own kind of jumping. Options worth weighing: show the drawn spacing beside the Spacing field; draw the set spacing faintly below the floor; or offer a Snap to setting separate from the drawn spacing.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-05T17:38:05.137Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-05T20:41:32.577Z",
+      "note": "Half of this was answered on 2026-09-05 by the p1 task snapping-pulls-to-the-grid-you-can-see-not-one-y: the pull now comes off the same ladder the drawing uses, so an edge can no longer land between two drawn lines. What is LEFT of this task is the first acceptance item only, saying somewhere on screen what the lines you are looking at are worth right now (at 100% a grid set to 4 draws and pulls to 32). The third acceptance item, 'zooming in and out never changes where a drag lands', is SUPERSEDED: the user filed the p1 task later asking for exactly the opposite, and it shipped. Do not restore it."
     }
   ]
 }

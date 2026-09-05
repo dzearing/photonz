@@ -48,14 +48,27 @@ public enum Snapping {
         public var guideXSpan: Span?
         /// How far across the horizontal guide reaches; nil means all of it.
         public var guideYSpan: Span?
+        /// The GRID line the point came to rest on down this axis, when the
+        /// grid is what placed it. Nil when a real edge won instead, or when
+        /// the grid is not pulling. Kept apart from `guideX` because the two
+        /// mean different things and are drawn differently: a guide says "you
+        /// lined up with that thing", a grid line says "you are on this line
+        /// of the paper", and the canvas lights up the line already on screen
+        /// rather than laying a second rule over it.
+        public var gridX: CGFloat?
+        /// The same for the horizontal grid line.
+        public var gridY: CGFloat?
 
         public init(origin: CGPoint, guideX: CGFloat? = nil, guideY: CGFloat? = nil,
-                    guideXSpan: Span? = nil, guideYSpan: Span? = nil) {
+                    guideXSpan: Span? = nil, guideYSpan: Span? = nil,
+                    gridX: CGFloat? = nil, gridY: CGFloat? = nil) {
             self.origin = origin
             self.guideX = guideX
             self.guideY = guideY
             self.guideXSpan = guideXSpan
             self.guideYSpan = guideYSpan
+            self.gridX = gridX
+            self.gridY = gridY
         }
     }
 
@@ -68,14 +81,20 @@ public enum Snapping {
         public var guideY: CGFloat?
         public var guideXSpan: Span?
         public var guideYSpan: Span?
+        /// The grid line the dragged edge came to rest on. See `Result.gridX`.
+        public var gridX: CGFloat?
+        public var gridY: CGFloat?
 
         public init(frame: CGRect, guideX: CGFloat? = nil, guideY: CGFloat? = nil,
-                    guideXSpan: Span? = nil, guideYSpan: Span? = nil) {
+                    guideXSpan: Span? = nil, guideYSpan: Span? = nil,
+                    gridX: CGFloat? = nil, gridY: CGFloat? = nil) {
             self.frame = frame
             self.guideX = guideX
             self.guideY = guideY
             self.guideXSpan = guideXSpan
             self.guideYSpan = guideYSpan
+            self.gridX = gridX
+            self.gridY = gridY
         }
     }
 
@@ -85,9 +104,13 @@ public enum Snapping {
     public static func snapFrameOrigin(_ proposed: CGPoint, size: CGSize, canvas: CGSize,
                                        peers: [CGRect] = [], gridSpacing: CGFloat? = nil,
                                        gridOrigin: CGPoint = .zero,
+                                       gridAxes: CanvasGridAxes = .columnsAndRows,
                                        zoom: CGFloat, screenTolerance: CGFloat = 8,
                                        holding held: SnapHold = .none) -> Result {
         let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
+        // A grid set to columns draws no lines across, so there is nothing to
+        // land on down that axis and nothing pulls there.
+        let gridRows = gridAxes.drawsRows ? gridSpacing : nil
         let x = snapAxis(origin: proposed.x, length: size.width, canvasLength: canvas.width,
                          crossOrigin: proposed.y, crossLength: size.height,
                          peers: peers.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) },
@@ -96,11 +119,12 @@ public enum Snapping {
         let y = snapAxis(origin: proposed.y, length: size.height, canvasLength: canvas.height,
                          crossOrigin: proposed.x, crossLength: size.width,
                          peers: peers.map { Peer(along: ($0.minY, $0.maxY), cross: ($0.minX, $0.maxX)) },
-                         gridSpacing: gridSpacing, gridOrigin: gridOrigin.y,
+                         gridSpacing: gridRows, gridOrigin: gridOrigin.y,
                          tolerance: tolerance, held: held.y)
         return Result(origin: CGPoint(x: x.origin, y: y.origin),
                       guideX: x.guide, guideY: y.guide,
-                      guideXSpan: x.span, guideYSpan: y.span)
+                      guideXSpan: x.span, guideYSpan: y.span,
+                      gridX: x.grid, gridY: y.grid)
     }
 
     /// Snaps the edge or corner a resize is DRAGGING, and leaves the one it is
@@ -122,11 +146,16 @@ public enum Snapping {
     public static func snapResizedFrame(_ proposed: CGRect, handle: ResizeHandle,
                                         canvas: CGSize, peers: [CGRect] = [],
                                         gridSpacing: CGFloat? = nil,
-                                        gridOrigin: CGPoint = .zero, zoom: CGFloat,
+                                        gridOrigin: CGPoint = .zero,
+                                        gridAxes: CanvasGridAxes = .columnsAndRows,
+                                        zoom: CGFloat,
                                         screenTolerance: CGFloat = 8,
                                         minSize: CGFloat = 1,
                                         holding held: SnapHold = .none) -> FrameResult {
         let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
+        // Columns only: nothing is drawn across the canvas, so a top or bottom
+        // edge pulls to nothing rather than to a line that is not there.
+        let gridRows = gridAxes.drawsRows ? gridSpacing : nil
         var frame = proposed
         var result = FrameResult(frame: proposed)
 
@@ -153,12 +182,13 @@ public enum Snapping {
                 }
                 result.guideX = snap.guide
                 result.guideXSpan = snap.span
+                result.gridX = snap.grid
             }
         }
         if handle.movesMinY || handle.movesMaxY {
             let moving = handle.movesMinY ? proposed.minY : proposed.maxY
             let snap = snapEdge(moving, canvasLength: canvas.height, crossSpan: crossY,
-                                peers: yPeers, gridSpacing: gridSpacing, gridOrigin: gridOrigin.y,
+                                peers: yPeers, gridSpacing: gridRows, gridOrigin: gridOrigin.y,
                                 tolerance: tolerance,
                                 held: held.y)
             let limit = handle.movesMinY ? proposed.maxY - minSize : proposed.minY + minSize
@@ -170,6 +200,7 @@ public enum Snapping {
                 }
                 result.guideY = snap.guide
                 result.guideYSpan = snap.span
+                result.gridY = snap.grid
             }
         }
         result.frame = frame
@@ -200,7 +231,7 @@ public enum Snapping {
                                  crossOrigin: CGFloat, crossLength: CGFloat,
                                  peers: [Peer], gridSpacing: CGFloat?, gridOrigin: CGFloat = 0,
                                  tolerance: CGFloat, held: CGFloat? = nil)
-        -> (origin: CGFloat, guide: CGFloat?, span: Span?) {
+        -> (origin: CGFloat, guide: CGFloat?, span: Span?, grid: CGFloat?) {
         let mine = Span(start: crossOrigin, end: crossOrigin + crossLength)
         var candidates: [Candidate] = [
             Candidate(offset: 0, target: 0, span: nil),
@@ -226,10 +257,16 @@ public enum Snapping {
             // of its own: the whole point of switching a grid on is that things
             // land on it, and a magnet whose reach is half the gap would be on
             // everywhere anyway. ⌘ is what turns it off for one drag.
-            return (quantized(origin, to: gridSpacing, from: gridOrigin), nil, nil)
+            let landed = quantized(origin, to: gridSpacing, from: gridOrigin, held: held,
+                                   tolerance: tolerance)
+            // The line it landed on is the answer itself: the leading edge is
+            // what the grid holds, so lighting up `landed` lights up the line
+            // the edge is standing on.
+            return (landed, nil, nil, gridSpacing == nil ? nil : landed)
         }
         return (best.candidate.target - best.candidate.offset, best.candidate.target,
-                widened(best.candidate.span, sharing: best.candidate.target, among: candidates))
+                widened(best.candidate.span, sharing: best.candidate.target, among: candidates),
+                nil)
     }
 
     /// Snaps ONE edge: the leading or trailing edge a resize is dragging. The
@@ -239,7 +276,7 @@ public enum Snapping {
     private static func snapEdge(_ value: CGFloat, canvasLength: CGFloat, crossSpan: Span,
                                  peers: [Peer], gridSpacing: CGFloat?, gridOrigin: CGFloat = 0,
                                  tolerance: CGFloat, held: CGFloat? = nil)
-        -> (value: CGFloat, guide: CGFloat?, span: Span?) {
+        -> (value: CGFloat, guide: CGFloat?, span: Span?, grid: CGFloat?) {
         var candidates: [Candidate] = [
             Candidate(offset: 0, target: 0, span: nil),
             Candidate(offset: 0, target: canvasLength / 2, span: nil),
@@ -255,10 +292,13 @@ public enum Snapping {
         }
 
         guard let best = capture(value, among: candidates, tolerance: tolerance, held: held) else {
-            return (quantized(value, to: gridSpacing, from: gridOrigin), nil, nil)
+            let landed = quantized(value, to: gridSpacing, from: gridOrigin, held: held,
+                                   tolerance: tolerance)
+            return (landed, nil, nil, gridSpacing == nil ? nil : landed)
         }
         return (best.candidate.target, best.candidate.target,
-                widened(best.candidate.span, sharing: best.candidate.target, among: candidates))
+                widened(best.candidate.span, sharing: best.candidate.target, among: candidates),
+                nil)
     }
 
     /// The nearest candidate within reach. Ties go to the canvas, then to the
@@ -311,11 +351,39 @@ public enum Snapping {
     /// `origin` is where the grid starts. Counting whole steps FROM it is what
     /// makes a snapped edge land exactly on a drawn line: the grid's lines are
     /// counted from the same point in exactly the same way.
+    ///
+    /// `held` is the grid line the drag is already standing on, and it is lit
+    /// on screen. Since the pull is as coarse as the lines a person can see,
+    /// the halfway mark between two of them is a cliff: without a dead band, a
+    /// hand wobbling either side of it throws the whole box a cell back and
+    /// forth. So a lit line keeps the drag a few SCREEN points past halfway — a
+    /// tremor is the same few points whatever the zoom — and only a clear move
+    /// hands it on. Same promise as a guide's hold: a line that is showing is a
+    /// line you get.
     private static func quantized(_ value: CGFloat, to spacing: CGFloat?,
-                                  from origin: CGFloat = 0) -> CGFloat {
+                                  from origin: CGFloat = 0,
+                                  held: CGFloat? = nil,
+                                  tolerance: CGFloat = 0) -> CGFloat {
         guard let spacing, spacing.isFinite, spacing > 0, value.isFinite,
               origin.isFinite else { return value }
-        return origin + ((value - origin) / spacing).rounded() * spacing
+        let landed = origin + ((value - origin) / spacing).rounded() * spacing
+        // Only a line of THIS grid can hold a drag on this grid: a guide left
+        // over from a layer edge is a different kind of line and has no say.
+        // Never more than one whole cell of hold: a magnet whose reach is wide
+        // compared with the cell (a fine grid seen from far away) must not be
+        // able to leave the box a cell and a half behind the pointer.
+        let slack = min(max(0, tolerance) * SnapHold.gridReleaseSlack, spacing / 2)
+        let keep = spacing / 2 + slack
+        guard let held, held.isFinite, isOnGrid(held, spacing: spacing, from: origin),
+              abs(value - held) <= keep else { return landed }
+        return held
+    }
+
+    /// Whether `value` is a whole number of steps from where the grid starts.
+    private static func isOnGrid(_ value: CGFloat, spacing: CGFloat,
+                                 from origin: CGFloat) -> Bool {
+        let steps = (value - origin) / spacing
+        return abs(steps - steps.rounded()) < 1e-6
     }
 }
 

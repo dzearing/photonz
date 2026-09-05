@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:38:05.176Z",
-  "updated": "2026-09-05T17:38:05.176Z",
+  "updated": "2026-09-05T20:41:32.604Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. Nudge.swift in PhotonzCore holds the step; CanvasGridSettings.snapSpacing is the grid step to use. TDD in core.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-05T17:38:05.176Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-05T20:41:32.604Z",
+      "note": "Note from 2026-09-05: CanvasGridSettings.snapSpacing is now a function, snapSpacing(atZoom:), because the pull follows the lines being drawn at the current zoom. A nudge has no zoom of its own, so this task has a question to answer that it did not have before: an arrow key should almost certainly step by the same thing a drag lands on, which means reading the canvas's zoom (CanvasView.canvasSnapSpacing already does exactly that) rather than the typed spacing."
     }
   ]
 }

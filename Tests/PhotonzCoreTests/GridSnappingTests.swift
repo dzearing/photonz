@@ -29,23 +29,22 @@ struct GridSnapToGridSettingTests {
     // MARK: What a drag actually pulls to
 
     @Test func aHiddenGridPullsAtNothing() {
-        #expect(CanvasGridSettings(isVisible: false, spacing: 4).snapSpacing == nil)
+        #expect(CanvasGridSettings(isVisible: false, spacing: 4).snapSpacing(atZoom: 1) == nil)
     }
 
     @Test func theSwitchOffStopsThePullWithoutHidingTheGrid() {
         var settings = CanvasGridSettings(isVisible: true, spacing: 4)
         settings.snapsToGrid = false
         #expect(settings.isVisible)
-        #expect(settings.snapSpacing == nil)
+        #expect(settings.snapSpacing(atZoom: 1) == nil)
     }
 
-    /// A grid set to four means things land on fours, and on the SAME fours
-    /// however close you happen to be standing. A pull that got coarser as you
-    /// zoomed out would make the same drag give different answers at different
-    /// zooms, which is its own kind of jumping.
-    @Test func theDragPullsToTheSpacingThatWasTypedIn() {
-        #expect(CanvasGridSettings(isVisible: true, spacing: 4).snapSpacing == 4)
-        #expect(CanvasGridSettings(isVisible: true, spacing: 16).snapSpacing == 16)
+    /// A grid pulls to the lines it is DRAWING at this zoom, so a spacing fine
+    /// enough to be a grey wash is not what things land on. See
+    /// `GridVisibleSnapTests` for the whole of that rule.
+    @Test func theDragPullsToTheSpacingOnScreenRatherThanTheOneTypedIn() {
+        #expect(CanvasGridSettings(isVisible: true, spacing: 4).snapSpacing(atZoom: 1) == 32)
+        #expect(CanvasGridSettings(isVisible: true, spacing: 16).snapSpacing(atZoom: 1) == 16)
     }
 }
 
@@ -138,7 +137,7 @@ struct ResizeSnappingTests {
         for zoom in [CGFloat(0.25), 0.5, 1, 2, 4, 8] {
             for spacing in [CGFloat(1), 4, 10, 16, 64] {
                 let settings = CanvasGridSettings(isVisible: true, spacing: spacing)
-                guard let step = settings.snapSpacing else { continue }
+                guard let step = settings.snapSpacing(atZoom: zoom) else { continue }
                 let start = CGRect(x: 200, y: 300, width: 137.31, height: 100)
                 let out = resize(start, .right, grid: step, zoom: zoom)
                 let offGrid = abs(out.frame.maxX.truncatingRemainder(dividingBy: step))

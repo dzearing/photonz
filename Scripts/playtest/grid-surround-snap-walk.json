@@ -45,12 +45,12 @@
     { "do": "drag", "from": [323, 450], "to": [341, 450], "steps": 8 },
     { "do": "describe", "stage": "grid-resize-1", "note": "right edge dragged to 341, expect it on a 16 line" },
     { "do": "drag", "from": [341, 450], "to": [346, 450], "steps": 8 },
-    { "do": "describe", "stage": "grid-resize-2", "note": "and again, five points on, expect it still on a 16 line" },
-    { "do": "drag", "from": [346, 450], "to": [353, 450], "steps": 8 },
-    { "do": "describe", "stage": "grid-resize-3" },
+    { "do": "describe", "stage": "grid-resize-2", "note": "and again, five points on: expect the edge still on 336, since a lit line keeps the drag a few screen points past the halfway mark rather than flipping a whole cell on a wobble" },
+    { "do": "drag", "from": [336, 450], "to": [353, 450], "steps": 8 },
+    { "do": "describe", "stage": "grid-resize-3", "note": "grabbed at the edge itself, which is where a person reaches for it, and dragged clearly past halfway: expect 352" },
     { "do": "snapshot", "name": "resize-on-grid" },
 
-    { "do": "drag", "from": [353, 450], "to": [359, 450], "steps": 8, "modifiers": ["command"] },
+    { "do": "drag", "from": [352, 450], "to": [359, 450], "steps": 8, "modifiers": ["command"] },
     { "do": "describe", "stage": "command-frees-the-resize", "note": "Command held: expect the edge exactly where the pointer left it, 359, off every line" },
 
     { "do": "drag", "from": [359, 450], "to": [497, 450], "steps": 16, "hold": "resize-catches-peer" },

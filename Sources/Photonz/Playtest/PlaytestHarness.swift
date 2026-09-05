@@ -401,6 +401,9 @@ private final class Run {
             let across = CGPoint(x: -along.y, y: along.x)
             let shake: [CGFloat] = [0, 1, -0.7, 0.4, -0.3, 0.9, -0.9, 0.2]
             var guides = SnapGuideTally()
+            // The grid line the drag is standing on, read the same way: which
+            // lines it stepped through, and which one it was on at the end.
+            var gridLines = SnapGuideTally(label: "grid lines")
             if let event = mouseEvent(.leftMouseDown, at: a, on: canvas, flags: flags) { canvas.mouseDown(with: event) }
             for i in 1...steps {
                 let t = CGFloat(i) / CGFloat(steps)
@@ -410,6 +413,7 @@ private final class Run {
                                 y: a.y + (b.y - a.y) * t + along.y * shiver + across.y * sway)
                 if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: flags) { canvas.mouseDragged(with: event) }
                 guides.record(canvas.liveSnapGuides)
+                gridLines.record(canvas.liveGridSnapLines)
                 await sleep(0.02)
             }
             // Anything that lives only while the button is down — the yellow
@@ -427,7 +431,7 @@ private final class Run {
             await sleep(0.05)
             note(number, step.name,
                  "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held), "
-                     + "cursor while down \(heldCursor), \(guides.reading)",
+                     + "cursor while down \(heldCursor), \(guides.reading), \(gridLines.reading)",
                  state: describe())
 
         case .type(let text):
@@ -2710,6 +2714,9 @@ final class MainThreadMeter {
 /// another, then returned to the first. That is the flicker, and on a fixed
 /// hold it is zero however much the hand shakes.
 private struct SnapGuideTally {
+    /// What these lines are called in the log: the yellow guides, or the grid
+    /// lines a drag is standing on. Same counting, different meaning.
+    let label: String
     private var caught = 0
     private var released = 0
     private var changes = 0
@@ -2717,6 +2724,8 @@ private struct SnapGuideTally {
     private var showing: Bool?
     /// The readings so far, only where they differ from the one before.
     private var distinct: [String] = []
+
+    init(label: String = "guides") { self.label = label }
 
     mutating func record(_ guides: (x: CGFloat?, y: CGFloat?)) {
         let isShowing = guides.x != nil || guides.y != nil
@@ -2740,7 +2749,8 @@ private struct SnapGuideTally {
     }
 
     var reading: String {
-        "guides caught \(caught), let go \(released), changed \(changes), went back on themselves \(reversals)"
+        "\(label) caught \(caught), let go \(released), changed \(changes), "
+            + "went back on themselves \(reversals), last \(distinct.last ?? "-")"
     }
 }
 #endif

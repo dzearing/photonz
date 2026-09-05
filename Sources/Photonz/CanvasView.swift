@@ -415,6 +415,11 @@ final class CanvasNSView: NSView {
     /// starts while the zero point is being placed. Chrome above everything,
     /// so they are never lost in the grid they are moving.
     let gridOriginLayer = CAShapeLayer()
+    /// The grid line a drag is standing on, lit up while it holds. It is one of
+    /// the lines already on screen drawn again at full strength, not a rule
+    /// laid over them, so the answer to "what did it snap to" is a line you
+    /// were already looking at. See `refreshGridSnapLines(in:)`.
+    private let gridSnapLayer = CAShapeLayer()
     /// The zero point being placed, in document points, or nil when the canvas
     /// is not in that mode. Set by `apply`, read by the grid chrome, the mouse
     /// and the keyboard.
@@ -995,6 +1000,7 @@ final class CanvasNSView: NSView {
                               pointer p: CGPoint, preserveAspect: Bool,
                               peers: [CGRect] = [], gridSpacing: CGFloat? = nil,
                               gridOrigin: CGPoint = .zero,
+                              gridAxes: CanvasGridAxes = .columnsAndRows,
                               holding held: SnapHold = .none)
         -> Snapping.FrameResult {
         let local = handleSpacePoint(p, layer: layer)
@@ -1006,6 +1012,7 @@ final class CanvasNSView: NSView {
                                                canvas: viewport?.documentSize ?? .zero,
                                                peers: peers, gridSpacing: gridSpacing,
                                                gridOrigin: gridOrigin,
+                                               gridAxes: gridAxes,
                                                zoom: viewport?.zoom ?? 1,
                                                holding: held)
         frame = result.frame
@@ -1033,11 +1040,15 @@ final class CanvasNSView: NSView {
     }
 
     /// How far apart the lines a drag pulls to are, or nil when nothing is
-    /// pulling: the feature off, the grid switched off, or Snap to grid
-    /// switched off.
+    /// pulling: the feature off, the grid switched off, Snap to grid switched
+    /// off, or nothing on the ladder far enough apart on screen to aim at.
+    ///
+    /// It follows the ZOOM, because it follows the lines actually drawn: what
+    /// a drag lands on is always something you can watch it land on. See
+    /// `CanvasGridSettings.snapSpacing(atZoom:)`.
     var canvasSnapSpacing: CGFloat? {
-        guard canvasGridEnabled else { return nil }
-        return canvasGrid?.snapSpacing
+        guard canvasGridEnabled, let viewport else { return nil }
+        return canvasGrid?.snapSpacing(atZoom: viewport.zoom)
     }
 
     /// Where the grid the drag is pulling to starts. Counting from the same
@@ -1046,6 +1057,12 @@ final class CanvasNSView: NSView {
     var canvasSnapOrigin: CGPoint {
         guard canvasGridEnabled else { return .zero }
         return canvasGrid?.origin ?? .zero
+    }
+
+    /// Which ways the grid's lines run, so a grid set to columns pulls sideways
+    /// and leaves the other axis alone: there is no line across to land on.
+    var canvasSnapAxes: CanvasGridAxes {
+        canvasGrid?.axes ?? .columnsAndRows
     }
 
     /// The zero point's own drag: a press anywhere on the canvas picks the
@@ -1169,8 +1186,8 @@ final class CanvasNSView: NSView {
         for shape in [collageWellsLayer, slotHighlightLayer,
                       dropLandingLayer, dropHostFrameLayer,
                       selectionBaseLayer, selectionAntsLayer, layerOutlineLayer,
-                      multiSelectOutlineLayer, gridOriginLayer, snapGuideLayer,
-                      handlesLayer] {
+                      multiSelectOutlineLayer, gridSnapLayer, gridOriginLayer,
+                      snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
             shape.isHidden = true
@@ -1237,6 +1254,11 @@ final class CanvasNSView: NSView {
         multiSelectOutlineLayer.lineCap = .round
         multiSelectOutlineLayer.lineDashPattern = [2, 4]
         snapGuideLayer.strokeColor = NSColor.systemYellow.cgColor
+        // The lit grid line: the grid's own accent, brought up to full strength
+        // from the wash it is drawn at. One point wide and unbroken, like the
+        // line underneath it, so it reads as that line lighting up rather than
+        // as a second line arriving.
+        gridSnapLayer.strokeColor = NSColor.controlAccentColor.cgColor
         // The zero point's two markers: the accent at full strength, twice as
         // wide as a grid line and unbroken, so they never read as two of the
         // lines they are placing.
@@ -2289,8 +2311,12 @@ final class CanvasNSView: NSView {
                                         peers: snapping ? drag.peers : [],
                                         gridSpacing: snapping ? canvasSnapSpacing : nil,
                                         gridOrigin: canvasSnapOrigin,
+                                        gridAxes: canvasSnapAxes,
                                         holding: snapping ? held : .none)
-            snapHold.caught(x: drag.snapped.guideX, y: drag.snapped.guideY)
+            // The lit grid line counts as a line the drag is standing on, so it
+            // holds through a wobble exactly as a guide does.
+            snapHold.caught(x: drag.snapped.guideX ?? drag.snapped.gridX,
+                            y: drag.snapped.guideY ?? drag.snapped.gridY)
             drag.frame = drag.snapped.frame
             resizeDrag = drag
             onFramePreview(drag.layerID, drag.frame)
@@ -2320,10 +2346,12 @@ final class CanvasNSView: NSView {
                                                             peers: drag.peers,
                                                             gridSpacing: canvasSnapSpacing,
                                                             gridOrigin: canvasSnapOrigin,
+                                                            gridAxes: canvasSnapAxes,
                                                             zoom: viewport.zoom,
                                                             holding: held)
                 }
-                snapHold.caught(x: drag.snapped.guideX, y: drag.snapped.guideY)
+                snapHold.caught(x: drag.snapped.guideX ?? drag.snapped.gridX,
+                                y: drag.snapped.guideY ?? drag.snapped.gridY)
                 if drag.copying {
                     onCopyDragPreview([drag.layerID: drag.snapped.origin])
                 } else {
@@ -2365,10 +2393,12 @@ final class CanvasNSView: NSView {
                                                             peers: drag.peers,
                                                             gridSpacing: canvasSnapSpacing,
                                                             gridOrigin: canvasSnapOrigin,
+                                                            gridAxes: canvasSnapAxes,
                                                             zoom: viewport.zoom,
                                                             holding: held)
                 }
-                snapHold.caught(x: drag.snapped.guideX, y: drag.snapped.guideY)
+                snapHold.caught(x: drag.snapped.guideX ?? drag.snapped.gridX,
+                                y: drag.snapped.guideY ?? drag.snapped.gridY)
                 let origins = drag.plan.origins(movingBoundsTo: drag.snapped.origin)
                 if drag.copying {
                     onCopyDragPreview(origins)
@@ -3948,6 +3978,57 @@ final class CanvasNSView: NSView {
         }
         snapGuideLayer.path = guides
         snapGuideLayer.isHidden = guides.isEmpty
+        refreshGridSnapLines(in: viewport)
+    }
+
+    /// The grid line a drag came to rest on, lit up while it holds it.
+    ///
+    /// It answers a different question from the yellow guides above. A guide
+    /// says "you lined up with THAT thing" and is news; the grid is pulling all
+    /// the time, so a yellow cross on screen through every drag would say
+    /// nothing and would drain the yellow of its meaning. Instead the line the
+    /// edge landed on is drawn again in the grid's own accent at full strength,
+    /// running right across the view the way the grid does, so the answer to
+    /// "what did it catch" is one of the lines you are already looking at.
+    ///
+    /// The moment a real edge wins on an axis, `gridX`/`gridY` go quiet for
+    /// that axis and the yellow guide takes over, which is exactly the handover
+    /// a person expects: the grid holds you until something better does.
+    private func refreshGridSnapLines(in viewport: Viewport) {
+        let move = moveDrag?.snapped ?? multiMove.flatMap { $0.moved ? $0.snapped : nil }
+        let resize = resizeDrag?.snapped
+        let x = move?.gridX ?? resize?.gridX
+        let y = move?.gridY ?? resize?.gridY
+        guard canvasGridEnabled, x != nil || y != nil,
+              bounds.width > 0.5, bounds.height > 0.5 else {
+            gridSnapLayer.path = nil
+            gridSnapLayer.isHidden = true
+            return
+        }
+        let path = CGMutablePath()
+        // Whole view points, for the same reason the grid itself rounds: a one
+        // point line off the pixel grid is a two point smear, and this one has
+        // to sit exactly on the line underneath it.
+        if let x {
+            let vx = viewport.viewPoint(fromDocument: CGPoint(x: x, y: 0)).x.rounded()
+            path.move(to: CGPoint(x: vx, y: bounds.minY))
+            path.addLine(to: CGPoint(x: vx, y: bounds.maxY))
+        }
+        if let y {
+            let vy = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: y)).y.rounded()
+            path.move(to: CGPoint(x: bounds.minX, y: vy))
+            path.addLine(to: CGPoint(x: bounds.maxX, y: vy))
+        }
+        gridSnapLayer.path = path
+        gridSnapLayer.isHidden = path.isEmpty
+    }
+
+    /// The grid lines lit up RIGHT NOW, for a scripted walk to read: the same
+    /// pair `refreshGridSnapLines` draws, in document points.
+    var liveGridSnapLines: (x: CGFloat?, y: CGFloat?) {
+        let move = moveDrag?.snapped ?? multiMove.flatMap { $0.moved ? $0.snapped : nil }
+        let resize = resizeDrag?.snapped
+        return (move?.gridX ?? resize?.gridX, move?.gridY ?? resize?.gridY)
     }
 
     /// A guide's reach, from canvas points into view points, with a few points

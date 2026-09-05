@@ -43,6 +43,19 @@ public struct SnapHold: Equatable, Sendable {
     /// until 16 — a wobble can never lose you a line you are standing on.
     public static let releaseFactor: CGFloat = 2
 
+    /// The same promise for a GRID line, where there is no reach to double: the
+    /// grid pulls everywhere, so what needs a dead band is the halfway mark
+    /// between two lines. A lit line keeps the drag a little PAST that mark,
+    /// and this is how far past, as a fraction of the magnet's reach: half of
+    /// it, so four screen points at the usual eight.
+    ///
+    /// Screen points, not a fraction of the cell, because the thing being
+    /// ridden out is a hand — a tremor is a few points of travel whatever the
+    /// zoom, and a fraction of the cell would put a coarse grid's dead band
+    /// tens of points wide and leave the edge trailing miles behind the
+    /// pointer.
+    public static let gridReleaseSlack: CGFloat = 0.5
+
     /// Remember what this event's snap caught, so the next one can keep it.
     /// A freed drag catches nothing, whatever it is told.
     public mutating func caught(x: CGFloat?, y: CGFloat?) {

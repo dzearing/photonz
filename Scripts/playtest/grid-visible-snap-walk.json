@@ -1,0 +1,58 @@
+{
+  "out": "/tmp/photonz-playtest/grid-visible-snap-walk",
+  "setup": {
+    "forget": ["grid", "shapes", "tools", "panel"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "grid-on-default", "note": "default four point grid at 100%: the canvas draws 32s, so the report should say it pulls to 32" },
+    { "do": "snapshot", "name": "visible-snap-1-grid-on" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [400, 300], "to": [500, 360] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [450, 330] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "box-drawn", "note": "a 100x60 box at 400,300 to drag about, selected" },
+
+    { "do": "drag", "from": [450, 330], "to": [489, 375], "steps": 16, "wobble": 3, "hold": "visible-snap-2-caught" },
+    { "do": "describe", "stage": "move-at-100-lands-on-a-32", "note": "moved with a shaking hand at 100%: expect the box origin on multiples of 32, and the lit line in the held picture sitting on one of the lines you can see" },
+    { "do": "snapshot", "name": "visible-snap-3-after-move" },
+
+    { "do": "drag", "from": [489, 375], "to": [500, 382], "steps": 8, "modifiers": ["command"] },
+    { "do": "describe", "stage": "command-still-frees-it", "note": "Command held: expect the box moved by exactly 11 and 7, off the grid, and no lit line at all" },
+
+    { "do": "pinch", "to": 4, "steps": 24 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "zoomed-in-to-400", "note": "at 400% the four point lines are drawn, so the report should say it pulls to 4" },
+    { "do": "snapshot", "name": "visible-snap-4-zoomed-in" },
+
+    { "do": "drag", "from": [470, 380], "to": [481, 387], "steps": 16, "wobble": 1, "hold": "visible-snap-5-caught-fine" },
+    { "do": "describe", "stage": "move-at-400-lands-on-a-4", "note": "expect the box origin on multiples of 4 now, finer than it was, with the lit line on a drawn line" },
+
+    { "do": "pinch", "to": 0.25, "steps": 32 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "zoomed-out-to-25", "note": "at 25% nothing finer than 256 is drawn, so the report should say it pulls to 256" },
+    { "do": "snapshot", "name": "visible-snap-6-zoomed-out" },
+
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Snap to grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "snapping-off", "note": "expect the report to say it pulls to nothing, with the lines still drawn" },
+    { "do": "click", "at": [470, 380] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [470, 380], "to": [507, 391], "steps": 8 },
+    { "do": "describe", "stage": "no-pull-with-snapping-off", "note": "expect the box moved by exactly 37 and 11, off every line, and no lit line" }
+  ]
+}

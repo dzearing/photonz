@@ -70,9 +70,9 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     /// default, so a grid nobody has moved is where it has always been.
     public var origin: CGPoint
     /// The finest cell the grid may DRAW, in document points, however far you
-    /// zoom in. It says what you look at, not what a drag lands on: the pull
-    /// stays on `spacing`, so you can work to the point and still look at
-    /// eight point cells instead of a grey wash. One point means no floor.
+    /// zoom in. Because a drag pulls to the lines that are actually drawn, it
+    /// is also the finest cell anything can land on: asking to look at eight
+    /// point cells is asking to work in eights. One point means no floor.
     public var minimumCell: CGFloat
 
     public init(isVisible: Bool = false,
@@ -157,21 +157,25 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     /// How far apart the lines a drag pulls to are, in document points, or nil
     /// when a drag should pull to nothing.
     ///
-    /// It is the spacing that was TYPED IN, and it does not change with the
-    /// zoom. A grid set to four means things land on fours, and they land on
-    /// the same fours whether you are looking at the whole picture or at one
-    /// corner of it — a pull that got coarser as you zoomed out would mean the
-    /// same drag gave a different answer depending on how close you happened to
-    /// be standing, which is its own kind of jumping.
+    /// It is the spacing being DRAWN at this zoom, which is not always the
+    /// spacing that was typed in. The level-of-detail ladder draws only the
+    /// rungs a person can read: at 100% a four point grid would be four screen
+    /// points apart and would read as a grey wash, so the canvas draws its
+    /// thirty two point lines instead. Pulling to the fours underneath them is
+    /// what makes snapping feel broken — every position is a snap position, so
+    /// nothing is ever caught, and an edge comes to rest between two lines
+    /// looking like it missed.
     ///
-    /// The lines DRAWN are a different question, and the level-of-detail ladder
-    /// answers it: zoomed far enough out, fine lines would be a grey wash, so
-    /// the canvas draws only the strong ones. A snapped edge can therefore land
-    /// between two drawn lines, on a line that is really there but too fine to
-    /// show at this zoom. Zooming in brings it back.
-    public var snapSpacing: CGFloat? {
-        guard isVisible, snapsToGrid, spacing.isFinite, spacing > 0 else { return nil }
-        return spacing
+    /// So the pull follows the picture. Zoom in until the fine lines arrive and
+    /// the pull gets finer with them; zoom out and it gets coarser. What you
+    /// land on is always something you can see yourself land on, and ⌘ is still
+    /// how you get away from it.
+    public func snapSpacing(atZoom zoom: CGFloat) -> CGFloat? {
+        guard isVisible, snapsToGrid, spacing.isFinite, spacing > 0,
+              zoom.isFinite, zoom > 0 else { return nil }
+        return CanvasGridLevels.snapSpacing(among: CanvasGridLevels.levels(spacing: drawnSpacing,
+                                                                          majorEvery: majorEvery,
+                                                                          zoom: zoom))
     }
 }
 
@@ -227,6 +231,23 @@ public enum CanvasGridLevels {
     public static let maximumLevels = 3
     /// A guard against a zoom so far out the ladder would climb forever.
     private static let maximumRungs = 16
+    /// How far apart a rung's lines must be ON SCREEN before a drag will pull
+    /// to them. A rung fades in from nothing at `minimumOnScreenSpacing` to
+    /// full at `fullStrengthOnScreenSpacing`, and this is the midpoint of that
+    /// fade: half drawn is the point where a line stops being a suggestion of
+    /// a line and becomes something you can aim at. Pulling to a rung fainter
+    /// than that is the same complaint as pulling to one that is not drawn at
+    /// all.
+    public static let minimumSnapOnScreenSpacing: CGFloat = 16
+
+    /// Which of the rungs being drawn a drag should pull to: the finest one far
+    /// enough apart on screen to aim at, or nil when there is nothing worth
+    /// pulling to. `levels` comes back finest first, so this is the first that
+    /// clears the bar.
+    public static func snapSpacing(among levels: [CanvasGridLevel]) -> CGFloat? {
+        levels.first { $0.onScreenSpacing >= minimumSnapOnScreenSpacing - 1e-9
+            && $0.opacity >= minimumDrawnOpacity }?.spacing
+    }
 
     public static func levels(spacing: CGFloat,
                               majorEvery: Int,

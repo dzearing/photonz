@@ -346,11 +346,13 @@ struct CanvasGridTests {
         }
     }
 
-    @Test func theSnapStillPullsToTheTypedSpacingNotTheSmallestCell() {
-        // The floor says what you LOOK at. What a drag lands on is the spacing
-        // that was typed in, which is the rule the grid already had.
+    @Test func theSmallestCellRaisesWhatADragLandsOnToo() {
+        // The floor says what you LOOK at, and a drag lands on what you are
+        // looking at, so asking for sixteen point cells is asking to work in
+        // sixteens. Anything finer would be a pull to lines that are not there.
         let g = CanvasGridSettings(isVisible: true, spacing: 2, minimumCell: 16)
-        #expect(g.snapSpacing == 2)
+        #expect(g.snapSpacing(atZoom: 1) == 16)
+        #expect(g.snapSpacing(atZoom: 4) == 16)
     }
 
     // MARK: Placing the zero point

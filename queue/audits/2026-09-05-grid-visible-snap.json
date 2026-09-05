@@ -1,0 +1,31 @@
+{
+  "feature": "Snapping pulls to the grid you can see",
+  "epic": "ui-building",
+  "summary": "With the grid on, a drag now lands on the lines actually drawn at the zoom you are at, and the line it landed on lights up while you hold it. Before, it pulled to the spacing you typed even when the canvas was drawing something eight times coarser, so every position was a snap position and nothing ever felt caught.",
+  "setup": "Photonz Dev, release Next. Grid is in the right hand panel with the Canvas row selected, and on the View menu. Nothing to switch on beyond the grid itself.",
+  "try": [
+    { "do": "Open a new blank canvas and click the Canvas row in the layers panel." },
+    { "do": "Press Grid to switch the grid on. Leave Spacing at 4.", "shot": "2026-09-05-grid-visible-snap-1.png" },
+    { "do": "Draw a rectangle, switch to the select tool, and drag the rectangle around slowly." },
+    { "do": "Watch the blue line that lights up under the edge you are moving, and let go: the edge is on that line." },
+    { "do": "Hold Command and drag again: nothing pulls and no line lights up." },
+    { "do": "Zoom to 400% and drag again. The lines are finer now and so is the pull.", "shot": "2026-09-05-grid-visible-snap-2.png" },
+    { "do": "Zoom out to 25% and drag again: the pull is coarser, matching the only lines still drawn." },
+    { "do": "Press Snap to grid to switch the pull off, and drag once more: the box follows the pointer exactly." }
+  ],
+  "evaluate": [
+    "At 100% with the default grid, does landing on a line now feel caught rather than smooth?",
+    "Is the lit blue line obviously the line the edge landed on, or does it read as a new line arriving?",
+    "Does the pull getting coarser as you zoom out feel natural, or does it feel like the app changed its mind?",
+    "At 100% the pull is 32 points even though Spacing says 4. Is that surprising enough to need saying on screen?",
+    "Does the box ever feel like it is lagging behind the pointer by too much?"
+  ],
+  "rough": [
+    "The pull follows the zoom, so the same drag lands differently at different zooms. That is what this task asked for and it reverses the earlier rule; the pending task 'the grid you set is the grid you see' still holds the other half of the problem, which is that nothing on screen says what the lines are currently worth.",
+    "The steps between pulls are big: the ladder climbs by the Every Nth setting, so at the default the pull goes 4, 32, 256 with nothing in between. Zooming from 100% to 380% keeps it at 32 and 400% drops it to 4. There is no in-between value to land on.",
+    "Drawing a NEW rectangle still ignores the grid entirely: it is only moving and resizing that pull. Filed as a follow-up.",
+    "Arrow key nudges still step by one point, so a layer just placed on the grid walks off it. Already queued separately.",
+    "A grid set to Columns no longer pulls up and down at all, since it draws no lines that way. That was silent before and is a change worth noticing.",
+    "Screenshots are real screen captures from the probe app, which held the Screen Recording grant."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T19:12:24.371Z",
-  "updated": "2026-09-05T19:12:24.412Z",
+  "updated": "2026-09-05T20:41:51.775Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05: snap to grid does not work, maybe it is snapping to a different grid. It is. CanvasGrid.snapSpacing (line 172) returns the raw spacing whatever the zoom, while the drawing picks coarser rungs from the level of detail ladder when fine lines would be a grey wash. The comment right above it says so plainly: a snapped edge can land between two drawn lines, on a line that is really there but too fine to show at this zoom. That was a deliberate choice and it is the wrong one, because at the default four points and a normal zoom every pixel is within reach of a grid line, so nothing ever feels caught. Fix by choosing the snap spacing from the SAME ladder the drawing uses, CanvasGridLevels.levels, taking the finest rung actually being drawn with a visible strength. The plumbing is already in place and does not need inventing: canvasSnapSpacing and canvasSnapOrigin (CanvasView.swift lines 1038 and 1046) are passed into the resize path at line 2290 and the move paths at 2321 and 2366. Coordinate with a-snap-that-is-showing-is-a-snap-you-get-with-no, which governs how a snap holds once caught; the highlight asked for here is the same guide that task is about.",
@@ -30,6 +30,47 @@
     {
       "t": "2026-09-05T19:12:24.411Z",
       "note": "seq 180 -> 1"
+    },
+    {
+      "t": "2026-09-05T20:14:46.450Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T20:18:27.632Z",
+      "note": "Adversarial review before building. Walked it as someone who has just switched the grid on at 100%. The complaint is real and reproducible by reading: at zoom 1 a four point grid draws its finest rung at 32 (CanvasGridLevels.minimumOnScreenSpacing is 8 view points and a rung at the floor has zero strength), while Snapping quantizes to 4 with no tolerance at all, so every position is a snap position. Nothing to cut here, the feature IS the correction."
+    },
+    {
+      "t": "2026-09-05T20:18:27.632Z",
+      "note": "Two things the task asks for that I pushed back on before building. (1) 'the finest rung actually being drawn' is not quite right: the ladder fades a rung in from nothing at 8 screen points to full at 32, so the finest DRAWN rung can be a barely-there wash at 9 screen points, and pulling to lines you can hardly see is the same complaint again. The bar is the halfway point of that fade, 16 screen points, which is also where a line is far enough apart to aim at. (2) The highlight should not be the yellow alignment rule. Yellow means 'you lined up with that thing'; with the grid quantizing, a yellow cross would be on screen for the whole of every drag and would drain that meaning. The grid line the edge landed on gets drawn in the grid's own colour at full strength instead, so it reads as one of the lines you are already looking at, lit up."
+    },
+    {
+      "t": "2026-09-05T20:18:27.632Z",
+      "note": "Known conflict, recorded rather than guessed at: the pending p2 task the-grid-you-set-is-the-grid-you-see asks that 'zooming in and out never changes where a drag lands', which is the behaviour this p1 task, filed later by the user, explicitly overrules. Building this one; noting the other for the manager pass rather than editing someone else's task."
+    },
+    {
+      "t": "2026-09-05T20:41:51.775Z",
+      "note": "Fix, tests first in PhotonzCore. CanvasGridSettings.snapSpacing became snapSpacing(atZoom:), which reads the SAME ladder the drawing uses (CanvasGridLevels.levels on drawnSpacing) and takes the finest rung whose lines are at least CanvasGridLevels.minimumSnapOnScreenSpacing (16 view points, the midpoint of the fade band) apart on screen. So at 100% a four point grid pulls to the 32s it is drawing, at 400% to 4s, at 25% to 256s, and a smallest cell raises the pull the way it raises the drawing."
+    },
+    {
+      "t": "2026-09-05T20:41:51.775Z",
+      "note": "The lit line. Snapping.Result and FrameResult gained gridX/gridY: the grid line the point came to rest on, separate from guideX/guideY so the yellow alignment rule keeps meaning 'you lined up with that thing'. CanvasView draws them in gridSnapLayer, the accent at full strength, one point wide, right across the view like the grid itself, so it reads as one of the lines you are already looking at lighting up. A peer snap takes the axis back and the yellow guide replaces it."
+    },
+    {
+      "t": "2026-09-05T20:41:51.775Z",
+      "note": "Two things found by the adversarial pass on the built thing, both fixed. (1) With the pull now as coarse as the drawn lines, the halfway mark between two of them became a cliff: a three point hand wobble threw the box a whole 32 point cell back and forth, measured once in a wobbling walk. A lit grid line now holds the drag a few SCREEN points past halfway (SnapHold.gridReleaseSlack, half the magnet's reach, capped at half a cell) — screen points because a tremor is a hand, not a grid, and a fraction of the cell would leave a coarse grid's box trailing tens of points behind the pointer. Reversals went 1 to 0 on the same walk. (2) A grid set to Columns draws no lines across the canvas but was still quantizing the vertical axis to them; snapFrameOrigin and snapResizedFrame now take gridAxes and pull sideways only."
+    },
+    {
+      "t": "2026-09-05T20:41:51.775Z",
+      "note": "Verified in the real app, not just in tests. New walk Scripts/playtest/grid-visible-snap-walk.json, with Screen Recording granted so the pictures are real captures. At 100% the log says 'pulls to 32' and a wobbling move landed the box at (448, 352), both multiples of 32, with the lit line reading 448.0/352.0; Command held moved it by exactly 11 and 7 with no line lit; at 400% 'pulls to 4' and the box landed at (468, 364); at 25% 'pulls to 256'; with Snap to grid off, 'pulls to nothing' and the box moved by exactly 37 and 11. The grid report line in every walk's state now carries the pull beside what is drawn."
+    },
+    {
+      "t": "2026-09-05T20:41:51.775Z",
+      "note": "Harness: a drag line now reports what the GRID lines did as well as the guides, with the last line lit, so any future walk can assert a landing. Scripts/playtest/grid-surround-snap-walk.json needed two step positions moved: with the hold in place the edge stays put where it used to flip a cell, so the pointer ran away from the resize handle and later steps stopped grabbing it. It grabs the edge where the edge is now, and still passes every one of its own expectations."
+    },
+    {
+      "t": "2026-09-05T20:41:51.775Z",
+      "note": "Full suite green, 3359 tests. Follow-up filed: a-shape-you-draw-lands-on-the-grid-like-everythi (drawing a new shape ignores the grid entirely). Notes added to the two pending grid tasks so neither reverts this: the-grid-you-set-is-the-grid-you-see keeps only its first acceptance item, and the-arrow-keys-step-by-the-grid now has a zoom to read."
     }
-  ]
+  ],
+  "started": "2026-09-05T20:14:46.449Z"
 }

@@ -1,0 +1,28 @@
+{
+  "id": "a-shape-you-draw-lands-on-the-grid-like-everythi",
+  "title": "A shape you draw lands on the grid like everything else",
+  "goal": "With the grid on, dragging a shape about lands it on the grid lines, but drawing a NEW shape ignores the grid completely: the box comes out wherever the pointer happened to start and stop. Drawing should pull to the same lines everything else does, so a box drawn on graph paper starts on the paper.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1280,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T20:41:24.189Z",
+  "updated": "2026-09-05T20:41:24.189Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-05 while building snapping-pulls-to-the-grid-you-can-see-not-one-y, and measured: with the grid on at 100% (pull 32) a drag from 400,300 to 500,360 produced a rectangle at exactly (400,300,100,60), so nothing pulled. The move and resize paths in CanvasView call Snapping with canvasSnapSpacing/canvasSnapOrigin/canvasSnapAxes; the shape-creation drag does not go through them at all. Use the same three, and Snapping.snapFrameOrigin on the two corners, so a drawn box gets the lit grid line too.",
+  "acceptance": [
+    "With the grid on, a rectangle drawn by dragging starts and ends on lines you can see",
+    "Holding Command while drawing frees it from the grid, exactly as it does for a move",
+    "The same holds for every shape the tool bar draws, not just the rectangle",
+    "With the grid off, or Snap to grid off, drawing behaves exactly as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T20:41:24.189Z",
+      "note": "created (manual)"
+    }
+  ]
+}
