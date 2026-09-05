@@ -8829,3 +8829,56 @@ trusted is how a real break gets waved through.
 **Open question.** At 3200% the finest cell drawn is the four point spacing, and
 at 3% only very coarse lines survive. Both are in the audit for the user to
 judge; nothing about the ladder was changed here.
+
+## 2026-09-05 — The grid settings are where you would look for them
+
+The user said, plainly: "I still do not have any way to configure the grid as
+far as I know." They were right in practice. `⌘'` drew graph paper and changed
+nothing else on screen, and every number that shapes the grid lived in the
+Canvas section of the panel, which only appears once you click the Canvas row at
+the bottom of the layers list. Half the feature was on a menu and the other half
+was behind a click nobody makes.
+
+The controls became one view, `CanvasGridControls`, drawn in three places:
+
+- **The grid's own chip.** While the grid is showing, a glass capsule sits in
+  the floating tool bar beside the zoom reading its live spacing, and pressing
+  it opens every setting in a popover. It arrives at the instant the lines do,
+  which is the discovery cue — no tip, nothing to dismiss.
+- **View ▸ Grid Settings**, directly under Show Grid. It opens the same popover,
+  switching the grid on first if it was off, since nobody judges a spacing
+  against a canvas with no lines on it.
+- **The Canvas section**, unchanged as a route, now drawing the shared view
+  rather than its own copy, so the two can never drift apart.
+
+Each number carries one plain line saying what it does, including what
+"Smallest cell" actually means. The wording lives in `CanvasGridCopy` in
+PhotonzCore, where a test holds every caption to the same standard.
+
+Two things were clumsy in the built thing and were fixed before it was called
+ready: the popover was titled Grid over a checkbox also called Grid (the switch
+is now "Show grid", parallel with "Snap to grid" and matching the menu; the five
+existing grid walks were updated with it), and the Columns / Columns and rows
+picker had no label at all, so a first-timer saw two phrases floating between
+two checkboxes. It now says "Lines".
+
+The chip stands down on a canvas narrower than 620pt, the same width the zoom
+slider leaves at: both are chrome for how the canvas is being *looked* at, both
+have a full menu equivalent, and this bar has no width to spare. Below it the
+View menu is the whole route.
+
+The harness grew with it: `focus` and `type` now reach a popover window, so a
+walk can type into a number that does not live in the panel — nothing could do
+that before. New `toggleGrid` and `showGridSettings` actions stand in for the
+menu chords the probe's unfocused menu bar refuses.
+
+Verified on the probe with `Scripts/playtest/grid-settings-walk.json` and real
+screen captures; `Scripts/test.sh` green at 3367 tests; all five existing grid
+walks re-run green. Audit: `queue/audits/2026-09-05-grid-settings.json`.
+
+**What is next.** `turning-the-grid-on-says-where-its-numbers-are` was the same
+question at p2 and is dropped as done here.
+
+**Open question.** The Canvas section is noticeably wordier now that it carries
+the same explanations the popover does. One copy of the controls was worth it,
+but the user should say whether the panel wants the short form.
