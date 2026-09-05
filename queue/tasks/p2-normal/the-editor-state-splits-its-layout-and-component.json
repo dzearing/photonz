@@ -1,15 +1,15 @@
 {
   "id": "the-editor-state-splits-its-layout-and-component",
   "title": "The editor state splits its layout and component work into its own files",
-  "goal": "Nothing a person sees changes. The one file that every recent layout and component change has landed in is broken into named pieces, so the next few features are not all editing the same 6800 lines.",
+  "goal": "Nothing a person sees changes. The one file every recent layout and component change has landed in is broken into named pieces, so the next auto layout features are not all rewriting the same 6800 lines at once. It unblocks three tasks that each add intents to that file: a row pushing its contents to its two ends, a piece taking the room a row has left over, and a container clipping what does not fit.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 6,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:16.029Z",
-  "updated": "2026-09-04T22:43:48.411Z",
+  "updated": "2026-09-05T14:05:05.274Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/EditorState.swift is 6810 lines and 341 KB, up about 90 KB in one day; CanvasView.swift is 4417 lines. The 2026-09-03 manager pass said to file the extraction once a third feature landed in the same file, and several have. This de-risks a-copy-can-be-given-its-own-color and a-row-can-push-its-contents-to-its-two-ends, which both add intents there. Suggested seams: the group layout intents, the component and instance intents, and the color and style intents. LayersPanel.swift at 3216 lines is not in scope.",
@@ -34,6 +34,14 @@
     {
       "t": "2026-09-04T22:43:48.411Z",
       "note": "seq 8 -> 6"
+    },
+    {
+      "t": "2026-09-05T14:03:40.037Z",
+      "note": "seq 6 -> 20"
+    },
+    {
+      "t": "2026-09-05T14:05:05.273Z",
+      "note": "seq 20 -> 30"
     }
   ]
 }

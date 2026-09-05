@@ -4,12 +4,12 @@
   "goal": "Inside a stack, one piece can be told to take whatever room is left along the direction the stack runs, so the search field in the middle of a nav bar grows with the bar and a button spans the width of a toolbar. Today every piece in a stack keeps the size it was drawn at along that direction and only the gap between them can change.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 2,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:42:32.241Z",
-  "updated": "2026-09-04T22:43:48.284Z",
+  "updated": "2026-09-05T14:05:05.341Z",
   "deps": [],
   "blockedBy": [],
   "notes": "GroupFlow.stacked() takes `along` straight from item.box on the flow axis and never reads that axis' placement rule, so today there is nothing to fill with. The cross axis already does this through span(size:start:extent:rule:) with .stretch, so the naming to reuse is there. The row that has to grow the choice is the 'owned by the flow' row in PlacementInspector.swift, which currently only says the stack decides it; childCaption is where the one line about a hugging stack goes. The pending task a-row-can-push-its-contents-to-its-two-ends edits the same function for the space between case: whichever lands first, the second reads it rather than re-deciding how leftover room is worked out. Watch the surface piece (stretch both ways), which is not one of the things being arranged and must not join the sharing.",
@@ -31,6 +31,14 @@
     {
       "t": "2026-09-04T22:43:48.283Z",
       "note": "seq 1200 -> 2"
+    },
+    {
+      "t": "2026-09-05T14:03:40.104Z",
+      "note": "seq 2 -> 40"
+    },
+    {
+      "t": "2026-09-05T14:05:05.340Z",
+      "note": "seq 40 -> 50"
     }
   ]
 }

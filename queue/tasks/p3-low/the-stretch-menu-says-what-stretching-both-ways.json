@@ -1,0 +1,36 @@
+{
+  "id": "the-stretch-menu-says-what-stretching-both-ways",
+  "title": "The Stretch menu says what stretching both ways will do",
+  "goal": "Inside a stack or a grid, stretching one piece both ways turns it into the surface the others sit on. The app now names it that once it has happened, but nothing tells you beforehand: you find the idea by trying it and then reading a list at the foot of the panel. The menu that does it should say what it is about to do.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T14:03:26.842Z",
+  "updated": "2026-09-05T14:03:40.608Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-05. Evidence: queue/audits/2026-09-04-surface-in-a-stack.json rough 2, \"Nothing announces the idea. You only learn that stretching both ways makes a piece the background by doing it and then reading the list, or by landing on the piece. There is no hint on the Stretch menu itself.\" That task named the surface everywhere it already exists (the list at the foot of Layout, and the piece's own row) and deliberately left the menu alone. The wording to match is \"Surface behind the rest\". Panel code is PlacementInspector.swift; the Free group wording is \"Stretch both ways\" and stays.",
+  "acceptance": [
+    "In a stack or a grid, the choice that stretches a piece both ways says on the menu itself that it makes that piece the surface behind the rest",
+    "It says it in the same words the list at the foot of Layout already uses, so one idea has one name",
+    "In a group that arranges nothing there is no surface to become, so the wording there is left exactly as it is",
+    "Nothing about the behaviour changes: this is what the menu says, not what it does",
+    "Ships behind next-auto-layout. To see it: open Photonz Next, group three rectangles, set the group to Stack, pick the first rectangle and open its Stretch menu",
+    "A screenshot of the menu in a stack and in a Free group goes in the audit",
+    "Anything left rough is filed as a follow-up task",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T14:03:26.843Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-05T14:03:40.608Z",
+      "note": "seq 1250 -> 60"
+    }
+  ]
+}

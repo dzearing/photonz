@@ -1,24 +1,27 @@
 {
   "id": "a-number-you-cannot-type-into-stops-looking-like",
   "title": "A number you cannot type into stops looking like one you can",
-  "goal": "In the Position and Size panel, the height of a piece of text is worked out for you and cannot be typed into. It is shown in the same rounded box as the width beside it, which you can type into, and the only difference is that the number is a little greyer. So you click it, nothing happens, and nothing tells you why until you have hovered long enough for a tip. A field you cannot edit should not look like a field you can.",
+  "goal": "In the Position and Size panel, a number the app works out for you, like the height of a piece of text, sits in the same rounded box as the width beside it that you can type into. So you click it, nothing happens, and nothing tells you why. A number you cannot type into loses its box and reads as plain grey text in the same place, so you can tell the two apart without touching anything. Both looks are already built and running; this makes the plain one what everybody gets.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 40,
-  "status": "blocked",
+  "seq": 20,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:31.741Z",
-  "updated": "2026-09-04T13:24:34.281Z",
+  "updated": "2026-09-05T14:05:28.257836Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Design review 2026-09-04. Straight from the audit that shipped the readout: queue/audits/2026-09-04-text-height-readout.json rough 1 (\"H still wears the same rounded box as the fields you can type in. Only the grey tells you apart, and a box that looks like an input but refuses the keyboard is the clumsiest part of this. Losing its border would say it louder, but that is a visual call worth your eye first\") and rough 2 (\"Clicking a read-only field gives no feedback at all. The tip explains it, but only after a hover delay\"). The same audit notes a locked layer and a stacked layer produce more read-only fields, so this is not one field. Losing the border is a look change, so open a decision card with two shots rather than guessing. docs/design/mocks/shared/UX-PATTERNS.md has no read-only field treatment at all; add it once the call is made. Related: one-rule-for-a-control-that-cannot-do-anything is the general version of this.",
+  "notes": "Design review 2026-09-04. Straight from the audit that shipped the readout: queue/audits/2026-09-04-text-height-readout.json rough 1 (\"H still wears the same rounded box as the fields you can type in. Only the grey tells you apart, and a box that looks like an input but refuses the keyboard is the clumsiest part of this. Losing its border would say it louder, but that is a visual call worth your eye first\") and rough 2 (\"Clicking a read-only field gives no feedback at all. The tip explains it, but only after a hover delay\"). The same audit notes a locked layer and a stacked layer produce more read-only fields, so this is not one field. Losing the border is a look change, so open a decision card with two shots rather than guessing. docs/design/mocks/shared/UX-PATTERNS.md has no read-only field treatment at all; add it once the call is made. Related: one-rule-for-a-control-that-cannot-do-anything is the general version of this.\n\nDecision answered on 2026-09-05: option a, plain number with no box. Both looks were already built and running before the card was raised, with the plain one behind an Experiments switch called \"Numbers you cannot type stop looking like ones you can\", off by default. So most of this task is making the plain look the default and taking the switch out, not building anything new. The one thing the card flagged as unhandled is the arrow case, where there is no width at all and W would become a lone letter.",
   "acceptance": [
-    "A field whose number is worked out for the user reads as a readout at a glance, without hovering",
-    "Clicking one gives an immediate answer rather than silence",
+    "A number the app works out for you reads as plain text where its box used to be: same letter in front, same column, same height, same right edge, so nothing shifts when a layer is locked or picked",
+    "The plain look is what everybody gets, and the Experiments switch that was holding it back is retired rather than left sitting there turned on",
     "The fields you can type into look exactly as they did",
-    "The same treatment covers every read-only number in the panel, not just the height of text",
-    "Try it with Build on a frame turned on in Experiments: draw a label, read its H, then click it; compare with W beside it",
+    "It covers every read-only number in the panel, not just the height of a piece of text: a locked layer reads as a plain statement of where it sits rather than four boxes that refuse the keyboard",
+    "Clicking a plain number still says in words why it takes nothing, which is the answer that shipped on 2026-09-04",
+    "An arrow, which has no width to show at all, does not leave W as a lone letter with empty space after it",
+    "To see it: open Photonz Next, draw a label, read its H beside its W, then click H; then lock the label and read all four numbers",
+    "The panel rules are scrubbed with it: the \"What Mixed looks like\" section of docs/design/mocks/shared/UX-PATTERNS.md still calls the read-only number a known exception waiting on a pending decision, and that decision is now answered",
     "Anything left rough is filed as a follow-up task",
     "Audit written under queue/audits/"
   ],
@@ -66,6 +69,22 @@
     {
       "t": "2026-09-04T13:24:34.280Z",
       "note": "Click answer shipped: clicking a number you cannot type says why straight away in the line under the fields, no hover. Both looks built and photographed; which one the panel should wear is a decision card with four real captures, so the box change is behind next-readout-fields (off) until it is answered. Audit: queue/audits/2026-09-04-readout-fields.json"
+    },
+    {
+      "t": "2026-09-05T14:01:49.967Z",
+      "note": "decision \"A number the app worked out for you sits in the same rounded box as a number you can type. Should it lose the box?\" resolved: Plain number, no box"
+    },
+    {
+      "t": "2026-09-05T14:03:40.373Z",
+      "note": "seq 40 -> 120"
+    },
+    {
+      "at": "2026-09-05T14:04:57.573981Z",
+      "note": "Triage: rewrote the goal and acceptance to the answered decision (plain number, no box), which turned this from a build into a default flip plus retiring the switch."
+    },
+    {
+      "t": "2026-09-05T14:05:05.239Z",
+      "note": "seq 120 -> 20"
     }
   ],
   "started": "2026-09-04T13:03:26.858Z"

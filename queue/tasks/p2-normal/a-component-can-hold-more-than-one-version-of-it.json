@@ -4,23 +4,26 @@
   "goal": "One button component can carry its normal, hover and disabled versions under one name, and a copy picks which one it is showing from a menu. Today a component is one drawing: to show a disabled button beside a normal one you make a second component, and the two drift apart the first time somebody edits one.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 1220,
-  "status": "blocked",
+  "seq": 120,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:43:02.752Z",
-  "updated": "2026-09-04T22:43:38.708Z",
+  "updated": "2026-09-05T14:05:05.567Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Blocked on its decision card: the shape of versions is a product judgment, not an engineering one. What exists today: ComponentPropertyKind has text, visible, variant and color (ComponentProperties.swift:34), where `variant` is Make Alternatives, one layer swapped for another sibling inside the same original (ComponentChoice.swift). That is a shape swap, not a version of the whole component. docs/design/ui-building.md, 'What the first version deliberately does not do', defers states outright, while queue/objectives.json describes the ui-components epic as 'create, reuse, variants, overrides', so the plan and the objective disagree and the user settles it. If the answer is the full version set, this task is the model and the knob only, and the Library tile, the canvas marks and any bulk editing across versions get filed as follow-ups after it. Sync lives in ComponentInstances.swift; the per copy override machinery that landed with the colour knob on 2026-09-04 is the pattern to follow.",
+  "notes": "Blocked on its decision card: the shape of versions is a product judgment, not an engineering one. What exists today: ComponentPropertyKind has text, visible, variant and color (ComponentProperties.swift:34), where `variant` is Make Alternatives, one layer swapped for another sibling inside the same original (ComponentChoice.swift). That is a shape swap, not a version of the whole component. docs/design/ui-building.md, 'What the first version deliberately does not do', defers states outright, while queue/objectives.json describes the ui-components epic as 'create, reuse, variants, overrides', so the plan and the objective disagree and the user settles it. If the answer is the full version set, this task is the model and the knob only, and the Library tile, the canvas marks and any bulk editing across versions get filed as follow-ups after it. Sync lives in ComponentInstances.swift; the per copy override machinery that landed with the colour knob on 2026-09-04 is the pattern to follow.\n\nDecision answered on 2026-09-05: option a, versions under one name. Each version is its own complete drawing, so a version can differ in any way at all, and the cost the user accepted is that a change meant for every version has to be made in each one. The mitigation they chose with it: a new version is made by duplicating an existing one, so versions start out identical. Make Alternatives (ComponentChoice.swift) stays what it is, a shape swap inside one drawing, and is not the same thing as a version.",
   "acceptance": [
-    "Written after the decision card on this task is answered: the checklist below is the shape of the recommended option and is rewritten to whatever the user picks",
-    "A component can be given a second version with a name, and the Library tile says how many versions it holds",
+    "A component can be given a second version with a name, made by duplicating a version that already exists, so a new version starts out identical until somebody changes it on purpose",
+    "Each version is a complete drawing of its own, so a version may differ in shape, arrangement or an extra part, not only in colour and wording",
+    "The Library tile for a component says how many versions it holds",
     "A copy shows a Version knob listing the names, and picking one swaps what that copy shows without touching any other copy",
-    "Everything a copy already owns survives the swap: its wording, its colours, its position and anything else it has been given for itself",
+    "Everything a copy already owns survives the swap: its wording, its colours, its own size and anything else it has been given for itself",
     "Editing a version changes every copy showing that version and no others, in one undo step",
-    "Ships behind next-components, with the try steps written into this task once the shape is decided",
-    "Tests in PhotonzCore cover adding a version, switching a copy, keeping a copy's own answers across a switch and deleting a version a copy is using, written before any app code",
+    "Deleting a version a copy is using leaves that copy on a version that still exists rather than on nothing, and says so",
+    "Old documents decode unchanged: a component with no versions is a component with one",
+    "Ships behind next-components. To see it: open Photonz Next, make a button a component, duplicate its version and name the copy Disabled, grey the rectangle in that version, drop two copies and set one of them to Disabled",
+    "Tests in PhotonzCore cover adding a version, switching a copy, keeping a copy's own answers across a switch, and deleting a version a copy is using, written before any app code",
     "Anything left rough is filed as a follow-up task",
     "Audit written under queue/audits/"
   ],
@@ -32,6 +35,22 @@
     {
       "t": "2026-09-04T22:43:38.707Z",
       "note": "Waiting on its decision card: whether a component holds full versions, difference lists, or stays as Make Alternatives."
+    },
+    {
+      "t": "2026-09-05T13:58:48.339Z",
+      "note": "decision \"A button usually has a normal, a hover and a disabled look. Should one component be able to hold all three under one name, with a copy picking which one it shows?\" resolved: Versions under one name"
+    },
+    {
+      "at": "2026-09-05T14:02:59.634321Z",
+      "note": "Triage: rewrote the acceptance checklist to the answered decision (versions under one name, new versions made by duplicating)."
+    },
+    {
+      "t": "2026-09-05T14:03:40.308Z",
+      "note": "seq 1220 -> 100"
+    },
+    {
+      "t": "2026-09-05T14:05:05.567Z",
+      "note": "seq 100 -> 120"
     }
   ]
 }

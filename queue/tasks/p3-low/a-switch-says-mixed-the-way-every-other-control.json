@@ -4,12 +4,12 @@
   "goal": "Pick five layers where three have a shadow and two do not. The Enable Shadow switch shows plain off, which is what it also shows when none of them have one, and the only thing telling you otherwise is a sentence of grey text underneath. Every other control in the panel now says Mixed out loud; the switch should too.",
   "epic": "ui-components",
   "priority": "p3-low",
-  "seq": 1220,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T21:25:38.250Z",
-  "updated": "2026-09-04T21:25:38.250Z",
+  "updated": "2026-09-05T14:03:40.508Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/LayersPanel.swift, the Shadow section: the Toggle binds to selection.hasShadowEverywhere, so a part-shadowed selection reads off. A Mac switch has no mixed position (a checkbox does, via NSControl.StateValue.mixed), so the answer is either a checkbox, a word beside the switch, or a third visual state. The one look is MixedLook.style / MixedValue.text and the rule is in docs/design/mocks/shared/UX-PATTERNS.md section 4, What Mixed looks like. Found while doing mixed-reads-the-same-way-in-every-control; audit queue/audits/2026-09-04-mixed-one-look.json rough 4.",
@@ -24,6 +24,10 @@
     {
       "t": "2026-09-04T21:25:38.250Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-05T14:03:40.508Z",
+      "note": "seq 1220 -> 30"
     }
   ]
 }

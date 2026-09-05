@@ -1,24 +1,28 @@
 {
   "id": "the-settings-for-the-tool-in-your-hand-are-reach",
   "title": "The settings for the tool in your hand are reachable with the panel hidden",
-  "goal": "Some things belong to the tool you are holding rather than to anything you have picked: how much a zoom callout magnifies, whether it is a box or a circle, how forgiving the wand is, what shape the crop keeps. Every one of them lives in the right hand panel. Hide the panel, which is a normal thing to do while you work on a picture, and there is no way to reach any of them. The tool in your hand should carry its own settings with it.",
+  "goal": "Some things belong to the tool you are holding rather than to anything you have picked: how much a zoom callout magnifies and whether it is a box or a circle, how forgiving the wand is, what Measure snaps to and shows. Every one of them lives in the right hand panel today, so hiding the panel, which is a normal thing to do while you work on a picture, takes them all away. They move into a capsule that rides just above the floating tool bar, always open, showing whatever the tool in your hand has to set.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 50,
-  "status": "blocked",
+  "seq": 90,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:51.061Z",
-  "updated": "2026-09-04T13:32:07.253Z",
+  "updated": "2026-09-05T14:05:05.470Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Design review 2026-09-04. Named as a house rule by the audit that added the newest one: queue/audits/2026-09-04-callout-shape.json rough 1 (\"With the inspector hidden there is no way to the choice at all. Every other tool setting has the same gap (the wands tolerance, crops aspect), so this follows the house rule rather than fixing it\"). queue/audits/2026-09-04-callout-one-home.json is the same story from the other side: the popover that used to hold tool settings was unreachable code, because picking up a drawing tool clears the layer selection, so the settings were moved into the panel with nowhere else to go. This is also a documented rule that reality has moved past: docs/design/mocks/shared/UX-PATTERNS.md section 6 says tool options are \"shown in the options bar or the top of the Inspector\", and there is no options bar in the app. Either build the strip the doc promises or change the doc; do not leave them disagreeing. Worth a decision card with shots before building, since it puts new chrome on screen.",
+  "notes": "Design review 2026-09-04. Named as a house rule by the audit that added the newest one: queue/audits/2026-09-04-callout-shape.json rough 1 (\"With the inspector hidden there is no way to the choice at all. Every other tool setting has the same gap (the wands tolerance, crops aspect), so this follows the house rule rather than fixing it\"). queue/audits/2026-09-04-callout-one-home.json is the same story from the other side: the popover that used to hold tool settings was unreachable code, because picking up a drawing tool clears the layer selection, so the settings were moved into the panel with nowhere else to go. This is also a documented rule that reality has moved past: docs/design/mocks/shared/UX-PATTERNS.md section 6 says tool options are \"shown in the options bar or the top of the Inspector\", and there is no options bar in the app. Either build the strip the doc promises or change the doc; do not leave them disagreeing. Worth a decision card with shots before building, since it puts new chrome on screen.\n\nDecision answered on 2026-09-05: option c, a capsule above the tool bar. Not the recommended option a (press and hold the tool button); the user chose always open and next to the button over hidden until asked. The cost they accepted, in their own card: it sits over the bottom of the picture, which on a screenshot is often where the buttons being redlined are. The mitigation that made it safe: it is its own capsule on its own row rather than part of the tool bar, so the tool bar never changes width, and the capsule wraps on a narrow window. That matters because tool settings used to live inside the tool bar and made it 150 to 200 points wider the moment you picked up Measure or Crop, and that was removed on purpose. Do not put them back in the bar.",
   "acceptance": [
-    "With the right hand panel hidden, the settings for the tool in your hand can still be reached and changed",
-    "The settings shown are the ones for the tool actually in your hand, and they change when the tool changes",
-    "Nothing that belongs to a selected layer moves out of the panel",
-    "With the panel shown, the panel keeps working exactly as it does now",
-    "Try it with Next: pick the Zoom Callout tool, hide the panel, and change its shape from Rectangle to Circle",
+    "A capsule sits just above the floating tool bar carrying the settings for the tool in your hand, open without pressing anything",
+    "It is its own capsule on its own row, so the tool bar itself never changes width whichever tool you pick up",
+    "It shows nothing at all, and takes no room, for a tool with nothing to set, so picking the arrow does not leave an empty bar hanging there",
+    "It changes as the tool changes, and it works whether the right hand panel is shown or hidden",
+    "On a narrow window it wraps rather than running off the edge or pushing the tool bar off the picture",
+    "Nothing that belongs to a selected layer moves out of the right hand panel, and with the panel shown the panel keeps working exactly as it does now",
+    "The settings in the capsule and the same settings in the panel are one thing: changing either shows in both at once",
+    "Ships behind next-tool-settings. To see it: open Photonz Next, pick the Zoom Callout tool, hide the right hand panel with Option Command L, and change its shape from Rectangle to Circle in the capsule",
+    "The audit says how much of the picture the capsule covers at the bottom of a normal window, since that is the cost the user accepted when they picked this",
     "Anything left rough is filed as a follow-up task",
     "Audit written under queue/audits/"
   ],
@@ -62,6 +66,22 @@
     {
       "t": "2026-09-04T13:32:07.252Z",
       "note": "Waiting on the decision \"With the right hand panel hidden, where should the settings for the tool in your hand live?\" Four options with real shots of today's gap and sketches of each answer; recommended A (settings at the foot of the tool button's press-and-hold list, the gesture Crop and Measure already use). Nothing built, because every answer puts the controls somewhere different."
+    },
+    {
+      "t": "2026-09-05T14:00:08.424Z",
+      "note": "decision \"With the right hand panel hidden, where should the settings for the tool in your hand live?\" resolved: In a capsule above the tool bar"
+    },
+    {
+      "t": "2026-09-05T14:03:40.407Z",
+      "note": "seq 50 -> 130"
+    },
+    {
+      "at": "2026-09-05T14:04:57.573981Z",
+      "note": "Triage: rewrote the goal and acceptance to the answered decision (capsule above the tool bar, option c)."
+    },
+    {
+      "t": "2026-09-05T14:05:05.469Z",
+      "note": "seq 130 -> 90"
     }
   ],
   "started": "2026-09-04T13:25:10.136Z"

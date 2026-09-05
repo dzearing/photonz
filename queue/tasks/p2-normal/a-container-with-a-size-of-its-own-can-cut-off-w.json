@@ -4,12 +4,12 @@
   "goal": "A screen cuts off anything hanging over its edge. A card, a button or any other container given a size does not: a long title runs straight out the side of the card and is still there in the export. The same switch a screen already has belongs on any container that has been given a size.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 4,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:42:46.219Z",
-  "updated": "2026-09-04T22:43:48.349Z",
+  "updated": "2026-09-05T14:05:05.439Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Most of this exists. GroupContent already stores clipsContents on EVERY group; only Layer.clipsToFrame (Layer.swift:769) narrows it to group?.isFrame == true, and Document.swift:251 plus ComponentPieceEditing.swift:173 gate hit testing on the same property. The renderer path is DocumentRenderer.swift:489, `layer.clipsToFrame ? layer.localBounds : layer.renderBounds`. The switch itself is in FrameInspector.swift; putting it on a sized group means the Layout section carries it, not the Frame section. Comes from queue/audits/2026-09-04-starter-sizing.json: 'A text field with a long placeholder wraps and gets taller instead of truncating with an ellipsis, because a text layer has nothing that clips it.' Truncating words with an ellipsis is a separate, later question: this task is only about the box cutting off what leaves it. Also the honest partner to the pending task a-container-can-be-told-the-smallest-and-largest, whose acceptance says a stack pinned at its largest size must not overflow quietly.",
@@ -31,6 +31,14 @@
     {
       "t": "2026-09-04T22:43:48.348Z",
       "note": "seq 1210 -> 4"
+    },
+    {
+      "t": "2026-09-05T14:03:40.208Z",
+      "note": "seq 4 -> 70"
+    },
+    {
+      "t": "2026-09-05T14:05:05.438Z",
+      "note": "seq 70 -> 80"
     }
   ]
 }

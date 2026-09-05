@@ -4,12 +4,12 @@
   "goal": "A stack that has been given a size can spread the room it has left between its rows instead of holding one fixed gap, which is how a nav bar with a logo on the left and buttons on the right is built.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 1,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:47.142Z",
-  "updated": "2026-09-04T22:43:48.251Z",
+  "updated": "2026-09-05T14:05:05.308Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/PhotonzCore/GroupLayout.swift holds a single CGFloat gap with usedGap; the spread case wants gap to become a small enum or an optional so Codable can stay backward compatible. Placement runs in GroupFlow.swift. No decision card: this is an option on the Gap row the user already sets, inside the auto layout epic they promoted on 2026-09-03, not a new surface. The starter nav bar still holds the size it was drawn at, see queue/audits/2026-09-04-ui-hug.json.",
@@ -35,6 +35,14 @@
     {
       "t": "2026-09-04T22:43:48.250Z",
       "note": "seq 5 -> 1"
+    },
+    {
+      "t": "2026-09-05T14:03:40.070Z",
+      "note": "seq 1 -> 30"
+    },
+    {
+      "t": "2026-09-05T14:05:05.307Z",
+      "note": "seq 30 -> 40"
     }
   ]
 }

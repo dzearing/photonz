@@ -1,0 +1,38 @@
+{
+  "id": "one-rule-for-a-control-that-speaks-for-several-p",
+  "title": "One rule for a control that speaks for several picked things",
+  "goal": "Every control in the panel now says the word Mixed the same way, but nothing says what a control should DO when the things you have picked disagree, or when there is more than one of them. So each new control settles it again on its own: a switch shows plain off, a component section vanishes rather than speaking for two copies, and a width field keeps showing a number the layers refused. Write the rule down once, so the three tasks waiting behind it stop each inventing an answer.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T14:03:15.041Z",
+  "updated": "2026-09-05T14:05:28.257836Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-05. Evidence: queue/audits/2026-09-04-mixed-one-look.json rough 2, 3, 4 and 5 all report a control answering the several-things question its own way after the one-look pass shipped; queue/audits/2026-09-04-copy-own-color.json rough 1 reports the whole Component section vanishing on a second copy. Unblocks the-knobs-panel-speaks-for-several-copies-at-onc (p2), a-switch-says-mixed-the-way-every-other-control (p3) and a-width-the-layers-refused-stops-claiming-the-nu (p3), each of which currently has to decide this for itself. The look is already settled and lives in MixedLook.style / MixedValue.text with the rule in docs/design/mocks/shared/UX-PATTERNS.md section 4, next to the rungs written by one-rule-for-a-control-that-cannot-do-anything on 2026-09-04. This is the behaviour half of that same section.\n\nRead the existing \"What Mixed looks like\" section first: it is good and it already says that a control saying Mixed is still a control and reaches every picked layer in one undo step. This task is the part it does not cover: what a control does when it cannot speak for the selection at all, what a field shows after a set that some of the picked layers refused, and the switch, which has no mixed position on the Mac. Write it as a sibling section, not a rewrite.",
+  "acceptance": [
+    "The panel rules gain one short section covering a control over several picked things: what it reads when they agree, what it reads when they do not, what setting it does, and what a control does when it cannot speak for the picked things at all",
+    "It says what a control shows after a set that some of the picked things refused, since a field showing a number nothing has is the bug behind one of the tasks waiting on this",
+    "It says what a switch does, which is the one control with no mixed position on the Mac, so the next person does not have to decide that in the middle of a feature",
+    "It says when disappearing is the right answer and when speaking for the selection is, because the Component section disappearing on a second copy is the current behaviour and the rule has to either bless it or call it a bug",
+    "Every existing example named in the rule points at a real control in the app, and the three open tasks it unblocks are named in it",
+    "No app code changes in this task: it is the written rule, and the tasks behind it do the building"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T14:03:15.042Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-05T14:03:40.138Z",
+      "note": "seq 1230 -> 50"
+    },
+    {
+      "t": "2026-09-05T14:05:05.374Z",
+      "note": "seq 50 -> 60"
+    }
+  ]
+}

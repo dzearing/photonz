@@ -4,12 +4,12 @@
   "goal": "Arming a tool with a color you saved by name is quiet in the two places it stops being that color, so what you draw is not the color you thought you picked. Both moments should say so.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 7,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:06.433Z",
-  "updated": "2026-09-04T22:43:48.442Z",
+  "updated": "2026-09-05T14:05:05.535Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Two rough lines from queue/audits/2026-09-04-tool-holds-saved-colour.json: picking any color under the Using Accent line silently lets go of Accent, and a tool armed with a name in one document draws the plain color it remembers in a document that has no such name, with no message. Code: Sources/PhotonzCore/ToolArming.swift and ToolColorStyles.swift; ColorStyles.swift holds the named colors, which live per document. Reuse the existing link-break pill from the components and styles work rather than inventing a second way of saying a link broke.",
@@ -35,6 +35,14 @@
     {
       "t": "2026-09-04T22:43:48.441Z",
       "note": "seq 7 -> 7"
+    },
+    {
+      "t": "2026-09-05T14:03:40.274Z",
+      "note": "seq 7 -> 90"
+    },
+    {
+      "t": "2026-09-05T14:05:05.534Z",
+      "note": "seq 90 -> 110"
     }
   ]
 }

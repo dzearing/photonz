@@ -4,12 +4,12 @@
   "goal": "A component can offer a number as a knob, so one card original can produce copies with different corner rounding or different room inside, without any of them leaving the family.",
   "epic": "ui-components",
   "priority": "p3-low",
-  "seq": 5,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:26.302Z",
-  "updated": "2026-09-04T22:08:49.996Z",
+  "updated": "2026-09-05T14:03:40.441Z",
   "deps": [
     "a-copy-can-be-given-its-own-color"
   ],
@@ -34,6 +34,10 @@
     {
       "t": "2026-09-04T22:08:49.995Z",
       "note": "seq 1240 -> 5"
+    },
+    {
+      "t": "2026-09-05T14:03:40.440Z",
+      "note": "seq 5 -> 10"
     }
   ]
 }
