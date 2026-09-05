@@ -1,0 +1,34 @@
+{
+  "id": "a-captioned-arrow-sits-right-tight-selection-a-p",
+  "title": "A captioned arrow sits right: tight selection, a pill that follows the drag, a tail that touches",
+  "goal": "The arrow with a caption is nearly right and three things spoil it. Its selection box is far bigger than the arrow and pill together, so a small arrow looks like it owns half the screen. Grabbing the tail makes the pill vanish for the whole drag, so you cannot see where the label will end up until you let go. And the tail stops a few pixels short of what it points at, leaving a visible gap instead of touching.",
+  "epic": "epic-uehjr1",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T14:13:58.273Z",
+  "updated": "2026-09-05T14:13:58.344Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05 with a screenshot, three separate causes found by reading. (1) Selection box: AnnotationBuilder in Tools.swift builds the frame as the drag box inset by renderPadding, then unions it with the caption pill rect inset again by captionShadowPadding. One rectangle spanning an arrow and a pill that hangs off its tail is mostly empty, and the selection outline draws that frame. The frame itself has to stay big enough to render into, so the fix is in what the selection DRAWS: hug the arrow and the pill as two shapes or as their tight union, not the padded frame. (2) Pill vanishing: CanvasView.refreshEndpointPreview at line 3649 calls displayAnnotationPreview, which draws the annotation vectors and no caption at all; only the commit path, EditorState.commitAnnotationEndpoints, calls AnnotationBuilder.planningCaption. Replan and draw the pill in the live preview so the drag shows the truth. (3) Tail gap: not diagnosed, measure it first. Suspects to check rather than assume: the line cap and stroke width moving the visual end away from the endpoint, and renderPadding. The user says a handful of pixels, so measure in document points at two zooms before changing anything.",
+  "acceptance": [
+    "The selection shown for a captioned arrow hugs what is actually drawn, the arrow and its pill, with no wide empty margin around either",
+    "Dragging either end keeps the pill on screen the whole time, re-placed live where it will land, so letting go changes nothing you can see",
+    "The tail meets what it points at with no gap, at every zoom and every stroke width, checked against a straight edge in a picture",
+    "Nothing about where a committed arrow or pill sits changes, so existing documents look the same",
+    "Core logic covered by tests in PhotonzCore written before the implementation",
+    "Audit written under queue/audits/ with pictures of a selected captioned arrow, a tail mid drag, and a tail against a border at two zooms, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T14:13:58.273Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T14:13:58.343Z",
+      "note": "seq 180 -> 4"
+    }
+  ]
+}

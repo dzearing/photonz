@@ -1,0 +1,37 @@
+{
+  "id": "an-arrow-can-wear-a-different-head-and-its-pill",
+  "title": "An arrow can wear a different head, and its pill can be a badge or a pill",
+  "goal": "Every arrow ends in the same solid triangle, and every caption sits in the same fully rounded pill. Give the arrow a choice of endings, a solid triangle, a fine open one, a solid dot, a hollow dot and a plain line, and let the caption corner be adjusted from square through rounded to fully round, so a label can read as a badge or as a pill.",
+  "epic": "epic-uehjr1",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T14:13:58.308Z",
+  "updated": "2026-09-05T14:13:58.379Z",
+  "deps": [
+    "a-captioned-arrow-sits-right-tight-selection-a"
+  ],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-05. Today AnnotationStyles carries only arrowheadScale (Sources/PhotonzCore/AnnotationStyles.swift, coding key arrowheadScale, defaultArrowheadScale) and there is no notion of a head SHAPE; the rasterizer draws one triangle. Add a head style to AnnotationContent with the triangle as the decoded default so old documents are untouched, and a corner radius for the caption pill likewise defaulting to fully round. Both belong in the tool options for the arrow, drawn as glyphs; see how the measure tool shows its modes for the pattern. Depends on the arrow polish task landing first so the pill is being drawn from one place before its shape becomes adjustable.",
+  "acceptance": [
+    "The arrow settings offer a set of endings shown as pictures rather than words, and picking one changes the arrow at once",
+    "Each ending scales with the stroke width the way the current triangle does, and stays centred on the point it marks",
+    "The caption corner is adjustable from square to fully round, with the current fully round look as the default",
+    "Both settings are remembered as the default for the next arrow you draw, the way colour and thickness already are",
+    "An arrow saved before this opens with the triangle and the round pill it had, unchanged",
+    "Core logic covered by tests in PhotonzCore written before the implementation",
+    "Audit written under queue/audits/ showing every ending at two stroke widths and a caption at three corner settings, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T14:13:58.309Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T14:13:58.378Z",
+      "note": "seq 1190 -> 5"
+    }
+  ]
+}
