@@ -1,0 +1,28 @@
+{
+  "feature": "The grid settings are where you would look for them",
+  "epic": "ui-building",
+  "summary": "Switching the grid on now puts a chip in the tool bar beside the zoom that reads its spacing and opens every grid setting, and the View menu gained a Grid Settings row right under Show Grid. You no longer have to know that the Canvas row at the bottom of the layers list is clickable.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-canvas-grid on. Open any picture or a blank canvas.",
+  "try": [
+    { "do": "Pick a shape or a layer, so something other than the Canvas is selected." },
+    { "do": "Press Command apostrophe. Graph paper appears, and so does a chip reading 4 pt beside the zoom.", "shot": "2026-09-05-grid-settings-chip.png" },
+    { "do": "Click the 4 pt chip.", "shot": "2026-09-05-grid-settings-open.png" },
+    { "do": "Type 8 into Spacing and press Return, then 4 into Bold every and press Return." },
+    { "do": "Press Escape, then press Command apostrophe twice to turn the grid off and on again." },
+    { "do": "Open the View menu and choose Grid Settings with the grid switched off. It switches the grid on and opens the same panel.", "shot": "2026-09-05-grid-settings-from-menu.png" },
+    { "do": "Click the Canvas row at the bottom of the layers list and check the Canvas section still holds the identical controls." }
+  ],
+  "evaluate": [
+    "When the lines appear, does your eye find the 4 pt chip without hunting for it?",
+    "Is a hash glyph and a number enough to say grid, or should the chip carry the word?",
+    "Does the chip belong beside the zoom, or is the tool bar the wrong home for it entirely?",
+    "Are the one line explanations useful, or do they make the Canvas section too wordy now that it carries them too?",
+    "Choosing Grid Settings while the grid is off switches it on. Is that helpful, or presumptuous?"
+  ],
+  "rough": [
+    "The chip disappears on a canvas narrower than 620pt, the same width the zoom slider leaves at, because the bar has no room for another capsule there. On a narrow window the View menu is the only route.",
+    "The Canvas section of the panel is noticeably taller than it was, because it now carries the same explanations the popover does. Keeping one copy of the controls was worth it, but the panel is wordier than before.",
+    "Set Grid Origin is still its own View menu row as well as the Starts at button inside the settings. Two doors to one mode, which is deliberate but is repetition.",
+    "The grid switch inside the settings turns the grid off, which takes the chip and the settings with it. It closes cleanly, but there is no undo for it beyond pressing Command apostrophe again."
+  ]
+}

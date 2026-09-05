@@ -41,6 +41,22 @@
     {
       "t": "2026-09-05T20:46:12.319491Z",
       "note": "Toolbar width is the scarce resource here (EditorChromeLayout comments: a measurements pill was removed from this bar for exactly this reason). Mitigation: the chip only exists while the grid is on, and below a canvas width threshold it drops its spacing readout and shows the glyph alone."
+    },
+    {
+      "t": "2026-09-05T21:01:00.885320Z",
+      "note": "Built. One shared control view (Sources/Photonz/CanvasGridSettingsView.swift) now draws every grid setting, and three places show it: the new chip in the floating tool bar (EditorView.gridChip, beside the zoom, only while the grid is showing and only on a canvas at least 620pt wide), View menu Grid Settings (EditorCommands, right under Show Grid, calls EditorState.showGridSettings which switches the grid on first when it was off), and the Canvas section of the panel, which now draws the same view instead of its own copy. Copy lives in PhotonzCore CanvasGridCopy so both places say the same words and a test can hold them to a standard."
+    },
+    {
+      "t": "2026-09-05T21:01:00.885320Z",
+      "note": "Post-build review on the real app, through Scripts/playtest/grid-settings-walk.json against the probe with Screen Recording granted, so every picture is a real capture. Two things were clumsy and got fixed before calling it ready: the popover was titled Grid over a checkbox also called Grid (the checkbox is now Show grid, matching the menu and reading in parallel with Snap to grid, and the five existing grid walks were updated), and the Columns / Columns and rows picker had no label at all, so a first timer saw two phrases floating between two checkboxes (it now has the word Lines above it and its explanation below)."
+    },
+    {
+      "t": "2026-09-05T21:01:00.885320Z",
+      "note": "Verified against acceptance: (1) chip is one press from the lines, Grid Settings is one row under Show Grid, neither needs a selection: the walk does the whole thing with a Rectangle selected; (2) the Canvas row still shows the identical controls, screenshotted at step 10; (3) the chip appears at the instant the lines do, no tip to dismiss; (4) every number carries one plain line, including what the smallest cell means; (5) walk types 8 into Spacing and 4 into Bold every from the popover with the layers list never touched; (6) audit at queue/audits/2026-09-05-grid-settings.json with three real captures."
+    },
+    {
+      "t": "2026-09-05T21:01:00.885320Z",
+      "note": "Harness: focus and type steps now look at the editor window AND any popover attached to it, otherwise no walk could ever type into a number that lives in a popover. New playtest actions toggleGrid and showGridSettings, because the probe's menu bar refuses window scoped chords while unfocused. Scripts/test.sh green (3367 tests), and all five existing grid walks re-run green after the Show grid rename."
     }
   ],
   "started": "2026-09-05T20:42:50.809Z"

@@ -615,6 +615,64 @@ struct EditorView: View {
         if fitted != toolbarVisibleCount { toolbarVisibleCount = fitted }
     }
 
+    /// The grid's own chip: a glass capsule beside the zoom that appears the
+    /// instant the grid does, reads the spacing it is drawing, and opens every
+    /// grid setting.
+    ///
+    /// It exists because turning the grid on used to change the picture and
+    /// nothing else, leaving the numbers behind a click on the Canvas row of
+    /// the layers list that nobody makes. Now the settings appear beside the
+    /// lines they shape, at the moment they arrive — no tip to dismiss, and
+    /// nothing to know in advance.
+    ///
+    /// It is only there while the grid is showing (a door into settings for a
+    /// grid that is off is a door into an empty room, and this bar has no width
+    /// to spare) and only on a canvas roomy enough to hold it, which is the
+    /// same width the zoom slider needs. On anything narrower the View menu's
+    /// Show Grid and Grid Settings are still the whole feature.
+    @ViewBuilder private var gridChip: some View {
+        @Bindable var state = editorState
+        if Experiments.shared.canvasGridEnabled, editorState.canvasGrid.isVisible,
+           editorState.document != nil,
+           EditorChromeLayout.showsGridChip(canvasWidth: canvasContentWidth) {
+            Button {
+                editorState.isGridSettingsPresented.toggle()
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "grid")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    // The live spacing, in the same weight the bar's other
+                    // pressable values wear. Monospaced digits so typing 4 into
+                    // 128 cannot resize the chip underneath the popover you are
+                    // typing in.
+                    Text(editorState.canvasGrid.spacingText)
+                        .font(.system(.caption, design: .monospaced).weight(.medium))
+                        .foregroundStyle(Color.primary)
+                        .frame(width: 38, alignment: .trailing)
+                        .background(Color.clear)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 8, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .fixedSize()
+                .frame(height: 28)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.borderless)
+            .fixedSize()
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .glassEffect(.regular, in: .capsule)
+            .contentShape(.capsule)
+            .help("Grid settings: spacing, bold lines, where it starts")
+            .playtestControl("Grid settings", detail: "Tool bar, \(editorState.canvasGrid.spacingText)")
+            .popover(isPresented: $state.isGridSettingsPresented, arrowEdge: .top) {
+                CanvasGridSettingsPopover()
+            }
+        }
+    }
+
     /// The color + zoom capsules, always present at the trailing end.
     ///
     /// The mock's "7 measurements" pill used to sit here too. It was a whole
@@ -626,6 +684,10 @@ struct EditorView: View {
     private var sideCapsules: some View {
         HStack(spacing: 10) {
             colorBar
+            // Grid beside zoom: both are chrome for how the canvas is being
+            // looked at, and both are the first things the bar sheds when the
+            // picture gets narrow.
+            gridChip
             zoomBar
         }
     }

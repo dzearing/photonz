@@ -183,6 +183,30 @@ public enum EditorChromeLayout {
         canvasWidth >= toolOptionsMinCanvasWidth
     }
 
+    /// The narrowest canvas that still gets the grid's own chip in the tool
+    /// bar — the glass capsule that appears beside the zoom while the grid is
+    /// showing, reads its spacing, and opens every grid setting.
+    ///
+    /// It shares the zoom slider's threshold on purpose. Both are the same kind
+    /// of thing: chrome for how the canvas is being LOOKED at, with a full
+    /// keyboard and menu equivalent behind it (⌘0 and ⌘1 for the zoom, the View
+    /// menu's Show Grid and Grid Settings for the grid). So they are the first
+    /// two things the bar sheds, and they go together rather than one at a
+    /// time. Below this width the grid is still switched on and tuned from the
+    /// View menu, which is where a person on a 500pt canvas is reaching anyway.
+    ///
+    /// The arithmetic: at the threshold the budget has to cover the widest the
+    /// bar ever gets with no tools inline — 473pt, measured — plus the chip,
+    /// which is under 90pt with its glyph, its spacing and its chevron.
+    public static let gridChipMinCanvasWidth: CGFloat = zoomSliderMinCanvasWidth
+
+    /// Whether the grid's chip appears in the tool bar at this canvas width.
+    /// Only asked while the grid is actually showing: with no lines on the
+    /// picture the chip would be a door to a room nobody is in.
+    public static func showsGridChip(canvasWidth: CGFloat) -> Bool {
+        canvasWidth >= gridChipMinCanvasWidth
+    }
+
     /// The narrowest canvas on which the CROP tool's options still lay
     /// themselves out along the tool bar.
     ///

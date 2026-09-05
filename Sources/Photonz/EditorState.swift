@@ -230,6 +230,32 @@ final class EditorState {
 
     var isPlacingGridOrigin: Bool { gridOriginAdjustment != nil }
 
+    /// Whether the grid's settings are open on the canvas. They hang off the
+    /// grid's chip in the floating tool bar, so this is what the View menu's
+    /// Grid Settings row raises: one flag, one popover, whichever door was
+    /// used. Per window, because the popover belongs to a window even though
+    /// the settings it edits are the app's.
+    var isGridSettingsPresented = false
+
+    /// Open the grid's settings, from the View menu or from anywhere else that
+    /// is not the chip itself.
+    ///
+    /// It switches the grid ON first when it was off, for the reason placing
+    /// the zero point does: nobody adjusts a grid they cannot see, and the chip
+    /// the popover hangs off only exists while there are lines on the picture.
+    /// The chip has to be in the view tree before the popover can point at it,
+    /// so the raise waits one turn of the run loop when the grid had to be
+    /// switched on for it.
+    func showGridSettings() {
+        guard Experiments.shared.canvasGridEnabled else { return }
+        guard !canvasGrid.isVisible else {
+            isGridSettingsPresented = true
+            return
+        }
+        canvasGrid.isVisible = true
+        Task { @MainActor in self.isGridSettingsPresented = true }
+    }
+
     /// Take the canvas over to say where the grid starts. Nothing is written
     /// to the settings until you keep it, so leaving costs nothing.
     func beginGridOriginPlacement() {
@@ -239,6 +265,10 @@ final class EditorState {
         if activeTool != .select { setTool(.select) }
         selectedLayerID = nil
         setSelection(nil)
+        // The settings popover hangs off the chip in the tool bar, and placing
+        // the zero point takes that whole bar over: leaving it up would leave a
+        // popover pointing at a control that is no longer there.
+        isGridSettingsPresented = false
         gridOriginAdjustment = CanvasGridOriginAdjustment(settings: canvasGrid)
     }
 

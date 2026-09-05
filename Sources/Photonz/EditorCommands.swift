@@ -520,8 +520,9 @@ struct EditorCommands: Commands {
             // The grid you build against (Next, `next-canvas-grid`), on the key
             // Photoshop uses for its own. It is a view preference, not part of
             // the picture, so it belongs on this menu next to the zooms rather
-            // than anywhere near Layer or Image. Its numbers are in the Canvas
-            // section of the panel.
+            // than anywhere near Layer or Image. Everything that shapes it is
+            // one row below, on Grid Settings, and on the chip the grid puts in
+            // the tool bar while it is showing.
             if Experiments.shared.canvasGridEnabled {
                 Divider()
                 Button((editor?.canvasGrid.isVisible ?? false) ? "Hide Grid" : "Show Grid") {
@@ -529,6 +530,15 @@ struct EditorCommands: Commands {
                 }
                 .keyboardShortcut("'", modifiers: .command)
                 .disabled(!hasDocument)
+                // Right under the switch, because the menu you turn the grid on
+                // from is the first place you look for what shapes it. It also
+                // switches the grid on when it was off: the settings open on
+                // the canvas, and there is nothing to judge a spacing against
+                // with no lines drawn.
+                Button(CanvasGridCopy.settingsMenuItem) {
+                    editor?.showGridSettings()
+                }
+                .disabled(!hasDocument || (editor?.isPlacingGridOrigin ?? false))
                 // Photoshop's own key for Snap, next to the grid it pulls to.
                 // Dimmed with the grid hidden, because with no lines on the
                 // picture there is nothing to pull to.

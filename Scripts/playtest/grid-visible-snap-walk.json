@@ -10,7 +10,7 @@
 
     { "do": "action", "action": "selectCanvas" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Grid" },
+    { "do": "press", "control": "Show grid" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "grid-on-default", "note": "default four point grid at 100%: the canvas draws 32s, so the report should say it pulls to 32" },
     { "do": "snapshot", "name": "visible-snap-1-grid-on" },

@@ -435,9 +435,14 @@ private final class Run {
                  state: describe())
 
         case .type(let text):
-            let window = try requireWindow()
-            guard let field = window.firstResponder as? NSTextView else {
-                let responder = window.firstResponder.map { String(describing: type(of: $0)) } ?? "nil"
+            // Whichever of the editor's surfaces holds the keyboard: a popover
+            // is a window of its own, so the field a `focus` step just took
+            // hold of is not always in the editor window.
+            let windows = try panelWindows()
+            guard let field = windows.compactMap({ $0.firstResponder as? NSTextView }).first else {
+                let responder = windows
+                    .map { $0.firstResponder.map { String(describing: type(of: $0)) } ?? "nil" }
+                    .joined(separator: ", ")
                 throw Failure(description: "no text field has the keyboard (first responder is \(responder))")
             }
             field.insertText(text, replacementRange: field.selectedRange())
@@ -445,9 +450,16 @@ private final class Run {
             note(number, step.name, "\"\(text)\" into \(type(of: field))")
 
         case .focus(let name):
-            let window = try requireWindow()
-            guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
-            let fields = Self.findAll(NSTextField.self, in: content).filter(\.isEditable)
+            // The editor window AND whatever is open above it. A number that
+            // lives in a popover — the grid's spacing, since its settings moved
+            // out of the panel — is in a window of its own, and a walk that
+            // only ever looked at the editor could photograph that field
+            // forever without typing into it.
+            let windows = try panelWindows()
+            let fields = windows.flatMap { window in
+                window.contentView.map { Self.findAll(NSTextField.self, in: $0) } ?? []
+            }
+            .filter { $0.isEditable && !$0.isHiddenOrHasHiddenAncestor }
             // Either word finds it. A field usually shows its own name when it
             // is empty, so the placeholder is the word on screen; a field that
             // stands in for something else while it has no number to show
@@ -461,6 +473,12 @@ private final class Run {
             }) else {
                 let seen = fields.map(label).filter { !$0.isEmpty }
                 throw Failure(description: "no editable field labelled \"\(name)\" is on screen; the ones that are: \(seen.isEmpty ? "none" : seen.joined(separator: ", "))")
+            }
+            // The field's OWN window: a popover takes the keyboard for itself,
+            // and asking the editor to make a field in another window first
+            // responder does nothing at all.
+            guard let window = match.window else {
+                throw Failure(description: "the field labelled \"\(name)\" is in no window")
             }
             guard window.makeFirstResponder(match) else {
                 throw Failure(description: "the field labelled \"\(name)\" would not take the keyboard")
@@ -1051,6 +1069,8 @@ private final class Run {
             case .hideLibrary: editor.setLibraryVisible(false)
             case .placeLibraryPick: editor.placeLibraryPick()
             case .insertPickedComponent: editor.insertPickedComponent()
+            case .toggleGrid: editor.toggleCanvasGrid()
+            case .showGridSettings: editor.showGridSettings()
             case .selectCanvas: editor.selectCanvas()
             case .duplicateLayer: editor.duplicateSelectedLayers()
             case .renameSelectedLayer:

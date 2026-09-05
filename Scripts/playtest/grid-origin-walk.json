@@ -15,7 +15,7 @@
 
     { "do": "action", "action": "selectCanvas" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Grid" },
+    { "do": "press", "control": "Show grid" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "1-before", "note": "grid on, starting at the corner of the picture as it always has" },
     { "do": "snapshot", "name": "1-grid-before" },

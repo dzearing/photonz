@@ -121,6 +121,12 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
         max(Self.clamped(spacing: spacing), Self.clamped(minimumCell: minimumCell))
     }
 
+    /// The spacing as a chip in the tool bar shows it. It is the number that
+    /// was TYPED, not `drawnSpacing`, because the chip is the door to the field
+    /// holding it: a readout that disagreed with the field it opens would read
+    /// as the app arguing with itself.
+    public var spacingText: String { "\(CanvasGridNumber.text(spacing)) pt" }
+
     // Stored settings outlive the shape of this type, so a blob written before
     // a field existed still reads back, and a number edited by hand into
     // something undrawable is clamped rather than obeyed.
@@ -405,19 +411,76 @@ public struct CanvasGridOriginAdjustment: Equatable, Sendable {
     }
 }
 
-/// Where the grid starts, as a person reads it: two numbers, whole where the
-/// number is whole and to the half point where it is not, because a readout
-/// that quietly rounded would be a lie about where the grid actually is.
-public enum CanvasGridOriginLabel {
-    public static func text(_ point: CGPoint) -> String {
-        "\(number(point.x)), \(number(point.y))"
-    }
-
-    private static func number(_ value: CGFloat) -> String {
+/// One of the grid's numbers, as a person reads it: whole where the number is
+/// whole and to the half point where it is not, because a readout that quietly
+/// rounded would be a lie about the grid it is describing.
+public enum CanvasGridNumber {
+    public static func text(_ value: CGFloat) -> String {
         guard value.isFinite else { return "0" }
         let rounded = (value * 2).rounded() / 2
         if rounded == rounded.rounded() { return String(Int(rounded.rounded())) }
         return String(format: "%.1f", Double(rounded))
     }
+}
+
+/// Where the grid starts, as a person reads it: two numbers, in the same
+/// wording as every other number the grid shows.
+public enum CanvasGridOriginLabel {
+    public static func text(_ point: CGPoint) -> String {
+        "\(CanvasGridNumber.text(point.x)), \(CanvasGridNumber.text(point.y))"
+    }
+}
+
+/// What the grid's controls are called, and what each of its numbers actually
+/// does, in the words a person reads.
+///
+/// The wording lives here rather than in a view because the SAME controls are
+/// drawn in two places — the settings popover the grid itself opens, and the
+/// Canvas section of the panel — and two copies of a sentence drift. It is
+/// also the only part of the grid a test can hold to a standard: every caption
+/// says what the number DOES, not what it is called again.
+public enum CanvasGridCopy {
+    /// "Show grid", not "Grid": it sits directly above "Snap to grid", it is
+    /// the same switch as View \u{25B8} Show Grid, and under a popover titled
+    /// Grid a checkbox also called Grid reads as the app stuttering.
+    public static let grid = "Show grid"
+    public static let gridCaption = "Draw the grid over the picture so you can build to it."
+
+    public static let snap = "Snap to grid"
+    public static let snapCaption =
+        "Dragging pulls to the nearest line you can see. Hold Command to get away from it."
+
+    public static let lines = "Lines"
+    public static let linesCaption = "Up and down only, or both ways like graph paper."
+
+    public static let spacing = "Spacing"
+    public static let spacingCaption = "How far apart the lines are, in points."
+
+    public static let majorEvery = "Bold every"
+    public static let majorEveryCaption =
+        "Draw every Nth line stronger, so you can count cells without measuring."
+
+    public static let minimumCell = "Smallest cell"
+    public static let minimumCellCaption =
+        "The finest cell the grid will ever draw, however far you zoom in. "
+        + "Set it to 8 and you are working in eights."
+
+    public static let origin = "Starts at"
+    public static let originCaption =
+        "Where the grid counts from. Move it to line the grid up with what is already in the picture."
+
+    /// The one line under the controls, in both places they are drawn.
+    public static let footnote =
+        "Zoom out and the fine lines fade away, zoom in and they come back, so the grid stays readable. "
+        + "It is drawn on the canvas, never into the picture."
+
+    /// What the button that opens all of this is called, on the View menu.
+    public static let settingsMenuItem = "Grid Settings\u{2026}"
+    /// The title over the settings when they are opened from the canvas.
+    public static let settingsTitle = "Grid"
+
+    /// Every caption, for a test that holds them all to the same standard.
+    public static let captions = [gridCaption, snapCaption, linesCaption, spacingCaption,
+                                  majorEveryCaption, minimumCellCaption, originCaption, footnote]
 }
 

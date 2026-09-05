@@ -206,6 +206,34 @@ struct EditorChromeLayoutTests {
         #expect(297 + 69 <= budget)
     }
 
+    // MARK: The grid's chip goes when the zoom slider goes
+
+    @Test func theGridChipShowsOnARoomyCanvas() {
+        #expect(EditorChromeLayout.showsGridChip(canvasWidth: 1135) == true)
+    }
+
+    @Test func theGridChipGivesWayOnACrampedCanvas() {
+        // The measured cramped case: a 700pt window with the inspector docked
+        // leaves a 435pt canvas, where the bar has already shed every tool it
+        // has. One more capsule there hangs off the end of the picture.
+        #expect(EditorChromeLayout.showsGridChip(canvasWidth: 435) == false)
+    }
+
+    @Test func theGridChipAndTheZoomSliderLeaveTogether() {
+        // Both are chrome for how the canvas is being LOOKED at, and both have
+        // a full keyboard and menu equivalent, so they are the first two things
+        // the bar sheds and they go at the same width.
+        #expect(EditorChromeLayout.gridChipMinCanvasWidth
+                == EditorChromeLayout.zoomSliderMinCanvasWidth)
+    }
+
+    @Test func theGridChipThresholdClearsTheWidestBarPlusTheChip() {
+        // At the threshold the bar with no tools inline, full tool options,
+        // colors and zoom measures 473pt, and the chip is under 90pt.
+        let t = EditorChromeLayout.gridChipMinCanvasWidth
+        #expect(EditorChromeLayout.toolBarBudget(canvasWidth: t) >= 473 + 90)
+    }
+
     // MARK: Crop's options are wider than the wand's, so they give way sooner
 
     @Test func cropOptionsLayOutInFullOnARoomyCanvas() {

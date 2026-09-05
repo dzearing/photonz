@@ -21,7 +21,7 @@
 
     { "do": "describe", "stage": "the-view-menu-row", "note": "View shows Show Grid on Command apostrophe. Pressing the chord here proves nothing: with no window focused the probe's whole View menu is dimmed, so the menu bar refuses every window scoped chord, Zoom In included. The switch below is the same call the menu row makes." },
 
-    { "do": "press", "control": "Grid" },
+    { "do": "press", "control": "Show grid" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "panel", "stage": "grid-on" },
     { "do": "snapshot", "name": "grid-on-fit" },
@@ -33,11 +33,11 @@
     { "do": "press", "control": "Columns and rows", "in": "Lines" },
     { "do": "wait", "seconds": 0.4 },
 
-    { "do": "press", "control": "Grid" },
+    { "do": "press", "control": "Show grid" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "snapshot", "name": "grid-off-after" },
 
-    { "do": "press", "control": "Grid" },
+    { "do": "press", "control": "Show grid" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "action", "action": "zoomIn" },
     { "do": "action", "action": "zoomIn" },
@@ -85,7 +85,7 @@
 
     { "do": "action", "action": "selectCanvas" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Grid" },
+    { "do": "press", "control": "Show grid" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "cost-with-the-grid-off", "note": "the same run of zooms and the same sweep, for the number to be compared against" },
     { "do": "click", "at": [700, 700] },

@@ -10,7 +10,7 @@
 
     { "do": "action", "action": "selectCanvas" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Grid" },
+    { "do": "press", "control": "Show grid" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "grid-on-at-fit", "note": "the grid as a document opens: this is the state the report says is fine" },
     { "do": "snapshot", "name": "grid-1-fit" },

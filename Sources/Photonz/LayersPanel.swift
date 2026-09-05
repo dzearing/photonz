@@ -3113,100 +3113,18 @@ struct CanvasInspector: View {
 
     // MARK: The grid you build against (Next, `next-canvas-grid`)
 
-    /// The grid's numbers live here, on the Canvas, because that is what the
-    /// grid belongs to. The switch is also on the View menu, on Command
-    /// apostrophe, so it can be flicked without coming here at all.
+    /// The grid's numbers, on the Canvas, because that is what the grid
+    /// belongs to. They are ALSO on the chip in the tool bar and on View ▸
+    /// Grid Settings, because "click the Canvas row first" is not how anyone
+    /// looks for them — see `CanvasGridControls`, which is the one copy of
+    /// these controls that all three places draw.
     ///
     /// Nothing here is saved in the document: it is a view preference the app
     /// remembers between launches, and every window shows the same one.
     @ViewBuilder private var gridSection: some View {
-        let grid = editorState.canvasGrid
-        VStack(alignment: .leading, spacing: 8) {
-            Toggle("Grid", isOn: Binding(get: { grid.isVisible },
-                                         set: { editorState.canvasGrid.isVisible = $0 }))
-                .font(.callout)
-                .controlSize(.small)
-                .playtestControl("Grid", detail: "Canvas, \(grid.isVisible ? "shown" : "hidden")")
-            if grid.isVisible {
-                // Only while the grid is showing: with no lines on the picture
-                // there is nothing to pull to, so a switch for it would be a
-                // control that does nothing.
-                Toggle("Snap to grid", isOn: Binding(
-                    get: { grid.snapsToGrid },
-                    set: { editorState.canvasGrid.snapsToGrid = $0 }))
-                    .font(.callout)
-                    .controlSize(.small)
-                    .playtestControl("Snap to grid",
-                                     detail: "Canvas, \(grid.snapsToGrid ? "on" : "off")")
-                Picker("Lines", selection: Binding(
-                    get: { grid.axes },
-                    set: { editorState.setCanvasGridAxes($0) })) {
-                    ForEach(CanvasGridAxes.allCases, id: \.self) { Text($0.label).tag($0) }
-                }
-                .labelsHidden().pickerStyle(.segmented).controlSize(.small)
-                .playtestField("Lines")
-                HStack(spacing: 8) {
-                    gridNumberField("Spacing", suffix: "pt",
-                                    value: Double(grid.spacing),
-                                    set: { editorState.setCanvasGridSpacing(CGFloat($0)) })
-                    gridNumberField("Bold every", suffix: "lines",
-                                    value: Double(grid.majorEvery),
-                                    set: { editorState.setCanvasGridMajorEvery(Int($0.rounded())) })
-                }
-                HStack(spacing: 8) {
-                    gridNumberField("Smallest cell", suffix: "pt",
-                                    value: Double(grid.minimumCell),
-                                    set: { editorState.setGridMinimumCell(CGFloat($0)) })
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Starts at")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        // The way into the placing mode from the place a
-                        // person is already standing when they care where the
-                        // grid starts. Also on the View menu.
-                        Button(CanvasGridOriginLabel.text(grid.origin)) {
-                            editorState.beginGridOriginPlacement()
-                        }
-                        .controlSize(.small)
-                        .help("Place the grid\u{2019}s zero point on the canvas")
-                        .playtestControl("Set grid origin",
-                                         detail: "Canvas, \(CanvasGridOriginLabel.text(grid.origin))")
-                    }
-                }
-                Text("Zoom out and the fine lines fade away, zoom in and they come back, so the grid is always readable. It is drawn on the canvas, never into the picture.")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
-        }
-    }
-
-    /// One of the grid's two numbers. It commits on Return and on losing the
-    /// keyboard, steps with the arrow keys like every other number in the
-    /// panel, and hands the keyboard back afterwards so the next letter picks
-    /// a tool.
-    @ViewBuilder private func gridNumberField(_ label: String, suffix: String,
-                                              value: Double,
-                                              set: @escaping (Double) -> Void) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
-            HStack(spacing: 4) {
-                TextField(label, value: Binding(get: { value }, set: { set($0) }),
-                          format: .number.precision(.fractionLength(0)).grouping(.never))
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 48)
-                    .numberFieldKeys(
-                        commit: {},
-                        revert: {},
-                        step: { direction, coarse in
-                            set(Double(LayerGeometry.stepped(value, direction: direction,
-                                                             coarse: coarse)))
-                        })
-                Text(suffix).font(.caption2).foregroundStyle(.tertiary)
-            }
-        }
-        .playtestField(label)
+        // The panel column is narrower than the popover, so the labels get
+        // less of it and the controls keep their room.
+        CanvasGridControls(labelWidth: 78)
     }
 
     private func syncFields() {

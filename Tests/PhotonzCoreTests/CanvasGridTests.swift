@@ -6,6 +6,41 @@ import Testing
 @Suite("Canvas grid")
 struct CanvasGridTests {
 
+    // MARK: What the settings say for themselves
+
+    @Test func everyControlHasAPlainWordCaption() {
+        for caption in CanvasGridCopy.captions {
+            #expect(!caption.isEmpty)
+            // User facing copy never carries an em dash.
+            #expect(!caption.contains("\u{2014}"))
+            // A caption that is one word is a second label, not an explanation.
+            #expect(caption.split(separator: " ").count >= 5)
+            #expect(caption.hasSuffix("."))
+        }
+    }
+
+    @Test func theSmallestCellCaptionSaysWhatItActuallyDoes() {
+        // The one number nobody can guess from its name: it is about how far
+        // you may zoom in, and about what a drag can land on.
+        let caption = CanvasGridCopy.minimumCell + " " + CanvasGridCopy.minimumCellCaption
+        #expect(caption.localizedCaseInsensitiveContains("zoom"))
+        #expect(caption.localizedCaseInsensitiveContains("finest")
+                || caption.localizedCaseInsensitiveContains("smallest"))
+    }
+
+    @Test func theSpacingReadsAsANumberWithItsUnit() {
+        #expect(CanvasGridSettings(spacing: 4).spacingText == "4 pt")
+        #expect(CanvasGridSettings(spacing: 12).spacingText == "12 pt")
+        // Half points survive: a grid actually sitting on 7.5 must not say 8.
+        #expect(CanvasGridSettings(spacing: 7.5).spacingText == "7.5 pt")
+    }
+
+    @Test func aNumberThatIsNotANumberStillReadsAsZero() {
+        #expect(CanvasGridNumber.text(.nan) == "0")
+        #expect(CanvasGridNumber.text(24) == "24")
+        #expect(CanvasGridNumber.text(-16.5) == "-16.5")
+    }
+
     // MARK: Settings
 
     @Test func startsOffAtFourPointsWithBothAxes() {

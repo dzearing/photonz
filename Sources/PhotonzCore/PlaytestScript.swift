@@ -382,6 +382,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Layer ▸ Insert Component (Next, `next-components`): puts a copy of the
     /// component picked on the shelf in the middle of what is on screen.
     case insertPickedComponent
+    /// View ▸ Show Grid (⌘\u{27}). The menu bar refuses a window scoped chord
+    /// while the probe window is not focused, so this is how a walk switches
+    /// the grid on the way a person does — without touching the Canvas row,
+    /// which is the whole point of the settings being reachable elsewhere.
+    case toggleGrid
+    /// View ▸ Grid Settings. Opens the grid's settings on the canvas, switching
+    /// the grid on first if it was off, exactly as the menu row does.
+    case showGridSettings
     /// Pick the Canvas row, which is what a click on it in the layers dock
     /// does. A walk cannot reach the dock with the pointer, so this is how the
     /// Canvas section's own numbers get typed into.
