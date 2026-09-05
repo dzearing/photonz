@@ -452,14 +452,21 @@ struct PlaytestScriptTests {
         {
           "steps": [
             { "do": "hover", "label": "Arrow" },
-            { "do": "hover", "at": [300, 800], "space": "view" }
+            { "do": "hover", "at": [300, 800], "space": "view" },
+            { "do": "hover", "label": "Copy", "window": "Capture History" }
           ]
         }
         """)
-        guard case .hover(.label(let label)) = script.steps[0] else { Issue.record("label"); return }
+        guard case .hover(.label(let label), let noWindow) = script.steps[0] else { Issue.record("label"); return }
         #expect(label == "Arrow")
-        guard case .hover(.point(let at)) = script.steps[1] else { Issue.record("point"); return }
+        #expect(noWindow == nil)
+        guard case .hover(.point(let at), _) = script.steps[1] else { Issue.record("point"); return }
         #expect(at.point == CGPoint(x: 300, y: 800) && at.space == .view)
+        // The capture history is a floating panel of its own, so a walk names
+        // the window its controls live in the way `snapshot` already does.
+        guard case .hover(.label(let panelLabel), let panel) = script.steps[2] else { Issue.record("window"); return }
+        #expect(panelLabel == "Copy")
+        #expect(panel == "Capture History")
         #expect(throws: PlaytestScriptError.self) {
             try decode(#"{ "steps": [ { "do": "hover" } ] }"#)
         }

@@ -19,9 +19,9 @@ import SwiftUI
 //  * Leaving waits a short grace period, so slipping onto the gap between two
 //    buttons does not evaporate the label you were reading. A press, a key,
 //    a scroll, or the control leaving the window hides it at once.
-//  * Placement: above the control by a gap, flipped below when there is no
-//    room, clamped to the screen with the beak walked back to the control.
-//    It NEVER resizes to fit.
+//  * Placement: on the side the control asks for (above by default), by a
+//    gap, flipped to the other side when there is no room, clamped to the
+//    screen with the beak walked back to the control. It NEVER resizes to fit.
 //  * It is never in the way: the panel ignores the mouse, so it cannot steal
 //    a hover or block a click.
 
@@ -155,11 +155,23 @@ final class HintTooltipController {
         let screen = window.screen ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1600, height: 1000)
 
-        var origin = CGPoint(x: target.midX - size.width / 2, y: target.maxY + Self.gap)
-        var side = Side.top
-        if origin.y + size.height > visible.maxY - Self.edge {
-            side = .bottom
-            origin.y = target.minY - Self.gap - size.height
+        // The control says which side reads better for it and the screen gets
+        // the last word. Above is right for the tool bar, which sits low; the
+        // capture history is pinned to the TOP of the screen and its buttons
+        // sit under the picture they belong to, so a label above one would
+        // land on that picture. Either way, no room means the other side.
+        var side = anchor.preferredSide
+        func place(_ side: Side) -> CGPoint {
+            CGPoint(x: target.midX - size.width / 2,
+                    y: side == .top ? target.maxY + Self.gap : target.minY - Self.gap - size.height)
+        }
+        var origin = place(side)
+        let fits = side == .top
+            ? origin.y + size.height <= visible.maxY - Self.edge
+            : origin.y >= visible.minY + Self.edge
+        if !fits {
+            side = side == .top ? .bottom : .top
+            origin = place(side)
         }
         origin.x = min(max(origin.x, visible.minX + Self.edge), visible.maxX - size.width - Self.edge)
         origin.y = max(origin.y, visible.minY + Self.edge)
@@ -267,11 +279,16 @@ final class HintTooltipController {
 final class HintAnchorView: NSView {
     var label: String
     var key: String?
+    /// The side the control would rather be labelled on. The screen still
+    /// overrules it when there is no room there.
+    var preferredSide: HintTooltipController.Side
+
     private var trackingArea: NSTrackingArea?
 
-    init(label: String, key: String?) {
+    init(label: String, key: String?, preferredSide: HintTooltipController.Side) {
         self.label = label
         self.key = key
+        self.preferredSide = preferredSide
         super.init(frame: .zero)
     }
 
@@ -321,14 +338,16 @@ final class HintAnchorView: NSView {
 private struct HintAnchor: NSViewRepresentable {
     let label: String
     let key: String?
+    let side: HintTooltipController.Side
 
     func makeNSView(context: Context) -> HintAnchorView {
-        HintAnchorView(label: label, key: key)
+        HintAnchorView(label: label, key: key, preferredSide: side)
     }
 
     func updateNSView(_ view: HintAnchorView, context: Context) {
         view.label = label
         view.key = key
+        view.preferredSide = side
     }
 }
 
@@ -411,10 +430,11 @@ private struct ToolTipModifier: ViewModifier {
     let label: String
     let key: String?
     let fallback: String?
+    let side: HintTooltipController.Side
 
     func body(content: Content) -> some View {
         if Experiments.shared.toolTipsEnabled {
-            content.background { HintAnchor(label: label, key: key) }
+            content.background { HintAnchor(label: label, key: key, side: side) }
         } else {
             content.help(fallback ?? "\(label)\(key.map { " (\($0))" } ?? "")")
         }
@@ -423,11 +443,15 @@ private struct ToolTipModifier: ViewModifier {
 
 extension View {
     /// The design-language tooltip for a control: `label` names it and `key`
-    /// is what fires it, printed quieter. With the Next release's
-    /// `next-tool-tips` flag off (so always in Current) this is the system
-    /// help tag instead, reading `fallback` when given and "label (key)"
-    /// otherwise, so Current keeps exactly the text it had.
-    func toolTip(_ label: String, key: String? = nil, fallback: String? = nil) -> some View {
-        modifier(ToolTipModifier(label: label, key: key, fallback: fallback))
+    /// is what fires it, printed quieter. `below` asks for the label under the
+    /// control rather than over it, for a control whose own picture is the
+    /// thing above it. With the Next release's `next-tool-tips` flag off (so
+    /// always in Current) this is the system help tag instead, reading
+    /// `fallback` when given and "label (key)" otherwise, so Current keeps
+    /// exactly the text it had.
+    func toolTip(_ label: String, key: String? = nil, fallback: String? = nil,
+                 below: Bool = false) -> some View {
+        modifier(ToolTipModifier(label: label, key: key, fallback: fallback,
+                                 side: below ? .bottom : .top))
     }
 }

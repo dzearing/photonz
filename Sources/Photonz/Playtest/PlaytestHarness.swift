@@ -295,9 +295,11 @@ private final class Run {
                  + "\(String(format: "%.4f", Double(landed))) in \(steps) nudges; \(verdict)",
                  state: describe(extra: ["gridDuringPinch": reports]))
 
-        case .hover(let target):
-            let window = try requireWindow()
-            let canvas = try requireCanvas()
+        case .hover(let target, let wanted):
+            // `window` reaches a panel of the app's own that is not the editor
+            // — the capture history is one — so its controls can be rested on
+            // exactly as the tool bar's are.
+            let window = try wanted.map { try requireWindow(titled: $0) } ?? (try requireWindow())
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
             let anchors = Self.findAll(HintAnchorView.self, in: content)
             let anchor: HintAnchorView?
@@ -312,15 +314,24 @@ private final class Run {
                         ?? anchors.first(where: { $0.label.hasPrefix(text) })
                         ?? anchors.first(where: { $0.label.range(of: text, options: .caseInsensitive) != nil }) else {
                     let names = anchors.map(\.label).sorted().joined(separator: ", ")
-                    throw Failure(description: "no control with a tooltip starting \"\(text)\"; on screen: \(names)")
+                    let whose = wanted.map { " in \"\($0)\"" } ?? ""
+                    throw Failure(description: "no control with a tooltip starting \"\(text)\"\(whose); on screen: "
+                        + (names.isEmpty ? "none" : names))
                 }
                 anchor = found
                 location = found.convert(CGPoint(x: found.bounds.midX, y: found.bounds.midY), to: nil)
                 place = "\"\(text)\""
             case .point(let at):
-                location = canvas.convert(try viewPoint(at), to: nil)
+                if wanted != nil {
+                    // No canvas in another window, so a point there is in that
+                    // window's own space, measured down from its top-left.
+                    let y = content.isFlipped ? at.point.y : content.bounds.height - at.point.y
+                    location = content.convert(CGPoint(x: at.point.x, y: y), to: nil)
+                } else {
+                    location = try requireCanvas().convert(try viewPoint(at), to: nil)
+                }
                 anchor = anchors.first { $0.convert($0.bounds, to: nil).contains(location) }
-                place = "\(short(at.point)) \(at.space.rawValue)"
+                place = "\(short(at.point)) \(wanted == nil ? at.space.rawValue : "window")"
             }
             let controller = HintTooltipController.shared
             guard let event = NSEvent.mouseEvent(
@@ -2316,18 +2327,27 @@ private final class Run {
                 note(0, "capture", "window \(window.windowNumber) not in shareable content")
                 return
             }
-            let filter = SCContentFilter(desktopIndependentWindow: scWindow)
-            let config = SCStreamConfiguration()
             let scale = window.backingScaleFactor
-            config.width = Int(scWindow.frame.width * scale)
-            config.height = Int(scWindow.frame.height * scale)
+            // A window is photographed WITH anything hanging off it, which is
+            // the only way a tooltip — a window of its own, hung on the one it
+            // labels — is in the picture at all. So the frame to ask for is the
+            // rectangle the family fills, not the parent's: ask for the
+            // parent's and the capture is squeezed to fit it.
+            let family = ([window] + (window.childWindows ?? [])).filter { $0.isVisible && $0.alphaValue > 0 }
+            let bounds = family.dropFirst().reduce(window.frame) { $0.union($1.frame) }
+            let config = SCStreamConfiguration()
+            config.width = Int((bounds.width * scale).rounded())
+            config.height = Int((bounds.height * scale).rounded())
             config.showsCursor = false
             config.captureResolution = .best
+            let filter = SCContentFilter(desktopIndependentWindow: scWindow)
             let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
             let rep = NSBitmapImageRep(cgImage: image)
             if let png = rep.representation(using: .png, properties: [:]) {
                 try png.write(to: out.appendingPathComponent("\(name)-sc.png"))
-                note(0, "capture", "\(name)-sc.png \(image.width)x\(image.height)")
+                let hung = family.count - 1
+                note(0, "capture", "\(name)-sc.png \(image.width)x\(image.height)"
+                    + (hung > 0 ? " (with \(hung) window\(hung == 1 ? "" : "s") hung on it)" : ""))
             }
         } catch {
             note(0, "capture", "failed: \(error)")

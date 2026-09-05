@@ -14,10 +14,6 @@ import SwiftUI
 struct HistoryOverlay: View {
     let coordinator: AppCoordinator
 
-    /// Coordinate space anchored at the overlay's top-left, so each icon can
-    /// report its frame for tooltip placement.
-    static let coordSpace = "captureHistoryOverlay"
-
     @State private var filter: CaptureFilter = .all
     /// Index of the focused item within the *filtered* list (nil = nothing / empty).
     @State private var selection: Int?
@@ -41,7 +37,6 @@ struct HistoryOverlay: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .glassEffect(.regular, in: .rect(cornerRadius: 20))
         .padding(8)
-        .coordinateSpace(.named(Self.coordSpace))
         // The whole overlay is the keyboard target so ← / → / Return / ⌫ reach
         // the focused item no matter where the pointer is.
         .focusable()
@@ -98,7 +93,7 @@ struct HistoryOverlay: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .fixedSize()
-            .help("Filter the history by capture type")
+            .toolTip("Filter the history by capture type", below: true)
 
             HStack {
                 Spacer()
@@ -108,7 +103,7 @@ struct HistoryOverlay: View {
                     Label("Clear All", systemImage: "trash")
                 }
                 .buttonStyle(PillActionButtonStyle())
-                .help("Move all captures to the Trash")
+                .toolTip("Move all captures to the Trash", below: true)
             }
         }
     }
@@ -246,18 +241,15 @@ private struct HistoryOverlayCell: View {
         .contentShape(Rectangle())
         // Hover only reveals this tile's actions (via `hovered`) — it must NOT
         // move the keyboard selection outline (that's ← / → only).
-        .onHover { hovering in
-            hovered = hovering
-            if !hovering { coordinator.hideCaptureTooltip() }
-        }
+        .onHover { hovered = $0 }
     }
 
     @ViewBuilder
     private var bottomSlot: some View {
         ZStack {
-            // Actions reveal on focus/hover; their tooltips float on a separate
-            // window (TooltipController) so they escape the overlay without
-            // reserving space.
+            // Actions reveal on focus/hover; their labels float on the app's
+            // own tooltip window so they escape the overlay without reserving
+            // space here.
             actions
                 .opacity(showsActions ? 1 : 0)
                 .allowsHitTesting(showsActions)
@@ -290,7 +282,7 @@ private struct HistoryOverlayCell: View {
                 }
                 .menuIndicator(.hidden)
                 .frame(width: 22)
-                .historyTooltip("Copy", coordinator: coordinator)
+                .toolTip("Copy", below: true)
                 iconButton("Play", "play.fill") {
                     coordinator.openRecording(entry.url)
                     coordinator.hideHistory()
@@ -320,45 +312,21 @@ private struct HistoryOverlayCell: View {
         .buttonStyle(IconActionButtonStyle())
     }
 
+    /// One glyph, and the word for it under the pointer. `below` because this
+    /// strip is pinned to the top of the screen and the row of buttons sits
+    /// UNDER the capture it acts on: a label above one would cover the very
+    /// picture you are pointing at.
+    ///
+    /// These used to run on a tooltip of the overlay's own, which read the
+    /// button's rectangle out of a SwiftUI preference. The preference stopped
+    /// arriving, the rectangle stayed empty, and every label was placed in the
+    /// corner of the screen instead of under its button, which is what a
+    /// person saw as no tooltip at all. There is now ONE tooltip in the app.
     private func iconButton(_ title: String, _ systemImage: String,
                             role: ButtonRole? = nil, action: @escaping () -> Void) -> some View {
         Button(role: role, action: action) {
             Image(systemName: systemImage)
         }
-        .historyTooltip(title, coordinator: coordinator)
-    }
-}
-
-/// Captures a control's frame in the overlay's coordinate space and shows the
-/// floating tooltip anchored just below it on hover.
-private struct HistoryTooltipModifier: ViewModifier {
-    let title: String
-    let coordinator: AppCoordinator
-    @State private var frame: CGRect = .zero
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                GeometryReader { proxy in
-                    Color.clear.preference(key: HistoryIconFrameKey.self,
-                                           value: proxy.frame(in: .named(HistoryOverlay.coordSpace)))
-                }
-            )
-            .onPreferenceChange(HistoryIconFrameKey.self) { frame = $0 }
-            .onHover { hovering in
-                if hovering { coordinator.showCaptureTooltip(title, iconFrameInOverlay: frame) }
-                else { coordinator.hideCaptureTooltip() }
-            }
-    }
-}
-
-private struct HistoryIconFrameKey: PreferenceKey {
-    static let defaultValue: CGRect = .zero
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
-}
-
-private extension View {
-    func historyTooltip(_ title: String, coordinator: AppCoordinator) -> some View {
-        modifier(HistoryTooltipModifier(title: title, coordinator: coordinator))
+        .toolTip(title, below: true)
     }
 }

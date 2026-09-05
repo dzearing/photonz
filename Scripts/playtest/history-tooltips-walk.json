@@ -1,0 +1,29 @@
+{
+  "out": "/tmp/photonz-playtest/history-tooltips",
+  "setup": { "captures": ["fixtures/Photonz drop probe.png"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 800, "canvasHeight": 600, "width": 1100, "height": 800 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "snapshot", "name": "1-overlay", "window": "Capture History" },
+
+    { "do": "hover", "label": "Copy", "window": "Capture History" },
+    { "do": "snapshot", "name": "2-copy", "window": "Capture History" },
+
+    { "do": "hover", "label": "Edit", "window": "Capture History" },
+    { "do": "snapshot", "name": "3-edit", "window": "Capture History" },
+
+    { "do": "hover", "label": "Show in Finder", "window": "Capture History" },
+    { "do": "snapshot", "name": "4-reveal", "window": "Capture History" },
+
+    { "do": "hover", "label": "Delete", "window": "Capture History" },
+    { "do": "snapshot", "name": "5-delete", "window": "Capture History" },
+
+    { "do": "hover", "label": "Move all captures to the Trash", "window": "Capture History" },
+    { "do": "snapshot", "name": "6-clear-all", "window": "Capture History" },
+
+    { "do": "hover", "label": "Filter the history by capture type", "window": "Capture History" },
+    { "do": "snapshot", "name": "7-filter", "window": "Capture History" }
+  ]
+}

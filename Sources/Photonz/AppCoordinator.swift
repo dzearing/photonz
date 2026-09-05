@@ -41,10 +41,6 @@ final class AppCoordinator {
     /// when the overlay was opened manually (⇧⌘H) or after it's dismissed.
     private(set) var highlightedCaptureURL: URL?
 
-    /// Floating tooltips for the history overlay's per-item icons (their own
-    /// window so they escape the overlay bounds — no reserved space per cell).
-    @ObservationIgnored private let tooltip = TooltipController()
-
     /// Bottom-right post-capture toasts. A capture no longer pops the whole
     /// history overlay — it stacks a small "Copied to clipboard" toast instead.
     @ObservationIgnored private let toasts = ToastController()
@@ -105,7 +101,8 @@ final class AppCoordinator {
         historyOverlay.onDismiss = { [weak self] in
             self?.isHistoryShown = false
             self?.highlightedCaptureURL = nil
-            self?.tooltip.hide()
+            // A label never outlives the button it names.
+            HintTooltipController.shared.dismiss()
             // Esc and click-away take the overlay down without going through
             // hideHistory(), so the menu has to be told here too.
             MainMenuTitles.retitleHistory(isShown: false)
@@ -420,22 +417,8 @@ final class AppCoordinator {
         historyOverlay.hide(notify: false)
         isHistoryShown = false
         highlightedCaptureURL = nil
-        tooltip.hide()
+        HintTooltipController.shared.dismiss()
         MainMenuTitles.retitleHistory(isShown: false)
-    }
-
-    /// History-icon tooltips (their own floating window). Anchored to the icon's
-    /// frame (`rect`, in the overlay's local top-left coordinate space) so the
-    /// tooltip sits just BELOW the icon — not wherever the pointer happens to be.
-    func showCaptureTooltip(_ text: String, iconFrameInOverlay rect: CGRect) {
-        guard let panel = historyOverlay.panelFrame else { return }
-        let centerX = panel.minX + rect.midX
-        let iconBottomScreenY = panel.maxY - rect.maxY  // overlay y is top-down; screen is bottom-up
-        tooltip.show(text, below: CGPoint(x: centerX, y: iconBottomScreenY - 6))
-    }
-
-    func hideCaptureTooltip() {
-        tooltip.hide()
     }
 
     /// "Clear All" in the history overlay: confirm, then move every capture to

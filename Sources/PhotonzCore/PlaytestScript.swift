@@ -686,7 +686,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Rest the pointer on a control (named by the label its tooltip shows,
     /// or by a point) long enough for its tooltip to appear. A point over no
     /// control rests in the open and hides whatever was showing.
-    case hover(PlaytestHoverTarget)
+    ///
+    /// `window` names one of the app's OTHER windows to rest in, by its title,
+    /// the way `snapshot` does. Without it the pointer rests in the editor
+    /// window; with it a walk can reach a floating panel like the capture
+    /// history, whose controls are in no editor window at all. A point inside
+    /// a named window is measured in window space (down from its top-left),
+    /// since there is no canvas there to measure from.
+    case hover(PlaytestHoverTarget, window: String?)
     case click(PlaytestPoint, count: Int, modifiers: [PlaytestModifier])
     /// `hold` names a snapshot taken with the button still DOWN, just before
     /// the release: the only way to photograph anything that exists only while
@@ -929,10 +936,11 @@ public enum PlaytestStep: Sendable, Equatable {
             let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultPinchSteps
             self = .pinch(to: to, steps: max(1, steps))
         case "hover":
+            let hoverWindow = try f.optionalString("window")
             if fields["label"] != nil {
-                self = .hover(.label(try f.string("label")))
+                self = .hover(.label(try f.string("label")), window: hoverWindow)
             } else if fields["at"] != nil {
-                self = .hover(.point(try f.point("at")))
+                self = .hover(.point(try f.point("at")), window: hoverWindow)
             } else {
                 throw f.invalid("label", "hover needs a \"label\" (the text the control's tooltip shows) or an \"at\" point")
             }

@@ -1,0 +1,29 @@
+{
+  "feature": "The buttons under a capture say what they do",
+  "epic": "unmanned-loop",
+  "summary": "Resting the pointer on any button in the capture history now shows its name in a small label just under it: copy, edit, show in Finder, delete, and the filter and Clear All at the top. The history used to run a tooltip of its own that placed every label in the corner of the screen; there is now one tooltip in the app and this is it.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Press Shift-Command-H to bring the capture history down.",
+  "try": [
+    { "do": "Press Shift-Command-H to bring the capture history down." },
+    { "do": "Rest the pointer on the leftmost glyph under the first capture and wait a moment.", "shot": "2026-09-05-history-tooltips-1.png" },
+    { "do": "Slide along to the pencil, the folder and the bin without pausing, and watch the label follow." },
+    { "do": "Rest on Clear All at the top right.", "shot": "2026-09-05-history-tooltips-2.png" },
+    { "do": "Rest on the All / Screenshots / Videos filter in the middle of the top row." },
+    { "do": "Move the pointer off the strip and check the label goes away." },
+    { "do": "Press Escape and check no label is left behind on screen." }
+  ],
+  "evaluate": [
+    "Does the label land where your eye already is, or do you have to look down for it?",
+    "Is the wait before it appears about right, or does it feel slow when you are hunting for the delete button?",
+    "The labels hang below the strip, over whatever is behind it. Does that read as part of the app, or as something loose on your desktop?",
+    "Does sliding from one glyph to the next feel like one label following you, or like four labels flashing?",
+    "The filter's label reads Filter the history by capture type, next to a control that already says All, Screenshots and Videos. Is that worth the words, or should the filter simply have no label?"
+  ],
+  "rough": [
+    "The pictures are real screen captures, not offscreen renders: the probe holds Screen Recording.",
+    "The filter's label is the old help text and it says nothing the segments do not already say out loud. I kept it because the task asked for the top row to keep its labels, but I would cut it.",
+    "A label sits below its button because the strip is pinned to the top of the screen and the buttons sit under the picture they act on. Above would have covered the very capture you are pointing at. It does mean the label can hang past the bottom edge of the glass.",
+    "The walk covers the leftmost buttons and, through Clear All, the right hand edge where the label has to be pulled back onto the screen. It does not separately walk the last capture in a long row: the buttons on a capture only appear once the pointer is on it, and a scripted walk cannot reveal them the way a real pointer does.",
+    "Deleted the history's own tooltip code (TooltipController and the frame it read out of a SwiftUI preference). One tooltip in the app now, so this cannot drift apart again."
+  ]
+}

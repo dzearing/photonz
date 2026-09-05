@@ -27,10 +27,6 @@ final class HistoryOverlayController {
 
     var isShown: Bool { panel != nil }
 
-    /// The presented panel's screen frame (bottom-left origin) — used to convert
-    /// an icon's overlay-local frame to screen coords for anchoring tooltips.
-    var panelFrame: CGRect? { panel?.frame }
-
     private static let panelHeight: CGFloat = 208
     /// Gap between the screen's visible top edge and the panel's top.
     private static let topInset: CGFloat = 8
