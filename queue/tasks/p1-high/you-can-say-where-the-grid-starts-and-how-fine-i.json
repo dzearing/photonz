@@ -1,0 +1,39 @@
+{
+  "id": "you-can-say-where-the-grid-starts-and-how-fine-i",
+  "title": "You can say where the grid starts and how fine it may get",
+  "goal": "The grid always starts at the corner of the picture and always uses the same spacing, so it cannot be lined up with what is already in a screenshot. Add two things. First, a smallest cell setting, so you can say the grid never goes finer than four points, or eight, or whatever the work needs. Second, a way to say where the grid starts: a mode where two lines, one across and one down, mark the zero point, and you move them with the arrow keys or by dragging, with the same pull to edges that dragging a layer already has. While you are placing them the tool bar becomes a small bar with Cancel and Done and the smallest cell slider, so the whole adjustment is in one place. Return accepts, Escape puts it back the way it was.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T16:51:55.012Z",
+  "updated": "2026-09-05T16:51:55.050Z",
+  "deps": [
+    "the-grid-is-always-behind-the-canvas-and-things"
+  ],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-05, after the canvas grid shipped. Today CanvasGridSettings (PhotonzCore/CanvasGrid.swift) carries isVisible, axes, spacing and majorEvery, with a spacing range of 1 to 512, and no origin at all, so the grid is anchored to the document corner. Add an origin point and a minimum cell size to those settings, both in the same store (CanvasGridStore, app wide rather than per document, behind next-canvas-grid). The level of detail ladder must respect the minimum: it currently picks rungs purely from zoom, so it needs a floor. The confirm bar has a pattern to copy rather than invent: the crop tool already replaces the canvas chrome with a two button bar (EditorView.cropActionBar around line 1436, Cancel and Crop, wired to Escape and Return), and the user is describing the same shape with a slider added. Reuse the modal state handling crop uses so two modes cannot both be live. Snapping for the two lines should call the same entry point a layer drag calls, and this task should be ordered after the-grid-is-always-behind-the-canvas-and-things so resize snapping and grid snapping exist before another thing wants to snap. The mode is a new visible surface; the user asked for it directly, so no decision card is needed, but if the runner wants to change the shape of the bar it should ask rather than guess.",
+  "acceptance": [
+    "The grid settings gain a smallest cell size, typed, and the grid never draws finer than it however far you zoom in",
+    "A command puts the canvas into grid adjustment: two lines appear at the current zero point, one across and one down, clearly different from the grid itself",
+    "The lines move by dragging and by the arrow keys, one step per press and a larger step with Shift, and they pull to layer edges and canvas edges the way a dragged layer does",
+    "While adjusting, the tool bar is replaced by a bar holding Cancel, Done and the smallest cell slider, and the canvas shows the grid updating live as the slider moves",
+    "Return leaves the mode keeping the change, Escape leaves it putting back the zero point and the cell size that were there before, and clicking Done or Cancel does the same",
+    "Everything else on the canvas is left alone while adjusting: no layer can be selected, moved or edited by accident",
+    "The zero point is remembered with the other grid settings, and a grid that has never been adjusted sits exactly where it does today",
+    "Core logic covered by tests in PhotonzCore written before the implementation, including that an offset grid still lands on whole positions at every zoom",
+    "Audit written under queue/audits/ with pictures of the mode, the two lines caught on a layer edge, and the grid before and after, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T16:51:55.013Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T16:51:55.049Z",
+      "note": "seq 180 -> 4"
+    }
+  ]
+}
