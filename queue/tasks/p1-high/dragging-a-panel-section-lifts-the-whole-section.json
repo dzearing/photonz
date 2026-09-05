@@ -1,0 +1,36 @@
+{
+  "id": "dragging-a-panel-section-lifts-the-whole-section",
+  "title": "Dragging a panel section lifts the whole section, and the red outline goes away",
+  "goal": "Rearranging the panel sections feels wrong in three ways. Only the section's title comes with the pointer, so you are dragging a scrap rather than the thing. A red dashed outline appears around the whole panel, which is the sign that a dropped file would be refused and has nothing to do with reordering, and it stays there after the drag ends. And sections swap the moment the pointer touches them rather than when it passes their middle. It should feel like picking the section up: the whole section lifts with a shadow, moves only up and down, and the others slide out of the way as you pass their halfway point.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T19:06:39.441Z",
+  "updated": "2026-09-05T19:06:39.479Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05 with a screenshot of the red dashed outline stuck around the whole panel. What the code does, from a read of LayersPanel.swift. The red dashes are PanelDropAffordance .refuses (line 730), whose documented meaning is that a dropped FILE will not be taken; it is nothing to do with reordering, so seeing it during a section drag is already wrong. The section drag attaches its item provider to the header only (dragItem at line 81 returns an NSItemProvider carrying the section id as text), which is why the system ghost is just the title; a whole section preview needs onDrag with an explicit preview or a hand rolled drag rather than the default snapshot. Reordering happens in SectionDropDelegate.dropEntered (line 755), which fires as the pointer ENTERS a section, hence the swap on touch rather than at the midpoint; the delegate has the DropInfo location available to compare against the section's own frame instead. For the stuck outline, note that dropExited and performDrop both only call editorState.endPanelDrop when dragging is nil (lines 773 and 778), so any path that arms the file drop state and then ends while a section drag is in flight leaves it armed with nothing to clear it. Confirm that is the sequence before fixing. The panel level drop target and the per section one both accept text plus FileDrop.types, so a section id travelling as text is visible to the file drop logic; consider a private type identifier for section drags so the two can never be confused.",
+  "acceptance": [
+    "Reproduce the stuck red outline first and record in the log the exact sequence that leaves it on screen",
+    "Dragging a section header lifts the whole section, not just its title, with a shadow that says it is off the surface",
+    "The dragged section follows the pointer vertically only; moving sideways does not move it or tear it out of the panel",
+    "Another section moves aside when the pointer passes its middle, not when it first touches it, and moves back if you retreat",
+    "No file drop marking of any kind appears during a reorder, neither the accepting wash nor the refusing dashes",
+    "Letting go anywhere, including outside the panel, and cancelling with Escape, both leave the panel with no leftover marking",
+    "Dropping a real file onto the panel still shows the accepting and refusing marks exactly as it does now",
+    "Audit written under queue/audits/ with pictures mid drag and after a cancelled drag, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T19:06:39.442Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T19:06:39.478Z",
+      "note": "seq 180 -> 7"
+    }
+  ]
+}
