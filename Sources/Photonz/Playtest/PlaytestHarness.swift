@@ -755,6 +755,10 @@ private final class Run {
         case .press(let control, let row, let count, let modifiers):
             try await pressControl(control, in: row, count: count, modifiers: modifiers, number: number)
 
+        case .dragSection(let section, let past, let stop, let hold, let cancel):
+            try await dragSection(section, past: past, stop: stop, hold: hold,
+                                  cancel: cancel, number: number)
+
         case .panel(let stage):
             let inventory = try readPanel()
             write(json: inventory, to: "panel-\(stage).json")
@@ -1250,6 +1254,79 @@ private final class Run {
              + "\(count == 1 ? "one click" : "\(count) clicks")"
              + (modifiers.isEmpty ? "" : " with \(modifiers.map(\.rawValue).joined(separator: "+"))")
              + "; " + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report,
+             state: describe())
+    }
+
+    /// Carries a dock section up or down the column, the way a person does:
+    /// take hold of its header, move until the pointer has passed the middle
+    /// of another section, and let go — or press Escape instead, which puts it
+    /// back.
+    ///
+    /// It drives the dock's own carry rather than posting mouse events, for
+    /// the reason written on `InspectorSectionDragProbe`: SwiftUI gestures do
+    /// not answer synthesized events. Everything the reorder decides is real;
+    /// the press that starts it is not.
+    private func dragSection(_ title: String, past: String, stop: PlaytestSectionStop,
+                             hold: String?, cancel: Bool, number: Int) async throws {
+        let window = try requireWindow()
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let probe = InspectorLayoutProbe.shared
+        guard !probe.measured.isEmpty else {
+            throw Failure(description: "the right hand panel is not on screen, so there is no section to carry")
+        }
+        func find(_ name: String) throws -> InspectorLayoutProbe.Section {
+            guard let found = probe.measured.first(where: { $0.title == name }) else {
+                throw Failure(description: "there is no section called \"\(name)\" in the panel; "
+                    + "there is \(probe.measured.map(\.title).joined(separator: ", "))")
+            }
+            return found
+        }
+        let carried = try find(title), landing = try find(past)
+        guard carried.id != landing.id else {
+            throw Failure(description: "a section cannot be carried past itself")
+        }
+        let dock = InspectorSectionDragProbe.shared
+        guard let carry = dock.carry, let letGo = dock.end, let putBack = dock.cancel else {
+            throw Failure(description: "the dock is not offering its reorder; is the panel on screen?")
+        }
+        let before = probe.measured.map(\.title)
+        // Take hold of the header, which is the top of the section, and travel
+        // to just past the middle of the section being passed: the line that
+        // one moves aside on.
+        let goingDown = landing.frame.midY > carried.frame.midY
+        let from = carried.frame.minY + 14
+        let to = switch stop {
+        case .middle: landing.frame.midY + (goingDown ? 4 : -4)
+        case .touching: goingDown ? landing.frame.minY + 4 : landing.frame.maxY - 4
+        }
+        let steps = 12
+        for i in 1...steps {
+            let y = from + (to - from) * CGFloat(i) / CGFloat(steps)
+            carry(carried.id, y, y - from)
+            await sleep(0.02)
+        }
+        // What the panel is promising WHILE the section is in the air. A
+        // reorder is not a drop, so the honest answer is nothing at all: this
+        // is the line that catches the red dashes coming back.
+        let promise = panelPromise()
+        let inHand = probe.carrying ?? "nothing"
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        if cancel { putBack() } else { letGo() }
+        await sleep(0.5)
+        let after = InspectorLayoutProbe.shared.measured.map(\.title)
+        note(number, "dragSection",
+             "\"\(title)\" carried \(goingDown ? "down" : "up") past \"\(past)\""
+             + (stop == .touching ? ", only far enough to touch it," : "")
+             + (cancel ? " and called off with Escape" : " and let go") + held
+             + "; in hand \(inHand); while carrying, \(promise)"
+             + "; order \(before.joined(separator: ", ")) -> \(after.joined(separator: ", "))",
              state: describe())
     }
 

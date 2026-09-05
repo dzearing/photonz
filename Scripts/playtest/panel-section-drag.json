@@ -1,0 +1,20 @@
+{
+  "out": "/tmp/photonz-playtest/panel-section-drag",
+  "setup": { "forget": ["panel", "groups", "tools", "measure"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "tool", "tool": "measure" },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "snapshot", "name": "dock-at-rest" },
+    { "do": "dragSection", "section": "Layers", "past": "Measure Tool", "stop": "touching", "hold": "only-touching" },
+    { "do": "dragSection", "section": "Layers", "past": "Position & Size", "hold": "carrying-layers-down" },
+    { "do": "snapshot", "name": "layers-landed" },
+    { "do": "dragSection", "section": "Layers", "past": "Measure Tool", "hold": "carrying-layers-back" },
+    { "do": "snapshot", "name": "layers-back-on-top" },
+    { "do": "dragSection", "section": "Measure Tool", "past": "Layers", "hold": "carrying-before-escape", "cancel": true },
+    { "do": "snapshot", "name": "after-escape" },
+    { "do": "dragFile", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [1150, 400], "space": "window", "hold": "file-over-panel" },
+    { "do": "dragFile", "file": "not-a-picture.txt", "at": [1150, 400], "space": "window", "hold": "text-over-panel" },
+    { "do": "describe", "stage": "end", "note": "the panel after every drag" }
+  ]
+}

@@ -8907,3 +8907,43 @@ Audit: `queue/audits/2026-09-05-history-tooltips.json`.
 
 Next: the queue. Open question in the audit — the filter's label repeats what
 its own segments already say; worth cutting?
+
+## 2026-09-05 — you pick a panel section up now, and the red dashes stay out of it
+
+Rearranging the right hand panel was riding on a SYSTEM drag: the header's
+`.onDrag` handed over an `NSItemProvider` carrying the section id as text.
+All three of the user's complaints fall out of that one choice. The drag
+preview is a snapshot of the view the provider is attached to, which was the
+header alone, so only the title came with the pointer. A system drag is free in
+two dimensions, so the section could be pulled sideways out of the panel. And
+the text it carried looked like a payload to every drop target it crossed —
+the layer rows and the sections both registered `.text` — so the first one it
+touched asked `FileDrop.carriesUsableFile`, was told no, and armed the red
+dashed refusal around the whole panel. `SectionDropDelegate.dropExited` then
+returned early for as long as a section was in hand, and `performDrop` cleared
+`dragging` without ever calling `endPanelDrop`, so that refusal had no path
+back to nil and stayed on screen after the button came up.
+
+Fixed by taking reordering out of the drop machinery altogether. `SectionReorderDrag`
+in `PhotonzCore` is the whole rule, tested first: a section moves aside when
+the POINTER passes its middle, read against the sections' resting spans so the
+decision lines stay still while the sections slide. `InspectorPanel` carries a
+section with one `DragGesture` on the header — no travel is a click and still
+collapses, 4pt picks it up — reads only `translation.height`, draws the carried
+section on a `thickMaterial` card with a shadow at `zIndex` 1, and slides the
+others with an animation scoped to the target slot so the carried one never
+lags the pointer. Escape puts it back. `SectionDropDelegate` became
+`SectionFileDrop`: files only, so a reorder can never light a drop mark.
+
+Harness: a `dragSection` step (`section`, `past`, `stop: middle|touching`,
+`hold`, `cancel`), and the dock's section order and collapsed state joined the
+`panel` memories a walk can forget. It drives the dock's own carry rather than
+posting mouse events, because SwiftUI gestures do not answer synthesized events
+at all — pressing a section header with the existing `press` step does nothing
+while the same step on a Button beside it works. Worth remembering the next
+time a walk needs to reach a `.gesture`. Guard walk:
+`Scripts/playtest/panel-section-drag.json`.
+Audit: `queue/audits/2026-09-05-panel-section-drag.json`.
+
+Next: the queue. Open question in the audit — the carried card is opaque, so
+the section under it is hidden while you carry one; too heavy?

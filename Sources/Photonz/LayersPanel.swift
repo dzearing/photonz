@@ -40,15 +40,25 @@ extension Color {
 /// `InspectorResizeHandle` on its left edge.
 struct InspectorPanel: View {
     @Environment(EditorState.self) private var editorState
-    @AppStorage("inspector.sectionOrder") private var orderRaw = ""
-    @AppStorage("inspector.collapsed") private var collapsedRaw = ""
+    @AppStorage(InspectorPanel.sectionOrderKey) private var orderRaw = ""
+    @AppStorage(InspectorPanel.collapsedKey) private var collapsedRaw = ""
     /// Which one-time section moves this panel's saved order has had. See
     /// `loadOrder`.
-    @AppStorage("inspector.sectionOrder.version") private var orderVersion = 0
+    @AppStorage(InspectorPanel.sectionOrderVersionKey) private var orderVersion = 0
+    /// What the dock remembers about its own sections between launches, named
+    /// so a scripted walk that rearranges them can put them back.
+    static let sectionOrderKey = "inspector.sectionOrder"
+    static let sectionOrderVersionKey = "inspector.sectionOrder.version"
+    static let collapsedKey = "inspector.collapsed"
     /// Effects joined the Color section instead of trailing every per-kind one.
     private static let orderVersionEffectsWithColor = 1
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
-    @State private var dragging: InspectorSectionID?
+    /// The section currently in the reader's hand, and where it is being
+    /// carried. See `sectionDragChanged`.
+    @State private var drag = SectionDrag()
+    /// The measurements and the Escape watch a reorder needs, held by
+    /// reference so keeping them up to date does not redraw the dock.
+    @State private var dragScratch = SectionDragScratch()
     /// The Library's scope, so the picked item's section can be titled after
     /// what it is ("Media", "Component") rather than "Library Item".
     @AppStorage(LibraryPanel.scopeKey) private var libraryScopeRaw = LibraryScope.media.rawValue
@@ -74,25 +84,30 @@ struct InspectorPanel: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(sections, id: \.self) { id in
-                        CollapsibleSection(
-                            title: sectionTitle(id),
-                            isCollapsed: isCollapsed(id),
-                            onToggle: { toggleCollapsed(id) },
-                            dragItem: {
-                                dragging = id
-                                return NSItemProvider(object: id.rawValue as NSString)
-                            },
-                            accessory: sectionAccessory(id)
-                        ) {
-                            sectionContent(id)
+                        VStack(alignment: .leading, spacing: 0) {
+                            CollapsibleSection(
+                                title: sectionTitle(id),
+                                isCollapsed: isCollapsed(id),
+                                onToggle: { toggleCollapsed(id) },
+                                onReorder: { pointerY, carriedBy in
+                                    sectionDragChanged(id, pointerY: pointerY,
+                                                       carriedBy: carriedBy, in: sections)
+                                },
+                                onReorderEnd: { endSectionDrag(in: sections) },
+                                accessory: sectionAccessory(id)
+                            ) {
+                                sectionContent(id)
+                            }
+                            // The hairline belongs to the section above it, so
+                            // a section lifted off the panel takes its line
+                            // with it instead of leaving one hanging in the
+                            // gap it left behind.
+                            Divider().opacity(drag.section == id ? 0 : 0.4)
                         }
-                        .onDrop(of: [.text] + FileDrop.types,
-                                delegate: SectionDropDelegate(item: id, order: $order,
-                                                              dragging: $dragging,
-                                                              editorState: editorState))
-                        // Where this section sits inside the dock, for the
-                        // reveal below. Only the Library's is kept, and it is
-                        // kept OUTSIDE @State on purpose: this fires on every
+                        // Where this section sits inside the dock: for the
+                        // reveal below, and for a reorder, which reads every
+                        // section's resting place the moment one is picked up.
+                        // Kept OUTSIDE @State on purpose: this fires on every
                         // scroll tick, and re-drawing the whole dock to
                         // remember a number nothing draws is the jank the
                         // comment further down is about.
@@ -100,11 +115,32 @@ struct InspectorPanel: View {
                             $0.frame(in: .named(inspectorDockSpace))
                         } action: { frame in
                             recordInspectorSection(id, title: sectionTitle(id), frame: frame)
+                            // Mid-drag a section is standing somewhere it does
+                            // not live, so its measurement is worth nothing:
+                            // the spans a reorder reads were taken before it
+                            // started.
+                            if drag.section == nil { dragScratch.frames[id] = frame }
                             guard id == .library else { return }
                             reveal.libraryFrame = frame
                             if reveal.isPending { applyLibraryReveal(proxy) }
                         }
-                        Divider().opacity(0.4)
+                        // A section in your hand is off the surface: it wears a
+                        // card and a shadow, and it draws over its neighbours.
+                        .background { sectionLift(id) }
+                        .zIndex(drag.section == id ? 1 : 0)
+                        // Two offsets, and the order matters. The sections
+                        // moving aside SLIDE, so their offset is animated; the
+                        // one in your hand must not, because an animation
+                        // between the pointer and the section is lag.
+                        .offset(y: sectionSlide(id, in: sections))
+                        .animation(.spring(duration: 0.24), value: drag.target)
+                        .offset(y: drag.section == id ? drag.carriedBy : 0)
+                        // FILES ONLY. Reordering is this panel's own gesture,
+                        // not a drop, so a section being carried never reaches
+                        // the drop machinery and can never light up the marks
+                        // that answer for a file.
+                        .onDrop(of: FileDrop.types,
+                                delegate: SectionFileDrop(item: id, editorState: editorState))
                     }
                 }
                 .padding(.vertical, 6)
@@ -121,6 +157,12 @@ struct InspectorPanel: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                 reveal.viewportHeight = $0
                 recordInspectorViewportHeight($0)
+            }
+            // Where the dock sits in the window. Only a scripted walk reads
+            // it, to put a pointer on a section; it is a no-op in the
+            // shipping build.
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                recordInspectorDockFrame($0)
             }
             .inspectorLayoutProbe(sections: sections)
             // A section the selection asked for that has not been built yet
@@ -158,6 +200,23 @@ struct InspectorPanel: View {
         .animation(.easeOut(duration: 0.12), value: editorState.panelDropOffer)
         .onAppear(perform: loadOrder)
         .onChange(of: order) { persistOrder() }
+        // A panel that goes away mid-drag takes its key watch with it.
+        .onDisappear(perform: stopWatchingForEscape)
+        // Only a scripted walk reads these; both are no-ops in the shipping
+        // build. A walk cannot drive the header's gesture — SwiftUI does not
+        // answer synthesized mouse events, which is the same wall
+        // `dragComponent` and `scrollPanel` hit — so it carries a section by
+        // calling the very handlers the gesture calls.
+        .onChange(of: drag.section) { _, id in
+            recordInspectorCarrying(id.map(sectionTitle))
+        }
+        .inspectorSectionDragProbe(
+            carry: { id, pointerY, carriedBy in
+                sectionDragChanged(id, pointerY: pointerY, carriedBy: carriedBy, in: sections)
+            },
+            end: { endSectionDrag(in: sections) },
+            cancel: cancelSectionDrag,
+            sections: sections)
     }
 
     // MARK: Bringing the Library into view
@@ -511,6 +570,137 @@ struct InspectorPanel: View {
         orderRaw = order.map(\.rawValue).joined(separator: ",")
     }
 
+    // MARK: Picking a section up
+
+    /// How far the section being carried is drawn from where it rests, and how
+    /// far each section it has passed has slid to open the gap.
+    private func sectionSlide(_ id: InspectorSectionID,
+                              in sections: [InspectorSectionID]) -> CGFloat {
+        guard drag.section != nil, let index = sections.firstIndex(of: id) else { return 0 }
+        return SectionReorderDrag.offset(of: index, dragging: drag.from,
+                                         target: drag.target, spans: drag.spans)
+    }
+
+    /// The card a section wears while it is in your hand: a solid surface and a
+    /// shadow under it, so it reads as lifted off the panel rather than drawn
+    /// on it.
+    @ViewBuilder
+    private func sectionLift(_ id: InspectorSectionID) -> some View {
+        if drag.section == id {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.thickMaterial)
+                .shadow(color: .black.opacity(0.32), radius: 14, y: 6)
+                .padding(.horizontal, 4)
+        }
+    }
+
+    /// The section being carried has moved. The first call is the pick-up: it
+    /// takes down where every section is standing, so the lines the drag reads
+    /// against stay still while the sections themselves slide.
+    ///
+    /// - Parameters:
+    ///   - pointerY: the pointer, measured down from the top of the dock's
+    ///     visible area.
+    ///   - carriedBy: how far the pointer has travelled since the pick-up,
+    ///     vertically. The sideways part is dropped on purpose: a section moves
+    ///     up and down its own column and cannot be pulled out of it.
+    private func sectionDragChanged(_ id: InspectorSectionID, pointerY: CGFloat,
+                                    carriedBy: CGFloat, in sections: [InspectorSectionID]) {
+        // Escape has already put this one back. Nothing else happens until the
+        // button comes up.
+        guard !drag.cancelled else { return }
+        if drag.section == nil {
+            guard let from = sections.firstIndex(of: id) else { return }
+            let spans = sections.map {
+                SectionReorderDrag.Span(top: dragScratch.frames[$0]?.minY ?? 0,
+                                        height: dragScratch.frames[$0]?.height ?? 0)
+            }
+            // A dock nothing has measured yet cannot say what the pointer is
+            // passing, so it does not move at all.
+            guard spans.allSatisfy({ $0.height > 0 }) else { return }
+            drag.section = id
+            drag.sections = sections
+            drag.from = from
+            drag.target = from
+            drag.spans = spans
+            watchForEscape()
+        }
+        // The dock rebuilt itself under the drag — a selection change adds and
+        // removes sections. What was measured at pick-up no longer describes
+        // what is on screen, so put it back rather than act on it.
+        guard drag.sections == sections else {
+            cancelSectionDrag()
+            return
+        }
+        drag.carriedBy = carriedBy
+        let target = SectionReorderDrag.target(dragging: drag.from, pointerY: pointerY,
+                                               spans: drag.spans)
+        guard target != drag.target else { return }
+        drag.target = target
+    }
+
+    /// Let go. The section lands in the slot the column has been holding open
+    /// for it, and everything settles in one animation.
+    private func endSectionDrag(in sections: [InspectorSectionID]) {
+        stopWatchingForEscape()
+        let landed = drag.section != nil && !drag.cancelled && drag.sections == sections
+            ? SectionReorderDrag.reordered(sections, moving: drag.from, to: drag.target)
+            : sections
+        withAnimation(.spring(duration: 0.28)) {
+            drag = SectionDrag()
+            commitSectionOrder(landed, onScreen: sections)
+        }
+    }
+
+    /// Escape while carrying: the section goes back where it came from, and
+    /// nothing about the column has changed.
+    private func cancelSectionDrag() {
+        stopWatchingForEscape()
+        guard drag.section != nil else { return }
+        withAnimation(.spring(duration: 0.22)) {
+            drag.carriedBy = 0
+            drag.target = drag.from
+            drag.section = nil
+        }
+        // The button is still down, so the gesture keeps reporting. It is
+        // ignored from here until it ends.
+        drag.cancelled = true
+    }
+
+    /// Writes an on-screen reordering back into the saved order, which also
+    /// holds the sections this selection has no use for. Those keep the slots
+    /// they have: reordering what you can see must not shuffle what you cannot.
+    private func commitSectionOrder(_ landed: [InspectorSectionID],
+                                    onScreen: [InspectorSectionID]) {
+        var queue = ArraySlice(landed)
+        var merged: [InspectorSectionID] = []
+        for id in order {
+            if onScreen.contains(id), let next = queue.popFirst() { merged.append(next) }
+            else { merged.append(id) }
+        }
+        merged.append(contentsOf: queue)
+        guard merged != order else { return }
+        order = merged
+    }
+
+    /// Escape puts a carried section back. A key watch rather than a key
+    /// binding because the dock does not hold the keyboard during a drag —
+    /// whatever had it before still does.
+    private func watchForEscape() {
+        guard dragScratch.escapeWatch == nil else { return }
+        dragScratch.escapeWatch = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard event.keyCode == 53 else { return event }
+            cancelSectionDrag()
+            return nil
+        }
+    }
+
+    private func stopWatchingForEscape() {
+        guard let watch = dragScratch.escapeWatch else { return }
+        NSEvent.removeMonitor(watch)
+        dragScratch.escapeWatch = nil
+    }
+
     private func isCollapsed(_ id: InspectorSectionID) -> Bool {
         collapsedRaw.split(separator: ",").contains(Substring(id.rawValue))
     }
@@ -536,6 +726,34 @@ struct InspectorPanel: View {
 /// The dock's live measurements for the Library reveal: where the shelf sits,
 /// how tall the dock is, and whether a reveal is waiting on layout. Held by
 /// reference so writing it during a scroll does not redraw the dock.
+/// A dock section on its way up or down the column.
+private struct SectionDrag: Equatable {
+    /// What is in your hand. Nil means nothing is being carried.
+    var section: InspectorSectionID?
+    /// The sections on screen when it was picked up, so a dock that rebuilds
+    /// itself mid-drag can be noticed rather than acted on.
+    var sections: [InspectorSectionID] = []
+    /// Where it came from, as an index into `sections`.
+    var from = 0
+    /// The slot it is currently offering to land in.
+    var target = 0
+    /// How far the pointer has carried it, vertically only.
+    var carriedBy: CGFloat = 0
+    /// Where every section was standing when it was picked up.
+    var spans: [SectionReorderDrag.Span] = []
+    /// Escape has put it back; the rest of the gesture is ignored.
+    var cancelled = false
+}
+
+/// What a reorder needs to remember that nothing draws: where the sections
+/// were last measured, and the key watch that lets Escape put one back. Held
+/// by reference so keeping it up to date on every scroll tick does not redraw
+/// the dock.
+@MainActor private final class SectionDragScratch {
+    var frames: [InspectorSectionID: CGRect] = [:]
+    var escapeWatch: Any?
+}
+
 @MainActor private final class DockRevealScratch {
     var libraryFrame: CGRect?
     var viewportHeight: CGFloat = 0
@@ -739,47 +957,33 @@ private struct PanelDropAffordance: View {
     }
 }
 
-/// Reorders sections live as a dragged header passes over another section, and
-/// takes a picture let go on the section the way the rest of the window does.
+/// Takes a picture let go on a dock section the way the rest of the window
+/// does.
 ///
 /// A section answers for files because nothing behind it can: SwiftUI gives the
 /// drag to the innermost target under the pointer and stops there, so a section
-/// that only understood headers made the top half of the panel refuse a picture
+/// that answered for nothing made the top half of the panel refuse a picture
 /// the bottom half was happily taking.
-private struct SectionDropDelegate: DropDelegate {
+///
+/// FILES ONLY, and that is the whole point of it. Reordering sections used to
+/// come through here as well, riding on a system drag that carried the
+/// section's name as text — which every drop target in the panel then read as
+/// a payload it could not use, and answered with the red dashes that mean a
+/// file would be refused. A reorder is now the panel's own gesture
+/// (`reorderGesture`) and never reaches the drop machinery at all.
+private struct SectionFileDrop: DropDelegate {
     let item: InspectorSectionID
-    @Binding var order: [InspectorSectionID]
-    @Binding var dragging: InspectorSectionID?
     let editorState: EditorState
 
-    func dropEntered(info: DropInfo) {
-        guard let dragging else {
-            offerFile(info)
-            return
-        }
-        guard dragging != item,
-              let from = order.firstIndex(of: dragging),
-              let to = order.firstIndex(of: item) else { return }
-        withAnimation(.spring(duration: 0.25)) {
-            order.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
-        }
-    }
+    func dropEntered(info: DropInfo) { offerFile(info) }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        if dragging != nil { return DropProposal(operation: .move) }
-        return DropProposal(operation: offerFile(info))
+        DropProposal(operation: offerFile(info))
     }
 
-    func dropExited(info: DropInfo) {
-        guard dragging == nil else { return }
-        editorState.endPanelDrop(from: item)
-    }
+    func dropExited(info: DropInfo) { editorState.endPanelDrop(from: item) }
 
     func performDrop(info: DropInfo) -> Bool {
-        guard dragging == nil else {
-            dragging = nil
-            return true
-        }
         let landing = editorState.incomingDropOnTop
         editorState.endPanelDrop(from: item)
         return FileDrop.accept(info, into: editorState, landingAt: landing)
@@ -912,11 +1116,18 @@ private struct CollapsibleSection<Content: View>: View {
     let title: String
     let isCollapsed: Bool
     let onToggle: () -> Void
-    let dragItem: () -> NSItemProvider
+    /// The header being dragged up or down the dock: where the pointer is in
+    /// the dock's visible area, and how far it has carried this section.
+    let onReorder: (CGFloat, CGFloat) -> Void
+    /// The header let go.
+    let onReorderEnd: () -> Void
     /// Optional header furniture between the title and the drag grip — the
     /// Measurements section puts its count badge and panel menu here.
     var accessory: AnyView?
     @ViewBuilder var content: () -> Content
+    /// Whether this header's press has travelled far enough to have picked the
+    /// section up. See `headerGesture`.
+    @State private var isCarrying = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -946,9 +1157,39 @@ private struct CollapsibleSection<Content: View>: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .contentShape(Rectangle())
-        .onTapGesture { withAnimation(.spring(duration: 0.25)) { onToggle() } }
-        .onDrag(dragItem)
+        .gesture(headerGesture)
         .help("Drag to reorder • click to collapse")
+        // Named for a scripted walk, so one can collapse a section, or pick it
+        // up, by the words on it.
+        .playtestControl("\(title) section", detail: "a dock section header")
+    }
+
+    /// Click to collapse, drag to reorder — ONE gesture, which is the only way
+    /// the two can be told apart without arbitration: a press that never
+    /// travels is a click, and a press that travels 4pt has picked the section
+    /// up and stays a carry until it is let go.
+    ///
+    /// Reordering is a plain drag of the panel's own, NOT a system drag. A
+    /// system drag hands the pointer a picture of the title and nothing else,
+    /// lets the section be pulled sideways out of the column, and — because
+    /// what it is carrying looks like a payload to every drop target it crosses
+    /// — makes the panel flash the marks that answer for a dropped file,
+    /// including the red dashes that mean a file would be refused.
+    private var headerGesture: some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named(inspectorDockSpace))
+            .onChanged { value in
+                guard isCarrying || abs(value.translation.height) > 4 else { return }
+                isCarrying = true
+                onReorder(value.location.y, value.translation.height)
+            }
+            .onEnded { _ in
+                guard isCarrying else {
+                    withAnimation(.spring(duration: 0.25)) { onToggle() }
+                    return
+                }
+                isCarrying = false
+                onReorderEnd()
+            }
     }
 }
 

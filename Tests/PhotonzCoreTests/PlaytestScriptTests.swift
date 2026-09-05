@@ -803,6 +803,59 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test func aWalkCanCarryADockSectionPastAnother() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragSection", "section": "Effects", "past": "Layers", "hold": "mid-drag" } ] }
+        """)
+        guard case .dragSection(let section, let past, let stop, let hold, let cancel) = script.steps[0] else {
+            Issue.record("dragSection"); return
+        }
+        #expect(section == "Effects")
+        #expect(past == "Layers")
+        #expect(stop == .middle)
+        #expect(hold == "mid-drag")
+        #expect(cancel == false)
+        #expect(script.steps[0].name == "dragSection")
+    }
+
+    @Test func aDockSectionDragCanBeCalledOffWithEscape() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragSection", "section": "Effects", "past": "Layers", "cancel": true } ] }
+        """)
+        guard case .dragSection(_, _, _, _, let cancel) = script.steps[0] else {
+            Issue.record("dragSection"); return
+        }
+        #expect(cancel)
+    }
+
+    /// The complaint this step exists to catch: sections used to swap the
+    /// moment the pointer touched one, rather than at its middle.
+    @Test func aDockSectionDragCanStopShortOfTheMiddle() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragSection", "section": "Effects", "past": "Layers", "stop": "touching" } ] }
+        """)
+        guard case .dragSection(_, _, let stop, _, _) = script.steps[0] else {
+            Issue.record("dragSection"); return
+        }
+        #expect(stop == .touching)
+    }
+
+    @Test func aDockSectionDragRefusesAStopThatIsNotOne() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dragSection", "section": "Effects", "past": "Layers", "stop": "halfway" } ] }
+            """)
+        }
+    }
+
+    @Test func aDockSectionDragNeedsSomethingToCarryItPast() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dragSection", "section": "Effects" } ] }
+            """)
+        }
+    }
+
     @Test func aWalkCanListWhatThePanelIsShowing() throws {
         // Naming a tile or a row is only possible when a walk can find out
         // what they are called, the way `menus` does for the menu bar.

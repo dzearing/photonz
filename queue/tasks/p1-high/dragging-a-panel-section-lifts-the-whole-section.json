@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 7,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T19:06:39.441Z",
-  "updated": "2026-09-05T19:06:39.479Z",
+  "updated": "2026-09-05T21:31:18.279Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 with a screenshot of the red dashed outline stuck around the whole panel. What the code does, from a read of LayersPanel.swift. The red dashes are PanelDropAffordance .refuses (line 730), whose documented meaning is that a dropped FILE will not be taken; it is nothing to do with reordering, so seeing it during a section drag is already wrong. The section drag attaches its item provider to the header only (dragItem at line 81 returns an NSItemProvider carrying the section id as text), which is why the system ghost is just the title; a whole section preview needs onDrag with an explicit preview or a hand rolled drag rather than the default snapshot. Reordering happens in SectionDropDelegate.dropEntered (line 755), which fires as the pointer ENTERS a section, hence the swap on touch rather than at the midpoint; the delegate has the DropInfo location available to compare against the section's own frame instead. For the stuck outline, note that dropExited and performDrop both only call editorState.endPanelDrop when dragging is nil (lines 773 and 778), so any path that arms the file drop state and then ends while a section drag is in flight leaves it armed with nothing to clear it. Confirm that is the sequence before fixing. The panel level drop target and the per section one both accept text plus FileDrop.types, so a section id travelling as text is visible to the file drop logic; consider a private type identifier for section drags so the two can never be confused.",
@@ -31,6 +31,39 @@
     {
       "t": "2026-09-05T19:06:39.478Z",
       "note": "seq 180 -> 7"
+    },
+    {
+      "t": "2026-09-05T21:31:18.279Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T22:02:38.583257Z",
+      "note": "Adversarial review, before building. The mock-free ask was right but the mechanism was wrong at the root: reordering was riding on a SYSTEM drag (.onDrag with an NSItemProvider carrying the section id as text). Everything the user complained about falls out of that one choice. A system drag's preview is a snapshot of the view the item provider is attached to, which was the header alone, so only the title came with the pointer. A system drag is free in two dimensions, so the section could be pulled sideways out of the panel. And what it carries looks like a payload to every drop target it crosses, which is where the red dashes come from. Fixing the three complaints one at a time on top of a system drag would have needed a custom preview, a sideways clamp the system does not offer, and a private type identifier to stop the drop targets reading the payload. The shortest version that delivers all of it is to stop using the drop machinery for reordering at all: one DragGesture on the header, the reorder decided by arithmetic, no pasteboard anywhere."
+    },
+    {
+      "t": "2026-09-05T22:02:38.583257Z",
+      "note": "Reproduction, and what could not be reproduced. The red dashes themselves are reproduced live and are in the audit (2026-09-05-section-drag-text-over-panel.png): PanelDropAffordance .refuses, armed by the one branch `guard FileDrop.carriesUsableFile(info) else { offerPanelDrop(.refuses) }`. A section drag reached that same branch because the section id travelled as .text and BOTH the layer rows (LayersPanel.swift:1369) and the sections themselves registered .text, so the first row or section the header crossed asked whether the payload was a usable file, was told no, and armed the refusal. The stuck part is provable from the old code without a live run: SectionDropDelegate.dropExited began `guard dragging == nil else { return }`, so while a section was in hand NO section could clear an armed offer; and performDrop, with a section in hand, did `dragging = nil; return true` and never called endPanelDrop. So any refusal armed during a section drag had no path back to nil and stayed on screen after the button came up. What I could NOT do is drive that live: no harness can start a system drag session (the same limit dragComponent documents), so the ordering of the two paths in a real drag is read from the code rather than filmed."
+    },
+    {
+      "t": "2026-09-05T22:02:38.583257Z",
+      "note": "Built. New pure model SectionReorderDrag in PhotonzCore (18 tests, written first): a section moves aside when the POINTER passes its middle, read against resting spans so the decision lines stay still while the sections slide. InspectorPanel now carries a section with one DragGesture on the header (minimumDistance 0: no travel is a click and still collapses, 4pt of travel picks it up), reads only translation.height so sideways travel does nothing, draws the carried section on a thickMaterial card with a shadow at zIndex 1, and slides the others with an animation scoped to the target slot so the carried one never lags the pointer. Escape puts it back through a local key watch. SectionDropDelegate became SectionFileDrop: files only, no .text, no reorder, so a reorder can never light a drop mark."
+    },
+    {
+      "t": "2026-09-05T22:02:38.583257Z",
+      "note": "Verified live in the probe with a new walk, Scripts/playtest/panel-section-drag.json. Layers carried down past Position & Size reorders to Measure Tool, Position & Size, Layers; carried back up past Measure Tool it returns; carried only far enough to TOUCH the next section the order does not change; Escape leaves the order untouched. Every carry logs \"the panel says nothing\" for the panel's drop promise, which is acceptance item 5 stated as evidence. A picture over the panel still shows the accepting wash and drop line, and a non-picture still shows the red dashes. Scripts/test.sh green: 3390 tests."
+    },
+    {
+      "t": "2026-09-05T22:02:38.583257Z",
+      "note": "Harness gained a dragSection step (section, past, stop: middle|touching, hold, cancel) plus the section order and collapsed state in the panel `forget` list, so the walk is repeatable. It drives the dock's own carry rather than posting mouse events: SwiftUI gestures do not answer synthesized events at all, which I confirmed by pressing a section header with the existing `press` step (nothing happened) while the same step on a Button next to it worked."
+    },
+    {
+      "t": "2026-09-05T22:02:38.583257Z",
+      "note": "Adversarial review, on the built thing. Two things a human should judge and a walk cannot: a plain click still collapsing a header (the click and the drag are now one gesture), and the Escape key (driven through the handler, not through a real key press). Both are called out in the audit's rough. The carried card is opaque, so the section under it is hidden while you carry one; that is what makes it read as lifted, but it is worth a look. This is SHARED code, not Next-only: the dock has never been forked, so Current gets the same fix, which is the direction the porting rule allows."
+    },
+    {
+      "t": "2026-09-05T22:02:38.583257Z",
+      "note": "Audit: queue/audits/2026-09-05-panel-section-drag.json with four real screen captures (Screen Recording was granted)."
     }
-  ]
+  ],
+  "started": "2026-09-05T21:31:18.279Z"
 }

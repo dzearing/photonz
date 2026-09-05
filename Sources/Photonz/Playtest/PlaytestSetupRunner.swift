@@ -38,7 +38,9 @@ extension PlaytestMemory {
             [EditorState.openGroupsKey]
         case .panel:
             [EditorState.inspectorVisibleKey, EditorState.libraryVisibleKey,
-             EditorState.inspectorWidthKey, LibraryPanel.scopeKey]
+             EditorState.inspectorWidthKey, LibraryPanel.scopeKey,
+             InspectorPanel.sectionOrderKey, InspectorPanel.sectionOrderVersionKey,
+             InspectorPanel.collapsedKey]
         case .grid:
             [EditorState.canvasGridKey]
         }

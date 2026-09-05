@@ -1,0 +1,29 @@
+{
+  "feature": "Picking a panel section up",
+  "epic": "ui-building",
+  "summary": "Dragging a section header in the right hand panel now lifts the whole section on a card with a shadow, moves it only up and down, and slides the other sections aside as the pointer passes their middles. No file drop marking of any kind appears while you rearrange, and Escape puts the section back.",
+  "setup": "Photonz Dev, release Next, a picture open with the right hand panel showing and a layer selected, so there is more than one section to rearrange.",
+  "try": [
+    { "do": "Press on the word Layers in the panel header and pull down slowly.", "shot": "2026-09-05-section-drag-carrying-layers-down.png" },
+    { "do": "Stop as soon as the card touches the next section and look: nothing below should have moved yet.", "shot": "2026-09-05-section-drag-only-touching.png" },
+    { "do": "Keep pulling until the pointer passes the middle of that section, and watch it slide out of the way." },
+    { "do": "Pull sideways as hard as you like and check the section stays in its column." },
+    { "do": "Let go. The section lands where the gap was." },
+    { "do": "Pick another section up, and press Escape while still holding the button down.", "shot": "2026-09-05-section-drag-after-escape.png" },
+    { "do": "Drag a file that is not a picture over the panel and confirm the red dashes still appear for that, and only for that.", "shot": "2026-09-05-section-drag-text-over-panel.png" },
+    { "do": "Click a section header without moving, to check a plain click still collapses it." }
+  ],
+  "evaluate": [
+    "Does the section feel picked up, or does the card read as too heavy over the panel?",
+    "Is the moment a section moves aside where you expect it, or does it still feel early or late?",
+    "Does the card hiding the section underneath bother you while you are carrying one?",
+    "Does a plain click on a header still collapse it every time, with no accidental nudge?",
+    "Is Escape while holding the button the way you would expect to call a drag off?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real screen capture of the probe window.",
+    "The header now handles click and drag as one press: a press that never travels collapses the section, one that travels 4pt picks it up. A scripted walk cannot press a SwiftUI gesture, so the collapse click and the Escape key were driven through the panel's own handlers, not through real events. Those two are the parts worth a human eye.",
+    "The lifted card is opaque, so while you carry a section you cannot see the one under it. That is what makes it read as lifted, but if it feels heavy the card could go translucent.",
+    "The panel wide red dashes used to appear during a reorder because the section travelled as text on a system drag and every drop target in the panel read it as a payload it could not use. Reordering no longer touches the drop machinery at all, so the dashes now mean only what they say: this file will not be taken."
+  ]
+}

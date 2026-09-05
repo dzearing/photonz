@@ -30,6 +30,13 @@ import SwiftUI
     var frames: [InspectorSectionID: Section] = [:]
     /// How tall the scrolling area is.
     var viewportHeight: CGFloat = 0
+    /// Where the scrolling area sits in the WINDOW, so a step that has to put
+    /// a pointer on a section can turn a section's frame into a point the
+    /// window understands.
+    var dockFrame: CGRect = .zero
+    /// The section currently being carried, by its title, so a walk can say
+    /// the dock really did pick one up rather than only that it looks lifted.
+    var carrying: String?
 
     /// The visible sections with a measurement, in draw order.
     var measured: [Section] {
@@ -59,6 +66,14 @@ import SwiftUI
     InspectorLayoutProbe.shared.viewportHeight = height
 }
 
+@MainActor func recordInspectorDockFrame(_ frame: CGRect) {
+    InspectorLayoutProbe.shared.dockFrame = frame
+}
+
+@MainActor func recordInspectorCarrying(_ title: String?) {
+    InspectorLayoutProbe.shared.carrying = title
+}
+
 extension View {
     /// Tells the probe which sections the dock is drawing, in order.
     func inspectorLayoutProbe(sections: [InspectorSectionID]) -> some View {
@@ -72,6 +87,8 @@ extension View {
 
 @MainActor func recordInspectorSection(_ id: InspectorSectionID, title: String, frame: CGRect) {}
 @MainActor func recordInspectorViewportHeight(_ height: CGFloat) {}
+@MainActor func recordInspectorDockFrame(_ frame: CGRect) {}
+@MainActor func recordInspectorCarrying(_ title: String?) {}
 
 extension View {
     func inspectorLayoutProbe(sections: [InspectorSectionID]) -> some View { self }

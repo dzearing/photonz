@@ -635,6 +635,16 @@ public enum PlaytestDropZone: String, CaseIterable, Hashable, Codable, Sendable 
     case above, inside, below
 }
 
+/// How far a carried dock section travels before the walk lets go of it.
+public enum PlaytestSectionStop: String, CaseIterable, Hashable, Codable, Sendable {
+    /// Past the middle of the section named, which is the line it moves aside
+    /// on.
+    case middle
+    /// Only far enough to touch that section's near edge, which is where
+    /// nothing should happen yet.
+    case touching
+}
+
 public enum PlaytestHoverTarget: Sendable, Equatable {
     /// The control whose tooltip begins with this text ("Arrow", "Measure").
     case label(String)
@@ -768,6 +778,17 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `hold` names a picture taken before letting go, which is the only
     /// moment the line that says what will happen is on screen.
     case dragRow(row: String, onto: String, zone: PlaytestDropZone, hold: String?)
+    /// Pick a section of the right hand panel up by its title and carry it
+    /// until the pointer has passed the middle of the section named by `past`,
+    /// which is the moment that one moves aside. `hold` names a picture taken
+    /// with the section still in hand, the only moment there is anything
+    /// lifted off the panel to photograph. `cancel` presses Escape instead of
+    /// letting go, so a walk can prove a called-off drag leaves the panel
+    /// exactly as it found it. `stop` says how far to carry it: all the way
+    /// past that section's middle, which is where it moves aside, or only far
+    /// enough to touch it, which is where nothing should happen yet.
+    case dragSection(section: String, past: String, stop: PlaytestSectionStop,
+                     hold: String?, cancel: Bool)
     /// Click a row in the layers list by the name it shows, the way a person
     /// picks a layer out of the list rather than off the picture. `modifiers`
     /// read as they do under a pointer: shift ranges from the anchor row,
@@ -838,7 +859,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
-        "dragFile", "dragRow", "dragTile", "dropComponent",
+        "dragFile", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
         "panel", "panelMenu", "pinch", "press",
         "readClipboard", "render", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
@@ -873,6 +894,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panelMenu: "panelMenu"
         case .dragTile: "dragTile"
         case .dragRow: "dragRow"
+        case .dragSection: "dragSection"
         case .selectRow: "selectRow"
         case .press: "press"
         case .panel: "panel"
@@ -1001,6 +1023,15 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .dragRow(row: try f.string("row"), onto: try f.string("onto"),
                             zone: zone, hold: try f.optionalString("hold"))
+        case "dragSection":
+            let stop: PlaytestSectionStop = if fields["stop"] == nil {
+                .middle
+            } else {
+                try f.enumValue("stop", PlaytestSectionStop.self)
+            }
+            self = .dragSection(section: try f.string("section"), past: try f.string("past"),
+                                stop: stop, hold: try f.optionalString("hold"),
+                                cancel: try f.optionalFlag("cancel") ?? false)
         case "selectRow":
             self = .selectRow(row: try f.string("row"), modifiers: try f.modifiers())
         case "press":
