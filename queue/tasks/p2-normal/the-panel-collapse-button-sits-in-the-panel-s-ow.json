@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 8,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T19:04:14.463Z",
-  "updated": "2026-09-05T23:24:40.286Z",
+  "updated": "2026-09-05T23:47:42.253Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-05 with a screenshot pointing at the panel's top right corner. Today the button is an overlay on the CANVAS at topTrailing (EditorView.swift line 109), inset by EditorChromeLayout.cornerInset, which is why it sits beside the panel rather than in it. Two things to carry across: EditorChromeLayout.inspectorToggleFrame (line 93) is the rect other chrome avoids, and the measure legend deliberately parks under this button when it takes the top right corner, so moving the button means that rect and the legend's parking rule both need revisiting rather than being left pointing at an empty corner. The closed state matters as much as the open one: with the panel collapsed the button is the only way back, including after the panel auto collapses on a narrow window, so keep an affordance there and say in the audit where it is.",
@@ -49,7 +49,12 @@
     {
       "t": "2026-09-05T23:43:00.000Z",
       "note": "Shared code, not Next-only: the editor shell and the dock are shared files that Next has not forked, so Next gets this by construction and Current gets the same fix. This is a relocation of existing chrome, not a new feature, so no flag."
+    },
+    {
+      "t": "2026-09-05T23:47:42.252Z",
+      "note": "The collapse button now sits in the dock's own top right corner, level with the first section header, in the panel's icon language; the glass capsule stays in the canvas corner for the closed state and after a narrow window auto-collapses the dock. The freed canvas corner goes to the measure legend, which no longer hangs a gap below a button that is not there. Verified on the probe with Screen Recording: Scripts/playtest/panel-collapse-corner-walk.json and panel-collapse-narrow-walk.json (real presses on both buttons) plus legend-under-toggle for the closed case; 3416 tests green. Audit: queue/audits/2026-09-05-panel-collapse-corner.json with four real captures."
     }
   ],
-  "started": "2026-09-05T23:24:40.285Z"
+  "started": "2026-09-05T23:24:40.285Z",
+  "completed": "2026-09-05T23:47:42.253Z"
 }
