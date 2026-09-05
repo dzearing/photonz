@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T19:03:09.344Z",
-  "updated": "2026-09-05T19:03:09.379Z",
+  "updated": "2026-09-05T20:12:58.793Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05: the grid shows on load, a slight trackpad zoom makes it disappear, more zoom brings it back. One suspect found by reading CanvasGrid.levels and strength, to be confirmed by the sweep rather than believed on sight: the finest rung is placed at climb, which is clamped to the range zero to one, and strength returns zero when its step is less than or equal to zero. So whenever the finest rung sits exactly at the band floor its strength is zero. That alone should still leave the two rungs above it drawing, so it does not explain a total disappearance by itself, which is why the sweep matters: it will say whether some zoom makes every rung land on a zero, or whether the cause is elsewhere, for example the minimumDrawnOpacity of 0.004 cutting all three, or the clipping to documentFrameInView in CanvasGridChrome hiding the grid rather than the maths dropping it. Write the sweep as a test in PhotonzCore first, since it is also the guard that stops this returning.",
@@ -28,6 +28,48 @@
     {
       "t": "2026-09-05T19:03:09.379Z",
       "note": "seq 180 -> 1"
+    },
+    {
+      "t": "2026-09-05T19:18:25.581Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T19:22:30.515308Z",
+      "note": "Adversarial review of the premise first. Swept the level maths over the whole zoom range (1/32 to 32) for majorEvery 2,3,4,8,10,16,100 and spacing 1,4,6,8,256,512: at EVERY zoom the strongest drawn rung is at full strength (0.30). The suspect in the notes (finest rung at climb, strength zero) is real but harmless: it only ever silences the rung that is about to be replaced, and the rung above it is always full. So the maths is not the cause and no fade change is needed."
+    },
+    {
+      "t": "2026-09-05T19:22:30.515308Z",
+      "note": "Read the user's own remembered grid out of the dev app's settings rather than guessing: {snapsToGrid:true, spacing:4, isVisible:true, axes:columnsAndRows, majorEvery:8} — exactly the default ladder, which the sweep proves never goes dark. Confirms the cause is in the app layer, not PhotonzCore."
+    },
+    {
+      "t": "2026-09-05T19:41:34.790632Z",
+      "note": "REPRODUCED, and the report was kinder than the truth. Built two seams into the probe (a `pinch` walk step that drives the very call a trackpad drives, nudge by nudge, and a `grid` reading taken off the CAShapeLayers themselves) and ran Scripts/playtest/grid-pinch-walk.json. Before the fix the grid was dark on 172 of 172 nudges, across the WHOLE range 1/32 to 32, every reading saying \"no settings, nothing drawn\". So there is no dead band and no dead zoom: the grid goes out for as long as the fingers keep moving, at every zoom, and comes back only when the next SwiftUI pass hands the settings in again. That is why a flick looks like \"gone, then back\"."
+    },
+    {
+      "t": "2026-09-05T19:41:34.790632Z",
+      "note": "Cause: CanvasNSView.commit(_:), the one call a pinch, a scroll and the zoom commands all go through, re-entered apply(...) with only the camera. apply takes the whole canvas as arguments and nine of them carried defaults, so everything commit did not mention was reset to its default: canvasGrid to nil (the grid), and with it gridOriginAdjust, groupContext, isCanvasSelected, annotationStyle, calloutShape and captionCloseRequest."
+    },
+    {
+      "t": "2026-09-05T19:41:34.790632Z",
+      "note": "Fix: commit now calls a new applyViewport(_:) that redraws for the new camera and touches nothing else, and never goes back through apply. Then every default was removed from apply's signature, since it now has exactly one caller (the SwiftUI updateNSView) and a defaulted argument there is precisely how a second caller silently switches a piece of the canvas off. After: 0 of 172 nudges dark, a rung at full 0.300 at every single one."
+    },
+    {
+      "t": "2026-09-05T19:41:34.790632Z",
+      "note": "No fade or ladder change was needed or made, so nothing is heavier: the settled readings are identical before and after at every zoom sampled (fit 0.8086 -> 3 rungs 0.281/0.300/0.217; 4.0 -> 3 rungs 0.150/0.300/0.300; 32 -> 2 rungs 0.300/0.300; 0.0312 -> 2 rungs 0.300/0.300)."
+    },
+    {
+      "t": "2026-09-05T19:41:34.790632Z",
+      "note": "Shipped: Scripts/playtest/grid-pinch-walk.json is the regression guard (it fails loudly with THE GRID WENT OUT), plus two PhotonzCore sweep tests. Full suite green, 3332 tests. Audit at queue/audits/2026-09-05-canvas-grid-zoom.json with two real screen captures at the zooms that used to be dark."
+    },
+    {
+      "t": "2026-09-05T20:12:28.106227Z",
+      "note": "Ran all 163 walks: 158 ok, 5 failed (mixed-one-look, text-height-readout, text-width-floor, tool-holds-saved-colour, type-menu-labels). Checked them rather than assuming: stashed the change, rebuilt, ran those five alone, then unstashed and ran the same five alone again. Identical both ways (4 ok, mixed-one-look failed on baseline main too), so none of the five is this change. The other four only fail as part of the full run, which is the walk set poisoning itself through remembered settings, and mixed-one-look is a standing failure. Filed as its own task rather than fixed here."
+    },
+    {
+      "t": "2026-09-05T20:12:58.792Z",
+      "note": "The grid no longer goes out while you zoom. Cause was not the level maths (a new PhotonzCore sweep proves the strongest rung is at full strength at every zoom from 1/32 to 32): commit(_:) re-entered apply(...) with only the camera, and apply's defaulted arguments reset canvasGrid to nil on every pinch and scroll nudge. commit now uses a new applyViewport(_:) and apply has no defaults left. Verified on the real app with a new playtest pinch step: 172 of 172 nudges dark before, 0 of 172 after. Guard: Scripts/playtest/grid-pinch-walk.json. Full suite green (3332). Audit: queue/audits/2026-09-05-canvas-grid-zoom.json with two real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-05T19:18:25.580Z",
+  "completed": "2026-09-05T20:12:58.793Z"
 }

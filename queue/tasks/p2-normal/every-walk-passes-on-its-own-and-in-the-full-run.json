@@ -1,0 +1,27 @@
+{
+  "id": "every-walk-passes-on-its-own-and-in-the-full-run",
+  "title": "Every walk passes on its own and in the full run",
+  "goal": "The set of scripted walks that proves the app still works gives different answers depending on whether you run one walk or all of them. Four walks pass alone and fail in the full run, and one has been failing for a while. That makes the whole set untrustworthy: an agent cannot tell a real break from noise, so real breaks get waved through.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 1270,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T20:12:28.140Z",
+  "updated": "2026-09-05T20:12:28.141Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-05 while checking the grid zoom fix. Full run: 158 passed, 5 failed. mixed-one-look-walk fails at step 35 (press \"align center\" is not in the window, needs a scrollPanel first) and fails the same way on unmodified main, so it is a standing break. text-height-readout-walk, text-width-floor-walk, tool-holds-saved-colour-walk and type-menu-labels-walk each pass when run alone and fail only inside the full run: tool-holds-saved-colour fails at step 15 with no text field holding the keyboard, type-menu-labels at step 18 with no menu called Size (only 100% is there). That pattern is what docs/design/playtest-harness.md warns about under \"What a walk needs set up, in the walk\": the probe keeps its settings between runs, so a walk that changes one and does not declare it in setup.forget leaves the next walk hunting for a value something else moved. Start by finding which earlier walk moves the text size and the colour.",
+  "acceptance": [
+    "Scripts/playtest-all.sh passes with zero failures",
+    "Running it twice in a row gives the same answer both times",
+    "Every walk that changes a remembered setting says so in its own setup block, so it cannot poison the walk after it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T20:12:28.141Z",
+      "note": "created (manual)"
+    }
+  ]
+}
