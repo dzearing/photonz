@@ -1,0 +1,34 @@
+{
+  "id": "the-grid-settings-are-somewhere-you-would-actual",
+  "title": "The grid settings are somewhere you would actually look",
+  "goal": "The grid can be switched on and off from the View menu, but everything that shapes it, the spacing, whether it draws columns or both, how often a line is bold, where it starts and how fine it may get, is buried in a panel section that only appears after you click the Canvas row in the layers list. Nobody finds that. The settings should be reachable from where the grid is switched on, and from the grid itself.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T19:07:22.563Z",
+  "updated": "2026-09-05T19:07:22.599Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05: I still do not have any way to configure the grid as far as I know. They are right in practice. What exists today, from a read: EditorCommands.swift line 525 puts Show Grid on Command apostrophe and a Snap to Grid toggle on the View menu, and that is all the menu offers. Every number lives in LayersPanel.gridSection (line 3122), which is drawn inside the Canvas inspector section, and that section only renders its content when editorState.isCanvasSelected (line 452). So the settings require knowing to click the Canvas row in the layers list first. The comment above gridSection explains the reasoning, that the grid belongs to the canvas, which is sound as a model but is not how anyone will look for it. Options for the runner to weigh and record: add the settings under the View menu item itself, put them in a small popover hung off the menu or off a grid button, or surface the Canvas section automatically when the grid is switched on. Do not simply move them and leave the Canvas section empty. This pairs with the pending task you-can-say-where-the-grid-starts-and-how-fine-i, which adds the origin and smallest cell; whichever lands second must put its new settings in the same place as the first.",
+  "acceptance": [
+    "Reaching every grid setting takes one obvious step from the View menu or from wherever the grid is turned on, with no prior selection needed",
+    "The settings are still there for someone who arrives by clicking the Canvas row, so nothing that works today stops working",
+    "Switching the grid on for the first time makes it clear where its settings are, without a tour or a tip that has to be dismissed",
+    "The settings say what each number does in plain words, including what the smallest cell means",
+    "A person who has never used the app can turn on the grid, set it to eight points and make every fourth line bold, without being told where to go",
+    "Audit written under queue/audits/ showing the path from switching it on to changing a number, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T19:07:22.563Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T19:07:22.599Z",
+      "note": "seq 180 -> 2"
+    }
+  ]
+}
