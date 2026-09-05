@@ -1,0 +1,43 @@
+{
+  "id": "menu-items-that-are-settings-wear-a-checkmark-in",
+  "title": "Menu items that are settings wear a checkmark instead of rewording themselves",
+  "goal": "Show Grid changes its wording to Hide Grid when the grid is on, and Snap to Grid becomes Stop Snapping to Grid. That is how an action is written, not a setting. Every menu item that is simply on or off should keep one name and carry a checkmark when it is on, so you can see the state without reading a sentence, and so the item does not move under the pointer as its label changes length. That goes for all of them, panels and the history included, not just the grid.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T19:08:57.672Z",
+  "updated": "2026-09-05T19:09:59.186Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-05, then confirmed for ALL stateful items rather than just the grid, so no per item judgement is needed: convert every one. No menu item in the app uses a checkmark today. EditorCommands.swift flips titles at line 527 (grid), 536 (snapping), 492 (layers panel) and 503 (Library), and MainMenuTitles.swift retitles the history item from a separate file. That history item is reached from the menu bar agent as well as the editor and there is an open task about the two disagreeing (show-history-and-hide-history-agree-with-whether); read it first and make sure this change resolves rather than deepens it. SwiftUI menu items take a Toggle for exactly this, which also reports the right state to accessibility, rather than drawing a tick by hand. Leave true actions alone, for example Play and Pause at line 183 and Crop to Region at 198.",
+  "acceptance": [
+    "Every menu item that holds an on or off state keeps a single name and carries a checkmark when it is on: the grid, snapping, the layers panel, the Library and the history, plus any other found while doing it",
+    "No menu item is left flipping its wording to say what state it is in; the audit lists every item changed and confirms none were missed",
+    "An item that genuinely performs an action, such as playing or pausing, is left alone, and the audit says which those are",
+    "Each one still works from its keyboard shortcut, and the shortcut is shown once rather than moving between two items",
+    "The history item reads the same in the menu bar agent and in the editor window, since it is retitled from a second place",
+    "Nothing changes about what any of them does",
+    "Audit written under queue/audits/ with the View menu and the history item in both states, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T19:08:57.673Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T19:08:57.708Z",
+      "note": "seq 1270 -> 10"
+    },
+    {
+      "t": "2026-09-05T19:09:59.152Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-05T19:09:59.186Z",
+      "note": "seq 10 -> 10"
+    }
+  ]
+}
