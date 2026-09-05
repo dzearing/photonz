@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T23:19:01.609Z",
-  "updated": "2026-09-05T15:11:08.894Z",
+  "updated": "2026-09-05T15:32:50.276Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-04 with a screenshot of a Color section: Fill wears a style named error and shows a red chip identical to the live wells on Outline and Border. Confirmed by reading ColorStylePanel.swift: readout(_:) renders swatch(style.paint(for:)) for the .style case, a plain non-interactive chip with only a tooltip, while the .color case renders the editable well. The docs comment at the top of the file says this on purpose: a colour that belongs to a style is not a colour you edit here. The intent is sound, the rendering is not, because the chip is the same size, shape and position as the well. The users own two options are the ones to weigh: hide the chip entirely on a styled row, or make it open the picker and treat choosing a colour as an unlink. Recommend the second, since a person who clicks a colour swatch wants to change the colour, and an unlink they can undo is friendlier than a control that ignores them; open a decision card with both drawn if the runner disagrees. Whatever is chosen, the styled state needs its own look: a different shape, an outline, or the palette mark on the chip itself.",
@@ -72,7 +72,12 @@
     {
       "t": "2026-09-05T15:32:33.175Z",
       "note": "Left alone deliberately: no mark on the chip (the menu button beside it already wears a palette mark and the name) and no caption under the row (the warning belongs in the picker). Both are called out in the audit as lines to disagree with."
+    },
+    {
+      "t": "2026-09-05T15:32:50.276Z",
+      "note": "A row wearing a style now draws its colour held inside a frame instead of filling its square, and the chip is a control again: it opens the picker, the picker says Using <name> with Unlink and warns that a pick takes the row off the style, and one undo puts both back. ColorStylePanel.swift plus ColorStyleSelection.styleReplacementNote in PhotonzCore (3 new tests). Verified on the probe app with Scripts/playtest/styled-row-walk.json in light and dark, real captures; Scripts/test.sh green. Audit: queue/audits/2026-09-05-styled-color-row.json"
     }
   ],
-  "started": "2026-09-05T15:11:08.894Z"
+  "started": "2026-09-05T15:11:08.894Z",
+  "completed": "2026-09-05T15:32:50.276Z"
 }
