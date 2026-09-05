@@ -452,8 +452,11 @@ struct ColorStyleSelectionTests {
         #expect(selection.unlinkNote == nil)
     }
 
-    /// Layers that all wear one style keep their plain swatch and their Unlink
-    /// button, so there is no well there to warn about.
+    /// Layers that all wear one style say nothing UNDER the row: that row is
+    /// not about to lose a style by accident, because the only way to paint it
+    /// by hand is to open its picker, and the picker says so itself
+    /// (`styleReplacementNote`). A sentence in the panel that is true every
+    /// time you look at it is a sentence nobody reads.
     @Test func aRowAllWearingOneStyleSaysNothingExtra() {
         let accent = UUID()
         let selection = ColorStyleSelection(slot: .fill, members: [
@@ -461,5 +464,41 @@ struct ColorStyleSelectionTests {
         ], selectionCount: 2)
         #expect(selection.reading == .style(accent))
         #expect(selection.unlinkNote == nil)
+    }
+
+    // MARK: - What the picker says over a colour that comes from a style
+
+    @Test func aStyledRowsPickerSaysAPickWouldTakeItOffTheStyle() {
+        let accent = UUID()
+        let selection = ColorStyleSelection(slot: .fill, members: [
+            member(UUID(), "#00A870", accent),
+        ], selectionCount: 1)
+        #expect(selection.styleReplacementNote == "A color picked here takes this off the style.")
+    }
+
+    @Test func aStyledRowOverSeveralLayersSaysHowManyAPickWouldTakeOff() {
+        let accent = UUID()
+        let selection = ColorStyleSelection(slot: .fill, members: [
+            member(UUID(), "#00A870", accent), member(UUID(), "#00A870", accent),
+            member(UUID(), "#00A870", accent),
+        ], selectionCount: 3)
+        #expect(selection.styleReplacementNote
+                == "A color picked here takes all 3 of them off the style.")
+    }
+
+    /// A row painted with a colour of its own has no style to lose, and a row
+    /// that disagrees already says so under itself with `unlinkNote`. Saying it
+    /// twice in two different places is how a warning stops meaning anything.
+    @Test func aRowWithNoOneStyleSaysNothingInItsPicker() {
+        let styled = UUID()
+        let own = ColorStyleSelection(slot: .fill, members: [
+            member(UUID(), "#3366FF"),
+        ], selectionCount: 1)
+        let mixed = ColorStyleSelection(slot: .fill, members: [
+            member(UUID(), "#3366FF", styled), member(UUID(), "#FF0000"),
+        ], selectionCount: 2)
+        #expect(own.styleReplacementNote == nil)
+        #expect(mixed.styleReplacementNote == nil)
+        #expect(mixed.unlinkNote != nil)
     }
 }

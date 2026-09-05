@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T23:19:01.609Z",
-  "updated": "2026-09-05T14:07:49.046Z",
+  "updated": "2026-09-05T15:11:08.894Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-04 with a screenshot of a Color section: Fill wears a style named error and shows a red chip identical to the live wells on Outline and Border. Confirmed by reading ColorStylePanel.swift: readout(_:) renders swatch(style.paint(for:)) for the .style case, a plain non-interactive chip with only a tooltip, while the .color case renders the editable well. The docs comment at the top of the file says this on purpose: a colour that belongs to a style is not a colour you edit here. The intent is sound, the rendering is not, because the chip is the same size, shape and position as the well. The users own two options are the ones to weigh: hide the chip entirely on a styled row, or make it open the picker and treat choosing a colour as an unlink. Recommend the second, since a person who clicks a colour swatch wants to change the colour, and an unlink they can undo is friendlier than a control that ignores them; open a decision card with both drawn if the runner disagrees. Whatever is chosen, the styled state needs its own look: a different shape, an outline, or the palette mark on the chip itself.",
@@ -36,6 +36,43 @@
     {
       "t": "2026-09-05T14:07:49.045Z",
       "note": "seq 10 -> 20"
+    },
+    {
+      "t": "2026-09-05T15:11:08.894Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T15:15:23.034Z",
+      "note": "Adversarial review before building. Walked the Color section as a first-time user: two rows, both showing an 18pt chip in the same column, one of them dead. The task offers two ways out and I agree with the user's second: the styled chip becomes a real well, and picking a colour in it takes the row off the style, which is what setPaint/setColorHex in PhotonzCore ALREADY do (they unbind first), and what the toolbar swatch already does for a tool holding a saved colour. So there is no model work here, only a row that lies about what it can do."
+    },
+    {
+      "t": "2026-09-05T15:15:23.034Z",
+      "note": "Rejected the first option (hide the chip on a styled row): the colour is the thing you scan the column for, and ui-building.md is explicit that everywhere a style is drawn it draws the paint. A row with a name and no colour is worse than a row with a colour you cannot click."
+    },
+    {
+      "t": "2026-09-05T15:15:23.034Z",
+      "note": "Cut from the design: no second palette mark ON the chip (the menu button 6pt to its right already carries a palette mark and the style name, so a mark on the chip is the same word twice), and no permanent caption under styled rows (the warning belongs in the picker, right before the click, not as a sentence you read every time you look at the panel). The at-a-glance difference is structural instead: a colour of its own FILLS its chip edge to edge, a colour from a style is a smaller chip INSIDE a frame. Same 18pt footprint, so the column does not move."
+    },
+    {
+      "t": "2026-09-05T15:15:23.034Z",
+      "note": "Risk found: someone opens the picker only to look at the colour and unlinks by accident. Softened three ways - the unlink lands only on a deliberate commit (not on hover or on opening), the picker grows a Using <name> banner with its own Unlink and a plain sentence saying a colour picked below takes it off the style, and the whole thing is one undo step."
+    },
+    {
+      "t": "2026-09-05T15:32:33.174Z",
+      "note": "Built. The styled readout is the well itself, drawing its colour inside a filled frame instead of covering its square (same 18pt footprint, same column). The picker it opens carries a Using <name> banner with Unlink and one sentence saying a pick takes the row off the style; ColorStyleSelection.styleReplacementNote writes that sentence in PhotonzCore, tested first, three tests."
+    },
+    {
+      "t": "2026-09-05T15:32:33.175Z",
+      "note": "Second adversarial pass, on the running probe app: found that picking a colour over a styled row SHUT the picker after one swatch. The well sat in a different branch of the readout switch for each reading, so the row rebuilt itself the moment the style came off. The Mixed row had the same fault. One branch now, the well keeps its identity, and both stay open - verified with a panel listing after the pick."
+    },
+    {
+      "t": "2026-09-05T15:32:33.175Z",
+      "note": "Verified in Scripts/playtest/styled-row-walk.json against the probe app, Screen Recording granted, real captures in both appearances: three rows with Fill wearing Error over Outline and Text; the chip opens the picker; Shades 2 paints it and takes it off the style (log reads fill #FFBBB8 with no style); ONE undo puts colour and style back; Unlink inside the picker keeps the colour, drops the style and leaves the picker open. Scripts/test.sh green, 3204 tests."
+    },
+    {
+      "t": "2026-09-05T15:32:33.175Z",
+      "note": "Left alone deliberately: no mark on the chip (the menu button beside it already wears a palette mark and the name) and no caption under the row (the warning belongs in the picker). Both are called out in the audit as lines to disagree with."
     }
-  ]
+  ],
+  "started": "2026-09-05T15:11:08.894Z"
 }

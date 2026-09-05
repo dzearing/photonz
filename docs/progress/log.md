@@ -8659,3 +8659,30 @@ placement geometry using a width guess instead of the measurement).
 Open question for the user: when there is no room beside the tail the pill now
 takes the near end of the shaft and the arrow runs out of its far edge. Reads
 well in the audit picture, but it does cover the first stretch of line.
+
+## 2026-09-05 — A color wearing a style looks different from one you can still edit
+
+Queue task `a-colour-wearing-a-style-looks-different-from-on` (p1, epic
+`ui-components`). Reported by the user: a Fill row wearing the style Error drew
+a chip the same size, shape and column as the live wells beside it, and clicking
+it did nothing.
+
+- The styled readout is the WELL now, not a dead chip. It draws its color held
+  inside a filled frame instead of covering its square, and it opens the same
+  picker every other row opens. Picking a color there takes the row off the
+  style, which `setColorHex`/`setPaint` in `PhotonzCore` have always done.
+- The picker grew a banner over a styled row: palette mark, "Using <name>",
+  Unlink, and one sentence saying what a pick would do.
+  `ColorStyleSelection.styleReplacementNote` writes the sentence, so the wording
+  is tested in core rather than typed into a view (3 new tests).
+- Fixed while in there: the well used to sit in a different branch of the
+  readout switch for each reading, so picking a color over a styled row (and
+  over a Mixed row) tore the well down and shut the picker after one swatch.
+  One branch now, so the picker stays open.
+- `Scripts/playtest/styled-row-walk.json` walks the whole thing: three rows with
+  one styled, both appearances, click the chip, pick, undo, unlink from the
+  picker. Audit and five real captures under
+  `queue/audits/2026-09-05-styled-color-row.json`.
+
+Next: the audit asks whether the held-chip look is loud enough at 1x; a louder
+mark is a follow-up if the user says so.

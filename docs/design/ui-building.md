@@ -1149,6 +1149,41 @@ documents and no publishing; there is no way to make a style without a layer to
 save it from; a style cannot be applied to several selected layers at once; and
 there are no text or effect styles, only color.
 
+## Landed: a row wearing a style says so, and still answers (Next, `next-styles`, 2026-09-05)
+
+Reported by the user against the two sections above: a Fill row wearing a style
+named Error showed a chip the same size, the same shape and in the same column
+as the live wells on Outline and Border, and clicking it did nothing. Two rows
+side by side looked identical and only one of them was live.
+
+- **A color from a style is drawn HELD.** The chip sits inside a filled holder
+  instead of covering its square, so a linked row and a plain one read
+  differently straight down the column without reading the name beside them.
+  Same 18pt footprint and the same column, so nothing moves when a row takes a
+  style on or lets one go.
+- **The chip is a control again.** It opens the same picker every other color
+  row opens, because a person who clicks a color wants to change it and a
+  control that ignores them is worse than one that asks. Picking a color there
+  takes the row off the style — which is what `setColorHex`/`setPaint` have
+  always done for a hand-picked color, and what the toolbar swatch has always
+  done for a tool holding a saved one.
+- **The picker says so before the click, not after.** Its top line reads
+  "Using Error" with a palette mark, an Unlink beside it, and one plain
+  sentence: a color picked here takes this off the style, or all three of them
+  off it when the row speaks for three. `ColorStyleSelection.styleReplacementNote`
+  in `PhotonzCore` writes it, so the wording is tested rather than typed into a
+  view. Nothing is added UNDER the row: a sentence that is true every time you
+  look at the panel is a sentence nobody reads by the third time.
+- **Unlink is in three places and means one thing**: the row's menu, the
+  picker's banner, and the toolbar swatch's popover. The color stays exactly as
+  it is and simply becomes the layer's own.
+- **One undo puts a style back on**, color and binding together, because the
+  unlink and the paint are the one step they always were.
+
+Deliberately left: no mark on the chip itself. The menu button 6pt to its right
+already wears a palette mark beside the style's name, and the same mark twice in
+one row says nothing the first one did not.
+
 ## Landed: a saved style can be a gradient (Next, `next-styles`, 2026-09-04)
 
 A color could be kept under a name from the day styles landed. A gradient could
@@ -1226,9 +1261,7 @@ unreadable panel.
 - **Nothing about how a shape paints changed.** Only what the panel reads.
 
 Deliberately left: the Measure section's own color row keeps its narrower label
-column, having nothing to line up against; and the styled readout is a plain
-square where a raw one is a clickable well, which is honest but does look like
-two different controls in one column.
+column, having nothing to line up against.
 
 ## Landed: the Library arrives stocked (Next, `next-starter-components`, 2026-09-03)
 

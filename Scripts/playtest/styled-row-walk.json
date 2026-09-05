@@ -1,0 +1,77 @@
+{
+  "out": "/tmp/photonz-playtest/styled-row",
+  "seed": "A Color section holding one row that wears a saved colour and two rows that do not. Reported by the user: the styled row showed a chip the same size, shape and place as the live wells beside it, and clicking it did nothing, so two rows looked identical and only one of them answered. This walk draws that exact section, looks at it in both appearances, and then clicks the styled row's chip to prove it now opens the picker and that picking a colour takes the row off the style, in one step one undo puts back.",
+  "setup": {
+    "forget": ["shapes", "color"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1000, "canvasHeight": 640, "width": 1320, "height": 800 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "appearance", "value": "dark" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 160], "to": [420, 320], "steps": 8 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [180, 420] },
+    { "do": "type", "text": "Save changes" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "click", "at": [280, 240] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-box-picked", "note": "the box alone: Fill and Outline, both of them live wells" },
+
+    { "do": "action", "action": "saveColorStyle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "focus", "field": "Style name" },
+    { "do": "type", "text": "Error" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-fill-styled", "note": "the box's Fill now wears Error" },
+
+    { "do": "click", "at": [230, 428], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-three-rows", "note": "the caption picked as well: three rows now, Fill wearing Error over Outline and Text which do not. The Fill chip should be a smaller square inside a frame, the other two filled edge to edge, and all three swatches in the same column" },
+    { "do": "snapshot", "name": "styled-row-1-dark" },
+
+    { "do": "appearance", "value": "light" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-light", "note": "the same three rows in the light appearance" },
+    { "do": "snapshot", "name": "styled-row-2-light" },
+
+    { "do": "click", "at": [280, 240] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3b-box-alone", "note": "just the box picked now, so the whole Color section fits on screen: its Fill still wears Error" },
+    { "do": "press", "control": "Color", "in": "Fill" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "panel", "stage": "4-picker-open" },
+    { "do": "describe", "stage": "4-picker-open", "note": "the styled row's chip opened the picker, and the picker says Using Error, offers Unlink, and warns that a colour picked here takes this off the style" },
+    { "do": "snapshot", "name": "styled-row-3-picker" },
+
+    { "do": "press", "control": "Shades" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Shades 2" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "panel", "stage": "5-still-open" },
+    { "do": "describe", "stage": "5-picked", "note": "a colour picked in the styled row's own picker: the fill should now be that colour with no style on it, and the chip should be filled edge to edge again" },
+    { "do": "render", "name": "unlinked-shade" },
+    { "do": "snapshot", "name": "styled-row-4-after-pick" },
+
+    { "do": "action", "action": "closeColorPicker" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-undone", "note": "ONE undo should put the Fill row back on Error, colour and style together" },
+    { "do": "snapshot", "name": "styled-row-5-undone" },
+
+    { "do": "press", "control": "Color", "in": "Fill" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "press", "control": "Unlink", "in": "Fill" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-unlinked", "note": "Unlink from inside the picker: the fill keeps its colour and simply owns it, the banner goes, and the picker is still there to pick with" },
+    { "do": "snapshot", "name": "styled-row-6-unlinked" },
+    { "do": "action", "action": "closeColorPicker" }
+  ]
+}

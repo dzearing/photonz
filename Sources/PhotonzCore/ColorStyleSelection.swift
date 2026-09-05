@@ -150,13 +150,33 @@ public struct ColorStyleSelection: Hashable, Sendable {
     /// edit to it fails to reach a layer.
     ///
     /// Nil when no style is involved, and nil when they ALL wear one: that row
-    /// keeps its plain swatch and its Unlink button and has no well to warn
-    /// about.
+    /// warns inside its picker instead (`styleReplacementNote`), which is where
+    /// the click that would do it is. A sentence that sits under the row every
+    /// time you look at the panel is a sentence nobody reads by the third time.
     public var unlinkNote: String? {
         guard reading == .mixed else { return nil }
         let styled = members.filter { $0.styleID != nil }.count
         guard styled > 0 else { return nil }
         return "A color picked here takes \(styled) of them off their style."
+    }
+
+    /// What the picker says over a color that comes from a style, before a
+    /// color is picked in it.
+    ///
+    /// The row's swatch opens the picker like any other, because a person who
+    /// clicks a color wants to change it and a control that ignores them is
+    /// worse than one that asks. Picking there takes the color off the style —
+    /// that is what painting by hand has always meant — so the picker says so
+    /// with the Unlink button beside it, and one undo puts it back.
+    ///
+    /// Only for a row where every color comes from ONE style. A row that
+    /// disagrees says it under itself, in `unlinkNote`, because there the
+    /// warning is about layers you cannot see from the picker.
+    public var styleReplacementNote: String? {
+        guard case .style = reading else { return nil }
+        return count > 1
+            ? "A color picked here takes all \(count) of them off the style."
+            : "A color picked here takes this off the style."
     }
 
 }

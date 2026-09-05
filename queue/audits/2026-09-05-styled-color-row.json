@@ -1,0 +1,31 @@
+{
+  "feature": "A color wearing a style looks different, and still answers",
+  "epic": "ui-components",
+  "summary": "A color row that is wearing a saved style now draws its color held inside a frame instead of filling its square, so you can tell it from a plain row without reading the name. Clicking it opens the picker like any other row: the picker says which style the color comes from, offers Unlink, and warns that picking a color takes the row off the style.",
+  "setup": "Photonz Dev, Experiments window, release Next. Styles are on by default. Any document.",
+  "try": [
+    { "do": "Draw a rectangle, then press T and type a caption beside it." },
+    { "do": "Click the rectangle, and in the Color section open the palette menu on the Fill row and choose Save as Style." },
+    { "do": "Type Error and press Return." },
+    { "do": "Shift click the caption so both are picked, and look down the Color section: Fill, Outline, Text.", "shot": "2026-09-05-styled-row-1-dark-sc.png" },
+    { "do": "Click the Fill row's swatch.", "shot": "2026-09-05-styled-row-3-picker-sc.png" },
+    { "do": "Pick a lighter shade off the Shades row and watch the Fill row.", "shot": "2026-09-05-styled-row-4-after-pick-sc.png" },
+    { "do": "Press Command Z once and check that the color and the name Error both come back." },
+    { "do": "Click the swatch again and press Unlink in the picker instead.", "shot": "2026-09-05-styled-row-6-unlinked-sc.png" }
+  ],
+  "evaluate": [
+    "At normal size, can you tell the styled row from the two plain ones without reading the word Error?",
+    "Is a chip held inside a frame the right way to say linked, or would you rather have a mark on the swatch, or a different shape?",
+    "You click a styled swatch: is opening the picker what you expected, or did you expect it to do nothing?",
+    "Is one line in the picker enough warning that picking a color drops the style, or should the row say it too?",
+    "Unlink is now in the row's menu and in the picker. Is the second one useful, or one place too many?"
+  ],
+  "rough": [
+    "The difference is honest but quiet at 1x: it is a two point frame round a twelve point chip. It reads clearly side by side down a column, which is how a section is actually read, but a single styled row on its own is subtler than a colored badge would be. This is the line to disagree with if you want it louder.",
+    "There is no palette mark on the chip itself. The menu button just to its right already wears one beside the style name, and two of the same mark in one row says nothing the first one did not. Say so if the chip should carry it anyway.",
+    "The light appearance needed the frame filled rather than only outlined: an outline alone came out faint against the light panel. Both appearances are pictured.",
+    "Picking a color from a styled row no longer closes the picker. It used to, because a styled row and a plain row drew their swatch in two different places in the view tree, so the row rebuilt itself the moment the style came off. The Mixed row had the same fault and is fixed by the same change.",
+    "Nothing was added under the row. A sentence that is true every time you look at the panel is a sentence nobody reads by the third time, so the warning lives in the picker where the click that needs it is.",
+    "All five pictures are real screen captures of the probe app, light and dark, not offscreen renders."
+  ]
+}

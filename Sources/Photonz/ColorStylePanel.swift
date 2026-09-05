@@ -26,13 +26,16 @@ struct ColorStyleNamingRequest: Hashable {
 /// - **A color of its own.** The row keeps its color well and this button is a
 ///   swatch outline: "Save as Style" makes one, and any style already on the
 ///   shelf can be picked straight from the menu.
-/// - **Wearing a style.** The well becomes a plain swatch and this button says
-///   the style's NAME beside a palette mark, because a color that belongs to a
-///   style is not a color you edit here: you change the style, on the shelf,
-///   and everything wearing it follows. "Unlink" is in the menu and says what
-///   it does, so the way back to a one-off color is one click and never a
-///   surprise. The row's own label never moves out of the way for the name —
-///   losing it was exactly what made a rectangle's settings unreadable.
+/// - **Wearing a style.** The well draws its color INSIDE a frame rather than
+///   filling its square, and this button says the style's NAME beside a
+///   palette mark, so a linked row and a plain one never look alike in the same
+///   column. The well still opens the picker, because a person who clicks a
+///   color wants to change it: picking one there takes the row off the style,
+///   which the picker says before the click and one undo puts back. "Unlink"
+///   is in the menu and in the picker and says what it does, so the way back to
+///   a one-off color is one click and never a surprise. The row's own label
+///   never moves out of the way for the name — losing it was exactly what made
+///   a rectangle's settings unreadable.
 /// - **Disagreeing.** Layers wearing different styles, or different colors, say
 ///   Mixed rather than naming one of them: a row printing Accent over three
 ///   layers when only one wears it is how you unlink a style you never meant to
@@ -321,9 +324,9 @@ struct ColorPartRow: View {
 ///
 /// The readout is whichever of three things is true. A color of its own gets a
 /// well — one layer's, or the whole selection's, which paints every picked
-/// layer at once. A color that comes from a style shows a plain swatch and the
-/// style's name instead: the color is still there to see, it is just not edited
-/// here, and Unlink in the menu is the way back. Several layers that disagree
+/// layer at once. A color that comes from a style gets the same well drawing
+/// the same color, framed rather than filled and named beside it, and picking
+/// a color in it takes the row off the style. Several layers that disagree
 /// say Mixed, because showing one of their colors is how three layers end up
 /// somewhere nobody asked for — and over a selection that word is itself the
 /// well, so the way out of Mixed is the thing you were already looking at.
@@ -388,38 +391,44 @@ struct ColorStyleRow<Well: View>: View {
     }
 
     @ViewBuilder private func readout(_ selection: ColorStyleSelection) -> some View {
-        switch selection.reading {
-        case .style(let id):
-            if let style = editorState.colorStyles.first(where: { $0.id == id }) {
-                swatch(style.paint(for: slot))
-                    .help("This color comes from the style \(style.name)")
-            }
-        case .mixed:
-            // Over a selection the word IS the well: it says they differ and
-            // it is the one thing to click to stop them differing.
-            if paintsSelection {
-                well
-            } else {
-                Text(ColorStyleSelection.mixedText)
-                    .font(.caption)
-                    .foregroundStyle(MixedLook.style)
-                    .help("The picked layers do not share one \(part.lowercased()). "
-                          + "Choosing a color or a style sets all of them.")
-            }
-        case .color:
+        // The well is in ONE place in the view tree whatever the row is
+        // reading, and it matters: two branches of a switch are two views, so
+        // a picker open over a styled row used to be torn down the moment
+        // picking a color took the row off its style. The popover shut under
+        // the pointer after one swatch, where every other row lets you keep
+        // trying. Same for the row that says Mixed and then agrees.
+        if showsWell(selection) {
             well
-        case .empty:
-            if !paintsSelection { well }
+        } else if case .mixed = selection.reading {
+            // A row over ONE layer cannot be mixed with itself, so this is the
+            // row inside a shape's own section: it has no well of its own to
+            // offer and says the word on its own.
+            Text(ColorStyleSelection.mixedText)
+                .font(.caption)
+                .foregroundStyle(MixedLook.style)
+                .help("The picked layers do not share one \(part.lowercased()). "
+                      + "Choosing a color or a style sets all of them.")
         }
     }
 
-    private func swatch(_ paint: Paint) -> some View {
-        PaintFill(paint: paint)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-            .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
-            .frame(width: 18, height: 18)
-            .overlay(RoundedRectangle(cornerRadius: 4)
-                .strokeBorder(.primary.opacity(0.25), lineWidth: 1))
+    /// Whether the color column is the well.
+    ///
+    /// A color of its own is one, and so is a color that comes from a style:
+    /// the well draws that one FRAMED rather than filled edge to edge, and
+    /// picking a color in it takes the row off the style, which is what
+    /// painting by hand has always meant everywhere else in the app. It used to
+    /// be a plain chip with a tooltip, the same size and shape and in the same
+    /// column as the live wells beside it, so two rows looked identical and
+    /// only one of them answered — which is the one thing a person tries first.
+    ///
+    /// Over a selection the word Mixed IS the well: it says they differ and it
+    /// is the one thing to click to stop them differing.
+    private func showsWell(_ selection: ColorStyleSelection) -> Bool {
+        switch selection.reading {
+        case .style, .color: return true
+        case .mixed: return paintsSelection
+        case .empty: return !paintsSelection
+        }
     }
 
     private var namingField: some View {
@@ -492,44 +501,103 @@ struct SelectionColorWell: View {
             // Mixed and giving up on the row.
             .onHover { isHovering = $0 }
             .help(help(selection))
-            .accessibilityLabel("\(part) of \(selection.count) selected layers")
+            .accessibilityLabel(boundStyle.map { "\(part) color, using the style \($0.name)" }
+                                ?? "\(part) color of \(selection.count) selected layers")
             // The same word every color well in the panel answers to, its row
             // saying which color it paints. Pressing it opens the picker.
             .playtestControl("Color", detail: part)
             .popover(isPresented: editorState.colorWellBinding(wellKey), arrowEdge: .top) {
-                ColorPickerContent(editorState: editorState,
-                                   paint: openingPaint(selection),
-                                   name: part,
-                                   slot: slot,
-                                   supportsOpacity: true,
-                                   supportsGradient: slot.acceptsGradient,
-                                   onClose: { editorState.openColorWell = nil },
-                                   // Live while the pointer is down, so the
-                                   // shapes follow the drag; ONE step, and one
-                                   // recents entry, when it is let go of.
-                                   onPreview: { paint in
-                    editorState.previewSelectionPaint(slot: slot, paint: paint)
-                }) { paint in
-                    editorState.commitSelectionPaint(slot: slot, paint: paint)
+                // Always two children, whether or not there is a banner to
+                // draw: the picker keeps its place in the stack, so letting go
+                // of a style with the picker open does not rebuild it under
+                // the pointer.
+                VStack(alignment: .leading, spacing: 0) {
+                    styleBanner
+                    ColorPickerContent(editorState: editorState,
+                                       paint: openingPaint(selection),
+                                       name: part,
+                                       slot: slot,
+                                       supportsOpacity: true,
+                                       supportsGradient: slot.acceptsGradient,
+                                       onClose: { editorState.openColorWell = nil },
+                                       // Live while the pointer is down, so the
+                                       // shapes follow the drag; ONE step, and one
+                                       // recents entry, when it is let go of.
+                                       onPreview: { paint in
+                        editorState.previewSelectionPaint(slot: slot, paint: paint)
+                    }) { paint in
+                        editorState.commitSelectionPaint(slot: slot, paint: paint)
+                    }
                 }
             }
     }
 
+    /// The style painting this row, when one style paints all of it.
+    private var boundStyle: ColorStyle? {
+        guard Experiments.shared.colorStylesEnabled else { return nil }
+        return selection.boundStyleID
+            .flatMap { id in editorState.colorStyles.first { $0.id == id } }
+    }
+
+    /// What the picker says over a color that comes from a style: which style
+    /// it is, that picking here lets go of it, and the way to let go without
+    /// picking anything.
+    ///
+    /// It is said HERE rather than under the row, because here is where the
+    /// click that would do it is. The same palette mark and the same word
+    /// Unlink the row's own menu and the toolbar swatch use, so the three
+    /// places read as one idea rather than three.
+    @ViewBuilder private var styleBanner: some View {
+        if let style = boundStyle {
+            let selection = self.selection
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: "swatchpalette")
+                        .foregroundStyle(.secondary)
+                    Text("Using \(style.name)")
+                        .font(.callout)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer(minLength: 8)
+                    Button("Unlink") { editorState.unlinkColorStyle(slot: slot) }
+                        .buttonStyle(.link)
+                        .font(.callout)
+                        .help("Keeps this color exactly as it is and stops following "
+                              + "\(style.name)")
+                        .playtestControl("Unlink", detail: part)
+                }
+                if let note = selection.styleReplacementNote {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+            .padding(.bottom, 10)
+            Divider()
+        }
+    }
+
     @ViewBuilder private func label(_ selection: ColorStyleSelection) -> some View {
-        if case .color(let hex) = selection.reading {
+        if case .style(let id) = selection.reading {
+            // A style the document has never heard of is no style at all: the
+            // row falls back to the plain chip over the color it is actually
+            // wearing rather than drawing a frame around nothing.
+            if let style = editorState.colorStyles.first(where: { $0.id == id }) {
+                styledSwatch(style)
+            } else {
+                filledSwatch(Paint(hex: selection.members.first?.colorHex ?? "#FFFFFF"))
+            }
+        } else if case .color(let hex) = selection.reading {
             // The swatch shows the PAINT, so a row holding a gradient looks
             // like the gradient rather than like the one flat colour it stands
             // for. Everything else about the chip is what it always was.
             // The paint in flight while a colour drag is happening, so the
             // chip under the picker keeps up with the canvas rather than
             // sitting on the old colour for a whole pull and jumping.
-            PaintFill(paint: editorState.previewedPaint(slot: slot) ?? Paint(hex: hex))
-                .clipShape(RoundedRectangle(cornerRadius: 4))
-                // Under a color that can be see-through, so a translucent fill
-                // reads as translucent rather than as a paler one.
-                .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
-                .frame(width: 18, height: 18)
-                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
+            filledSwatch(Paint(hex: hex))
         } else {
             // A chip rather than bare text: the same height and the same
             // hairline as the swatch it replaces, so a row that says Mixed
@@ -545,6 +613,50 @@ struct SelectionColorWell: View {
                 .background(RoundedRectangle(cornerRadius: 4).fill(.quaternary))
                 .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
         }
+    }
+
+    /// A color the row owns: it fills its chip edge to edge.
+    private func filledSwatch(_ paint: Paint) -> some View {
+        // The chip shows the PAINT, so a row holding a gradient looks like the
+        // gradient rather than like the one flat color it stands for, and it
+        // shows the paint in flight while a color drag is happening, so it
+        // keeps up with the canvas instead of sitting on the old color for a
+        // whole pull and jumping.
+        PaintFill(paint: editorState.previewedPaint(slot: slot) ?? paint)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+            // Under a color that can be see-through, so a translucent fill
+            // reads as translucent rather than as a paler one.
+            .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
+            .frame(width: 18, height: 18)
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
+    }
+
+    /// A color that comes from a style: the same 18pt square in the same
+    /// column, but the paint sits INSIDE a frame instead of filling the square.
+    ///
+    /// That gap is the whole point. Two rows of the Color section used to show
+    /// the same chip in the same place whether the color was the layer's own or
+    /// a style's, so the only way to tell them apart was to read the name in
+    /// the next column — and the one you could not click looked exactly like
+    /// the one you could. Held versus filled reads straight down the column
+    /// without reading a word.
+    ///
+    /// No palette mark on the chip: the menu button 6pt to the right already
+    /// wears one beside the style's name, and the same mark twice in one row
+    /// says nothing the first one did not.
+    private func styledSwatch(_ style: ColorStyle) -> some View {
+        PaintFill(paint: editorState.previewedPaint(slot: slot) ?? style.paint(for: slot))
+            .clipShape(RoundedRectangle(cornerRadius: 2))
+            .background(CheckerBoard(square: 3).clipShape(RoundedRectangle(cornerRadius: 2)))
+            .frame(width: 12, height: 12)
+            .frame(width: 18, height: 18)
+            // The holder is filled, not just outlined, the way the Mixed chip
+            // in this same column is: an outline alone came out faint in the
+            // light appearance, and a chip sitting in something reads as held
+            // from across the panel where a hairline does not.
+            .background(RoundedRectangle(cornerRadius: 5).fill(.quaternary))
+            .overlay(RoundedRectangle(cornerRadius: 5)
+                .strokeBorder(.primary.opacity(isHovering ? 0.6 : 0.35), lineWidth: 1))
     }
 
     private var edge: Color { .primary.opacity(isHovering ? 0.55 : 0.25) }
@@ -567,9 +679,28 @@ struct SelectionColorWell: View {
         // "the text of all 3 of them" would read as the words rather than the
         // ink, so every slot says color out loud: fill color, outline color,
         // text color.
-        var lines = ["Sets the \(part.lowercased()) color of all "
-                     + "\(selection.count) of them, in one step."]
-        if let note = selection.unlinkNote { lines.append(note) }
+        let noun = part.lowercased()
+        var lines: [String] = []
+        if let style = boundStyle {
+            // A color from a style says where it comes from FIRST, then what
+            // clicking would do to that, because "sets the fill color" over a
+            // color somebody deliberately linked is the wrong half of the
+            // story to lead with.
+            lines.append(selection.count > 1
+                         ? "All \(selection.count) of these \(noun) colors come from "
+                            + "the style \(style.name)."
+                         : "This \(noun) color comes from the style \(style.name).")
+        } else {
+            lines.append(selection.count > 1
+                         ? "Sets the \(noun) color of all \(selection.count) of them, "
+                            + "in one step."
+                         : "Sets the \(noun) color.")
+        }
+        // What a pick would let go of: for a row that disagrees, the layers it
+        // would take off their styles; for a row wearing one, the style itself.
+        if let note = selection.unlinkNote ?? selection.styleReplacementNote {
+            lines.append(note)
+        }
         return lines.joined(separator: " ")
     }
 }
