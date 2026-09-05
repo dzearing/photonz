@@ -1,0 +1,28 @@
+{
+  "feature": "A short arrow caption stays a pill",
+  "epic": "measure-redline",
+  "summary": "An arrow caption with only a character or two in it now draws as a badge lying on its side instead of a lozenge standing on end. Captions with real words in them are exactly the size they were.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Open a screenshot." },
+    { "do": "Press A for the arrow tool." },
+    { "do": "Drag an arrow onto something, then type 1 and press Return." },
+    { "do": "Draw a second arrow, type Hi, press Return." },
+    { "do": "Draw a third arrow, type Primary action, press Return.", "shot": "2026-09-05-caption-pill-shape-1.png" },
+    { "do": "Compare the three pills: all three should read as the same kind of badge, just different lengths." },
+    { "do": "Zoom to 400% and look at the one character pill's left and right ends." }
+  ],
+  "evaluate": [
+    "Does the one character caption read as the same object as the long one, only shorter?",
+    "At its narrowest the pill is a fifth wider than it is tall. Is that wide enough, or does a single character still look like it is floating in a blob?",
+    "Do the ends look like clean semicircles at 400%, with no pinch or point?",
+    "Does the caption you type in look like the caption that lands, at every length?"
+  ],
+  "rough": [
+    "The pointed oval in the original report is already gone: a change that landed earlier the same day clamped the corner radius to half the pill's short side. What was left, and what this fixes, is the tall narrow lozenge. There is now a test that pins the clamp so the adjustable corner radius task cannot bring the point back.",
+    "The floor is exactly the fifth the task asked for. On screen a one character pill still reads as a fat rounded badge rather than a stadium; going to a third wider than tall would look more like the long pills. Say the word and it is a one line change.",
+    "A measurement chip has the same problem and is NOT fixed here: a caliper reading 4 or 12 is narrower than it is tall, for the same reason. Filed as its own task because widening measure chips moves geometry that chip joins and callout clearance are tested against.",
+    "Caption text sits about two points left of the middle of its pill, at every length. That predates this change (the measured text box carries the last glyph's trailing space) and is filed as its own task.",
+    "Verified in the real app with a scripted playtest on the probe build. Screen Recording was granted, so the picture above is a real window capture, not an offscreen render."
+  ]
+}

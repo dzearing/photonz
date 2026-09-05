@@ -212,6 +212,21 @@ extension AnnotationContent {
         captionFontSize * MeasureContent.labelPadding / MeasureContent.labelFontSize
     }
 
+    /// The narrowest a caption pill is ever drawn: a fifth wider than the pill
+    /// is tall, so a one character caption (or an empty field) still reads as a
+    /// badge lying on its side rather than a lozenge standing on end.
+    ///
+    /// Derived from the font size and padding alone, never from measured
+    /// glyphs, because two places need the SAME number: the rasterizer, which
+    /// knows the real text height, and `estimatedCaptionSize`, which reserves
+    /// the frame from a character count and has no text measurement at all. A
+    /// floor either of them could compute differently is a floor the drawn pill
+    /// can spill out of. `captionFontSize * 1.4` is SF Pro's line height, which
+    /// is what the measured text height comes back as.
+    public var captionMinPillWidth: CGFloat {
+        (captionFontSize * 1.4 + 2 * captionPadding) * 1.2
+    }
+
     /// The pill's fill tone: the arrow color darkened the way the measure
     /// defaults pair #FF3B30 ink with a #8C201A chip, so any arrow color gets
     /// a matching dark pill that white text stays legible on.
@@ -245,11 +260,13 @@ extension AnnotationContent {
     /// hairline beside a thick shaft.
     public var captionBorderWidth: CGFloat { min(max(1.5, strokeWidth / 2), 3) }
 
-    /// The pill around a laid-out line of caption text: padding on every side.
-    /// The rasterizer and the on-canvas field both size themselves with this,
-    /// so the bubble you type in is the bubble that lands.
+    /// The pill around a laid-out line of caption text: padding on every side,
+    /// and never narrower than `captionMinPillWidth`. The rasterizer and the
+    /// on-canvas field both size themselves with this, so the bubble you type
+    /// in is the bubble that lands.
     public func captionPillSize(forTextSize text: CGSize) -> CGSize {
-        CGSize(width: text.width + 2 * captionPadding, height: text.height + 2 * captionPadding)
+        CGSize(width: max(text.width + 2 * captionPadding, captionMinPillWidth),
+               height: text.height + 2 * captionPadding)
     }
 
     /// A capsule, whatever the pill's height — the measure chip's corner.
@@ -258,10 +275,12 @@ extension AnnotationContent {
     /// A generous estimate of the caption pill's footprint, used for frame
     /// reservation and hit-testing. The rasterizer measures the real text and
     /// hangs the (smaller) pill from the same attachment, so it always sits
-    /// inside the box this estimate reserved.
+    /// inside the box this estimate reserved — which is why the same width
+    /// floor the rasterizer draws with is applied here too: without it a one
+    /// character caption reserves less room than it draws.
     public var estimatedCaptionSize: CGSize {
         let chars = CGFloat(max(caption?.count ?? 0, 1) + 1)
-        let w = chars * captionFontSize * 0.75 + 2 * captionPadding
+        let w = max(chars * captionFontSize * 0.75 + 2 * captionPadding, captionMinPillWidth)
         let h = captionFontSize * 1.3 + 2 * captionPadding
         return CGSize(width: w.rounded(.up), height: h.rounded(.up))
     }

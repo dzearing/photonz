@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/short-caption-pill",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [340, 760], "to": [300, 560], "steps": 12 },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "0-field-empty", "note": "an empty caption field: the bubble should read as a pill on its side" },
+    { "do": "snapshot", "name": "0-field-empty" },
+    { "do": "type", "text": "1" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [700, 760], "to": [660, 560], "steps": 12 },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "type", "text": "Hi" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [1080, 760], "to": [1040, 560], "steps": 12 },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "type", "text": "Primary action" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-three-captions", "note": "one character, two characters and a sentence, side by side" },
+    { "do": "snapshot", "name": "1-three-captions" },
+    { "do": "render", "name": "1-three-captions" }
+  ]
+}

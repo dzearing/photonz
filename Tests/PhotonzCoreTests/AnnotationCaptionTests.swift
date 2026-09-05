@@ -631,6 +631,57 @@ struct AnnotationCaptionPillTests {
         let content = arrowContent(caption: "x")
         #expect(content.captionCornerRadius(pillHeight: 44) == 22)
     }
+
+    /// A caption with almost nothing in it is still a pill lying on its side,
+    /// never a lozenge standing on end: the floor is a fifth wider than the
+    /// pill is tall.
+    @Test func aTinyCaptionKeepsAPillsProportions() {
+        var content = arrowContent(caption: "i")
+        content.captionFontSize = 20
+        // A single narrow glyph: far narrower than the pill is tall.
+        let pill = content.captionPillSize(forTextSize: CGSize(width: 5, height: 28))
+        #expect(pill.width >= pill.height * 1.2)
+    }
+
+    /// Even a caption field with nothing typed in it yet.
+    @Test func anEmptyCaptionKeepsAPillsProportions() {
+        var content = arrowContent(caption: "")
+        content.captionFontSize = 20
+        let pill = content.captionPillSize(forTextSize: CGSize(width: 0, height: 28))
+        #expect(pill.width >= pill.height * 1.2)
+    }
+
+    /// The floor never touches a caption that has real words in it.
+    @Test func aCaptionWithWordsIsExactlyItsTextPlusPadding() {
+        var content = arrowContent(caption: "Primary action")
+        content.captionFontSize = 20
+        let text = CGSize(width: 120, height: 28)
+        let pill = content.captionPillSize(forTextSize: text)
+        #expect(pill.width == text.width + 2 * content.captionPadding)
+    }
+
+    /// The floor is a proportion, not a constant: a 40pt caption's minimum is
+    /// twice a 20pt one's.
+    @Test func theMinimumWidthScalesWithTheFontSize() {
+        var small = arrowContent(caption: "i")
+        small.captionFontSize = 20
+        var big = small
+        big.captionFontSize = 40
+        #expect(big.captionMinPillWidth == small.captionMinPillWidth * 2)
+    }
+
+    /// The reserved box has to CONTAIN what is drawn. The estimate is measured
+    /// from character counts and the drawn pill from real glyphs, so the floor
+    /// has to be in both or a one character caption spills out of its frame.
+    @Test func theReservedBoxContainsTheWidenedPill() {
+        for caption in ["", "i", "1", "Hi"] {
+            var content = arrowContent(caption: caption)
+            content.captionFontSize = 20
+            // The narrowest the rasterizer could ever measure this text at.
+            let drawn = content.captionPillSize(forTextSize: CGSize(width: 0, height: 28))
+            #expect(content.estimatedCaptionSize.width >= drawn.width)
+        }
+    }
 }
 
 // MARK: - Growing a caption

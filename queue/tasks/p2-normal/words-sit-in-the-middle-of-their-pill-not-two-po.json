@@ -1,0 +1,28 @@
+{
+  "id": "words-sit-in-the-middle-of-their-pill-not-two-po",
+  "title": "Words sit in the middle of their pill, not two points left of it",
+  "goal": "The text inside a caption pill and a measurement chip sits about two points left of centre. It is small enough that nobody would name it, but every badge in the app is very slightly off, which is the kind of thing that makes a screenshot look hand-drawn rather than built.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1300,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T23:23:20.999Z",
+  "updated": "2026-09-05T23:23:21.000Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured on 2026-09-05 while fixing the short caption pill: for both \"H\" in a widened pill and \"A much longer caption\" in a text-sized one, the glyph ink centre sits 2.5px left of the pill ink centre — identical for both, so it is not the widening. The cause is that TextRasterizer.naturalSize returns a box that includes the last glyph's trailing advance, and PillRasterizer.draw centres that box rather than the ink. Fix is likely to centre on the typographic bounds instead, or to trim the trailing advance in naturalSize (careful: naturalSize also sizes text layers, so check TextRasterizerTests and TextBlockMetricsTests). Tests/PhotonzRenderTests/CaptionPillShapeTests.swift has a glyphOffCenter helper that already measures this.",
+  "acceptance": [
+    "The ink of a centred word is within a point of the pill's centre, measured off real pixels",
+    "This holds for one character, two characters and a full sentence",
+    "This holds for a measurement chip as well as an arrow caption",
+    "The pill's own size does not change"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T23:23:21.000Z",
+      "note": "created (manual)"
+    }
+  ]
+}

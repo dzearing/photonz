@@ -1,0 +1,29 @@
+{
+  "id": "a-one-or-two-digit-measurement-stays-a-pill-inst",
+  "title": "A one or two digit measurement stays a pill instead of a lozenge",
+  "goal": "When a caliper measures something small, its number chip is narrower than it is tall and reads as a lozenge standing on end rather than the badge every other readout is. Any measurement, however few digits it has, should read as the same badge.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1290,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T23:23:11.533Z",
+  "updated": "2026-09-05T23:23:11.533Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Same defect the arrow caption had, on the other side of the shared PillRasterizer. Confirmed by measuring: PillRasterizer.footprint for \"4\" at MeasureContent.labelFontSize/labelPadding is 32x42, and \"12\" is 39x42 — both narrower than tall. The caption fix put the floor on AnnotationContent.captionMinPillWidth (Sources/PhotonzCore/Layer.swift) and applied it in captionPillSize + estimatedCaptionSize; the measure side would want the same floor in PillRasterizer.footprint or in MeasureContent's own chip size. Deliberately NOT done with the caption fix because widening a measure chip moves geometry that MeasureChipJoinTests, MeasureCalloutClearanceTests and the callout fixture tests all assert against, so it needs its own pass over those. No point can form (the radius is already clamped to half the short side), so this is purely about the shape reading right.",
+  "acceptance": [
+    "A chip reading a single digit is never narrower than its height plus about a fifth",
+    "A chip with several characters is exactly the size it is today",
+    "The caliper line still meets the widened chip on its outline, with no gap and no overshoot",
+    "A callout still keeps its clearance from what it is measuring at the new chip size",
+    "Pixel tests cover a one digit, a two digit and a long chip"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T23:23:11.533Z",
+      "note": "created (manual)"
+    }
+  ]
+}
