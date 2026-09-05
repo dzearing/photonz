@@ -190,6 +190,12 @@ struct CanvasView: NSViewRepresentable {
     let isCanvasSelected: Bool
     /// The canvas grid to draw, or nil for the canvas exactly as it was.
     let canvasGrid: CanvasGridSettings?
+    /// The grid's zero point while it is being placed, or nil the rest of the
+    /// time. Non-nil takes the canvas over: see `CanvasNSView.mouseDown`.
+    let gridOriginAdjust: CGPoint?
+    let onGridOriginChange: (CGPoint) -> Void
+    let onGridOriginCommit: () -> Void
+    let onGridOriginCancel: () -> Void
     let onCanvasResize: (CGSize, CanvasAnchor) -> Void
     let onFillAt: (CGPoint, UUID?, Bool) -> Void
     let onFillSelected: (Bool) -> Void
@@ -219,7 +225,7 @@ struct CanvasView: NSViewRepresentable {
                    measureCandidateLevel: measureCandidateLevel,
                    measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
                    lumaField: lumaField, isCanvasSelected: isCanvasSelected,
-                   canvasGrid: canvasGrid)
+                   canvasGrid: canvasGrid, gridOriginAdjust: gridOriginAdjust)
         view.applyCrispTile(crispTile, viewport: crispTileViewport)
     }
 
@@ -287,6 +293,9 @@ struct CanvasView: NSViewRepresentable {
         view.onFillSelected = onFillSelected
         view.onClearBackground = onClearBackground
         view.onWindowChange = onWindowChange
+        view.onGridOriginChange = onGridOriginChange
+        view.onGridOriginCommit = onGridOriginCommit
+        view.onGridOriginCancel = onGridOriginCancel
     }
 }
 
@@ -378,6 +387,11 @@ final class CanvasNSView: NSView {
     /// The canvas landed in (or left) a window — the reliable moment to size the
     /// window to a just-opened image (mirrors the video preview's hook).
     var onWindowChange: ((NSWindow?) -> Void) = { _ in }
+    /// The zero point moved to here (live, while placing the grid).
+    var onGridOriginChange: ((CGPoint) -> Void) = { _ in }
+    /// ⏎ / ⎋ while placing the grid.
+    var onGridOriginCommit: (() -> Void) = { }
+    var onGridOriginCancel: (() -> Void) = { }
 
     private let contentLayer = CALayer()
     /// The visible part of the document redrawn at the zoom, laid exactly over
@@ -397,6 +411,14 @@ final class CanvasNSView: NSView {
     /// The three rungs together, so the whole grid changes sides of the picture
     /// in one move. See `placeCanvasGrid(overPicture:)`.
     let canvasGridContainer = CALayer()
+    /// The two markers, one across and one down, that say where the grid
+    /// starts while the zero point is being placed. Chrome above everything,
+    /// so they are never lost in the grid they are moving.
+    let gridOriginLayer = CAShapeLayer()
+    /// The zero point being placed, in document points, or nil when the canvas
+    /// is not in that mode. Set by `apply`, read by the grid chrome, the mouse
+    /// and the keyboard.
+    var gridOriginAdjust: CGPoint?
     /// Which side of the picture the grid is currently on, or nil before it has
     /// been placed at all.
     private var canvasGridOverPicture: Bool?
@@ -972,6 +994,7 @@ final class CanvasNSView: NSView {
     private func resizedFrame(for layer: Layer?, start: CGRect, handle: ResizeHandle,
                               pointer p: CGPoint, preserveAspect: Bool,
                               peers: [CGRect] = [], gridSpacing: CGFloat? = nil,
+                              gridOrigin: CGPoint = .zero,
                               holding held: SnapHold = .none)
         -> Snapping.FrameResult {
         let local = handleSpacePoint(p, layer: layer)
@@ -982,6 +1005,7 @@ final class CanvasNSView: NSView {
         var result = Snapping.snapResizedFrame(frame, handle: handle,
                                                canvas: viewport?.documentSize ?? .zero,
                                                peers: peers, gridSpacing: gridSpacing,
+                                               gridOrigin: gridOrigin,
                                                zoom: viewport?.zoom ?? 1,
                                                holding: held)
         frame = result.frame
@@ -1014,6 +1038,55 @@ final class CanvasNSView: NSView {
     var canvasSnapSpacing: CGFloat? {
         guard canvasGridEnabled else { return nil }
         return canvasGrid?.snapSpacing
+    }
+
+    /// Where the grid the drag is pulling to starts. Counting from the same
+    /// point the lines are counted from is what keeps a snapped edge ON a line
+    /// rather than beside it.
+    var canvasSnapOrigin: CGPoint {
+        guard canvasGridEnabled else { return .zero }
+        return canvasGrid?.origin ?? .zero
+    }
+
+    /// The zero point's own drag: a press anywhere on the canvas picks the
+    /// markers up, so there is no one-point line to aim at and the pair is
+    /// always exactly where you last put the pointer.
+    private var gridOriginDragging = false
+
+    /// Move the markers to a point on screen, pulling to the same edges and
+    /// middles a dragged layer pulls to: the canvas's, and every layer's. It is
+    /// the same call a layer drag makes, with no box around the point. ⌘ drops
+    /// the magnets for the rest of the drag, as it does everywhere else.
+    private func moveGridOrigin(toViewPoint viewPoint: CGPoint, freeing: Bool) {
+        guard let viewport, gridOriginAdjust != nil else { return }
+        let proposed = viewport.documentPoint(fromView: viewPoint)
+        let held = snapHold(freeing: freeing)
+        guard !held.isFree else {
+            snapGuide = nil
+            onGridOriginChange(proposed)
+            refreshOverlays()
+            return
+        }
+        // No grid spacing: the zero point catches real edges, never the grid it
+        // is itself placing.
+        let snapped = Snapping.snapFrameOrigin(proposed, size: .zero,
+                                               canvas: viewport.documentSize,
+                                               peers: document?.snapPeers(excluding: Set<UUID>()) ?? [],
+                                               gridSpacing: nil,
+                                               zoom: viewport.zoom,
+                                               holding: held)
+        snapHold.caught(x: snapped.guideX, y: snapped.guideY)
+        snapGuide = (snapped.guideX, snapped.guideY)
+        onGridOriginChange(snapped.origin)
+        refreshOverlays()
+    }
+
+    /// One arrow-key press while the markers are up.
+    private func nudgeGridOrigin(by delta: CGVector) {
+        guard let origin = gridOriginAdjust else { return }
+        snapGuide = nil
+        onGridOriginChange(CGPoint(x: origin.x + delta.dx, y: origin.y + delta.dy))
+        refreshOverlays()
     }
 
     /// In-progress endpoint drag on a selected line/arrow. The geometry lives
@@ -1096,7 +1169,8 @@ final class CanvasNSView: NSView {
         for shape in [collageWellsLayer, slotHighlightLayer,
                       dropLandingLayer, dropHostFrameLayer,
                       selectionBaseLayer, selectionAntsLayer, layerOutlineLayer,
-                      multiSelectOutlineLayer, snapGuideLayer, handlesLayer] {
+                      multiSelectOutlineLayer, gridOriginLayer, snapGuideLayer,
+                      handlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
             shape.isHidden = true
@@ -1163,6 +1237,11 @@ final class CanvasNSView: NSView {
         multiSelectOutlineLayer.lineCap = .round
         multiSelectOutlineLayer.lineDashPattern = [2, 4]
         snapGuideLayer.strokeColor = NSColor.systemYellow.cgColor
+        // The zero point's two markers: the accent at full strength, twice as
+        // wide as a grid line and unbroken, so they never read as two of the
+        // lines they are placing.
+        gridOriginLayer.strokeColor = NSColor.controlAccentColor.cgColor
+        gridOriginLayer.lineWidth = 2
         handlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
         handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
         rotateKnobLayer.fillColor = CGColor(gray: 1, alpha: 1)
@@ -1449,6 +1528,13 @@ final class CanvasNSView: NSView {
     }
 
     override func mouseMoved(with event: NSEvent) {
+        // While the zero point is being placed nothing on the canvas is
+        // hoverable: no name label lights up, no handle offers itself, and the
+        // pointer is a crosshair over the whole canvas.
+        if gridOriginAdjust != nil {
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
+            return
+        }
         handleMeasureHover(event)
         refreshNameLabelHover(at: convert(event.locationInWindow, from: nil))
         refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
@@ -1547,6 +1633,9 @@ final class CanvasNSView: NSView {
     /// resize and rotate hold — so nothing switches under way. That is why
     /// every drag session bails out here rather than re-reading the pointer.
     private func refreshGrabCursor(at viewPoint: CGPoint? = nil) {
+        // Placing the grid's zero point owns the pointer: a crosshair over the
+        // whole canvas, because every point on it is somewhere zero can go.
+        if gridOriginAdjust != nil { return applyGrabCursor(.crosshair, force: true) }
         guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil,
               endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil,
               cropDrag == nil else { return }
@@ -1610,6 +1699,16 @@ final class CanvasNSView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let viewport else { return }
+        // Placing the grid's zero point owns the whole canvas: a press moves
+        // the two markers to the pointer and nothing else on the canvas can be
+        // picked up, selected or edited by accident.
+        if gridOriginAdjust != nil {
+            window?.makeFirstResponder(self)
+            gridOriginDragging = true
+            moveGridOrigin(toViewPoint: convert(event.locationInWindow, from: nil),
+                           freeing: event.modifierFlags.contains(.command))
+            return
+        }
         // Every press starts a drag that is standing on nothing and has not
         // been freed: whatever the last one caught, or whether ⌘ let it go,
         // is none of this one's business. A caliper being placed is the
@@ -2074,6 +2173,11 @@ final class CanvasNSView: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         guard let viewport else { return }
+        if gridOriginDragging {
+            moveGridOrigin(toViewPoint: convert(event.locationInWindow, from: nil),
+                           freeing: event.modifierFlags.contains(.command))
+            return
+        }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
         if var drag = cropDrag {
             let bounds = cropBounds ?? CGRect(origin: .zero, size: viewport.documentSize)
@@ -2184,6 +2288,7 @@ final class CanvasNSView: NSView {
                                         pointer: p, preserveAspect: aspect,
                                         peers: snapping ? drag.peers : [],
                                         gridSpacing: snapping ? canvasSnapSpacing : nil,
+                                        gridOrigin: canvasSnapOrigin,
                                         holding: snapping ? held : .none)
             snapHold.caught(x: drag.snapped.guideX, y: drag.snapped.guideY)
             drag.frame = drag.snapped.frame
@@ -2214,6 +2319,7 @@ final class CanvasNSView: NSView {
                                                             canvas: viewport.documentSize,
                                                             peers: drag.peers,
                                                             gridSpacing: canvasSnapSpacing,
+                                                            gridOrigin: canvasSnapOrigin,
                                                             zoom: viewport.zoom,
                                                             holding: held)
                 }
@@ -2258,6 +2364,7 @@ final class CanvasNSView: NSView {
                                                             canvas: viewport.documentSize,
                                                             peers: drag.peers,
                                                             gridSpacing: canvasSnapSpacing,
+                                                            gridOrigin: canvasSnapOrigin,
                                                             zoom: viewport.zoom,
                                                             holding: held)
                 }
@@ -2346,6 +2453,13 @@ final class CanvasNSView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         guard let viewport else { return }
+        if gridOriginDragging {
+            gridOriginDragging = false
+            snapHold = .none
+            snapGuide = nil
+            refreshOverlays()
+            return
+        }
         // The measure tool advances its placement on mouse-up (click/click) or on
         // a press-drag release (down/drag/release draws the line).
         if let drag = alignmentDrag {
@@ -2633,6 +2747,28 @@ final class CanvasNSView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
+        // Placing the grid's zero point takes every key the canvas would
+        // otherwise act on, so an arrow moves the markers rather than the last
+        // layer you happened to have selected, and ⏎ finishes the placement
+        // rather than opening a text box.
+        if gridOriginAdjust != nil {
+            if let delta = Nudge.delta(keyCode: event.keyCode,
+                                       large: event.modifierFlags.contains(.shift)) {
+                nudgeGridOrigin(by: delta)
+                return
+            }
+            if event.keyCode == 36 || event.keyCode == 76 { // ⏎ / keypad ⏎
+                gridOriginDragging = false
+                onGridOriginCommit()
+                return
+            }
+            if event.keyCode == 53 { // ⎋
+                gridOriginDragging = false
+                onGridOriginCancel()
+                return
+            }
+            return
+        }
         // Size mode: [ shrinks the pick, ] grows it. A flat screenshot has no
         // element tree, so the first guess is a guess — these two keys are what
         // make a wrong guess a half-second correction instead of a dead end.
@@ -2930,8 +3066,28 @@ final class CanvasNSView: NSView {
                measureSnapsToCenters: Bool = false,
                edgeMap: EdgeMap, lumaField: LumaField,
                isCanvasSelected: Bool = false,
-               canvasGrid: CanvasGridSettings? = nil) {
+               canvasGrid: CanvasGridSettings? = nil,
+               gridOriginAdjust: CGPoint? = nil) {
         self.canvasGrid = canvasGrid
+        let wasPlacingGridOrigin = self.gridOriginAdjust != nil
+        if self.gridOriginAdjust != gridOriginAdjust {
+            self.gridOriginAdjust = gridOriginAdjust
+            // Leaving the mode drops whatever the markers had caught, so a
+            // stale yellow line never outlives the placement.
+            if gridOriginAdjust == nil {
+                gridOriginDragging = false
+                snapHold = .none
+                snapGuide = nil
+                applyGrabCursor(nil, force: true)
+            } else if !wasPlacingGridOrigin {
+                // The mode is usually entered from a menu or a button in the
+                // panel, which leaves the keyboard there. The arrow keys are
+                // half the feature, so the canvas takes it back rather than
+                // waiting for a click to earn it.
+                window?.makeFirstResponder(self)
+                applyGrabCursor(.crosshair, force: true)
+            }
+        }
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
         if self.isCanvasSelected != isCanvasSelected {
             self.isCanvasSelected = isCanvasSelected
@@ -3514,6 +3670,21 @@ final class CanvasNSView: NSView {
         refreshGroupContextOutline()
         refreshFrameChrome()
         refreshComponentChrome()
+        // Placing the grid's zero point: nothing on the canvas is selected, so
+        // the usual chrome has nothing to draw, but the two markers still catch
+        // edges and the yellow line has to say which one — otherwise the pull
+        // happens invisibly and reads as the markers drifting.
+        if gridOriginAdjust != nil {
+            layerOutlineLayer.isHidden = true
+            handlesLayer.isHidden = true
+            rotateKnobLayer.isHidden = true
+            if let viewport {
+                refreshSnapGuides(in: viewport)
+            } else {
+                snapGuideLayer.isHidden = true
+            }
+            return
+        }
         // The Canvas pseudo-selection: outline + eight handles on the document
         // boundary (or the in-flight proposed boundary). No rotate knob — the
         // canvas doesn't rotate.

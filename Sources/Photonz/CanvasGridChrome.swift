@@ -41,6 +41,7 @@ extension CanvasNSView {
     var canvasGridEnabled: Bool { Experiments.shared.canvasGridEnabled }
 
     func refreshCanvasGrid() {
+        refreshGridOriginMarkers()
         guard canvasGridEnabled, let settings = canvasGrid,
               let viewport, viewport.zoom > 0 else {
             hideCanvasGrid()
@@ -56,7 +57,10 @@ extension CanvasNSView {
             return
         }
 
-        let levels = CanvasGridLevels.levels(spacing: settings.spacing,
+        // `drawnSpacing`, not `spacing`: a smallest cell raises the base of the
+        // ladder, so the grid is never drawn finer than the cell asked for
+        // however far in you go. What a drag LANDS on is still the spacing.
+        let levels = CanvasGridLevels.levels(spacing: settings.drawnSpacing,
                                              majorEvery: settings.majorEvery,
                                              zoom: viewport.zoom)
         guard !levels.isEmpty else {
@@ -77,7 +81,8 @@ extension CanvasNSView {
             let level = levels[index]
             let path = CGMutablePath()
             for x in CanvasGridLevels.lines(spacing: level.spacing,
-                                            from: topLeft.x, to: bottomRight.x) {
+                                            from: topLeft.x, to: bottomRight.x,
+                                            origin: settings.origin.x) {
                 // Whole view points keep a one point line on whole device
                 // pixels, which is the difference between a hairline and a
                 // grey smear.
@@ -87,7 +92,8 @@ extension CanvasNSView {
             }
             if settings.axes.drawsRows {
                 for y in CanvasGridLevels.lines(spacing: level.spacing,
-                                                from: topLeft.y, to: bottomRight.y) {
+                                                from: topLeft.y, to: bottomRight.y,
+                                                origin: settings.origin.y) {
                     let vy = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: y)).y.rounded()
                     path.move(to: CGPoint(x: visible.minX, y: vy))
                     path.addLine(to: CGPoint(x: visible.maxX, y: vy))
@@ -98,6 +104,32 @@ extension CanvasNSView {
             shape.opacity = Float(level.opacity)
             shape.isHidden = path.isEmpty
         }
+    }
+
+    /// The two markers that say where the grid starts, drawn only while the
+    /// zero point is being placed. They run right across the view, one down and
+    /// one across, in the accent at full strength: the grid they are placing is
+    /// a faint wash of the same colour, so the pair reads as the thing you are
+    /// holding rather than as two lines of it.
+    private func refreshGridOriginMarkers() {
+        guard canvasGridEnabled, let origin = gridOriginAdjust, let viewport,
+              bounds.width > 0.5, bounds.height > 0.5 else {
+            gridOriginLayer.path = nil
+            gridOriginLayer.isHidden = true
+            return
+        }
+        let point = viewport.viewPoint(fromDocument: origin)
+        let path = CGMutablePath()
+        // Whole view points, for the same reason the grid rounds: a two point
+        // line off the pixel grid is a four point smear.
+        let x = point.x.rounded()
+        let y = point.y.rounded()
+        path.move(to: CGPoint(x: x, y: bounds.minY))
+        path.addLine(to: CGPoint(x: x, y: bounds.maxY))
+        path.move(to: CGPoint(x: bounds.minX, y: y))
+        path.addLine(to: CGPoint(x: bounds.maxX, y: y))
+        gridOriginLayer.path = path
+        gridOriginLayer.isHidden = false
     }
 
     private func hideCanvasGrid() {

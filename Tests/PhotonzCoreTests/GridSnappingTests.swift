@@ -236,3 +236,80 @@ struct ResizeSnappingTests {
         #expect(out.frame.width >= 1)
     }
 }
+
+@Suite("A grid that starts somewhere other than the corner")
+struct OffsetGridSnappingTests {
+    let canvas = CGSize(width: 1000, height: 800)
+    let size = CGSize(width: 100, height: 40)
+
+    @Test func aDraggedLayerLandsOnTheOffsetLinesNotTheCornerOnes() {
+        // Zero point at (3, 5), spacing 4: the lines are 3, 7, 11 … across and
+        // 5, 9, 13 … down, and that is what the drag lands on.
+        let out = Snapping.snapFrameOrigin(CGPoint(x: 302, y: 202), size: size, canvas: canvas,
+                                           gridSpacing: 4, gridOrigin: CGPoint(x: 3, y: 5),
+                                           zoom: 1)
+        #expect(out.origin == CGPoint(x: 303, y: 201))
+    }
+
+    @Test func aDraggedEdgeLandsOnTheOffsetLinesToo() {
+        let out = Snapping.snapResizedFrame(CGRect(x: 300, y: 200, width: 102, height: 40),
+                                            handle: .right, canvas: canvas,
+                                            gridSpacing: 4, gridOrigin: CGPoint(x: 3, y: 5),
+                                            zoom: 1)
+        #expect(out.frame.maxX == 403)
+        #expect(out.frame.minX == 300)
+    }
+
+    @Test func aZeroPointAtTheCornerIsExactlyWhatTheGridDidBefore() {
+        let offset = Snapping.snapFrameOrigin(CGPoint(x: 303.2, y: 201.9), size: size,
+                                              canvas: canvas, gridSpacing: 4,
+                                              gridOrigin: .zero, zoom: 1)
+        let plain = Snapping.snapFrameOrigin(CGPoint(x: 303.2, y: 201.9), size: size,
+                                             canvas: canvas, gridSpacing: 4, zoom: 1)
+        #expect(offset == plain)
+    }
+
+    @Test func anEdgeStillBeatsAnOffsetGridLine() {
+        let peer = CGRect(x: 500, y: 100, width: 200, height: 100)
+        let out = Snapping.snapFrameOrigin(CGPoint(x: 498, y: 300), size: size, canvas: canvas,
+                                           peers: [peer], gridSpacing: 4,
+                                           gridOrigin: CGPoint(x: 3, y: 5), zoom: 1)
+        #expect(out.origin.x == 500)
+        #expect(out.guideX == 500)
+    }
+}
+
+@Suite("Placing the grid's zero point")
+struct GridOriginPlacementTests {
+    let canvas = CGSize(width: 1000, height: 800)
+
+    /// The zero point is a point, so it pulls to things the way a box with no
+    /// size does: the same call a dragged layer makes, with no box around it.
+    func place(_ x: CGFloat, _ y: CGFloat, peers: [CGRect] = []) -> Snapping.Result {
+        Snapping.snapFrameOrigin(CGPoint(x: x, y: y), size: .zero, canvas: canvas,
+                                 peers: peers, gridSpacing: nil, zoom: 1)
+    }
+
+    @Test func itCatchesALayersCorner() {
+        let peer = CGRect(x: 240, y: 160, width: 200, height: 100)
+        let out = place(243, 163, peers: [peer])
+        #expect(out.origin == CGPoint(x: 240, y: 160))
+        #expect(out.guideX == 240)
+        #expect(out.guideY == 160)
+    }
+
+    @Test func itCatchesALayersFarEdge() {
+        let peer = CGRect(x: 240, y: 160, width: 200, height: 100)
+        #expect(place(438, 400, peers: [peer]).origin.x == 440)
+    }
+
+    @Test func itCatchesTheCanvasCornerAndTheCanvasMiddle() {
+        #expect(place(3, 2).origin == .zero)
+        #expect(place(497, 403).origin == CGPoint(x: 500, y: 400))
+    }
+
+    @Test func awayFromEverythingItStaysExactlyWhereItWasPut() {
+        #expect(place(317.5, 233.25).origin == CGPoint(x: 317.5, y: 233.25))
+    }
+}
+

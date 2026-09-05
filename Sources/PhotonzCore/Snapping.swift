@@ -84,17 +84,20 @@ public enum Snapping {
     /// guide you can see is the guide you get. See `SnapHold`.
     public static func snapFrameOrigin(_ proposed: CGPoint, size: CGSize, canvas: CGSize,
                                        peers: [CGRect] = [], gridSpacing: CGFloat? = nil,
+                                       gridOrigin: CGPoint = .zero,
                                        zoom: CGFloat, screenTolerance: CGFloat = 8,
                                        holding held: SnapHold = .none) -> Result {
         let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
         let x = snapAxis(origin: proposed.x, length: size.width, canvasLength: canvas.width,
                          crossOrigin: proposed.y, crossLength: size.height,
                          peers: peers.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) },
-                         gridSpacing: gridSpacing, tolerance: tolerance, held: held.x)
+                         gridSpacing: gridSpacing, gridOrigin: gridOrigin.x,
+                         tolerance: tolerance, held: held.x)
         let y = snapAxis(origin: proposed.y, length: size.height, canvasLength: canvas.height,
                          crossOrigin: proposed.x, crossLength: size.width,
                          peers: peers.map { Peer(along: ($0.minY, $0.maxY), cross: ($0.minX, $0.maxX)) },
-                         gridSpacing: gridSpacing, tolerance: tolerance, held: held.y)
+                         gridSpacing: gridSpacing, gridOrigin: gridOrigin.y,
+                         tolerance: tolerance, held: held.y)
         return Result(origin: CGPoint(x: x.origin, y: y.origin),
                       guideX: x.guide, guideY: y.guide,
                       guideXSpan: x.span, guideYSpan: y.span)
@@ -118,7 +121,8 @@ public enum Snapping {
     /// box that stopped following the pointer for no visible reason.
     public static func snapResizedFrame(_ proposed: CGRect, handle: ResizeHandle,
                                         canvas: CGSize, peers: [CGRect] = [],
-                                        gridSpacing: CGFloat? = nil, zoom: CGFloat,
+                                        gridSpacing: CGFloat? = nil,
+                                        gridOrigin: CGPoint = .zero, zoom: CGFloat,
                                         screenTolerance: CGFloat = 8,
                                         minSize: CGFloat = 1,
                                         holding held: SnapHold = .none) -> FrameResult {
@@ -134,7 +138,8 @@ public enum Snapping {
         if handle.movesMinX || handle.movesMaxX {
             let moving = handle.movesMinX ? proposed.minX : proposed.maxX
             let snap = snapEdge(moving, canvasLength: canvas.width, crossSpan: crossX,
-                                peers: xPeers, gridSpacing: gridSpacing, tolerance: tolerance,
+                                peers: xPeers, gridSpacing: gridSpacing, gridOrigin: gridOrigin.x,
+                                tolerance: tolerance,
                                 held: held.x)
             let limit = handle.movesMinX ? proposed.maxX - minSize : proposed.minX + minSize
             if handle.movesMinX ? snap.value <= limit : snap.value >= limit {
@@ -153,7 +158,8 @@ public enum Snapping {
         if handle.movesMinY || handle.movesMaxY {
             let moving = handle.movesMinY ? proposed.minY : proposed.maxY
             let snap = snapEdge(moving, canvasLength: canvas.height, crossSpan: crossY,
-                                peers: yPeers, gridSpacing: gridSpacing, tolerance: tolerance,
+                                peers: yPeers, gridSpacing: gridSpacing, gridOrigin: gridOrigin.y,
+                                tolerance: tolerance,
                                 held: held.y)
             let limit = handle.movesMinY ? proposed.maxY - minSize : proposed.minY + minSize
             if handle.movesMinY ? snap.value <= limit : snap.value >= limit {
@@ -192,8 +198,8 @@ public enum Snapping {
     /// two equally good ones.
     private static func snapAxis(origin: CGFloat, length: CGFloat, canvasLength: CGFloat,
                                  crossOrigin: CGFloat, crossLength: CGFloat,
-                                 peers: [Peer], gridSpacing: CGFloat?, tolerance: CGFloat,
-                                 held: CGFloat? = nil)
+                                 peers: [Peer], gridSpacing: CGFloat?, gridOrigin: CGFloat = 0,
+                                 tolerance: CGFloat, held: CGFloat? = nil)
         -> (origin: CGFloat, guide: CGFloat?, span: Span?) {
         let mine = Span(start: crossOrigin, end: crossOrigin + crossLength)
         var candidates: [Candidate] = [
@@ -220,7 +226,7 @@ public enum Snapping {
             // of its own: the whole point of switching a grid on is that things
             // land on it, and a magnet whose reach is half the gap would be on
             // everywhere anyway. ⌘ is what turns it off for one drag.
-            return (quantized(origin, to: gridSpacing), nil, nil)
+            return (quantized(origin, to: gridSpacing, from: gridOrigin), nil, nil)
         }
         return (best.candidate.target - best.candidate.offset, best.candidate.target,
                 widened(best.candidate.span, sharing: best.candidate.target, among: candidates))
@@ -231,8 +237,8 @@ public enum Snapping {
     /// the box's own middle or its far side, since neither of those is what the
     /// pointer is holding.
     private static func snapEdge(_ value: CGFloat, canvasLength: CGFloat, crossSpan: Span,
-                                 peers: [Peer], gridSpacing: CGFloat?, tolerance: CGFloat,
-                                 held: CGFloat? = nil)
+                                 peers: [Peer], gridSpacing: CGFloat?, gridOrigin: CGFloat = 0,
+                                 tolerance: CGFloat, held: CGFloat? = nil)
         -> (value: CGFloat, guide: CGFloat?, span: Span?) {
         var candidates: [Candidate] = [
             Candidate(offset: 0, target: 0, span: nil),
@@ -249,7 +255,7 @@ public enum Snapping {
         }
 
         guard let best = capture(value, among: candidates, tolerance: tolerance, held: held) else {
-            return (quantized(value, to: gridSpacing), nil, nil)
+            return (quantized(value, to: gridSpacing, from: gridOrigin), nil, nil)
         }
         return (best.candidate.target, best.candidate.target,
                 widened(best.candidate.span, sharing: best.candidate.target, among: candidates))
@@ -302,9 +308,14 @@ public enum Snapping {
     }
 
     /// The nearest grid line, or the value untouched when nothing is pulling.
-    private static func quantized(_ value: CGFloat, to spacing: CGFloat?) -> CGFloat {
-        guard let spacing, spacing.isFinite, spacing > 0, value.isFinite else { return value }
-        return (value / spacing).rounded() * spacing
+    /// `origin` is where the grid starts. Counting whole steps FROM it is what
+    /// makes a snapped edge land exactly on a drawn line: the grid's lines are
+    /// counted from the same point in exactly the same way.
+    private static func quantized(_ value: CGFloat, to spacing: CGFloat?,
+                                  from origin: CGFloat = 0) -> CGFloat {
+        guard let spacing, spacing.isFinite, spacing > 0, value.isFinite,
+              origin.isFinite else { return value }
+        return origin + ((value - origin) / spacing).rounded() * spacing
     }
 }
 

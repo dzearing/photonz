@@ -216,7 +216,59 @@ final class EditorState {
     /// the answer is no.
     var drawnCanvasGrid: CanvasGridSettings? {
         guard Experiments.shared.canvasGridEnabled else { return nil }
-        return canvasGrid
+        // While the zero point is being placed the canvas draws the grid as it
+        // would be if you kept it, so the lines move under the two markers
+        // rather than after them.
+        return gridOriginAdjustment?.live ?? canvasGrid
+    }
+
+    /// Live while the grid's zero point is being placed: the two markers, the
+    /// smallest-cell slider, and the grid the canvas is drawing meanwhile. Nil
+    /// the rest of the time, which is what every other surface reads to know
+    /// the canvas has been taken over. See `CanvasGridOriginAdjustment`.
+    private(set) var gridOriginAdjustment: CanvasGridOriginAdjustment?
+
+    var isPlacingGridOrigin: Bool { gridOriginAdjustment != nil }
+
+    /// Take the canvas over to say where the grid starts. Nothing is written
+    /// to the settings until you keep it, so leaving costs nothing.
+    func beginGridOriginPlacement() {
+        guard Experiments.shared.canvasGridEnabled, document != nil else { return }
+        // Two modes on one canvas is one mode too many: a live crop ends first.
+        if cropRect != nil { cancelCrop() }
+        if activeTool != .select { setTool(.select) }
+        selectedLayerID = nil
+        setSelection(nil)
+        gridOriginAdjustment = CanvasGridOriginAdjustment(settings: canvasGrid)
+    }
+
+    func moveGridOrigin(to point: CGPoint) {
+        gridOriginAdjustment?.origin = point
+    }
+
+    func nudgeGridOrigin(by delta: CGVector) {
+        gridOriginAdjustment?.nudge(delta)
+    }
+
+    func setGridMinimumCell(_ cell: CGFloat) {
+        gridOriginAdjustment?.minimumCell = CanvasGridSettings.clamped(minimumCell: cell)
+        // Outside the mode the same slider edits the grid directly.
+        if gridOriginAdjustment == nil {
+            canvasGrid.minimumCell = CanvasGridSettings.clamped(minimumCell: cell)
+            canvasGrid.isVisible = true
+        }
+    }
+
+    func commitGridOriginPlacement() {
+        guard let session = gridOriginAdjustment else { return }
+        gridOriginAdjustment = nil
+        canvasGrid = session.committed
+    }
+
+    func cancelGridOriginPlacement() {
+        guard let session = gridOriginAdjustment else { return }
+        gridOriginAdjustment = nil
+        canvasGrid = session.cancelled
     }
 
     func toggleCanvasGrid() { canvasGrid.isVisible.toggle() }

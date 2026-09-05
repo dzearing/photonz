@@ -205,4 +205,195 @@ struct CanvasGridTests {
         let lines = CanvasGridLevels.lines(spacing: 0.001, from: 0, to: 1_000_000, limit: 500)
         #expect(lines.count == 500)
     }
+
+    // MARK: Where the grid starts
+
+    @Test func aGridNobodyHasTouchedStartsAtTheCorner() {
+        let g = CanvasGridSettings()
+        #expect(g.origin == .zero)
+        #expect(g.minimumCell == CanvasGridSettings.noMinimumCell)
+        // No floor means the ladder is exactly the one it has always been.
+        #expect(g.drawnSpacing == g.spacing)
+    }
+
+    @Test func theZeroPointIsRememberedWithEverythingElse() throws {
+        let g = CanvasGridSettings(origin: CGPoint(x: 24, y: -16), minimumCell: 8)
+        let data = try JSONEncoder().encode(g)
+        #expect(try JSONDecoder().decode(CanvasGridSettings.self, from: data) == g)
+    }
+
+    @Test func settingsWrittenBeforeThereWasAZeroPointStillRead() throws {
+        let data = Data(#"{"isVisible":true,"spacing":8,"majorEvery":4}"#.utf8)
+        let g = try JSONDecoder().decode(CanvasGridSettings.self, from: data)
+        #expect(g.origin == .zero)
+        #expect(g.minimumCell == CanvasGridSettings.noMinimumCell)
+    }
+
+    @Test func aZeroPointThatIsNotANumberIsIgnoredRatherThanDrawn() {
+        #expect(CanvasGridSettings(origin: CGPoint(x: CGFloat.nan, y: 4)).origin == .zero)
+        #expect(CanvasGridSettings(origin: CGPoint(x: CGFloat.infinity, y: 0)).origin == .zero)
+    }
+
+    @Test func linesRunFromTheZeroPointRatherThanFromTheCorner() {
+        #expect(CanvasGridLevels.lines(spacing: 10, from: 0, to: 30, origin: 3) == [3, 13, 23])
+    }
+
+    @Test func aNegativeZeroPointWorksTheSameWay() {
+        #expect(CanvasGridLevels.lines(spacing: 10, from: 0, to: 20, origin: -7) == [3, 13])
+    }
+
+    @Test func anOffsetGridStillLandsOnWholeStepsAtEveryZoom() {
+        // The promise of a zero point: however far you zoom and wherever you
+        // put it, every line drawn is a whole number of cells away from it.
+        // A line that drifted a fraction of a point would put a snapped edge
+        // beside the line it snapped to rather than on it.
+        let origin: CGFloat = 13.5
+        for step in 0...80 {
+            let zoom = pow(2, CGFloat(step) / 10 - 4)
+            let settings = CanvasGridSettings(spacing: 4, origin: CGPoint(x: origin, y: origin))
+            for level in CanvasGridLevels.levels(spacing: settings.drawnSpacing,
+                                                 majorEvery: settings.majorEvery,
+                                                 zoom: zoom) {
+                for line in CanvasGridLevels.lines(spacing: level.spacing,
+                                                   from: -500, to: 500, origin: origin) {
+                    let steps = (line - origin) / level.spacing
+                    #expect(abs(steps - steps.rounded()) < 1e-6)
+                }
+            }
+        }
+    }
+
+    @Test func everyRungStillContainsTheOneAboveItWhenTheGridIsOffset() {
+        // The rungs stack, which is what makes every Nth line stronger. An
+        // offset must not break that: a coarse line has to sit exactly on a
+        // fine one, or the strong lines would be drawn beside the grid.
+        let origin: CGFloat = -6.25
+        let fine = CanvasGridLevels.lines(spacing: 4, from: 0, to: 400, origin: origin)
+        let coarse = CanvasGridLevels.lines(spacing: 32, from: 0, to: 400, origin: origin)
+        for line in coarse {
+            #expect(fine.contains { abs($0 - line) < 1e-6 })
+        }
+    }
+
+    // MARK: The smallest cell
+
+    @Test func theSmallestCellIsClampedToSomethingDrawable() {
+        #expect(CanvasGridSettings(minimumCell: 0).minimumCell == CanvasGridSettings.noMinimumCell)
+        #expect(CanvasGridSettings(minimumCell: .nan).minimumCell == CanvasGridSettings.noMinimumCell)
+        #expect(CanvasGridSettings(minimumCell: 99_999).minimumCell
+                == CanvasGridSettings.minimumCellRange.upperBound)
+        #expect(CanvasGridSettings(minimumCell: 8).minimumCell == 8)
+    }
+
+    @Test func theSmallestCellRaisesTheFinestCellDrawn() {
+        #expect(CanvasGridSettings(spacing: 2, minimumCell: 8).drawnSpacing == 8)
+        // A floor under the spacing changes nothing: the spacing was already
+        // coarser than the floor asked for.
+        #expect(CanvasGridSettings(spacing: 16, minimumCell: 8).drawnSpacing == 16)
+    }
+
+    @Test func nothingIsEverDrawnFinerThanTheSmallestCellHoweverFarYouZoom() {
+        for step in 0...120 {
+            let zoom = pow(2, CGFloat(step) / 10 - 4)
+            let levels = CanvasGridLevels.levels(spacing: 1, majorEvery: 8,
+                                                 zoom: zoom, minimumCell: 8)
+            for level in levels { #expect(level.spacing >= 8 - 1e-9) }
+        }
+    }
+
+    @Test func theSmallestCellOnlyEverRaisesTheLadderNeverLowersIt() {
+        // Asking for a floor below the spacing is a no-op, at every zoom.
+        for step in 0...60 {
+            let zoom = pow(2, CGFloat(step) / 10 - 2)
+            let floored = CanvasGridLevels.levels(spacing: 4, majorEvery: 8,
+                                                  zoom: zoom, minimumCell: 2)
+            let plain = CanvasGridLevels.levels(spacing: 4, majorEvery: 8, zoom: zoom)
+            #expect(floored == plain)
+        }
+    }
+
+    @Test func theSnapStillPullsToTheTypedSpacingNotTheSmallestCell() {
+        // The floor says what you LOOK at. What a drag lands on is the spacing
+        // that was typed in, which is the rule the grid already had.
+        let g = CanvasGridSettings(isVisible: true, spacing: 2, minimumCell: 16)
+        #expect(g.snapSpacing == 2)
+    }
+
+    // MARK: Placing the zero point
+
+    @Test func placingStartsFromWhereTheGridAlreadyIs() {
+        let before = CanvasGridSettings(isVisible: false, spacing: 8,
+                                        origin: CGPoint(x: 3, y: 5), minimumCell: 4)
+        let session = CanvasGridOriginAdjustment(settings: before)
+        #expect(session.origin == CGPoint(x: 3, y: 5))
+        #expect(session.minimumCell == 4)
+        // Nobody adjusts a grid they cannot see, so placing shows it.
+        #expect(session.live.isVisible)
+        #expect(session.live.spacing == 8)
+    }
+
+    @Test func theArrowKeysMoveTheZeroPointByOnePointAndTenWithShift() {
+        var session = CanvasGridOriginAdjustment(settings: CanvasGridSettings())
+        session.nudge(CGVector(dx: 1, dy: 0))
+        #expect(session.origin == CGPoint(x: 1, y: 0))
+        session.nudge(CGVector(dx: 0, dy: -10))
+        #expect(session.origin == CGPoint(x: 1, y: -10))
+    }
+
+    @Test func theLiveGridCarriesWhatYouAreAdjustingAndNothingElse() {
+        var session = CanvasGridOriginAdjustment(
+            settings: CanvasGridSettings(isVisible: true, axes: .columns, spacing: 6, majorEvery: 4))
+        session.origin = CGPoint(x: 12, y: 20)
+        session.minimumCell = 12
+        let live = session.live
+        #expect(live.origin == CGPoint(x: 12, y: 20))
+        #expect(live.minimumCell == 12)
+        #expect(live.axes == .columns)
+        #expect(live.spacing == 6)
+        #expect(live.majorEvery == 4)
+    }
+
+    @Test func leavingWithoutKeepingItPutsBackEverythingItTouched() {
+        let before = CanvasGridSettings(isVisible: false, snapsToGrid: false, axes: .columns,
+                                        spacing: 6, majorEvery: 4,
+                                        origin: CGPoint(x: 2, y: 2), minimumCell: 4)
+        var session = CanvasGridOriginAdjustment(settings: before)
+        session.origin = CGPoint(x: 40, y: 40)
+        session.minimumCell = 32
+        #expect(session.cancelled == before)
+    }
+
+    @Test func keepingItWritesTheZeroPointAndTheSmallestCellBack() {
+        let before = CanvasGridSettings(spacing: 6)
+        var session = CanvasGridOriginAdjustment(settings: before)
+        session.origin = CGPoint(x: 40, y: 12)
+        session.minimumCell = 32
+        let kept = session.committed
+        #expect(kept.origin == CGPoint(x: 40, y: 12))
+        #expect(kept.minimumCell == 32)
+        #expect(kept.spacing == 6)
+        // Placing switched the grid on, and keeping it keeps it on.
+        #expect(kept.isVisible)
+    }
+
+    @Test func anOutOfRangeSmallestCellCannotBeTypedIntoTheSession() {
+        var session = CanvasGridOriginAdjustment(settings: CanvasGridSettings())
+        session.minimumCell = 100_000
+        #expect(session.live.minimumCell == CanvasGridSettings.minimumCellRange.upperBound)
+    }
+
+    // MARK: Saying where it starts, in words
+
+    @Test func theZeroPointReadsAsTwoWholeNumbers() {
+        #expect(CanvasGridOriginLabel.text(CGPoint(x: 24, y: 16)) == "24, 16")
+        #expect(CanvasGridOriginLabel.text(.zero) == "0, 0")
+        #expect(CanvasGridOriginLabel.text(CGPoint(x: -8, y: 12)) == "-8, 12")
+    }
+
+    @Test func aHalfPointIsShownRatherThanQuietlyRounded() {
+        // A number that rounded away would be a lie about where the grid is.
+        #expect(CanvasGridOriginLabel.text(CGPoint(x: 24.5, y: 16)) == "24.5, 16")
+        #expect(CanvasGridOriginLabel.text(CGPoint(x: 24.26, y: 16)) == "24.5, 16")
+    }
 }
+

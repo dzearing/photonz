@@ -329,6 +329,10 @@ struct EditorView: View {
                        },
                        isCanvasSelected: editorState.isCanvasSelected,
                        canvasGrid: editorState.drawnCanvasGrid,
+                       gridOriginAdjust: editorState.gridOriginAdjustment?.origin,
+                       onGridOriginChange: { editorState.moveGridOrigin(to: $0) },
+                       onGridOriginCommit: { editorState.commitGridOriginPlacement() },
+                       onGridOriginCancel: { editorState.cancelGridOriginPlacement() },
                        onCanvasResize: { size, anchor in
                            editorState.setCanvasSize(to: size, anchor: anchor)
                        },
@@ -525,14 +529,77 @@ struct EditorView: View {
     /// see `EditorChromeLayout.showsZoomSlider`.
     private var toolbar: some View {
         HStack(spacing: 10) {
-            if toolbarVisibleCount >= toolbarSlots.count {
-                toolsBar
+            // Placing the grid's zero point takes the bar over: the whole
+            // adjustment is in one place, and there is no tool to reach for
+            // while the canvas belongs to the two markers.
+            if editorState.isPlacingGridOrigin {
+                gridOriginBar
             } else {
-                compactToolsBar(visibleCount: toolbarVisibleCount)
+                if toolbarVisibleCount >= toolbarSlots.count {
+                    toolsBar
+                } else {
+                    compactToolsBar(visibleCount: toolbarVisibleCount)
+                }
+                sideCapsules
             }
-            sideCapsules
         }
     }
+
+    /// The bar that replaces the tools while the grid's zero point is being
+    /// placed: where it is now, how fine the grid may get, and the two ways out.
+    ///
+    /// The readout is not decoration. The whole point of the mode is landing
+    /// zero on something exact — the left edge of a screenshot's content, say —
+    /// and you cannot check by eye that the markers came to rest on 24, 16.
+    @ViewBuilder private var gridOriginBar: some View {
+        let cell = editorState.gridOriginAdjustment?.minimumCell ?? CanvasGridSettings.noMinimumCell
+        let origin = editorState.gridOriginAdjustment?.origin ?? .zero
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Grid starts at")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Text(CanvasGridOriginLabel.text(origin))
+                    .font(.system(size: 13, weight: .semibold).monospacedDigit())
+            }
+            .frame(minWidth: 92, alignment: .leading)
+            Divider().frame(height: 24)
+            gridMinimumCellSlider(cell)
+            Divider().frame(height: 24)
+            Button("Cancel") { editorState.cancelGridOriginPlacement() }
+                .help("Put the grid back where it was (\u{238B})")
+                .playtestControl("Cancel", detail: "Grid origin bar")
+            Button("Done") { editorState.commitGridOriginPlacement() }
+                .keyboardShortcut(.return, modifiers: [])
+                .buttonStyle(.borderedProminent)
+                .help("Keep this zero point (\u{23CE})")
+                .playtestControl("Done", detail: "Grid origin bar")
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 10)
+        .glassEffect(.regular, in: .capsule)
+        .contentShape(.capsule)
+        .transition(.opacity.combined(with: .move(edge: .bottom)))
+    }
+
+    /// The smallest cell the grid may draw. One to sixty four covers every UI
+    /// grid anyone works to; the setting itself allows more, which is what a
+    /// typed number is for.
+    private func gridMinimumCellSlider(_ cell: CGFloat) -> some View {
+        let value = Binding(get: { Double(cell) },
+                            set: { editorState.setGridMinimumCell(CGFloat($0.rounded())) })
+        return HStack(spacing: 8) {
+            Text("Smallest cell")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+            Slider(value: value, in: 1...64, step: 1)
+                .frame(width: 130)
+            Text(verbatim: "\(Int(cell.rounded())) pt")
+                .font(.system(size: 11).monospacedDigit())
+                .frame(width: 38, alignment: .leading)
+        }
+    }
+
 
     /// Move the visible tool count to the largest set that fits `toolbarBudget`.
     /// Called whenever the measured content width or the available budget

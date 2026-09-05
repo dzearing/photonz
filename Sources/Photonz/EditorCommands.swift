@@ -538,6 +538,13 @@ struct EditorCommands: Commands {
                 }
                 .keyboardShortcut(";", modifiers: [.command, .shift])
                 .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false))
+                // Where the grid starts. It takes the canvas over, so it reads
+                // as an action with an ellipsis rather than as a switch, and it
+                // is the same door the Canvas section's Starts at button opens.
+                Button("Set Grid Origin\u{2026}") {
+                    editor?.beginGridOriginPlacement()
+                }
+                .disabled(!hasDocument || (editor?.isPlacingGridOrigin ?? false))
             }
             Divider()
         }

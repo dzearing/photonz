@@ -3153,6 +3153,26 @@ struct CanvasInspector: View {
                                     value: Double(grid.majorEvery),
                                     set: { editorState.setCanvasGridMajorEvery(Int($0.rounded())) })
                 }
+                HStack(spacing: 8) {
+                    gridNumberField("Smallest cell", suffix: "pt",
+                                    value: Double(grid.minimumCell),
+                                    set: { editorState.setGridMinimumCell(CGFloat($0)) })
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Starts at")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        // The way into the placing mode from the place a
+                        // person is already standing when they care where the
+                        // grid starts. Also on the View menu.
+                        Button(CanvasGridOriginLabel.text(grid.origin)) {
+                            editorState.beginGridOriginPlacement()
+                        }
+                        .controlSize(.small)
+                        .help("Place the grid\u{2019}s zero point on the canvas")
+                        .playtestControl("Set grid origin",
+                                         detail: "Canvas, \(CanvasGridOriginLabel.text(grid.origin))")
+                    }
+                }
                 Text("Zoom out and the fine lines fade away, zoom in and they come back, so the grid is always readable. It is drawn on the canvas, never into the picture.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)

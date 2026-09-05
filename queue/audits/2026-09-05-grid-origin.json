@@ -1,0 +1,30 @@
+{
+  "feature": "Where the grid starts, and how fine it may get",
+  "epic": "ui-building",
+  "summary": "The grid no longer has to start at the corner of the picture. You can put its zero point anywhere, by dragging it or nudging it with the arrow keys, and it catches layer edges and canvas edges on the way. You can also say the smallest cell it may ever draw, so a grid you snap to the point can still be looked at in eights.",
+  "setup": "Photonz Dev, release Next, grid flag on by default. Open anything, then click Canvas in the Layers list to reach the Canvas section of the panel.",
+  "try": [
+    { "do": "Tick Grid in the Canvas section, so there is a grid to move.", "shot": "2026-09-05-grid-origin-1-before.png" },
+    { "do": "Click the Starts at button under the grid numbers (View ▸ Set Grid Origin does the same).", "shot": "2026-09-05-grid-origin-2-mode.png" },
+    { "do": "Press anywhere on the canvas: the two lines jump there and the grid redraws under them." },
+    { "do": "Drag them onto the corner of a layer and hold: they should catch it, with the yellow lines that say why.", "shot": "2026-09-05-grid-origin-3-caught.png" },
+    { "do": "Press the right arrow a few times, then Shift and the down arrow, and watch the numbers in the bar." },
+    { "do": "Drag the Smallest cell slider up to 16 and watch the grid coarsen live." },
+    { "do": "Press Return to keep it, or Escape to put everything back the way it was.", "shot": "2026-09-05-grid-origin-4-after.png" },
+    { "do": "Zoom right in and check the grid never draws anything finer than the cell you asked for.", "shot": "2026-09-05-grid-origin-5-smallest-cell.png" }
+  ],
+  "evaluate": [
+    "Is pressing anywhere to move the zero point what you expected, or did you expect to have to grab one of the two lines?",
+    "Are the two lines different enough from the grid itself, or do they read as two thicker grid lines?",
+    "Is the readout in the bar in the right place, or would you rather see the numbers on the canvas beside the lines?",
+    "Smallest cell says what you LOOK at and leaves what a drag LANDS on alone: with spacing 4 and smallest cell 16 you see sixteens and land on fours. Is that the split you wanted, or should the pull follow the cell too?",
+    "Is the tool bar being replaced right, or would you rather the tools stayed and the bar sat above them the way the crop bar does?"
+  ],
+  "rough": [
+    "Every picture here is a real screen capture of the probe app taken during a scripted walk, so what you see is what a person sees. The window was not the key window at capture time, which is why Done reads grey: the prominent button colour could not be judged from these shots.",
+    "There is no dot at the crossing of the two lines. It is two lines exactly as asked, but a small mark at the zero point itself might read faster.",
+    "If the zero point is off screen (you panned away, or it is still at 0, 0 with the corner out of view) there is nothing pointing to it. The numbers in the bar tell you where it is, and pressing anywhere brings it to you, but nothing says which way to look.",
+    "Once you touch the Smallest cell slider the keyboard belongs to the slider, so the arrow keys move the slider rather than the zero point until you click the canvas again. That is how every macOS control behaves, but it is a stumble in a mode where the arrow keys are half the feature.",
+    "Changed from the ask: the smallest cell raises the base of the level of detail ladder rather than skipping its bottom rungs, so what you see is always a whole multiple of the spacing. The default is 1 point, which is no floor, so a grid nobody has touched draws exactly what it drew yesterday."
+  ]
+}

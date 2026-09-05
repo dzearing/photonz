@@ -1,0 +1,80 @@
+{
+  "out": "/tmp/photonz-playtest/grid-origin-walk",
+  "setup": {
+    "forget": ["grid", "shapes", "tools", "panel"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 260], "to": [620, 420] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Grid" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-before", "note": "grid on, starting at the corner of the picture as it always has" },
+    { "do": "snapshot", "name": "1-grid-before" },
+    { "do": "panel", "stage": "canvas-section" },
+
+    { "do": "press", "control": "Set grid origin" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-mode", "note": "the tool bar has been replaced by the grid bar: where the grid starts, the smallest cell slider, Cancel and Done" },
+    { "do": "snapshot", "name": "2-mode-entered" },
+
+    { "do": "click", "at": [500, 560] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-placed", "note": "a press anywhere moves the zero point there; the grid redraws under the two markers" },
+    { "do": "snapshot", "name": "3-zero-placed" },
+
+    { "do": "drag", "from": [500, 560], "to": [617, 417], "steps": 16, "hold": "4-caught-held" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-caught", "note": "dragged at the rectangle's bottom right corner: the markers should have caught its two edges, with yellow guides saying so" },
+    { "do": "snapshot", "name": "4-caught-on-a-layer-edge" },
+
+    { "do": "key", "key": "right" },
+    { "do": "key", "key": "right" },
+    { "do": "key", "key": "down" },
+    { "do": "key", "key": "down", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-nudged", "note": "four arrow presses: two points across, one down, then ten more down with Shift, and the readout in the bar counts them" },
+    { "do": "snapshot", "name": "5-nudged" },
+
+    { "do": "press", "control": "Done" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-kept", "note": "back to the tools, and the grid keeps its new zero point" },
+    { "do": "snapshot", "name": "6-kept" },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "focus", "field": "Smallest cell" },
+    { "do": "type", "text": "16" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-floor", "note": "smallest cell 16 with a spacing of 4: zoomed right in the grid still draws sixteen point cells, never fours" },
+    { "do": "snapshot", "name": "7-smallest-cell-16" },
+
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Set grid origin" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [820, 700] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "8-about-to-cancel" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-cancelled", "note": "Escape put the zero point and the smallest cell back exactly as they were before the mode" },
+    { "do": "snapshot", "name": "8-cancelled" },
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "panel", "stage": "canvas-after" }
+  ]
+}

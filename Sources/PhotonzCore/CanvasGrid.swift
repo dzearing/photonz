@@ -40,6 +40,13 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     /// lines on thirty two points — a rhythm real UI is already built on.
     public static let defaultMajorEvery = 8
     public static let majorEveryRange: ClosedRange<Int> = 2...100
+    /// A smallest cell of one point is no floor at all: the finest thing the
+    /// grid can draw is the spacing, and the spacing can never go below one.
+    /// So this is what "I have not asked for a floor" looks like, and a grid
+    /// nobody has touched draws exactly what it drew before the floor existed.
+    public static let noMinimumCell: CGFloat = 1
+    /// Bigger than this and the floor would swallow the whole picture.
+    public static let minimumCellRange: ClosedRange<CGFloat> = 1...256
 
     /// Whether the grid is drawn OVER the picture. The surround around the
     /// picture carries it either way: that is the surface you work on, and
@@ -56,17 +63,32 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     /// measuring. It is also the step of the level-of-detail ladder, so the
     /// strong lines are never knocked out of step by a fade.
     public var majorEvery: Int
+    /// Where the grid's zero point sits, in document points. Every line, and
+    /// every pull, is measured from here rather than from the corner of the
+    /// picture: a screenshot whose content starts twenty four points in can
+    /// have the grid lined up with what is already in it. The corner is the
+    /// default, so a grid nobody has moved is where it has always been.
+    public var origin: CGPoint
+    /// The finest cell the grid may DRAW, in document points, however far you
+    /// zoom in. It says what you look at, not what a drag lands on: the pull
+    /// stays on `spacing`, so you can work to the point and still look at
+    /// eight point cells instead of a grey wash. One point means no floor.
+    public var minimumCell: CGFloat
 
     public init(isVisible: Bool = false,
                 snapsToGrid: Bool = true,
                 axes: CanvasGridAxes = .columnsAndRows,
                 spacing: CGFloat = defaultSpacing,
-                majorEvery: Int = defaultMajorEvery) {
+                majorEvery: Int = defaultMajorEvery,
+                origin: CGPoint = .zero,
+                minimumCell: CGFloat = noMinimumCell) {
         self.isVisible = isVisible
         self.snapsToGrid = snapsToGrid
         self.axes = axes
         self.spacing = Self.clamped(spacing: spacing)
         self.majorEvery = Self.clamped(majorEvery: majorEvery)
+        self.origin = Self.clamped(origin: origin)
+        self.minimumCell = Self.clamped(minimumCell: minimumCell)
     }
 
     public static func clamped(spacing: CGFloat) -> CGFloat {
@@ -78,11 +100,33 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
         min(max(majorEvery, majorEveryRange.lowerBound), majorEveryRange.upperBound)
     }
 
+    /// A zero point that is not a number is no zero point: the corner is a
+    /// grid you can still see, and a NaN is a canvas with nothing drawn on it.
+    public static func clamped(origin: CGPoint) -> CGPoint {
+        guard origin.x.isFinite, origin.y.isFinite else { return .zero }
+        return origin
+    }
+
+    public static func clamped(minimumCell: CGFloat) -> CGFloat {
+        guard minimumCell.isFinite else { return noMinimumCell }
+        return min(max(minimumCell, minimumCellRange.lowerBound), minimumCellRange.upperBound)
+    }
+
+    /// The finest cell the grid actually draws: the spacing, unless a smallest
+    /// cell has been asked for that is coarser than it. Raising the BASE of
+    /// the ladder rather than skipping its bottom rungs keeps every drawn line
+    /// a whole number of spacings from the zero point, so a snapped edge still
+    /// lands on a line you can see.
+    public var drawnSpacing: CGFloat {
+        max(Self.clamped(spacing: spacing), Self.clamped(minimumCell: minimumCell))
+    }
+
     // Stored settings outlive the shape of this type, so a blob written before
     // a field existed still reads back, and a number edited by hand into
     // something undrawable is clamped rather than obeyed.
     private enum CodingKeys: String, CodingKey {
         case isVisible, snapsToGrid, axes, spacing, majorEvery
+        case originX, originY, minimumCell
     }
 
     public init(from decoder: Decoder) throws {
@@ -91,7 +135,23 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
                   snapsToGrid: try c.decodeIfPresent(Bool.self, forKey: .snapsToGrid) ?? true,
                   axes: try c.decodeIfPresent(CanvasGridAxes.self, forKey: .axes) ?? .columnsAndRows,
                   spacing: try c.decodeIfPresent(CGFloat.self, forKey: .spacing) ?? Self.defaultSpacing,
-                  majorEvery: try c.decodeIfPresent(Int.self, forKey: .majorEvery) ?? Self.defaultMajorEvery)
+                  majorEvery: try c.decodeIfPresent(Int.self, forKey: .majorEvery) ?? Self.defaultMajorEvery,
+                  origin: CGPoint(x: try c.decodeIfPresent(CGFloat.self, forKey: .originX) ?? 0,
+                                  y: try c.decodeIfPresent(CGFloat.self, forKey: .originY) ?? 0),
+                  minimumCell: try c.decodeIfPresent(CGFloat.self, forKey: .minimumCell)
+                      ?? Self.noMinimumCell)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(isVisible, forKey: .isVisible)
+        try c.encode(snapsToGrid, forKey: .snapsToGrid)
+        try c.encode(axes, forKey: .axes)
+        try c.encode(spacing, forKey: .spacing)
+        try c.encode(majorEvery, forKey: .majorEvery)
+        try c.encode(origin.x, forKey: .originX)
+        try c.encode(origin.y, forKey: .originY)
+        try c.encode(minimumCell, forKey: .minimumCell)
     }
 
     /// How far apart the lines a drag pulls to are, in document points, or nil
@@ -171,9 +231,14 @@ public enum CanvasGridLevels {
     public static func levels(spacing: CGFloat,
                               majorEvery: Int,
                               zoom: CGFloat,
+                              minimumCell: CGFloat = 0,
                               maximumOpacity: CGFloat = maximumOpacity) -> [CanvasGridLevel] {
         guard spacing.isFinite, spacing > 0, zoom.isFinite, zoom > 0 else { return [] }
         let step = CGFloat(CanvasGridSettings.clamped(majorEvery: majorEvery))
+        // A smallest cell raises the BASE of the ladder rather than knocking
+        // rungs off the bottom of it, so the cells drawn stay whole multiples
+        // of the spacing and the rungs still stack.
+        let spacing = minimumCell.isFinite ? max(spacing, minimumCell) : spacing
         let unitOnScreen = spacing * zoom
         guard unitOnScreen.isFinite, unitOnScreen > 0 else { return [] }
 
@@ -243,17 +308,95 @@ public enum CanvasGridLevels {
     public static func lines(spacing: CGFloat,
                              from lower: CGFloat,
                              to upper: CGFloat,
+                             origin: CGFloat = 0,
                              limit: Int = 4096) -> [CGFloat] {
-        guard spacing.isFinite, spacing > 0, lower.isFinite, upper.isFinite, upper >= lower else {
+        guard spacing.isFinite, spacing > 0, lower.isFinite, upper.isFinite, upper >= lower,
+              origin.isFinite else {
             return []
         }
+        // Everything is counted in whole steps FROM the zero point, so a line
+        // is always exactly `origin + k × spacing`: the offset can move the
+        // grid but it can never put a line a fraction of a point off the step
+        // a drag snapped to.
+        let low = lower - origin
+        let high = upper - origin
         // A line landing exactly on either end is on screen, and floating point
         // must not be the reason it is missed.
-        let slack = max(spacing, abs(lower), abs(upper)) * 1e-9
-        let first = Int(((lower - slack) / spacing).rounded(.up))
-        let last = Int(((upper + slack) / spacing).rounded(.down))
+        let slack = max(spacing, abs(low), abs(high)) * 1e-9
+        let first = Int(((low - slack) / spacing).rounded(.up))
+        let last = Int(((high + slack) / spacing).rounded(.down))
         guard last >= first else { return [] }
         let count = min(last - first + 1, limit)
-        return (0..<count).map { CGFloat(first + $0) * spacing }
+        return (0..<count).map { origin + CGFloat(first + $0) * spacing }
     }
 }
+
+/// Placing the grid's zero point: what the canvas is holding while two lines,
+/// one across and one down, are being moved about to say where the grid starts.
+///
+/// It is a snapshot and a working copy. The snapshot is the WHOLE grid as it
+/// was on the way in, so leaving without keeping it puts back everything the
+/// mode touched — including the fact that placing switches the grid on, because
+/// nobody adjusts a grid they cannot see. The working copy is the two things
+/// being adjusted, the zero point and the smallest cell, and `live` is what the
+/// canvas draws while you move them, so the grid updates under the lines rather
+/// than after them.
+///
+/// The pull is not here: the two lines catch layer edges and canvas edges
+/// through `Snapping.snapFrameOrigin` with no box around them, which is the
+/// same call a dragged layer makes, so they behave like everything else that
+/// moves on this canvas.
+public struct CanvasGridOriginAdjustment: Equatable, Sendable {
+    /// The grid exactly as it was on the way in.
+    public let original: CanvasGridSettings
+    /// Where the two lines are now, in document points.
+    public var origin: CGPoint
+    /// The smallest cell the slider is currently sitting on.
+    public var minimumCell: CGFloat
+
+    public init(settings: CanvasGridSettings) {
+        original = settings
+        origin = settings.origin
+        minimumCell = settings.minimumCell
+    }
+
+    /// What the canvas draws right now: the grid you came in with, with the
+    /// zero point and the smallest cell you are holding, and switched on.
+    public var live: CanvasGridSettings {
+        var settings = original
+        settings.isVisible = true
+        settings.origin = CanvasGridSettings.clamped(origin: origin)
+        settings.minimumCell = CanvasGridSettings.clamped(minimumCell: minimumCell)
+        return settings
+    }
+
+    /// What to keep when you accept: the live grid, unchanged.
+    public var committed: CanvasGridSettings { live }
+
+    /// What to put back when you leave without keeping it.
+    public var cancelled: CanvasGridSettings { original }
+
+    /// One arrow-key press: the same step a nudged layer travels, so the keys
+    /// mean here what they already mean everywhere else on the canvas.
+    public mutating func nudge(_ delta: CGVector) {
+        guard delta.dx.isFinite, delta.dy.isFinite else { return }
+        origin = CGPoint(x: origin.x + delta.dx, y: origin.y + delta.dy)
+    }
+}
+
+/// Where the grid starts, as a person reads it: two numbers, whole where the
+/// number is whole and to the half point where it is not, because a readout
+/// that quietly rounded would be a lie about where the grid actually is.
+public enum CanvasGridOriginLabel {
+    public static func text(_ point: CGPoint) -> String {
+        "\(number(point.x)), \(number(point.y))"
+    }
+
+    private static func number(_ value: CGFloat) -> String {
+        guard value.isFinite else { return "0" }
+        let rounded = (value * 2).rounded() / 2
+        if rounded == rounded.rounded() { return String(Int(rounded.rounded())) }
+        return String(format: "%.1f", Double(rounded))
+    }
+}
+
