@@ -101,7 +101,6 @@ struct GeometryInspector: View {
                 field: field,
                 reading: selection.reading(field),
                 help: help(field, selection),
-                isBoxed: !Experiments.shared.readoutFieldsEnabled,
                 explain: { explanation = selection.explanation(for: field) })
         } else {
             GeometryNumberField(
@@ -280,19 +279,10 @@ private struct GeometryNumberField: View {
     /// says they do not.
     private func display() -> String { display(reading) }
 
-    private func display(_ reading: LayerGeometryReading) -> String {
-        switch reading {
-        case .empty: return ""
-        case .mixed: return LayerGeometrySelection.mixedText
-        case .agreed(let value): return displayed(value)
-        }
-    }
-
     /// Whole points, the same rounding `LayerGeometry.displayValue` does, so
-    /// what is on screen is exactly what an arrow key steps from.
-    private func displayed(_ value: CGFloat) -> String {
-        String(Int(value.rounded()))
-    }
+    /// what is on screen is exactly what an arrow key steps from, and the same
+    /// spelling the readout beside it uses so the two columns agree.
+    private func display(_ reading: LayerGeometryReading) -> String { reading.draftText }
 }
 
 /// One geometry number the app worked out for you: read, never typed.
@@ -302,15 +292,14 @@ private struct GeometryNumberField: View {
 /// as four numbers. What it does not wear is the rounded box, because that box
 /// is the panel's promise that the keyboard will land there.
 ///
-/// `isBoxed` puts the old look back, one Experiments switch away, while which
-/// of the two the app should wear is being decided. Everything else about this
-/// view is the same either way: it is never in the tab order, it never takes
-/// focus, and a click on it is answered.
+/// It is never in the tab order, it never takes focus, and a click on it is
+/// answered. The two looks were built side by side and photographed; the user
+/// picked the plain one on 2026-09-05, so the box is gone rather than sitting
+/// behind a switch.
 private struct GeometryReadout: View {
     let field: LayerGeometryField
     let reading: LayerGeometryReading
     let help: String
-    let isBoxed: Bool
     let explain: () -> Void
 
     /// The size a small rounded-border field takes, matched by hand so a row
@@ -320,13 +309,10 @@ private struct GeometryReadout: View {
     private static let fieldHeight: CGFloat = 21
     private static let bezelInset: CGFloat = 5
 
-    private var text: String {
-        switch reading {
-        case .empty: return ""
-        case .mixed: return LayerGeometrySelection.mixedText
-        case .agreed(let value): return String(Int(value.rounded()))
-        }
-    }
+    /// The digits, the word for "they differ", or the mark that stands for no
+    /// number at all. Never blank: an arrow has no width, and a lone W with a
+    /// gap after it reads as a row that failed to draw.
+    private var text: String { reading.readoutText }
 
     var body: some View {
         // The slot IS the control: clicking anywhere on it, the letter, the
@@ -352,30 +338,13 @@ private struct GeometryReadout: View {
         .playtestControl(field.label, detail: "Position & Size")
     }
 
-    @ViewBuilder
     private var number: some View {
-        if isBoxed {
-            // No placeholder. A field's placeholder is a promise that typing
-            // that thing here would work, and on a readout it does not: an
-            // arrow has no width, so a blank W box wearing a faint "W" put the
-            // letter on the row twice and made the empty box look like it was
-            // waiting for a number.
-            TextField("", text: .constant(text))
-                .textFieldStyle(.roundedBorder)
-                .controlSize(.small)
-                .multilineTextAlignment(.trailing)
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .disabled(true)
-                .allowsHitTesting(false)
-        } else {
-            Text(text)
-                .font(.system(size: 11))
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.trailing, Self.bezelInset)
-                .frame(height: Self.fieldHeight)
-        }
+        Text(text)
+            .font(.system(size: 11))
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.trailing, Self.bezelInset)
+            .frame(height: Self.fieldHeight)
     }
 }

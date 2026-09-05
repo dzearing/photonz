@@ -326,11 +326,19 @@ One rule now, and every new control follows it:
 - **A control saying Mixed is still a control.** Whatever you set from it
   reaches every picked layer, in one undo step.
 
-Known exception, on purpose: a read-only number is dim all over, so its Mixed is
-dimmer than the rule (`H` over a text layer). The word is not being singled out
-there; the whole box is quiet. Whether a read-only number should look like that
-at all is the pending decision
-`a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for`.
+Known exception, on purpose: a read-only number is quiet all over, so its Mixed
+is quieter than the rule (`H` over a text layer). The word is not being singled
+out there; the whole readout is quiet. That is settled, not pending: the user
+answered
+`a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for`
+on 2026-09-05 with "plain number, no box", so a read-only number now has no box
+to be quiet inside. See **What a number you cannot type looks like** below.
+
+A dash is not a contradiction of "never a dash". A dash means there is no number
+here at all, and only a readout can say it: an arrow has no width of its own, so
+its W would otherwise be a lone letter with a gap after it. `Mixed` means the
+layers have numbers and disagree. Two different answers, two different marks,
+and a box you can type in still says "nothing set" by staying empty.
 
 ### A control that cannot act
 
@@ -357,6 +365,34 @@ what decides:
 | **A chooser whose value is decided elsewhere** | a menu, a segmented row, a toggle, where something above has already answered the question | **Replaced by the answer, in the same row.** Show the value in plain words and name who owns it. Keep the row in its place and its column so the section still reads as a set of settings. |
 | **A field that still has a number to report** | a width, a height, a position the layer really has, that you cannot type | **Keeps the number, read only.** A number you can read is worth more than an empty box, even when it is not yours to set. It must not look like something the keyboard will accept. A field with nothing true to report is the one that stays blank: a line or a caliper has no width of its own, so a number there would be about nothing you drew. |
 | **A bare affordance** | a resize handle, a rotate knob, a drag target: something with no label, grabbed rather than read | **Removed.** There is nowhere on a handle to say why it refuses, and a handle you can see but not drag teaches the wrong thing about the state that froze it. Take it away and make sure the state itself is visible somewhere with words, such as the padlock on the layer's row. Only the grabs go: the frame that says what is selected stays, because that answers a different question. |
+
+#### What a number you cannot type looks like
+
+Settled 2026-09-05 by the decision above, after both looks were built and
+photographed side by side. This is the field row of the table above, drawn.
+
+- **No box.** The rounded bezel is the panel's promise that the keyboard lands
+  there, so a number you cannot type does not wear one. It is plain text in the
+  same place: same letter in front, same column, same right edge, same 21pt row
+  height as the field beside it, so nothing shifts when a layer is locked.
+- **Quiet, but readable.** Secondary strength, monospaced digits, so a locked
+  layer reads as a plain statement of where it sits rather than four boxes that
+  refuse the keyboard.
+- **A dash when there is no number.** An arrow has no width, so its W and H show
+  a short dash (an en dash, `U+2013`) rather than nothing. A readout has no box
+  left to hold the place, and a lone letter with a gap after it reads as a row
+  that failed to draw.
+- **Never a placeholder.** A field's grey placeholder is a promise that typing
+  that thing here would work. On a readout it is a lie, and it puts the letter
+  on the row twice.
+- **Clicking it answers.** The whole slot is the control, including the empty
+  space beside a dash, and pressing it puts the reason in the line under the
+  section straight away. Never a hover tip alone.
+- **Never in the tab order.** Tab moves between the numbers you can type.
+
+Built as `GeometryReadout` in `Sources/Photonz/GeometryInspector.swift`, with the
+words and the spelling in `LayerGeometrySelection` (`readoutText`, `blankText`)
+so the panel cannot drift from what is tested.
 
 **A corollary, for things that are not controls.** A count or a list that
 reports state ("1 layer has a rule of its own") reports only what has an effect.
@@ -415,24 +451,20 @@ user's own nouns, sentence and label both from one constant.
 | `2026-09-04-locked-caption` | X, Y, W and H on a locked layer | numbers stay, one line under the section says locked and how to unlock | field, and the exemplar for a state that takes a whole section at once. |
 | `2026-09-04-locked-layer-handles` | eight resize handles and a rotate knob on a locked layer | removed | bare affordance |
 | `2026-09-04-inert-placement-rule` | a placement rule on the axis the stack owns | stopped being counted as an exception, Clear offered on the layer itself | the corollary |
-| `2026-09-04-text-height-readout` | the H field for text | shows the height, dimmed, still refuses the keyboard | **the one exception.** Right as a field, wrong on where the reason goes. |
+| `2026-09-04-text-height-readout` | the H field for text | shows the height as plain text with no box, and clicking it says why | field. **Closed 2026-09-05**, and now the pattern the row above describes. |
 
-The exception, stated plainly: a text layer's H keeps its number, which is
-right, but it still wears the rounded box of a field you can type in, so the
-only thing saying it is read only is the grey. Its own audit calls that box the
-clumsiest part of the feature.
+That row was the one exception for a day. It is closed. A text layer's H keeps
+its number, which was always right, and it has stopped wearing the rounded box
+of a field you can type in, which its own audit called the clumsiest part of the
+feature.
 
-Half of it is already fixed. Clicking a number you cannot type now answers in
-the line under the fields, unflagged, so no reason lives on hover alone any
-more. The other half, losing the border, is BUILT and waiting on the user:
-it sits behind the `next-readout-fields` flag, off by default, because which of
-the two looks the app should wear is a visual call they should see both ways
-before it lands. The card is
+Both halves shipped. Clicking a number you cannot type answers in the line under
+the fields, so no reason lives on hover alone. And the box is gone: the two
+looks were built side by side, photographed, and put to the user as
 `a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for`,
-with four real captures, and the task holding it is
-`a-number-you-cannot-type-into-stops-looking-like`. Until that is answered, the
-default still shows the box, so treat this row as open, not as a pattern to
-copy.
+who chose the plain number on 2026-09-05. The switch that held it back is
+retired rather than left sitting there turned on, so there is one look now.
+Copy it: the rules are in **What a number you cannot type looks like** above.
 
 ---
 

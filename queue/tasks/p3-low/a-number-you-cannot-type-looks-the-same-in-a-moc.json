@@ -1,0 +1,28 @@
+{
+  "id": "a-number-you-cannot-type-looks-the-same-in-a-moc",
+  "title": "A number you cannot type looks the same in a mock as it does in the app",
+  "goal": "The app now shows a number it worked out for you, like the height of a piece of text, as plain text rather than in a typing box, because that is what the user picked. The mock pages that sketch new panels have no such thing, so anyone drawing one there reaches for a greyed-out box, which is exactly the look that was just rejected. Give the mock library the plain read-only number so a sketch and the real app agree.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1220,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T16:19:57.489Z",
+  "updated": "2026-09-05T16:19:57.490Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from a-number-you-cannot-type-into-stops-looking-like (done 2026-09-05). App side: GeometryReadout in Sources/Photonz/GeometryInspector.swift, text from LayerGeometrySelection.readoutText / .blankText (en dash U+2013). Rules now written up in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a number you cannot type looks like\". Mock side: docs/design/mocks/shared/components/input.css has only .input.disabled (opacity .42 on the box), which is the rejected look; needs a real read-only variant rather than a dimmed input.",
+  "acceptance": [
+    "The shared mock library has a read-only number that draws as plain text with no box, in the same column and at the same row height as the number beside it that you can type into",
+    "Where there is no number at all, it shows the same short dash the app shows",
+    "Every mock page that currently draws a number you cannot type as a dimmed box uses the new one instead",
+    "The rules page and the component list both show it, so the next person drawing a panel finds it without asking"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T16:19:57.489Z",
+      "note": "created (manual)"
+    }
+  ]
+}

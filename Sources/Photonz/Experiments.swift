@@ -325,13 +325,6 @@ extension Experiments {
     /// release's catalog, so Current always reads false and stays drag only.
     var geometryFieldsEnabled: Bool { isEnabled(FeatureCatalog.geometryFieldsFlag) }
 
-    /// `next-readout-fields`: whether a Position and Size number that was
-    /// worked out for you drops the rounded box the typeable numbers wear.
-    /// Off puts the box back, which is where this started. Clicking one to be
-    /// told why it takes nothing is NOT flagged: that answers a click that
-    /// used to be answered by silence, and it is right in either look.
-    var readoutFieldsEnabled: Bool { isEnabled(FeatureCatalog.readoutFieldsFlag) }
-
     /// `next-align-layers`: whether the Arrange row and the Layer menu's align
     /// and space commands exist, and whether a dragged layer sticks to the
     /// other layers as well as to the picture. Exists only in the Next

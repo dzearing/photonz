@@ -489,4 +489,36 @@ struct LayerGeometrySelectionTests {
         #expect(!sel.isLocked)
         #expect(sel.caption == selection([CGRect(x: 0, y: 0, width: 1, height: 1)]).caption)
     }
+
+    // MARK: - What a number reads as on screen
+
+    @Test("A number is shown the same whether you can type it or only read it")
+    func aReadingSpellsItselfTheSameEitherWay() {
+        #expect(LayerGeometryReading.agreed(17.4).draftText == "17")
+        #expect(LayerGeometryReading.agreed(17.4).readoutText == "17")
+        #expect(LayerGeometryReading.agreed(-0.4).draftText == "0")
+        #expect(LayerGeometryReading.mixed.draftText == LayerGeometrySelection.mixedText)
+        #expect(LayerGeometryReading.mixed.readoutText == LayerGeometrySelection.mixedText)
+    }
+
+    @Test("A number you cannot type and have none of says so with a mark, rather than leaving its letter alone on the row")
+    func aBlankReadoutStillHasSomethingToShow() {
+        #expect(LayerGeometryReading.empty.readoutText == LayerGeometrySelection.blankText)
+        #expect(!LayerGeometrySelection.blankText.isEmpty)
+    }
+
+    @Test("A box you are typing in shows nothing when there is no number, so there is room to type one")
+    func aBlankFieldYouCanTypeInStaysEmpty() {
+        #expect(LayerGeometryReading.empty.draftText == "")
+    }
+
+    @Test("A shape dragged by its ends shows a mark where its width would be, not a bare W")
+    func anEndpointShapeShowsAMarkForItsWidth() {
+        let box = CGRect(x: 0, y: 0, width: 100, height: 40)
+        let sel = LayerGeometrySelection([member(arrow(box), box)])
+        #expect(sel.isReadOnly(.width))
+        #expect(sel.reading(.width).readoutText == LayerGeometrySelection.blankText)
+        // Where it sits is a real number, so it is not marked blank.
+        #expect(sel.reading(.x).readoutText == "0")
+    }
 }

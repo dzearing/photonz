@@ -77,13 +77,13 @@
       "name": "2-wrapped"
     },
     {
-      "do": "focus",
-      "field": "H"
+      "do": "press",
+      "control": "H"
     },
     {
       "do": "describe",
       "stage": "3-h-reads",
-      "note": "the line above says what H is showing for the wrapped paragraph. The keyboard does not stay here: a run that tried to type into H found the field had already handed focus back to the window, so H reads and never takes"
+      "note": "H just took a press. It is a readout, not a field: the keyboard never lands in it, and the line under the fields says why the height is not yours to set."
     },
     {
       "do": "focus",
@@ -111,13 +111,13 @@
       "name": "4-rewrapped-wider"
     },
     {
-      "do": "focus",
-      "field": "H"
+      "do": "press",
+      "control": "H"
     },
     {
       "do": "describe",
       "stage": "5-h-follows",
-      "note": "the line above is H after the re-wrap: it must be the shorter number, not the one it read before"
+      "note": "H after the re-wrap: the number above must be the shorter one, not the one it read before, and pressing it says the same sentence again."
     }
   ]
 }

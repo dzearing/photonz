@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:31.741Z",
-  "updated": "2026-09-05T14:05:28.257836Z",
+  "updated": "2026-09-05T16:08:17.990Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Straight from the audit that shipped the readout: queue/audits/2026-09-04-text-height-readout.json rough 1 (\"H still wears the same rounded box as the fields you can type in. Only the grey tells you apart, and a box that looks like an input but refuses the keyboard is the clumsiest part of this. Losing its border would say it louder, but that is a visual call worth your eye first\") and rough 2 (\"Clicking a read-only field gives no feedback at all. The tip explains it, but only after a hover delay\"). The same audit notes a locked layer and a stacked layer produce more read-only fields, so this is not one field. Losing the border is a look change, so open a decision card with two shots rather than guessing. docs/design/mocks/shared/UX-PATTERNS.md has no read-only field treatment at all; add it once the call is made. Related: one-rule-for-a-control-that-cannot-do-anything is the general version of this.\n\nDecision answered on 2026-09-05: option a, plain number with no box. Both looks were already built and running before the card was raised, with the plain one behind an Experiments switch called \"Numbers you cannot type stop looking like ones you can\", off by default. So most of this task is making the plain look the default and taking the switch out, not building anything new. The one thing the card flagged as unhandled is the arrow case, where there is no width at all and W would become a lone letter.",
@@ -85,7 +85,43 @@
     {
       "t": "2026-09-05T14:05:05.239Z",
       "note": "seq 120 -> 20"
+    },
+    {
+      "t": "2026-09-05T16:08:17.990Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T16:20:18.227313Z",
+      "note": "Adversarial review before building, second pass. The decision was already answered (plain number, no box) and both looks were already built, so the question was not what to build but what the flip leaves broken. Two things. One: an arrow has no width, so in the plain look its W row is a lone letter with a gap after it, which reads as a row that failed to draw rather than as a row with nothing to say. That was the case the card itself flagged as unhandled. Two: nothing outside the app knows the answer, so the pattern doc still called this a pending exception and the mock library still only offers a dimmed box. Cut as unnecessary: any new control, any badge, any second look for a blank. The shortest version is one constant, one branch, and three deletions."
+    },
+    {
+      "t": "2026-09-05T16:20:18.227313Z",
+      "note": "Core first, tests before code. LayerGeometryReading gained draftText and readoutText, and LayerGeometrySelection.blankText is an en dash. The two spellings sit beside each other so a readout and the field next to it cannot round or spell a number differently; the only difference is what nothing means, which is an empty box you can type in versus a dash you cannot. Four new tests in LayerGeometrySelectionTests, including the arrow's blank W."
+    },
+    {
+      "t": "2026-09-05T16:20:18.227313Z",
+      "note": "The flip: GeometryReadout lost isBoxed and the whole boxed branch, so there is one look. next-readout-fields is gone from FeatureCatalog and its reader is gone from Experiments, so the switch is retired rather than left sitting there turned on; ExperimentsStore already falls back to the catalog for a flag that no longer exists, so a machine that had it set is unaffected. The sentence about the plain look moved into the next-geometry-fields description, which is the flag that owns the section."
+    },
+    {
+      "t": "2026-09-05T16:20:18.227313Z",
+      "note": "Verified live in the probe, Screen Recording granted, Scripts/playtest/readout-fields-walk.json, status ok. A text layer: W in a box reading 473, H plain reading 38, same right edge, same row height. Clicking H puts \"Height follows the text...\" in the line under the fields. A locked layer: all four plain, caption says it is locked. An arrow: X and Y in boxes, W and H each a dash, and clicking the dash answers \"Drag this shape's ends on the canvas to change its size.\" Three real captures shipped with the audit."
+    },
+    {
+      "t": "2026-09-05T16:20:18.227313Z",
+      "note": "Adversarial review on the built thing. Nothing to fix that I could see: the numbers hold their column, the section does not change height when a layer is locked, and the click answer still lands. Left rough and written into the audit for the user: the dash is my call rather than theirs, and the arrow's whole bottom row is now two faint grey marks, which reads correctly but quietly."
+    },
+    {
+      "t": "2026-09-05T16:20:18.227313Z",
+      "note": "Found and fixed a stale walk on the way past: Scripts/playtest/text-height-readout-walk.json had been trying to put the keyboard into H since H stopped being a field on 2026-09-04, so it had been failing for a day. Confirmed by stashing this change and re-running, so it is not a regression from this task. It presses H now, which is what a person can do, and it passes. Re-ran geometry-fields-walk and number-field-handback, both ok. Scripts/test.sh green, 3229 tests."
+    },
+    {
+      "t": "2026-09-05T16:20:18.227313Z",
+      "note": "Docs: UX-PATTERNS.md gained \"What a number you cannot type looks like\" under section 4, the six-fix table row for text-height-readout is closed rather than the one exception, and the Mixed section says why a dash is not a contradiction of \"never a dash\" (a dash means no number at all, Mixed means they differ)."
+    },
+    {
+      "t": "2026-09-05T16:20:18.227313Z",
+      "note": "Follow-up filed: a-number-you-cannot-type-looks-the-same-in-a-moc (p3-low). The mock library still only has a dimmed input box, which is the look that was just rejected, so a sketch drawn there would reintroduce it."
     }
   ],
-  "started": "2026-09-04T13:03:26.858Z"
+  "started": "2026-09-05T16:08:17.989Z"
 }

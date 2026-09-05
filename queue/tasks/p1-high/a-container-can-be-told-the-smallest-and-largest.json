@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:26.798Z",
-  "updated": "2026-09-05T15:52:41.823Z",
+  "updated": "2026-09-05T15:53:01.709Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from the rough list of queue/audits/2026-09-04-ui-hug.json: \"There is no minimum width, so a button with one letter in it is as narrow as one letter plus its room.\" Model lives in Sources/PhotonzCore/GroupLayout.swift, which today holds kind, direction, columns, gap, rowGap, padding, width and height and nothing else; usedWidth/usedHeight and hugsWidth/hugsHeight are the clamp points. Layout runs in GroupFlow.swift and the panel rows are in Sources/Photonz/LayersPanel.swift. Keep the maths in the core, out of the view. Codable needs the new keys optional so old files decode.\n\nTriage 2026-09-05: the 2026-09-04 runner was interrupted after writing its tests and before any implementation. It left Tests/PhotonzCoreTests/GroupSizeLimitsTests.swift behind, referencing GroupLayout.limitsWidth, limitsHeight and limitsSentence, none of which exist, so the whole test target could not compile and every task's test gate would have failed. The file is parked at queue/attic/2026-09-05-GroupSizeLimitsTests.swift.txt and removed from Tests. Read it for the shape it had in mind (a GroupSizeLimits value on GroupLayout, limits that survive a switch between Free, Stack and Grid, and a limitsSentence for the panel), then write the tests fresh.",
@@ -90,6 +90,6 @@
     }
   ],
   "started": "2026-09-05T15:33:22.175Z",
-  "failures": 1,
+  "failures": 0,
   "completed": "2026-09-05T15:52:41.823Z"
 }

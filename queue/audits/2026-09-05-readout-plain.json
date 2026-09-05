@@ -1,0 +1,28 @@
+{
+  "feature": "A number you cannot type stops looking like one you can",
+  "epic": "ui-building",
+  "summary": "In Position and Size, a number the app worked out for you no longer wears the rounded box of a number you type. It sits as plain text in the same column, and where there is no number at all it shows a short dash instead of leaving a lone letter with a gap after it.",
+  "setup": "Photonz Next. Nothing to switch on: the plain look is what everybody gets now, and the Experiments switch that used to hold it back is gone from the list.",
+  "try": [
+    { "do": "Draw a text layer and type a sentence into it, then press Command and Return to finish.", "shot": "2026-09-05-readout-plain-1-text-sc.png" },
+    { "do": "Read W and H side by side in Position and Size: W has a box, H does not." },
+    { "do": "Click H and read the line under the fields." },
+    { "do": "Click the padlock on that layer's row in the Layers list, then click the row.", "shot": "2026-09-05-readout-plain-3-locked-sc.png" },
+    { "do": "Read all four numbers, then click any one of them." },
+    { "do": "Draw an arrow with the arrow tool, switch back to the select tool, and read W and H.", "shot": "2026-09-05-readout-plain-4-arrow-sc.png" },
+    { "do": "Click the dash where the arrow's W would be." }
+  ],
+  "evaluate": [
+    "Reading W and H on the text layer, is it obvious which one takes the keyboard before you touch either?",
+    "Does the number still land where your eye expects it, or does losing the box make the column feel loose?",
+    "A locked layer is now four plain numbers and a sentence. Does that read as a statement of where it sits, or as a panel that looks unfinished?",
+    "Is the short dash on the arrow's W the right way to say there is no number, or would you rather see nothing there at all?",
+    "When you click one of these and the sentence appears under the fields, do you notice it, or is it too far from where you clicked?"
+  ],
+  "rough": [
+    "Screen Recording was granted for this run, so all three pictures are real captures of the window, not offscreen renders.",
+    "The dash is my call, not yours. The decision card covered the box and left the blank case open, and doing nothing there leaves W alone on a row looking like it failed to draw. A dash is the plain answer; if you would rather have something else there, say so on this line.",
+    "The plain number is quieter than the boxed one it replaced, so on the arrow the whole bottom row is now two grey dashes. It reads correctly but it is faint.",
+    "The walk that covers a text layer's height had been trying to put the keyboard into H since H stopped being a field on 2026-09-04, so it had been failing for a day. It now presses H instead, which is what a person can actually do, and it passes."
+  ]
+}

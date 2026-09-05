@@ -24,6 +24,28 @@ public enum LayerGeometryReading: Hashable, Sendable {
     }
 
     public var isMixed: Bool { self == .mixed }
+
+    /// What a number you can TYPE shows: the number, or the word for "they
+    /// differ", or nothing at all, because an empty box is room to type in.
+    public var draftText: String {
+        switch self {
+        case .empty: return ""
+        case .mixed: return LayerGeometrySelection.mixedText
+        case .agreed(let value): return String(Int(value.rounded()))
+        }
+    }
+
+    /// What a number you can only READ shows. The same digits and the same
+    /// word, so a locked layer's numbers line up with the ones beside them,
+    /// but nothing becomes a mark rather than nothing: a readout has no box
+    /// left to stand in for it, so an arrow's blank width would otherwise
+    /// leave a W alone on the row with a gap after it.
+    public var readoutText: String {
+        switch self {
+        case .empty: return LayerGeometrySelection.blankText
+        default: return draftText
+        }
+    }
 }
 
 /// The layers the Position & Size fields speak for, and what typing in one of
@@ -77,6 +99,12 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     /// What the field shows in place of a number when the layers differ. One
     /// word for the whole app, so no two controls can spell it differently.
     public static let mixedText = MixedValue.text
+
+    /// What a number you cannot type shows when there is no number to show.
+    /// An en dash, the mark a table uses for "nothing here", so the column
+    /// still reads as a column. Only readouts use it: a box you can type in
+    /// says nothing by staying empty.
+    public static let blankText = "\u{2013}"
 
     public let members: [Member]
 
