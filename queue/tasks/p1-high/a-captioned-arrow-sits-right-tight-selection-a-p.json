@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T14:13:58.273Z",
-  "updated": "2026-09-05T15:09:48.994062Z",
+  "updated": "2026-09-05T15:10:18.472Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 with a screenshot, three separate causes found by reading. (1) Selection box: AnnotationBuilder in Tools.swift builds the frame as the drag box inset by renderPadding, then unions it with the caption pill rect inset again by captionShadowPadding. One rectangle spanning an arrow and a pill that hangs off its tail is mostly empty, and the selection outline draws that frame. The frame itself has to stay big enough to render into, so the fix is in what the selection DRAWS: hug the arrow and the pill as two shapes or as their tight union, not the padded frame. (2) Pill vanishing: CanvasView.refreshEndpointPreview at line 3649 calls displayAnnotationPreview, which draws the annotation vectors and no caption at all; only the commit path, EditorState.commitAnnotationEndpoints, calls AnnotationBuilder.planningCaption. Replan and draw the pill in the live preview so the drag shows the truth. (3) Tail gap: not diagnosed, measure it first. Suspects to check rather than assume: the line cap and stroke width moving the visual end away from the endpoint, and renderPadding. The user says a handful of pixels, so measure in document points at two zooms before changing anything. (4) Tail not meeting the pill, reported with a second screenshot on 2026-09-05 showing a short label ok whose pill is nearly circular, with the tail ending above and left of it and a clear space between. Suspect, to be measured rather than assumed: CaptionPlanner in AnnotationEditing.swift around line 385 places the pill by an ATTACHMENT POINT, and its default candidate is tail plus the shaft direction times captionGap (6pt, Layer.swift line 194), while the other candidates sit squarely left, right, above or below the tail. attachment(forPillCenter:) converts a centre to that attachment. If the conversion assumes the near side is one of four flat edges of a rectangle, a diagonal shaft will attach nearer a corner than the true near point, which both offsets it and opens a gap, and a nearly circular pill makes it obvious. Fix the geometry so the attachment is the point where the shaft line crosses the pill's rounded outline, and keep the 6pt gap as a deliberate breathing space or drop it, whichever looks connected.",
@@ -61,7 +61,7 @@
     },
     {
       "t": "2026-09-05T15:09:48.994062Z",
-      "note": "acceptance 3 closed by measurement, not by a change: the tip lands exactly on what it points at. Composited a document with the tip on a toggle's left edge and scanned pixels at zoom 1/2/4, pixelScale 1/2, stroke width 1..40 and head scale 0.5..2 \u2014 full-strength ink ends 0.5 document points short every time, which is the antialiased boundary pixel. Two pictures at 1x and 4x are in the audit. The likely thing the user saw is the OLD selection box, 16pt past the tip, now gone; the other candidate is aim, since one pointer point is two image pixels at 100% on a Retina capture. Filed 'An arrow tip lands on the edge it is pointing at' for that."
+      "note": "acceptance 3 closed by measurement, not by a change: the tip lands exactly on what it points at. Composited a document with the tip on a toggle's left edge and scanned pixels at zoom 1/2/4, pixelScale 1/2, stroke width 1..40 and head scale 0.5..2 — full-strength ink ends 0.5 document points short every time, which is the antialiased boundary pixel. Two pictures at 1x and 4x are in the audit. The likely thing the user saw is the OLD selection box, 16pt past the tip, now gone; the other candidate is aim, since one pointer point is two image pixels at 100% on a Retina capture. Filed 'An arrow tip lands on the edge it is pointing at' for that."
     },
     {
       "t": "2026-09-05T15:09:48.994062Z",
@@ -74,7 +74,12 @@
     {
       "t": "2026-09-05T15:09:48.994062Z",
       "note": "shared-code note: the tighter selection outline is in CanvasView, which both releases share, so a plain line or arrow in Current gets the same tight box. Captions themselves are next-arrow-captions and Next only. A selection box that overstates where the ink ends is wrong in both releases, so this was left unforked rather than flag-gated."
+    },
+    {
+      "t": "2026-09-05T15:10:18.471Z",
+      "note": "The pill hangs off the tail and touches it in the middle of its near edge at every angle and label length (new attachment plus a four-direction planner in PhotonzCore); the selection outline draws Layer.drawnBounds with the MEASURED pill instead of the padded frame; the pill rides an endpoint drag as a once-baked bitmap. The 'tip stops short' complaint does not reproduce: measured 0.5pt of antialiasing against a straight edge at three zooms, two pixel scales, six stroke widths and three head sizes, pictures in the audit. 3201 tests green, five existing caption walks still pass, three new walks, audit at queue/audits/2026-09-05-arrow-caption-touch.json. Two follow-ups filed."
     }
   ],
-  "started": "2026-09-05T14:39:36.894Z"
+  "started": "2026-09-05T14:39:36.894Z",
+  "completed": "2026-09-05T15:10:18.472Z"
 }

@@ -8623,3 +8623,39 @@ pass. No composite-path change: the extra work is one nil check per layer in
 a walk that already ran.
 
 Next: back to the queue.
+
+## 2026-09-05 — a captioned arrow holds together
+
+Four complaints the user filed with screenshots, three of them real.
+
+- **The pill floated off the tail.** Its attachment sat one 6pt gap past the
+  tail, and the four fallback spots the planner reached for near a canvas edge
+  hung it off a *corner* rather than an edge midpoint. `captionAttachment()` is
+  now the tail itself, and `CaptionPlanner.plan`'s spots are four directions off
+  it, so whichever wins, the tail is the middle of the pill's near edge and the
+  shaft runs into it. Off-picture is priced instead of pre-slid; sliding is a
+  last resort only.
+- **The selection box was several times the ink.** New
+  `Layer.drawnBounds(captionPillSize:)` walks what the rasterizer actually
+  draws; `CanvasView` feeds it the pill width `CaptionMetrics` measures rather
+  than the frame's generous estimate.
+- **The pill vanished for a whole endpoint drag.**
+  `AnnotationRasterizer.captionPill` bakes the pill alone once per drag; the
+  preview plans it for the live endpoints and moves the bitmap.
+- **The tip does not stop short.** Measured against a straight edge at zoom
+  1/2/4, pixelScale 1/2, stroke width 1..40, head scale 0.5..2: full-strength
+  ink ends 0.5 document points short every time, which is the antialiased
+  boundary pixel. The 16pt selection box past the tip was the likely culprit and
+  is gone. Aim is the other candidate — at 100% on a Retina capture one pointer
+  point is two image pixels — and now has its own task.
+
+Audit: `queue/audits/2026-09-05-arrow-caption-touch.json`. New walks:
+`arrow-caption-touch`, `arrow-caption-field`, `arrow-tip-edge`.
+
+Next: the two follow-ups — an arrow tip that snaps to the edge it points at, and
+a hand-dropped pill that lands where you let go (both are the same root cause,
+placement geometry using a width guess instead of the measurement).
+
+Open question for the user: when there is no room beside the tail the pill now
+takes the near end of the shaft and the arrow runs out of its far edge. Reads
+well in the audit picture, but it does cover the first stretch of line.
