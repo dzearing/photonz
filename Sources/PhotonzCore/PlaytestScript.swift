@@ -677,8 +677,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `hold` names a snapshot taken with the button still DOWN, just before
     /// the release: the only way to photograph anything that exists only while
     /// a drag is in hand, like the yellow snap guide.
+    /// `wobble` shakes the pointer by that many points as it travels, mostly
+    /// back and forth along the line it is walking and half as much sideways:
+    /// a hand that is not a ruler. It is what a walk uses to prove a snap does
+    /// not flicker under an unsteady hand, and the drag reports how often the
+    /// guides came and went.
     case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int,
-              modifiers: [PlaytestModifier], hold: String?)
+              modifiers: [PlaytestModifier], hold: String?, wobble: CGFloat)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Give the keyboard to a named text field in the inspector (its label, as
@@ -912,7 +917,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "drag":
             let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps
             self = .drag(from: try f.point("from"), to: try f.point("to"), steps: max(1, steps),
-                         modifiers: try f.modifiers(), hold: try f.optionalString("hold"))
+                         modifiers: try f.modifiers(), hold: try f.optionalString("hold"),
+                         wobble: CGFloat(try f.optionalNumber("wobble") ?? 0))
         case "type":
             self = .type(try f.string("text"))
         case "focus":

@@ -84,10 +84,11 @@ public enum EdgeSnapping {
     /// parks, but the other chips do.
     public static func snapValue(_ value: CGFloat, toGuides guides: [CGFloat], zoom: CGFloat,
                                  screenTolerance: CGFloat = 8,
-                                 snapToPixelGrid: Bool = true) -> (value: CGFloat, guide: CGFloat?) {
+                                 snapToPixelGrid: Bool = true,
+                                 holding held: CGFloat? = nil) -> (value: CGFloat, guide: CGFloat?) {
         snapAxis(value, candidates: [], guides: guides,
                  tolerance: tolerance(zoom: zoom, screenTolerance: screenTolerance),
-                 includeCenters: false, pixelGrid: snapToPixelGrid)
+                 includeCenters: false, pixelGrid: snapToPixelGrid, held: held)
     }
 
     /// Snaps `point` against locally detected edges.
@@ -100,13 +101,18 @@ public enum EdgeSnapping {
     /// - snapToPixelGrid: when no edge captures an axis, round it to whole pixels.
     /// - guides: extra lines the caller wants this point to land on, whatever
     ///   the picture underneath says (the other measurements on the canvas).
+    /// - holding: the lines this drag already caught. A line being SHOWN keeps
+    ///   the point until the pointer is clearly away from it, so a wobbling
+    ///   hand cannot take a snap and give it back on alternate frames. See
+    ///   `SnapHold`.
     public static func snap(_ point: CGPoint, edges: EdgeMap, zoom: CGFloat,
                             xSpan: ClosedRange<CGFloat>? = nil,
                             ySpan: ClosedRange<CGFloat>? = nil,
                             screenTolerance: CGFloat = 8,
                             includeCenters: Bool = false,
                             snapToPixelGrid: Bool = true,
-                            guides: GuideLines = .none) -> Snap {
+                            guides: GuideLines = .none,
+                            holding held: SnapHold = .none) -> Snap {
         let tolerance = tolerance(zoom: zoom, screenTolerance: screenTolerance)
 
         let xWindow = ySpan ?? (point.y - defaultSpanRadius)...(point.y + defaultSpanRadius)
@@ -114,14 +120,16 @@ public enum EdgeSnapping {
             inYRange: Double(xWindow.lowerBound)...Double(xWindow.upperBound))
         let x = snapAxis(point.x, candidates: vertical, guides: guides.vertical,
                          tolerance: tolerance,
-                         includeCenters: includeCenters, pixelGrid: snapToPixelGrid)
+                         includeCenters: includeCenters, pixelGrid: snapToPixelGrid,
+                         held: held.x)
 
         let yWindow = xSpan ?? (point.x - defaultSpanRadius)...(point.x + defaultSpanRadius)
         let horizontal = edges.horizontalEdges(
             inXRange: Double(yWindow.lowerBound)...Double(yWindow.upperBound))
         let y = snapAxis(point.y, candidates: horizontal, guides: guides.horizontal,
                          tolerance: tolerance,
-                         includeCenters: includeCenters, pixelGrid: snapToPixelGrid)
+                         includeCenters: includeCenters, pixelGrid: snapToPixelGrid,
+                         held: held.y)
 
         return Snap(point: CGPoint(x: x.value, y: y.value), guideX: x.guide, guideY: y.guide)
     }
@@ -138,7 +146,15 @@ public enum EdgeSnapping {
     private static func snapAxis(_ value: CGFloat, candidates: [EdgeCandidate],
                                  guides: [CGFloat] = [],
                                  tolerance: CGFloat, includeCenters: Bool,
-                                 pixelGrid: Bool) -> (value: CGFloat, guide: CGFloat?) {
+                                 pixelGrid: Bool,
+                                 held: CGFloat? = nil) -> (value: CGFloat, guide: CGFloat?) {
+        // A line already caught outranks everything else while the pointer is
+        // anywhere near it — twice as near as it took to catch. Scores decide
+        // which line to TAKE; nothing but distance decides when to let one go,
+        // or the answer would change under a hand that is standing still.
+        if let held, abs(held - value) <= tolerance * SnapHold.releaseFactor {
+            return (held, held)
+        }
         var best: (position: CGFloat, score: Double)?
         // Supplied guides go first so an equal-scoring edge cannot displace
         // them, and so guides tie-break toward the lower position.

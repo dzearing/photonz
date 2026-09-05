@@ -32,7 +32,8 @@ extension CanvasNSView {
     /// line and does not ride the head, and a snap it would not honour is
     /// dropped rather than faked.
     func snapMeasureHead(_ drag: inout MeasureHandleDrag, pointer p: CGPoint,
-                         zoom: CGFloat, snapping: Bool) -> (x: CGFloat?, y: CGFloat?)? {
+                         zoom: CGFloat, snapping: Bool,
+                         holding held: SnapHold = .none) -> (x: CGFloat?, y: CGFloat?)? {
         guard let layer = document?.layer(id: drag.layerID),
               let m = documentMeasure(layer) else {
             drag.current = p
@@ -42,7 +43,7 @@ extension CanvasNSView {
         let landing = MeasureReadoutDrag.resolve(m, pointer: p, grabCross: drag.grabCross,
                                                  grabAlong: drag.grabAlong, guides: drag.guides,
                                                  zoom: zoom, snapping: snapping,
-                                                 slidesAlong: slides)
+                                                 slidesAlong: slides, holding: held)
         drag.current = p
         drag.head = landing.headOffset
         // Only a drag that actually slid the number claims it was placed by
@@ -198,13 +199,23 @@ extension CanvasNSView {
     private func snapMeasureSecondFoot(from foot1: CGPoint, to doc: CGPoint,
                                        modifiers: NSEvent.ModifierFlags) -> (foot2: CGPoint, mode: MeasureMode) {
         var p = doc
-        if let viewport, !modifiers.contains(.command) {
-            p = axisGated(EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom,
-                                            xSpan: min(foot1.x, doc.x)...max(foot1.x, doc.x),
-                                            ySpan: min(foot1.y, doc.y)...max(foot1.y, doc.y),
-                                            includeCenters: measureSnapsToCenters,
-                                            guides: measureGuideLines(excluding: nil)),
-                          raw: doc).point
+        if modifiers.contains(.command) {
+            // Freed by hand: nothing is being stood on any more, so nothing is
+            // waiting to grab the line back when the key comes up.
+            snapHold = .none
+        } else if let viewport {
+            // The line the preview is showing is the line the click lands on:
+            // the same hold the handle drags use, so drawing a caliper and
+            // adjusting one afterwards behave identically.
+            let snap = axisGated(EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom,
+                                                   xSpan: min(foot1.x, doc.x)...max(foot1.x, doc.x),
+                                                   ySpan: min(foot1.y, doc.y)...max(foot1.y, doc.y),
+                                                   includeCenters: measureSnapsToCenters,
+                                                   guides: measureGuideLines(excluding: nil),
+                                                   holding: snapHold),
+                                  raw: doc)
+            snapHold.caught(x: snap.guideX, y: snap.guideY)
+            p = snap.point
         }
         let mode = MeasureContent.dominantAxis(from: foot1, to: p)
         let foot2 = mode == .horizontal ? CGPoint(x: p.x, y: foot1.y) : CGPoint(x: foot1.x, y: p.y)

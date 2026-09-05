@@ -72,11 +72,17 @@ public enum MeasureReadoutDrag {
     public static func resolve(_ content: MeasureContent, pointer: CGPoint,
                                grabCross: CGFloat, grabAlong: CGFloat,
                                guides: EdgeSnapping.GuideLines, zoom: CGFloat,
-                               snapping: Bool, slidesAlong: Bool = true) -> Placement {
+                               snapping: Bool, slidesAlong: Bool = true,
+                               holding held: SnapHold = .none) -> Placement {
         let horizontal = content.mode == .horizontal
         let chip = content.estimatedLabelSize
         let alongGuides = horizontal ? guides.vertical : guides.horizontal
         let crossGuides = horizontal ? guides.horizontal : guides.vertical
+        // A number being dragged holds its lines the way every other drag on
+        // the canvas does: the guide showing under the pill is the guide it
+        // lands on, until the pointer is clearly away from it.
+        let heldAlong = horizontal ? held.x : held.y
+        let heldCross = horizontal ? held.y : held.x
 
         // Across the line, the head follows the pointer and the pill follows
         // the head — except where a placement holds the pill at its own standoff
@@ -88,7 +94,8 @@ public enum MeasureReadoutDrag {
         if snapping, !crossGuides.isEmpty {
             let cross = chipCross(content, head: rawHead, chip: chip)
             if let line = EdgeSnapping.snapValue(cross, toGuides: crossGuides, zoom: zoom,
-                                                 snapToPixelGrid: false).guide {
+                                                 snapToPixelGrid: false,
+                                                 holding: heldCross).guide {
                 let moved = rawHead + (line - cross)
                 if abs(chipCross(content, head: moved, chip: chip) - line) < 0.5 {
                     head = moved
@@ -110,7 +117,8 @@ public enum MeasureReadoutDrag {
         let home = chipAlong(content, head: head, nudge: 0, chip: chip)
         if snapping {
             if let line = EdgeSnapping.snapValue(target, toGuides: alongGuides, zoom: zoom,
-                                                 snapToPixelGrid: false).guide {
+                                                 snapToPixelGrid: false,
+                                                 holding: heldAlong).guide {
                 target = line
                 guideAlong = line
             } else if abs(target - home) <= EdgeSnapping.tolerance(zoom: zoom,

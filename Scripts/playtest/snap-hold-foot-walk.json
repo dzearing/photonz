@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/snap-hold-foot-walk",
+  "seed": "The case the user reported: a caliper foot beside a yellow guide, flickering as the mouse barely moves. The foot is walked across the edges of a real screenshot with a shaking hand, and the drag line says how often the guides came and went.",
+  "setup": { "forget": ["measure", "tools"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+
+    { "do": "click", "at": [236, 400] },
+    { "do": "move", "at": [236, 700] },
+    { "do": "click", "at": [236, 700] },
+    { "do": "move", "at": [300, 700] },
+    { "do": "click", "at": [300, 700] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "caliper-placed", "note": "a height caliper down the panel, feet at x 236" },
+    { "do": "snapshot", "name": "1-caliper" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "click", "at": [236, 550] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "caliper-selected", "note": "selected, so its three handles are grabbable" },
+
+    { "do": "drag", "from": [236, 700], "to": [80, 700], "steps": 90, "wobble": 3, "hold": "2-foot-on-a-guide" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "foot-slow-pass", "note": "the bottom foot walked left across the picture with a shaking hand, over the container edges on the way: every edge it crosses should be caught once and let go once, never taken and given back" },
+    { "do": "snapshot", "name": "2-foot-walked" },
+
+    { "do": "drag", "from": [80, 700], "to": [220, 700], "steps": 90, "wobble": 3, "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "command-frees-the-foot", "note": "Command held the whole way back: expect no guide at any point" },
+    { "do": "snapshot", "name": "3-foot-free" }
+  ]
+}

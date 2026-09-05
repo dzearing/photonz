@@ -1,0 +1,45 @@
+{
+  "out": "/tmp/photonz-playtest/snap-hold-walk",
+  "seed": "A snap that is showing is a snap you get. Every drag here is walked with a shaking hand (wobble) across a line something can catch on, and every drag line in the log says how many times the guides came and went. One catch and one let go across a pass is the whole point; more than that is the flicker this walk exists to measure.",
+  "setup": {
+    "forget": ["grid", "shapes", "tools", "panel"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [500, 100], "to": [700, 220] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "peer-drawn", "note": "the box everything below lines itself up with: its left edge is at 500" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 400], "to": [320, 500] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [200, 450] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "before-resize", "note": "the box about to be resized, selected" },
+
+    { "do": "drag", "from": [320, 450], "to": [480, 450], "steps": 20 },
+    { "do": "describe", "stage": "up-to-the-line", "note": "right edge walked up to 480, still clear of the peer's 500" },
+
+    { "do": "drag", "from": [480, 450], "to": [530, 450], "steps": 60, "wobble": 3, "hold": "edge-on-the-guide" },
+    { "do": "describe", "stage": "slow-pass-resize", "note": "a shaking hand walking the right edge from 480 to 530, straight through the peer's left edge at 500. Expect the drag line to say caught 1, let go 1." },
+    { "do": "snapshot", "name": "after-slow-pass" },
+
+    { "do": "drag", "from": [530, 450], "to": [497, 450], "steps": 30, "wobble": 3, "hold": "edge-caught-again" },
+    { "do": "describe", "stage": "back-onto-the-line", "note": "walked back to 497, three short of the peer edge: expect the edge exactly on 500 with a guide showing" },
+
+    { "do": "drag", "from": [500, 450], "to": [520, 450], "steps": 30, "wobble": 3, "modifiers": ["command"] },
+    { "do": "describe", "stage": "command-frees-it", "note": "Command held the whole way: expect no guide at all and the edge exactly where the pointer left it" },
+
+    { "do": "click", "at": [200, 450] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [200, 450], "to": [200, 340], "steps": 60, "wobble": 3, "hold": "move-on-the-guide" },
+    { "do": "describe", "stage": "slow-pass-move", "note": "the whole box walked up the canvas with a shaking hand, across the canvas middle at 350: expect it caught once and still held at the end, so the box centres on 350" },
+    { "do": "snapshot", "name": "after-move-pass" }
+  ]
+}

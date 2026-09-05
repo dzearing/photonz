@@ -79,18 +79,22 @@ public enum Snapping {
         }
     }
 
+    /// `holding` carries the lines this drag is already standing on: one of
+    /// them keeps the frame until the pointer is clearly away from it, so the
+    /// guide you can see is the guide you get. See `SnapHold`.
     public static func snapFrameOrigin(_ proposed: CGPoint, size: CGSize, canvas: CGSize,
                                        peers: [CGRect] = [], gridSpacing: CGFloat? = nil,
-                                       zoom: CGFloat, screenTolerance: CGFloat = 8) -> Result {
+                                       zoom: CGFloat, screenTolerance: CGFloat = 8,
+                                       holding held: SnapHold = .none) -> Result {
         let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
         let x = snapAxis(origin: proposed.x, length: size.width, canvasLength: canvas.width,
                          crossOrigin: proposed.y, crossLength: size.height,
                          peers: peers.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) },
-                         gridSpacing: gridSpacing, tolerance: tolerance)
+                         gridSpacing: gridSpacing, tolerance: tolerance, held: held.x)
         let y = snapAxis(origin: proposed.y, length: size.height, canvasLength: canvas.height,
                          crossOrigin: proposed.x, crossLength: size.width,
                          peers: peers.map { Peer(along: ($0.minY, $0.maxY), cross: ($0.minX, $0.maxX)) },
-                         gridSpacing: gridSpacing, tolerance: tolerance)
+                         gridSpacing: gridSpacing, tolerance: tolerance, held: held.y)
         return Result(origin: CGPoint(x: x.origin, y: y.origin),
                       guideX: x.guide, guideY: y.guide,
                       guideXSpan: x.span, guideYSpan: y.span)
@@ -116,7 +120,8 @@ public enum Snapping {
                                         canvas: CGSize, peers: [CGRect] = [],
                                         gridSpacing: CGFloat? = nil, zoom: CGFloat,
                                         screenTolerance: CGFloat = 8,
-                                        minSize: CGFloat = 1) -> FrameResult {
+                                        minSize: CGFloat = 1,
+                                        holding held: SnapHold = .none) -> FrameResult {
         let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
         var frame = proposed
         var result = FrameResult(frame: proposed)
@@ -129,7 +134,8 @@ public enum Snapping {
         if handle.movesMinX || handle.movesMaxX {
             let moving = handle.movesMinX ? proposed.minX : proposed.maxX
             let snap = snapEdge(moving, canvasLength: canvas.width, crossSpan: crossX,
-                                peers: xPeers, gridSpacing: gridSpacing, tolerance: tolerance)
+                                peers: xPeers, gridSpacing: gridSpacing, tolerance: tolerance,
+                                held: held.x)
             let limit = handle.movesMinX ? proposed.maxX - minSize : proposed.minX + minSize
             if handle.movesMinX ? snap.value <= limit : snap.value >= limit {
                 // Only rewrite the geometry when the edge actually moved: an
@@ -147,7 +153,8 @@ public enum Snapping {
         if handle.movesMinY || handle.movesMaxY {
             let moving = handle.movesMinY ? proposed.minY : proposed.maxY
             let snap = snapEdge(moving, canvasLength: canvas.height, crossSpan: crossY,
-                                peers: yPeers, gridSpacing: gridSpacing, tolerance: tolerance)
+                                peers: yPeers, gridSpacing: gridSpacing, tolerance: tolerance,
+                                held: held.y)
             let limit = handle.movesMinY ? proposed.maxY - minSize : proposed.minY + minSize
             if handle.movesMinY ? snap.value <= limit : snap.value >= limit {
                 if snap.value != moving {
@@ -185,7 +192,8 @@ public enum Snapping {
     /// two equally good ones.
     private static func snapAxis(origin: CGFloat, length: CGFloat, canvasLength: CGFloat,
                                  crossOrigin: CGFloat, crossLength: CGFloat,
-                                 peers: [Peer], gridSpacing: CGFloat?, tolerance: CGFloat)
+                                 peers: [Peer], gridSpacing: CGFloat?, tolerance: CGFloat,
+                                 held: CGFloat? = nil)
         -> (origin: CGFloat, guide: CGFloat?, span: Span?) {
         let mine = Span(start: crossOrigin, end: crossOrigin + crossLength)
         var candidates: [Candidate] = [
@@ -207,7 +215,7 @@ public enum Snapping {
             candidates.append(Candidate(offset: length, target: peer.along.min, span: span))
         }
 
-        guard let best = capture(origin, among: candidates, tolerance: tolerance) else {
+        guard let best = capture(origin, among: candidates, tolerance: tolerance, held: held) else {
             // Nothing to line up with, so the grid decides. It has no tolerance
             // of its own: the whole point of switching a grid on is that things
             // land on it, and a magnet whose reach is half the gap would be on
@@ -223,7 +231,8 @@ public enum Snapping {
     /// the box's own middle or its far side, since neither of those is what the
     /// pointer is holding.
     private static func snapEdge(_ value: CGFloat, canvasLength: CGFloat, crossSpan: Span,
-                                 peers: [Peer], gridSpacing: CGFloat?, tolerance: CGFloat)
+                                 peers: [Peer], gridSpacing: CGFloat?, tolerance: CGFloat,
+                                 held: CGFloat? = nil)
         -> (value: CGFloat, guide: CGFloat?, span: Span?) {
         var candidates: [Candidate] = [
             Candidate(offset: 0, target: 0, span: nil),
@@ -239,7 +248,7 @@ public enum Snapping {
             candidates.append(Candidate(offset: 0, target: peer.along.max, span: span))
         }
 
-        guard let best = capture(value, among: candidates, tolerance: tolerance) else {
+        guard let best = capture(value, among: candidates, tolerance: tolerance, held: held) else {
             return (quantized(value, to: gridSpacing), nil, nil)
         }
         return (best.candidate.target, best.candidate.target,
@@ -249,9 +258,25 @@ public enum Snapping {
     /// The nearest candidate within reach. Ties go to the canvas, then to the
     /// earliest layer, so the answer never flickers between two equally good
     /// ones.
+    ///
+    /// `held` is the line the drag is already standing on, and it gets first
+    /// refusal at `releaseFactor` times the reach: a line only lets go once the
+    /// pointer has travelled clearly farther than it took to catch it, which is
+    /// the difference between a magnet and a coin toss.
     private static func capture(_ value: CGFloat, among candidates: [Candidate],
-                                tolerance: CGFloat)
+                                tolerance: CGFloat, held: CGFloat? = nil)
         -> (candidate: Candidate, distance: CGFloat)? {
+        if let held {
+            var kept: (candidate: Candidate, distance: CGFloat)?
+            for candidate in candidates where abs(candidate.target - held) < 0.01 {
+                let distance = abs(value + candidate.offset - candidate.target)
+                if distance <= tolerance * SnapHold.releaseFactor,
+                   distance < (kept?.distance ?? .infinity) {
+                    kept = (candidate, distance)
+                }
+            }
+            if let kept { return kept }
+        }
         var best: (candidate: Candidate, distance: CGFloat)?
         for candidate in candidates {
             let distance = abs(value + candidate.offset - candidate.target)

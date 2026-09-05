@@ -354,15 +354,30 @@ private final class Run {
                 + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
-        case .drag(let from, let to, let steps, let modifiers, let hold):
+        case .drag(let from, let to, let steps, let modifiers, let hold, let wobble):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
             let flags = eventFlags(modifiers)
+            // A hand is not a ruler: `wobble` shakes the pointer as it travels,
+            // mostly BACK AND FORTH ALONG the line it is walking, which is the
+            // tremor a magnet's reach actually chatters on, plus half as much
+            // sideways. The guides are read after every single move, so a walk
+            // can say how often a snap was taken and given back rather than
+            // only where the drag ended up.
+            let length = max(hypot(b.x - a.x, b.y - a.y), 0.0001)
+            let along = CGPoint(x: (b.x - a.x) / length, y: (b.y - a.y) / length)
+            let across = CGPoint(x: -along.y, y: along.x)
+            let shake: [CGFloat] = [0, 1, -0.7, 0.4, -0.3, 0.9, -0.9, 0.2]
+            var guides = SnapGuideTally()
             if let event = mouseEvent(.leftMouseDown, at: a, on: canvas, flags: flags) { canvas.mouseDown(with: event) }
             for i in 1...steps {
                 let t = CGFloat(i) / CGFloat(steps)
-                let p = CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
+                let shiver = wobble * shake[i % shake.count]
+                let sway = wobble * shake[(i + 3) % shake.count] / 2
+                let p = CGPoint(x: a.x + (b.x - a.x) * t + along.x * shiver + across.x * sway,
+                                y: a.y + (b.y - a.y) * t + along.y * shiver + across.y * sway)
                 if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: flags) { canvas.mouseDragged(with: event) }
+                guides.record(canvas.liveSnapGuides)
                 await sleep(0.02)
             }
             // Anything that lives only while the button is down — the yellow
@@ -379,7 +394,8 @@ private final class Run {
             if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: flags) { canvas.mouseUp(with: event) }
             await sleep(0.05)
             note(number, step.name,
-                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held), cursor while down \(heldCursor)",
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held), "
+                     + "cursor while down \(heldCursor), \(guides.reading)",
                  state: describe())
 
         case .type(let text):
@@ -2637,6 +2653,48 @@ final class MainThreadMeter {
         var total = busy
         if let since = activeSince { total += max(0, CACurrentMediaTime() - since - excludedInPass) }
         return String(format: "mainBusy %.1fms over %d passes, longest %.1fms", total * 1000, passes, longest * 1000)
+    }
+}
+
+/// What the yellow guides did across ONE drag.
+///
+/// A snap that is showing is a snap you get, so the telling number is not how
+/// many lines a drag passed — a walk over a dense screenshot honestly crosses
+/// dozens — but how often the answer WENT BACK on itself: took a line, took
+/// another, then returned to the first. That is the flicker, and on a fixed
+/// hold it is zero however much the hand shakes.
+private struct SnapGuideTally {
+    private var caught = 0
+    private var released = 0
+    private var changes = 0
+    private var reversals = 0
+    private var showing: Bool?
+    /// The readings so far, only where they differ from the one before.
+    private var distinct: [String] = []
+
+    mutating func record(_ guides: (x: CGFloat?, y: CGFloat?)) {
+        let isShowing = guides.x != nil || guides.y != nil
+        if let showing, showing != isShowing {
+            if isShowing { caught += 1 } else { released += 1 }
+        }
+        showing = isShowing
+
+        func read(_ v: CGFloat?) -> String { v.map { String(format: "%.1f", $0) } ?? "-" }
+        let reading = read(guides.x) + "/" + read(guides.y)
+        guard distinct.last != reading else { return }
+        if !distinct.isEmpty {
+            changes += 1
+            // Only a return to a LINE counts: letting go at the end of a pass
+            // and catching nothing again is what a pass is supposed to do.
+            if isShowing, distinct.count > 1, distinct[distinct.count - 2] == reading {
+                reversals += 1
+            }
+        }
+        distinct.append(reading)
+    }
+
+    var reading: String {
+        "guides caught \(caught), let go \(released), changed \(changes), went back on themselves \(reversals)"
     }
 }
 #endif

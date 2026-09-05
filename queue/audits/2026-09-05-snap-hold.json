@@ -1,0 +1,30 @@
+{
+  "feature": "A snap that is showing is a snap you get",
+  "epic": "measure-redline",
+  "summary": "Snapping no longer chatters. A line you can see now keeps whatever you are dragging until you have clearly pulled away from it, so landing on a guide is something you do rather than something you catch. Holding Command still drops every magnet, and now keeps them off until you let go of the mouse.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Open any screenshot for the caliper steps; a blank canvas with two rectangles is enough for the layer steps.",
+  "try": [
+    { "do": "Open a screenshot, press I for Measure, and click two feet across something to place a caliper." },
+    { "do": "Press V, click the caliper, then drag one foot slowly across the picture with a hand that is not steady.", "shot": "2026-09-05-snap-hold-foot-sc.png" },
+    { "do": "Stop with the yellow guide showing and jiggle the mouse a couple of points either way. The foot should stay on the line." },
+    { "do": "Keep pulling away until it lets go. Note how far you had to travel before it did." },
+    { "do": "On a blank canvas draw two rectangles, select one and drag its right edge slowly onto the other one's left edge.", "shot": "2026-09-05-snap-hold-edge-sc.png" },
+    { "do": "Do it again holding Command: no guide should appear at any point." },
+    { "do": "Drag a whole layer up the canvas until it centres, and wobble on the centre line." }
+  ],
+  "evaluate": [
+    "When the yellow line is showing, does the edge look like it is actually ON it rather than near it?",
+    "Is the distance you have to travel to shake a line off right, or does it feel like the snap is clinging?",
+    "When a snap lets go, is the jump to the pointer acceptable, or does the edge appear to leap?",
+    "Does Command staying off for the rest of the drag feel right, or would you expect the magnets back the moment you release the key?",
+    "Dragging a foot across a busy screenshot, does it now feel like it is stepping from edge to edge rather than shimmering?"
+  ],
+  "rough": [
+    "Measured in the real app with two new scripted walks that shake the pointer as they go (Scripts/playtest/snap-hold-walk.json, snap-hold-foot-walk.json). Dragging a caliper foot across the settings capture: before, the guides changed 67 times and went back on a line they had just left 39 times; after, 4 changes and 0 reversals. A layer edge walked onto a neighbour: 6 changes and 2 reversals before, 2 and 0 after. A whole layer moved onto the canvas centre: 4 and 1 before, 1 and 0 after.",
+    "The escape distance doubled as a direct consequence: a caught line now lets go at 16 screen points rather than 8, so pulling deliberately away means a slightly bigger jump when it finally releases. That is the trade the fix is made of and the thing to judge.",
+    "Command keeping snapping off for the rest of the drag is new. If a reflex Command press mid-drag (for undo, say) makes a drag go free unexpectedly, that will be why.",
+    "The screenshots are real screen captures: the probe held the Screen Recording grant for this run.",
+    "The old axis gate, which stopped a straight up-and-down drag flashing vertical guides, flipped its own mind near its threshold and was part of the chatter. It now has a wide dead band and keeps its decision while the travel is ambiguous, so it can no longer toggle.",
+    "Not covered by the walks: releasing Command in the middle of a drag. A synthesized drag holds its modifiers for the whole gesture, so that half of the rule is only covered by a unit test."
+  ]
+}

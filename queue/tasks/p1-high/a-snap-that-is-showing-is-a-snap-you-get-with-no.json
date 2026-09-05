@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:02:51.607Z",
-  "updated": "2026-09-05T17:02:51.642Z",
+  "updated": "2026-09-05T18:42:42.588413Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 with a screenshot of a caliper foot beside a yellow guide, flickering as the mouse moves slightly. This is the jumpiness left undiagnosed in the-grid-is-always-behind-the-canvas-and-things; that task adds resize snapping and this one governs how any snap behaves, so they must agree and should probably be done together or in that order. Strong candidate cause found by reading, to be confirmed rather than assumed: CanvasView.axisGated (line 711) decides whether to keep a snap from a decaying motion accumulator, dropping the x snap when abs(dy) is more than twice abs(dx) and above 2, and the y snap the other way round. trackDragMotion (line 724) feeds it with a 0.7 decay per event. During a slow drag the two numbers sit near those thresholds, so ordinary hand jitter flips which branch wins from one event to the next and the snap is taken and dropped on alternate frames. There is also no hysteresis anywhere: nothing holds a caught snap once it is caught, which is the second half of the fix and is what the acceptance asks for. Whatever replaces the axis gate must still stop a purely vertical drag flashing horizontal guides, which is the problem it was written to solve; a directional gate that only updates when the motion is unambiguous, and otherwise holds its last decision, would do that without oscillating.",
@@ -31,6 +31,47 @@
     {
       "t": "2026-09-05T17:02:51.641Z",
       "note": "seq 180 -> 2"
+    },
+    {
+      "t": "2026-09-05T18:11:48.868Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T18:42:42.588413Z",
+      "note": "Adversarial review before building. The mock is not the problem here, the rule is: with a hold in place a snap that catches something you did not want is now twice as sticky, so \u2318 has to be a real escape and it now latches for the rest of the drag. A hold also makes the old axis gate dangerous rather than merely noisy: a guide flashed for one frame by an oscillating gate would now be HELD, so the gate had to stop oscillating in the same change. Shortest version that delivers the value: no new state object, because the line already being drawn IS the state to keep, so the hold is just the previous guides fed back in."
+    },
+    {
+      "t": "2026-09-05T18:42:42.588413Z",
+      "note": "Reproduced first, before any change. A scripted slow walk with a hand wobble across one line, at the core level: EdgeSnapping flipped between snapped and free 6 times on a single pass (3 catches, 3 releases where 1 each is right), with the value jumping 208.3 -> 200 -> 208.2 -> 200; Snapping.snapResizedFrame flipped 6 times too, alternating between the peer line at 300 and the grid line at 312."
+    },
+    {
+      "t": "2026-09-05T18:42:42.588413Z",
+      "note": "Then reproduced in the REAL app, with a new playtest walk that shakes the pointer as it drags and reports what the guides did. Caliper foot dragged across the settings capture: guides changed 67 times and went back to a line they had just left 39 times. Layer edge onto a neighbour: 6 changes, 2 reversals. Whole layer onto the canvas centre: 4 changes, 1 reversal."
+    },
+    {
+      "t": "2026-09-05T18:42:42.588413Z",
+      "note": "Fix, all in PhotonzCore with tests first. SnapHold (the lines a drag is standing on plus a \u2318 latch) and DragAxisGate (the direction gate, now with a dead band between locking and unlocking so ambiguity keeps the last decision instead of toggling). EdgeSnapping.snap/snapValue, Snapping.snapFrameOrigin/snapResizedFrame and MeasureReadoutDrag.resolve all take `holding:`: a held line wins outright while the pointer is within SnapHold.releaseFactor (2) times the catch tolerance, so it lets go at 16 screen points having caught at 8."
+    },
+    {
+      "t": "2026-09-05T18:42:42.588413Z",
+      "note": "Wired in CanvasView as ONE piece of state, `snapHold`, read and written by every snapping drag: measure foot, measure readout, region corner, layer edge, layer corner, one layer moving, several layers moving, and the caliper being drawn. Cleared on mouse-down, except while a caliper placement is in flight, since that is one gesture spread over two clicks and the line the preview shows has to be the line the click lands on."
+    },
+    {
+      "t": "2026-09-05T18:42:42.588413Z",
+      "note": "After, same walks: caliper foot 4 changes and 0 reversals (was 67 and 39); layer edge 2 and 0 (was 6 and 2); layer move 1 and 0 (was 4 and 1). Core walk tests assert exactly one catch and one release across a pass. Full suite green, 3298 tests."
+    },
+    {
+      "t": "2026-09-05T18:42:42.588413Z",
+      "note": "Harness gained two things any future walk can use: `wobble` on a drag (shakes the pointer along the line it walks, and half as much sideways) and a guide reading on every drag line \u2014 caught, let go, changed, and went back on themselves. The last number is the flicker one. Documented in docs/design/playtest-harness.md."
+    },
+    {
+      "t": "2026-09-05T18:42:42.588413Z",
+      "note": "Acceptance note on 'no rounding or pulling of any kind' when no guide is showing: the canvas grid still quantizes, and EdgeSnapping still rounds to whole image pixels. Both were read as pulling you can SEE (the grid lines are on screen, and the pixel grid is what makes a 1px sizer line land crisp), and the grid behaviour is what the sibling task shipped this morning at your request. Say so if that reading is wrong and it becomes a follow-up."
+    },
+    {
+      "t": "2026-09-05T18:42:42.588413Z",
+      "note": "Not covered in the app: releasing \u2318 mid-drag. A synthesized drag holds its modifiers for the whole gesture, so the latch is covered by a unit test only. Recorded in the audit."
     }
-  ]
+  ],
+  "started": "2026-09-05T18:11:48.867Z"
 }

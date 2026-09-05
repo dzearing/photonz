@@ -696,11 +696,17 @@ final class CanvasNSView: NSView {
     /// Document-space x/y of the edge(s) a measure corner is currently snapped to,
     /// drawn as a highlight while the corner is held. Cleared on mouse-up.
     var snapGuide: (x: CGFloat?, y: CGFloat?)?
-    /// Decayed accumulator of recent drag motion (doc px). When the user is
-    /// clearly resizing along ONE axis, the perpendicular axis stops grabbing
-    /// edges — dragging a leg up/down shouldn't flash vertical snap guides.
-    private var dragMotion = CGVector.zero
-    private var lastDragPoint: CGPoint?
+    /// Which axes this drag is still allowed to catch lines on, from the
+    /// direction the hand is actually travelling: dragging a leg up and down
+    /// shouldn't flash vertical guides past it. The gate keeps its decision
+    /// while the travel is ambiguous, so it cannot toggle under a wobble.
+    private var dragGate = DragAxisGate()
+    /// The lines THIS drag is standing on, and whether ⌘ has freed it. Every
+    /// snapping drag on the canvas — a measure foot, a layer edge, a corner, a
+    /// whole layer, a region — reads and writes this one piece of state, which
+    /// is what makes all of them behave the same way: a line that is showing
+    /// keeps the drag until the pointer is clearly away from it.
+    var snapHold = SnapHold()
     /// In-flight swap drag: a filled slot of the SELECTED collage picked up.
     private var slotDrag: (collageID: UUID, from: Int)?
     /// The slot any eligible drag is currently hovering (drop/absorb/swap target).
@@ -714,33 +720,39 @@ final class CanvasNSView: NSView {
     /// `.center` when ⇧ made the drag symmetric (content stays centered).
     private var canvasResizeDrag: (handle: ResizeHandle, rect: CGRect, centered: Bool)?
 
-    /// Suppresses edge captures on the axis perpendicular to decisive motion.
-    /// The suppressed axis falls back to the pixel grid.
+    /// Suppresses edge captures on the axis the drag is not travelling along.
+    /// The suppressed axis falls back to the pixel grid, and drops whatever it
+    /// was holding: a line nobody may catch is not a line anyone is standing on.
     func axisGated(_ snap: EdgeSnapping.Snap, raw p: CGPoint) -> EdgeSnapping.Snap {
         var snap = snap
-        let ax = abs(dragMotion.dx), ay = abs(dragMotion.dy)
-        if ay > 2 * ax, ay > 2, snap.guideX != nil {
+        if !dragGate.capturesX, snap.guideX != nil {
             snap.point.x = p.x.rounded()
             snap.guideX = nil
-        } else if ax > 2 * ay, ax > 2, snap.guideY != nil {
+        }
+        if !dragGate.capturesY, snap.guideY != nil {
             snap.point.y = p.y.rounded()
             snap.guideY = nil
         }
         return snap
     }
 
-    /// Feeds the motion accumulator; call once per mouseDragged before snapping.
+    /// Feeds the direction gate; call once per mouseDragged before snapping.
     func trackDragMotion(_ p: CGPoint) {
-        if let last = lastDragPoint {
-            dragMotion.dx = dragMotion.dx * 0.7 + (p.x - last.x)
-            dragMotion.dy = dragMotion.dy * 0.7 + (p.y - last.y)
-        }
-        lastDragPoint = p
+        dragGate.track(p)
     }
 
+    /// A new drag starts with no direction and nothing caught.
     func resetDragMotion(_ p: CGPoint) {
-        dragMotion = .zero
-        lastDragPoint = p
+        dragGate.reset(at: p)
+        snapHold = .none
+    }
+
+    /// The lines a snapping drag may keep holding this event. ⌘ empties it and
+    /// latches it empty for the rest of the drag: a magnet that came back when
+    /// the key came up would move the thing you had just placed by hand.
+    func snapHold(freeing free: Bool) -> SnapHold {
+        if free { snapHold.free() }
+        return snapHold
     }
 
     /// A captioned arrow's pill footprint in document space (the same estimate
@@ -959,7 +971,8 @@ final class CanvasNSView: NSView {
     /// that says what the edge just caught.
     private func resizedFrame(for layer: Layer?, start: CGRect, handle: ResizeHandle,
                               pointer p: CGPoint, preserveAspect: Bool,
-                              peers: [CGRect] = [], gridSpacing: CGFloat? = nil)
+                              peers: [CGRect] = [], gridSpacing: CGFloat? = nil,
+                              holding held: SnapHold = .none)
         -> Snapping.FrameResult {
         let local = handleSpacePoint(p, layer: layer)
         var frame = Handles.resize(start, dragging: handle, to: local, preserveAspect: preserveAspect)
@@ -969,7 +982,8 @@ final class CanvasNSView: NSView {
         var result = Snapping.snapResizedFrame(frame, handle: handle,
                                                canvas: viewport?.documentSize ?? .zero,
                                                peers: peers, gridSpacing: gridSpacing,
-                                               zoom: viewport?.zoom ?? 1)
+                                               zoom: viewport?.zoom ?? 1,
+                                               holding: held)
         frame = result.frame
         if let layer, layer.resizeWidthOnly, case .text(let content) = layer.content {
             // Every number here is the box a person SEES: the handles are on
@@ -1596,6 +1610,12 @@ final class CanvasNSView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let viewport else { return }
+        // Every press starts a drag that is standing on nothing and has not
+        // been freed: whatever the last one caught, or whether ⌘ let it go,
+        // is none of this one's business. A caliper being placed is the
+        // exception — it is ONE gesture spread over two clicks, and the line
+        // its preview is showing has to still be the line the click lands on.
+        if measurePlacement == nil { snapHold = .none }
         // A click outside the inline text editor commits it; the click is
         // swallowed so committing never doubles as starting something else.
         // The one exception is the fresh arrow's caption field: the Arrow tool
@@ -2094,10 +2114,12 @@ final class CanvasNSView: NSView {
             // HEAD is the label position, not a measured point, so the picture's
             // edges have no say over it — but the other readouts do: it lines up
             // with the chips around it. ⌘ drags either one free.
+            let held = snapHold(freeing: event.modifierFlags.contains(.command))
             if drag.handle == .head {
                 snapGuide = snapMeasureHead(&drag, pointer: p, zoom: viewport.zoom,
-                                            snapping: !event.modifierFlags.contains(.command))
-            } else if event.modifierFlags.contains(.command) {
+                                            snapping: !held.isFree, holding: held)
+                snapHold.caught(x: snapGuide?.x, y: snapGuide?.y)
+            } else if held.isFree {
                 drag.current = p
                 snapGuide = nil
             } else {
@@ -2110,10 +2132,12 @@ final class CanvasNSView: NSView {
                                       xSpan: min(fixed.x, p.x)...max(fixed.x, p.x),
                                       ySpan: min(fixed.y, p.y)...max(fixed.y, p.y),
                                       includeCenters: measureSnapsToCenters,
-                                      guides: drag.guides),
+                                      guides: drag.guides,
+                                      holding: held),
                     raw: p)
                 drag.current = snap.point
                 snapGuide = (snap.guideX, snap.guideY)
+                snapHold.caught(x: snap.guideX, y: snap.guideY)
             }
             measureHandleDrag = drag
             // Live re-render so the measured value updates as the handle moves.
@@ -2154,11 +2178,14 @@ final class CanvasNSView: NSView {
             // ratio nobody may quietly break. Either one hands back exactly the
             // resize this has always done.
             let aspect = event.modifierFlags.contains(.shift)
-            let snapping = !aspect && !event.modifierFlags.contains(.command)
+            let held = snapHold(freeing: event.modifierFlags.contains(.command))
+            let snapping = !aspect && !held.isFree
             drag.snapped = resizedFrame(for: layer, start: drag.startFrame, handle: drag.handle,
                                         pointer: p, preserveAspect: aspect,
                                         peers: snapping ? drag.peers : [],
-                                        gridSpacing: snapping ? canvasSnapSpacing : nil)
+                                        gridSpacing: snapping ? canvasSnapSpacing : nil,
+                                        holding: snapping ? held : .none)
+            snapHold.caught(x: drag.snapped.guideX, y: drag.snapped.guideY)
             drag.frame = drag.snapped.frame
             resizeDrag = drag
             onFramePreview(drag.layerID, drag.frame)
@@ -2179,15 +2206,18 @@ final class CanvasNSView: NSView {
                 // ⌘ drags free, the way it already does for a measure foot or a
                 // region corner: one key that means "ignore the magnets"
                 // everywhere on the canvas.
-                if event.modifierFlags.contains(.command) {
+                let held = snapHold(freeing: event.modifierFlags.contains(.command))
+                if held.isFree {
                     drag.snapped = Snapping.Result(origin: proposed)
                 } else {
                     drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.size,
                                                             canvas: viewport.documentSize,
                                                             peers: drag.peers,
                                                             gridSpacing: canvasSnapSpacing,
-                                                            zoom: viewport.zoom)
+                                                            zoom: viewport.zoom,
+                                                            holding: held)
                 }
+                snapHold.caught(x: drag.snapped.guideX, y: drag.snapped.guideY)
                 if drag.copying {
                     onCopyDragPreview([drag.layerID: drag.snapped.origin])
                 } else {
@@ -2220,15 +2250,18 @@ final class CanvasNSView: NSView {
             if copyDragModifier(event) { drag.copying = true }
             if drag.moved {
                 // ⌘ drags free of the magnets, exactly as it does for one layer.
-                if event.modifierFlags.contains(.command) {
+                let held = snapHold(freeing: event.modifierFlags.contains(.command))
+                if held.isFree {
                     drag.snapped = Snapping.Result(origin: proposed)
                 } else {
                     drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.plan.bounds.size,
                                                             canvas: viewport.documentSize,
                                                             peers: drag.peers,
                                                             gridSpacing: canvasSnapSpacing,
-                                                            zoom: viewport.zoom)
+                                                            zoom: viewport.zoom,
+                                                            holding: held)
                 }
+                snapHold.caught(x: drag.snapped.guideX, y: drag.snapped.guideY)
                 let origins = drag.plan.origins(movingBoundsTo: drag.snapped.origin)
                 if drag.copying {
                     onCopyDragPreview(origins)
@@ -2286,7 +2319,8 @@ final class CanvasNSView: NSView {
         } else if var session = regionDrag {
             // Same corner magnetizing as a measure drag: the growing edges
             // window the candidates; ⌘ drags free.
-            if event.modifierFlags.contains(.command) {
+            let held = snapHold(freeing: event.modifierFlags.contains(.command))
+            if held.isFree {
                 session.drag.update(to: p)
                 snapGuide = nil
             } else {
@@ -2294,10 +2328,12 @@ final class CanvasNSView: NSView {
                 let snap = axisGated(
                     EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom,
                                       xSpan: min(session.drag.anchor.x, p.x)...max(session.drag.anchor.x, p.x),
-                                      ySpan: min(session.drag.anchor.y, p.y)...max(session.drag.anchor.y, p.y)),
+                                      ySpan: min(session.drag.anchor.y, p.y)...max(session.drag.anchor.y, p.y),
+                                      holding: held),
                     raw: p)
                 session.drag.update(to: snap.point)
                 snapGuide = (snap.guideX, snap.guideY)
+                snapHold.caught(x: snap.guideX, y: snap.guideY)
             }
             regionDrag = session
             refreshOverlays()
@@ -3650,6 +3686,17 @@ final class CanvasNSView: NSView {
         }
 
         refreshSnapGuides(in: viewport)
+    }
+
+    /// The guides on screen RIGHT NOW, whichever kind of drag put them there.
+    /// A scripted walk samples this between the moves of one drag to count how
+    /// often a snap is taken and given back, which is the only way to measure
+    /// flicker from outside.
+    var liveSnapGuides: (x: CGFloat?, y: CGFloat?) {
+        let move = moveDrag?.snapped ?? multiMove.flatMap { $0.moved ? $0.snapped : nil }
+        let resize = resizeDrag?.snapped
+        return (move?.guideX ?? resize?.guideX ?? snapGuide?.x,
+                move?.guideY ?? resize?.guideY ?? snapGuide?.y)
     }
 
     /// The lines that say what a drag just lined itself up with. Guides span
