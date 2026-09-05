@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T16:46:53.691Z",
-  "updated": "2026-09-05T18:10:51.805201Z",
+  "updated": "2026-09-05T18:11:06.491Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 after the canvas grid shipped. Four findings from a read, three of them confirmed. (1) Surround: CanvasGridChrome.refreshCanvasGrid line 39 intersects the grid with viewport.documentFrameInView, so the grid is clipped to the picture and never appears on the grey around it. The user wants the surround to carry it always, with the switched on state being the grid drawn OVER the picture. (2) Snap to grid does not exist: no reference to grid anywhere in Snapping.swift or in the drag paths. (3) Resize does no snapping at all: only the move path calls Snapping.snapFrameOrigin (CanvasView.swift lines 2107 and 2147); the resize branch at line 1992 has no snapping, which is exactly the asymmetry the user hit. Snapping.swift only offers snapFrameOrigin, which snaps an ORIGIN given a fixed size, so a resize needs a new entry point that snaps the moving edge or corner and leaves the opposite one alone; keep it in the same file so there is one snapping idea, not two. (4) The jumpiness with the grid on is NOT explained by anything found: there is no grid snapping to be inaccurate. Reproduce it before theorising; suspects worth checking are the level of detail ladder changing which lines are drawn mid drag so the eye reads a different grid, and the existing pixel grid rounding on the drag. Grid settings live in CanvasGridSettings and CanvasGridStore, are app wide rather than per document, and ship behind next-canvas-grid.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-05T18:10:51.805201Z",
       "note": "Full suite green (3276) and Scripts/playtest-all.sh run: 153 passed, 6 failed. Five of the six pass on their own and were shared-state cascade inside the batch. The sixth, mixed-one-look-walk, fails identically on a stashed PRE-CHANGE build, so it is not from this work; filed as the-mixed-one-look-walk-reaches-the-alignment-bu. Audit written at queue/audits/2026-09-05-grid-surround-and-snapping.json with three real window captures."
+    },
+    {
+      "t": "2026-09-05T18:11:06.490Z",
+      "note": "Shipped in Next (803ebd3). The grey surround always carries the grid, with the picture's drop shadow falling across it when the grid is switched off over the picture; a Snap to grid switch sits under Grid in the Canvas section and on View as Shift Command semicolon, on by default; resizing an edge or a corner now pulls to the other layers, the canvas and the grid, drawing the same guides a move draws, with Command freeing it. Verified in the probe with Scripts/playtest/grid-surround-snap-walk.json: 16pt grid, right handle dragged to 341, 346, 353 landed on 336, 352, 352 and stayed; dragged to 497 beside a peer at 500 landed on 500 with the guide; Command gave 359 exactly; snapping off gave 463 exactly with the lines still drawn; grid off gave 470 exactly and still caught the peer. Cost measured against a stashed pre-change build: no measurable difference. 25 core tests written first, suite green at 3276. Audit: queue/audits/2026-09-05-grid-surround-and-snapping.json."
     }
   ],
-  "started": "2026-09-05T17:01:29.852Z"
+  "started": "2026-09-05T17:01:29.852Z",
+  "completed": "2026-09-05T18:11:06.491Z"
 }
