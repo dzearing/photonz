@@ -2346,3 +2346,51 @@ made at drop time and nothing rewrites one in place. And a text field with a
 long placeholder WRAPS rather than truncating with an ellipsis, because a text
 layer has nothing that clips; growing downward is the honest shape when nothing
 can be hidden.
+
+## Landed: a container can be told the smallest and largest it may get (Next, `next-auto-layout`, 2026-09-05)
+
+The hug audit's own complaint: "There is no minimum width, so a button with one
+letter in it is as narrow as one letter plus its room." Hugging is right until
+it is not — a two letter button stops looking like a button, and a card with a
+very long title runs off the screen. Every group can now be given a floor and a
+ceiling on each axis, and neither one is anything but a typed number.
+
+**Four numbers, empty by default.** Beside the **Width** and **Height** rows in
+the Layout section sits the same twist-open **Padding** already uses. Open it
+and there are two rows, **Smallest** and **Largest**, both showing None. A
+group nobody has typed a number into is byte for byte the group it was: the
+same layout, the same file, no extra work in the flow. The rows open themselves
+whenever a limit is set, so a group that stopped growing never hides the reason,
+and the section's sentence reads it back: "It never gets narrower than 200."
+
+**The room a floor makes belongs to the contents.** This is the part the sketch
+of the feature got wrong and the build fixed. A floor holding a group open makes
+room nobody has put anything in yet, so the whole block of contents moves to
+where its pieces agree it should go: a centred word centres in the room the
+floor made rather than sitting jammed against the left padding. An axis the
+group was GIVEN a size on is different — that size came from a handle somebody
+dragged, and things staying where you put them is what Free means — so it is
+only the limit case that places the block.
+
+**Contents too big for the room start at the near edge.** A word wider than its
+ceiling overhangs the far edge rather than centring and escaping off the near
+one, where nothing else in the app would look for it. Overhanging is honest
+until there is a way to wrap or shrink words; nothing is clipped and nothing is
+lost.
+
+**The rules that keep it small.** The smallest wins where the two cross, which
+is what anybody who has written a stylesheet already carries, and typing 96 over
+a 9 passes through that state anyway. A limit stops a dragged handle too, so the
+number in the field and the box on the canvas can never disagree. A stack or a
+grid held at a limit lays its rows out in the room it actually has, rather than
+overflowing it quietly. A limit that does not bite costs nothing: the flow only
+runs a second pass when the number it comes back with is not the one it started
+with.
+
+Not in this slice: wrapping or shrinking words that outgrow a ceiling, limits on
+a screen (its box is its frame), per child limits, and limits as tokens on a
+scale.
+
+Model and maths in `GroupLayout` and `GroupFlow` (`limitsSize`, `heldWidth`,
+`heldHeight`, `holding`), the rows in `ArrangementInspector`. Tested in
+`GroupSizeLimitsTests`, walked by `Scripts/playtest/size-limits-walk.json`.

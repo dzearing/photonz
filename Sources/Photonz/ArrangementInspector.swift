@@ -33,6 +33,13 @@ struct ArrangementInspector: View {
     /// card with 24 at the bottom always shows the 24.
     @State private var sidesOpen: Bool?
 
+    /// Whether each axis' smallest and largest are showing, and nil while
+    /// nobody has said: an axis that already carries one shows it. Forgotten
+    /// when the selection moves on, so arriving at a group held at 96 always
+    /// shows the 96.
+    @State private var widthLimitsOpen: Bool?
+    @State private var heightLimitsOpen: Bool?
+
     private var current: Layer { editorState.document?.layer(id: layer.id) ?? layer }
     /// What this group is working to, including what a group nobody has touched
     /// is already working to, so the rows read the same either way.
@@ -51,7 +58,11 @@ struct ArrangementInspector: View {
                 ownRows(layout)
             }
         }
-        .onChange(of: layer.id) { sidesOpen = nil }
+        .onChange(of: layer.id) {
+            sidesOpen = nil
+            widthLimitsOpen = nil
+            heightLimitsOpen = nil
+        }
     }
 
     /// The whole section as the group that owns it sees it.
@@ -71,7 +82,9 @@ struct ArrangementInspector: View {
             .frame(maxWidth: 152)
         }
         numbers(layout)
-        Text(caption(layout) + (sizeSentence(layout).map { " " + $0 } ?? ""))
+        Text(([caption(layout), sizeSentence(layout),
+               current.isFrame ? nil : layout.limitsSentence]
+            .compactMap { $0 }).joined(separator: " "))
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
@@ -127,6 +140,7 @@ struct ArrangementInspector: View {
         if !current.isFrame, !fixed.isEmpty {
             parts.append("It is \(fixed.joined(separator: " and ")).")
         }
+        if !current.isFrame, let limits = layout.limitsSentence { parts.append(limits) }
         return parts.joined(separator: " ")
     }
 
@@ -156,12 +170,8 @@ struct ArrangementInspector: View {
         // contents make or holds a size of its own, which is what lets a menu
         // be 320 wide before there is a screen to build it on.
         if !current.isFrame {
-            sizeRow("Width", hugs: layout.hugsWidth, measured: current.localBounds.width) { size in
-                editorState.updateArrangement(id: layer.id) { $0.width = size }
-            }
-            sizeRow("Height", hugs: layout.hugsHeight, measured: current.localBounds.height) { size in
-                editorState.updateArrangement(id: layer.id) { $0.height = size }
-            }
+            sizeRows(.width, layout)
+            sizeRows(.height, layout)
         }
         // A gap is the space the flow leaves BETWEEN things, so it belongs to
         // the two arrangements that put things one after another.
@@ -261,15 +271,50 @@ struct ArrangementInspector: View {
         showsSides(room) || room.isUniform ? MixedValue.text : room.shorthand
     }
 
-    /// One axis' Hug-or-Fixed row. Choosing Fixed starts from the size the
-    /// group is at that moment, so nothing moves when you press it, and the
-    /// number itself is typed in W or H above rather than in a second field
-    /// here that would have to agree with it.
-    private func sizeRow(_ title: String, hugs: Bool, measured: CGFloat,
-                         commit: @escaping (CGFloat?) -> Void) -> some View {
-        row(title) {
-            Picker("", selection: Binding(get: { hugs },
-                                          set: { commit($0 ? nil : measured.rounded()) })) {
+    /// One axis' Hug-or-Fixed row, and behind a chevron beside it, the
+    /// smallest and the largest that axis may get.
+    ///
+    /// Choosing Fixed starts from the size the group is at that moment, so
+    /// nothing moves when you press it, and the number itself is typed in W or
+    /// H above rather than in a second field here that would have to agree
+    /// with it.
+    ///
+    /// The two limits hide behind the same twist-open Padding already uses,
+    /// because four more always-on rows would be the section telling you it has
+    /// run out of room. They open themselves the moment one is set, so a group
+    /// that stopped growing never hides the reason.
+    @ViewBuilder
+    private func sizeRows(_ axis: SizeAxis, _ layout: GroupLayout) -> some View {
+        let hugs = axis == .width ? layout.hugsWidth : layout.hugsHeight
+        let measured = axis == .width ? current.localBounds.width : current.localBounds.height
+        let open = showsLimits(axis, layout)
+        let noun = current.isFrame ? "screen" : "group"
+        HStack(spacing: 8) {
+            Text(axis.title)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+            Button {
+                setLimitsOpen(axis, !open)
+            } label: {
+                Image(systemName: open ? "chevron.down" : "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 12, height: 12)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .help(open
+                ? "Hide the smallest and largest \(axis.noun), and keep the numbers they were given."
+                : "Give this \(noun) a smallest and a largest \(axis.noun).")
+            .playtestControl("Limits", detail: axis.title)
+            Spacer(minLength: 8)
+            Picker("", selection: Binding(get: { hugs }, set: { hugging in
+                let size = hugging ? nil : measured.rounded()
+                editorState.updateArrangement(id: layer.id) {
+                    if axis == .width { $0.width = size } else { $0.height = size }
+                }
+            })) {
                 Text("Hug").tag(true)
                 Text("Fixed").tag(false)
             }
@@ -277,8 +322,67 @@ struct ArrangementInspector: View {
             .labelsHidden()
             .frame(maxWidth: 152)
             .help(hugs
-                ? "This group is as \(title == "Width" ? "wide" : "tall") as what is inside it. Fixed holds the size it is now, and W and H above set it."
-                : "This group holds the \(title.lowercased()) it was given. Type it in \(title == "Width" ? "W" : "H") above, or drag a handle.")
+                ? "This group is as \(axis.adjective) as what is inside it. Fixed holds the size it is now, and W and H above set it."
+                : "This group holds the \(axis.noun) it was given. Type it in \(axis.field) above, or drag a handle.")
+        }
+        .playtestField(axis.title)
+        if open {
+            limit("Smallest", axis: axis, value: axis == .width ? layout.minWidth
+                                                                : layout.minHeight,
+                  help: "The \(axis.least) this \(noun) may ever get, whatever is inside it. Leave it empty for no limit.") { size in
+                editorState.updateArrangement(id: layer.id) {
+                    if axis == .width { $0.minWidth = size } else { $0.minHeight = size }
+                }
+            }
+            limit("Largest", axis: axis, value: axis == .width ? layout.maxWidth
+                                                               : layout.maxHeight,
+                  help: "The \(axis.most) this \(noun) may ever get, whatever is inside it. Leave it empty for no limit.") { size in
+                editorState.updateArrangement(id: layer.id) {
+                    if axis == .width { $0.maxWidth = size } else { $0.maxHeight = size }
+                }
+            }
+        }
+    }
+
+    /// One of the two axes a size and its limits belong to, and the words each
+    /// one is talked about in, so no row has to work them out from its title.
+    private enum SizeAxis {
+        case width, height
+
+        var title: String { self == .width ? "Width" : "Height" }
+        /// The plain noun, for a sentence: "a smallest and a largest width".
+        var noun: String { self == .width ? "width" : "height" }
+        /// Which field above holds the number itself.
+        var field: String { self == .width ? "W" : "H" }
+        var adjective: String { self == .width ? "wide" : "tall" }
+        var least: String { self == .width ? "narrowest" : "shortest" }
+        var most: String { self == .width ? "widest" : "tallest" }
+    }
+
+    /// Whether one axis' limits are showing. Until somebody says otherwise, an
+    /// axis that already carries a limit shows it: a number that is holding a
+    /// group open is not something to go hunting behind a chevron for.
+    private func showsLimits(_ axis: SizeAxis, _ layout: GroupLayout) -> Bool {
+        let open = axis == .width ? widthLimitsOpen : heightLimitsOpen
+        return open ?? (axis == .width ? layout.limitsWidth : layout.limitsHeight)
+    }
+
+    private func setLimitsOpen(_ axis: SizeAxis, _ open: Bool) {
+        if axis == .width { widthLimitsOpen = open } else { heightLimitsOpen = open }
+    }
+
+    /// One limit: empty until somebody types a number, and empty again the
+    /// moment they clear it, because "no limit" is the answer every group
+    /// starts with and it has to be one keystroke away.
+    private func limit(_ title: String, axis: SizeAxis, value: CGFloat?, help: String,
+                       commit: @escaping (CGFloat?) -> Void) -> some View {
+        // The box answers to the axis' own name — "Smallest width", not
+        // "Smallest" — because the word Smallest sits under Width AND under
+        // Height, and a field two rows answer to is a field neither of them
+        // owns, for a screen reader as much as for a scripted walk.
+        row(title, indent: 20, field: "\(title) \(axis.noun)") {
+            LayoutNumberField(title: "\(title) \(axis.noun)", value: value, prompt: "None",
+                              help: help, clear: { commit(nil) }, commit: { commit($0) })
         }
     }
 
@@ -339,7 +443,7 @@ struct ArrangementInspector: View {
     /// One labelled row. The label never wraps: "Arrangement" broken over two
     /// lines is the panel telling you it has run out of room, and the control
     /// beside it can give up the points instead.
-    private func row(_ title: String, indent: CGFloat = 0,
+    private func row(_ title: String, indent: CGFloat = 0, field: String? = nil,
                      @ViewBuilder control: () -> some View) -> some View {
         HStack(spacing: 8) {
             // The sides of a padding sit under the word they belong to, so a
@@ -353,8 +457,10 @@ struct ArrangementInspector: View {
             control()
         }
         // Lends the row's word to whatever it holds, so a scripted walk can
-        // say Width's Fixed rather than whichever Fixed came first.
-        .playtestField(title)
+        // say Width's Fixed rather than whichever Fixed came first. Two rows
+        // can share a WORD without sharing a name: Smallest sits under both
+        // Width and Height, so each says which one it belongs to.
+        .playtestField(field ?? title)
     }
 
     private func number(_ title: String, value: CGFloat, minimum: CGFloat = 0,
@@ -385,6 +491,10 @@ private struct LayoutNumberField: View {
     /// than picking one of them and lying.
     let value: CGFloat?
     var minimum: CGFloat = 0
+    /// What the box says while it is EMPTY, which is a different thing from
+    /// standing in for a value that is not one value: a limit nobody has set
+    /// says None, and typing a number is what sets it.
+    var prompt: String?
     /// What stands in the field when there is no one number to show: the word
     /// Mixed. It is the field's TEXT, not its placeholder, so it is drawn at
     /// the one strength every other Mixed in the dock is drawn at; a
@@ -392,6 +502,10 @@ private struct LayoutNumberField: View {
     /// the same question (`MixedLook.swift`).
     var placeholder: String = ""
     let help: String
+    /// Emptying the box, where emptying it means something. A limit cleared is
+    /// no limit; a gap cleared is not a thing, so those fields leave this out
+    /// and go on snapping back to the number they had.
+    var clear: (() -> Void)?
     let commit: (CGFloat) -> Void
 
     @State private var text = ""
@@ -426,7 +540,7 @@ private struct LayoutNumberField: View {
         // then the word Mixed sits where the number would be, which is what
         // every other control in the dock does with a value the picked things
         // do not agree on.
-        TextField(title, text: $text)
+        TextField(title, text: $text, prompt: prompt.map { Text($0) })
             .textFieldStyle(.roundedBorder)
             .controlSize(.small)
             .multilineTextAlignment(.trailing)
@@ -467,7 +581,13 @@ private struct LayoutNumberField: View {
     /// The draft, landed. Text that is not a number snaps back to the number
     /// the group really has rather than being guessed at.
     private func land() {
-        guard let typed = Double(text.trimmingCharacters(in: .whitespaces)) else {
+        let typed = text.trimmingCharacters(in: .whitespaces)
+        if typed.isEmpty, let clear {
+            guard value != nil else { return }
+            clear()
+            return
+        }
+        guard let typed = Double(typed) else {
             text = display(value)
             return
         }

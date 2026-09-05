@@ -1,0 +1,28 @@
+{
+  "id": "words-that-outgrow-their-container-wrap-instead",
+  "title": "Words that outgrow their container wrap instead of hanging out of it",
+  "goal": "When a label is wider than the box it lives in, the words wrap onto a second line and the box grows downward, instead of running out past the edge where nobody can read them. Today a button with a ceiling on its width shows its label hanging off the side.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1220,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T15:52:00.555Z",
+  "updated": "2026-09-05T15:52:00.556Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from queue/audits/2026-09-05-group-size-limits.json. Limits landed 2026-09-05 (GroupLayout.minWidth/maxWidth/minHeight/maxHeight, GroupFlow.holding). The ceiling case deliberately leaves the words starting at the near edge and overhanging the far one, because clipping loses them and centring pushes them off the near edge too. Text measurement and re-wrap already exist for a stretched label in a stack (see the reflowPasses comment in GroupLayoutEditing); the missing piece is handing a capped width to a label that is NOT set to stretch.",
+  "acceptance": [
+    "A text layer inside a group whose width is capped wraps at that width rather than overhanging it",
+    "The group grows taller as the words wrap, unless its height is capped too",
+    "A label that fits changes in no way at all",
+    "Tests cover wrapping at a ceiling, at a typed width, and the no-change case in PhotonzCore before the app code is written"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T15:52:00.556Z",
+      "note": "created (manual)"
+    }
+  ]
+}

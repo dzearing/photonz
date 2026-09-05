@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:26.798Z",
-  "updated": "2026-09-05T14:07:49.079Z",
+  "updated": "2026-09-05T15:33:22.176Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from the rough list of queue/audits/2026-09-04-ui-hug.json: \"There is no minimum width, so a button with one letter in it is as narrow as one letter plus its room.\" Model lives in Sources/PhotonzCore/GroupLayout.swift, which today holds kind, direction, columns, gap, rowGap, padding, width and height and nothing else; usedWidth/usedHeight and hugsWidth/hugsHeight are the clamp points. Layout runs in GroupFlow.swift and the panel rows are in Sources/Photonz/LayersPanel.swift. Keep the maths in the core, out of the view. Codable needs the new keys optional so old files decode.\n\nTriage 2026-09-05: the 2026-09-04 runner was interrupted after writing its tests and before any implementation. It left Tests/PhotonzCoreTests/GroupSizeLimitsTests.swift behind, referencing GroupLayout.limitsWidth, limitsHeight and limitsSentence, none of which exist, so the whole test target could not compile and every task's test gate would have failed. The file is parked at queue/attic/2026-09-05-GroupSizeLimitsTests.swift.txt and removed from Tests. Read it for the shape it had in mind (a GroupSizeLimits value on GroupLayout, limits that survive a switch between Free, Stack and Grid, and a limitsSentence for the panel), then write the tests fresh.",
@@ -59,8 +59,32 @@
     {
       "t": "2026-09-05T14:07:49.079Z",
       "note": "seq 20 -> 30"
+    },
+    {
+      "t": "2026-09-05T15:33:22.176Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T15:52:22.007052Z",
+      "note": "Adversarial review before building, second pass. (1) The parked sketch's shape is sound: four optional numbers, not a nested value. (2) It got ONE thing wrong and the build fixed it: a ceiling that centres an oversized word pushes it off the NEAR edge into negative coordinates, where nothing else in the app looks for it. Contents too big for the room now start at the near edge and overhang the far one, which is what safe alignment means everywhere else. (3) Cut, as before: no on/off switch, no per-child limits, no shrink-to-fit, no wrapping. (4) Cut further during the build: limits on a screen. A screen's box is its own frame, a size somebody gave it, so there is nothing for a limit to hold, and the rows are hidden there exactly as Width and Height already are. (5) Discoverability: the limits sit behind the same twist-open Padding uses, on the Width and Height rows, and open themselves once a number is set. Four more always-on rows would be the section telling you it has run out of room."
+    },
+    {
+      "t": "2026-09-05T15:52:22.007052Z",
+      "note": "Built. Core: GroupLayout gains minWidth/maxWidth/minHeight/maxHeight (optional, Codable keys optional so old files decode and untouched files write nothing), usedMin*/usedMax* reading them the same forgiving way as every other number, heldWidth/heldHeight/held(size) with the floor beating the ceiling, and limitsSentence for the panel. GroupFlow.holding works out the box the limits allow before anything is placed: an axis with a size of its own is simply held, a hugging axis is laid out once to find its natural size and only re-laid-out when the number comes back different, so a limit that does not bite costs nothing. GroupFlow.size holds its answer too, which is what makes Layer.localBounds agree without threading anything. closedAround's block shift became three cases, the third being the new one. LayerScaling.rearranging clamps the dragged box before it pins it, so the field and the canvas cannot disagree. setGroupLayout now carries a layout across a kind switch by changing only the kind, instead of listing the fields it kept, which is how the limits would have been forgotten."
+    },
+    {
+      "t": "2026-09-05T15:52:22.007052Z",
+      "note": "Verified. 21 new tests in Tests/PhotonzCoreTests/GroupSizeLimitsTests.swift written before any implementation, covering the floor and the ceiling on both axes, hug and fixed, stack and grid, the drag, the round trip, the old document, the kind switch and the sentence. Full suite green: 3225 tests in 279 suites. Walked live on the probe with Screen Recording granted (Scripts/playtest/size-limits-walk.json, 53 steps, all passed): a starter Button held open at 200 with its word centred in the room the floor made, stopped at 56 with its word overhanging, cleared back to None twice, and made 72 tall on the other axis. Real window captures, not offscreen renders."
+    },
+    {
+      "t": "2026-09-05T15:52:22.007052Z",
+      "note": "Adversarial review of the BUILT thing, on the real app. Kept: with both axes open the Layout section runs to twelve rows, which is a lot, but each pair is behind its own chevron and only opens when asked or when a number is set, exactly as Padding does. Kept: the Width row goes on saying Hug while a limit holds the box, because it IS hugging, with a floor, and the section's sentence says so. Left rough and filed: a word wider than its ceiling overhangs, because there is no way to wrap or shrink it yet (queue task words-that-outgrow-their-container-wrap-instead). Left rough, in the audit: a fixed width of 400 under a ceiling of 200 shows 400 in the W field and a 200 wide box."
+    },
+    {
+      "t": "2026-09-05T15:52:22.007052Z",
+      "note": "Docs: a Landed section in docs/design/ui-building.md, including why the sketch's centring rule was wrong. Audit at queue/audits/2026-09-05-group-size-limits.json with two real captures beside it."
     }
   ],
-  "started": "2026-09-04T23:10:49.406Z",
+  "started": "2026-09-05T15:33:22.175Z",
   "failures": 1
 }

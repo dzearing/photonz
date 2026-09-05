@@ -1,0 +1,30 @@
+{
+  "feature": "The smallest and largest a container may get",
+  "epic": "ui-layout",
+  "summary": "A group that is the size of its contents can now be given a floor and a ceiling on each axis, so a button with one letter in it is still a button and a card with a very long title stops growing instead of running off the screen.",
+  "setup": "Photonz Next, release Next in the Experiments window, flag next-auto-layout on (it is on by default). Nothing new to turn on.",
+  "try": [
+    { "do": "Open the component shelf and drop the starter Button on the canvas." },
+    { "do": "Show the inspector and find the Layout section. Click the chevron beside the word Width." },
+    { "do": "Type 200 into Smallest and press Return.", "shot": "2026-09-05-size-limits-held-open.png" },
+    { "do": "Double click the button's word, shorten it to OK, press Return and click away. The pill stays 200 wide." },
+    { "do": "Empty the Smallest box and press Return, then type 56 into Largest.", "shot": "2026-09-05-size-limits-stopped.png" },
+    { "do": "Empty Largest, then click the chevron beside Height and type 72 into its Smallest." },
+    { "do": "Set Arrangement to Stack, then back to Free, and check the numbers are still there." },
+    { "do": "Save the document, close it and open it again." }
+  ],
+  "evaluate": [
+    "Is a chevron beside Width the right place to keep these, or should the two numbers always be on screen?",
+    "When a floor holds the button open, the word centres in the room it made. Is that what you expected, or should it stay put where it was?",
+    "A word wider than its ceiling overhangs the right edge. Is overhanging the honest answer, or should the pill clip it?",
+    "The Width row still says Hug while a limit is holding the box. Does that read as wrong to you?",
+    "Are Smallest and Largest the right words, or do you want Min and Max?"
+  ],
+  "rough": [
+    "There is no way to make words wrap or shrink when they outgrow a ceiling, so they overhang. That is the next thing this feature wants.",
+    "A screen cannot be given limits: its box is its own frame, so the rows are hidden there, the same as Width and Height already are.",
+    "Type a fixed width of 400 with a ceiling of 200 and the W field says 400 while the box is 200. The section's sentence says why, but the two numbers do disagree on screen.",
+    "Nothing in the mock drew these at all. The whole shape comes from the hug audit's own complaint, so there was nothing to copy and nothing to argue with.",
+    "Screen Recording was granted for this run, so both pictures are real window captures, not offscreen renders."
+  ]
+}

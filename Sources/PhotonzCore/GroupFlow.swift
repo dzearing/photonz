@@ -48,6 +48,14 @@ enum GroupFlow {
     struct Bounds {
         var width: CGFloat?
         var height: CGFloat?
+        /// True where the number above is not a size this group was given but
+        /// the smallest or the largest it may be, holding open (or holding in)
+        /// a box that is still the size of its contents. It is the difference
+        /// between "you dragged this 300 wide, so things stay where you put
+        /// them" and "a floor made room nobody has put anything in yet", which
+        /// is the room a centred word should centre in.
+        var limitedWidth = false
+        var limitedHeight = false
 
         static let hugging = Bounds(width: nil, height: nil)
 
@@ -92,6 +100,11 @@ enum GroupFlow {
                                contentPlacement: LayerPlacement?,
                                bounds: Bounds, onAScreen: Bool) -> [Layer] {
         let rules = resolving(children, contentPlacement, onAScreen: onAScreen)
+        // Whatever the group was going to be, held to the smallest and the
+        // largest it may get, so the flow lays out in the room it is actually
+        // allowed rather than overflowing a ceiling quietly.
+        let bounds = holding(children, rules: rules, layout: layout, bounds: bounds,
+                             contentPlacement: contentPlacement, onAScreen: onAScreen)
         var out = layout.arranges
             ? arranged(children, rules: rules, layout: layout, bounds: bounds)
             : closedAround(children, rules: rules, layout: layout, bounds: bounds)
@@ -108,6 +121,48 @@ enum GroupFlow {
             out[index] = moved(out[index], to: box, fillingHeight: true)
         }
         return out
+    }
+
+    // MARK: - The smallest and the largest it may get
+
+    /// The box this group is allowed, once its limits have had their say.
+    ///
+    /// An axis with a size of its own only needs that number held. An axis
+    /// that is the size of its CONTENTS has to be laid out once to find out
+    /// how big that is, so a limit that actually bites costs one extra pass
+    /// and a limit that does not costs nothing at all: where the number comes
+    /// back unchanged the axis goes on hugging, byte for byte the layout it
+    /// would have had before limits existed.
+    private static func holding(_ children: [Layer], rules: [ResolvedPlacement],
+                                layout: GroupLayout, bounds: Bounds,
+                                contentPlacement: LayerPlacement?,
+                                onAScreen: Bool) -> Bounds {
+        // A screen's box is its own frame, which is a size somebody gave it
+        // and not one it worked out, so nothing here has anything to hold.
+        guard layout.limitsSize, !onAScreen else { return bounds }
+        var natural = CGSize(width: bounds.width ?? 0, height: bounds.height ?? 0)
+        if bounds.width == nil || bounds.height == nil {
+            let first = layout.arranges
+                ? arranged(children, rules: rules, layout: layout, bounds: bounds)
+                : closedAround(children, rules: rules, layout: layout, bounds: bounds)
+            natural = size(of: first, layout: layout, contentPlacement: contentPlacement,
+                           bounds: bounds, onAScreen: onAScreen, held: false)
+        }
+        let width = held(bounds.width, hugging: natural.width, by: layout.heldWidth)
+        let height = held(bounds.height, hugging: natural.height, by: layout.heldHeight)
+        return Bounds(width: width.side, height: height.side,
+                      limitedWidth: width.limited, limitedHeight: height.limited)
+    }
+
+    /// One axis held to its limits: the number it ends up with, and whether a
+    /// limit is what put it there.
+    private static func held(_ side: CGFloat?, hugging natural: CGFloat,
+                             by hold: (CGFloat) -> CGFloat) -> (side: CGFloat?, limited: Bool) {
+        guard let side else {
+            let limited = hold(natural)
+            return limited == natural ? (nil, false) : (limited, true)
+        }
+        return (hold(side), false)
     }
 
     /// What each child does on each axis, once its own rule and the group's
@@ -133,10 +188,10 @@ enum GroupFlow {
                                      layout: GroupLayout, bounds: Bounds) -> [Layer] {
         let padding = layout.usedPadding
         let box = hugged(children, rules: rules, layout: layout, bounds: bounds)
-        let dx = bounds.width == nil
-            ? padding.left - near(children, rules, horizontal: true) : 0
-        let dy = bounds.height == nil
-            ? padding.top - near(children, rules, horizontal: false) : 0
+        let dx = shift(children, rules, horizontal: true, bounds: bounds,
+                       box: box.width, near: padding.left, far: padding.right)
+        let dy = shift(children, rules, horizontal: false, bounds: bounds,
+                       box: box.height, near: padding.top, far: padding.bottom)
         var out = children
         for index in children.indices {
             // The surface behind everything is placed once, at the end, from
@@ -162,6 +217,45 @@ enum GroupFlow {
         return out
     }
 
+    /// How far the whole block of contents moves on one axis.
+    ///
+    /// Three cases, and the third is the one limits added. An axis that is the
+    /// size of its contents pulls them back to the room at its near edge, so
+    /// the box can close around them. An axis the group was GIVEN a size on
+    /// leaves them exactly where they were put, because that size came from a
+    /// handle somebody dragged and things staying put is what a group that
+    /// arranges nothing means. An axis a LIMIT is holding open has room nobody
+    /// has put anything in yet, so the block goes where its contents agree it
+    /// should: a centred word centres in the room the floor made rather than
+    /// sitting jammed against the left padding.
+    ///
+    /// Contents too big for the room start at the near edge whatever the rule
+    /// says, so a word wider than its ceiling overhangs the far edge rather
+    /// than escaping off the near one where nothing else in the app looks.
+    private static func shift(_ children: [Layer], _ rules: [ResolvedPlacement],
+                              horizontal: Bool, bounds: Bounds, box: CGFloat,
+                              near: CGFloat, far: CGFloat) -> CGFloat {
+        let low = self.near(children, rules, horizontal: horizontal)
+        let side = horizontal ? bounds.width : bounds.height
+        guard side != nil else { return near - low }
+        guard horizontal ? bounds.limitedWidth : bounds.limitedHeight else { return 0 }
+        let extent = max(0, box - near - far)
+        let length = span(children, rules, horizontal: horizontal)
+        guard length <= extent else { return near - low }
+        let rule = agreed(children, rules, horizontal: horizontal)
+        return span(size: length, start: near, extent: extent, rule: rule).low - low
+    }
+
+    /// The one thing every piece being measured says about this axis, or the
+    /// near edge where they say different things. A block moves as one, so a
+    /// block whose pieces disagree has no single answer to move by.
+    private static func agreed(_ children: [Layer], _ rules: [ResolvedPlacement],
+                               horizontal: Bool) -> PlacementSpan {
+        let spans = Set(measuring(children, rules, horizontal: horizontal)
+            .map { horizontal ? rules[$0].horizontal.span : rules[$0].vertical.span })
+        return spans.count == 1 ? (spans.first ?? .leading) : .leading
+    }
+
     // MARK: - How big the group ends up
 
     /// The size a group with a layout occupies: the number it was given on an
@@ -175,20 +269,25 @@ enum GroupFlow {
     /// group keeps the size it had.
     static func size(of children: [Layer], layout: GroupLayout,
                      contentPlacement: LayerPlacement?, bounds: Bounds,
-                     onAScreen: Bool) -> CGSize {
+                     onAScreen: Bool, held: Bool = true) -> CGSize {
         let rules = resolving(children, contentPlacement, onAScreen: onAScreen)
-        guard layout.arranges else {
-            return hugged(children, rules: rules, layout: layout, bounds: bounds)
-        }
         let padding = layout.usedPadding
         // A stack and a grid flow from their own corner, so the room at the
         // near edge is already in where the contents start and only the far
-        // edge is still to be added.
-        return CGSize(
-            width: bounds.width ?? (children.isEmpty
-                ? padding.horizontal : far(children, rules, horizontal: true) + padding.right),
-            height: bounds.height ?? (children.isEmpty
-                ? padding.vertical : far(children, rules, horizontal: false) + padding.bottom))
+        // edge is still to be added. A group that arranges nothing is measured
+        // from wherever its contents sit, at both edges.
+        let box = layout.arranges
+            ? CGSize(
+                width: bounds.width ?? (children.isEmpty
+                    ? padding.horizontal : far(children, rules, horizontal: true) + padding.right),
+                height: bounds.height ?? (children.isEmpty
+                    ? padding.vertical : far(children, rules, horizontal: false) + padding.bottom))
+            : hugged(children, rules: rules, layout: layout, bounds: bounds)
+        // The smallest and the largest it may get have the last word, so the
+        // box on the canvas and the numbers in the Layout section agree even
+        // where nobody has re-run the flow.
+        guard held, !onAScreen else { return box }
+        return layout.held(box)
     }
 
     /// The box of a group that closes around its contents: the room at both
@@ -205,10 +304,16 @@ enum GroupFlow {
     /// stretching along it, or everything there is when they all are.
     private static func measurable(_ children: [Layer], _ rules: [ResolvedPlacement],
                                    horizontal: Bool) -> [CGRect] {
-        let boxes = children.indices
+        measuring(children, rules, horizontal: horizontal).map { children[$0].contentBounds }
+    }
+
+    /// The same children, as indices, so the rule they agree on can be read
+    /// off exactly the set that decided the size.
+    private static func measuring(_ children: [Layer], _ rules: [ResolvedPlacement],
+                                  horizontal: Bool) -> [Int] {
+        let taking = children.indices
             .filter { horizontal ? rules[$0].horizontal != .stretch : rules[$0].vertical != .stretch }
-            .map { children[$0].contentBounds }
-        return boxes.isEmpty ? children.map(\.contentBounds) : boxes
+        return taking.isEmpty ? Array(children.indices) : taking
     }
 
     /// Where the contents begin on one axis, and how much room they take.

@@ -50,15 +50,21 @@ enum LayerScaling {
     static func rearranging(_ layer: Layer, to box: CGRect) -> Layer {
         guard var layout = layer.group?.layout else { return layer }
         let current = layer.localBounds
-        if box.width != current.width { layout.width = max(0, box.width) }
-        if box.height != current.height { layout.height = max(0, box.height) }
+        // A group told the smallest and the largest it may get stops there when
+        // its handle is dragged past it, so the number in the Layout section
+        // and the box on the canvas can never disagree after a drag.
+        let held = CGRect(origin: box.origin,
+                          size: CGSize(width: layout.heldWidth(max(0, box.width)),
+                                       height: layout.heldHeight(max(0, box.height))))
+        if box.width != current.width { layout.width = held.width }
+        if box.height != current.height { layout.height = held.height }
         // A group that arranges nothing still places its contents the way it
         // always did when its handle is dragged: the rules on each piece say
         // whether it holds an edge, keeps its offset from the middle or grows.
         // The drag simply also gives the group that size of its own, so an
         // axis that was closing around its contents stops.
-        var out = layout.arranges ? layer : resizing(layer, to: box)
-        out.frame.origin = box.origin
+        var out = layout.arranges ? layer : resizing(layer, to: held)
+        out.frame.origin = held.origin
         out.setGroupLayout(layout)
         return GroupFlow.flowing(out)
     }

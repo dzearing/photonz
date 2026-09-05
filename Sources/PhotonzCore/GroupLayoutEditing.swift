@@ -74,11 +74,12 @@ extension PhotonzDocument {
         var inferred = GroupLayout.inferred(from: boxes, kind: kind, container: container)
         // Everything a group already carries about how it flows is kept, so
         // turning a stack into a grid and back does not forget the gap.
-        if let existing = group.layout {
-            inferred = GroupLayout(kind: kind, direction: existing.direction,
-                                   columns: existing.columns, gap: existing.gap,
-                                   rowGap: existing.rowGap, padding: existing.padding,
-                                   width: existing.width, height: existing.height)
+        // Kept by changing only the kind, never by listing the fields: a list
+        // is a place to forget the next number somebody adds, and the limits
+        // were exactly that number (found 2026-09-05).
+        if var existing = group.layout {
+            existing.kind = kind
+            inferred = existing
         }
         updateLayer(id: id) { layer in
             // Only a group being arranged for the FIRST time needs pulling

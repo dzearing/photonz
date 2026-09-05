@@ -83,6 +83,17 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     public var width: CGFloat?
     /// How tall this group is, or nil for a group as tall as its contents.
     public var height: CGFloat?
+    /// The narrowest this group may ever be, or nil where nothing holds it
+    /// open. A button with one letter in it is still a button because of this
+    /// number; without one it is as narrow as one letter plus its room.
+    public var minWidth: CGFloat?
+    /// The widest this group may ever get, or nil where nothing stops it. What
+    /// keeps a card with a very long title from running off the screen.
+    public var maxWidth: CGFloat?
+    /// The shortest this group may ever be, or nil where nothing holds it open.
+    public var minHeight: CGFloat?
+    /// The tallest this group may ever get, or nil where nothing stops it.
+    public var maxHeight: CGFloat?
 
     /// The gap a layout starts with when nothing suggests another: the same 12
     /// points the starter components are built on.
@@ -107,7 +118,11 @@ public struct GroupLayout: Hashable, Codable, Sendable {
                 rowGap: CGFloat = GroupLayout.defaultGap,
                 padding: GroupPadding = .none,
                 width: CGFloat? = nil,
-                height: CGFloat? = nil) {
+                height: CGFloat? = nil,
+                minWidth: CGFloat? = nil,
+                maxWidth: CGFloat? = nil,
+                minHeight: CGFloat? = nil,
+                maxHeight: CGFloat? = nil) {
         self.kind = kind
         self.direction = direction
         self.columns = columns
@@ -116,6 +131,10 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         self.padding = padding
         self.width = width
         self.height = height
+        self.minWidth = minWidth
+        self.maxWidth = maxWidth
+        self.minHeight = minHeight
+        self.maxHeight = maxHeight
     }
 
     /// The column count actually used. A grid of nought columns is not a thing
@@ -147,6 +166,63 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     public var hugsWidth: Bool { usedWidth == nil }
     public var hugsHeight: Bool { usedHeight == nil }
 
+    // MARK: - The smallest and the largest it may get
+
+    /// The limits actually kept, read the same forgiving way as every other
+    /// number here: a number that is not a real number is no limit at all
+    /// rather than an infinity handed to the flow, and one below nought is
+    /// nought, because typing over a field passes through odd values on the
+    /// way to a number.
+    public var usedMinWidth: CGFloat? { Self.usedSide(minWidth) }
+    public var usedMaxWidth: CGFloat? { Self.usedSide(maxWidth) }
+    public var usedMinHeight: CGFloat? { Self.usedSide(minHeight) }
+    public var usedMaxHeight: CGFloat? { Self.usedSide(maxHeight) }
+
+    /// Whether anything at all holds this axis, which is the only question the
+    /// flow has to ask before doing any extra work for limits.
+    public var limitsWidth: Bool { usedMinWidth != nil || usedMaxWidth != nil }
+    public var limitsHeight: Bool { usedMinHeight != nil || usedMaxHeight != nil }
+    public var limitsSize: Bool { limitsWidth || limitsHeight }
+
+    /// A width held to what this group is allowed to be.
+    public func heldWidth(_ width: CGFloat) -> CGFloat {
+        Self.held(width, least: usedMinWidth, most: usedMaxWidth)
+    }
+
+    /// A height held to what this group is allowed to be.
+    public func heldHeight(_ height: CGFloat) -> CGFloat {
+        Self.held(height, least: usedMinHeight, most: usedMaxHeight)
+    }
+
+    /// A size held to what this group is allowed to be, on both axes at once.
+    public func held(_ size: CGSize) -> CGSize {
+        CGSize(width: heldWidth(size.width), height: heldHeight(size.height))
+    }
+
+    /// The smallest wins where the two cross. Somebody typing 96 over a 9
+    /// passes through that state on the way, so it has to mean something
+    /// sensible rather than being refused, and "the floor wins" is the rule
+    /// anybody who has written a stylesheet already carries.
+    private static func held(_ side: CGFloat, least: CGFloat?, most: CGFloat?) -> CGFloat {
+        var out = side
+        if let most { out = Swift.min(out, most) }
+        if let least { out = Swift.max(out, least) }
+        return out
+    }
+
+    /// What the limits say, in words, or nil where there are none. The Layout
+    /// section reads this out under the rows, so a group that stopped growing
+    /// says why rather than looking stuck.
+    public var limitsSentence: String? {
+        let clauses = [usedMinWidth.map { "narrower than \(Int($0.rounded()))" },
+                       usedMaxWidth.map { "wider than \(Int($0.rounded()))" },
+                       usedMinHeight.map { "shorter than \(Int($0.rounded()))" },
+                       usedMaxHeight.map { "taller than \(Int($0.rounded()))" }]
+            .compactMap { $0 }
+        guard !clauses.isEmpty else { return nil }
+        return "It never gets " + clauses.joined(separator: " or ") + "."
+    }
+
     /// Which axis the flow itself decides. The other one is the placement
     /// rules', and the inspector says so rather than leaving a live menu that
     /// changes nothing.
@@ -170,6 +246,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case kind, direction, columns, gap, rowGap, padding, width, height
+        case minWidth, maxWidth, minHeight, maxHeight
     }
 
     /// Read forgivingly: a layout saved by an older build that knew fewer
@@ -191,6 +268,13 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         // as one that is the size of its contents, which is what it was.
         width = try c.decodeIfPresent(CGFloat.self, forKey: .width)
         height = try c.decodeIfPresent(CGFloat.self, forKey: .height)
+        // A group saved before there were limits opens with none, which is
+        // exactly what it had, and a layout that carries none writes none, so
+        // a document nobody set one on stays the file it always was.
+        minWidth = try c.decodeIfPresent(CGFloat.self, forKey: .minWidth)
+        maxWidth = try c.decodeIfPresent(CGFloat.self, forKey: .maxWidth)
+        minHeight = try c.decodeIfPresent(CGFloat.self, forKey: .minHeight)
+        maxHeight = try c.decodeIfPresent(CGFloat.self, forKey: .maxHeight)
     }
 }
 
