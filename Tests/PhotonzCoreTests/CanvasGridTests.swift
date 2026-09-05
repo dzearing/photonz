@@ -169,6 +169,40 @@ struct CanvasGridTests {
         }
     }
 
+    @Test func someLineIsAlwaysFullyThereAtEveryZoomInTheWholeRange() {
+        // The guard against the grid blinking out. Sweep the WHOLE zoom range
+        // the canvas allows, in steps far finer than a pinch can move, for
+        // every multiple and every spacing anyone can ask for: at each step
+        // there has to be a line drawn, and the strongest one has to be at
+        // FULL strength. "At least one line somewhere" would not be enough —
+        // a grid drawn only at 0.004 is a grid nobody can see.
+        for majorEvery in [2, 3, 4, 8, 10, 16, 100] {
+            for spacing in [CGFloat(1), 4, 6, 8, 256, 512] {
+                for step in 0...2000 {
+                    let t = Double(step) / 2000
+                    let zoom = Viewport.minZoom
+                        * CGFloat(pow(Double(Viewport.maxZoom / Viewport.minZoom), t))
+                    let drawn = levels(zoom, spacing: spacing, majorEvery: majorEvery)
+                    let strongest = drawn.map(\.opacity).max() ?? 0
+                    #expect(strongest == CanvasGridLevels.maximumOpacity,
+                            "spacing \(spacing) every \(majorEvery) at zoom \(zoom) drew \(drawn.count) levels, strongest \(strongest)")
+                }
+            }
+        }
+    }
+
+    @Test func theFinestRungGoingQuietNeverTakesTheWholeGridWithIt() {
+        // The finest rung sits at the band's floor and is drawn at nothing
+        // there, which is exactly how it leaves without popping. What must
+        // never happen is the rung ABOVE it going quiet at the same moment.
+        for step in 0...600 {
+            let zoom = CGFloat(pow(2.0, -5.0 + Double(step) / 60.0))
+            let drawn = levels(zoom)
+            #expect(drawn.count >= 1)
+            #expect(drawn.contains { $0.opacity == CanvasGridLevels.maximumOpacity })
+        }
+    }
+
     @Test func neverDrawsMoreThanThreeLevels() {
         for step in 0...200 {
             let zoom = CGFloat(pow(2.0, -5.0 + Double(step) / 20.0))

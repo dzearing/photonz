@@ -1,0 +1,39 @@
+{
+  "out": "/tmp/photonz-playtest/grid-pinch-walk",
+  "setup": {
+    "forget": ["grid", "shapes", "tools", "panel"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "grid-on-at-fit", "note": "the grid as a document opens: this is the state the report says is fine" },
+    { "do": "snapshot", "name": "grid-1-fit" },
+
+    { "do": "pinch", "to": 0.75, "steps": 12 },
+    { "do": "describe", "stage": "after-a-small-pinch", "note": "the reported fault: a slight pinch and the grid is gone" },
+    { "do": "snapshot", "name": "grid-2-small-pinch" },
+
+    { "do": "pinch", "to": 4, "steps": 40 },
+    { "do": "describe", "stage": "pinched-right-in" },
+    { "do": "snapshot", "name": "grid-3-close" },
+
+    { "do": "pinch", "to": 32, "steps": 40 },
+    { "do": "describe", "stage": "pinched-to-the-top-of-the-range" },
+    { "do": "snapshot", "name": "grid-4-closest" },
+
+    { "do": "pinch", "to": 0.03125, "steps": 80 },
+    { "do": "describe", "stage": "pinched-to-the-bottom-of-the-range" },
+    { "do": "snapshot", "name": "grid-5-farthest" },
+
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "back-at-fit" },
+    { "do": "snapshot", "name": "grid-6-back-at-fit" }
+  ]
+}

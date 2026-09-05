@@ -8798,3 +8798,34 @@ that is not drawn. Queued as `the-grid-you-set-is-the-grid-you-see`. Arrow-key
 nudges still step by 1 and 10 rather than by the grid, queued as
 `the-arrow-keys-step-by-the-grid-while-the-grid-i`. Dragging the canvas edges
 pulls at nothing; not queued.
+
+## 2026-09-05 — The grid holds while you zoom
+
+**What changed.** The canvas grid went out for as long as a pinch or a two
+finger scroll kept moving, at every zoom, and came back only once the gesture
+stopped. The level-of-detail maths was never the cause: a sweep over the whole
+zoom range (1/32 to 32) for every multiple and spacing anyone can ask for shows
+the strongest rung at full strength at every single step, and that sweep is now
+a test. The cause was `CanvasNSView.commit(_:)`, the one call a pinch, a scroll
+and the zoom commands share, re-entering `apply(...)` with only the camera.
+`apply` takes the whole canvas as arguments and nine of them carried defaults,
+so everything `commit` did not mention was reset: `canvasGrid` to nil, and with
+it the grid origin markers, the group context, the canvas selection, the
+annotation style and the callout shape.
+
+`commit` now calls `applyViewport(_:)`, which redraws for the new camera and
+touches nothing else, and every default has been removed from `apply` so its one
+remaining caller has to say everything. Measured with a new playtest `pinch`
+step that drives the very call a trackpad drives, nudge by nudge, and reads the
+grid off the shape layers at each one: 172 of 172 nudges dark before, 0 of 172
+after. `Scripts/playtest/grid-pinch-walk.json` is the guard.
+
+**What is next.** The walk set gives different answers alone and in the full run
+(158 of 163 passed; four of the five failures pass when run on their own, and
+`mixed-one-look-walk` fails on unmodified main). Filed as
+`every-walk-passes-on-its-own-and-in-the-full-run`, since a suite that cannot be
+trusted is how a real break gets waved through.
+
+**Open question.** At 3200% the finest cell drawn is the four point spacing, and
+at 3% only very coarse lines survive. Both are in the audit for the user to
+judge; nothing about the ladder was changed here.

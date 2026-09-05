@@ -263,6 +263,38 @@ private final class Run {
             await sleep(0.05)
             note(number, step.name, "to \(short(at.point)) \(at.space.rawValue) = view \(short(p))")
 
+        case .pinch(let to, let steps):
+            let canvas = try requireCanvas()
+            guard let start = canvas.viewport?.zoom, start > 0 else {
+                throw Failure(description: "the canvas has no viewport to pinch")
+            }
+            // A trackpad moves the zoom by a small FRACTION per event, so the
+            // walk does too: the same ratio every nudge, which is what makes
+            // the nudges even on the screen rather than even in the numbers.
+            let anchor = CGPoint(x: canvas.bounds.midX, y: canvas.bounds.midY)
+            let ratio = pow(Double(to / start), 1.0 / Double(steps))
+            var dark: [String] = []
+            var reports: [String] = []
+            for _ in 0..<steps {
+                canvas.pinch(magnification: CGFloat(ratio - 1), anchorInView: anchor)
+                // What is on the screen at THIS instant, before the run loop
+                // gets a turn to put anything back. A grid that only goes out
+                // between the gesture and the next redraw is still a grid that
+                // goes out, and this is the only place it can be seen.
+                let report = canvas.playtestGridReport
+                reports.append(report)
+                if !canvas.playtestGridIsVisible { dark.append(report) }
+                await sleep(0.016)
+            }
+            let landed = canvas.viewport?.zoom ?? 0
+            let verdict = dark.isEmpty
+                ? "the grid was drawn at every one"
+                : "THE GRID WENT OUT at \(dark.count) of \(steps): \(dark.prefix(4).joined(separator: " | "))"
+            note(number, step.name,
+                 "pinched from \(String(format: "%.4f", Double(start))) to "
+                 + "\(String(format: "%.4f", Double(landed))) in \(steps) nudges; \(verdict)",
+                 state: describe(extra: ["gridDuringPinch": reports]))
+
         case .hover(let target):
             let window = try requireWindow()
             let canvas = try requireCanvas()
@@ -2315,7 +2347,16 @@ private final class Run {
         }
     }
 
-    private func describe() -> [String: Any] {
+    /// `extra` is whatever the step itself watched while it ran and nothing
+    /// else can see afterwards, like what the grid did between two nudges of a
+    /// pinch. It is merged over the state, so a step can name its own evidence.
+    private func describe(extra: [String: Any] = [:]) -> [String: Any] {
+        var state = describeState()
+        for (key, value) in extra { state[key] = value }
+        return state
+    }
+
+    private func describeState() -> [String: Any] {
         let began = CACurrentMediaTime()
         defer { MainThreadMeter.shared.exclude(CACurrentMediaTime() - began) }
         guard let editor else { return [:] }
@@ -2566,6 +2607,11 @@ private final class Run {
             // other half: these two disagreeing means the cue was right and the
             // pointer did not follow it.
             "cue": canvas?.playtestPointerCue ?? "no canvas",
+            // What the grid is drawing on the layers themselves, at this
+            // instant: the zoom, the strength of every rung with a path, and
+            // which side of the picture it is on. "nothing drawn" here is the
+            // grid having gone out.
+            "grid": canvas?.playtestGridReport ?? "no canvas",
             // The named colors in the document, and what each one paints, so a
             // walk can prove an edit to a style reached everything wearing it.
             "styles": (editor.document?.colorStyles ?? []).map {

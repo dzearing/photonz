@@ -132,6 +132,33 @@ extension CanvasNSView {
         gridOriginLayer.isHidden = false
     }
 
+    /// What the grid is drawing RIGHT NOW, read off the layers themselves
+    /// rather than recomputed from the settings: the zoom, then one strength
+    /// per rung that has a path and is not hidden, and which side of the
+    /// picture the grid is on. A walk asserts on this, so it is the layers'
+    /// own answer that has to hold, not the ladder's.
+    var playtestGridReport: String {
+        guard canvasGridEnabled else { return "grid off in Experiments" }
+        guard let viewport else { return "no viewport" }
+        let zoom = String(format: "%.4f", Double(viewport.zoom))
+        guard canvasGrid != nil else { return "zoom \(zoom) · no settings · nothing drawn" }
+        let drawn = canvasGridLayers.filter { !$0.isHidden && ($0.path?.isEmpty == false) }
+        guard !drawn.isEmpty else { return "zoom \(zoom) · nothing drawn" }
+        let strengths = drawn.map { String(format: "%.3f", $0.opacity) }.joined(separator: " ")
+        let side = canvasGrid?.isVisible == true ? "over" : "under"
+        return "zoom \(zoom) · \(drawn.count) rungs · \(strengths) · \(side)"
+    }
+
+    /// Whether a person can see the grid at all at this instant: something
+    /// drawn, and the strongest rung strong enough to read.
+    var playtestGridIsVisible: Bool {
+        guard canvasGridEnabled, canvasGrid != nil else { return false }
+        return canvasGridLayers.contains {
+            !$0.isHidden && ($0.path?.isEmpty == false)
+                && CGFloat($0.opacity) >= CanvasGridLevels.minimumDrawnOpacity
+        }
+    }
+
     private func hideCanvasGrid() {
         for shape in canvasGridLayers where !shape.isHidden {
             shape.path = nil

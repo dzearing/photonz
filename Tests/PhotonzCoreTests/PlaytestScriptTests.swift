@@ -175,6 +175,40 @@ struct PlaytestScriptTests {
         #expect(hold == nil)
     }
 
+    @Test("A pinch step names the zoom to arrive at and how many nudges to take")
+    func pinchStepNamesTheZoomItIsWalkingTo() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "pinch", "to": 2.5, "steps": 40 } ] }
+        """)
+        guard case .pinch(let to, let steps) = script.steps[0] else { Issue.record("pinch"); return }
+        #expect(to == 2.5)
+        #expect(steps == 40)
+        #expect(script.steps[0].name == "pinch")
+    }
+
+    @Test("A pinch step walks in a sensible number of nudges when it is not told")
+    func pinchStepHasADefaultNumberOfNudges() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "pinch", "to": 0.25 } ] }
+        """)
+        guard case .pinch(_, let steps) = script.steps[0] else { Issue.record("pinch"); return }
+        #expect(steps == PlaytestStep.defaultPinchSteps)
+    }
+
+    @Test("A pinch to nowhere is refused before the run starts")
+    func pinchToAnImpossibleZoomIsRefused() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "pinch", "to": 0 } ] }
+            """)
+        }
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "pinch", "to": -1 } ] }
+            """)
+        }
+    }
+
     @Test func aScriptIsAnOutputFolderAndAListOfSteps() throws {
         let script = try decode("""
         {

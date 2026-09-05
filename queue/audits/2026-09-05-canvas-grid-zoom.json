@@ -1,0 +1,27 @@
+{
+  "feature": "The grid holds while you zoom",
+  "epic": "ui-building",
+  "summary": "The canvas grid used to go out for as long as your fingers kept pinching, at every zoom, and come back only once you stopped. Now it stays drawn the whole way through a pinch and through a two finger scroll, thinning and thickening as it always did.",
+  "setup": "Photonz Dev, release Next, a document open. Turn the grid on in the Canvas section of the right hand panel, or View > Show Grid.",
+  "try": [
+    { "do": "Open any picture and switch the grid on in the Canvas section." },
+    { "do": "Pinch OUT very slightly on the trackpad, a few percent, and watch the lines the whole time.", "shot": "2026-09-05-grid-holds-at-75.png" },
+    { "do": "Pinch in slowly all the way to 3200%, without letting go, and keep watching." },
+    { "do": "Pinch back out slowly all the way to 3%.", "shot": "2026-09-05-grid-holds-at-3.png" },
+    { "do": "Two finger scroll the canvas around fast at any zoom." },
+    { "do": "Press Command 0 to fit, then Command plus and Command minus a few times." }
+  ],
+  "evaluate": [
+    "Does the grid ever blink, even for a frame, anywhere in that pinch?",
+    "As the lines thin out and a coarser set takes over, does the handover read as a fade or as a swap?",
+    "At 3200% the finest cell is the four point spacing. Is that the right thing to be looking at that close in, or would you rather see something coarser?",
+    "At 3% only the very coarse lines are left. Is that still useful, or is it noise you would rather have gone?",
+    "Does the pinch itself feel as smooth as it did before, or heavier?"
+  ],
+  "rough": [
+    "The maths was never the problem, so nothing about the fade or the level ladder changed: the same rungs at the same strengths at the same zooms as before. What changed is that a camera move no longer resets the rest of the canvas.",
+    "The same fault also took the group context outline and the canvas selection out on every pinch and scroll. They are fixed by the same change but are not what this audit is asking you to look at.",
+    "A still cannot photograph this. The grid went out between two frames and came back on the next redraw, and the redraw that takes a screenshot is the redraw that puts it back. The proof is in the walk's log, which reads the layers at the instant of each nudge: 172 of 172 nudges dark before, 0 of 172 after. The two pictures here are real screen captures at the zooms that used to be dark, not renders.",
+    "A pinch is now the only gesture with a dedicated redraw path. A pan, a scroll and the zoom commands share it, but if some future gesture moves the camera another way it has to use the same path or it will have the same bug."
+  ]
+}

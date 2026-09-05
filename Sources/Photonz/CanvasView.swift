@@ -3011,9 +3011,18 @@ final class CanvasNSView: NSView {
 
     /// Pinch zooms around the cursor.
     override func magnify(with event: NSEvent) {
-        guard let viewport else { return }
-        let anchor = convert(event.locationInWindow, from: nil)
-        commit(viewport.zoomed(to: viewport.zoom * (1 + event.magnification), anchorInView: anchor))
+        pinch(magnification: event.magnification,
+              anchorInView: convert(event.locationInWindow, from: nil))
+    }
+
+    /// One nudge of a pinch: the zoom moves by `magnification`, keeping the
+    /// point under the fingers where it is. The gesture and a scripted walk
+    /// both come through here, so what a walk drives is exactly what a
+    /// trackpad drives — which is the only way a fault that only shows WHILE
+    /// the zoom is moving can be caught by anything but a person.
+    func pinch(magnification: CGFloat, anchorInView anchor: CGPoint) {
+        guard let viewport, magnification.isFinite else { return }
+        commit(viewport.zoomed(to: viewport.zoom * (1 + magnification), anchorInView: anchor))
     }
 
     /// Two-finger double-tap: toggle between fit and 100% at the cursor.
@@ -3034,40 +3043,72 @@ final class CanvasNSView: NSView {
         WindowTitleBarAction.perform(on: window)
     }
 
+    /// The canvas moved its own camera: a pinch, a scroll, a zoom command.
+    ///
+    /// It goes STRAIGHT to `applyViewport` and never back through `apply`.
+    /// `apply` takes everything the canvas is showing as arguments and half of
+    /// them carry defaults, so re-entering it with only the camera quietly
+    /// reset the rest to those defaults — and the grid was one of them. Every
+    /// pinch and every two-finger scroll therefore blew the grid away for as
+    /// long as the fingers kept moving, and it came back only when the next
+    /// SwiftUI pass handed the settings in again. That is the "grid disappears
+    /// when you zoom" report of 2026-09-05, and it took the group context and
+    /// the canvas selection with it. A camera move must not be able to say
+    /// anything about the rest of the world, so now it cannot.
     private func commit(_ next: Viewport) {
-        apply(image: image, viewport: next, document: document, selection: selection,
-              selectionTargetsPixels: selectionTargetsPixels,
-              cropRect: cropRect, cropAspect: cropAspect, cropBounds: cropBounds,
-              selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
-              multiSelectedLayerIDs: multiSelectedLayerIDs,
-              dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
-              textContent: textContent, measureContent: measureContent,
-              measureToolMode: measureToolMode, measureCandidateLevel: measureCandidateLevel,
-              measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
-              lumaField: lumaField)
+        applyViewport(next)
         onViewportChange(next)
+    }
+
+    /// Redraw for a new camera and nothing else. Same picture, same document,
+    /// same selection: only where they land on the screen changes, so this is
+    /// the part of `apply` that depends on the viewport, and no more.
+    func applyViewport(_ next: Viewport) {
+        viewport = next
+        // Zooming changes what sits under a resting pointer, so the grab cue
+        // has to agree with the new arrangement rather than the old one.
+        refreshGrabCursor()
+        guard let image else { return }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        defer { CATransaction.commit() }
+        contentLayer.isHidden = false
+        contentLayer.contents = calloutHoldImage ?? image
+        contentLayer.frame = next.documentFrameInView
+        contentLayer.shadowPath = CGPath(rect: contentLayer.bounds, transform: nil)
+        // Past 2x the user is inspecting pixels — show them squarely instead
+        // of smearing, exactly as `apply` decides it.
+        contentLayer.magnificationFilter = next.zoom >= 2 ? .nearest : .linear
+        refreshOverlaysInsideTransaction()
     }
 
     // MARK: Display
 
+    /// Everything the canvas is showing, in one call, from the SwiftUI view
+    /// that owns it — and that is the ONLY caller. None of these carry a
+    /// default on purpose: a defaulted argument here is a piece of the canvas
+    /// that a second caller can silently switch off by not mentioning it,
+    /// which is exactly how a pinch used to take the grid out. Anything that
+    /// changes only part of the canvas gets its own method, like
+    /// `applyViewport`.
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
-               selection: SelectionRegion?, selectionTargetsPixels: Bool = false,
+               selection: SelectionRegion?, selectionTargetsPixels: Bool,
                cropRect: CGRect?, cropAspect: CropAspect,
                cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
-               groupContext: UUID? = nil,
+               groupContext: UUID?,
                multiSelectedLayerIDs: Set<UUID>,
-               dragPreview: DragPreview?, tool: Tool, captionCloseRequest: Int = 0,
+               dragPreview: DragPreview?, tool: Tool, captionCloseRequest: Int,
                annotationContent: AnnotationContent?,
-               calloutShape: ZoomCalloutShape = .rectangle,
-               annotationStyle: LayerStyle? = nil,
+               calloutShape: ZoomCalloutShape,
+               annotationStyle: LayerStyle?,
                textContent: TextContent?, measureContent: MeasureContent?,
-               measureToolMode: MeasureToolMode = .distance,
-               measureCandidateLevel: Int = 0,
-               measureSnapsToCenters: Bool = false,
+               measureToolMode: MeasureToolMode,
+               measureCandidateLevel: Int,
+               measureSnapsToCenters: Bool,
                edgeMap: EdgeMap, lumaField: LumaField,
-               isCanvasSelected: Bool = false,
-               canvasGrid: CanvasGridSettings? = nil,
-               gridOriginAdjust: CGPoint? = nil) {
+               isCanvasSelected: Bool,
+               canvasGrid: CanvasGridSettings?,
+               gridOriginAdjust: CGPoint?) {
         self.canvasGrid = canvasGrid
         let wasPlacingGridOrigin = self.gridOriginAdjust != nil
         if self.gridOriginAdjust != gridOriginAdjust {

@@ -669,6 +669,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// goes through the app. This step is how a walk reaches those.
     case appKey(PlaytestKey, [PlaytestModifier])
     case move(PlaytestPoint)
+    /// Pinch the canvas to a zoom, the way two fingers on a trackpad do: a run
+    /// of small nudges rather than one jump, each through the very call the
+    /// gesture makes. A grid, a guide or a readout that only misbehaves WHILE
+    /// the zoom is moving has nowhere to hide from this, and a single
+    /// `zoomIn` would step straight over it.
+    case pinch(to: CGFloat, steps: Int)
     /// Rest the pointer on a control (named by the label its tooltip shows,
     /// or by a point) long enough for its tooltip to appear. A point over no
     /// control rests in the open and hides whatever was showing.
@@ -810,13 +816,16 @@ public enum PlaytestStep: Sendable, Equatable {
 
     public static let defaultTimeout: Double = 10
     public static let defaultDragSteps = 8
+    /// Enough nudges that a pinch across a whole octave of zoom lands on more
+    /// zooms than a hand would, so nothing can slip between two of them.
+    public static let defaultPinchSteps = 24
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
         "dragFile", "dragRow", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menus", "move", "open",
-        "panel", "panelMenu", "press",
+        "panel", "panelMenu", "pinch", "press",
         "readClipboard", "render", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
 
@@ -831,6 +840,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .shortcut: "shortcut"
         case .appKey: "appKey"
         case .move: "move"
+        case .pinch: "pinch"
         case .hover: "hover"
         case .click: "click"
         case .drag: "drag"
@@ -903,6 +913,13 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .appKey(key, try f.modifiers())
         case "move":
             self = .move(try f.point("at"))
+        case "pinch":
+            let to = CGFloat(try f.number("to"))
+            guard to.isFinite, to > 0 else {
+                throw f.invalid("to", "a zoom to pinch to has to be a positive number, like 2 for 200%")
+            }
+            let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultPinchSteps
+            self = .pinch(to: to, steps: max(1, steps))
         case "hover":
             if fields["label"] != nil {
                 self = .hover(.label(try f.string("label")))
