@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:47.142Z",
-  "updated": "2026-09-05T16:45:16.645Z",
+  "updated": "2026-09-05T17:00:35.880291Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/PhotonzCore/GroupLayout.swift holds a single CGFloat gap with usedGap; the spread case wants gap to become a small enum or an optional so Codable can stay backward compatible. Placement runs in GroupFlow.swift. No decision card: this is an option on the Gap row the user already sets, inside the auto layout epic they promoted on 2026-09-03, not a new surface. The starter nav bar still holds the size it was drawn at, see queue/audits/2026-09-04-ui-hug.json.",
@@ -47,6 +47,34 @@
     {
       "t": "2026-09-05T16:45:16.644Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T17:00:35.880291Z",
+      "note": "review before building: the task's own demo (drop the starter nav bar, set its Gap to spread) cannot be done. The starter Nav Bar is a Free group, so it has no Gap row, and turning it into a Row stack pulls its 1pt divider into the flow as an item. Built the feature anyway and used three drawn rectangles for the walk; filed the-starter-nav-bar-arranges-itself-like-a-real for the bar itself."
+    },
+    {
+      "t": "2026-09-05T17:00:35.880291Z",
+      "note": "review before building: cut two things the sketch of this implies. A grid is never offered spreading (its columns already share the width out, so it would be a second way to say the same thing and a second way to be wrong), and only space-between is built, not space-around/evenly. The audit asks the user whether room around the outside is wanted before anyone builds it."
+    },
+    {
+      "t": "2026-09-05T17:00:35.880291Z",
+      "note": "review before building: the model keeps gap and adds a separate switch rather than turning gap into an enum, because 'turning it back to a number restores the number that was there' then costs nothing and cannot be got wrong."
+    },
+    {
+      "t": "2026-09-05T17:00:35.880291Z",
+      "note": "built: GroupLayout.spreadsGap / spreadsContents / couldSpread, GroupFlow.spread shares the leftover room and measures each row's push from the START so the last one lands exactly on the far edge, ArrangementInspector.gapRow puts an arrows-apart switch between the word Gap and its field. GroupLayout now writes its own JSON so a stack holding one gap writes nothing about spreading and older documents stay byte for byte the files they were."
+    },
+    {
+      "t": "2026-09-05T17:00:35.880291Z",
+      "note": "verified: 21 tests in GroupSpreadTests written before the code, full suite 3250 green. Walked on the probe with Scripts/playtest/spread-gap-walk.json, Screen Recording granted, so the audit carries real window captures: hugging stack has no switch and says why, 640 wide spreads to the two ends, padding 24 respected, typing 40 over the word stops it, switch on then off restores the 40."
+    },
+    {
+      "t": "2026-09-05T17:00:35.880291Z",
+      "note": "review before ready: the switch is an icon with no word in the same column as the twist-open chevrons, and the arrow keys do nothing in the field while it spreads. Both recorded in the audit's rough rather than fixed."
+    },
+    {
+      "t": "2026-09-05T17:00:35.880291Z",
+      "note": "audit: queue/audits/2026-09-05-spread-gap.json with 2026-09-05-spread-gap-1.png and -2.png."
     }
   ],
   "started": "2026-09-05T16:45:16.644Z"

@@ -454,19 +454,46 @@ enum GroupFlow {
         let crossExtent = room(horizontal ? bounds.height : bounds.width,
                                between: horizontal ? padding.vertical : padding.horizontal)
             ?? (items.map { horizontal ? $0.box.height : $0.box.width }.max() ?? 0)
+        // The room left over, shared out between the rows, or nil where the
+        // stack holds one typed gap instead.
+        let share = spread(items, layout: layout, bounds: bounds, horizontal: horizontal)
         var cursor = horizontal ? padding.left : padding.top
         var out: [CGRect] = []
-        for item in items {
+        for (index, item) in items.enumerated() {
             let along = horizontal ? item.box.width : item.box.height
             let cross = span(size: horizontal ? item.box.height : item.box.width,
                              start: crossStart, extent: crossExtent,
                              rule: horizontal ? item.vertical : item.horizontal)
+            // Every row is pushed on by its own share of the leftover room,
+            // measured from the START rather than added up gap by gap, so the
+            // last one lands exactly on the far edge however the rounding
+            // falls. A half point is the thing typed geometry exists to avoid.
+            let start = cursor + (share.map { ($0 * CGFloat(index)).rounded() } ?? 0)
             out.append(horizontal
-                ? CGRect(x: cursor, y: cross.low, width: along, height: cross.length)
-                : CGRect(x: cross.low, y: cursor, width: cross.length, height: along))
-            cursor += along + layout.usedGap
+                ? CGRect(x: start, y: cross.low, width: along, height: cross.length)
+                : CGRect(x: cross.low, y: start, width: cross.length, height: along))
+            cursor += along + (share == nil ? layout.usedGap : 0)
         }
         return out
+    }
+
+    /// How much leftover room each row after the first is pushed on by, or nil
+    /// where this stack is not spreading at all.
+    ///
+    /// Nil in three cases, and they are all the same case: there is nothing to
+    /// share. The stack is not spreading, it is the size of its contents so it
+    /// has no room left over, or there is one row and no space between rows to
+    /// put the room in. Contents too big for the room share nought, which puts
+    /// them tight against each other rather than overlapping.
+    private static func spread(_ items: [Item], layout: GroupLayout, bounds: Bounds,
+                               horizontal: Bool) -> CGFloat? {
+        guard layout.spreadsContents, items.count > 1 else { return nil }
+        let padding = layout.usedPadding
+        guard let extent = room(horizontal ? bounds.width : bounds.height,
+                                between: horizontal ? padding.horizontal : padding.vertical)
+        else { return nil }
+        let filled = items.reduce(CGFloat(0)) { $0 + (horizontal ? $1.box.width : $1.box.height) }
+        return max(0, extent - filled) / CGFloat(items.count - 1)
     }
 
     private static func gridded(_ items: [Item], layout: GroupLayout,

@@ -1,0 +1,28 @@
+{
+  "id": "the-starter-nav-bar-arranges-itself-like-a-real",
+  "title": "The starter Nav Bar arranges itself like a real bar",
+  "goal": "Drag the Nav Bar out of the Library, make it wider, and its back label should stay on the left while its title stays where it belongs, without anyone opening the Layout section. Today it is a box of pieces pinned by hand, so it is the one starter that cannot show off how a bar is actually built.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1240,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T17:00:21.673Z",
+  "updated": "2026-09-05T17:00:21.674Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building the spread gap task on 2026-09-05: its acceptance suggested demoing spread on the starter Nav Bar and it cannot be done. StarterComponents.navBar builds .free(width: 320, height: 48) with a Background (fill), a Divider (horizontal stretch + vertical bottom), a Back label pinned at x=14 and a centred Title. Turning it into a Row stack by hand pulls the Divider into the flow as an item, because isSurface needs stretch on BOTH axes. Options worth weighing: leave it Free and place the pieces with LayerPlacement (cheapest, and already half true), or make the bar a Row stack with the divider kept out of the flow, which needs a way to say \"this is chrome, not a row\" beyond isSurface. See queue/audits/2026-09-05-spread-gap.json.",
+  "acceptance": [
+    "Dropping the Nav Bar and dragging it wider keeps the back label at the left edge and the title where it belongs, with no typing in the Layout section",
+    "The hairline along the bottom still spans the bar and still hugs the bottom, and is not treated as one of the things being arranged",
+    "The surface behind the bar still fills it whatever the bar is doing",
+    "Picking the dropped Nav Bar and reading the Layout section shows an arrangement a person would recognise as the one they can see"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T17:00:21.674Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -67,6 +67,15 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// The space between one thing and the next along the flow: between the
     /// items of a stack, and between the columns of a grid.
     public var gap: CGFloat
+    /// Whether a stack shares the room it has LEFT OVER between its rows
+    /// instead of holding the gap above. A nav bar is a logo at one end and
+    /// buttons at the other, and that is the only shape a single gap cannot
+    /// make. There is only room to share where the stack is bigger than its
+    /// contents, so this does nothing at all on a stack that is the size of
+    /// what is inside it, and `couldSpread` is what the inspector asks before
+    /// it offers the choice. The gap itself is KEPT while this is on, so
+    /// turning it back off restores the number that was there.
+    public var spreadsGap: Bool = false
     /// The space between a grid's rows. Kept apart from `gap` because a card
     /// grid usually wants more air above than beside.
     public var rowGap: CGFloat
@@ -115,6 +124,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
                 direction: StackDirection = .column,
                 columns: Int = GroupLayout.defaultColumns,
                 gap: CGFloat = GroupLayout.defaultGap,
+                spreadsGap: Bool = false,
                 rowGap: CGFloat = GroupLayout.defaultGap,
                 padding: GroupPadding = .none,
                 width: CGFloat? = nil,
@@ -127,6 +137,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         self.direction = direction
         self.columns = columns
         self.gap = gap
+        self.spreadsGap = spreadsGap
         self.rowGap = rowGap
         self.padding = padding
         self.width = width
@@ -147,6 +158,23 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// below nought means, so the model holds the floor.
     public var usedGap: CGFloat { max(0, gap) }
     public var usedRowGap: CGFloat { max(0, rowGap) }
+
+    /// Whether this layout actually spreads its contents. Only a stack does:
+    /// a grid already shares its width out between its columns, and a group
+    /// that arranges nothing has no gap to spread in the first place.
+    public var spreadsContents: Bool { kind == .stack && spreadsGap }
+
+    /// Whether spreading could do anything here, which is the question the
+    /// Gap row asks before it offers the choice. A stack only has room to
+    /// share where the axis it FLOWS along is bigger than its contents: a
+    /// size of its own, or a floor holding it open. A row told how tall it is
+    /// still has nothing left over across. A screen is a box somebody drew, so
+    /// the app answers that one for itself.
+    public var couldSpread: Bool {
+        guard kind == .stack else { return false }
+        return direction.isHorizontal ? (usedWidth != nil || usedMinWidth != nil)
+                                      : (usedHeight != nil || usedMinHeight != nil)
+    }
     public var usedPadding: GroupPadding { padding.used }
 
     /// The size actually used on each axis: the number given, never negative,
@@ -245,7 +273,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     public var decidesHeight: Bool { kind != .stack || direction.isHorizontal }
 
     private enum CodingKeys: String, CodingKey {
-        case kind, direction, columns, gap, rowGap, padding, width, height
+        case kind, direction, columns, gap, spreadsGap, rowGap, padding, width, height
         case minWidth, maxWidth, minHeight, maxHeight
     }
 
@@ -260,6 +288,9 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         direction = try c.decodeIfPresent(StackDirection.self, forKey: .direction) ?? .column
         columns = try c.decodeIfPresent(Int.self, forKey: .columns) ?? GroupLayout.defaultColumns
         gap = try c.decodeIfPresent(CGFloat.self, forKey: .gap) ?? GroupLayout.defaultGap
+        // A stack saved before a row could push its contents to its two ends
+        // opens holding the one gap it always held, which is what it was.
+        spreadsGap = try c.decodeIfPresent(Bool.self, forKey: .spreadsGap) ?? false
         rowGap = try c.decodeIfPresent(CGFloat.self, forKey: .rowGap) ?? GroupLayout.defaultGap
         // Either shape of room: the single number older documents hold, or the
         // four sides a card with uneven room needs.
@@ -275,6 +306,29 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         maxWidth = try c.decodeIfPresent(CGFloat.self, forKey: .maxWidth)
         minHeight = try c.decodeIfPresent(CGFloat.self, forKey: .minHeight)
         maxHeight = try c.decodeIfPresent(CGFloat.self, forKey: .maxHeight)
+    }
+
+    /// Written by hand for one reason: a stack that holds one gap writes
+    /// nothing at all about spreading, so every document saved before rows
+    /// could push to their ends is byte for byte the file it always was.
+    /// Everything else is written exactly as it always was, in the order it
+    /// always was, and `everyNumberRoundTrips` in the tests is what stops the
+    /// next number added here from being forgotten in this list.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(kind, forKey: .kind)
+        try c.encode(direction, forKey: .direction)
+        try c.encode(columns, forKey: .columns)
+        try c.encode(gap, forKey: .gap)
+        if spreadsGap { try c.encode(true, forKey: .spreadsGap) }
+        try c.encode(rowGap, forKey: .rowGap)
+        try c.encode(padding, forKey: .padding)
+        try c.encodeIfPresent(width, forKey: .width)
+        try c.encodeIfPresent(height, forKey: .height)
+        try c.encodeIfPresent(minWidth, forKey: .minWidth)
+        try c.encodeIfPresent(maxWidth, forKey: .maxWidth)
+        try c.encodeIfPresent(minHeight, forKey: .minHeight)
+        try c.encodeIfPresent(maxHeight, forKey: .maxHeight)
     }
 }
 

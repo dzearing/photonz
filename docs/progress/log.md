@@ -8711,3 +8711,30 @@ mark is a follow-up if the user says so.
 - Filed: split `CanvasView.swift` (4417 lines) the same way, and fix
   `mixed-one-look-walk.json`, which fails at step 35 reaching an alignment
   button that is scrolled out of sight (confirmed pre-existing).
+
+## 2026-09-05 — a row can push its contents to its two ends
+
+Auto layout (`next-auto-layout`) gained space-between. A stack with a size of
+its own can share the room it has left over between its rows instead of holding
+one gap: `GroupLayout.spreadsGap` with `spreadsContents` and `couldSpread`,
+`GroupFlow.spread` doing the maths, and a small arrows-apart switch between the
+word Gap and its field in `ArrangementInspector.gapRow`. The gap itself is kept
+while it spreads, so pressing the switch off restores the number that was there;
+typing a number straight over the word Spread is the other way back.
+
+`GroupLayout` writes its own JSON now. Only so a stack that holds one gap writes
+nothing at all about spreading and every document saved before this is byte for
+byte the file it was; `everyNumberRoundTrips` is the test that stops the next
+number added there from being forgotten in that list.
+
+21 tests in `GroupSpreadTests` written before the code, full suite green (3250).
+Walked on the probe with `Scripts/playtest/spread-gap-walk.json` with Screen
+Recording granted, so `queue/audits/2026-09-05-spread-gap.json` carries real
+window captures.
+
+Next / open: the task's suggested demo was the starter Nav Bar and it cannot be
+done — the Nav Bar is a Free group with a hairline divider that would join the
+flow — so `the-starter-nav-bar-arranges-itself-like-a-real` is queued. Only
+space-between is built; the audit asks whether room around the outside is wanted
+before anyone builds it. Per-child growth is already queued as
+`a-piece-can-take-the-room-a-row-has-left-over`.

@@ -82,7 +82,7 @@ struct ArrangementInspector: View {
             .frame(maxWidth: 152)
         }
         numbers(layout)
-        Text(([caption(layout), sizeSentence(layout),
+        Text(([caption(layout), spreadSentence(layout), sizeSentence(layout),
                current.isFrame ? nil : layout.limitsSentence]
             .compactMap { $0 }).joined(separator: " "))
             .font(.caption2)
@@ -124,7 +124,9 @@ struct ArrangementInspector: View {
         case .stack:
             parts.append("Everything in this copy lines up "
                          + "\(layout.direction.isHorizontal ? "across" : "down"), "
-                         + "\(Int(layout.usedGap)) apart.")
+                         + (canSpread(layout) && layout.spreadsGap
+                            ? "with the room left over shared between them."
+                            : "\(Int(layout.usedGap)) apart."))
         case .grid:
             parts.append("Everything in this copy fills \(layout.usedColumns) "
                          + "\(layout.usedColumns == 1 ? "column" : "columns"), a row at a time.")
@@ -175,11 +177,13 @@ struct ArrangementInspector: View {
         }
         // A gap is the space the flow leaves BETWEEN things, so it belongs to
         // the two arrangements that put things one after another.
-        if layout.arranges {
-            number(layout.kind == .grid ? "Column gap" : "Gap", value: layout.usedGap,
+        if layout.kind == .grid {
+            number("Column gap", value: layout.usedGap,
                    help: "The space between one thing and the next.") { value in
                 editorState.updateArrangement(id: layer.id) { $0.gap = value }
             }
+        } else if layout.kind == .stack {
+            gapRow(layout)
         }
         if layout.kind == .grid {
             number("Row gap", value: layout.usedRowGap,
@@ -191,6 +195,77 @@ struct ArrangementInspector: View {
         // given a size or takes the one its contents make, so it can keep room
         // clear inside them the same way a screen does.
         padding(layout)
+    }
+
+    /// The space between one thing and the next, and on a stack that has room
+    /// to spare, the choice to share that room out instead of holding a number.
+    ///
+    /// A nav bar is a logo at one end and buttons at the other, and one gap
+    /// cannot make that shape: the pieces have to be pushed apart, and until
+    /// now the only way to do it was to nudge them and watch the stack put
+    /// them back. Spreading is a switch beside the word rather than a row of
+    /// its own, because it is two states about the number on the same line and
+    /// this section has already spent its rows.
+    ///
+    /// It is only there where it could DO something. A stack that is the size
+    /// of its contents has nothing left over, so the switch is gone and the
+    /// sentence under the section says why: a control that is present and
+    /// changes nothing is worse than no control.
+    ///
+    /// Two ways back to a number, because either is the one somebody reaches
+    /// for: press the switch again and the gap that was there comes back, or
+    /// type a number straight over the word.
+    @ViewBuilder
+    private func gapRow(_ layout: GroupLayout) -> some View {
+        let offered = canSpread(layout)
+        let spreading = offered && layout.spreadsGap
+        let across = layout.direction.isHorizontal
+        HStack(spacing: 6) {
+            Text("Gap")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+            if offered {
+                Button {
+                    editorState.updateArrangement(id: layer.id) { $0.spreadsGap = !spreading }
+                } label: {
+                    Image(systemName: across ? "arrow.left.and.line.vertical.and.arrow.right"
+                                             : "arrow.up.and.line.horizontal.and.arrow.down")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(spreading ? AnyShapeStyle(Color.accentColor)
+                                                   : AnyShapeStyle(.secondary))
+                        .frame(width: 16, height: 12)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .help(spreading
+                    ? "Hold one gap between them again, the \(Int(layout.usedGap)) that was here before."
+                    : "Share the room left over between them, so the first and the last sit at the two ends.")
+                .playtestControl("Spread", detail: "Layout")
+            }
+            Spacer(minLength: 8)
+            LayoutNumberField(
+                title: "Gap", value: spreading ? nil : layout.usedGap,
+                placeholder: spreading ? "Spread" : "",
+                help: spreading
+                    ? "The room left over is shared between them. Type a number to hold one gap instead."
+                    : "The space between one thing and the next."
+            ) { value in
+                editorState.updateArrangement(id: layer.id) {
+                    $0.gap = value
+                    $0.spreadsGap = false
+                }
+            }
+        }
+        .playtestField("Gap")
+    }
+
+    /// Whether this stack has any room to spread. A screen is a box somebody
+    /// drew, so it always has; a group has one where the axis it flows along
+    /// was given a size or is held open by a floor.
+    private func canSpread(_ layout: GroupLayout) -> Bool {
+        guard layout.kind == .stack else { return false }
+        return current.isFrame || layout.couldSpread
     }
 
     /// The room kept clear inside the edges.
@@ -401,7 +476,10 @@ struct ArrangementInspector: View {
             let axis = layout.direction.isHorizontal ? "across" : "down"
             let owned = layout.direction.isHorizontal ? "Horizontal" : "Vertical"
             let other = layout.direction.isHorizontal ? "Vertical" : "Horizontal"
-            return "Everything in this \(noun) lines up \(axis), \(Int(layout.usedGap)) apart. "
+            let spacing = canSpread(layout) && layout.spreadsGap
+                ? "with the room left over shared between them"
+                : "\(Int(layout.usedGap)) apart"
+            return "Everything in this \(noun) lines up \(axis), \(spacing). "
                 + "\(owned) is the stack's now; \(other) below still says where each one sits, "
                 + "and any one layer can answer it differently for itself."
         case .grid:
@@ -409,6 +487,20 @@ struct ArrangementInspector: View {
                 + "\(layout.usedColumns == 1 ? "column" : "columns"), a row at a time. "
                 + "Horizontal and Vertical below say where each one sits inside its cell."
         }
+    }
+
+    /// Why a stack is not being offered the choice to spread, in one line.
+    ///
+    /// A stack the size of its contents has no room left over, so the switch
+    /// on the Gap row is not there at all. Saying nothing would leave somebody
+    /// looking for a control they have seen on another stack, so the section
+    /// says which row makes the room instead.
+    private func spreadSentence(_ layout: GroupLayout) -> String? {
+        guard layout.kind == .stack, !canSpread(layout) else { return nil }
+        // One clause, not two sentences: it sits at the end of a paragraph
+        // that is already four lines long, and it has one thing to say.
+        return "There is nothing left over to spread until "
+            + "\(layout.direction.isHorizontal ? "Width" : "Height") is Fixed."
     }
 
     /// What a size of its own means for what is inside it, in words. A stack
@@ -545,7 +637,12 @@ private struct LayoutNumberField: View {
             .controlSize(.small)
             .multilineTextAlignment(.trailing)
             .monospacedDigit()
-            .foregroundStyle(MixedLook.style(showsMixed, otherwise: .primary))
+            // Grey is what a value that is not one value looks like. A stand-in
+            // that names a real state — a gap that is being spread rather than
+            // held — is a value, so it is drawn like one; greying it would
+            // read as a field somebody had switched off.
+            .foregroundStyle(MixedLook.style(showsMixed && placeholder == MixedValue.text,
+                                             otherwise: .primary))
             .frame(width: fieldWidth)
             .focused($isFocused)
             .help(help)

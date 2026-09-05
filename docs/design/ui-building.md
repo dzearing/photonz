@@ -2394,3 +2394,57 @@ scale.
 Model and maths in `GroupLayout` and `GroupFlow` (`limitsSize`, `heldWidth`,
 `heldHeight`, `holding`), the rows in `ArrangementInspector`. Tested in
 `GroupSizeLimitsTests`, walked by `Scripts/playtest/size-limits-walk.json`.
+
+## Landed: a row can push its contents to its two ends (Next, `next-auto-layout`, 2026-09-05)
+
+A bar is a logo at one end and buttons at the other, and one gap cannot make
+that shape. Until now the only way to build it was to nudge the pieces apart by
+hand and watch the stack put them back, which is the whole complaint auto layout
+exists to answer. A stack that has been given a size of its own can now share
+the room it has LEFT OVER between its rows instead of holding a number.
+
+**A switch beside the word, not a row of its own.** The Gap row grows a small
+arrows-apart switch between its label and its field. Press it and the field
+reads **Spread**: the first piece sits on the near edge, the last on the far
+one, and everything between them shares the room equally. The Layout section
+already spends seven rows on one group, and this is two states about the number
+on the same line, so it is a switch rather than an eighth row.
+
+**Two ways back to a number, because either is the one somebody reaches for.**
+Press the switch again and the gap that was there comes back — the number is
+KEPT while it spreads, never thrown away and never re-inferred — or type a
+number straight over the word Spread, which turns spreading off and holds that
+gap. The word is drawn at full strength, not the grey a Mixed value is drawn
+at: it names a real state rather than standing in for a value that is not one
+value.
+
+**It is only offered where it could do something.** There is room to spread only
+where the axis the stack FLOWS along is bigger than its contents: a size of its
+own, a floor holding it open, or a screen, whose box is the box you drew. A
+stack that hugs has nothing left over, so the switch is not there at all and the
+section's sentence says why in one line — "There is nothing left over to spread
+until Width is Fixed." A control that is present and changes nothing is worse
+than no control. A grid is never offered it either: its columns already share
+its width out, and a second way to say that is a second way to be wrong.
+
+**The room is measured from the start, not added up gap by gap.** Each row is
+pushed on by its own share of what is left over, rounded once, so the last one
+lands exactly on the far edge however the rounding falls, and no gap is ever a
+half point. Contents too big for the room share nought and sit tight against
+each other rather than overlapping, which is the same answer a stylesheet gives.
+The room at the edges is respected on both sides, so the two ends land inside
+the padding, and the surface behind a bar still takes the whole box rather than
+being spread with the pieces on it.
+
+Not in this slice: sharing the room around the outside as well (the centred and
+space-around shapes), spreading a grid's rows, and per-child growth — a piece
+that eats the leftover room itself rather than the gaps doing it.
+
+Model and maths in `GroupLayout` (`spreadsGap`, `spreadsContents`,
+`couldSpread`) and `GroupFlow.spread`, the row in
+`ArrangementInspector.gapRow`. `GroupLayout` writes its own JSON now, for one
+reason: a stack that holds one gap writes nothing at all about spreading, so
+every document saved before this is byte for byte the file it always was, and
+`everyNumberRoundTrips` is the test that stops the next number added there from
+being forgotten in that list. Tested in `GroupSpreadTests`, walked by
+`Scripts/playtest/spread-gap-walk.json`.

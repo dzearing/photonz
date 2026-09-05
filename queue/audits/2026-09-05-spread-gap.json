@@ -1,0 +1,31 @@
+{
+  "feature": "A row can push its contents to its two ends",
+  "epic": "ui-layout",
+  "summary": "A stack that has been given a size can share the room it has left over between its rows instead of holding one gap, so a bar with a logo at one end and buttons at the other is two clicks rather than nudging pieces the stack keeps putting back.",
+  "setup": "Photonz Dev, release Next, flag \"Groups that arrange their own contents\" (on by default). Open a blank document.",
+  "try": [
+    { "do": "Draw three rectangles side by side across the top of the canvas, with different widths." },
+    { "do": "Sweep a band round all three and press Layer ▸ Stack Selection (⇧⌘S)." },
+    { "do": "Read the Layout section: the Gap row has no switch beside it, and the sentence says there is nothing left over to spread until Width is Fixed.", "shot": "2026-09-05-spread-gap-2.png" },
+    { "do": "Type 640 into W and press Return: a small arrows-apart switch appears beside the word Gap." },
+    { "do": "Press that switch. The pieces go to the two ends and the Gap field reads Spread.", "shot": "2026-09-05-spread-gap-1.png" },
+    { "do": "Type 24 into Padding: the two ends come in 24 from the sides and the stack stays 640." },
+    { "do": "Type 40 straight over the word Spread: spreading stops and they bunch up 40 apart." },
+    { "do": "Press the switch on, then off again: the 40 comes back, not the 12 it started with." }
+  ],
+  "evaluate": [
+    "Is the arrows-apart switch beside the word Gap something you would have found on your own, or does it need a word next to it?",
+    "Is it in the right place, or did you expect the choice to be a Number/Spread pair the way Width is Hug/Fixed?",
+    "Does the field reading Spread read as a value, or does it look like a field that has been switched off?",
+    "Typing a number over the word turns spreading off. Is that what you would expect, or should the field refuse the typing while it spreads?",
+    "On a stack that hugs, is one grey line saying \"There is nothing left over to spread until Width is Fixed\" the right amount, or would you rather see the switch there and greyed out?",
+    "Is space-between the only shape you want, or do you also reach for room around the outside (a centred row with even air at both ends)?"
+  ],
+  "rough": [
+    "The task's own suggested walk was to drop the starter Nav Bar and set its Gap. It does not work: the Nav Bar is a Free group, so it has no Gap row at all, and turning it into a Row stack pulls its hairline divider into the flow as a fourth piece. The starter nav bar still holds the size it was drawn at, which is a separate open task. The walk above uses three rectangles instead.",
+    "The switch is an icon with no word, sitting in the same column as the twist-open chevrons on Width, Height and Padding. It is a different shape and it has help text, but it could still read as another twist-open at a glance.",
+    "While it spreads, the up and down arrow keys in the Gap field do nothing: there is no number in the box to step from. Honest, but somebody holding the arrow keys will feel it as dead.",
+    "Only space-between is built. Room around the outside as well (space-around, space-evenly) and spreading a grid's rows are not in this slice, and neither is per-child growth where a piece eats the leftover room instead of the gaps.",
+    "Screen Recording was granted for the probe, so every shot here is a real window capture, not an offscreen render."
+  ]
+}
