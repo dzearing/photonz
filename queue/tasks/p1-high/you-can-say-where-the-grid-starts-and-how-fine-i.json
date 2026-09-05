@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T16:51:55.012Z",
-  "updated": "2026-09-05T16:51:55.050Z",
+  "updated": "2026-09-05T18:46:20.756Z",
   "deps": [
     "the-grid-is-always-behind-the-canvas-and-things"
   ],
@@ -34,6 +34,19 @@
     {
       "t": "2026-09-05T16:51:55.049Z",
       "note": "seq 180 -> 4"
+    },
+    {
+      "t": "2026-09-05T18:43:39.813Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T18:46:20.756Z",
+      "note": "adversarial review, before building. (1) Entry point: a menu item alone would never be found. The place a person is already standing when they care about the grid is the Grid section of the inspector, so the mode is entered from a button there AND from View > Grid, not from a menu only. (2) Dragging: hit-testing a one point line is fiddly, so pressing ANYWHERE on the canvas moves the zero point to the pointer and keeps it under the pointer for the rest of the drag. One rule, no invisible hit targets, and the lines are always exactly where you last pressed. (3) Arrow keys reuse the layer nudge (1pt, 10pt with shift) so the step is the one already in the fingers. (4) The mode snapshots the WHOLE grid settings on entry, so it can switch the grid on for you (nobody adjusts a grid they cannot see) and Escape still puts everything back. (5) Cut from the mock reading: no separate crosshair badge or draggable handles. Added: the bar shows the zero point as numbers, because you cannot check that 0,0 landed on 24,16 by eye. (6) Smallest cell is a floor on what is DRAWN, not on the pull, which is what the acceptance says; that combination is the useful one (pull on 1pt, look at 8pt cells) but it is worth asking the user, so it goes in the audit as a question."
+    },
+    {
+      "t": "2026-09-05T18:46:20.756Z",
+      "note": "decided without a card (no visible consequence to weigh): smallest cell raises the BASE of the level of detail ladder to max(spacing, smallest cell) rather than skipping rungs, so the cells you see are still whole multiples of the spacing and the ladder keeps stacking. Default smallest cell is 1pt, i.e. no floor, so a grid nobody has touched draws exactly what it draws today."
     }
-  ]
+  ],
+  "started": "2026-09-05T18:43:39.812Z"
 }

@@ -1,0 +1,33 @@
+{
+  "id": "the-grid-never-disappears-at-any-zoom",
+  "title": "The grid never disappears at any zoom",
+  "goal": "The grid is there when a document opens, vanishes completely after a small pinch to zoom, then comes back when zooming further. A grid that blinks out is worse than no grid, because you cannot trust what you are aligning to. It should be visible at every zoom, thinning and thickening as it already does, with no gap where nothing is drawn.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T19:03:09.344Z",
+  "updated": "2026-09-05T19:03:09.379Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05: the grid shows on load, a slight trackpad zoom makes it disappear, more zoom brings it back. One suspect found by reading CanvasGrid.levels and strength, to be confirmed by the sweep rather than believed on sight: the finest rung is placed at climb, which is clamped to the range zero to one, and strength returns zero when its step is less than or equal to zero. So whenever the finest rung sits exactly at the band floor its strength is zero. That alone should still leave the two rungs above it drawing, so it does not explain a total disappearance by itself, which is why the sweep matters: it will say whether some zoom makes every rung land on a zero, or whether the cause is elsewhere, for example the minimumDrawnOpacity of 0.004 cutting all three, or the clipping to documentFrameInView in CanvasGridChrome hiding the grid rather than the maths dropping it. Write the sweep as a test in PhotonzCore first, since it is also the guard that stops this returning.",
+  "acceptance": [
+    "A test sweeps zoom across the whole range in small steps and asserts that at least one line is drawn with a visible strength at every single step, with no gap anywhere",
+    "Reproduce the reported disappearance first and record in the log the zoom at which it happens and how wide the dead band is",
+    "Pinch zooming slowly through that range shows the grid the whole way, with lines fading in and out but never all of them at once",
+    "The change does not make the grid heavier at any zoom: line counts and strengths outside the dead band stay as they are",
+    "Audit written under queue/audits/ with the grid at the zoom that used to kill it, and the sweep result, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T19:03:09.344Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T19:03:09.379Z",
+      "note": "seq 180 -> 1"
+    }
+  ]
+}
