@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T19:07:22.563Z",
-  "updated": "2026-09-05T19:07:22.599Z",
+  "updated": "2026-09-05T20:42:50.810Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05: I still do not have any way to configure the grid as far as I know. They are right in practice. What exists today, from a read: EditorCommands.swift line 525 puts Show Grid on Command apostrophe and a Snap to Grid toggle on the View menu, and that is all the menu offers. Every number lives in LayersPanel.gridSection (line 3122), which is drawn inside the Canvas inspector section, and that section only renders its content when editorState.isCanvasSelected (line 452). So the settings require knowing to click the Canvas row in the layers list first. The comment above gridSection explains the reasoning, that the grid belongs to the canvas, which is sound as a model but is not how anyone will look for it. Options for the runner to weigh and record: add the settings under the View menu item itself, put them in a small popover hung off the menu or off a grid button, or surface the Canvas section automatically when the grid is switched on. Do not simply move them and leave the Canvas section empty. This pairs with the pending task you-can-say-where-the-grid-starts-and-how-fine-i, which adds the origin and smallest cell; whichever lands second must put its new settings in the same place as the first.",
@@ -29,6 +29,11 @@
     {
       "t": "2026-09-05T19:07:22.599Z",
       "note": "seq 180 -> 2"
+    },
+    {
+      "t": "2026-09-05T20:42:50.810Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-05T20:42:50.809Z"
 }
