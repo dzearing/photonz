@@ -33,6 +33,14 @@
     {
       "t": "2026-09-05T20:42:50.810Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T20:46:12.319491Z",
+      "note": "Adversarial review before building. Walked it as a first timer: you press Command apostrophe, graph paper appears, and nothing on screen has changed except the picture. The only route to a number is to know that the Canvas row at the bottom of the layers list is a thing you can click. Rejected putting the numbers ON the View menu: spacing and bold-every are typed values and a menu cannot hold a text field you watch the canvas answer. Rejected auto-selecting the Canvas row, which throws away the layer you had picked (the sibling task turning-the-grid-on-says-where-its-numbers-are says the same). Rejected a first-run tip, because acceptance forbids something to dismiss. Chose: the grid gets a small chip in the floating bar beside zoom, present only while the grid is showing, reading the live spacing, opening every setting in a popover; plus View menu gains Grid Settings, right under Show Grid, opening the same popover and switching the grid on first if it was off. The chip appearing at the same instant the lines appear IS the discovery cue, and the menu you turned it on from now lists its settings next to the switch. The Canvas section keeps the identical controls by sharing one view, so nothing that works today stops working. Shortest version that delivers the value: one shared control view, one chip, one menu row."
+    },
+    {
+      "t": "2026-09-05T20:46:12.319491Z",
+      "note": "Toolbar width is the scarce resource here (EditorChromeLayout comments: a measurements pill was removed from this bar for exactly this reason). Mitigation: the chip only exists while the grid is on, and below a canvas width threshold it drops its spacing readout and shows the glyph alone."
     }
   ],
   "started": "2026-09-05T20:42:50.809Z"
