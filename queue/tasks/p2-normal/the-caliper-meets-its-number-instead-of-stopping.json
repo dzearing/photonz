@@ -1,0 +1,35 @@
+{
+  "id": "the-caliper-meets-its-number-instead-of-stopping",
+  "title": "The caliper meets its number instead of stopping short of it",
+  "goal": "A measurement chip should look joined to the caliper that produced it. On a short measurement the two lines simply stop either side of the chip with a space, no curve, so the number looks like it is floating between two unrelated lines. On a long one the curve is drawn and looks right, but it still stops a few points before the chip and never touches. Both should meet the chip cleanly at its edge.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T16:55:56.968Z",
+  "updated": "2026-09-05T16:55:57.006Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05 with two screenshots, a 22px measurement showing no curve at all and a 34px one showing the curve with a gap. Both causes are in MeasureRasterizer.labelPlan around line 225. The short case: when the chip rides the line, splitCenter is set and the line is simply cut with gapHalf equal to chipAxisHalfExtent plus MeasureContent.chipLineGap, and the leader that draws the curve is skipped entirely by the guard if splitCenter == nil, so a riding chip can never be connected. The long case: the leader runs from the nearest point on the measurements own strokes to entryPoint on the chip rect, which should touch, so measure why it does not before changing it; suspects are the chip rect used for the entry not matching the pill actually drawn once its own stroke and chipRenderPadding are added, and the line cap ending short. The five point clearance is MeasureContent.chipLineGap, documented as existing so a translucent pill never reveals a stroke behind it; that reason is still valid, so the fix is to end the line exactly ON the pill outline rather than short of it, which satisfies both.",
+  "acceptance": [
+    "On a short measurement the line curves into the chip and touches it, in place of the plain gap it leaves today",
+    "On a long measurement the curve reaches the chip edge and touches it, with no visible space at any zoom or stroke width",
+    "No stroke shows through the chip, including when the chip is translucent",
+    "The join looks the same on both sides of a chip that sits on the line, and at every angle",
+    "Existing measurements keep their numbers, positions and values, only the join changes",
+    "Pixel tests in PhotonzRender cover a short and a long measurement, written before the change",
+    "Audit written under queue/audits/ with a short and a long caliper at two zooms, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T16:55:56.969Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T16:55:57.006Z",
+      "note": "seq 1240 -> 6"
+    }
+  ]
+}
