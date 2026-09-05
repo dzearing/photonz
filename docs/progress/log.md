@@ -8882,3 +8882,28 @@ question at p2 and is dropped as done here.
 **Open question.** The Canvas section is noticeably wordier now that it carries
 the same explanations the popover does. One copy of the controls was worth it,
 but the user should say whether the panel wants the short form.
+
+## 2026-09-05 — the buttons under a capture say what they do again
+
+The capture history's action buttons showed no label on hover. Reproduced in
+the probe with a scripted walk: the hover *was* seen, but the overlay's own
+tooltip read each button's rectangle out of a SwiftUI preference set inside
+`.background(GeometryReader ...)`, and that preference never reached the
+`.onPreferenceChange` beside it. The frame stayed empty, so every label was
+anchored to the overlay's top-left corner and drawn in the corner of the
+screen, about 1600pt from its button.
+
+Fixed by deleting the bespoke route: the history now uses the one `.toolTip`
+the tool bar does, which reads the control's real screen frame from AppKit.
+`TooltipController.swift`, `AppCoordinator.showCaptureTooltip` and
+`HistoryOverlayController.panelFrame` are gone. `HintTooltip` gained a
+preferred side, because a label above these buttons would cover the capture
+they act on.
+
+Harness: `hover` takes an optional `window` (the history is a floating panel),
+and a `-sc.png` now covers the window plus anything hung on it, so a tooltip is
+in the picture. Guard walk: `Scripts/playtest/history-tooltips-walk.json`.
+Audit: `queue/audits/2026-09-05-history-tooltips.json`.
+
+Next: the queue. Open question in the audit — the filter's label repeats what
+its own segments already say; worth cutting?
