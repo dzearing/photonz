@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:16.029Z",
-  "updated": "2026-09-05T16:44:05.072692Z",
+  "updated": "2026-09-05T16:44:26.407Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/EditorState.swift is 6810 lines and 341 KB, up about 90 KB in one day; CanvasView.swift is 4417 lines. The 2026-09-03 manager pass said to file the extraction once a third feature landed in the same file, and several have. This de-risks a-copy-can-be-given-its-own-color and a-row-can-push-its-contents-to-its-two-ends, which both add intents there. Suggested seams: the group layout intents, the component and instance intents, and the color and style intents. LayersPanel.swift at 3216 lines is not in scope.",
@@ -82,7 +82,12 @@
     {
       "t": "2026-09-05T16:44:05.072692Z",
       "note": "No audit: nothing a person can see or try changed."
+    },
+    {
+      "t": "2026-09-05T16:44:26.406Z",
+      "note": "EditorState.swift 6965 -> 1839 lines; 14 area files beside it (layout intents in EditorState+Layout.swift, component intents in EditorState+Components.swift). Moves only: every original line still present exactly once, 79 declarations widened from private because two files now share them. Verified by swift build (no new warnings), Scripts/test.sh 3229 tests with no test edited, and seven playtest walks on a fresh probe. Perf unchanged: renderer untouched, 12MP/10-layer re-render median 5.6ms. Follow-ups filed for CanvasView.swift and a pre-existing broken walk. Commit a0ba1e1."
     }
   ],
-  "started": "2026-09-05T16:21:11.841Z"
+  "started": "2026-09-05T16:21:11.841Z",
+  "completed": "2026-09-05T16:44:26.407Z"
 }
