@@ -1,0 +1,36 @@
+{
+  "id": "the-grid-is-always-behind-the-canvas-and-things",
+  "title": "The grid is always behind the canvas, and things snap to it while you resize as well as move",
+  "goal": "Four things about the grid and snapping are wrong together. The grey area around the canvas should always show the grid, so the surface you work on reads as graph paper whether the grid is switched on over the picture or not. There should be a Snap to grid switch, on by default, that decides whether dragging pulls to the grid while the grid is showing. Moving a rectangle already offers helpful pull to the other rectangles, but resizing an edge offers none, so matching one rectangle to another is guesswork. And with the grid on, resizing jumps about instead of settling cleanly on grid lines.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T16:46:53.691Z",
+  "updated": "2026-09-05T16:46:53.725Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05 after the canvas grid shipped. Four findings from a read, three of them confirmed. (1) Surround: CanvasGridChrome.refreshCanvasGrid line 39 intersects the grid with viewport.documentFrameInView, so the grid is clipped to the picture and never appears on the grey around it. The user wants the surround to carry it always, with the switched on state being the grid drawn OVER the picture. (2) Snap to grid does not exist: no reference to grid anywhere in Snapping.swift or in the drag paths. (3) Resize does no snapping at all: only the move path calls Snapping.snapFrameOrigin (CanvasView.swift lines 2107 and 2147); the resize branch at line 1992 has no snapping, which is exactly the asymmetry the user hit. Snapping.swift only offers snapFrameOrigin, which snaps an ORIGIN given a fixed size, so a resize needs a new entry point that snaps the moving edge or corner and leaves the opposite one alone; keep it in the same file so there is one snapping idea, not two. (4) The jumpiness with the grid on is NOT explained by anything found: there is no grid snapping to be inaccurate. Reproduce it before theorising; suspects worth checking are the level of detail ladder changing which lines are drawn mid drag so the eye reads a different grid, and the existing pixel grid rounding on the drag. Grid settings live in CanvasGridSettings and CanvasGridStore, are app wide rather than per document, and ship behind next-canvas-grid.",
+  "acceptance": [
+    "The grey surround around the canvas always shows the grid, at every zoom, whether or not the grid is switched on over the picture, and it costs no measurable frame time",
+    "A Snap to grid switch sits beside the grid settings, on by default, and turning it off stops the pulling without hiding the grid",
+    "Dragging an edge or a corner to resize pulls to the same things a move pulls to: the other layers edges and centres, the canvas edges, and the grid when snapping is on, with the same guides drawn",
+    "With snapping on, a resized edge lands exactly on a grid line and stays there, with no jumping, at every zoom and every grid spacing",
+    "Holding Command frees a resize from all of it, the same key that already frees a move",
+    "With the grid switched off, moving and resizing behave exactly as they do today",
+    "Core logic covered by tests in PhotonzCore written before the implementation, including a resize at several zooms against a grid",
+    "Audit written under queue/audits/ with pictures of the surround grid, a resize catching a peer edge, and a resize catching a grid line, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T16:46:53.692Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T16:46:53.725Z",
+      "note": "seq 180 -> 3"
+    }
+  ]
+}
