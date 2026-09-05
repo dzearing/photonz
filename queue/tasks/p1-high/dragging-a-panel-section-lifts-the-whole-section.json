@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 7,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T19:06:39.441Z",
-  "updated": "2026-09-05T21:31:18.279Z",
+  "updated": "2026-09-05T22:05:33.333Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 with a screenshot of the red dashed outline stuck around the whole panel. What the code does, from a read of LayersPanel.swift. The red dashes are PanelDropAffordance .refuses (line 730), whose documented meaning is that a dropped FILE will not be taken; it is nothing to do with reordering, so seeing it during a section drag is already wrong. The section drag attaches its item provider to the header only (dragItem at line 81 returns an NSItemProvider carrying the section id as text), which is why the system ghost is just the title; a whole section preview needs onDrag with an explicit preview or a hand rolled drag rather than the default snapshot. Reordering happens in SectionDropDelegate.dropEntered (line 755), which fires as the pointer ENTERS a section, hence the swap on touch rather than at the midpoint; the delegate has the DropInfo location available to compare against the section's own frame instead. For the stuck outline, note that dropExited and performDrop both only call editorState.endPanelDrop when dragging is nil (lines 773 and 778), so any path that arms the file drop state and then ends while a section drag is in flight leaves it armed with nothing to clear it. Confirm that is the sequence before fixing. The panel level drop target and the per section one both accept text plus FileDrop.types, so a section id travelling as text is visible to the file drop logic; consider a private type identifier for section drags so the two can never be confused.",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-05T22:02:38.583257Z",
       "note": "Audit: queue/audits/2026-09-05-panel-section-drag.json with four real screen captures (Screen Recording was granted)."
+    },
+    {
+      "t": "2026-09-05T22:05:33.332Z",
+      "note": "Reordering is the panel's own gesture now, not a system drag: the whole section lifts on a card with a shadow, moves only up and down, and others slide aside when the pointer passes their middle. No drop marking during a reorder; Escape puts it back. Rule lives in PhotonzCore SectionReorderDrag (18 tests, written first). Verified live in the probe with the new dragSection harness step (Scripts/playtest/panel-section-drag.json): touch does not swap, past the middle does, Escape leaves the order alone, and the panel promises nothing while carrying. File drops still show both marks. Scripts/test.sh green. Audit queue/audits/2026-09-05-panel-section-drag.json. Commit 015517e."
     }
   ],
-  "started": "2026-09-05T21:31:18.279Z"
+  "started": "2026-09-05T21:31:18.279Z",
+  "completed": "2026-09-05T22:05:33.333Z"
 }
