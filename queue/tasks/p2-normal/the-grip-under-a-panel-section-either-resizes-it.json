@@ -1,0 +1,34 @@
+{
+  "id": "the-grip-under-a-panel-section-either-resizes-it",
+  "title": "The grip under a panel section either resizes it or is not there",
+  "goal": "There is a drag grip under the layers list and dragging it does nothing at all. A control that is drawn, changes the pointer to a resize cursor, and then ignores every drag is worse than no control. Either dragging it resizes the area for real, or it does not appear until there is something to resize.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T19:05:01.877Z",
+  "updated": "2026-09-05T19:05:01.914Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05 with a screenshot showing two rows and a grip that does nothing. Cause found by reading LayersPanel.swift: the grip writes to maxHeight (PanelAreaResizeHandle around line 1013, bound at line 1222), but the list is drawn at viewport equals min(natural, maxHeight) where natural is the height the rows actually need (line 1094). With a short list natural is well under maxHeight, so dragging moves maxHeight between its bounds and min(natural, maxHeight) never changes: nothing happens. It cannot even shrink, because minHeight is 120 (line 1073) and a two row list needs less than that, so the floor is already above the content. The code comments say the quiet part out loud: only meaningful once the list is tall enough to scroll, but always shown so the affordance is discoverable. That trade is the bug, since a visible grip with a resize cursor promises something it cannot do. Decide between the two options in the goal and say which in the audit; hiding it when it cannot act is the smaller change, letting the area grow past its content is the more useful one if an oversized empty area is acceptable.",
+  "acceptance": [
+    "Reproduce it first with a short list and record in the log exactly which drags do nothing and why",
+    "Dragging the grip changes the height of the layers area immediately, in both directions, wherever the list is short or long",
+    "With a list too short for resizing to mean anything, the grip is not drawn and the pointer does not change over that spot",
+    "The chosen height is remembered between launches, as it is meant to be today",
+    "The same rule holds for every panel section that offers a grip, not just the layers one",
+    "Audit written under queue/audits/ with a short list and a long one, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T19:05:01.878Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T19:05:01.914Z",
+      "note": "seq 1270 -> 9"
+    }
+  ]
+}
