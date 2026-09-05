@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:47.142Z",
-  "updated": "2026-09-05T17:00:35.880291Z",
+  "updated": "2026-09-05T17:01:01.113Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/PhotonzCore/GroupLayout.swift holds a single CGFloat gap with usedGap; the spread case wants gap to become a small enum or an optional so Codable can stay backward compatible. Placement runs in GroupFlow.swift. No decision card: this is an option on the Gap row the user already sets, inside the auto layout epic they promoted on 2026-09-03, not a new surface. The starter nav bar still holds the size it was drawn at, see queue/audits/2026-09-04-ui-hug.json.",
@@ -75,7 +75,12 @@
     {
       "t": "2026-09-05T17:00:35.880291Z",
       "note": "audit: queue/audits/2026-09-05-spread-gap.json with 2026-09-05-spread-gap-1.png and -2.png."
+    },
+    {
+      "t": "2026-09-05T17:01:01.112Z",
+      "note": "A stack with a size of its own can share the room it has left over between its rows: GroupLayout.spreadsGap + GroupFlow.spread, an arrows-apart switch on the Gap row in ArrangementInspector. 21 new tests in GroupSpreadTests written first, full suite 3250 green, walked on the probe with real window captures (Scripts/playtest/spread-gap-walk.json). Audit: queue/audits/2026-09-05-spread-gap.json. Commit e243f86."
     }
   ],
-  "started": "2026-09-05T16:45:16.644Z"
+  "started": "2026-09-05T16:45:16.644Z",
+  "completed": "2026-09-05T17:01:01.113Z"
 }

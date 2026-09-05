@@ -1,0 +1,36 @@
+{
+  "id": "a-snap-that-is-showing-is-a-snap-you-get-with-no",
+  "title": "A snap that is showing is a snap you get, with no flickering",
+  "goal": "While resizing with a guide line showing, the size flickers between snapped and free as the mouse barely moves, so landing on the guide is a matter of luck. The rule should be plain: if a guide is showing, the edge is on it; if none is showing, the drag follows the mouse smoothly; holding Command turns snapping off entirely. Never a rapid switch between the two.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T17:02:51.607Z",
+  "updated": "2026-09-05T17:02:51.642Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05 with a screenshot of a caliper foot beside a yellow guide, flickering as the mouse moves slightly. This is the jumpiness left undiagnosed in the-grid-is-always-behind-the-canvas-and-things; that task adds resize snapping and this one governs how any snap behaves, so they must agree and should probably be done together or in that order. Strong candidate cause found by reading, to be confirmed rather than assumed: CanvasView.axisGated (line 711) decides whether to keep a snap from a decaying motion accumulator, dropping the x snap when abs(dy) is more than twice abs(dx) and above 2, and the y snap the other way round. trackDragMotion (line 724) feeds it with a 0.7 decay per event. During a slow drag the two numbers sit near those thresholds, so ordinary hand jitter flips which branch wins from one event to the next and the snap is taken and dropped on alternate frames. There is also no hysteresis anywhere: nothing holds a caught snap once it is caught, which is the second half of the fix and is what the acceptance asks for. Whatever replaces the axis gate must still stop a purely vertical drag flashing horizontal guides, which is the problem it was written to solve; a directional gate that only updates when the motion is unambiguous, and otherwise holds its last decision, would do that without oscillating.",
+  "acceptance": [
+    "Reproduce the flicker first with a scripted walk that moves a handle in small steps past a guide, and record in the log how many times the result flips between snapped and free across that move",
+    "With a guide showing, the dragged edge is exactly on it, and it stays there while the pointer stays near it",
+    "A caught snap is only released when the pointer has moved a clear distance away from it, more than the distance it took to catch, so a caught guide cannot be lost to a small wobble",
+    "With no guide showing, the drag follows the pointer with no rounding or pulling of any kind",
+    "Holding Command drops every snap immediately and keeps it off for the rest of that drag",
+    "The same rule holds for a measure foot, a layer edge, a layer corner and a whole layer move, so all four feel like one behaviour",
+    "Core logic covered by tests in PhotonzCore written before the change, including a slow pass across a guide asserting exactly one catch and one release",
+    "Audit written under queue/audits/ with the flip count before and after, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T17:02:51.608Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T17:02:51.641Z",
+      "note": "seq 180 -> 2"
+    }
+  ]
+}
