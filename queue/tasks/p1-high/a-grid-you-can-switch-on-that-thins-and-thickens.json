@@ -4,15 +4,15 @@
   "goal": "There is no grid to build against. Add one you can switch on for the canvas: columns only, or columns and rows, spaced four points apart by default and typable. Zooming must never turn it into mush or make it vanish: as you zoom out the fine lines drop away and only the coarser ones remain, and as you zoom in the fine ones fade back, so what you see is always a readable amount of line. Off, the canvas looks exactly as it does now. On, the grid sits above the backdrop, tinted with the brand colour and fading into the grey behind it so it reads as part of the surface rather than graph paper laid on top. It has to draw fast enough that panning and zooming never stutter.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 9,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T14:06:30.562Z",
-  "updated": "2026-09-05T14:06:30.597Z",
+  "updated": "2026-09-05T14:07:49.012Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Asked by the user on 2026-09-05. Distinct from the pending task a-screen-can-show-the-column-grid-you-are-design, which is a per SCREEN column guide with a count, gutter and margin, meant for laying out one screen and blocked on its own decision card. This one is a canvas wide grid you build against, spacing based rather than column count based, and belongs to the canvas rather than to any frame; the runner should read that task and make the two read as one idea rather than two grids with different words, and say in the audit how a person tells them apart. Drawing: the canvas is an AppKit view with CALayers (CanvasView.swift); a grid drawn as a repeating CGPattern or a tiled CALayer with contentsScale set will beat rebuilding a CGPath of every line on each frame, which at four points and a wide canvas is tens of thousands of segments. The fade is the important part: pick a level of detail so the on screen spacing stays inside a band, for example eight to thirty two points, and cross fade the finer level in as it approaches the top of the band rather than switching abruptly. Viewport.zoom in PhotonzCore is the input; keep the level of detail maths in PhotonzCore with tests, and leave only the drawing in the app. Grid tint: use the accent colour at a low alpha over the backdrop, and verify against both themes. Snapping to the grid is NOT part of this task; if it is wanted it is a follow up, and it should join the existing snapping rather than being a second idea.",
+  "notes": "Asked by the user on 2026-09-05. Distinct from the pending task a-screen-can-show-the-column-grid-you-are-design, which is a per SCREEN column guide with a count, gutter and margin, meant for laying out one screen and blocked on its own decision card. This one is a canvas wide grid you build against, spacing based rather than column count based, and belongs to the canvas rather than to any frame; the runner should read that task and make the two read as one idea rather than two grids with different words, and say in the audit how a person tells them apart. Drawing: the canvas is an AppKit view with CALayers (CanvasView.swift); a grid drawn as a repeating CGPattern or a tiled CALayer with contentsScale set will beat rebuilding a CGPath of every line on each frame, which at four points and a wide canvas is tens of thousands of segments. The fade is the important part: pick a level of detail so the on screen spacing stays inside a band, for example eight to thirty two points, and cross fade the finer level in as it approaches the top of the band rather than switching abruptly. Viewport.zoom in PhotonzCore is the input; keep the level of detail maths in PhotonzCore with tests, and leave only the drawing in the app. Grid tint: use the accent colour at a low alpha over the backdrop, and verify against both themes. Snapping to the grid is NOT part of this task; if it is wanted it is a follow up, and it should join the existing snapping rather than being a second idea.\n\nTriage 2026-09-05: the note above says the per screen column guide is blocked on its decision card. It is not any more. The user answered it minutes after this task was filed, and they chose the option WITH snapping: dragging on a screen that has a column overlay pulls to the column edges, with Command to drag free. So the line above saying snapping should join the existing snapping rather than being a second idea is now the standing instruction for both grids, not a hypothetical. Read a-screen-can-show-the-column-grid-you-are-design before starting, and whichever of the two lands first sets the shared vocabulary the other follows.",
   "acceptance": [
     "A control switches the grid on and off, and offers columns only or columns and rows; the spacing is typed and starts at four points",
     "Lines never crowd: at any zoom the spacing on screen stays within a readable band, with finer lines fading out as you zoom away and back in as you approach, with no popping",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-05T14:06:30.596Z",
       "note": "seq 180 -> 9"
+    },
+    {
+      "t": "2026-09-05T14:07:49.011Z",
+      "note": "seq 9 -> 10"
     }
   ]
 }

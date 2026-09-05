@@ -1508,3 +1508,62 @@
 {"t":"2026-09-04T22:45:08.345Z","ev":"task_started","id":"a-copy-can-be-given-its-own-size","title":"A copy can be given its own size","priority":"p1-high"}
 {"t":"2026-09-04T23:09:52.763Z","ev":"task_created","id":"the-layout-section-says-a-copy-stays-where-the-o","priority":"p3-low","title":"The Layout section says a copy stays where the original put it, which a resized copy does not"}
 {"t":"2026-09-04T23:10:21.098Z","ev":"task_done","id":"a-copy-can-be-given-its-own-size","from":"in_progress","note":"A copy takes a width and a height like any other layer and keeps them: GroupContent.instanceSize written over the original's layout by the sync (InstanceSizing), LayerScaling.resizingCopy for the resize, placedByContainer so a copy stretched by a stack claims nothing, and an Its own size row in the Component section that puts both sides back. Verified on the probe end to end (handle drag 320x48 to 460x84, typed 1200, revert, 375, original H 72 leaves the copy 375x72, one undo leaves it 375x48). 3173 tests green. Audit queue/audits/2026-09-04-copy-own-size.json with two real captures; follow-up filed for the Layout section's now half-wrong sentence."}
+{"t":"2026-09-04T23:10:49.408Z","ev":"task_started","id":"a-container-can-be-told-the-smallest-and-largest","title":"A container can be told the smallest and largest it may get","priority":"p1-high"}
+{"t":"2026-09-04T23:17:16.185Z","ev":"task_reset","id":"a-container-can-be-told-the-smallest-and-largest","attempt":1}
+{"t":"2026-09-04T23:19:01.610Z","ev":"task_created","id":"a-colour-wearing-a-style-looks-different-from-on","priority":"p1-high","title":"A colour wearing a style looks different from one you can still edit"}
+{"t":"2026-09-04T23:19:01.645Z","ev":"task_resequenced","id":"a-colour-wearing-a-style-looks-different-from-on","from":180,"to":8}
+{"t":"2026-09-05T13:58:32.900Z","ev":"loop_started","pid":36604}
+{"t":"2026-09-05T13:58:48.328Z","ev":"decision_resolved","id":"a-component-can-hold-more-than-one-version-of-it-a-button-usually-has-a-normal-a","taskId":"a-component-can-hold-more-than-one-version-of-it","choice":"a"}
+{"t":"2026-09-05T13:58:48.340Z","ev":"task_unblocked","id":"a-component-can-hold-more-than-one-version-of-it","decision":"a-component-can-hold-more-than-one-version-of-it-a-button-usually-has-a-normal-a"}
+{"t":"2026-09-05T13:59:09.039Z","ev":"decision_resolved","id":"a-locked-layer-inside-a-stack-is-left-where-it-i-you-lock-a-row-inside-a-stack-sh","taskId":"a-locked-layer-inside-a-stack-is-left-where-it-i","choice":"a"}
+{"t":"2026-09-05T13:59:09.053Z","ev":"task_dropped","id":"a-locked-layer-inside-a-stack-is-left-where-it-i","from":"blocked","decision":"a-locked-layer-inside-a-stack-is-left-where-it-i-you-lock-a-row-inside-a-stack-sh","note":"declined: The stack keeps arranging it"}
+{"t":"2026-09-05T14:00:08.411Z","ev":"decision_resolved","id":"the-settings-for-the-tool-in-your-hand-are-reach-with-the-right-hand-panel-hidden","taskId":"the-settings-for-the-tool-in-your-hand-are-reach","choice":"c"}
+{"t":"2026-09-05T14:00:08.424Z","ev":"task_unblocked","id":"the-settings-for-the-tool-in-your-hand-are-reach","decision":"the-settings-for-the-tool-in-your-hand-are-reach-with-the-right-hand-panel-hidden"}
+{"t":"2026-09-05T14:01:49.958Z","ev":"decision_resolved","id":"a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for","taskId":"a-number-you-cannot-type-into-stops-looking-like","choice":"a"}
+{"t":"2026-09-05T14:01:49.968Z","ev":"task_unblocked","id":"a-number-you-cannot-type-into-stops-looking-like","decision":"a-number-you-cannot-type-into-stops-looking-like-a-number-the-app-worked-out-for"}
+{"t":"2026-09-05T14:02:34.677Z","ev":"task_pending","id":"witness-the-capture-dim-in-another-tool-on-an-un","from":"blocked","note":"Screen is unlocked as of the 2026-09-05 triage pass (ioreg IOConsoleLocked printed false), which was the only thing blocking this. Run it while that is still true."}
+{"t":"2026-09-05T14:02:56.822Z","ev":"decision_resolved","id":"a-screen-can-show-the-column-grid-you-are-design-should-a-screen-be-able-to-show","taskId":"a-screen-can-show-the-column-grid-you-are-design","choice":"b"}
+{"t":"2026-09-05T14:02:56.828Z","ev":"task_unblocked","id":"a-screen-can-show-the-column-grid-you-are-design","decision":"a-screen-can-show-the-column-grid-you-are-design-should-a-screen-be-able-to-show"}
+{"t":"2026-09-05T14:03:15.042Z","ev":"task_created","id":"one-rule-for-a-control-that-speaks-for-several-p","priority":"p2-normal","title":"One rule for a control that speaks for several picked things"}
+{"t":"2026-09-05T14:03:26.843Z","ev":"task_created","id":"the-stretch-menu-says-what-stretching-both-ways","priority":"p3-low","title":"The Stretch menu says what stretching both ways will do"}
+{"t":"2026-09-05T14:03:39.937Z","ev":"task_resequenced","id":"a-colour-wearing-a-style-looks-different-from-on","from":8,"to":10}
+{"t":"2026-09-05T14:03:39.971Z","ev":"task_resequenced","id":"a-container-can-be-told-the-smallest-and-largest","from":2,"to":20}
+{"t":"2026-09-05T14:03:40.004Z","ev":"task_resequenced","id":"witness-the-capture-dim-in-another-tool-on-an-un","from":10,"to":10}
+{"t":"2026-09-05T14:03:40.038Z","ev":"task_resequenced","id":"the-editor-state-splits-its-layout-and-component","from":6,"to":20}
+{"t":"2026-09-05T14:03:40.071Z","ev":"task_resequenced","id":"a-row-can-push-its-contents-to-its-two-ends","from":1,"to":30}
+{"t":"2026-09-05T14:03:40.105Z","ev":"task_resequenced","id":"a-piece-can-take-the-room-a-row-has-left-over","from":2,"to":40}
+{"t":"2026-09-05T14:03:40.138Z","ev":"task_resequenced","id":"one-rule-for-a-control-that-speaks-for-several-p","from":1230,"to":50}
+{"t":"2026-09-05T14:03:40.172Z","ev":"task_resequenced","id":"the-knobs-panel-speaks-for-several-copies-at-onc","from":3,"to":60}
+{"t":"2026-09-05T14:03:40.209Z","ev":"task_resequenced","id":"a-container-with-a-size-of-its-own-can-cut-off-w","from":4,"to":70}
+{"t":"2026-09-05T14:03:40.241Z","ev":"task_resequenced","id":"a-sweep-inside-a-group-picks-the-layers-in-that","from":5,"to":80}
+{"t":"2026-09-05T14:03:40.275Z","ev":"task_resequenced","id":"the-tool-says-when-a-saved-color-cannot-come-wit","from":7,"to":90}
+{"t":"2026-09-05T14:03:40.309Z","ev":"task_resequenced","id":"a-component-can-hold-more-than-one-version-of-it","from":1220,"to":100}
+{"t":"2026-09-05T14:03:40.340Z","ev":"task_resequenced","id":"a-screen-can-show-the-column-grid-you-are-design","from":20,"to":110}
+{"t":"2026-09-05T14:03:40.374Z","ev":"task_resequenced","id":"a-number-you-cannot-type-into-stops-looking-like","from":40,"to":120}
+{"t":"2026-09-05T14:03:40.408Z","ev":"task_resequenced","id":"the-settings-for-the-tool-in-your-hand-are-reach","from":50,"to":130}
+{"t":"2026-09-05T14:03:40.441Z","ev":"task_resequenced","id":"a-knob-can-be-a-number","from":5,"to":10}
+{"t":"2026-09-05T14:03:40.476Z","ev":"task_resequenced","id":"the-font-menu-stops-changing-width-with-the-fami","from":6,"to":20}
+{"t":"2026-09-05T14:03:40.509Z","ev":"task_resequenced","id":"a-switch-says-mixed-the-way-every-other-control","from":1220,"to":30}
+{"t":"2026-09-05T14:03:40.542Z","ev":"task_resequenced","id":"a-width-the-layers-refused-stops-claiming-the-nu","from":1230,"to":40}
+{"t":"2026-09-05T14:03:40.575Z","ev":"task_resequenced","id":"the-layout-section-says-a-copy-stays-where-the-o","from":1240,"to":50}
+{"t":"2026-09-05T14:03:40.608Z","ev":"task_resequenced","id":"the-stretch-menu-says-what-stretching-both-ways","from":1250,"to":60}
+{"t":"2026-09-05T14:05:05.202Z","ev":"task_resequenced","id":"witness-the-capture-dim-in-another-tool-on-an-un","from":10,"to":10}
+{"t":"2026-09-05T14:05:05.240Z","ev":"task_resequenced","id":"a-number-you-cannot-type-into-stops-looking-like","from":120,"to":20}
+{"t":"2026-09-05T14:05:05.274Z","ev":"task_resequenced","id":"the-editor-state-splits-its-layout-and-component","from":20,"to":30}
+{"t":"2026-09-05T14:05:05.308Z","ev":"task_resequenced","id":"a-row-can-push-its-contents-to-its-two-ends","from":30,"to":40}
+{"t":"2026-09-05T14:05:05.341Z","ev":"task_resequenced","id":"a-piece-can-take-the-room-a-row-has-left-over","from":40,"to":50}
+{"t":"2026-09-05T14:05:05.375Z","ev":"task_resequenced","id":"one-rule-for-a-control-that-speaks-for-several-p","from":50,"to":60}
+{"t":"2026-09-05T14:05:05.406Z","ev":"task_resequenced","id":"the-knobs-panel-speaks-for-several-copies-at-onc","from":60,"to":70}
+{"t":"2026-09-05T14:05:05.439Z","ev":"task_resequenced","id":"a-container-with-a-size-of-its-own-can-cut-off-w","from":70,"to":80}
+{"t":"2026-09-05T14:05:05.470Z","ev":"task_resequenced","id":"the-settings-for-the-tool-in-your-hand-are-reach","from":130,"to":90}
+{"t":"2026-09-05T14:05:05.503Z","ev":"task_resequenced","id":"a-sweep-inside-a-group-picks-the-layers-in-that","from":80,"to":100}
+{"t":"2026-09-05T14:05:05.535Z","ev":"task_resequenced","id":"the-tool-says-when-a-saved-color-cannot-come-wit","from":90,"to":110}
+{"t":"2026-09-05T14:05:05.568Z","ev":"task_resequenced","id":"a-component-can-hold-more-than-one-version-of-it","from":100,"to":120}
+{"t":"2026-09-05T14:05:05.599Z","ev":"task_resequenced","id":"a-screen-can-show-the-column-grid-you-are-design","from":110,"to":130}
+{"t":"2026-09-05T14:05:28.296Z","ev":"triage","summary":"21 open after the pass, up from 19. Merged 0 (no duplicates found). Dropped 0. Moved 0 between priorities. Unblocked 1 by hand (witness the capture dim: the screen is unlocked today) and 3 more by the users own answers arriving mid pass, so nothing is blocked. Groomed 6: rewrote the goal and acceptance of the four tasks whose decisions were answered, named the features the editor state split unblocks, and recorded what the interrupted runner left behind. Filed 2 from the design review. Repaired 1: an interrupted runner left an uncompilable test file that would have failed every tasks test gate. Resequenced all 21 to clean steps of 10."}
+{"t":"2026-09-05T14:06:30.563Z","ev":"task_created","id":"a-grid-you-can-switch-on-that-thins-and-thickens","priority":"p1-high","title":"A grid you can switch on, that thins and thickens as you zoom"}
+{"t":"2026-09-05T14:06:30.597Z","ev":"task_resequenced","id":"a-grid-you-can-switch-on-that-thins-and-thickens","from":180,"to":9}
+{"t":"2026-09-05T14:06:49.953Z","ev":"digest","file":"2026-09-05.md"}
+{"t":"2026-09-05T14:07:49.012Z","ev":"task_resequenced","id":"a-grid-you-can-switch-on-that-thins-and-thickens","from":9,"to":10}
+{"t":"2026-09-05T14:07:49.046Z","ev":"task_resequenced","id":"a-colour-wearing-a-style-looks-different-from-on","from":10,"to":20}
+{"t":"2026-09-05T14:07:49.080Z","ev":"task_resequenced","id":"a-container-can-be-told-the-smallest-and-largest","from":20,"to":30}

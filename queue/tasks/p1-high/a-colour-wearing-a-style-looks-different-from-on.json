@@ -4,12 +4,12 @@
   "goal": "When a row is wearing a saved style it still shows what looks exactly like the colour swatch on every other row, but that swatch does nothing when clicked. So two rows side by side look identical and only one of them is live. Either the swatch should stop looking like a swatch, or clicking it should pick a colour and drop the style, which is what people reach for.",
   "epic": "ui-components",
   "priority": "p1-high",
-  "seq": 10,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T23:19:01.609Z",
-  "updated": "2026-09-05T14:03:39.936Z",
+  "updated": "2026-09-05T14:07:49.046Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-04 with a screenshot of a Color section: Fill wears a style named error and shows a red chip identical to the live wells on Outline and Border. Confirmed by reading ColorStylePanel.swift: readout(_:) renders swatch(style.paint(for:)) for the .style case, a plain non-interactive chip with only a tooltip, while the .color case renders the editable well. The docs comment at the top of the file says this on purpose: a colour that belongs to a style is not a colour you edit here. The intent is sound, the rendering is not, because the chip is the same size, shape and position as the well. The users own two options are the ones to weigh: hide the chip entirely on a styled row, or make it open the picker and treat choosing a colour as an unlink. Recommend the second, since a person who clicks a colour swatch wants to change the colour, and an unlink they can undo is friendlier than a control that ignores them; open a decision card with both drawn if the runner disagrees. Whatever is chosen, the styled state needs its own look: a different shape, an outline, or the palette mark on the chip itself.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-05T14:03:39.935Z",
       "note": "seq 8 -> 10"
+    },
+    {
+      "t": "2026-09-05T14:07:49.045Z",
+      "note": "seq 10 -> 20"
     }
   ]
 }
