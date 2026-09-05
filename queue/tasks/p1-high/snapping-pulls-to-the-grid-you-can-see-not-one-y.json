@@ -1,0 +1,35 @@
+{
+  "id": "snapping-pulls-to-the-grid-you-can-see-not-one-y",
+  "title": "Snapping pulls to the grid you can see, not one you cannot",
+  "goal": "With the grid on and snapping on, dragging a rectangle does not appear to snap to anything. It is in fact pulling to a four point grid while the canvas is only drawing the coarser lines at that zoom, so every position is a snap position and nothing ever feels caught. Snapping should pull to the lines actually on screen, so the edge lands where you can see it land.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T19:12:24.371Z",
+  "updated": "2026-09-05T19:12:24.412Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-05: snap to grid does not work, maybe it is snapping to a different grid. It is. CanvasGrid.snapSpacing (line 172) returns the raw spacing whatever the zoom, while the drawing picks coarser rungs from the level of detail ladder when fine lines would be a grey wash. The comment right above it says so plainly: a snapped edge can land between two drawn lines, on a line that is really there but too fine to show at this zoom. That was a deliberate choice and it is the wrong one, because at the default four points and a normal zoom every pixel is within reach of a grid line, so nothing ever feels caught. Fix by choosing the snap spacing from the SAME ladder the drawing uses, CanvasGridLevels.levels, taking the finest rung actually being drawn with a visible strength. The plumbing is already in place and does not need inventing: canvasSnapSpacing and canvasSnapOrigin (CanvasView.swift lines 1038 and 1046) are passed into the resize path at line 2290 and the move paths at 2321 and 2366. Coordinate with a-snap-that-is-showing-is-a-snap-you-get-with-no, which governs how a snap holds once caught; the highlight asked for here is the same guide that task is about.",
+  "acceptance": [
+    "With the grid on, dragging or resizing pulls to the lines visible at the current zoom, and the edge lands on a line you can see",
+    "Zooming in, so finer lines appear, makes the pull finer to match, and zooming out makes it coarser, with no need to touch a setting",
+    "The line that caught the edge is highlighted while it holds, so it is obvious what it snapped to",
+    "A grid whose lines are all too fine to draw does not silently snap to them; it pulls to whatever is drawn or to nothing",
+    "With snapping off, or Command held, nothing pulls at all",
+    "Core logic covered by tests in PhotonzCore written before the change, asserting the snap spacing equals a drawn spacing at several zooms",
+    "Audit written under queue/audits/ with an edge caught on a visible line at two zooms, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T19:12:24.372Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-05T19:12:24.411Z",
+      "note": "seq 180 -> 1"
+    }
+  ]
+}
