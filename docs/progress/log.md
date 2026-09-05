@@ -8686,3 +8686,28 @@ it did nothing.
 
 Next: the audit asks whether the held-chip look is loud enough at 1x; a louder
 mark is a follow-up if the user says so.
+
+## 2026-09-05 — EditorState split into area files
+
+- `Sources/Photonz/EditorState.swift` went from 6965 to 1839 lines. Fourteen
+  extension files sit beside it, one per area: `+Annotations`, `+Clipboard`,
+  `+ColorStyles`, `+Components`, `+Crop`, `+Frames`, `+LayerDrag`, `+LayerOps`,
+  `+LayersPanel`, `+Layout`, `+Measure`, `+MeasurePanel`, `+Regions`, `+Text`.
+  The main file keeps the state, opening and saving, viewport, tools, layer
+  selection and move, undo/redo and rendering.
+- Moves only. Every non-blank line of the original still appears exactly once
+  across the fifteen files; the only differences are 79 declarations that lost a
+  `private` or `private(set)`, each widened only because the compiler asked.
+  Stored properties all stayed inside the class, so the `@Observable` rewrite is
+  untouched.
+- Verified: `swift build` clean with no new warnings, `Scripts/test.sh` 3229
+  tests in 279 suites with no test edited, and seven playtest walks on a freshly
+  built probe (redline, copy-own-color, styled-row, size-limits,
+  text-height-readout, canvas-grid, handles-fit).
+- Next: the three queued auto-layout tasks (a row pushing its contents to its
+  two ends, a piece taking the room a row has left over, a container clipping
+  what does not fit) now add to `EditorState+Layout.swift` rather than to one
+  6800 line file.
+- Filed: split `CanvasView.swift` (4417 lines) the same way, and fix
+  `mixed-one-look-walk.json`, which fails at step 35 reaching an alignment
+  button that is scrolled out of sight (confirmed pre-existing).
