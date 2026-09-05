@@ -41,8 +41,13 @@ enum CaptureDiag {
         say("screen recording granted: \(ScreenCapturer.hasPermission), "
             + (locked ? "SCREEN LOCKED: every reading below is of the lock screen, discard them"
                : "screen unlocked"))
-        let clean = await luma(of: screen)
+        let cleanShot = try? await ScreenCapturer.capture(screen: screen)
+        let clean = cleanShot.map { luma(of: $0) } ?? -1
         say(String(format: "clean screen: mean luma %.4f", clean))
+        if let cleanShot {
+            write(cleanShot, to: "/tmp/photonz-capture-diag-clean.png")
+            say("clean screenshot: /tmp/photonz-capture-diag-clean.png")
+        }
 
         // How long one screenshot of this display takes, measured on a warm
         // client. Every reading below is quantised by this number, so it is
@@ -91,9 +96,20 @@ enum CaptureDiag {
         // window server's own sharing state for the overlay says whether
         // another tool is ALLOWED to see it; the pixels say whether one
         // actually would. On a locked screen only the first means anything.
+        //
+        // The pixel reading is a COVERAGE measure, not a mean over the display,
+        // and that distinction is the whole reason this run exists. Window
+        // picking opens the dim with a hole over the window under the pointer,
+        // so the dimmed part of the screen is whatever that window does not
+        // cover. On 2026-09-05 the pointer sat over a 1728x1027 window on a
+        // 1728x1117 screen: the dim was there, correct, and plainly visible in
+        // the screenshot, but it fell only on the menu bar and a sliver below
+        // the window, so a mean over the display read 0.979 of clean and this
+        // run reported "the dim NEVER shows up" three times in a row. Compare
+        // against the clean shot cell by cell instead and the hole stops
+        // hiding the thing being measured.
         let overlays = Set(selection?.overlayWindowNumbers ?? [])
-        var dimmed = -1.0
-        var ratio = 1.0
+        var dim = (covered: 0.0, ratio: 1.0)
         var polls = 0
         var sawDimAfter: Double?
         var sharedAfter: Double?
@@ -101,10 +117,14 @@ enum CaptureDiag {
             if sharedAfter == nil, sharingState(of: overlays).allSatisfy({ $0 != 0 }) {
                 sharedAfter = Date().timeIntervalSince(t0) * 1000
             }
-            dimmed = await luma(of: screen)
+            guard let shot = try? await ScreenCapturer.capture(screen: screen),
+                  let cleanShot else { break }
             polls += 1
-            ratio = dimmed / max(clean, 0.0001)
-            if ratio < 0.9 {
+            dim = dimCoverage(of: shot, against: cleanShot)
+            // A fiftieth of the display washed to about three quarters is far
+            // more than any anti-aliasing or clock tick can fake, and far less
+            // than the smallest hole the overlay ever opens.
+            if dim.covered > 0.02 {
                 sawDimAfter = Date().timeIntervalSince(t0) * 1000
                 break
             }
@@ -119,11 +139,20 @@ enum CaptureDiag {
         }
         if let sawDimAfter {
             say(String(format: "dim shows up in another tool's screenshot after %.0f ms (%d "
-                       + "polls): mean luma %.4f, %.3f of clean (0.75 = one dim, 0.56 = the "
-                       + "freeze photographed our own dim)", sawDimAfter, polls, dimmed, ratio))
+                       + "polls): %.0f%% of the display is washed to %.3f of clean (0.75 = one "
+                       + "dim, 0.56 = the freeze photographed our own dim). The rest is the hole "
+                       + "the overlay opens over the window under the pointer.",
+                       sawDimAfter, polls, dim.covered * 100, dim.ratio))
         } else {
-            say(String(format: "dim NEVER shows up in another tool's screenshot: still %.3f of "
-                       + "clean after 3 s and %d polls", ratio, polls))
+            say(String(format: "dim NEVER shows up in another tool's screenshot: only %.0f%% of "
+                       + "the display is washed after 3 s and %d polls", dim.covered * 100, polls))
+        }
+        // The poll above stops the moment it has its answer, which is now well
+        // inside the time the freeze takes to land, so wait for it rather than
+        // reporting "no display froze one" about a freeze that simply had not
+        // happened yet.
+        while selection?.freezeFinished == nil, Date().timeIntervalSince(t0) < 3.0 {
+            try? await Task.sleep(for: .milliseconds(20))
         }
         if let landed = selection?.freezeFinished {
             let frozen = selection?.frozenCount ?? (landed: 0, displays: 0)
@@ -131,6 +160,19 @@ enum CaptureDiag {
                        landed.timeIntervalSince(t0) * 1000, frozen.landed, frozen.displays))
         } else {
             say("freeze had not landed within 3 s")
+        }
+
+        // The overlay as another tool sees it BEFORE the pointer has done
+        // anything. The drag shot at the end of this run cannot answer "is the
+        // dim there from the first instant", because a drag repaints the
+        // overlay and a repaint is itself a way the dim can arrive; this one is
+        // taken with the overlay simply sitting there.
+        if let shot = try? await ScreenCapturer.capture(screen: screen), let cleanShot {
+            write(shot, to: "/tmp/photonz-capture-diag-predrag.png")
+            let still = dimCoverage(of: shot, against: cleanShot)
+            say(String(format: "screenshot before any pointer event: "
+                       + "/tmp/photonz-capture-diag-predrag.png, %.0f%% of the display washed to "
+                       + "%.3f of clean", still.covered * 100, still.ratio))
         }
 
         // The picture itself, measured rather than inferred. Everything above
@@ -155,9 +197,12 @@ enum CaptureDiag {
         // else beside the pointer.
         selection?.simulateDrag(from: CGPoint(x: 320, y: 260), to: CGPoint(x: 900, y: 620))
         try? await Task.sleep(for: .milliseconds(250))
-        if let shot = try? await ScreenCapturer.capture(screen: screen) {
+        if let shot = try? await ScreenCapturer.capture(screen: screen), let cleanShot {
             write(shot, to: "/tmp/photonz-capture-diag-drag.png")
-            say("drag screenshot: /tmp/photonz-capture-diag-drag.png")
+            let dragged = dimCoverage(of: shot, against: cleanShot)
+            say(String(format: "drag screenshot: /tmp/photonz-capture-diag-drag.png, %.0f%% of "
+                       + "the display washed to %.3f of clean, the clean part being the box "
+                       + "being dragged", dragged.covered * 100, dragged.ratio))
         } else {
             say("drag screenshot FAILED")
         }
@@ -165,9 +210,16 @@ enum CaptureDiag {
         selection?.dismiss()
         selection = nil
         try? await Task.sleep(for: .milliseconds(200))
-        let after = await luma(of: screen)
-        say(String(format: "overlay gone: mean luma %.4f, %.3f of clean", after,
-                   after / max(clean, 0.0001)))
+        // Also the control for the dim reading above: with the overlay gone
+        // there is nothing left to wash, so this has to come back at nearly
+        // zero. If it ever reports a real percentage, the dim numbers above are
+        // measuring the screen changing under them and mean nothing.
+        if let shot = try? await ScreenCapturer.capture(screen: screen), let cleanShot {
+            let left = dimCoverage(of: shot, against: cleanShot)
+            say(String(format: "overlay gone: mean luma %.4f, %.3f of clean; %.0f%% of the "
+                       + "display still washed (this is the control, it has to be 0%%)",
+                       luma(of: shot), luma(of: shot) / max(clean, 0.0001), left.covered * 100))
+        }
 
         try? out.joined(separator: "\n").write(toFile: "/tmp/photonz-capture-diag.txt",
                                                atomically: true, encoding: .utf8)
@@ -271,6 +323,70 @@ enum CaptureDiag {
                 return (n, w[kCGWindowSharingState as String] as? Int ?? 0)
             }, uniquingKeysWith: { a, _ in a })
         return windowNumbers.sorted().map { byNumber[$0] ?? 0 }
+    }
+
+    /// How much of the display a shot has washed darker than the clean screen,
+    /// and how dark that washed part is.
+    ///
+    /// The overlay never dims the whole display: it always holds a hole open,
+    /// over the window under the pointer or over the box being dragged. So a
+    /// mean over the display answers a question nobody asked, and answers it
+    /// wrong whenever the hole is large. This compares the two shots cell by
+    /// cell and reports only the cells that actually went darker: `covered` is
+    /// the fraction of the display the dim fell on, `ratio` is how dark it went
+    /// there, which is the number the dim's own alpha predicts (0.75 for one
+    /// 25% black wash, about 0.56 if it ever got applied twice).
+    ///
+    /// Cells that are near black to begin with are skipped: three quarters of
+    /// almost nothing is still almost nothing, so their ratio is noise.
+    private static func dimCoverage(of shot: CGImage,
+                                    against clean: CGImage) -> (covered: Double, ratio: Double) {
+        guard shot.width == clean.width, shot.height == clean.height,
+              let shotData = shot.dataProvider?.data as Data?,
+              let cleanData = clean.dataProvider?.data as Data? else { return (0, 1) }
+        let cols = 64, rows = 40
+        var washed = 0.0
+        var cells = 0.0
+        var ratioTotal = 0.0
+        for r in 0..<rows {
+            for c in 0..<cols {
+                let x0 = shot.width * c / cols, x1 = shot.width * (c + 1) / cols
+                let y0 = shot.height * r / rows, y1 = shot.height * (r + 1) / rows
+                let before = mean(cleanData, of: clean, x0, y0, x1, y1)
+                let after = mean(shotData, of: shot, x0, y0, x1, y1)
+                guard before > 0.04 else { continue }
+                cells += 1
+                let ratio = after / before
+                // Wide enough to catch a dim laid over changing content (a
+                // clock, a cursor blink), tight enough that redrawn content
+                // cannot masquerade as one.
+                if ratio > 0.45 && ratio < 0.88 {
+                    washed += 1
+                    ratioTotal += ratio
+                }
+            }
+        }
+        guard cells > 0 else { return (0, 1) }
+        return (washed / cells, washed > 0 ? ratioTotal / washed : 1)
+    }
+
+    /// Mean luminance of a pixel-rect block, read straight out of a buffer that
+    /// the caller already holds, so a per-cell sweep does not re-fetch it.
+    private static func mean(_ data: Data, of image: CGImage,
+                             _ x0: Int, _ y0: Int, _ x1: Int, _ y1: Int) -> Double {
+        let bpr = image.bytesPerRow
+        let bpp = image.bitsPerPixel / 8
+        var total = 0.0
+        var count = 0.0
+        for y in stride(from: y0, to: y1, by: 3) {
+            for x in stride(from: x0, to: x1, by: 3) {
+                let i = y * bpr + x * bpp
+                guard i + 2 < data.count else { continue }
+                total += (Double(data[i]) + Double(data[i + 1]) + Double(data[i + 2])) / 765.0
+                count += 1
+            }
+        }
+        return count > 0 ? total / count : 0
     }
 
     /// Mean luminance of a screen, freshly captured.

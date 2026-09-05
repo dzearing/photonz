@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T06:58:36.959Z",
-  "updated": "2026-09-05T14:05:05.202Z",
+  "updated": "2026-09-05T16:07:20.478Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Blocked only on an unlocked screen. Everything else is ready: ONE command answers all four acceptance items now.\n\nRun:\n  ioreg -n Root -d1 -a | plutil -extract IOConsoleLocked raw -   # must print false\n  Scripts/probe-app.sh --quit; open -a \"$PWD/dist/Photonz Probe.app\" --args --capture-diag\n  cat /tmp/photonz-capture-diag.txt\nNote the ABSOLUTE path: `open -a \"dist/Photonz Probe.app\"` fails to resolve.\n\nReport lines map to the acceptance items in order: line 1 says unlocked; the \"dim shows up in another tool's screenshot\" line wants about 0.75 of clean; the \"frozen picture under the overlay\" line wants 1.00 of clean; the \"window shadow below a test window\" line wants the freeze path within 75% of the old path's depth.\n\nThe shadow line is still the real risk. The freeze moved from SCScreenshotManager.captureImage(in:) to SCContentFilter(display:excludingWindows:) with ignoreShadows = false, and the comment on ScreenCapturer.capture(screen:) records a 2026-07-03 measurement that the filter path synthesizes NO window shadows at all (filter path delta-0 luma under every window edge). ignoreShadows = false is supposed to have fixed that and it has never been checked. If the line says SHADOW LOST, the fallback is to keep the filter path only while the overlay is up and note it.\n\nGeometry and mean luma already match the old path exactly (3456x2234, 0.4887 both ways on this run).\n\nAlso worth a real screenshot for queue/audits/2026-09-03-capture-dim-in-recordings.json, which ships without one and says why; /tmp/photonz-capture-diag-drag.png is written every run but is only worth shipping from an unlocked one.",
+  "notes": "Witnessed and closed on 2026-09-05. All four acceptance items pass on an unlocked screen.\n\nTo re-run:\n  ioreg -n Root -d1 -a | plutil -extract IOConsoleLocked raw -   # must print false\n  Scripts/build-app.sh --probe\n  Scripts/probe-app.sh --quit; open -a \"$PWD/dist/Photonz Probe.app\" --args --capture-diag\n  cat /tmp/photonz-capture-diag.txt\nNote the ABSOLUTE path: `open -a \"dist/Photonz Probe.app\"` fails to resolve.\n\nResult: overlay shareable at 38 ms, dim measurable in another tool at 112 ms, freeze lands at 169 ms. Resting on a window, 6% of the display washed to 0.762 of clean; mid drag, 87% washed to 0.750 with the box left clean. Frozen picture 1.000 of clean. Shadow 0.0373 through both capture paths, so 100% as deep as before: the SHADOW LOST fallback the old notes described is not needed, ignoreShadows = false did fix it.\n\nTHE TRAP, if this is ever re-run: do not judge the dim by mean luma over the display. Window picking opens the dim with a hole over the window under the pointer, so a large window leaves the display average almost unchanged (0.993 of clean) while the dim is present and correct. That misread reported a working feature as broken three runs in a row. CaptureDiag now uses dimCoverage(of:against:), which compares each shot against a clean shot cell by cell and reports the fraction washed and how dark, plus a control line that must read 0% once the overlay is gone.\n\nArtifacts every run: /tmp/photonz-capture-diag-clean.png, -predrag.png (overlay up, before any pointer event) and -drag.png. Audit: queue/audits/2026-09-05-capture-dim-witnessed.json, which supersedes the unwitnessed parts of queue/audits/2026-09-03-capture-dim-in-recordings.json.",
   "acceptance": [
     "The probe report at /tmp/photonz-capture-diag.txt says the screen was unlocked on its first line",
     "Its dim line says the dim shows up in another tool screenshot, at about 0.75 of clean rather than 0.99",
@@ -57,7 +57,28 @@
       "note": "seq 10 -> 10",
       "since": "2026-09-05T14:03:40.003Z",
       "count": 2
+    },
+    {
+      "t": "2026-09-05T15:53:13.318Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T16:20:00.000Z",
+      "note": "Witnessed on an unlocked screen (IOConsoleLocked false before and after every run). All four acceptance items pass: line 1 says unlocked; the dim reaches another tool's screenshot 112 ms after the shortcut at 0.762 of clean; the frozen picture measures 1.000 of clean, so the world is never dimmed twice; the window shadow through the freeze path is 100% as deep as the old path (0.0373 both ways), which closes the one real risk the notes flagged."
+    },
+    {
+      "t": "2026-09-05T16:20:01.000Z",
+      "note": "The first three unlocked runs reported 'dim NEVER shows up ... 0.993 of clean', and that was the diagnostic lying, not the feature. It averaged luma over the whole display, but window picking opens the dim with a hole over the window under the pointer, and the pointer sat on a 1728x1027 window on a 1728x1117 screen. Proved it by mapping predrag against a clean shot on a 48x24 grid: only the menu bar row and the strip below the window were washed, everything else pixel-identical to clean, while the drag shot showed the whole screen washed except the box. Replaced the whole-screen mean with dimCoverage(of:against:), which compares against the clean shot cell by cell and reports what fraction is washed and how dark; a hole can no longer hide the dim. Added a control line (overlay gone must read 0% washed; it does), a clean PNG, and a predrag PNG taken before any pointer event. Also fixed a bug my own change introduced: the poll now breaks at ~110 ms, before the freeze lands at ~169 ms, so the freeze report is preceded by a wait rather than reporting 'no display froze one'."
+    },
+    {
+      "t": "2026-09-05T16:20:02.000Z",
+      "note": "Adversarial pass on the built thing: one honest UX finding, not fixed on purpose. When the pointer rests on a window that fills most of the screen, starting a capture washes only 6% of the display, so almost nothing visibly changes and it can read as 'nothing happened'. That is window picking working as designed (it previews what a click would capture) and the outline and size pill do appear, so whether a capture should announce itself more loudly is a product call. Put it in the audit's evaluate and rough so the user can react to it rather than guessing for them. Scripts/test.sh green (3225 tests). Probe quit. Audit with two real screen captures at queue/audits/2026-09-05-capture-dim-witnessed.json."
+    },
+    {
+      "t": "2026-09-05T16:07:20.477Z",
+      "note": "Witnessed on an unlocked screen: all four acceptance items pass. Dim reaches another capture tool 112 ms after the shortcut at 0.762 of clean (87% of the display at 0.750 mid drag, box left clean); frozen picture 1.000 of clean so the world is never dimmed twice; window shadow 100% as deep through the freeze path as the old one (0.0373 both ways), closing the one real risk. Found and fixed a false negative in the diagnostic itself: it averaged luma over the whole display, which a large window-picking hole hides, and had reported the working dim as broken. Now compares against a clean shot cell by cell with a 0% control. Audit plus two real screen captures at queue/audits/2026-09-05-capture-dim-witnessed.json. Scripts/test.sh green (3225 tests)."
     }
   ],
-  "started": "2026-09-03T19:02:25.163Z"
+  "started": "2026-09-05T15:53:13.318Z",
+  "completed": "2026-09-05T16:07:20.478Z"
 }

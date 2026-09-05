@@ -1,0 +1,29 @@
+{
+  "feature": "The capture dim shows up in recordings and shared screens (witnessed)",
+  "epic": "measure-redline",
+  "summary": "The screen darkening that a region capture puts up has now been watched working on a real, logged-in screen instead of argued about. Another capture tool sees the dim 112 ms after the shortcut, at three quarters brightness where it falls, and the picture frozen underneath is the true screen, so the world is never darkened twice. Window drop shadows also survive the capture change, which was the one thing that could have quietly spoiled captured pictures.",
+  "setup": "Nothing to switch on. This is the shared region capture overlay, so it behaves the same in Current and Next. The numbers below come from the probe app's --capture-diag run on an unlocked screen, and the two pictures are real screen captures, not offscreen renders.",
+  "try": [
+    { "do": "Start a screen recording in QuickTime Player (File, New Screen Recording) and leave it running." },
+    { "do": "Press Shift Command 4 and drag a box around something, then press Esc." },
+    { "do": "Stop the recording and scrub to the exact frame where you pressed Shift Command 4.", "shot": "2026-09-05-capture-dim-drag.png" },
+    { "do": "Check that frame is already dim outside the box and normal brightness inside it." },
+    { "do": "Press Shift Command 4 again and, without dragging, just rest the pointer over a small window.", "shot": "2026-09-05-capture-dim-hover.png" },
+    { "do": "Press Shift Command 4 and rest the pointer over a window that fills most of the screen, and notice how little of the screen darkens." },
+    { "do": "Drag a box across a window's drop shadow and check the shadow is still in the captured image." }
+  ],
+  "evaluate": [
+    "In the recording, is the screen already dim on the very frame you pressed the shortcut, or can you still catch a bright one?",
+    "Is the picture inside the box the same brightness as the real screen, with no darkening baked into it?",
+    "When the pointer rests on a window that fills most of the screen, only the menu bar and a sliver darken. Is that enough for you to tell that a capture has started?",
+    "Do window shadows in a captured region look the way they did before?",
+    "Does starting a capture feel any slower than it did before?"
+  ],
+  "rough": [
+    "The first three runs of this check reported the opposite: the dim never shows up. That was the measuring, not the feature. The check averaged brightness across the whole display, but the overlay always holds a hole open over the window under the pointer, and the pointer happened to rest on a window 1728 by 1027 on a screen 1728 by 1117. The dim was there and correct, it just fell on the menu bar and a strip below the window, so the average barely moved and the check called it broken. It now compares against a clean shot cell by cell and reports how much of the screen is washed and how dark, which the hole cannot hide. A control reading with the overlay gone reports 0 percent, so the new number is not inventing dimming.",
+    "Worth your judgement, and the reason step 6 exists: when the pointer happens to sit on a window that fills most of the screen, starting a capture changes almost nothing visually. Only 6 percent of the display darkens. That is the window picking behaviour working as designed, since it is showing you what a click would capture, and the outline and size pill do appear. But it may read as nothing happened. I did not change it, because whether a capture should announce itself more loudly is a product call rather than a bug.",
+    "The numbers, all from one unlocked run: the overlay becomes visible to other capture tools 38 ms after the shortcut, the dim is measurable in another tool's screenshot at 112 ms, and the freeze lands its picture at 169 ms. Resting on a window, 6 percent of the display is washed to 0.762 of clean; mid drag, 87 percent is washed to 0.750, the clean part being the box. The frozen picture measures 1.000 of clean, so our own dim is not in it.",
+    "The window shadow question from the previous audit is answered: the old capture path darkens the band under a test card by 0.0373 and the new one by 0.0373 as well, so the shadow is 100 percent as deep as before. That could not be asked on a locked screen, because a screen with no windows on it makes a missing shadow and nothing to cast one look identical. The check now puts its own grey backdrop and white card on screen so there is always something casting one.",
+    "The two pictures shipped here are real captures of the live screen taken by the probe, which held the Screen Recording grant this time. They are scaled down to 1200 wide to keep the repo light; the brightness difference they are evidence of survives the scaling."
+  ]
+}
