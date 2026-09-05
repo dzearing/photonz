@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:26.798Z",
-  "updated": "2026-09-05T15:33:22.176Z",
+  "updated": "2026-09-05T15:52:41.823Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from the rough list of queue/audits/2026-09-04-ui-hug.json: \"There is no minimum width, so a button with one letter in it is as narrow as one letter plus its room.\" Model lives in Sources/PhotonzCore/GroupLayout.swift, which today holds kind, direction, columns, gap, rowGap, padding, width and height and nothing else; usedWidth/usedHeight and hugsWidth/hugsHeight are the clamp points. Layout runs in GroupFlow.swift and the panel rows are in Sources/Photonz/LayersPanel.swift. Keep the maths in the core, out of the view. Codable needs the new keys optional so old files decode.\n\nTriage 2026-09-05: the 2026-09-04 runner was interrupted after writing its tests and before any implementation. It left Tests/PhotonzCoreTests/GroupSizeLimitsTests.swift behind, referencing GroupLayout.limitsWidth, limitsHeight and limitsSentence, none of which exist, so the whole test target could not compile and every task's test gate would have failed. The file is parked at queue/attic/2026-09-05-GroupSizeLimitsTests.swift.txt and removed from Tests. Read it for the shape it had in mind (a GroupSizeLimits value on GroupLayout, limits that survive a switch between Free, Stack and Grid, and a limitsSentence for the panel), then write the tests fresh.",
@@ -83,8 +83,13 @@
     {
       "t": "2026-09-05T15:52:22.007052Z",
       "note": "Docs: a Landed section in docs/design/ui-building.md, including why the sketch's centring rule was wrong. Audit at queue/audits/2026-09-05-group-size-limits.json with two real captures beside it."
+    },
+    {
+      "t": "2026-09-05T15:52:41.822Z",
+      "note": "Smallest and Largest on each axis, behind the same twist-open Padding uses, empty by default. Core clamp in GroupLayout/GroupFlow (limits held before layout, so a stack lays out in the room it has); a dragged handle stops at the limit; the room a floor makes goes where the contents say. 21 new tests written first, full suite green at 3225, walked live on the probe with real captures (Scripts/playtest/size-limits-walk.json). Audit: queue/audits/2026-09-05-group-size-limits.json. Follow-up filed: words-that-outgrow-their-container-wrap-instead. Commit a9a0e3a, pushed to main."
     }
   ],
   "started": "2026-09-05T15:33:22.175Z",
-  "failures": 1
+  "failures": 1,
+  "completed": "2026-09-05T15:52:41.823Z"
 }
