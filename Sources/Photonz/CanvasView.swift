@@ -390,11 +390,19 @@ final class CanvasNSView: NSView {
     private let previewSpriteLayer = CALayer()
     /// The grid you build against (Next, `next-canvas-grid`): one shape layer
     /// per rung of the level-of-detail ladder, coarsest last, each carrying its
-    /// own strength. Chrome, so it is above the picture and out of every
-    /// export. See `CanvasGridChrome.swift`.
+    /// own strength. Chrome, so it is out of every export, and on whichever
+    /// side of the picture the grid is switched to. See `CanvasGridChrome.swift`
+    /// and `placeCanvasGrid(overPicture:)`.
     let canvasGridLayers = [CAShapeLayer(), CAShapeLayer(), CAShapeLayer()]
+    /// The three rungs together, so the whole grid changes sides of the picture
+    /// in one move. See `placeCanvasGrid(overPicture:)`.
+    let canvasGridContainer = CALayer()
+    /// Which side of the picture the grid is currently on, or nil before it has
+    /// been placed at all.
+    private var canvasGridOverPicture: Bool?
     /// What the grid should be, echoed from `EditorState`; nil when the
-    /// feature is off or the grid is switched off, and then nothing is drawn.
+    /// feature is off, and then nothing is drawn. The grid being switched OFF
+    /// is not nothing: the surround still carries it.
     var canvasGrid: CanvasGridSettings?
     /// Marching ants: a solid white stroke underneath…
     private let selectionBaseLayer = CAShapeLayer()
@@ -869,6 +877,16 @@ final class CanvasNSView: NSView {
         let handle: ResizeHandle
         let startFrame: CGRect
         var frame: CGRect
+        /// The boxes the dragged EDGE lines itself up with, in canvas
+        /// coordinates. Gathered ONCE at grab time, exactly as a move gathers
+        /// them: nothing but this layer changes during the drag, so a crowded
+        /// document costs nothing per frame. Empty for a layer that is rotated
+        /// or skewed, whose handle space is not canvas space.
+        var peers: [CGRect] = []
+        /// The guides the last snap put down, for the overlay to draw. A resize
+        /// draws the same yellow lines a move does, because it is lining up
+        /// with the same things.
+        var snapped = Snapping.FrameResult(frame: .zero)
     }
     private var resizeDrag: ResizeDrag?
 
@@ -900,6 +918,28 @@ final class CanvasNSView: NSView {
     /// until the re-rendered composite lands (no flash-back).
     private var transformHold: (layerID: UUID, start: LayerTransform, transform: LayerTransform)?
 
+    /// Puts the grid on the right side of the picture.
+    ///
+    /// Switched ON it goes over the picture, so it is still there once you have
+    /// drawn something on top of it. Switched off, when only the surround
+    /// carries it, it goes UNDER, so the canvas's own drop shadow falls across
+    /// the graph paper and the paper reads as the surface the picture is lying
+    /// on. Above `previewSpriteLayer` is exactly where it used to sit, so the
+    /// switched-on case is unchanged, and re-ordering only happens when the
+    /// side actually changes.
+    func placeCanvasGrid(overPicture: Bool) {
+        guard let host = layer else { return }
+        guard canvasGridOverPicture != overPicture
+                || canvasGridContainer.superlayer !== host else { return }
+        canvasGridOverPicture = overPicture
+        canvasGridContainer.removeFromSuperlayer()
+        if overPicture {
+            host.insertSublayer(canvasGridContainer, above: previewSpriteLayer)
+        } else {
+            host.insertSublayer(canvasGridContainer, below: contentLayer)
+        }
+    }
+
     /// Maps a document point into the selected layer's untransformed frame
     /// space, so frame-handle hit-testing and resizing agree with where the
     /// (transformed) chrome draws.
@@ -909,15 +949,28 @@ final class CanvasNSView: NSView {
     }
 
     /// The resized frame for a handle drag: the standard opposite-anchor resize,
-    /// plus — for text — width-only sizing with a re-wrapped height (the top edge
-    /// stays put, the block grows downward), plus anchor compensation so the
-    /// corner opposite the dragged handle stays fixed in screen space under any
-    /// rotation/skew (a plain resize would swing it — the "resize after rotate"
-    /// bug).
+    /// plus the magnets on the edge the pointer is holding, plus — for text —
+    /// width-only sizing with a re-wrapped height (the top edge stays put, the
+    /// block grows downward), plus anchor compensation so the corner opposite
+    /// the dragged handle stays fixed in screen space under any rotation/skew
+    /// (a plain resize would swing it — the "resize after rotate" bug).
+    ///
+    /// The guides come back with the frame, so the canvas can draw the line
+    /// that says what the edge just caught.
     private func resizedFrame(for layer: Layer?, start: CGRect, handle: ResizeHandle,
-                             pointer p: CGPoint, preserveAspect: Bool) -> CGRect {
+                              pointer p: CGPoint, preserveAspect: Bool,
+                              peers: [CGRect] = [], gridSpacing: CGFloat? = nil)
+        -> Snapping.FrameResult {
         let local = handleSpacePoint(p, layer: layer)
         var frame = Handles.resize(start, dragging: handle, to: local, preserveAspect: preserveAspect)
+        // The magnets act on the edge the pointer is holding, before anything
+        // downstream re-derives a height from it, so a re-wrapped text block is
+        // measured at the width the drag actually settled on.
+        var result = Snapping.snapResizedFrame(frame, handle: handle,
+                                               canvas: viewport?.documentSize ?? .zero,
+                                               peers: peers, gridSpacing: gridSpacing,
+                                               zoom: viewport?.zoom ?? 1)
+        frame = result.frame
         if let layer, layer.resizeWidthOnly, case .text(let content) = layer.content {
             // Every number here is the box a person SEES: the handles are on
             // the words, so the width dragged out is the words' width and the
@@ -937,7 +990,16 @@ final class CanvasNSView: NSView {
             frame = Handles.anchoredFrame(start: start, proposed: frame, handle: handle,
                                           transform: layer.transform)
         }
-        return frame
+        result.frame = frame
+        return result
+    }
+
+    /// How far apart the lines a drag pulls to are, or nil when nothing is
+    /// pulling: the feature off, the grid switched off, or Snap to grid
+    /// switched off.
+    var canvasSnapSpacing: CGFloat? {
+        guard canvasGridEnabled else { return nil }
+        return canvasGrid?.snapSpacing
     }
 
     /// In-progress endpoint drag on a selected line/arrow. The geometry lives
@@ -982,16 +1044,18 @@ final class CanvasNSView: NSView {
         previewSpriteLayer.isHidden = true
         layer?.addSublayer(previewSpriteLayer)
 
-        // The grid sits on the canvas surface: above the picture, so it is
-        // still there once you have drawn something over it, and below every
-        // piece of chrome, so a selection outline or a measurement is never
-        // competing with it. Its colour and strength land per refresh.
+        // The grid sits on the canvas surface, and which side of the picture
+        // that is depends on whether it is switched on over it: see
+        // `placeCanvasGrid(overPicture:)`. Either way it is below every piece
+        // of chrome, so a selection outline or a measurement is never competing
+        // with it. Its colour and strength land per refresh.
         for shape in canvasGridLayers {
             shape.fillColor = nil
             shape.lineWidth = 1
             shape.isHidden = true
-            layer?.addSublayer(shape)
+            canvasGridContainer.addSublayer(shape)
         }
+        layer?.addSublayer(canvasGridContainer)
 
         annotationPreviewLayer.isHidden = true
         annotationPreviewLayer.lineCap = .round
@@ -1862,7 +1926,12 @@ final class CanvasNSView: NSView {
                     center: CGPoint(x: layer.frame.midX, y: layer.frame.midY),
                     frameSize: layer.frame.size, transform: layer.transform)
             } else {
-                resizeDrag = ResizeDrag(layerID: id, handle: handle, startFrame: frame, frame: frame)
+                let untransformed = selectedLayer?.transform.isIdentity ?? true
+                resizeDrag = ResizeDrag(
+                    layerID: id, handle: handle, startFrame: frame, frame: frame,
+                    peers: Experiments.shared.alignLayersEnabled && untransformed
+                        ? (document?.snapPeers(excluding: id) ?? []) : [],
+                    snapped: Snapping.FrameResult(frame: frame))
                 applyGrabCursor(CanvasCursor.cursor(for: .resize(handle),
                                                     transform: selectedLayer?.transform ?? .identity))
             }
@@ -2080,8 +2149,17 @@ final class CanvasNSView: NSView {
             refreshOverlays()
         } else if var drag = resizeDrag {
             let layer = document?.canvasLayer(id: drag.layerID)
-            drag.frame = resizedFrame(for: layer, start: drag.startFrame, handle: drag.handle,
-                                      pointer: p, preserveAspect: event.modifierFlags.contains(.shift))
+            // ⇧ keeps the proportions and ⌘ drags free of every magnet: one key
+            // that means "ignore the magnets" everywhere on the canvas, and a
+            // ratio nobody may quietly break. Either one hands back exactly the
+            // resize this has always done.
+            let aspect = event.modifierFlags.contains(.shift)
+            let snapping = !aspect && !event.modifierFlags.contains(.command)
+            drag.snapped = resizedFrame(for: layer, start: drag.startFrame, handle: drag.handle,
+                                        pointer: p, preserveAspect: aspect,
+                                        peers: snapping ? drag.peers : [],
+                                        gridSpacing: snapping ? canvasSnapSpacing : nil)
+            drag.frame = drag.snapped.frame
             resizeDrag = drag
             onFramePreview(drag.layerID, drag.frame)
             refreshOverlays()
@@ -2107,6 +2185,7 @@ final class CanvasNSView: NSView {
                     drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.size,
                                                             canvas: viewport.documentSize,
                                                             peers: drag.peers,
+                                                            gridSpacing: canvasSnapSpacing,
                                                             zoom: viewport.zoom)
                 }
                 if drag.copying {
@@ -2147,6 +2226,7 @@ final class CanvasNSView: NSView {
                     drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.plan.bounds.size,
                                                             canvas: viewport.documentSize,
                                                             peers: drag.peers,
+                                                            gridSpacing: canvasSnapSpacing,
                                                             zoom: viewport.zoom)
                 }
                 let origins = drag.plan.origins(movingBoundsTo: drag.snapped.origin)
@@ -3579,11 +3659,15 @@ final class CanvasNSView: NSView {
     private func refreshSnapGuides(in viewport: Viewport) {
         let guides = CGMutablePath()
         let docFrame = viewport.documentFrameInView
-        // A multi-selection snaps by the box it makes, and draws the same
-        // guide a one-layer drag does.
+        // A multi-selection snaps by the box it makes, and draws the same guide
+        // a one-layer drag does. A RESIZE draws it too: it is lining up with
+        // the same things a move lines up with.
         let move = moveDrag?.snapped ?? multiMove.flatMap { $0.moved ? $0.snapped : nil }
-        let guideX = move?.guideX ?? snapGuide?.x
-        let guideY = move?.guideY ?? snapGuide?.y
+        let resize = resizeDrag?.snapped
+        let guideX = move?.guideX ?? resize?.guideX ?? snapGuide?.x
+        let guideY = move?.guideY ?? resize?.guideY ?? snapGuide?.y
+        let spanX = move?.guideXSpan ?? resize?.guideXSpan
+        let spanY = move?.guideYSpan ?? resize?.guideYSpan
         // A line to the picture's own edge or middle spans the whole picture,
         // because that is what it lines up with. A line to another LAYER
         // reaches only across the boxes it joins, with a little overhang, so a
@@ -3591,14 +3675,14 @@ final class CanvasNSView: NSView {
         // something is dragged.
         if let x = guideX {
             let vx = viewport.viewPoint(fromDocument: CGPoint(x: x, y: 0)).x
-            let ends = viewSpan(move?.guideXSpan, vertical: true, in: viewport)
+            let ends = viewSpan(spanX, vertical: true, in: viewport)
                 ?? (docFrame.minY, docFrame.maxY)
             guides.move(to: CGPoint(x: vx, y: ends.0))
             guides.addLine(to: CGPoint(x: vx, y: ends.1))
         }
         if let y = guideY {
             let vy = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: y)).y
-            let ends = viewSpan(move?.guideYSpan, vertical: false, in: viewport)
+            let ends = viewSpan(spanY, vertical: false, in: viewport)
                 ?? (docFrame.minX, docFrame.maxX)
             guides.move(to: CGPoint(x: ends.0, y: vy))
             guides.addLine(to: CGPoint(x: ends.1, y: vy))

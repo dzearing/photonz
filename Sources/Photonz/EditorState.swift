@@ -207,14 +207,21 @@ final class EditorState {
     static let canvasGridKey = CanvasGridStore.defaultsKey
 
     /// What the canvas should actually draw: nothing at all unless the feature
-    /// is on AND the grid is switched on, so with either off the canvas is
-    /// exactly what it was.
+    /// is on, so with the feature off the canvas is exactly what it was.
+    ///
+    /// The grid being switched OFF is not nothing. The surround around the
+    /// picture carries the grid either way, because that is the surface you are
+    /// working on; the switch decides whether the PICTURE has it too. The
+    /// canvas reads `isVisible` for that, so it needs the settings even when
+    /// the answer is no.
     var drawnCanvasGrid: CanvasGridSettings? {
-        guard Experiments.shared.canvasGridEnabled, canvasGrid.isVisible else { return nil }
+        guard Experiments.shared.canvasGridEnabled else { return nil }
         return canvasGrid
     }
 
     func toggleCanvasGrid() { canvasGrid.isVisible.toggle() }
+
+    func toggleSnapToGrid() { canvasGrid.snapsToGrid.toggle() }
 
     func setCanvasGridAxes(_ axes: CanvasGridAxes) { canvasGrid.axes = axes }
 

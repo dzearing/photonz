@@ -529,6 +529,15 @@ struct EditorCommands: Commands {
                 }
                 .keyboardShortcut("'", modifiers: .command)
                 .disabled(!hasDocument)
+                // Photoshop's own key for Snap, next to the grid it pulls to.
+                // Dimmed with the grid hidden, because with no lines on the
+                // picture there is nothing to pull to.
+                Button((editor?.canvasGrid.snapsToGrid ?? true)
+                        ? "Stop Snapping to Grid" : "Snap to Grid") {
+                    editor?.toggleSnapToGrid()
+                }
+                .keyboardShortcut(";", modifiers: [.command, .shift])
+                .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false))
             }
             Divider()
         }

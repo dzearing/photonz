@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-05T16:46:53.691Z",
-  "updated": "2026-09-05T17:01:29.852Z",
+  "updated": "2026-09-05T18:10:51.805201Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 after the canvas grid shipped. Four findings from a read, three of them confirmed. (1) Surround: CanvasGridChrome.refreshCanvasGrid line 39 intersects the grid with viewport.documentFrameInView, so the grid is clipped to the picture and never appears on the grey around it. The user wants the surround to carry it always, with the switched on state being the grid drawn OVER the picture. (2) Snap to grid does not exist: no reference to grid anywhere in Snapping.swift or in the drag paths. (3) Resize does no snapping at all: only the move path calls Snapping.snapFrameOrigin (CanvasView.swift lines 2107 and 2147); the resize branch at line 1992 has no snapping, which is exactly the asymmetry the user hit. Snapping.swift only offers snapFrameOrigin, which snaps an ORIGIN given a fixed size, so a resize needs a new entry point that snaps the moving edge or corner and leaves the opposite one alone; keep it in the same file so there is one snapping idea, not two. (4) The jumpiness with the grid on is NOT explained by anything found: there is no grid snapping to be inaccurate. Reproduce it before theorising; suspects worth checking are the level of detail ladder changing which lines are drawn mid drag so the eye reads a different grid, and the existing pixel grid rounding on the drag. Grid settings live in CanvasGridSettings and CanvasGridStore, are app wide rather than per document, and ship behind next-canvas-grid.",
@@ -35,6 +35,22 @@
     {
       "t": "2026-09-05T17:01:29.852Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T17:06:58.719485Z",
+      "note": "Adversarial review before building. (1) Surround: confirmed, refreshCanvasGrid clips to viewport.documentFrameInView. Building it as ONE set of grid layers moved above or below the picture rather than a second set: grid on = drawn over everything, grid off = drawn under the picture so the canvas's own drop shadow falls on the graph paper and it reads as the work surface rather than as ink printed over the shadow. Same path, same cost. (2) Snap to grid switch: confirmed absent. (3+4) Reproduced both in the probe with a walk (/tmp/pz/grid-resize-repro.json): grid on at 4pt, dragging the right handle in 3pt steps put the edge on 563, 566, 569, 572, 575 - not one of them a grid line, and no peer pull either. So the user's 'jumps about' is not a separate defect: it IS the missing snap, seen against visible lines. The level of detail ladder is not implicated, zoom does not change during a resize. Design decisions: the grid pull uses the FINEST RUNG ACTUALLY DRAWN at the current zoom, not the raw spacing, so a snapped edge lands on a line you can see rather than on an invisible 4pt one when the canvas is only drawing 32s. Peers and canvas keep priority (a magnet with a tolerance); the grid is a quantize that applies only when nothing else caught, so matching a peer at 13pt is still possible on a 4pt grid. Shift (keep aspect) skips snapping, aspect wins. A rotated or skewed layer skips peer snapping: its handle space is not canvas space."
+    },
+    {
+      "t": "2026-09-05T17:38:35.694572Z",
+      "note": "Built and verified in the probe with Scripts/playtest/grid-surround-snap-walk.json. Every acceptance item checked against the real app, not assumed. (a) Surround: the grey carries the grid with the grid switched off, and the picture's shadow falls across it, because the three grid layers now sit in one container that moves BELOW the picture when the grid is off and above it when on (CanvasView.placeCanvasGrid). (b) Snap to grid: in the Canvas section under Grid, on by default, and on the View menu on Shift Command semicolon, Photoshop's own key for Snap. It only shows while the grid is showing, since with no lines there is nothing to pull to. (c) Resize snapping: 16pt grid, right handle dragged to 341, 346, 353 gave 336, 352, 352 - on a line and STAYING there. Dragged to 497 with a peer at 500 gave 500 with the guide drawn across both boxes. (d) Command held gave 359 exactly, the pointer's own answer. (e) Snap to grid off gave 463 exactly with the lines still drawn. (f) Grid off gave 470 exactly on a resize and a move of exactly 17 by 11, and a peer at 500 was still caught, since the grid switch governs the grid and never the other layers. (g) Cost: the same sweep measured 320.6ms over 123 passes with the surround grid against 332.1ms over 129 passes on the stashed pre-change build. No measurable difference."
+    },
+    {
+      "t": "2026-09-05T17:38:35.694572Z",
+      "note": "One design decision worth knowing about. The grid pull uses the spacing that was TYPED IN, not the finest rung the canvas is drawing at this zoom. Snapping to the drawn rung was the first design and it is worse: at 100% a 4pt grid draws 32s, so the same drag would give a different answer depending on how close you were standing. The cost is that at 100% with the default 4pt grid an edge lands on a real line that is not drawn, and can look like it missed. Filed as the-grid-you-set-is-the-grid-you-see rather than guessed at here. Also filed: the-arrow-keys-step-by-the-grid-while-the-grid-i."
+    },
+    {
+      "t": "2026-09-05T18:10:51.805201Z",
+      "note": "Full suite green (3276) and Scripts/playtest-all.sh run: 153 passed, 6 failed. Five of the six pass on their own and were shared-state cascade inside the batch. The sixth, mixed-one-look-walk, fails identically on a stashed PRE-CHANGE build, so it is not from this work; filed as the-mixed-one-look-walk-reaches-the-alignment-bu. Audit written at queue/audits/2026-09-05-grid-surround-and-snapping.json with three real window captures."
     }
   ],
   "started": "2026-09-05T17:01:29.852Z"

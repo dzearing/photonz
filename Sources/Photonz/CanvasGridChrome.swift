@@ -4,10 +4,21 @@ import PhotonzCore
 /// The grid you build against, drawn on the canvas (Next, `next-canvas-grid`).
 ///
 /// It is chrome, not content: it is drawn by this view rather than by the
-/// renderer, so it sits above the picture, never lands in an export or a copied
-/// picture, and costs the document nothing.
+/// renderer, so it never lands in an export or a copied picture and costs the
+/// document nothing.
 ///
-/// Three things make it behave:
+/// Four things make it behave:
+///
+/// - **The surround always carries it; the switch decides the picture.** The
+///   grey around the canvas is the surface you are working on, and a surface
+///   for building UI is graph paper, so it is graph paper whatever the switch
+///   says. What the switch changes is the PICTURE: on, and the grid is drawn
+///   over it, still there once you have drawn something on top; off, and the
+///   grid goes UNDER the picture, so the canvas's own drop shadow falls across
+///   the paper and the paper reads as the surface the picture is lying on
+///   rather than as ink printed over its shadow. One set of layers either way,
+///   moved rather than duplicated, so the switch costs a re-order and nothing
+///   else.
 ///
 /// - **A ladder, not a spacing.** `CanvasGridLevels` picks which rungs to draw
 ///   at the current zoom and how strongly, so the lines are never closer
@@ -15,10 +26,12 @@ import PhotonzCore
 ///   rung's lines are a subset of the finer rung's, so the rungs stack: a line
 ///   several rungs share comes out stronger, which is what makes every Nth line
 ///   countable without a second rule that could fall out of step with the fade.
-/// - **Only what is on screen.** The paths hold the lines inside the visible
-///   part of the canvas and nothing else, so a huge document costs the same as
-///   a small one. With the ladder's floor of eight view points that bounds the
-///   whole thing at roughly the view's width over eight, whatever the spacing.
+/// - **Only what is on screen.** The paths hold the lines inside the view and
+///   nothing else, so a huge document costs the same as a small one. With the
+///   ladder's floor of eight view points that bounds the whole thing at roughly
+///   the view's width over eight, whatever the spacing — and running the lines
+///   out over the surround as well adds no lines at all, only length to the
+///   ones already being drawn.
 /// - **The accent, sunk into the surface.** The lines are the brand colour
 ///   mixed halfway into a neutral and drawn at a low alpha, resolved against
 ///   the window's own appearance so they read the same in light and dark.
@@ -28,15 +41,16 @@ extension CanvasNSView {
     var canvasGridEnabled: Bool { Experiments.shared.canvasGridEnabled }
 
     func refreshCanvasGrid() {
-        guard canvasGridEnabled, let settings = canvasGrid, settings.isVisible,
+        guard canvasGridEnabled, let settings = canvasGrid,
               let viewport, viewport.zoom > 0 else {
             hideCanvasGrid()
             return
         }
-        // Only the part of the canvas on screen: the grid belongs to the
-        // canvas, so it stops at its edges rather than running out over the
-        // surround.
-        let visible = viewport.documentFrameInView.intersection(bounds)
+        // The whole view, picture and surround alike. The lines run right
+        // across, and where the picture sits is a question of which side of it
+        // these layers are on, not of where the paths stop.
+        placeCanvasGrid(overPicture: settings.isVisible)
+        let visible = bounds
         guard visible.width > 0.5, visible.height > 0.5 else {
             hideCanvasGrid()
             return

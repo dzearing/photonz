@@ -1,10 +1,17 @@
 import CoreGraphics
 import Foundation
 
-/// Drag-to-move snapping: a dragged layer's edges and centres attract to the
-/// canvas edges and centre, and to the edges and centres of the other layers.
+/// Snapping for both ways of dragging a layer about: MOVING it, where its
+/// edges and centres attract to the canvas edges and centre and to the edges
+/// and centres of the other layers, and RESIZING it, where the edge under the
+/// pointer attracts to the same things and the opposite one stays anchored.
 /// Tolerance is expressed in screen points so the magnetic feel is constant at
 /// any zoom level.
+///
+/// The canvas grid comes in underneath all of that, as a quantize rather than a
+/// magnet: whatever nothing else caught lands on the nearest grid line. So a
+/// grid never stops you matching a real edge, and away from real edges things
+/// sit on the grid rather than near it.
 ///
 /// Peers are what makes this useful for building UI rather than annotating a
 /// picture: a button dragged next to another button lines up with it, sits
@@ -52,21 +59,108 @@ public enum Snapping {
         }
     }
 
+    /// The same answer for a RESIZE: which edges moved, where they came to
+    /// rest, and the guides that say why.
+    public struct FrameResult: Equatable, Sendable {
+        /// The (possibly snapped) frame.
+        public var frame: CGRect
+        public var guideX: CGFloat?
+        public var guideY: CGFloat?
+        public var guideXSpan: Span?
+        public var guideYSpan: Span?
+
+        public init(frame: CGRect, guideX: CGFloat? = nil, guideY: CGFloat? = nil,
+                    guideXSpan: Span? = nil, guideYSpan: Span? = nil) {
+            self.frame = frame
+            self.guideX = guideX
+            self.guideY = guideY
+            self.guideXSpan = guideXSpan
+            self.guideYSpan = guideYSpan
+        }
+    }
+
     public static func snapFrameOrigin(_ proposed: CGPoint, size: CGSize, canvas: CGSize,
-                                       peers: [CGRect] = [], zoom: CGFloat,
-                                       screenTolerance: CGFloat = 8) -> Result {
+                                       peers: [CGRect] = [], gridSpacing: CGFloat? = nil,
+                                       zoom: CGFloat, screenTolerance: CGFloat = 8) -> Result {
         let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
         let x = snapAxis(origin: proposed.x, length: size.width, canvasLength: canvas.width,
                          crossOrigin: proposed.y, crossLength: size.height,
                          peers: peers.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) },
-                         tolerance: tolerance)
+                         gridSpacing: gridSpacing, tolerance: tolerance)
         let y = snapAxis(origin: proposed.y, length: size.height, canvasLength: canvas.height,
                          crossOrigin: proposed.x, crossLength: size.width,
                          peers: peers.map { Peer(along: ($0.minY, $0.maxY), cross: ($0.minX, $0.maxX)) },
-                         tolerance: tolerance)
+                         gridSpacing: gridSpacing, tolerance: tolerance)
         return Result(origin: CGPoint(x: x.origin, y: y.origin),
                       guideX: x.guide, guideY: y.guide,
                       guideXSpan: x.span, guideYSpan: y.span)
+    }
+
+    /// Snaps the edge or corner a resize is DRAGGING, and leaves the one it is
+    /// anchored on exactly where it was.
+    ///
+    /// A move carries a whole box and lines its leading edge, its middle and
+    /// its trailing edge up with things. A resize carries one edge, or two at a
+    /// corner, and that edge is the only thing to line up: the box's middle
+    /// moves as a consequence of the drag, so a middle that happens to land on
+    /// something is not a relationship anyone was aiming for. A side handle
+    /// therefore touches ONE axis and never quietly tidies the other, or a row
+    /// of boxes would resettle every time one of them was made wider.
+    ///
+    /// What the dragged edge attracts to is what a move attracts to: the canvas
+    /// edges and middle, every other layer's edges and middle, and, when the
+    /// grid is pulling, the nearest grid line. A snap that would turn the box
+    /// inside out is refused rather than clamped, because a clamped box is a
+    /// box that stopped following the pointer for no visible reason.
+    public static func snapResizedFrame(_ proposed: CGRect, handle: ResizeHandle,
+                                        canvas: CGSize, peers: [CGRect] = [],
+                                        gridSpacing: CGFloat? = nil, zoom: CGFloat,
+                                        screenTolerance: CGFloat = 8,
+                                        minSize: CGFloat = 1) -> FrameResult {
+        let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
+        var frame = proposed
+        var result = FrameResult(frame: proposed)
+
+        let crossX = Span(start: proposed.minY, end: proposed.maxY)
+        let crossY = Span(start: proposed.minX, end: proposed.maxX)
+        let xPeers = peers.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) }
+        let yPeers = peers.map { Peer(along: ($0.minY, $0.maxY), cross: ($0.minX, $0.maxX)) }
+
+        if handle.movesMinX || handle.movesMaxX {
+            let moving = handle.movesMinX ? proposed.minX : proposed.maxX
+            let snap = snapEdge(moving, canvasLength: canvas.width, crossSpan: crossX,
+                                peers: xPeers, gridSpacing: gridSpacing, tolerance: tolerance)
+            let limit = handle.movesMinX ? proposed.maxX - minSize : proposed.minX + minSize
+            if handle.movesMinX ? snap.value <= limit : snap.value >= limit {
+                // Only rewrite the geometry when the edge actually moved: an
+                // untouched frame must come back bit for bit, not through a
+                // subtraction that shifts its width by a millionth.
+                if snap.value != moving {
+                    frame.origin.x = handle.movesMinX ? snap.value : proposed.minX
+                    frame.size.width = handle.movesMinX ? proposed.maxX - snap.value
+                                                        : snap.value - proposed.minX
+                }
+                result.guideX = snap.guide
+                result.guideXSpan = snap.span
+            }
+        }
+        if handle.movesMinY || handle.movesMaxY {
+            let moving = handle.movesMinY ? proposed.minY : proposed.maxY
+            let snap = snapEdge(moving, canvasLength: canvas.height, crossSpan: crossY,
+                                peers: yPeers, gridSpacing: gridSpacing, tolerance: tolerance)
+            let limit = handle.movesMinY ? proposed.maxY - minSize : proposed.minY + minSize
+            if handle.movesMinY ? snap.value <= limit : snap.value >= limit {
+                if snap.value != moving {
+                    frame.origin.y = handle.movesMinY ? snap.value : proposed.minY
+                    frame.size.height = handle.movesMinY ? proposed.maxY - snap.value
+                                                         : snap.value - proposed.minY
+                }
+                result.guideY = snap.guide
+                result.guideYSpan = snap.span
+            }
+        }
+        result.frame = frame
+        return result
     }
 
     /// One other layer, reduced to the two ranges this axis cares about.
@@ -91,7 +185,7 @@ public enum Snapping {
     /// two equally good ones.
     private static func snapAxis(origin: CGFloat, length: CGFloat, canvasLength: CGFloat,
                                  crossOrigin: CGFloat, crossLength: CGFloat,
-                                 peers: [Peer], tolerance: CGFloat)
+                                 peers: [Peer], gridSpacing: CGFloat?, tolerance: CGFloat)
         -> (origin: CGFloat, guide: CGFloat?, span: Span?) {
         let mine = Span(start: crossOrigin, end: crossOrigin + crossLength)
         var candidates: [Candidate] = [
@@ -113,26 +207,79 @@ public enum Snapping {
             candidates.append(Candidate(offset: length, target: peer.along.min, span: span))
         }
 
+        guard let best = capture(origin, among: candidates, tolerance: tolerance) else {
+            // Nothing to line up with, so the grid decides. It has no tolerance
+            // of its own: the whole point of switching a grid on is that things
+            // land on it, and a magnet whose reach is half the gap would be on
+            // everywhere anyway. ⌘ is what turns it off for one drag.
+            return (quantized(origin, to: gridSpacing), nil, nil)
+        }
+        return (best.candidate.target - best.candidate.offset, best.candidate.target,
+                widened(best.candidate.span, sharing: best.candidate.target, among: candidates))
+    }
+
+    /// Snaps ONE edge: the leading or trailing edge a resize is dragging. The
+    /// candidates are the same ones a move sees, minus every one that involves
+    /// the box's own middle or its far side, since neither of those is what the
+    /// pointer is holding.
+    private static func snapEdge(_ value: CGFloat, canvasLength: CGFloat, crossSpan: Span,
+                                 peers: [Peer], gridSpacing: CGFloat?, tolerance: CGFloat)
+        -> (value: CGFloat, guide: CGFloat?, span: Span?) {
+        var candidates: [Candidate] = [
+            Candidate(offset: 0, target: 0, span: nil),
+            Candidate(offset: 0, target: canvasLength / 2, span: nil),
+            Candidate(offset: 0, target: canvasLength, span: nil),
+        ]
+        for peer in peers {
+            let span = crossSpan.union(Span(start: peer.cross.min, end: peer.cross.max))
+            candidates.append(Candidate(offset: 0, target: peer.along.min, span: span))
+            candidates.append(Candidate(offset: 0,
+                                        target: (peer.along.min + peer.along.max) / 2,
+                                        span: span))
+            candidates.append(Candidate(offset: 0, target: peer.along.max, span: span))
+        }
+
+        guard let best = capture(value, among: candidates, tolerance: tolerance) else {
+            return (quantized(value, to: gridSpacing), nil, nil)
+        }
+        return (best.candidate.target, best.candidate.target,
+                widened(best.candidate.span, sharing: best.candidate.target, among: candidates))
+    }
+
+    /// The nearest candidate within reach. Ties go to the canvas, then to the
+    /// earliest layer, so the answer never flickers between two equally good
+    /// ones.
+    private static func capture(_ value: CGFloat, among candidates: [Candidate],
+                                tolerance: CGFloat)
+        -> (candidate: Candidate, distance: CGFloat)? {
         var best: (candidate: Candidate, distance: CGFloat)?
         for candidate in candidates {
-            let distance = abs(origin + candidate.offset - candidate.target)
+            let distance = abs(value + candidate.offset - candidate.target)
             if distance <= tolerance, distance < (best?.distance ?? .infinity) {
                 best = (candidate, distance)
             }
         }
-        guard let best else { return (origin, nil, nil) }
+        return best
+    }
 
-        // Every layer that shares the winning line is on it, so the line
-        // reaches all of them: three boxes on one left edge get one line down
-        // all three, not a line to whichever one won by a hair.
-        var span = best.candidate.span
-        if span != nil {
-            for candidate in candidates where candidate.span != nil {
-                guard abs(candidate.target - best.candidate.target) < 0.01 else { continue }
-                span = span?.union(candidate.span!)
-            }
+    /// Every layer that shares the winning line is on it, so the line reaches
+    /// all of them: three boxes on one left edge get one line down all three,
+    /// not a line to whichever one won by a hair.
+    private static func widened(_ span: Span?, sharing target: CGFloat,
+                                among candidates: [Candidate]) -> Span? {
+        guard var span else { return nil }
+        for candidate in candidates {
+            guard let other = candidate.span,
+                  abs(candidate.target - target) < 0.01 else { continue }
+            span = span.union(other)
         }
-        return (best.candidate.target - best.candidate.offset, best.candidate.target, span)
+        return span
+    }
+
+    /// The nearest grid line, or the value untouched when nothing is pulling.
+    private static func quantized(_ value: CGFloat, to spacing: CGFloat?) -> CGFloat {
+        guard let spacing, spacing.isFinite, spacing > 0, value.isFinite else { return value }
+        return (value / spacing).rounded() * spacing
     }
 }
 

@@ -1,0 +1,97 @@
+{
+  "out": "/tmp/photonz-playtest/grid-surround-snap-walk",
+  "setup": {
+    "forget": ["grid", "shapes", "tools", "panel"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "describe", "stage": "surround", "note": "A 900x700 canvas in a 1240x900 window fits at 100%, so there is grey all round it and the surround grid has somewhere to show." },
+    { "do": "snapshot", "name": "surround-grid-off" },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panel", "stage": "grid-off" },
+    { "do": "press", "control": "Grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "panel", "stage": "grid-on" },
+    { "do": "menus", "stage": "view-menu", "menu": "View" },
+    { "do": "describe", "stage": "the-view-menu-rows", "note": "View carries Snap to Grid on Shift Command semicolon, next to the grid it pulls to. Both rows read their words off the FOCUSED window, and a walk's probe window never has focus, so they come back saying Show Grid and Stop Snapping to Grid whatever the switches are actually set to. The panel above is where the real state is read." },
+    { "do": "snapshot", "name": "surround-grid-on" },
+
+    { "do": "focus", "field": "Spacing" },
+    { "do": "type", "text": "16" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "spacing-16", "note": "16 pt lines are far enough apart at 100% to be drawn as well as pulled to, so the pictures below show an edge landing on a line you can see." },
+    { "do": "snapshot", "name": "grid-16" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [500, 100], "to": [700, 220] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "peer-drawn", "note": "the box a resize will line itself up with" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 400], "to": [323, 500] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [200, 450] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "before-resize", "note": "the box about to be resized, selected" },
+
+    { "do": "drag", "from": [323, 450], "to": [341, 450], "steps": 8 },
+    { "do": "describe", "stage": "grid-resize-1", "note": "right edge dragged to 341, expect it on a 16 line" },
+    { "do": "drag", "from": [341, 450], "to": [346, 450], "steps": 8 },
+    { "do": "describe", "stage": "grid-resize-2", "note": "and again, five points on, expect it still on a 16 line" },
+    { "do": "drag", "from": [346, 450], "to": [353, 450], "steps": 8 },
+    { "do": "describe", "stage": "grid-resize-3" },
+    { "do": "snapshot", "name": "resize-on-grid" },
+
+    { "do": "drag", "from": [353, 450], "to": [359, 450], "steps": 8, "modifiers": ["command"] },
+    { "do": "describe", "stage": "command-frees-the-resize", "note": "Command held: expect the edge exactly where the pointer left it, 359, off every line" },
+
+    { "do": "drag", "from": [359, 450], "to": [497, 450], "steps": 16, "hold": "resize-catches-peer" },
+    { "do": "describe", "stage": "resize-catches-peer", "note": "dragged to 497, three short of the other box's left edge at 500: expect 500 and a guide" },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Snap to grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "panel", "stage": "snapping-off" },
+    { "do": "snapshot", "name": "snapping-off" },
+
+    { "do": "click", "at": [200, 450] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [500, 450], "to": [463, 450], "steps": 8 },
+    { "do": "describe", "stage": "no-pull-with-snapping-off", "note": "expect the edge exactly on 463, off every line, with the grid still drawn" },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Snap to grid" },
+    { "do": "press", "control": "Grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [200, 450] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [463, 450], "to": [470, 450], "steps": 8 },
+    { "do": "describe", "stage": "grid-off-resize", "note": "grid switched off, and clear of everything: expect the edge on 470, exactly where the pointer left it" },
+    { "do": "drag", "from": [470, 450], "to": [497, 450], "steps": 8 },
+    { "do": "describe", "stage": "grid-off-still-catches-a-peer", "note": "grid switched off but three short of the other box's left edge: expect 500. The grid switch governs the grid, never the other layers." },
+    { "do": "drag", "from": [200, 450], "to": [217, 461], "steps": 8 },
+    { "do": "describe", "stage": "grid-off-move", "note": "grid switched off: expect the box moved by exactly 17 and 11" },
+    { "do": "snapshot", "name": "grid-off-surround-still-there" },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "cost-with-the-grid-on", "note": "the sweep below is measured from the click that resets the meter, for the surround grid's cost" },
+    { "do": "click", "at": [800, 650] },
+    { "do": "drag", "from": [150, 600], "to": [800, 680], "steps": 24 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.3 }
+  ]
+}

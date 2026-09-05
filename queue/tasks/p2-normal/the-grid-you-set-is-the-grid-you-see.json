@@ -1,0 +1,27 @@
+{
+  "id": "the-grid-you-set-is-the-grid-you-see",
+  "title": "The grid you set is the grid you see",
+  "goal": "With the grid set to 4 points and the picture at 100%, the canvas does not draw 4 point lines at all: they would be four screen points apart and read as a grey wash, so it draws the stronger 32 point ones instead. Things still land on 4s, so an edge can settle between two lines you can see and look like it missed. Make the two agree: either say somewhere what the lines on screen are actually worth right now, or change what gets drawn.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1250,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T17:38:05.136Z",
+  "updated": "2026-09-05T17:38:05.137Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. CanvasGridLevels.minimumOnScreenSpacing is 8 view points and strength() is zero at the floor, so at zoom 1 a 4pt grid draws its first rung at 32. CanvasGridSettings.snapSpacing deliberately returns the configured spacing rather than the finest drawn rung, because a pull that changed with the zoom would be its own kind of jumping. Options worth weighing: show the drawn spacing beside the Spacing field; draw the set spacing faintly below the floor; or offer a Snap to setting separate from the drawn spacing.",
+  "acceptance": [
+    "With a grid set to any spacing, a person can tell at a glance what the lines they are looking at are worth",
+    "An edge that has landed on a grid line never looks like it has landed between two lines",
+    "Zooming in and out never changes where a drag lands"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T17:38:05.137Z",
+      "note": "created (manual)"
+    }
+  ]
+}

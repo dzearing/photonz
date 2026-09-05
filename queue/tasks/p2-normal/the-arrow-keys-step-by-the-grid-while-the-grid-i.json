@@ -1,0 +1,28 @@
+{
+  "id": "the-arrow-keys-step-by-the-grid-while-the-grid-i",
+  "title": "The arrow keys step by the grid while the grid is pulling",
+  "goal": "With the grid on and Snap to grid on, dragging a layer lands it on grid lines but nudging it with the arrow keys still moves it by one point, so the two ways of moving something disagree and a nudged layer walks off the grid it was just put on.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1260,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-05T17:38:05.176Z",
+  "updated": "2026-09-05T17:38:05.176Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. Nudge.swift in PhotonzCore holds the step; CanvasGridSettings.snapSpacing is the grid step to use. TDD in core.",
+  "acceptance": [
+    "With Snap to grid on, an arrow key moves a layer by one grid step",
+    "Shift and an arrow key moves it by a larger multiple of the grid, not by ten points",
+    "With the grid off, or Snap to grid off, the arrow keys behave exactly as they do today",
+    "A layer that is already off the grid comes back onto it on the first nudge rather than staying off by the same amount"
+  ],
+  "log": [
+    {
+      "t": "2026-09-05T17:38:05.176Z",
+      "note": "created (manual)"
+    }
+  ]
+}

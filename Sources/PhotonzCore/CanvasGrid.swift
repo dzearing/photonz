@@ -41,8 +41,14 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     public static let defaultMajorEvery = 8
     public static let majorEveryRange: ClosedRange<Int> = 2...100
 
-    /// Whether the grid is drawn at all.
+    /// Whether the grid is drawn OVER the picture. The surround around the
+    /// picture carries it either way: that is the surface you work on, and
+    /// graph paper is what a surface for building UI looks like.
     public var isVisible: Bool
+    /// Whether a drag pulls to the grid while the grid is showing. On unless
+    /// someone turns it off, and turning it off leaves the lines exactly where
+    /// they were: it stops the magnet, not the picture.
+    public var snapsToGrid: Bool
     public var axes: CanvasGridAxes
     /// The gap between two neighbouring lines, in document points.
     public var spacing: CGFloat
@@ -52,10 +58,12 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     public var majorEvery: Int
 
     public init(isVisible: Bool = false,
+                snapsToGrid: Bool = true,
                 axes: CanvasGridAxes = .columnsAndRows,
                 spacing: CGFloat = defaultSpacing,
                 majorEvery: Int = defaultMajorEvery) {
         self.isVisible = isVisible
+        self.snapsToGrid = snapsToGrid
         self.axes = axes
         self.spacing = Self.clamped(spacing: spacing)
         self.majorEvery = Self.clamped(majorEvery: majorEvery)
@@ -74,15 +82,36 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     // a field existed still reads back, and a number edited by hand into
     // something undrawable is clamped rather than obeyed.
     private enum CodingKeys: String, CodingKey {
-        case isVisible, axes, spacing, majorEvery
+        case isVisible, snapsToGrid, axes, spacing, majorEvery
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(isVisible: try c.decodeIfPresent(Bool.self, forKey: .isVisible) ?? false,
+                  snapsToGrid: try c.decodeIfPresent(Bool.self, forKey: .snapsToGrid) ?? true,
                   axes: try c.decodeIfPresent(CanvasGridAxes.self, forKey: .axes) ?? .columnsAndRows,
                   spacing: try c.decodeIfPresent(CGFloat.self, forKey: .spacing) ?? Self.defaultSpacing,
                   majorEvery: try c.decodeIfPresent(Int.self, forKey: .majorEvery) ?? Self.defaultMajorEvery)
+    }
+
+    /// How far apart the lines a drag pulls to are, in document points, or nil
+    /// when a drag should pull to nothing.
+    ///
+    /// It is the spacing that was TYPED IN, and it does not change with the
+    /// zoom. A grid set to four means things land on fours, and they land on
+    /// the same fours whether you are looking at the whole picture or at one
+    /// corner of it — a pull that got coarser as you zoomed out would mean the
+    /// same drag gave a different answer depending on how close you happened to
+    /// be standing, which is its own kind of jumping.
+    ///
+    /// The lines DRAWN are a different question, and the level-of-detail ladder
+    /// answers it: zoomed far enough out, fine lines would be a grey wash, so
+    /// the canvas draws only the strong ones. A snapped edge can therefore land
+    /// between two drawn lines, on a line that is really there but too fine to
+    /// show at this zoom. Zooming in brings it back.
+    public var snapSpacing: CGFloat? {
+        guard isVisible, snapsToGrid, spacing.isFinite, spacing > 0 else { return nil }
+        return spacing
     }
 }
 

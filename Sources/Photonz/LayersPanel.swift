@@ -3126,8 +3126,18 @@ struct CanvasInspector: View {
                                          set: { editorState.canvasGrid.isVisible = $0 }))
                 .font(.callout)
                 .controlSize(.small)
-                .playtestControl("Grid", detail: "Canvas")
+                .playtestControl("Grid", detail: "Canvas, \(grid.isVisible ? "shown" : "hidden")")
             if grid.isVisible {
+                // Only while the grid is showing: with no lines on the picture
+                // there is nothing to pull to, so a switch for it would be a
+                // control that does nothing.
+                Toggle("Snap to grid", isOn: Binding(
+                    get: { grid.snapsToGrid },
+                    set: { editorState.canvasGrid.snapsToGrid = $0 }))
+                    .font(.callout)
+                    .controlSize(.small)
+                    .playtestControl("Snap to grid",
+                                     detail: "Canvas, \(grid.snapsToGrid ? "on" : "off")")
                 Picker("Lines", selection: Binding(
                     get: { grid.axes },
                     set: { editorState.setCanvasGridAxes($0) })) {

@@ -8738,3 +8738,63 @@ flow — so `the-starter-nav-bar-arranges-itself-like-a-real` is queued. Only
 space-between is built; the audit asks whether room around the outside is wanted
 before anyone builds it. Per-child growth is already queued as
 `a-piece-can-take-the-room-a-row-has-left-over`.
+
+## 2026-09-05 — The grid behind everything, and snapping on a resize
+
+Task `the-grid-is-always-behind-the-canvas-and-things` (p1, ui-building), four
+complaints in one.
+
+**The surround always carries the grid.** `refreshCanvasGrid` used to intersect
+its paths with `viewport.documentFrameInView`, so the grid stopped at the
+picture's edge and the grey around it stayed blank. It now draws the whole view,
+and what the switch changes is which SIDE of the picture the grid is on: the
+three rung layers live in one container (`canvasGridContainer`) that
+`CanvasNSView.placeCanvasGrid(overPicture:)` inserts above `previewSpriteLayer`
+when the grid is switched on, and below `contentLayer` when it is not — so with
+the grid off, the canvas's own drop shadow falls across the graph paper and the
+paper reads as the surface the picture is lying on. One set of layers, moved
+rather than duplicated. `EditorState.drawnCanvasGrid` therefore stops returning
+nil when the grid is hidden; only the feature flag turns it off now.
+
+**Snap to grid.** `CanvasGridSettings.snapsToGrid`, default true, decoded true
+from every blob written before it existed. It shows in the Canvas section only
+while the grid is showing, and on View as ⇧⌘; (Photoshop's key for Snap).
+
+**Resize snaps like a move.** `Snapping.snapResizedFrame` is the new entry
+point: it snaps the edge or corner under the pointer and leaves the anchored one
+alone, so a side handle touches one axis and never tidies the other. It shares
+`capture`, `widened` and `quantized` with the move path, so there is one
+snapping idea rather than two. The canvas gathers peers once at grab time, ⌘
+frees the drag exactly as it does a move, ⇧ (keep proportions) turns snapping
+off because a ratio and a grid cannot both be obeyed, and a rotated or skewed
+layer gets no peer snapping since its handle space is not canvas space. Guides
+are drawn from the resize result the same way they are from a move's.
+
+**The grid pull is a quantize, not a magnet.** Peers and the canvas keep
+priority with their eight screen point tolerance; whatever nothing else caught
+lands on the nearest grid line. So a 4pt grid never stops you matching a peer
+edge at 13. It uses the spacing that was TYPED IN, not the finest rung the
+canvas is drawing: pulling to the drawn rung would make the same drag give a
+different answer depending on the zoom.
+
+The user's fourth complaint, "resizing jumps about with the grid on", was
+reproduced first and turned out to be the same defect as the third rather than a
+separate one: with a 4pt grid on, dragging the right handle in 3pt steps put the
+edge on 563, 566, 569, 572, 575, never a grid line, because resize did no
+snapping at all. The level-of-detail ladder is not implicated — zoom does not
+change during a resize.
+
+25 tests in `GridSnappingTests` written before the code, full suite green
+(3276). Walked on the probe with `Scripts/playtest/grid-surround-snap-walk.json`
+with Screen Recording granted; every acceptance item checked against the real
+app, including a before/after cost measurement against the stashed pre-change
+build (320.6ms over 123 passes with the surround grid, 332.1ms over 129 without
+it: no measurable difference). Audit:
+`queue/audits/2026-09-05-grid-surround-and-snapping.json`.
+
+Next / open: the grid you SET is not always the grid you SEE — at 100% with the
+default 4pt spacing the canvas draws 32s, so an edge can settle on a real line
+that is not drawn. Queued as `the-grid-you-set-is-the-grid-you-see`. Arrow-key
+nudges still step by 1 and 10 rather than by the grid, queued as
+`the-arrow-keys-step-by-the-grid-while-the-grid-i`. Dragging the canvas edges
+pulls at nothing; not queued.

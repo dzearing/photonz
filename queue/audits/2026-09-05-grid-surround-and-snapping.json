@@ -1,0 +1,33 @@
+{
+  "feature": "The grid behind everything, and snapping that works on a resize",
+  "epic": "ui-building",
+  "summary": "The grey around the canvas is graph paper now, whether or not the grid is switched on over the picture. Dragging a handle to resize pulls to the same things a move pulls to, the other layers, the canvas and the grid, and a new Snap to grid switch turns the grid's pull off without hiding the lines.",
+  "setup": "Photonz Dev, release Next. Open any picture, click the Canvas row in the Layers panel to reach the grid settings. Nothing to switch on: the grid flag already ships on in Next.",
+  "try": [
+    { "do": "Open a picture and press Command 0 to fit it, so there is grey around it.", "shot": "2026-09-05-grid-surround-off.png" },
+    { "do": "Look at the grey: it is graph paper, and the picture's shadow falls across it." },
+    { "do": "Click the Canvas row in the panel, then turn Grid on. Set Spacing to 16." },
+    { "do": "Draw two rectangles well apart with the R tool, then press V." },
+    { "do": "Drag one rectangle's right handle slowly: the edge steps from grid line to grid line and stays put between steps.", "shot": "2026-09-05-resize-on-grid.png" },
+    { "do": "Keep dragging until the edge is a few points short of the other rectangle: it jumps onto that edge and a yellow line joins the two boxes.", "shot": "2026-09-05-resize-catches-peer.png" },
+    { "do": "Do the same drag holding Command: nothing pulls at all." },
+    { "do": "Turn Snap to grid off in the panel, or press Shift Command semicolon, and drag again: the lines stay, the pull stops." }
+  ],
+  "evaluate": [
+    "Is the graph paper on the grey a better surface to work on, or is it noise behind your picture?",
+    "Should the surround carry the grid even when you are redlining a screenshot rather than building UI?",
+    "When a resized edge catches another layer, does the yellow line tell you what it caught quickly enough, or do you have to look for it?",
+    "With the grid at 4 points, does the pull feel too fine to notice, and would you rather it pulled to the stronger lines?",
+    "Is Snap to grid in the right place, under the Grid switch on the Canvas row, or would you look for it on the View menu first?",
+    "Does Command feel like the right key for letting go of the magnets on a resize, given it already does that for a move?"
+  ],
+  "rough": [
+    "The grid you SET is not always the grid you SEE. At 100% with the default 4 point spacing, 4 point lines would be 4 screen points apart, which reads as a grey wash, so the canvas draws 32s instead. Snapping goes to 4, which is a real grid line but not a drawn one, so an edge can settle between two visible lines and look wrong. Snapping to the drawn lines instead was the alternative and it is worse: the answer would change as you zoomed. Filed as its own task.",
+    "Holding Shift to keep the proportions turns snapping off for that drag. A ratio and a grid cannot both be obeyed, and the ratio is the thing you asked for by holding the key.",
+    "A rotated or skewed layer does not pull to the other layers on a resize: its handles work in its own tilted space, and matching a tilted edge to an upright one has no meaning. Its size still lands on grid multiples.",
+    "The arrow keys still nudge by 1 and by 10 with the grid on, not by the grid. Filed as its own task.",
+    "Dragging the CANVAS edges to add or trim space pulls at nothing. Out of scope here.",
+    "The screen capture taken mid drag showed a frame one step behind the app's own state, so the peer catch picture in this audit is the offscreen render of that same moment instead. The two agree; the capture just races the redraw.",
+    "Cost measured against the same walk on the code before this change: a 24 step sweep across the canvas took 320.6ms of main thread over 123 passes with the surround grid drawing, against 332.1ms over 129 passes before it existed. No measurable difference."
+  ]
+}
