@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1300,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T23:23:20.999Z",
-  "updated": "2026-09-06T10:28:13.570Z",
+  "updated": "2026-09-06T10:47:38.110Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Measured on 2026-09-05 while fixing the short caption pill: for both \"H\" in a widened pill and \"A much longer caption\" in a text-sized one, the glyph ink centre sits 2.5px left of the pill ink centre \u2014 identical for both, so it is not the widening. The cause is that TextRasterizer.naturalSize returns a box that includes the last glyph's trailing advance, and PillRasterizer.draw centres that box rather than the ink. Fix is likely to centre on the typographic bounds instead, or to trim the trailing advance in naturalSize (careful: naturalSize also sizes text layers, so check TextRasterizerTests and TextBlockMetricsTests). Tests/PhotonzRenderTests/CaptionPillShapeTests.swift has a glyphOffCenter helper that already measures this.",
+  "notes": "Measured on 2026-09-05 while fixing the short caption pill: for both \"H\" in a widened pill and \"A much longer caption\" in a text-sized one, the glyph ink centre sits 2.5px left of the pill ink centre — identical for both, so it is not the widening. The cause is that TextRasterizer.naturalSize returns a box that includes the last glyph's trailing advance, and PillRasterizer.draw centres that box rather than the ink. Fix is likely to centre on the typographic bounds instead, or to trim the trailing advance in naturalSize (careful: naturalSize also sizes text layers, so check TextRasterizerTests and TextBlockMetricsTests). Tests/PhotonzRenderTests/CaptionPillShapeTests.swift has a glyphOffCenter helper that already measures this.",
   "acceptance": [
     "The ink of a centred word is within a point of the pill's centre, measured off real pixels",
     "This holds for one character, two characters and a full sentence",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-06T11:30:00.000Z",
       "note": "Shared render code, so both releases get it; nothing to port. Audit: queue/audits/2026-09-06-pill-text-centring.json with two real captures."
+    },
+    {
+      "t": "2026-09-06T10:47:38.109Z",
+      "note": "Pills and chips centre the ink of their words instead of the measured box (TextRasterizer.inkOffset + PillRasterizer), and the caption field types its draft where the commit draws it (CaptionMetrics.textInset). Verified on real window captures from the probe build: captions 0.25/0.00/0.25pt off centre, chips within a device pixel; footprints unchanged; 3721 tests pass. Audit: queue/audits/2026-09-06-pill-text-centring.json"
     }
   ],
-  "started": "2026-09-06T10:28:13.569Z"
+  "started": "2026-09-06T10:28:13.569Z",
+  "completed": "2026-09-06T10:47:38.110Z"
 }
