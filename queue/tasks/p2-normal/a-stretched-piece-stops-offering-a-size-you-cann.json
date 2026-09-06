@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-06T00:33:57.098Z",
-  "updated": "2026-09-06T13:19:58.956846Z",
+  "updated": "2026-09-06T13:21:09.547Z",
   "deps": [],
   "blockedBy": [],
   "notes": "LayerGeometryEditing.init already does this for the filling case (Self.fillingReason, added 2026-09-05 with FlowFill). The stretch case is the same shape: resolvedPlacement(in: container) is .stretch on the axis the container decides. Watch heightIsFilled(in:), which already covers half of it for text and now also answers for a column filler. Broadened on 2026-09-06 from the stretch case alone: three audits in one cycle reported the same wart (2026-09-05-fill-the-flow rough2, 2026-09-05-nav-bar-row rough3, 2026-09-05-words-that-wrap rough3). The rule already exists in docs/design/mocks/shared/UX-PATTERNS.md section 4, What a number you cannot type looks like; it was only ever applied to the text height case. LayerGeometryEditing.init already does the filling case (Self.fillingReason).",
@@ -69,7 +69,12 @@
     {
       "t": "2026-09-06T13:19:58.956846Z",
       "note": "Done: 3821 tests green, walk complete, audit at queue/audits/2026-09-06-a-decided-number-looks-decided.json with two real captures."
+    },
+    {
+      "t": "2026-09-06T13:21:09.546Z",
+      "note": "Every size a container decides is now plain text, not a box: stretched across a column stack, down a row stack, into a grid cell, spanning the way a row runs, and the surface stretched both ways. One question behind all of them (Layer.sizeIsDecidedByItsContainer) plus GroupLayout.decidesWidth; LayerGeometryEditing names Fill or Stretch as whoever holds the number. Also fixed the click-to-explain sentence outliving the rule it explained. 13 new tests in DecidedSizeTests, 3821 green, verified on the probe with Scripts/playtest/decided-size-walk.json. Audit: queue/audits/2026-09-06-a-decided-number-looks-decided.json with two real window captures. The wrapped-label item was NOT built: reproduced it and the premise was false (a typed width there sticks), so it is filed as a-wrapped-label-says-which-width-you-are-looking."
     }
   ],
-  "started": "2026-09-06T13:04:45.514Z"
+  "started": "2026-09-06T13:04:45.514Z",
+  "completed": "2026-09-06T13:21:09.547Z"
 }
