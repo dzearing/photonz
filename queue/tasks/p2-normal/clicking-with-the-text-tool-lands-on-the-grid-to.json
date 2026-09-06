@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T09:56:32.137Z",
-  "updated": "2026-09-06T15:10:00.000Z",
+  "updated": "2026-09-06T15:04:13.096Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-06 while doing a-shape-you-draw-lands-on-the-grid-like-everythi. CanvasPointerDrags mouseDown line 90: `if tool == .text { beginTextSession(layerID: nil, at: p) }` uses the raw document point and never goes near snappedAnnotationPoint, so no edge magnet and no grid. Text is placed by a CLICK, not a drag, so there is no opposite end and no one cell floor to worry about: it just wants the point quantized. AnnotationSnapping.snap with shape nil and opposite nil already does exactly that (it is what the frame tool uses on its press), so this should be a one line change plus a test. | DONE: CanvasView.snappedTextOrigin(_:event:) asks AnnotationSnapping.snap for a shapeless point with no opposite (grid quantize only, no edge magnet, no floor, no guide, no snap memory in either direction, Command frees). CanvasPointerDrags.swift mouseDown line ~93 passes it to beginTextSession. Re-edit paths (lines 244/252, CanvasKeys 59) still use the layer's own origin, so existing text never moves. Gated by next-canvas-grid through canvasSnapSpacing, so Current is untouched and there is nothing to port.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-06T15:10:00.000Z",
       "note": "review after building: the box corner is on the line but the glyphs sit a few points inside it, because a line of type is taller than its letters. Left as is (every design tool snaps the box, and X/Y in the panel agree with the line), raised in the audit for the user to judge."
+    },
+    {
+      "t": "2026-09-06T15:04:13.095Z",
+      "note": "Clicking with the Text tool now places the box on the grid: CanvasView.snappedTextOrigin asks AnnotationSnapping for a shapeless point with no opposite (grid quantize only, Command frees), wired into CanvasPointerDrags mouseDown. Three core tests in AnnotationGridSnappingTests; verified on the probe with Scripts/playtest/text-on-the-grid-walk.json (407,293 -> 416,288; Command 300,505 stays exact; Snap off 201,611 stays exact) and real screen captures. Audit: queue/audits/2026-09-06-text-on-the-grid.json. Scripts/test.sh green, 3870 tests. Pushed as 08f13a6."
     }
   ],
-  "started": "2026-09-06T14:56:56.034Z"
+  "started": "2026-09-06T14:56:56.034Z",
+  "completed": "2026-09-06T15:04:13.096Z"
 }
