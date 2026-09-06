@@ -384,8 +384,6 @@ struct InspectorPanel: View {
             // (Next, `next-frames`). Only a frame has any of them.
             if Experiments.shared.framesEnabled, layer.isFrame {
                 set.insert(.frame)
-                // The columns this screen is designed to, right under its size.
-                set.insert(.columns)
             }
             // A main component's own section (Next, `next-components`): its
             // name, which is the one name the layers list and the shelf both
@@ -430,6 +428,17 @@ struct InspectorPanel: View {
         // the section leaves only when nothing picked is a copy at all.
         if Experiments.shared.componentsEnabled, editorState.componentKnobSelection.isPresent {
             set.insert(.component)
+        }
+        // The columns of the screen you are working on (Next, `next-frames`),
+        // right under Frame. Present for the screen itself AND for a button on
+        // it, because the columns belong to the screen either way and Layer ▸
+        // Show Columns has always acted on it either way: the section used to
+        // go the moment you picked something on the screen, so the same
+        // feature was half there depending on what you clicked last. When the
+        // screen is not the thing picked, the header says whose numbers these
+        // are.
+        if editorState.columnsTargetFrameID != nil {
+            set.insert(.columns)
         }
         if editorState.isCanvasSelected { set.insert(.canvas) }
         // The Library shelf (step B3, `next-library`): an ordinary panel group,
@@ -510,6 +519,16 @@ struct InspectorPanel: View {
             return AnyView(Text(scope.title)
                 .font(.caption)
                 .foregroundStyle(.secondary))
+        case .columns:
+            // Whose columns these are, when they are not the picked thing's
+            // own. Beside the title so a collapsed section says it too.
+            guard !editorState.isColumnsTargetSelected,
+                  let frame = editorState.columnsTargetFrame else { return nil }
+            return AnyView(Text(FrameColumnsCopy.belongsTo(frame.name))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.tail))
         default:
             return nil
         }
@@ -566,8 +585,9 @@ struct InspectorPanel: View {
                 FrameInspector(layer: layer)
             }
         case .columns:
-            if let layer = selectedLayer, layer.isFrame {
-                FrameColumnsInspector(layer: layer)
+            // The screen picked, or the screen what you picked is on.
+            if let frame = editorState.columnsTargetFrame {
+                FrameColumnsInspector(layer: frame)
             }
         case .placement:
             // One layer picked or five: the same section, the same rows, each

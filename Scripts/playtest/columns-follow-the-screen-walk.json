@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/columns-follow-the-screen-walk",
+  "setup": {
+    "forget": ["grid", "shapes", "tools", "panel"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [200, 180], "to": [1000, 780] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-screen-picked", "note": "the screen itself picked: a Columns section headed plainly Columns, with nothing extra beside the title" },
+    { "do": "panel", "stage": "screen-picked" },
+    { "do": "snapshot", "name": "follow-1-screen-picked" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 300], "to": [500, 400] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-box-picked-columns-off", "note": "a box ON that screen picked, columns never switched on: the Columns section must still be there, unticked, headed with the screen's name" },
+    { "do": "panel", "stage": "box-picked-off" },
+    { "do": "snapshot", "name": "follow-2-box-picked-off" },
+
+    { "do": "menus", "stage": "layer-menu-with-box", "menu": "Layer" },
+    { "do": "describe", "stage": "3-menu-row-with-box", "note": "the Layer menu's Show Columns must be live with the box picked, which it already was: this is the half that used to work alone" },
+
+    { "do": "press", "control": "Show columns" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-switched-on-from-the-box", "note": "switched on without ever picking the screen: twelve bands on the screen and three numbers in the panel" },
+    { "do": "panel", "stage": "box-picked-on" },
+    { "do": "snapshot", "name": "follow-3-on-from-the-box" },
+
+    { "do": "focus", "field": "Columns" },
+    { "do": "type", "text": "6" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-six-typed-with-the-box-picked", "note": "six typed while the box is picked: six wider bands on the screen, the box untouched" },
+    { "do": "panel", "stage": "box-picked-six" },
+    { "do": "snapshot", "name": "follow-4-six-from-the-box" },
+
+    { "do": "click", "at": [700, 700] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-screen-picked-again", "note": "the screen picked again: the same six, and the header back to a plain Columns with no name beside it" },
+    { "do": "panel", "stage": "screen-picked-again" },
+    { "do": "snapshot", "name": "follow-5-screen-picked-again" },
+
+    { "do": "click", "at": [100, 950] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-nothing-on-a-screen", "note": "clicked the bare canvas, nowhere near a screen: no Columns section at all, and the menu row goes grey" },
+    { "do": "panel", "stage": "canvas-picked" },
+    { "do": "menus", "stage": "layer-menu-on-canvas", "menu": "Layer" },
+    { "do": "snapshot", "name": "follow-6-canvas-picked" }
+  ]
+}

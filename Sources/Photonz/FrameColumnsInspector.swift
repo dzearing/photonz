@@ -1,7 +1,9 @@
 import PhotonzCore
 import SwiftUI
 
-/// The column layout a selected screen is designed to (Next, `next-frames`).
+/// The column layout the screen you are working on is designed to (Next,
+/// `next-frames`) — the screen you picked, or the screen what you picked is
+/// on, which is the same screen Layer ▸ Show Columns acts on.
 ///
 /// A section of its own rather than three more rows inside Frame, because the
 /// app now has two things a person could call a grid and the surest way to tell
@@ -31,7 +33,8 @@ struct FrameColumnsInspector: View {
                 .toggleStyle(.checkbox)
                 .help(FrameColumnsCopy.showCaption)
                 .playtestControl(FrameColumnsCopy.show,
-                                 detail: "Columns, \(isShowing ? "shown" : "hidden")")
+                                 detail: "Columns on \(layer.name), "
+                                     + (isShowing ? "shown" : "hidden"))
 
             if let columns, isShowing {
                 // Only while they are showing: with nothing drawn on the screen
@@ -120,4 +123,9 @@ enum FrameColumnsCopy {
     }
 
     static let noRoom = "These numbers leave no room for a column on this screen, so nothing is drawn."
+
+    /// Whose columns the section is showing, for its header, when the screen
+    /// is not the thing selected: "on Home". With the screen itself picked the
+    /// header says nothing extra, because the panel is already about it.
+    static func belongsTo(_ screen: String) -> String { "on \(screen)" }
 }

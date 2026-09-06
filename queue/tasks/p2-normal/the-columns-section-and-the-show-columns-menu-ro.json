@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:48:41.859Z",
-  "updated": "2026-09-06T12:16:42.232Z",
+  "updated": "2026-09-06T14:56:09.759Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the audit queue/audits/2026-09-05-screen-columns.json. The menu row reads EditorState.columnsTargetFrameID, which is selectedFrameID and so walks up to the containing screen; the panel section is gated on selectedLayer.isFrame in LayersPanel.availableSections. Two options worth putting to the user: show the section for the containing screen with a header that names it (like the Layout section already does with This layer on Frame), or narrow the menu row to the selected screen only. The first is more useful, the second is more honest about what a properties panel is.",
@@ -30,6 +30,27 @@
     {
       "t": "2026-09-06T12:16:42.232Z",
       "note": "seq 60 -> 60"
+    },
+    {
+      "t": "2026-09-06T14:48:53.616Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T14:56:09.759Z",
+      "note": "Adversarial review before building. Walked it as a first-time user: you draw a screen, turn its columns on, draw a button, pick the button to nudge it, and the numbers vanish while the menu row keeps working. The mismatch reads as the feature being tied to selection rather than to the screen. The two ways out were not equal: narrowing the menu row to a picked screen only would take away something that already works, including the useful move of switching columns on WHILE holding the button you are trying to line up. Showing the section for the containing screen is also the idiom the panel already has, one section below: Layout says 'This layer on Frame' for exactly this case. So the panel follows the menu, and the header names the screen. Decided rather than filed as a question because it follows an existing pattern and takes nothing away; the audit puts the question to the user anyway."
+    },
+    {
+      "t": "2026-09-06T14:56:09.759Z",
+      "note": "Built. columnsTargetFrame and isColumnsTargetSelected added in EditorState+Frames.swift; LayersPanel.availableSections now inserts .columns whenever columnsTargetFrameID is non-nil rather than only for a picked frame; sectionContent feeds FrameColumnsInspector the target frame; sectionAccessory(.columns) puts 'on <screen name>' beside the title, but only when the screen is not the picked thing. FrameColumnsCopy.belongsTo holds the wording. The Show columns checkbox names its screen in its playtest detail so a walk can prove the target in text."
+    },
+    {
+      "t": "2026-09-06T14:56:09.759Z",
+      "note": "Verified on the probe with Scripts/playtest/columns-follow-the-screen-walk.json, Screen Recording granted so the pictures are real captures. Box picked, columns off: Columns section present, header reads Columns / on Frame, control detail 'Columns on Frame, hidden'. Ticked it from there: twelve bands drawn without ever picking the screen. Typed 6 with the box still picked: six bands, box untouched at 100,120. Screen picked again: same numbers, header back to a plain Columns with no name beside it. Bare canvas picked: no Columns section at all. Scripts/test.sh green, 3867 tests."
+    },
+    {
+      "t": "2026-09-06T14:56:09.759Z",
+      "note": "Second review, on the built thing. It reads well directly above Layout, which says 'This layer on Frame' for the same screen. Two things left rough and written into the audit: the default screen name is literally Frame so the first one reads 'on Frame', and a multi-selection spanning two screens speaks for the last-picked layer's screen, which the header at least now names. Audit: queue/audits/2026-09-06-columns-follow-the-screen.json."
     }
-  ]
+  ],
+  "started": "2026-09-06T14:48:53.615Z"
 }

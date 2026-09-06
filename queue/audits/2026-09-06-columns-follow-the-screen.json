@@ -1,0 +1,28 @@
+{
+  "feature": "Columns follow the screen you are working on",
+  "epic": "ui-layout",
+  "summary": "A screen's Columns numbers now stay in the panel while you have something ON that screen picked, headed with the screen's name, so switching columns on and typing their numbers works from wherever you are. Before, the Layer menu row worked with a button picked but the panel section disappeared.",
+  "setup": "Photonz Next, a document with a screen in it. The flag is Frames, on by default. Nothing changes for a document with no screens.",
+  "try": [
+    { "do": "Press F, drag out a screen, then press V to get the pointer back." },
+    { "do": "Press R, draw a box inside that screen, then press V." },
+    { "do": "Look at the panel: the Columns section is still there, with on Frame beside its title.", "shot": "2026-09-06-columns-follow-1-box-picked.png" },
+    { "do": "Tick Show columns without ever picking the screen." },
+    { "do": "Type 6 into Columns, still with the box picked.", "shot": "2026-09-06-columns-follow-2-six-typed.png" },
+    { "do": "Click the empty room inside the screen to pick the screen itself: the same numbers, and the header is a plain Columns again." },
+    { "do": "Click the bare canvas outside every screen: the Columns section is gone and Layer, Show Columns is grey." }
+  ],
+  "evaluate": [
+    "With a button picked, does a Columns section reading on Frame tell you fast enough that those numbers belong to the screen and not to the button?",
+    "Is on Frame in the header enough, or should it read the way Layout does just below it, in a line of its own inside the section?",
+    "A screen that has never been given columns still brings the section, one unticked checkbox, whenever anything on that screen is picked. Is that a useful door or one more section in the way?",
+    "The columns section now sits in the same place whether the screen or a button on it is picked. Does the panel feel steadier for that, or would you rather it stayed a screen-only thing?"
+  ],
+  "rough": [
+    "Named after the screen, and a screen's default name is Frame, so the first one you draw reads on Frame. Rename the screen and the header follows.",
+    "Pick two layers on two different screens at once and the section speaks for one of them, the screen the last-picked layer is on, with its name in the header. The Layer menu row has always behaved that way; this makes it visible rather than fixing it.",
+    "The other way was open: narrow the Layer menu row to a picked screen only. That would have taken away something that already worked, including the useful move of switching columns on to line up the button you have in hand, so the panel followed the menu instead.",
+    "A piece you have clicked into inside a component copy still gets no Columns section, like all the other sections a piece does not own.",
+    "Verified live: Screen Recording was granted, so both pictures are real captures of the probe app, not offscreen renders. Walk: Scripts/playtest/columns-follow-the-screen-walk.json."
+  ]
+}

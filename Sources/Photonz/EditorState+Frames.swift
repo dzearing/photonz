@@ -248,9 +248,27 @@ extension EditorState {
     /// selected screen, or the screen whatever is selected lives in. Selecting
     /// a button inside a screen and asking for columns is asking for that
     /// screen's columns, which is the only screen it could mean.
+    ///
+    /// The panel reads this too, so the numbers are wherever the menu row
+    /// works and never the other way round (the menu row used to work with a
+    /// button picked while the section had gone).
     var columnsTargetFrameID: UUID? {
         guard framesEnabled else { return nil }
         return selectedFrameID
+    }
+
+    /// That same screen as a layer, so the panel can say its name in the
+    /// section header when the screen is not the thing you have picked.
+    var columnsTargetFrame: Layer? {
+        columnsTargetFrameID.flatMap { document?.layer(id: $0) }
+    }
+
+    /// Whether the screen those columns belong to IS what is selected. False
+    /// with a button on the screen picked, which is when the section has to
+    /// name the screen rather than just say "Columns".
+    var isColumnsTargetSelected: Bool {
+        guard let id = columnsTargetFrameID else { return false }
+        return id == selectedLayerID
     }
 
     /// What that screen's columns are right now, or nil for a screen nobody
