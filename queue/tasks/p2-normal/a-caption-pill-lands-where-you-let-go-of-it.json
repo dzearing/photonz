@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1210,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T15:09:22.798Z",
-  "updated": "2026-09-06T04:51:57.228998Z",
+  "updated": "2026-09-06T04:52:17.109Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while fixing the tail-meets-pill geometry. AnnotationBuilder.placingCaption converts the dropped CENTRE into the stored attachment with CaptionPlanner.attachment(forPillCenter:of:size:) passing a.estimatedCaptionSize, but the rasterizer hangs the MEASURED pill (CaptionMetrics.pillSize) off that attachment. For \"ok\" the estimate is 63pt wide and the measurement 44, so the pill lands (63-44)/2 = 9.5pt back toward the tail. The same guess drives CaptionPlanner.keepingOnCanvas and plan(). The fix is to let the app pass the measured size in, since only PhotonzRender can measure type: give placingCaption and planningCaption an optional pill size and thread CaptionMetrics.pillSize from EditorState (call sites around EditorState.swift 1241, 1281, 1308, 1325, 1350, 6292, 6616, 6667). Layer.drawnBounds already takes the measured pill this way.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-06T04:51:57.228998Z",
       "note": "Adversarial review of the built thing: a label now allowed to touch the edge has its shadow and the outer half of its border clipped by the picture boundary, which is what dragging it there asks for but is worth a decision (raised in the audit's evaluate list). The grab box is now tight to the label plus the usual 6pt, which is honest but less forgiving than the accidental margin it had. Selection hit-testing still uses the estimate, filed as 'Clicking blank canvas next to a label does not select its arrow'."
+    },
+    {
+      "t": "2026-09-06T04:52:17.109Z",
+      "note": "A dropped arrow label now lands exactly under the hand, tucks flush against the edge of the picture (a sentence used to stop 157pt short), and is grabbed by the label rather than by 163pt of blank canvas beside it. Measured pill threaded through placingCaption/planningCaption/keepingOnCanvas/CanvasGrab; verified on the probe with Scripts/playtest/caption-drop-lands-walk.json (pill (500, 700) exact, edge drops on 1440) plus 11 new tests, 3622 green. Audit: queue/audits/2026-09-05-caption-drop-lands.json."
     }
   ],
-  "started": "2026-09-06T04:36:58.035Z"
+  "started": "2026-09-06T04:36:58.035Z",
+  "completed": "2026-09-06T04:52:17.109Z"
 }
