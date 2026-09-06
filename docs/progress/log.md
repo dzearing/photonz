@@ -9543,3 +9543,27 @@ of the panel wells.
 Next: those two follow-ups. The one thing a scripted walk cannot do is START a
 real drag session, so the picking-up half is what the audit asks the user to
 watch first.
+
+## 2026-09-06 — a shape is made of parts (model + decision)
+
+Task `one-way-to-add-colour-and-remove-any-part-of-a-s`. Reproduced first on the
+probe: a rectangle's outline still cannot be removed (no tick on the Outline
+row, `strokeWidthRange` floors at 1pt). The task's other half was stale — "One
+width for the line round a shape" (2026-09-03) already took the Border row away
+from any layer that draws its own outline, so a shape no longer carries two
+edges; Border now only reaches pictures, frames, labels, groups and callouts.
+
+Wrote the model down before any code: `docs/design/shape-parts.md`. A **part** is
+something a layer paints that can be absent (one switch, one colour, its own
+settings while on); a **property** is something it always has and has no switch.
+Fill, outline and shadow are parts; opacity, blur, corner radius, head size are
+properties. Thickness becomes Width inside the Outline part, Corner Radius
+leaves Effects for the shape's own section, Border becomes Outline everywhere.
+
+Opened the decision the task asks for, with the panel drawn four ways at the
+real panel width (`Scripts/make-parts-mock.swift` renders the strips; brief and
+PNGs under `queue/decisions/`). Recommended B, settings always showing.
+
+Task is blocked on that answer. No app code touched; suite green at 3862 tests.
+Next: build the chosen layout, starting with a real absent state for the stroke
+in PhotonzCore (TDD), then the parts list in Next, then the audit.
