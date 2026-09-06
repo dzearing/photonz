@@ -455,3 +455,58 @@ extension View {
                                  side: below ? .bottom : .top))
     }
 }
+
+/// A row of pictures drawn as ONE segmented picker, with a tooltip on each
+/// picture instead of one shared by the row.
+///
+/// A segmented picker takes a single tooltip for the whole control, so a row
+/// of five little pictures answered every one of them with the same sentence:
+/// resting on the hollow dot read out the SOLID head's description, which is
+/// worse than saying nothing. The row itself has no idea which segment the
+/// pointer is over.
+///
+/// The way in is the same invisible tracking view every other tooltip uses,
+/// laid over the row once per segment. Segments carrying pictures of one size
+/// share the row evenly, which is what an even row of anchors is. The anchors
+/// take no clicks (`HintAnchorView.hitTest` returns nil, and the overlay is out
+/// of SwiftUI's hit testing too), and an overlay is measured by what it covers,
+/// so the row keeps exactly the size and spacing it had.
+///
+/// With `next-tool-tips` off — so always in Current — this is the row's own
+/// system help tag, reading `fallback`, exactly as before.
+private struct SegmentToolTips: ViewModifier {
+    /// One per segment, in the order the segments are built in.
+    let labels: [String]
+    /// What the whole row says when the designed tooltip is off.
+    let fallback: String
+    let side: HintTooltipController.Side
+
+    func body(content: Content) -> some View {
+        if Experiments.shared.toolTipsEnabled, labels.count > 1 {
+            content.overlay {
+                HStack(spacing: 0) {
+                    ForEach(Array(labels.enumerated()), id: \.offset) { segment in
+                        HintAnchor(label: segment.element, key: nil, side: side)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                }
+                .allowsHitTesting(false)
+            }
+        } else {
+            content.help(fallback)
+        }
+    }
+}
+
+extension View {
+    /// Names each picture in a segmented row of pictures, one tooltip per
+    /// segment. `labels` must be in the same order the segments are built in,
+    /// which is why every caller builds both from one `allCases`. `fallback`
+    /// is the row's system help tag for Current, where the designed tooltip
+    /// does not exist.
+    func segmentToolTips(_ labels: [String], fallback: String,
+                         below: Bool = false) -> some View {
+        modifier(SegmentToolTips(labels: labels, fallback: fallback,
+                                 side: below ? .bottom : .top))
+    }
+}

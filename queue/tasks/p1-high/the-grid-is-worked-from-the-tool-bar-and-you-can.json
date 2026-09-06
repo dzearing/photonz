@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T19:50:37.081Z",
-  "updated": "2026-09-06T20:03:34.583977Z",
+  "updated": "2026-09-06T20:33:09.132Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Confirmed by the user on 2026-09-06: guides are document specific, not an app preference. That settles the storage question and raises the obvious companion, which the runner should carry out rather than re-ask: the grid's ORIGIN has exactly the same argument, since a zero point aligned to the content of one screenshot is meaningless in another, so move it into the document alongside the guides. Keep the rest in CanvasGridStore as a view preference: whether the grid is shown, whether it snaps, the spacing, the smallest cell and how often a line is bold are about how you like to work, not about a particular picture, and a person switching between documents should not have the grid keep vanishing. Migration matters: an origin already saved app wide must not be silently applied to every document a person opens afterwards, so decide what an existing stored origin becomes and say so in the audit. Asked for by the user on 2026-09-06, reworking what shipped as you-can-say-where-the-grid-starts-and-how-fine-i (audit queue/audits/2026-09-05-grid-origin.json, commit fa64398). What exists to build on: the mode itself, entered only from EditorCommands.swift line 601 Set Grid Origin, which replaces the tool bar with a Cancel and Done bar carrying the smallest cell control, moves two accent lines by press or arrow keys, and returns on Return or Escape. What is new here: the tool bar readout and slider outside the mode, a tool bar way in, and locked guides, which do not exist at all today (nothing in CanvasGrid.swift mentions a guide). Guides are a new persisted thing and the first grid state that belongs to the DOCUMENT rather than the app: the grid settings live in CanvasGridStore app wide, but a guide marking a margin in one picture is meaningless in another, so put guides in the document model, Codable, and say so in the audit. They also need to join the one snapping path rather than adding a second: see snapping-pulls-to-the-grid-you-can-see-not-one-y and a-snap-that-is-showing-is-a-snap-you-get-with-no, and make the guide highlight the same one those tasks use. Yellow is already the colour of the edge snapping guide on the canvas (systemYellow in CanvasView), so a pinned guide in the same yellow reads consistently but must be told apart from a transient snap guide; say how in the audit.",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-06T20:03:34.583977Z",
       "note": "(7) Undo: the whole Adjust Grid session commits as ONE document edit, so Clear Guides is one undo step and Escape puts everything back without touching history at all."
+    },
+    {
+      "t": "2026-09-06T20:33:09.132Z",
+      "note": "The tool bar carries the grid: the cell readout, a slider that stops on real UI sizes and redraws the lines live, and an Adjust Grid button. In the mode the nearest grid line lights yellow and a click pins a guide; a pinned guide stays with the grid off, catches drags and resizes through the one snapping path, moves by dragging, goes with backspace, and Clear Guides takes them all in one undo step. Guides and the grid's zero point now live on PhotonzDocument (an app-wide origin from an earlier build is dropped, not re-applied); the rest stays a preference. Smallest cell and Starts at came out of the settings popover. 4064 tests green; verified in the probe with Scripts/playtest/grid-guides-walk.json plus a save/close/reopen walk. Audit queue/audits/2026-09-06-grid-guides.json, commit 22553d4. Follow-up filed: arrows-lines-and-measurements-catch-pinned-guide."
     }
   ],
-  "started": "2026-09-06T19:59:32.045Z"
+  "started": "2026-09-06T19:59:32.045Z",
+  "completed": "2026-09-06T20:33:09.132Z"
 }

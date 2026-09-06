@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1430,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T16:15:10.084Z",
-  "updated": "2026-09-06T16:15:10.085Z",
+  "updated": "2026-09-06T20:51:39.400786Z",
   "deps": [],
   "blockedBy": [],
   "notes": "A SwiftUI Picker(.segmented) takes a single .help for the whole control; a per-segment tooltip needs the underlying NSSegmentedControl (setToolTip(_:forSegment:)) reached through an NSViewRepresentable or a view-tree walk. See Sources/Photonz/ArrowheadStylePicker.swift and the alignment rows in LayersPanel.swift. Raised by the 2026-09-06 arrow endings audit.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-06T16:15:10.085Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T20:34:00.530Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T20:38:54.720828Z",
+      "note": "Adversarial review before building. (1) The bug is worse than 'missing': hovering the hollow dot today reads out the SOLID head's sentence, so the row actively lies. Worth doing. (2) The note's plan (reach the NSSegmentedControl and call setToolTip(_:forSegment:)) is the wrong way in for this app: Next does not use the system help tag at all. It has its own designed tooltip (HintTooltip.swift, flag next-tool-tips, on by default in Next) that every tool bar button already wears. A per-segment system tag would put a yellow box in a panel where every other tooltip is a dark plate with a beak, and would fight the row's own .help. (3) Shortest version that delivers the value: the designed tooltip's anchor is an invisible tracking view laid behind a control. A row of N equal segments takes a row of N anchors laid over it, one per picture. No AppKit view-tree walking, no size or spacing change (an overlay cannot change layout), and the pictures keep the accessibility names walks already press them by. (4) Copy: the designed tooltip is one line and never resizes, so each segment says its NAME (Solid head, Hollow dot, Left, Middle) rather than the paragraph the row used to share. The name is the thing that was missing under a picture. (5) Only three picture rows exist in the whole app: the arrow Ending row and the two text alignment rows. Every other segmented picker carries words, so it already names itself. (6) One thing the row .help said that the names do not: what a mixed selection means. Kept, by giving the Mixed word itself a tooltip."
+    },
+    {
+      "t": "2026-09-06T20:51:39.400786Z",
+      "note": "Built. New `segmentToolTips(_:fallback:)` in HintTooltip.swift lays one invisible tooltip anchor over each segment of a picture row, so the row keeps its exact size and spacing (an overlay is measured by what it covers) and takes no clicks. Applied to the arrow Ending row (ArrowheadStylePicker) and both text alignment rows (LayersPanel.alignRow), each building its pictures AND its names from one `allCases` so a name cannot land under the wrong picture. With next-tool-tips off, so always in Current, each row keeps exactly the .help it had. PlaytestPanelPress now reports, for every segment, what resting at its own middle would show, which is how the mapping is checked rather than assumed."
+    },
+    {
+      "t": "2026-09-06T20:51:39.400786Z",
+      "note": "Verified on the probe (Screen Recording granted, so the pictures are real captures). Scripts/playtest/segment-tooltips-walk.json, status ok: the panel listing reports Solid head, Open head, Solid dot, Hollow dot and Plain line each naming itself at its own centre, and Left, Center, Right likewise, including with two layers picked and no segment lit. Resting shows the designed plate over the picture it names (2026-09-06-picture-rows-1.png, -2.png). Scripts/test.sh green, 4064 tests. mixed-one-look, panel-press and placement walks still ok. arrow-endings-walk fails at step 34, and failed identically with these changes stashed, so it is pre-existing: filed."
+    },
+    {
+      "t": "2026-09-06T20:51:39.400786Z",
+      "note": "Adversarial review of the built thing. Cut one piece: the word Mixed had been given a tooltip to keep the sentence the shared row tooltip used to carry, and seeing it running, the section already prints that sentence permanently under the row. Removed. Kept and recorded as rough: the tooltip sits above the row and covers the Caption field while up (standard placement for every tooltip in the app), and the Down row's three pictures still have no accessibility name, which is a separate gap from tooltips and is filed as its own task."
     }
-  ]
+  ],
+  "started": "2026-09-06T20:34:00.529Z"
 }

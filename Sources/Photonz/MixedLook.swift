@@ -55,5 +55,13 @@ struct MixedWord: View {
         Text(MixedValue.text)
             .font(.caption)
             .foregroundStyle(MixedLook.style)
+        // No tooltip on the word. The row's old shared tooltip said what
+        // picking one would do to the rest, and giving that sentence to the
+        // word looked like the way to keep it when each picture took the
+        // tooltip over. Built and looked at, it was already on screen: every
+        // section speaking for several layers prints "A change here changes
+        // every one of them, in one step" under its own controls, in words
+        // that stay put. A label that repeats what is written an inch below it
+        // is one more thing to read, not one more thing to know.
     }
 }

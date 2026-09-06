@@ -66,13 +66,20 @@ enum PlaytestPanelPress {
             let box = control.convert(control.bounds, to: nil)
             let chosen = control.selectedSegment
             let row = field(at: box, among: fields)
+            let anchors = hintAnchors(in: content)
             return (0..<control.segmentCount).compactMap { index in
                 guard let label = name(ofSegment: index, in: control) else { return nil }
+                let point = CGPoint(x: centre(ofSegment: index, in: control, box: box), y: box.midY)
                 var detail = row ?? "a picker"
                 if index == chosen { detail += ", already on \(label)" }
+                // What resting HERE would say. A row of pictures gets one
+                // tooltip per picture, and the only way to know a name landed
+                // on the picture it belongs to is to read it back at that
+                // picture's own middle.
+                detail += ", tooltip \(tip(at: point, among: anchors).map { "\"\($0)\"" } ?? "none")"
                 return PlaytestPressTarget(
                     name: label, detail: detail,
-                    point: CGPoint(x: centre(ofSegment: index, in: control, box: box), y: box.midY),
+                    point: point,
                     box: box,
                     isEnabled: control.isEnabled && control.isEnabled(forSegment: index),
                     window: control.window)
@@ -105,6 +112,30 @@ enum PlaytestPanelPress {
             .filter { $0.1.contains(box) }
             .min { $0.1.width * $0.1.height < $1.1.width * $1.1.height }?
             .0.name
+    }
+
+    /// Every tooltip anchor in the window: the invisible tracking views the
+    /// designed tooltip watches the pointer with.
+    @MainActor static func hintAnchors(in content: NSView) -> [HintAnchorView] {
+        var found: [HintAnchorView] = []
+        func walk(_ view: NSView) {
+            if let anchor = view as? HintAnchorView,
+               !view.isHiddenOrHasHiddenAncestor { found.append(anchor) }
+            for sub in view.subviews { walk(sub) }
+        }
+        walk(content)
+        return found
+    }
+
+    /// The tooltip a pointer resting on this point would show: the SMALLEST
+    /// anchor covering it, so one picture's own anchor wins over an anchor
+    /// laid across the whole row it sits in.
+    @MainActor static func tip(at point: CGPoint, among anchors: [HintAnchorView]) -> String? {
+        anchors
+            .map { ($0, $0.convert($0.bounds, to: nil)) }
+            .filter { $0.1.contains(point) }
+            .min { $0.1.width * $0.1.height < $1.1.width * $1.1.height }?
+            .0.label
     }
 
     /// Every segmented picker in the window.

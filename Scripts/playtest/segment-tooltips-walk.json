@@ -1,0 +1,66 @@
+{
+  "out": "/tmp/photonz-playtest/segment-tooltips",
+  "seed": "Three rows in the dock offer a choice as small pictures rather than words: the arrow's Ending row and the two text alignment rows. Each of them used to share ONE tooltip for the whole row, so resting on the hollow dot read out whichever ending was already picked. This walk types a label and draws an arrow, then reads every picture in all three rows back at its own middle (the panel listing now says what resting on each segment would show) and rests on three of them for a picture of the label itself. It ends with two labels that differ, because a mixed row lights no segment at all and the names have to hold up with nothing picked.",
+  "setup": {
+    "forget": [
+      "text",
+      "shapes",
+      "tools"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1360, "height": 1180 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "panel", "stage": "text-picked" },
+    { "do": "describe", "stage": "1-alignment-rows", "note": "the two alignment rows: every picture in Across and Down must report its own name, not the row's" },
+
+    { "do": "hover", "label": "Center" },
+    { "do": "snapshot", "name": "1-across-center" },
+    { "do": "hover", "label": "Bottom" },
+    { "do": "snapshot", "name": "2-down-bottom" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [200, 420], "to": [520, 420], "steps": 8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "panel", "stage": "arrow-picked" },
+    { "do": "describe", "stage": "2-ending-row", "note": "the five endings: resting on each one must name that ending" },
+
+    { "do": "hover", "label": "Hollow dot" },
+    { "do": "snapshot", "name": "3-hollow-dot" },
+    { "do": "hover", "label": "Plain line" },
+    { "do": "snapshot", "name": "4-plain-line" },
+
+    { "do": "hover", "at": [450, 250] },
+    { "do": "describe", "stage": "3-left", "note": "resting out on the picture: nothing showing" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 300] },
+    { "do": "type", "text": "Use your account" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "align center", "in": "Across" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [180, 145] },
+    { "do": "click", "at": [200, 312], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "panel", "stage": "two-picked" },
+    { "do": "describe", "stage": "4-mixed", "note": "two labels sitting their words differently: with no segment lit, every picture must still report its own name" },
+    { "do": "snapshot", "name": "5-mixed" }
+  ]
+}

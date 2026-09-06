@@ -1,0 +1,46 @@
+{
+  "feature": "Each picture in a row of pictures says its own name",
+  "epic": "measure-redline",
+  "summary": "Resting on one of the small pictures in the arrow Ending row, or in the text Across and Down rows, now names that picture. Before, the whole row shared one tooltip, so resting on the hollow dot described whichever ending was already picked.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: it rides the tooltip flag that is already on by default in Next.",
+  "try": [
+    {
+      "do": "Draw an arrow on any picture, then press Escape so the arrow is picked."
+    },
+    {
+      "do": "Rest the pointer on the fourth picture in the Ending row, the hollow circle.",
+      "shot": "2026-09-06-picture-rows-1.png"
+    },
+    {
+      "do": "Slide along to the fifth, the plain dash, without leaving the row."
+    },
+    {
+      "do": "Type some text with the Text tool, press Command Return, then click it with the Select tool."
+    },
+    {
+      "do": "Rest on the middle picture of the Across row.",
+      "shot": "2026-09-06-picture-rows-2.png"
+    },
+    {
+      "do": "Rest on the last picture of the Down row."
+    },
+    {
+      "do": "Pick two pieces of text that sit their words differently, so the Across row lights nothing, and rest on its middle picture."
+    }
+  ],
+  "evaluate": [
+    "Does the name that appears tell you what you wanted to know, or were you hoping for a sentence about what the ending is for?",
+    "Sliding along the five endings, do the names keep up with the pointer, or does one lag behind the picture you are on?",
+    "The label sits above the row and covers the Caption field while it is up. Is that in the way?",
+    "The row's caption already prints the picked ending's name. Does the tooltip saying a different name at the same time read clearly, or does it confuse which one is on?",
+    "With two layers picked and no picture lit, does the name still help you choose, or do you want the row to say something about the two first?"
+  ],
+  "rough": [
+    "Only names, no descriptions. The app's tooltip is one line and never wraps, so the old sentences (\"A hollow dot, so what it marks shows through\") would have made a plate wider than the dock. The name is the thing a picture cannot say for itself; the sentence was the thing the row got wrong anyway.",
+    "The task's own note proposed reaching the AppKit control and setting a tooltip per segment. That would have put a yellow system help tag in a panel where every other tooltip is the app's dark plate with a beak. Built with the app's own tooltip instead, one invisible anchor laid over each picture.",
+    "Verified with a scripted walk on the probe build, and the screenshots here are real screen captures, not offscreen renders. What a walk cannot do is move the real pointer: the probe's window is offscreen, so its hovers are delivered by hand, exactly as they are for every tool bar tooltip the app already ships. What the walk does prove exactly is placement: it reads back, at the dead centre of each picture, which name would show, and all five endings and all three Across pictures answer with their own.",
+    "The three pictures in the Down row still have no name for a screen reader or for a walk, because the system symbols they use carry no description. Their tooltips work; their names do not. Filed as its own task.",
+    "Scripts/playtest/arrow-endings-walk.json fails halfway through, and did so before this change too (checked by stashing and re-running). Filed separately.",
+    "One thing built and then taken back out: the word Mixed beside these rows was given a tooltip saying \"These differ. Picking one sets them all\", to keep the sentence the row's old shared tooltip carried. Looking at it running, the section already prints \"A change here changes every one of them, in one step\" in permanent words an inch below the row. A label that repeats what is written just below it is one more thing to read, not one more thing to know, so the word Mixed is left as it was."
+  ]
+}

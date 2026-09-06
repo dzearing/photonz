@@ -79,13 +79,20 @@ struct ArrowheadStylePicker: View {
         .pickerStyle(.segmented)
         .labelsHidden()
         .controlSize(.small)
+        // Each ending names itself. Before this the whole row shared one
+        // tooltip, so resting on the hollow dot described whichever ending
+        // happened to be picked. Built from the same `allCases` the segments
+        // are, so the names can never fall out of step with the pictures. It
+        // goes on before the row is claimed below, so the anchors cover the
+        // pictures rather than the empty half of the row.
+        .segmentToolTips(ArrowheadStyle.allCases.map(\.title),
+                         fallback: isMixed
+                         ? "The picked arrows end differently. Choosing one ending sets all of them."
+                         : (selection ?? .standard).help)
         // Five glyphs cannot fill a panel row the way a slider does, so the
         // row is claimed and the pictures sit at its leading edge — lined up
         // with the sliders above and below rather than floating in the middle
         // of them.
         .frame(maxWidth: .infinity, alignment: .leading)
-        .help(isMixed
-              ? "The picked arrows end differently. Choosing one ending sets all of them."
-              : (selection ?? .standard).help)
     }
 }

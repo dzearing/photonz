@@ -1,0 +1,26 @@
+{
+  "id": "the-arrow-endings-walk-gets-a-thickness-slider-b",
+  "title": "The arrow endings walk gets a Thickness slider back",
+  "goal": "One of the scripted walks that photographs the five arrow endings stops halfway through with an empty panel, so nobody can regenerate the pictures that audit uses. Make the walk run to the end again.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1490,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T20:46:26.904Z",
+  "updated": "2026-09-06T20:46:26.905Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Fails at step 34: press Slider in Thickness reports \"the ones that are: none\", so the panel had no controls at all, meaning nothing was selected at that point. Confirmed pre-existing on 2026-09-06 by stashing that day's changes and re-running: identical failure at the same step. Likely the arrow drag from [30,250] to [190,250] misses or the preceding escape drops the selection.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/arrow-endings-walk.json finishes with status ok",
+    "The walk still produces the thin row, thick row and caption corner pictures it produced before"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T20:46:26.905Z",
+      "note": "created (manual)"
+    }
+  ]
+}

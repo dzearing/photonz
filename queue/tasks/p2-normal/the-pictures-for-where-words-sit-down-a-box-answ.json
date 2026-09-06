@@ -1,0 +1,27 @@
+{
+  "id": "the-pictures-for-where-words-sit-down-a-box-answ",
+  "title": "The pictures for where words sit down a box answer to a name",
+  "goal": "The three little pictures that set whether text sits at the top, middle or bottom of its box have no name at all: a screen reader announces nothing for them, and an automated walk cannot press them. The three beside them, for left, center and right, do have names. Give the down row the same.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1500,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T20:46:35.045Z",
+  "updated": "2026-09-06T20:46:35.045Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "A plain Image(systemName:) hands the segment whatever the system calls the symbol, and align.vertical.top/center/bottom carry no description at all, so PlaytestPanelPress.name(ofSegment:) returns nil and the segment is skipped. ArrowheadStyle.glyph shows the fix: build the Image through NSImage(systemSymbolName:accessibilityDescription:) and set accessibilityDescription. Doing the same to the Across row would rename its press targets from \"align center\" to \"Center\", which mixed-one-look-walk.json and any other walk pressing them would have to be updated for. Found on 2026-09-06 while giving each picture its own tooltip.",
+  "acceptance": [
+    "A panel listing names all three pictures in the Down row, the way it already names the three in Across",
+    "A scripted walk can press one of them by name",
+    "The pictures themselves do not change"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T20:46:35.045Z",
+      "note": "created (manual)"
+    }
+  ]
+}
