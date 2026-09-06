@@ -163,17 +163,19 @@ struct DropIntoOpenGroupTests {
         #expect(placed.flatMap { history.current.parentID(of: $0) } == barID)
     }
 
-    /// The point of joining the bar: the row takes over. The badge lines up
-    /// after the back label at the row's own gap, with nothing typed.
-    @Test("The row lines the new piece up beside the back label, no numbers typed")
+    /// The point of joining the bar: the row takes over. Let go on the far
+    /// half of the bar, the badge lines up after the title at the row's own
+    /// gap and against the bar's far edge, with nothing typed.
+    @Test("The row lines the new piece up at the end it was let go on, no numbers typed")
     func theRowLinesTheNewPieceUp() {
         var (history, barID) = withBar()
         let point = overTheBar(history.current, barID)
         history.perform { _ = $0.insertStarterComponent(.badge, at: point, inside: barID) }
         guard let bar = history.current.layer(id: barID),
-              let back = piece(bar, "Back"), let badge = piece(bar, "Badge")
+              let title = piece(bar, "Title"), let badge = piece(bar, "Badge")
         else { Issue.record("the badge did not join the bar"); return }
-        #expect(badge.frame.minX == back.contentBounds.maxX + 12)
+        #expect(badge.contentBounds.minX == title.contentBounds.maxX + 12)
+        #expect(badge.contentBounds.maxX == bar.localBounds.width - 14)
     }
 
     /// Acceptance, the other way round: bare canvas is untouched.

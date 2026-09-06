@@ -1,0 +1,27 @@
+{
+  "id": "a-long-bar-title-wraps-out-of-the-bottom-of-its",
+  "title": "A long bar title wraps out of the bottom of its bar",
+  "goal": "Type a long title into the starter Nav Bar and the words wrap onto a second line that hangs below the bar, through its bottom hairline. A bar title should stay on one line and give way some other way when it does not fit.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1470,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T19:18:35.998Z",
+  "updated": "2026-09-06T19:18:35.998Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on 2026-09-06 while landing a-control-added-to-a-bar-does-not-vanish-behind. The title is now an in-flow Fill item, so GroupFlow.wrapRooms treats it like any other row label and wraps it to the room left over (Title box goes 248x36 in a 48-tall bar). Before that change it was Stretch and overhung sideways instead. Probably wants a per-layer no-wrap answer, or a rule that a row whose height is a typed number never wraps a label past that height. See docs/design/ui-building.md, \"A field and a bar keep their width on purpose\".",
+  "acceptance": [
+    "A title too long for the room left in the bar stays on one line",
+    "Nothing the bar draws hangs below the bar itself",
+    "A short title is unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T19:18:35.998Z",
+      "note": "created (manual)"
+    }
+  ]
+}

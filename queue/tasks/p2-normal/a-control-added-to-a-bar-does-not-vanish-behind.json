@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1370,
-  "status": "blocked",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:40:40.427Z",
-  "updated": "2026-09-06T17:23:55.138Z",
+  "updated": "2026-09-06T19:05:32.796Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-06 in queue/audits/2026-09-06-drop-into-open-group.json: after a Badge and a Button joined the bar, the word Title was drawn under the Button and could not be seen. The bar packs its row from the left while the Title stretches the whole bar and centres in it, so the two eventually collide. queue/audits/2026-09-05-nav-bar-row.json already asked whether the title should centre on the whole bar or sit beside the back label - that judgment decides this.",
@@ -46,7 +46,35 @@
     {
       "t": "2026-09-06T17:23:55.137Z",
       "note": "Reproduced the collision in the model (Button 93..172 sits on the title's words at ~145..175) and prototyped the cheap fix, but which way it is fixed is a look change to the starter bar: title takes the room left over, or the bar keeps its middle and controls park at its two ends. Decision + brief filed."
+    },
+    {
+      "t": "2026-09-06T19:05:11.707Z",
+      "note": "decision \"Add two controls to the starter Nav Bar and its title disappears behind one of them. Where should a bar's title sit once the bar has controls on it?\" resolved: The title takes the room that is left"
+    },
+    {
+      "t": "2026-09-06T19:05:32.796Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T19:20:00.000Z",
+      "note": "The decision came back as A, the title takes the room that is left, so this run built it rather than re-asking. Tests first: GroupChromeTests grew a test that drops a Badge and a Button into the bar through the real insert path and asserts nothing overlaps the title, plus one for the mitigation (hide the back label and the title is dead centre again)."
+    },
+    {
+      "t": "2026-09-06T19:20:00.000Z",
+      "note": "Implementation is small: in StarterComponents.navBar the Title stops being Stretch-across (out of the flow, spanning the bar) and becomes an ordinary row item with flowFill set, drawn after the Back label so the row reads left to right. Its own placement is now nil, so it inherits Middle down from the bar and the Layout section lists it as \"Takes the room left over\"."
+    },
+    {
+      "t": "2026-09-06T19:20:00.000Z",
+      "note": "Fallout, all of it honest and updated rather than papered over: StarterSizingTests (a longer title re-centres in its room, not on the bar), StarterComponentRenderTests (the ink centres on the title's box, not the image), RowDropSlotTests (Title now appears in the row order, and holding room open for a drop takes the room out of the title instead of shoving the badges along), DropIntoOpenGroupTests (a tile let go on the far half lines up at the far end). Full suite: 4001 tests green."
+    },
+    {
+      "t": "2026-09-06T19:20:00.000Z",
+      "note": "Verified on the built app, not just in the model. Screen Recording was granted, so Scripts/playtest/title-keeps-its-room-walk.json drove the probe and the real window captures show Back, Title, Button, Badge all readable after the exact drops that used to bury the word Title, and a control let go beside Back joining the leading end. Audit: queue/audits/2026-09-06-nav-bar-title.json."
+    },
+    {
+      "t": "2026-09-06T19:20:00.000Z",
+      "note": "Adversarial review of the built thing. Two roughs recorded in the audit. The accepted one: on a bar with only a back label the title sits about 24 points right of the middle. The new one: a title too long for the room left now wraps to a second line and hangs below the bar's hairline, where before it overhung sideways. Filed as a-long-bar-title-wraps-out-of-the-bottom-of-its rather than widened into this task."
     }
   ],
-  "started": "2026-09-06T17:16:54.821Z"
+  "started": "2026-09-06T19:05:32.796Z"
 }

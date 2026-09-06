@@ -1,0 +1,27 @@
+{
+  "feature": "A bar's title keeps its own room",
+  "epic": "ui-layout",
+  "summary": "Add controls to the starter Nav Bar and its title no longer disappears behind one of them. The title is part of the row now and takes whatever room is left over, so where you let go decides whether a control joins the bar's leading end or its trailing end.",
+  "setup": "Photonz Dev, Experiments window, release Next, with \"Components in the Library from the start\" on. Open a blank document and show the Library's Components shelf.",
+  "try": [
+    { "do": "Drag the Nav Bar tile onto the canvas.", "shot": "2026-09-06-nav-bar-title-1-bar.png" },
+    { "do": "Double click the back label to step inside the bar." },
+    { "do": "Drag the Badge tile onto the right-hand half of the bar." },
+    { "do": "Drag the Button tile onto the right-hand half of the bar.", "shot": "2026-09-06-nav-bar-title-4-button.png" },
+    { "do": "Drag another Badge onto the bar just to the right of the word Back.", "shot": "2026-09-06-nav-bar-title-5-leading.png" },
+    { "do": "Select the title and read the Layout section: it says \"Takes the room left over\"." },
+    { "do": "Select the back label and press the eye to hide it, and watch the title centre on the whole bar." }
+  ],
+  "evaluate": [
+    "On a bar carrying only a back label, does the title sitting about 24 points right of the bar's exact middle bother you?",
+    "When you let go on the right-hand half, is it obvious the control joined the far end rather than the near one?",
+    "Is it clear enough that the title is squeezing to make room, or does it read as the title drifting?",
+    "Does a bar with a control at each end read as a nav bar to you, or does it still need real end groups?"
+  ],
+  "rough": [
+    "The title no longer sits on the bar's exact middle when the bar carries a back label and nothing else. That is the price of the option chosen on 2026-09-06; hiding the back label puts it back dead centre.",
+    "A title too long for the room left over now wraps to a second line and hangs about 3 points below the bar's hairline, where before it stayed on one line and overhung sideways. Neither is right and a follow-up task is filed for it.",
+    "Screen Recording was granted, so the pictures above are real window captures, not offscreen renders.",
+    "Dropped a Button slightly to the right of a Badge and it still landed to the Badge's left. That is the existing rule about which gap a drop falls into, not new here, but it is the thing that felt clumsiest while playing with it."
+  ]
+}

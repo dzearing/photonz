@@ -2414,9 +2414,9 @@ live for whatever is selected, which is where a person actually reads it.
 
 **A field and a bar keep their width on purpose.** A field 74 points wide
 because "Name" is short is not a place to type, and a bar is as wide as the
-screen it sits on, never as wide as its title. So the width is a number, the
-wording wraps inside it, and a nav bar title too long for its bar stays centred
-and overhangs — which is what a person building that screen needs to see.
+screen it sits on, never as wide as its title. So the width is a number and the
+wording wraps inside it. A nav bar title too long for the room the row leaves it
+wraps in that room rather than running out past the controls beside it.
 
 **The card is the one that ARRANGES.** It is a column stack, not a box that
 closes around what is in it, and that is the whole reason it works: a title
@@ -2520,17 +2520,30 @@ name.
 **The starter Nav Bar is a row now.** Drop it, drag it wider, and it arranges
 itself with nothing typed into the Layout section: the back label holds the
 room at the left edge, the hairline spans the new width and stays a hairline,
-the surface fills it, and the title stays in the middle of the whole bar rather
-than in the room the back label leaves — a title is centred on the bar it is on,
-which is what the render test has always asked of it. Three of its four pieces
-are not things the row lines up at all, and its Layout section says so: Stack,
-Row, and three pieces listed with a rule of their own. What is left in the row
-is the leading end of the bar, so a second control dropped beside the back label
-lines up with no numbers typed.
+the surface fills it, and the title takes whatever room the row has left over
+and centres its words in that. Two of its four pieces are not things the row
+lines up at all, and its Layout section says so: Stack, Row, and three pieces
+listed with a rule of their own — the surface, the hairline, and the title,
+which says "Takes the room left over".
 
-**The title is drawn UNDER the controls.** Its box is the whole bar, so on top
-it would answer for every click meant for the back label — driving the built bar
-on 2026-09-05 is how that was found, not reading the diff.
+**The title takes the room left over, and that is what stops it disappearing.**
+It used to lie across the whole bar and centre on it, drawn underneath the
+controls so the back label kept its own clicks. That is fine on a bar with one
+control and broken on a bar with three: the row packs from the left, so the
+third control reaches the middle and stands on the word Title with nothing on
+screen saying where it went (found on 2026-09-06, after a Badge and a Button
+joined the bar). Putting the title IN the row fixes it by construction, because
+the row hands it what is left AFTER everything else has taken its width. It also
+gives the bar two ends for nothing: let go before the title and a control joins
+the leading end, let go past it and the row pushes it out to the far edge.
+
+The price, and the user chose to pay it on 2026-09-06: on a bar carrying a back
+label and nothing else the title's words sit about 24 points right of the bar's
+exact middle, where a real nav bar's title would be dead centre. Turn the back
+label off and the title is the whole row again, centred on the bar. The other
+way out — holding the middle for good and grouping the controls into a leading
+and a trailing end — is a bigger build and puts two groups inside the bar where
+there is now a flat row of pieces.
 
 **Centred words line up in the width they were measured against.** A text box
 carries a couple of points on each side for the antialiased glyph edges to round

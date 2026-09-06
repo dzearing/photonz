@@ -175,29 +175,33 @@ struct StarterSizingTests {
 
     // MARK: - The nav bar
 
-    @Test("A longer nav bar title stays centred and does not widen the bar")
+    @Test("A longer nav bar title stays in its own room and does not widen the bar")
     func theBarHoldsItsWidthAndCentresItsTitle() {
-        // The bar is a ROW, and its title is not one of the things the row
-        // lines up: it spans the bar and centres its words on the whole of it,
-        // so a longer title re-centres in place rather than growing sideways
-        // out of a box that was only as wide as the old words
-        // (`GroupChromeTests`).
+        // The bar is a ROW, and the title is one of the things the row lines
+        // up: it takes whatever room is left once the back label and anything
+        // else on the bar have taken theirs, and centres its words in that.
+        // So a longer title re-centres in the same room rather than growing
+        // sideways out of the bar (`GroupChromeTests`).
         var history = History(document: document())
         var barID: UUID?
         history.perform { barID = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
         guard let barID, let before = history.current.layer(id: barID),
-              let title = piece(before, "Title") else { Issue.record("no bar"); return }
+              let title = piece(before, "Title"), let back = piece(before, "Back")
+        else { Issue.record("no bar"); return }
         #expect(before.group?.layout?.hugsWidth == false)
         #expect(before.group?.layout?.hugsHeight == false)
-        #expect(abs(words(title).midX - before.localBounds.width / 2) <= 1)
+        let room = CGRect(x: back.contentBounds.maxX + 12, y: 0,
+                          width: before.localBounds.width - 14 - (back.contentBounds.maxX + 12),
+                          height: before.localBounds.height)
+        #expect(abs(words(title).midX - room.midX) <= 1)
 
         reword(&history, title.id, "Notifications and alerts", anchor: .center)
 
         guard let after = history.current.layer(id: barID),
               let grown = piece(after, "Title") else { Issue.record("no bar"); return }
         #expect(after.localBounds.size == before.localBounds.size)
-        #expect(words(grown).width == after.localBounds.width)
-        #expect(abs(words(grown).midX - after.localBounds.width / 2) <= 1)
+        #expect(grown.contentBounds.width == room.width)
+        #expect(abs(words(grown).midX - room.midX) <= 1)
         // The hairline still spans the bar and still hugs the bottom of it.
         guard let divider = piece(after, "Divider") else { Issue.record("no divider"); return }
         #expect(divider.frame.width == after.localBounds.width)

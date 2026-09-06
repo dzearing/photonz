@@ -185,18 +185,65 @@ struct GroupChromeTests {
         #expect(piece(wider, "Back") == piece(GroupFlow.flowing(bar), "Back"))
     }
 
-    @Test("Dragging the Nav Bar wider keeps its title in the middle of it")
+    @Test("Dragging the Nav Bar wider keeps its title in the middle of the room left for it")
     func theTitleStaysInTheMiddle() throws {
         let bar = try #require(droppedBar())
         for width in [CGFloat(200), 320, 640, 1280] {
             let sized = bar.resized(to: CGRect(x: 0, y: 0, width: width, height: 48))
             let title = try #require(sized.children.first { $0.name == "Title" })
-            // The words span the bar and centre themselves on the whole of it,
-            // so the middle of the words is the middle of the bar at any size.
-            #expect(title.contentBounds.width == width)
-            #expect(abs(title.contentBounds.midX - width / 2) <= 1)
+            let back = try #require(sized.children.first { $0.name == "Back" })
+            // The title is IN the row now, taking whatever the back label and
+            // the row's gap leave, so its box runs from there to the far edge
+            // and its words centre in that box however wide the bar gets.
+            #expect(title.contentBounds.minX == back.contentBounds.maxX + 12)
+            #expect(abs(title.contentBounds.maxX - (width - 14)) <= 1)
             #expect(title.text?.alignment == .center)
         }
+    }
+
+    /// The bug this is here for: a Badge and a Button added to the bar used to
+    /// walk across it and stand on top of the word Title, which was drawn
+    /// underneath them and simply disappeared.
+    @Test("Controls added to the Nav Bar never land on top of its title")
+    func addedControlsNeverCoverTheTitle() throws {
+        var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 900, height: 700)))
+        var placed: UUID?
+        history.perform { placed = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
+        guard let barID = placed, let box = history.current.canvasBounds(of: barID)
+        else { Issue.record("the bar did not land"); return }
+        // Let go at the far end of the bar, which is where a person adding a
+        // control to a bar reaches for.
+        for kind in [StarterComponent.badge, .button] {
+            history.perform {
+                $0.insertStarterComponent(kind, at: CGPoint(x: box.maxX - 20, y: box.midY),
+                                          inside: barID)
+            }
+        }
+        let bar = try #require(history.current.layer(id: barID))
+        let title = try #require(bar.children.first { $0.name == "Title" })
+        #expect(bar.children.count == 6)
+        #expect(title.contentBounds.width > 0)
+        // Everything but the two pieces that are painted to the bar's own
+        // edges rather than lined up in it.
+        for other in bar.children where !["Title", "Background", "Divider"].contains(other.name) {
+            #expect(!other.contentBounds.insetBy(dx: 0.5, dy: 0.5)
+                .intersects(title.contentBounds),
+                    "\(other.name) is standing on the title")
+        }
+    }
+
+    /// What pays for the title no longer sitting on the bar's exact middle:
+    /// turn the back label off and there is nothing else in the row, so the
+    /// room left over is the whole bar and the words are dead centre again.
+    @Test("A Nav Bar with its back label turned off centres the title on the bar")
+    func theTitleCentresOnABareBar() throws {
+        var bar = try #require(droppedBar())
+        guard let index = bar.children.firstIndex(where: { $0.name == "Back" })
+        else { Issue.record("the bar has no back label"); return }
+        bar.children[index].isVisible = false
+        let laid = GroupFlow.flowing(bar)
+        let title = try #require(laid.children.first { $0.name == "Title" })
+        #expect(abs(title.contentBounds.midX - laid.localBounds.width / 2) <= 1)
     }
 
     @Test("Dragging the Nav Bar about keeps its hairline and its surface honest")
@@ -207,15 +254,30 @@ struct GroupChromeTests {
         #expect(piece(sized, "Background") == CGRect(x: 0, y: 0, width: 640, height: 72))
     }
 
-    @Test("A second control dropped on the bar lines up beside the first")
+    @Test("A control dropped beside the back label lines up next to it")
     func aSecondControlLinesUp() throws {
         var bar = try #require(droppedBar())
-        bar.children.append(box("Menu", CGRect(x: 200, y: 0, width: 24, height: 24)))
+        // Let go between the back label and the title, which is the leading
+        // end of the bar.
+        bar.children.append(box("Menu", CGRect(x: 50, y: 0, width: 24, height: 24)))
         let laid = GroupFlow.flowing(bar)
         // 14 in from the left, then the words of the back label, then the
         // row's gap.
         let back = try #require(laid.children.first { $0.name == "Back" })
         #expect(piece(laid, "Menu").minX == back.contentBounds.maxX + 12)
+    }
+
+    /// The other half of the same rule, and the reason the bar gets two ends
+    /// for free: the title takes the room in between, so a control let go past
+    /// it is pushed out to the far edge instead of marching across it.
+    @Test("A control dropped past the title lands at the far end of the bar")
+    func aControlPastTheTitleTakesTheFarEnd() throws {
+        var bar = try #require(droppedBar())
+        bar.children.append(box("Menu", CGRect(x: 200, y: 0, width: 24, height: 24)))
+        let laid = GroupFlow.flowing(bar)
+        let title = try #require(laid.children.first { $0.name == "Title" })
+        #expect(piece(laid, "Menu").maxX == laid.localBounds.width - 14)
+        #expect(piece(laid, "Menu").minX == title.contentBounds.maxX + 12)
     }
 
     @Test("The bar's Layout section reads as the bar a person can see")
@@ -224,7 +286,9 @@ struct GroupChromeTests {
         let listed = bar.contentsWithTheirOwnPlacement(arrangement: bar.group?.layout)
         #expect(listed.first { $0.name == "Background" }?.summary == "Surface behind the rest")
         #expect(listed.first { $0.name == "Divider" }?.summary == "Stretch across, Bottom down")
-        #expect(listed.first { $0.name == "Title" }?.summary == "Stretch across, Middle down")
+        // The title is one of the pieces the row lines up now, and the only
+        // thing it says for itself is that it takes what is left.
+        #expect(listed.first { $0.name == "Title" }?.summary == "Takes the room left over")
         // The back label is the one piece the row is actually lining up, so it
         // is not on the list of pieces doing something else.
         #expect(listed.first { $0.name == "Back" } == nil)
@@ -235,9 +299,9 @@ struct GroupChromeTests {
         let bar = try #require(droppedBar())
         let back = try #require(bar.children.first { $0.name == "Back" })
         let point = CGPoint(x: back.contentBounds.midX, y: back.contentBounds.midY)
-        // Topmost first, the way a click reads the picture. The title's box is
-        // the whole bar, so drawn over the controls it would answer for all of
-        // them.
+        // Topmost first, the way a click reads the picture. The title is in
+        // the row beside the back label rather than lying across it, so
+        // neither can answer for the other.
         let hit = bar.children.reversed().first { $0.contains(canvasPoint: point) }
         #expect(hit?.name == "Back")
         #expect(bar.children.map(\.name) == ["Background", "Divider", "Title", "Back"])

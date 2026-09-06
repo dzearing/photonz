@@ -70,18 +70,26 @@ struct StarterComponentRenderTests {
     /// the model can catch it: the numbers are all correct, the font is just
     /// not the width the estimate guessed.
     @Test func aCentredLabelIsActuallyCentred() throws {
-        let cases: [(kind: StarterComponent, row: Int, window: ClosedRange<CGFloat>)] =
-            [(.button, 18, 0...1), (.badge, 10, 0...1), (.navBar, 24, 0.3...0.7)]
-        for (kind, row, window) in cases {
+        // `piece` names the box the words are centred IN where that is not the
+        // whole control. A bar's title takes the room the row has left over
+        // and centres in that, so on a bar carrying a back label the words sit
+        // right of the bar's own middle, on purpose.
+        let cases: [(kind: StarterComponent, row: Int,
+                     window: ClosedRange<CGFloat>, piece: String?)] =
+            [(.button, 18, 0...1, nil), (.badge, 10, 0...1, nil), (.navBar, 24, 0.3...0.7, "Title")]
+        for (kind, row, window, piece) in cases {
             let image = try #require(render(kind))
             let columns = inkColumns(image, row: row, within: window)
             guard let first = columns.first, let last = columns.last else {
                 Issue.record("\(kind.name) has no label ink on row \(row)")
                 continue
             }
+            let built = StarterComponents.layer(kind, measure: measure)
+            let box = piece.flatMap { name in built.children.first { $0.name == name } }?
+                .contentBounds ?? built.localBounds
             let middle = CGFloat(first + last) / 2
-            #expect(abs(middle - CGFloat(image.width) / 2) <= 2,
-                    "\(kind.name) label sits at \(middle) of \(image.width)")
+            #expect(abs(middle - box.midX) <= 2,
+                    "\(kind.name) label sits at \(middle), not \(box.midX)")
         }
     }
 

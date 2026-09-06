@@ -545,36 +545,46 @@ public enum StarterComponents {
     }
 
     /// 320 × 48, both of them numbers. A bar is as wide as the screen it sits
-    /// on and as tall as a bar is, so a longer title stays centred in it
-    /// rather than stretching it. A surface, a hairline along the bottom, that
-    /// centred title, and a back label you can turn off.
+    /// on and as tall as a bar is, so a longer title stays inside it rather
+    /// than stretching it. A surface, a hairline along the bottom, a title,
+    /// and a back label you can turn off.
     ///
     /// It is a ROW, and it is the one starter that shows what a bar is made
-    /// of. Three of its four pieces are not things the row lines up at all:
-    /// the surface is painted to the bar's own edges, the hairline spans it
-    /// and hugs its bottom, and the title spans it and centres its words on
-    /// the whole bar rather than on the room the back label leaves. What is
-    /// left in the row is the leading end of the bar, which starts with one
-    /// label — drop a second control beside it and the row lines it up with no
-    /// numbers typed anywhere.
+    /// of. Two of its four pieces are not things the row lines up: the surface
+    /// is painted to the bar's own edges, and the hairline spans it and hugs
+    /// its bottom. Both say the same thing to get there: Stretch, along the
+    /// way the row runs.
     ///
-    /// The three all say the same thing to get there: Stretch, along the way
-    /// the row runs. See `GroupChromeTests`.
+    /// The other two ARE in the row, the back label first and then the title,
+    /// which takes whatever room the row has left over and centres its words
+    /// in it. That is what stops a control added to the bar from ever standing
+    /// on the title: the row hands the title what is left AFTER everything
+    /// else has taken its width, so there is nothing for a new control to
+    /// cover. Where you let go decides which side of the title it lands on, so
+    /// a bar gets a leading end and a trailing end with nothing typed
+    /// anywhere. It costs the title the bar's exact middle on a bar that
+    /// carries a back label and nothing else; turn the back label off and the
+    /// title is the whole row again, dead centre. Chosen by the user on
+    /// 2026-09-06 over holding the middle and grouping the two ends.
+    ///
+    /// See `GroupChromeTests`.
     private static func navBar(_ pen: Pen) -> [Layer] {
-        [pen.box("Background", x: 0, y: 0, width: 320, height: 48, fill: .surface,
-                 placement: .fill),
-         // A hairline stays a hairline: it spans the bar and hugs the bottom
-         // rather than fattening up when the bar gets taller.
-         pen.box("Divider", x: 0, y: 47, width: 320, height: 1, fill: .border,
-                 placement: LayerPlacement(horizontal: .stretch, vertical: .bottom)),
-         // The title is UNDER the controls, not over them. Its box is the
-         // whole bar, so drawn on top it would swallow every click meant for
-         // the back label and a title long enough to reach one would print
-         // over it (found on 2026-09-05, driving the built bar).
-         pen.label("Title", "Title", x: 0, centerY: 24, size: 15,
-                   weight: .semibold, color: .text, align: .center,
-                   placement: LayerPlacement(horizontal: .stretch, vertical: .center)),
-         pen.label("Back", "Back", x: pen.px(14), centerY: 24, size: 15, color: .accent)]
+        let back = pen.label("Back", "Back", x: pen.px(14), centerY: 24, size: 15, color: .accent)
+        // Drawn after the back label because a row reads left to right off
+        // where its pieces already sit, and this one belongs on the far side
+        // of it. Nothing but the order comes from these numbers: the flow
+        // hands out every width and position on the first pass.
+        var title = pen.label("Title", "Title", x: back.frame.maxX + pen.px(12), centerY: 24,
+                              size: 15, weight: .semibold, color: .text, align: .center)
+        title.flowFill = FlowFill(sizeBefore: title.frame.standardized.size)
+        return [pen.box("Background", x: 0, y: 0, width: 320, height: 48, fill: .surface,
+                        placement: .fill),
+                // A hairline stays a hairline: it spans the bar and hugs the
+                // bottom rather than fattening up when the bar gets taller.
+                pen.box("Divider", x: 0, y: 47, width: 320, height: 1, fill: .border,
+                        placement: LayerPlacement(horizontal: .stretch, vertical: .bottom)),
+                title,
+                back]
     }
 
     /// The smallest thing on the shelf, 20 tall and as wide as the number in

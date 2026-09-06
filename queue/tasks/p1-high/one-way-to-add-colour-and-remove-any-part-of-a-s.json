@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 12,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:04:07.017Z",
-  "updated": "2026-09-06T14:33:18.070Z",
+  "updated": "2026-09-06T19:05:45.282Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised by the user on 2026-09-06 after failing to find a way to turn off a rectangle's border. They are describing a real structural problem, not a preference. What the code actually has, from a read: a rectangle carries TWO independent edges from two systems. The shape's own stroke is AnnotationContent.strokeWidth, shown as Thickness in the section titled Rectangle, with its colour shown in the Color section as Outline; the comment at Tools.swift says rectangles and ellipses inset their stroke, which is why the user reads it as being inside the shape. Separately LayerStyle.borderWidth is a layer style applied at render time around the layer's frame, shown as Border in the Effects section (LayersPanel.swift line 2557), with its colour also in the Color section, called Border. So Outline and Border are genuinely different things that both draw an edge, in different sections, one insettable and one not, and nothing on screen says so. Colours are deliberately pulled into one Color section: the comment at line 349 explains it, so a colour does not move to a different section when a second layer is selected. That reason is sound for a multi selection and is what breaks proximity for a single one, so the model has to answer both rather than simply undoing it. Fill has a checkbox (LayersPanel.swift around line 1636, setAnnotationFill with nil meaning no fill) because a nil colour means absent; the stroke has no such state, which is why it cannot be switched off. This is the same family as the-shape-settings-say-what-they-are-and-what-ea, which fixes the section title and the unlabelled swatches; that task is smaller and can land first, but this one supersedes it in scope, so whoever takes this should read it and fold it in rather than leaving two half models.",
@@ -65,6 +65,10 @@
     {
       "t": "2026-09-06T14:33:18.068Z",
       "note": "Model written down in docs/design/shape-parts.md and a decision opened with the panel drawn four ways; waiting on which layout the parts list should take before any code"
+    },
+    {
+      "t": "2026-09-06T19:05:45.282Z",
+      "note": "decision \"How should a shape's parts, its fill, its outline and its shadow, be laid out in the settings panel?\" resolved: One list, settings unfold"
     }
   ],
   "started": "2026-09-06T14:23:54.836Z"

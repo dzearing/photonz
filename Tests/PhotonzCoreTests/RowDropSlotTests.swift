@@ -23,8 +23,10 @@ struct RowDropSlotTests {
         PhotonzDocument(canvasSize: CGSize(width: 900, height: 700))
     }
 
-    /// A nav bar at 400,300 with two badges already added, so there are three
-    /// controls in the row and two gaps between them to aim at.
+    /// A nav bar at 400,300 with two badges added on its far end, so the row
+    /// reads Back, Title, One, Two and there are gaps all along it to aim at.
+    /// The title is one of the pieces the row lines up: it takes the room left
+    /// over, so it sits between the back label and the two badges.
     private func filledBar() -> (History, UUID) {
         var history = History(document: document())
         var barID: UUID?
@@ -68,10 +70,10 @@ struct RowDropSlotTests {
     @Test("A button let go between the back label and the first badge lands between them")
     func aWidePieceLandsInTheGapItWasLetGoIn() {
         var (history, barID) = filledBar()
-        #expect(rowOrder(history.current, barID) == ["Back", "One", "Two"])
-        let point = gap(history.current, barID, after: "Back", before: "One")
+        #expect(rowOrder(history.current, barID) == ["Back", "Title", "One", "Two"])
+        let point = gap(history.current, barID, after: "Back", before: "Title")
         history.perform { _ = $0.insertStarterComponent(.button, at: point, inside: barID) }
-        #expect(rowOrder(history.current, barID) == ["Back", "Button", "One", "Two"])
+        #expect(rowOrder(history.current, barID) == ["Back", "Button", "Title", "One", "Two"])
     }
 
     @Test("Let go in the second gap, it goes in the second gap")
@@ -79,7 +81,7 @@ struct RowDropSlotTests {
         var (history, barID) = filledBar()
         let point = gap(history.current, barID, after: "One", before: "Two")
         history.perform { _ = $0.insertStarterComponent(.button, at: point, inside: barID) }
-        #expect(rowOrder(history.current, barID) == ["Back", "One", "Button", "Two"])
+        #expect(rowOrder(history.current, barID) == ["Back", "Title", "One", "Button", "Two"])
     }
 
     @Test("Let go before the first piece, it goes first")
@@ -90,7 +92,7 @@ struct RowDropSlotTests {
         let point = CGPoint(x: corner.x + back.contentBounds.minX + 1,
                             y: corner.y + back.contentBounds.midY)
         history.perform { _ = $0.insertStarterComponent(.button, at: point, inside: barID) }
-        #expect(rowOrder(history.current, barID) == ["Button", "Back", "One", "Two"])
+        #expect(rowOrder(history.current, barID) == ["Button", "Back", "Title", "One", "Two"])
     }
 
     @Test("Let go past the last piece, it still goes on the end")
@@ -99,7 +101,7 @@ struct RowDropSlotTests {
         let box = history.current.canvasBounds(of: barID)!
         let point = CGPoint(x: box.maxX - 8, y: box.midY)
         history.perform { _ = $0.insertStarterComponent(.button, at: point, inside: barID) }
-        #expect(rowOrder(history.current, barID) == ["Back", "One", "Two", "Button"])
+        #expect(rowOrder(history.current, barID) == ["Back", "Title", "One", "Two", "Button"])
     }
 
     /// A copy off the shelf takes the same slot a starter does: the two drops
@@ -108,12 +110,12 @@ struct RowDropSlotTests {
     func aCopyTakesTheSameSlot() {
         var (history, barID) = filledBar()
         history.perform { _ = $0.insertStarterComponent(.button, at: CGPoint(x: 120, y: 620)) }
-        let point = gap(history.current, barID, after: "Back", before: "One")
+        let point = gap(history.current, barID, after: "Back", before: "Title")
         history.perform {
             _ = $0.insertComponentInstance(of: StarterComponent.button.componentID,
                                            at: point, inside: barID)
         }
-        #expect(rowOrder(history.current, barID) == ["Back", "Button", "One", "Two"])
+        #expect(rowOrder(history.current, barID) == ["Back", "Button", "Title", "One", "Two"])
     }
 
     /// A column reads the same way, down instead of across.
@@ -186,13 +188,15 @@ struct RowDropSlotTests {
         #expect(promised.rect == landed)
     }
 
-    /// The room really opens: the pieces after the gap move along by the width
-    /// of what is coming, and the gap the outline draws is empty.
+    /// The room really opens, and on a bar it opens out of the title: the
+    /// title is the piece taking whatever is left over, so it is the piece
+    /// that gives some back, and the controls on the far end hold still
+    /// instead of being shoved along.
     @Test("While the drag is in the air the row holds the room open")
     func theRowHoldsTheRoomOpen() {
         let (history, barID) = filledBar()
         let doc = history.current
-        let point = gap(doc, barID, after: "Back", before: "One")
+        let point = gap(doc, barID, after: "Back", before: "Title")
         guard let landing = doc.componentDropLanding(of: StarterComponent.button.componentID,
                                                      at: point, inside: barID),
               let held = doc.holdingRoomForComponentDrop(of: StarterComponent.button.componentID,
@@ -201,14 +205,25 @@ struct RowDropSlotTests {
         // The room is EMPTY: nothing new draws, the gap is just being held.
         #expect(held.layer(id: barID)?.children.filter { $0.style.opacity > 0 }.count
                 == doc.layer(id: barID)?.children.count)
-        // The badge after the gap really moved along, and it moved clear of the
-        // box the outline is drawn in.
-        guard let before = doc.canvasBounds(of: badgeID(doc, barID)),
-              let after = held.canvasBounds(of: badgeID(doc, barID)) else {
-            Issue.record("no badge"); return
+        // The title gave up the room, and it starts again clear of the box the
+        // outline is drawn in.
+        guard let wide = doc.canvasBounds(of: titleID(doc, barID)),
+              let narrowed = held.canvasBounds(of: titleID(doc, barID)) else {
+            Issue.record("no title"); return
         }
-        #expect(after.minX > before.minX)
-        #expect(after.minX >= landing.rect.maxX)
+        #expect(narrowed.width < wide.width)
+        #expect(narrowed.minX >= landing.rect.maxX)
+        // Nothing the bar already carries is standing in the room being held.
+        // The nameless piece IS the room, so it is the one thing that is.
+        for other in held.layer(id: barID)?.children ?? []
+        where !other.name.isEmpty && !["Background", "Divider"].contains(other.name) {
+            guard let box = held.canvasBounds(of: other.id) else { continue }
+            #expect(!box.insetBy(dx: 0.5, dy: 0.5).intersects(landing.rect),
+                    "\(other.name) is standing in the room being held open")
+        }
+        // The badges on the far end were not shoved along to make it.
+        #expect(held.canvasBounds(of: badgeID(doc, barID))?.minX
+                == doc.canvasBounds(of: badgeID(doc, barID))?.minX)
         // ...and the bar itself is drawn at the size it will be once it has
         // taken the piece, so the dashed outline round it is not left short.
         #expect(landing.hostBox == held.canvasBounds(of: barID))
@@ -219,6 +234,10 @@ struct RowDropSlotTests {
         let (history, _) = filledBar()
         #expect(history.current.holdingRoomForComponentDrop(
             of: StarterComponent.button.componentID, at: CGPoint(x: 120, y: 620)) == nil)
+    }
+
+    private func titleID(_ doc: PhotonzDocument, _ barID: UUID) -> UUID {
+        doc.layer(id: barID)!.children.first { $0.name == "Title" }!.id
     }
 
     private func badgeID(_ doc: PhotonzDocument, _ barID: UUID) -> UUID {
