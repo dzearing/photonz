@@ -1,0 +1,248 @@
+{
+  "out": "/tmp/photonz-playtest/toolbar-colour",
+  "setup": {
+    "forget": [
+      "panel",
+      "color",
+      "shapes"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1100,
+      "canvasHeight": 700,
+      "width": 1500,
+      "height": 950
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "showMediaShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-armed",
+      "note": "the bar is wearing ONE swatch, the colour the next arrow comes out in: toolPaint is what it shows"
+    },
+    {
+      "do": "snapshot",
+      "name": "toolbar-1-armed"
+    },
+    {
+      "do": "dragColor",
+      "from": "Toolbar",
+      "onto": "Library",
+      "hold": "toolbar-2-in-flight",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Marker"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "2-kept",
+      "note": "the colour the tool is holding was carried off the bar and kept: Marker is in styles, and toolPaint is unchanged"
+    },
+    {
+      "do": "panel",
+      "stage": "2-kept"
+    },
+    {
+      "do": "snapshot",
+      "name": "toolbar-2-kept"
+    },
+    {
+      "do": "dragColor",
+      "from": "Toolbar",
+      "onto": "Toolbar",
+      "expect": "refuses"
+    },
+    {
+      "do": "describe",
+      "stage": "3-came-from-here",
+      "note": "the swatch the colour came from stays dark and nothing changed"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Toolbar border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-border-picker",
+      "note": "the bar's border swatch opens the same picker every colour row opens"
+    },
+    {
+      "do": "press",
+      "control": "Shades 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-two-colours",
+      "note": "the next box now has two different colours: toolPaint is the darker shade and toolFillPaint is still #FF3B30"
+    },
+    {
+      "do": "snapshot",
+      "name": "toolbar-4-pair"
+    },
+    {
+      "do": "dragColor",
+      "from": "Toolbar border",
+      "onto": "Toolbar fill",
+      "hold": "toolbar-5-in-flight",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-inside-taken",
+      "note": "the border's colour was carried onto the inside: the next box comes out filled with it"
+    },
+    {
+      "do": "snapshot",
+      "name": "toolbar-5-inside-taken"
+    },
+    {
+      "do": "dragColor",
+      "from": "Toolbar border",
+      "onto": "Toolbar fill",
+      "expect": "refuses"
+    },
+    {
+      "do": "describe",
+      "stage": "6-already-this-colour",
+      "note": "the inside already wears it, so the swatch stays dark rather than doing nothing loudly"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        180
+      ],
+      "to": [
+        520,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-drawn",
+      "note": "a box drawn after the drop comes out wearing the colour that was carried onto the inside"
+    },
+    {
+      "do": "render",
+      "name": "toolbar-7-drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "toolbar-7-drawn"
+    },
+    {
+      "do": "dragColor",
+      "from": "Foreground fill",
+      "onto": "Background fill",
+      "hold": "toolbar-8-in-flight",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "8-bucket-pair",
+      "note": "the pair the bucket fills with is carried the same way: the background fill now wears the foreground's colour"
+    },
+    {
+      "do": "snapshot",
+      "name": "toolbar-8-bucket-pair"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Toolbar fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-click-still-opens",
+      "note": "a plain click on the bar's swatch still opens its picker, so the drag never stole the click"
+    },
+    {
+      "do": "snapshot",
+      "name": "toolbar-8-picker-open"
+    }
+  ]
+}

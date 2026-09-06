@@ -89,7 +89,7 @@ public enum ColorDrop {
         // so. Wearing a SAVED colour is different: letting go there still
         // takes it off the name, whatever colour the name stands for today.
         if target.styleName == nil, landing.draws(sameAs: target.wearing) {
-            return Answer(landing: nil, note: "\(target.part) is already this colour.")
+            return Answer(landing: nil, note: "\(opening(target.part)) is already this colour.")
         }
         let result = Landing(paint: landing, flattened: flattens, letsGoOf: target.styleName)
         return Answer(landing: result, note: note(for: result, on: target))
@@ -101,13 +101,27 @@ public enum ColorDrop {
     /// know before letting go than after.
     private static func note(for landing: Landing, on target: Target) -> String {
         if landing.flattened {
-            return "\(target.part) cannot hold a gradient, so it takes its flat colour."
+            return "\(opening(target.part)) cannot hold a gradient, so it takes its flat colour."
         }
         var sentence = target.reaches > 1
             ? "Paints \(target.part) on all \(target.reaches) of them with this colour"
             : "Paints \(target.part) with this colour"
         if let name = landing.letsGoOf { sentence += " and lets go of \(name)" }
         return sentence + "."
+    }
+
+    /// A part at the START of a sentence.
+    ///
+    /// The panel's swatches are named after the row they sit on — "Fill",
+    /// "Outline" — and read as themselves anywhere in a sentence. The
+    /// toolbar's swatch has no row: what it stands for is the next shape you
+    /// draw, and the only honest name for it is those words, which have to be
+    /// capitalised where they start the sentence and left alone where they do
+    /// not. Only the first letter is touched, so "the next shape's border"
+    /// keeps everything after it exactly as the swatch wrote it.
+    private static func opening(_ part: String) -> String {
+        guard let first = part.first else { return part }
+        return first.uppercased() + part.dropFirst()
     }
 }
 

@@ -1276,6 +1276,17 @@ struct EditorView: View {
         }
         .help(editorState.toolColorStyle(slot: .fill).map { "Fill color — using \($0.name)" }
               ?? "Fill color — the shape's interior. Uncheck Fill for an outline.")
+        .playtestControl("Color", detail: Self.toolbarFillSwatchName, payload: {
+            guard let paint = editorState.activeToolFillPaint else { return NSItemProvider() }
+            return ColorDrag.itemProvider(paint: paint, source: toolFillWellKey)
+        })
+        // A box with no inside carries nothing, and takes a colour by GAINING
+        // an inside: dropping on the slash is the shortest way to say fill it.
+        .colorSwatchDrag(key: toolFillWellKey, part: "\(shapeSwatchSubject)'s inside",
+                         paint: { editorState.activeToolFillPaint },
+                         styleName: { editorState.toolColorStyle(slot: .fill)?.name },
+                         acceptsGradient: ColorSlot.fill.acceptsGradient,
+                         onDrop: { editorState.setAnnotationFillPaint($0.paint) })
         .popover(isPresented: editorState.colorWellBinding(toolFillWellKey), arrowEdge: .top) {
             let off = editorState.activeToolFillPaint == nil
             VStack(alignment: .leading, spacing: 14) {
@@ -1316,6 +1327,23 @@ struct EditorView: View {
         }
         .help(editorState.toolColorStyle(slot: .stroke).map { "Border color — using \($0.name)" }
               ?? "Border color, width, and corner radius")
+        .playtestControl("Color", detail: Self.toolbarBorderSwatchName, payload: {
+            guard editedStrokeWidth > 0 else { return NSItemProvider() }
+            return ColorDrag.itemProvider(paint: activeToolPaint, source: toolStyleWellKey)
+        })
+        .colorSwatchDrag(key: toolStyleWellKey, part: "\(shapeSwatchSubject)'s border",
+                         paint: { editedStrokeWidth > 0 ? activeToolPaint : nil },
+                         styleName: { editorState.toolColorStyle(slot: .stroke)?.name },
+                         acceptsGradient: ColorSlot.stroke.acceptsGradient,
+                         onDrop: { landing in
+            // A border that is off comes back ON with the colour, in one step:
+            // see `paintBorderTurningItOn`.
+            if editedStrokeWidth > 0 {
+                editorState.setAnnotationPaint(landing.paint)
+            } else {
+                editorState.paintBorderTurningItOn(landing.paint)
+            }
+        })
         .popover(isPresented: editorState.colorWellBinding(toolStyleWellKey), arrowEdge: .top) {
             stylePopover
         }
@@ -1441,6 +1469,21 @@ struct EditorView: View {
         .help(isForeground
               ? "Foreground fill: bucket and ⌥⌫ fill with this"
               : "Background fill: new canvas space and ⌫-cleared backgrounds use this")
+        .playtestControl("Color", detail: isForeground ? "Foreground fill" : "Background fill",
+                         payload: { ColorDrag.itemProvider(paint: Paint(hex: hex),
+                                                           source: isForeground ? "fill.foreground"
+                                                                                : "fill.background") })
+        // The pair the bucket fills with is two more swatches on the same bar,
+        // so it is carried the same way. Neither can hold a ramp, and the
+        // swatch says so before a gradient lands on it flat.
+        .colorSwatchDrag(key: isForeground ? "fill.foreground" : "fill.background",
+                         part: isForeground ? "the foreground fill" : "the background fill",
+                         paint: { Paint(hex: hex) },
+                         onDrop: { landing in
+            if isForeground { editorState.foregroundFillHex = landing.paint.hex }
+            else { editorState.backgroundFillHex = landing.paint.hex }
+            editorState.recordRecentColor(hex: landing.paint.hex)
+        })
         .popover(isPresented: isForeground ? $isFgPickerShown : $isBgPickerShown,
                  arrowEdge: .top) {
             ColorPickerContent(editorState: editorState,
@@ -1937,10 +1980,45 @@ struct EditorView: View {
                  ?? (editorState.activeTool == .text ? "Text Style" : "Annotation Style"),
                  key: "S")
         .keyboardShortcut("s", modifiers: [])
+        // The bar's swatch answers to the same word every swatch in the panel
+        // does, told apart by where it lives rather than by a row it does not
+        // have, so a walk can carry a colour off the bar as well as onto it.
+        .playtestControl("Color", detail: Self.toolbarSwatchName, payload: {
+            ColorDrag.itemProvider(paint: activeToolPaint, source: toolStyleWellKey)
+        })
+        // The colour the next shape comes out in is the one on screen most, so
+        // it is a handle like every swatch in the panel: pull it onto a shape's
+        // row to paint with it, or drop a saved colour here to draw in it next.
+        .colorSwatchDrag(key: toolStyleWellKey, part: toolSwatchSubject,
+                         paint: { activeToolPaint },
+                         styleName: { heldStyle?.name },
+                         acceptsGradient: toolColorAcceptsGradient,
+                         // The one swatch in the app that is a circle.
+                         ringCornerRadius: 17,
+                         onDrop: { applyPaint($0.paint) })
         .popover(isPresented: editorState.colorWellBinding(toolStyleWellKey), arrowEdge: .top) {
             stylePopover
         }
     }
+
+    /// What the bar's swatches answer to in a walk. They are all called Color,
+    /// the way the panel's are; what tells them apart is that they live on the
+    /// bar rather than on a row.
+    static let toolbarSwatchName = "Toolbar"
+    static let toolbarFillSwatchName = "Toolbar fill"
+    static let toolbarBorderSwatchName = "Toolbar border"
+
+    /// What the bar's swatches stand for, in words, because they have no row
+    /// to be named after. It is the sentence a colour held over one of them
+    /// says, so it has to be the truth: the bar only ever wears these swatches
+    /// while a DRAWING tool is in hand, and what they decide is what the next
+    /// thing drawn comes out as. (Picking a shape means the select tool, and
+    /// the select tool puts the bucket's pair here instead.)
+    private var toolSwatchSubject: String {
+        editorState.activeTool == .text ? "the text you type next" : shapeSwatchSubject
+    }
+
+    private var shapeSwatchSubject: String { "the next shape" }
 
     private var stylePopover: some View {
         let borderOff = showsBorderToggle && editedStrokeWidth <= 0

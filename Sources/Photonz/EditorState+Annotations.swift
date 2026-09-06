@@ -356,6 +356,33 @@ extension EditorState {
         recordRecentColor(hex: paint.hex)
     }
 
+    /// A colour let go of on the border swatch of a shape that has NO border.
+    ///
+    /// The swatch shows the red slash then, and painting a border nobody can
+    /// see would look like the drop did nothing. The only thing the gesture
+    /// can mean is "give it this border", so the width comes back with the
+    /// colour — and both land in ONE undo step, because one letting go of the
+    /// pointer is one thing done.
+    func paintBorderTurningItOn(_ paint: Paint) {
+        let width = AnnotationContent.defaultStrokeWidth
+        guard let layer = selectedAnnotationLayer, let shape = layer.annotation?.shape,
+              shape != .highlight else {
+            // Nothing picked: this only arms the tool, which is a preference
+            // rather than part of the picture, so there is no step to share.
+            setAnnotationStrokeWidth(width)
+            setAnnotationPaint(paint)
+            return
+        }
+        discardDragPreview()
+        perform { $0.updateLayer(id: layer.id) {
+            $0 = AnnotationBuilder.restyled($0, paint: paint, strokeWidth: width)
+        } }
+        annotationStyles.setPaint(paint, forShape: shape)
+        annotationStyles.setStrokeWidth(width, forShape: shape)
+        saveAnnotationStyles()
+        recordRecentColor(hex: paint.hex)
+    }
+
     /// What the current selection/tool draws its outline in, gradient and all.
     var activeToolPaint: Paint? {
         if let layer = selectedAnnotationLayer { return layer.annotation?.paint }

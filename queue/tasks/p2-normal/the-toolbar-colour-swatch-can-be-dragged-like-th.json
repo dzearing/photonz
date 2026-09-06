@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1400,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:18:21.418Z",
-  "updated": "2026-09-06T14:18:21.419Z",
+  "updated": "2026-09-06T18:21:19.386253Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed on 2026-09-06 alongside the panel colour drag. The toolbar swatch is its own view in EditorView.swift (around line 1298) rather than a ColorWellButton, so it did not get the behaviour for free. Wearing the .colorSwatchDrag modifier (Sources/Photonz/ColorSwatchDrag.swift) should be most of it; the tool arming path is annotationStyles.arm.",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-06T14:18:21.419Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T18:01:37.220Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T18:21:19.386253Z",
+      "note": "before building: walked the idea as a first-time user. The mock-free version of this task assumed the bar's swatch and the panel's colour rows are on screen together. They are not: a panel colour row needs a selected layer, selecting one means the select tool, and the select tool swaps the bar over to the bucket's foreground/background pair. Confirmed with a panel dump from a live run: with a drawing tool in hand and nothing picked, the ONLY colour swatch anywhere is the bar's. So acceptance items 2 and 3 as written cannot be performed in one window."
+    },
+    {
+      "t": "2026-09-06T18:21:19.386253Z",
+      "note": "what IS reachable, and what shipped: the bar's swatch is a drag SOURCE (carry the armed colour to the Library and keep it under a name, or out to another app), the box's inside and border swatches pass colour to each other, the bucket's foreground and background pair do the same, and any of them takes a colour dropped in from another window or another app."
+    },
+    {
+      "t": "2026-09-06T18:21:19.386253Z",
+      "note": "shortest version preferred: no new chrome, no new gesture. The bar's swatches wear the same .colorSwatchDrag the panel wells wear, so the ring, the refusals, the sentence and the palette mark are the ones the app already has."
+    },
+    {
+      "t": "2026-09-06T18:21:19.386253Z",
+      "note": "core (TDD): ColorDrop now capitalises the part when it starts the sentence, so a swatch with no row to be named after can name itself in words. \"Paints the next shape with this colour.\" / \"The next shape's border is already this colour.\" Four new tests in ColorDropTests; the panel's own labels are untouched."
+    },
+    {
+      "t": "2026-09-06T18:21:19.386253Z",
+      "note": "app: Sources/Photonz/EditorView.swift wears the modifier on all four bar swatches (tool colour, box inside, box border, bucket foreground/background), each named for a walk as Color in \"Toolbar\", \"Toolbar fill\", \"Toolbar border\", \"Foreground fill\", \"Background fill\". Dropping on a box's border while the border is OFF turns it on with that colour in one step (EditorState.paintBorderTurningItOn); dropping on the inside while there is no fill switches the fill on, which setAnnotationFillPaint already did. The ring is round on the round tool swatch (new ringCornerRadius on ColorSwatchDrag, default unchanged at 6)."
+    },
+    {
+      "t": "2026-09-06T18:21:19.386253Z",
+      "note": "verified in the probe: Scripts/playtest/toolbar-colour-walk.json passes end to end (dragColor off \"Toolbar\" onto the Library saves Marker; the same swatch refuses its own colour; border to inside lights up, lands and the next box is drawn in it; a second try stays dark because the inside already wears it; foreground to background lands; a plain click still opens the picker). Screen Recording was granted, so the audit ships real window captures."
+    },
+    {
+      "t": "2026-09-06T18:21:19.386253Z",
+      "note": "Scripts/test.sh green (3985 tests). Audit: queue/audits/2026-09-06-toolbar-colour-swatch.json. Follow up filed: a-saved-colour-can-be-dragged-off-the-library-sh, which is the missing drag SOURCE that makes the bar a worthwhile drop target."
     }
-  ]
+  ],
+  "started": "2026-09-06T18:01:37.219Z"
 }

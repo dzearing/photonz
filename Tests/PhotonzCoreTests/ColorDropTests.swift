@@ -131,4 +131,39 @@ struct ColorDropTests {
         #expect(answer.landing?.paint == Paint(hex: "#3B82F6"))
         #expect(answer.landing?.flattened == true)
     }
+
+    // MARK: - A swatch that names itself in words
+
+    /// The panel's swatches are named after their row — "Fill", "Outline" —
+    /// but the toolbar's swatch has no row: what it stands for is the next
+    /// shape you draw, and the only honest name for it is those words. So a
+    /// part may be a phrase, and the sentence that STARTS with it capitalises
+    /// it rather than reading "the next shape is already this colour."
+    @Test func aPartThatIsAPhraseReadsMidSentence() {
+        let answer = ColorDrop.answer(dropping: red,
+                                      on: target(part: "the next shape", wearing: blue))
+        #expect(answer.note == "Paints the next shape with this colour.")
+    }
+
+    @Test func aPartThatIsAPhraseIsCapitalisedWhenItStartsTheSentence() {
+        let answer = ColorDrop.answer(dropping: blue,
+                                      on: target(part: "the next shape's border", wearing: blue))
+        #expect(!answer.lightsUp)
+        #expect(answer.note == "The next shape's border is already this colour.")
+    }
+
+    @Test func aPhrasePartIsCapitalisedInTheGradientSentenceToo() {
+        let answer = ColorDrop.answer(dropping: ramp(),
+                                      on: target(part: "the text you type next", wearing: red,
+                                                 acceptsGradient: false))
+        #expect(answer.note
+                == "The text you type next cannot hold a gradient, so it takes its flat colour.")
+    }
+
+    /// A row's own label is left exactly as the row writes it: capitalising
+    /// the first letter of "Fill" changes nothing, which is the point.
+    @Test func aRowLabelIsUntouched() {
+        let answer = ColorDrop.answer(dropping: blue, on: target(part: "Outline", wearing: blue))
+        #expect(answer.note == "Outline is already this colour.")
+    }
 }

@@ -1,0 +1,30 @@
+{
+  "feature": "Carry a colour off the toolbar swatch",
+  "epic": "ui-components",
+  "summary": "The colour the next shape will be drawn in can now be picked up and dropped, like every swatch in the right hand panel. Drag it onto the Library to keep it under a name, and pass a box's border colour to its inside without opening a picker.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Carry a colour from one swatch to another\" is on by default.",
+  "try": [
+    { "do": "Press A for the arrow tool. The bar shows one round swatch, the colour the next arrow comes out in." },
+    { "do": "Drag that swatch onto the Library shelf, type Marker and press Return. The colour is kept under that name.", "shot": "2026-09-06-toolbar-colour-2.png" },
+    { "do": "Press R for the rectangle tool. The bar now shows two swatches: the inside in front, the border behind it." },
+    { "do": "Click the border swatch and pick a different colour in the picker, then press Escape." },
+    { "do": "Drag the border swatch onto the inside swatch. Watch the ring appear before you let go.", "shot": "2026-09-06-toolbar-colour-1.png" },
+    { "do": "Drag a box on the canvas. It comes out filled with the colour you carried." },
+    { "do": "Drag the border swatch onto the inside again. It stays dark, because the inside already wears that colour." },
+    { "do": "Click the inside swatch. The picker still opens, exactly as before." }
+  ],
+  "evaluate": [
+    "Does picking the colour up off the bar feel like the same gesture as picking one up in the panel?",
+    "Is the ring around the bar's swatch easy to see against the glass, or does it get lost?",
+    "Dropping a colour on the Library from the bar: is that the flow you would reach for to keep the colour you are drawing with?",
+    "The two bucket swatches (select tool) copy on a drag rather than swapping, and X still swaps. Is copy the right answer there?",
+    "Dropping on the inside swatch while a box has no fill switches the fill on. Right, or should it refuse?"
+  ],
+  "rough": [
+    "The bar's swatch and the panel's colour rows are never on screen together: the panel rows need a selected layer, and selecting one puts you on the select tool, which swaps the bar over to the bucket pair. So the task's \"drop a panel colour onto the toolbar swatch\" cannot happen inside one window today. What works is bar to bar, bar to Library, and in or out of another window or another app.",
+    "Filed a follow up so dropping onto the bar has a real source: a saved colour on the Library shelf cannot be dragged off it yet.",
+    "A colour let go of on the bar's swatch writes no undo step, because what a tool is holding is a preference rather than part of the picture. Undo will not put the old armed colour back.",
+    "The ring around the round tool swatch was made round to match it, but no in app drag can reach that swatch yet, so only the square swatches' rings were photographed running.",
+    "Screen Recording was granted, so every picture here is the window as a person sees it, not an offscreen render."
+  ]
+}

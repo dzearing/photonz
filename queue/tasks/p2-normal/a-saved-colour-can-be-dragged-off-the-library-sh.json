@@ -1,0 +1,28 @@
+{
+  "id": "a-saved-colour-can-be-dragged-off-the-library-sh",
+  "title": "A saved colour can be dragged off the Library shelf",
+  "goal": "Colours you have saved sit on the Library shelf as tiles, but you cannot pick one up: to use it somewhere you have to open a picker and find it. Dragging a saved colour off the shelf and dropping it on any swatch would paint with it, including the swatch in the toolbar that decides what the next shape looks like.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1450,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T18:20:59.768Z",
+  "updated": "2026-09-06T18:20:59.768Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed 2026-09-06 by the toolbar-swatch task. LibraryStyleTile (Sources/Photonz/ColorStylePanel.swift, around line 844) has no onDrag and no playtest payload; the drag side of .colorSwatchDrag or a plain .onDrag with ColorDrag.itemProvider(paint:source:) is most of it. It is the missing SOURCE that makes the toolbar swatch worth being a drop target: the panel colour rows and the toolbar swatch are never on screen at the same time (panel rows need a selected layer, which means the select tool, which swaps the bar to the bucket pair), so today a colour can only be dropped on the bar from the other bar swatch, another window or another app. A drop that carries the STYLE (so the swatch follows the saved name) is a bigger question than a drop that carries its colour: carrying the colour is the shortest version and matches what every other swatch drop does today.",
+  "acceptance": [
+    "A saved colour tile on the Library shelf can be picked up, with the colour visible under the pointer",
+    "Dropping it on a colour row in the panel paints that row, in one undo step",
+    "Dropping it on the toolbar swatch arms the tool with that colour",
+    "A plain click on the tile still selects it the way it does now"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T18:20:59.768Z",
+      "note": "created (manual)"
+    }
+  ]
+}

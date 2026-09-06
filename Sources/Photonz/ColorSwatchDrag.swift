@@ -9,6 +9,9 @@ import UniformTypeIdentifiers
 /// `SelectionColorWell` — so Outline, Fill, Text, the shadow's colour and a
 /// collage backdrop all behave the same way without any of them knowing about
 /// drag and drop. A third kind of well added tomorrow gets it by wearing this.
+/// The toolbar's own swatches wear it too, so the colour the next shape comes
+/// out in can be carried off the bar and kept, and a colour let go of on the
+/// bar arms the tool with it.
 ///
 /// What it puts on screen while a colour is in the air is deliberately the
 /// least a Mac can say and still be understood: the swatch that would take the
@@ -36,6 +39,10 @@ struct ColorSwatchDrag: ViewModifier {
     let reaches: () -> Int
     /// Whether this swatch can hold a ramp.
     let acceptsGradient: Bool
+    /// How round the ring is. Every swatch in the panel is a rounded square,
+    /// which is the default; the bar's own swatch is a circle, and a boxy ring
+    /// around a round chip looks like a mistake rather than a promise.
+    let ringCornerRadius: CGFloat
     /// Letting go. One undo step, however many layers it reached.
     let onDrop: (ColorDrop.Landing) -> Void
 
@@ -106,7 +113,7 @@ struct ColorSwatchDrag: ViewModifier {
     /// the palette mark when letting go here lets go of a saved colour.
     @ViewBuilder private var ring: some View {
         if let landing = incoming?.landing {
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: ringCornerRadius)
                 .strokeBorder(Color.accentColor, lineWidth: 2)
                 .padding(-3)
                 .overlay(alignment: .topTrailing) {
@@ -178,9 +185,10 @@ extension View {
                          styleName: @escaping () -> String? = { nil },
                          reaches: @escaping () -> Int = { 1 },
                          acceptsGradient: Bool = false,
+                         ringCornerRadius: CGFloat = 6,
                          onDrop: @escaping (ColorDrop.Landing) -> Void) -> some View {
         modifier(ColorSwatchDrag(key: key, part: part, paint: paint, styleName: styleName,
                                  reaches: reaches, acceptsGradient: acceptsGradient,
-                                 onDrop: onDrop))
+                                 ringCornerRadius: ringCornerRadius, onDrop: onDrop))
     }
 }
