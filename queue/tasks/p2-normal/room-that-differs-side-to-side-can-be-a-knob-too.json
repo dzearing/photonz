@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1440,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T17:41:35.407Z",
-  "updated": "2026-09-06T21:12:04.673Z",
+  "updated": "2026-09-06T21:12:22.054Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while shipping a-copy-can-have-its-own-room-inside on 2026-09-06. ComponentNumberSlot.padding reads through GroupLayout.number(for:) which returns usedPadding.uniform, nil when the four sides disagree; the same rule already applied to layers INSIDE an original. Every starter except .card is built with a non-uniform GroupPadding (StarterComponents.layout), so the whole starter set is excluded. Open question worth a decision card before building: one knob writing all four sides (loses the shape of the original inset), a knob that scales the inset, or four knobs. That is a UX call, not an engineering one.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-06T21:12:04.673Z",
       "note": "Verified in the probe app with Scripts/playtest/component-uneven-room-walk.json, Screen Recording granted so the pictures are real window captures. Card at 10/24/10/24, knob offered (it used to be missing entirely), copy shows 10/24/10/24 closed, sides open pre-filled from the original, Left typed to 56 changes only that side and the revert arrow appears, then the original levelled to 6 leaves the answered copy at 56/24. Audit: queue/audits/2026-09-06-uneven-room-knob.json. Doc: docs/design/ui-building.md, new Landed section, and the two Deliberately left notes that said this could not be done now point at it."
+    },
+    {
+      "t": "2026-09-06T21:12:22.054Z",
+      "note": "Room carries four sides as one knob. Core: ComponentPropertyValue.room, knobValue/setKnobValue, setInstanceRoom, componentRoomSide (ComponentRoomKnobTests, 4081 tests green). App: InstanceRoomKnob in ComponentPanel, one field plus a chevron plus four sides, the canvas Padding control on a copy's panel. Verified in the probe app with component-uneven-room-walk.json (real captures): the knob is offered at all now, a copy reads 10/24/10/24, Left typed to 56 changes only that side, and levelling the original to 6 leaves the answered copy alone. Audit: queue/audits/2026-09-06-uneven-room-knob.json."
     }
   ],
-  "started": "2026-09-06T20:52:38.781Z"
+  "started": "2026-09-06T20:52:38.781Z",
+  "completed": "2026-09-06T21:12:22.054Z"
 }
