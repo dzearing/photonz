@@ -536,9 +536,28 @@ itself whenever the two things that decide its shape change:
   somebody HAS dragged narrower is a paragraph, so it keeps that wrap width and
   grows downward.
 
+- **The room its container has for it.** A label in a group with a width of its
+  own — one somebody typed, or one a ceiling is holding in — is as wide as its
+  words until they outgrow that room, and then it wraps inside it and the group
+  grows downward. This is the same answer a max width and a label give
+  everywhere else, and it replaces the old one, where the words simply ran out
+  past the far edge.
+
+  Two rules keep it honest. It never narrows a label past the widest single
+  WORD in it: below that there is nothing left to break and the letters come
+  apart in the middle of a word, so a word too long for the room hangs out of
+  it exactly as it did before. And the flow remembers that IT narrowed the
+  label (`Layer.wrappedByItsContainer`), undoes that at the top of every pass
+  and works the width out again, so raising the ceiling gives the words their
+  line back instead of leaving them stuck on two.
+
+  A paragraph somebody dragged narrower by hand is not touched. That width is
+  an answer, not a derivation.
+
 Nothing else re-measures. Moving a layer, restyling it, or changing anything
-that is not its width or its words leaves the box exactly as it was, so a
-document that was laid out by hand is never quietly re-flowed under its author.
+that is not its width, its words or the room around it leaves the box exactly
+as it was, so a document that was laid out by hand is never quietly re-flowed
+under its author.
 
 Two rules make it hold together:
 

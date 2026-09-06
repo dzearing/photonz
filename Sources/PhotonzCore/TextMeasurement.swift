@@ -49,6 +49,38 @@ public enum TextMeasurement {
     /// `frameInset` on each side.
     public static let slack: CGFloat = 4
 
+    /// The narrowest a box can be and still break these words BETWEEN them:
+    /// the width of the widest single word in it.
+    ///
+    /// Narrower than this there is nothing left to break, so the letters come
+    /// apart in the middle of a word — "But" over "ton" — which is never what
+    /// a ceiling on a button meant. A container narrows a label to its room or
+    /// to this, whichever is wider, so a word too long for the room overhangs
+    /// it exactly as it did before any of this wrapped anything.
+    ///
+    /// The widest word is measured rather than guessed from letter counts,
+    /// because a proportional face makes "WWW" wider than "illili". Only the
+    /// longest handful are measured: this is a floor, not a layout number, and
+    /// a wall of text is not a label that hugs its words in the first place.
+    public static func widestWord(in text: TextContent) -> CGFloat {
+        let words = Set(text.string.split(whereSeparator: { $0 == " " || $0 == "\n" })
+            .map(String.init))
+        // Longest first, and ties broken by the words themselves, so the
+        // handful that gets measured is the same handful every run.
+        let longest = words.sorted {
+            $0.count == $1.count ? $0 < $1 : $0.count > $1.count
+        }.prefix(wordsMeasuredForAFloor)
+        return longest.reduce(CGFloat(0)) { widest, word in
+            var one = text
+            one.string = word
+            return Swift.max(widest, size(of: one).width)
+        }
+    }
+
+    /// How many words a floor costs at most. Twelve covers every label anybody
+    /// puts in a button, a chip or a title.
+    private static let wordsMeasuredForAFloor = 12
+
     /// About how big a piece of text is, without CoreText: whole-word wrapping
     /// against an average glyph width. Only used where the real thing has not
     /// been installed.
@@ -159,7 +191,59 @@ extension Layer {
     /// "changes".
     var textHugsItsWords: Bool {
         guard case .text(let content) = self.content else { return false }
+        // A box the CONTAINER narrowed is still a box nobody chose a width
+        // for: the flow works that width out again every pass, so re-wording
+        // one goes back to the words and gets wrapped afresh.
+        if wrappedByItsContainer == true { return true }
         return frame.standardized.width + 0.5 >= TextMeasurement.size(of: content).width
+    }
+
+    /// Whether the container around this layer may decide how wide it is: it is
+    /// text, and its width is not a width somebody chose. A paragraph dragged
+    /// narrower by hand is not — that width is an answer, and a box that only
+    /// happens to sit inside something narrow must not lose it.
+    var wrapsToItsContainer: Bool {
+        guard case .text = content else { return false }
+        return textHugsItsWords
+    }
+
+    /// This text box narrowed to the room its container has for it, with the
+    /// words re-wrapped and the box as tall as they now need.
+    ///
+    /// `room` is room a person can SEE, the same as everything else the flow
+    /// hands about, so the slack a measured box carries is added back here.
+    /// Words that already fit change nothing at all: the same layer comes
+    /// straight back, unmarked, so a label inside a roomy container is byte for
+    /// byte the layer it was before any of this existed.
+    func textWrapped(inRoom room: CGFloat) -> Layer {
+        guard case .text(let content) = self.content else { return self }
+        // Never narrower than a single word needs. Below that the words break
+        // in the middle of themselves, which is worse than the overhang this
+        // set out to fix.
+        let allowed = max(max(1, room + boxSlack.width), TextMeasurement.widestWord(in: content))
+        guard TextMeasurement.size(of: content).width > allowed else { return self }
+        let box = frame.standardized
+        let height = TextMeasurement.size(of: content, wrappingAt: allowed).height
+        var out = self
+        out.frame = CGRect(x: box.minX, y: box.minY, width: allowed, height: height)
+        out.wrappedByItsContainer = true
+        return out
+    }
+
+    /// The same box back at the width its WORDS want, undoing whatever a
+    /// container decided last time. Every flow pass starts here, so the room a
+    /// label is allowed is worked out from the words rather than from the
+    /// answer the last pass gave — otherwise a wrapped label measures as if it
+    /// fitted, the ceiling stops biting, and the two answers take turns for
+    /// ever.
+    var textUnwrapped: Layer {
+        guard wrappedByItsContainer == true,
+              case .text(let content) = self.content else { return self }
+        let box = frame.standardized
+        var out = self
+        out.frame = CGRect(origin: box.origin, size: TextMeasurement.size(of: content))
+        out.wrappedByItsContainer = nil
+        return out
     }
 
     /// This text box re-fitted to the words in it.

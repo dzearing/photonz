@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/wrap-at-a-ceiling",
+  "seed": "Words wider than the box they live in wrap onto a second line and the box grows downward, instead of running out past the edge. The walk builds a small card out of a square and a sentence, stacks them, puts a ceiling on the stack's width, and then takes the ceiling away again.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 240], "to": [340, 280] },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [300, 320] },
+    { "do": "type", "text": "Save all the changes" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "0-built", "note": "a square and a sentence, both loose on the canvas" },
+    { "do": "render", "name": "wrap-0-built-doc" },
+
+    { "do": "click", "at": [320, 260] },
+    { "do": "click", "at": [340, 330], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-one-line", "note": "the two are a column stack now, as wide as the sentence, all on one line, because nothing is holding it in" },
+    { "do": "snapshot", "name": "wrap-1-one-line" },
+    { "do": "render", "name": "wrap-1-one-line-doc" },
+    { "do": "panel", "stage": "1-one-line" },
+
+    { "do": "press", "control": "Limits", "in": "Width" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "focus", "field": "Largest width" },
+    { "do": "type", "text": "140" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-wrapped", "note": "THE TEST: a ceiling of 140, well under the width the sentence wants. The words break onto a second line INSIDE the stack and the stack grows downward, instead of the old answer where they hung off the right edge." },
+    { "do": "snapshot", "name": "wrap-2-wrapped" },
+    { "do": "render", "name": "wrap-2-wrapped-doc" },
+    { "do": "panel", "stage": "2-wrapped" },
+
+    { "do": "focus", "field": "Largest width" },
+    { "do": "key", "key": "delete" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-cleared", "note": "THE OTHER TEST: emptying the ceiling gives the words their one line back. The stack is exactly what it was in step 1, not a tall narrow leftover of the ceiling." },
+    { "do": "snapshot", "name": "wrap-3-cleared" },
+    { "do": "render", "name": "wrap-3-cleared-doc" },
+    { "do": "panel", "stage": "3-cleared" }
+  ]
+}

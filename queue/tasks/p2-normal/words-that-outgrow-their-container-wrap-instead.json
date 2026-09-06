@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1220,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T15:52:00.555Z",
-  "updated": "2026-09-05T15:52:00.556Z",
+  "updated": "2026-09-06T05:19:55.305Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-05-group-size-limits.json. Limits landed 2026-09-05 (GroupLayout.minWidth/maxWidth/minHeight/maxHeight, GroupFlow.holding). The ceiling case deliberately leaves the words starting at the near edge and overhanging the far one, because clipping loses them and centring pushes them off the near edge too. Text measurement and re-wrap already exist for a stretched label in a stack (see the reflowPasses comment in GroupLayoutEditing); the missing piece is handing a capped width to a label that is NOT set to stretch.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-05T15:52:00.556Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T04:52:49.491Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T04:58:57.346Z",
+      "note": "Adversarial review before building. (1) The mock does not cover this; it comes from the size-limits audit complaint, so there is nothing to copy. (2) The expected answer is the one every stylesheet already gives: a max width makes the words wrap and the box grow downward. Building anything else would surprise a first-time user. (3) The trap is the one-way door: if the flow narrows the label and forgets it did, clearing the ceiling leaves the label stuck on two lines in a tall narrow pill, which reads as broken. That is exactly the step the last audit asked for (empty the box and press Return), so it would be hit immediately. Fix: the flow records that IT narrowed the label, undoes that at the top of every pass, and re-derives. (4) Second trap: the ceiling test is run against the label as it currently is, so a wrapped label measures as if it fitted, the limit stops biting and the next pass un-wraps it, forever. Fix comes free from (3): undo first, then measure. (5) Cut from scope: a row stack holding TWO labels that both outgrow it has no single answer (each would be sized against the other), so a row wraps at most one label and the rest is left as it is. (6) Not touched: a paragraph somebody deliberately dragged narrower. Its width is a choice, not a derivation."
+    },
+    {
+      "t": "2026-09-06T05:19:55.305Z",
+      "note": "Built in PhotonzCore, tests first. GroupFlow.placed now runs in three steps: undo anything a container narrowed last time, settle the WIDTH (holding is split per axis so the width is decided before the words break), wrap the labels that outgrow the room, then settle the HEIGHT from what the wrap actually came out at. Room per label: the whole width across for a free group and a column stack, one cell for a grid, and what the other pieces leave for a row stack (one label only). Layer.wrappedByItsContainer records that the flow, not a person, chose that width; resized() drops it the moment somebody drags or types a width of their own. 13 new tests in GroupTextWrapTests, 3637 green."
+    },
+    {
+      "t": "2026-09-06T05:19:55.305Z",
+      "note": "Adversarial review of the BUILT thing, on the probe app (Screen Recording granted, real captures). Found a real regression and fixed it: with a ceiling of 56 on the starter Button, CoreText broke the single word Button into But over ton and the second line was cut off by the pill. Wrapping cannot help a word that has nothing to break at, so textWrapped now never narrows a label below TextMeasurement.widestWord: a word too long for the room hangs out of it exactly as it did before, which is the honest answer and the one every stylesheet gives. Re-ran size-limits-walk to confirm the Button case is what it was. Also cut the cost: the wrap asks the expensive question (is this width the container's to decide) only about labels that actually do not fit, so a screen full of labels that fit pays nothing."
+    },
+    {
+      "t": "2026-09-06T05:19:55.305Z",
+      "note": "Verified: wrap-at-a-ceiling-walk renders for step 1 (no ceiling) and step 3 (ceiling cleared) are byte identical, so clearing the ceiling really does give the words their line back rather than leaving them stuck on two. Audit at queue/audits/2026-09-05-words-that-wrap.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-06T04:52:49.491Z"
 }

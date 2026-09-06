@@ -102,15 +102,28 @@ enum GroupFlow {
     private static func placed(_ children: [Layer], layout: GroupLayout,
                                contentPlacement: LayerPlacement?,
                                bounds: Bounds, onAScreen: Bool) -> [Layer] {
+        // Any label a container narrowed last time goes back to the width its
+        // WORDS want before anything is measured, so every answer below is
+        // worked out from the words rather than from the last answer.
+        let children = children.contains { $0.wrappedByItsContainer == true }
+            ? children.map(\.textUnwrapped) : children
         let rules = resolving(children, contentPlacement, onAScreen: onAScreen)
-        // Whatever the group was going to be, held to the smallest and the
-        // largest it may get, so the flow lays out in the room it is actually
-        // allowed rather than overflowing a ceiling quietly.
-        let bounds = holding(children, rules: rules, layout: layout, bounds: bounds,
-                             contentPlacement: contentPlacement, onAScreen: onAScreen)
+        // Width first, because how wide this group is allowed to be is what
+        // decides where the words break, and where the words break is what
+        // decides how tall it comes out.
+        var bounds = holding(children, rules: rules, layout: layout, bounds: bounds,
+                             contentPlacement: contentPlacement, onAScreen: onAScreen,
+                             horizontal: true)
+        // Words that outgrew that width wrap inside it instead of running out
+        // past the edge, and the box grows downward the way it does everywhere
+        // else a max width and a label meet.
+        let fitted = wrapping(children, rules: rules, layout: layout, bounds: bounds)
+        bounds = holding(fitted, rules: rules, layout: layout, bounds: bounds,
+                         contentPlacement: contentPlacement, onAScreen: onAScreen,
+                         horizontal: false)
         var out = layout.arranges
-            ? arranged(children, rules: rules, layout: layout, bounds: bounds)
-            : closedAround(children, rules: rules, layout: layout, bounds: bounds)
+            ? arranged(fitted, rules: rules, layout: layout, bounds: bounds)
+            : closedAround(fitted, rules: rules, layout: layout, bounds: bounds)
         // A piece told to stretch BOTH ways is not one of the things being
         // arranged: it is the surface behind them, painted to the box's own
         // edges. The room at the edges is room INSIDE that surface, which is
@@ -139,22 +152,104 @@ enum GroupFlow {
     private static func holding(_ children: [Layer], rules: [ResolvedPlacement],
                                 layout: GroupLayout, bounds: Bounds,
                                 contentPlacement: LayerPlacement?,
-                                onAScreen: Bool) -> Bounds {
+                                onAScreen: Bool, horizontal: Bool) -> Bounds {
         // A screen's box is its own frame, which is a size somebody gave it
         // and not one it worked out, so nothing here has anything to hold.
         guard layout.limitsSize, !onAScreen else { return bounds }
-        var natural = CGSize(width: bounds.width ?? 0, height: bounds.height ?? 0)
-        if bounds.width == nil || bounds.height == nil {
+        let side = horizontal ? bounds.width : bounds.height
+        var natural = side ?? 0
+        if side == nil {
             let first = layout.arranges
                 ? arranged(children, rules: rules, layout: layout, bounds: bounds)
                 : closedAround(children, rules: rules, layout: layout, bounds: bounds)
-            natural = size(of: first, layout: layout, contentPlacement: contentPlacement,
-                           bounds: bounds, onAScreen: onAScreen, held: false)
+            let size = size(of: first, layout: layout, contentPlacement: contentPlacement,
+                            bounds: bounds, onAScreen: onAScreen, held: false)
+            natural = horizontal ? size.width : size.height
         }
-        let width = held(bounds.width, hugging: natural.width, by: layout.heldWidth)
-        let height = held(bounds.height, hugging: natural.height, by: layout.heldHeight)
-        return Bounds(width: width.side, height: height.side,
-                      limitedWidth: width.limited, limitedHeight: height.limited)
+        let outcome = held(side, hugging: natural,
+                           by: horizontal ? layout.heldWidth : layout.heldHeight)
+        var out = bounds
+        if horizontal {
+            out.width = outcome.side
+            out.limitedWidth = outcome.limited
+        } else {
+            out.height = outcome.side
+            out.limitedHeight = outcome.limited
+        }
+        return out
+    }
+
+    // MARK: - Words that outgrow the room they are given
+
+    /// Every label in this group re-wrapped to the room the group actually has
+    /// for it.
+    ///
+    /// A label is as wide as its words until something narrows it, and a group
+    /// with a width of its own — one somebody typed, or one a ceiling is
+    /// holding in — is exactly that something. A group that is the size of its
+    /// contents narrows nothing, because there is nothing there to outgrow.
+    private static func wrapping(_ children: [Layer], rules: [ResolvedPlacement],
+                                 layout: GroupLayout, bounds: Bounds) -> [Layer] {
+        guard let width = bounds.width else { return children }
+        let rooms = wrapRooms(children, rules, layout: layout, width: width)
+        guard !rooms.isEmpty else { return children }
+        var out = children
+        for (index, room) in rooms {
+            // The honest question — is this width the container's to decide,
+            // or a paragraph width somebody chose — costs a text measurement,
+            // so it is asked only about a label that does not fit. One that
+            // does fit is left alone either way.
+            guard children[index].wrapsToItsContainer else { continue }
+            out[index] = children[index].textWrapped(inRoom: room)
+        }
+        return out
+    }
+
+    /// The labels that do not fit the room this group has across, and how much
+    /// room each of them gets.
+    ///
+    /// Everything the container does not decide the width of is left out:
+    /// anything that is not text, the surface behind everything, a piece
+    /// already told to stretch (which is handed the room anyway, on its way to
+    /// the box), and every label that already fits.
+    private static func wrapRooms(_ children: [Layer], _ rules: [ResolvedPlacement],
+                                  layout: GroupLayout, width: CGFloat) -> [(Int, CGFloat)] {
+        let labels = children.indices.filter {
+            children[$0].text != nil && !rules[$0].isSurface
+                && rules[$0].horizontal != .stretch
+        }
+        guard !labels.isEmpty else { return [] }
+        let padding = layout.usedPadding
+        let inner = max(0, width - padding.horizontal)
+        func outgrowing(_ room: (Int) -> CGFloat) -> [(Int, CGFloat)] {
+            labels.compactMap { index in
+                let allowed = room(index)
+                return children[index].contentBounds.width > allowed ? (index, allowed) : nil
+            }
+        }
+        // A group that arranges nothing, and a column stack, both leave the
+        // whole room across to every label in them: across is the axis neither
+        // of them decides.
+        guard layout.arranges else { return outgrowing { _ in inner } }
+        if layout.kind == .grid {
+            let columns = CGFloat(layout.usedColumns)
+            let cell = max(0, (inner - layout.usedGap * (columns - 1)) / columns)
+            return outgrowing { _ in cell }
+        }
+        guard layout.direction.isHorizontal else { return outgrowing { _ in inner } }
+        // A row stack: across IS the way it runs, so a label's room is
+        // whatever the other pieces and the gaps between them leave. Two
+        // labels that both outgrow the row have no single answer — each would
+        // be sized with the other's width already decided — so a row holding
+        // two is left exactly as it was rather than given an answer nobody can
+        // predict.
+        let flowing = children.indices.filter { children[$0].isVisible && !rules[$0].isSurface }
+        let gaps = layout.usedGap * CGFloat(max(0, flowing.count - 1))
+        let taken = flowing.reduce(CGFloat(0)) { $0 + children[$1].contentBounds.width }
+        let outgrown = outgrowing { index in
+            max(0, inner - gaps - (taken - children[index].contentBounds.width))
+        }.filter { flowing.contains($0.0) }
+        return outgrown.count == 1 ? outgrown : []
     }
 
     /// One axis held to its limits: the number it ends up with, and whether a

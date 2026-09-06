@@ -1,0 +1,29 @@
+{
+  "feature": "Words that outgrow their container wrap instead of hanging out of it",
+  "epic": "ui-layout",
+  "summary": "A label in a box with a width of its own now breaks onto a second line inside that box and pushes the box downward, where before it simply ran out past the right edge. Clearing the width gives the words their one line back.",
+  "setup": "Photonz Next, release Next in the Experiments window, flag next-auto-layout on (it is on by default). Nothing new to turn on.",
+  "try": [
+    { "do": "On a blank canvas, draw a small square with the rectangle tool." },
+    { "do": "With the text tool, click under the square and type Save all the changes." },
+    { "do": "Switch to the select tool, click the square, shift click the words, and choose Layer > Stack Selection." },
+    { "do": "Show the inspector and click the chevron beside the word Width in the Layout section." },
+    { "do": "Type 140 into Largest and press Return.", "shot": "2026-09-05-wrap-at-a-ceiling-2-wrapped-sc.png" },
+    { "do": "Empty the Largest box and press Return.", "shot": "2026-09-05-wrap-at-a-ceiling-3-cleared-sc.png" },
+    { "do": "Drop the starter Button, give it a Largest width of 56, and watch its one word hang out of the pill instead of coming apart." }
+  ],
+  "evaluate": [
+    "When the words wrap, the box grows downward and the top edge stays put. Is growing down the direction you expected?",
+    "A single word too long for the ceiling hangs out of the box rather than being broken in the middle. Is hanging out the right answer there, or would you rather see it shrink to fit?",
+    "Emptying the ceiling puts the words back on one line. Did that feel automatic, or did you expect to have to undo?",
+    "The Width row still says Hug while a ceiling is holding the box at 140. Does that read as wrong now that the words visibly reflow?",
+    "In a row, only one label can be given the leftover room. Have you ever wanted two labels in the same row to share it?"
+  ],
+  "rough": [
+    "A word longer than the room still hangs out, and so does a whole label when even its longest word does not fit. That is deliberate: narrowing further makes the letters break in the middle of a word, which looked worse than the overhang it replaced.",
+    "A row stack that holds TWO labels wide enough to outgrow it wraps neither. Each would have to be sized with the other's width already decided, and there is no single answer to that, so the row is left exactly as it was.",
+    "A label the flow wrapped reads its container's width in the W field, not the width of its own words. That is the same thing a stretched label already does, but it is still two numbers that look like they disagree.",
+    "Nothing in the mocks drew this. It comes from the size limits audit's own complaint, so there was nothing to copy and nothing to argue with.",
+    "Screen Recording was granted for this run, so both pictures are real window captures, not offscreen renders."
+  ]
+}

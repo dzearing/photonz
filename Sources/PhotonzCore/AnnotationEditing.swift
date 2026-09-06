@@ -204,6 +204,13 @@ extension Layer {
         }
         var layer = self
         layer.frame = frame
+        // A width chosen by hand is an answer, so the container's answer is
+        // dropped: from here on this box is a paragraph somebody made, and the
+        // flow leaves its width alone.
+        if !placedByContainer, text != nil,
+           abs(frame.standardized.width - self.frame.standardized.width) > 0.01 {
+            layer.wrappedByItsContainer = nil
+        }
         // A text box's width IS its wrap width, so a new one re-wraps the words
         // and the box becomes as tall as they now need — dragged narrower it
         // gains lines, dragged wider it gives them back, and the top edge stays

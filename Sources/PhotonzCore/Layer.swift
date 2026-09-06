@@ -775,6 +775,19 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// told to, which is every piece in every document written before this.
     public var flowFill: FlowFill?
 
+    /// Set where this label's width is not a width somebody chose but the room
+    /// the container had left for it: the words outgrew a box with a width of
+    /// its own, so the flow wrapped them at that width and wrote it down here
+    /// (`docs/design/ui-building.md`, "A label grows to fit what it says").
+    ///
+    /// The flow undoes this at the top of every pass and works the width out
+    /// again, which is the whole reason it is recorded. Without it a label
+    /// narrowed once is indistinguishable from a paragraph somebody dragged
+    /// narrower on purpose, so raising the ceiling would leave the words stuck
+    /// on two lines for ever. Nil is every text box whose width is its own
+    /// answer, which is every one written before this.
+    public var wrappedByItsContainer: Bool?
+
     public init(id: UUID = UUID(), name: String, content: LayerContent, frame: CGRect,
                 crop: CGRect? = nil, transform: LayerTransform = .identity,
                 style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false,
@@ -805,6 +818,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          isVisible: isVisible, isLocked: false,
                          colorStyleBindings: colorStyleBindings, placement: placement,
                          flowFill: flowFill)
+        copy.wrappedByItsContainer = wrappedByItsContainer
         copy.repointComponentProperties(map)
         return copy
     }
@@ -824,11 +838,12 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// The same layer with fresh ids, recording what became what so anything
     /// that pointed at an old id can be pointed at the new one.
     func reidentified(map: inout [UUID: UUID]) -> Layer {
-        let copy = Layer(name: name, content: content.reidentified(map: &map), frame: frame,
+        var copy = Layer(name: name, content: content.reidentified(map: &map), frame: frame,
                          crop: crop, transform: transform, style: style,
                          isVisible: isVisible, isLocked: isLocked,
                          colorStyleBindings: colorStyleBindings, placement: placement,
                          flowFill: flowFill)
+        copy.wrappedByItsContainer = wrappedByItsContainer
         map[id] = copy.id
         return copy
     }
