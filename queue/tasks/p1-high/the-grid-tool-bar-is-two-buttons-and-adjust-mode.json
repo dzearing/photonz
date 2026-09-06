@@ -1,0 +1,37 @@
+{
+  "id": "the-grid-tool-bar-is-two-buttons-and-adjust-mode",
+  "title": "The grid tool bar is two buttons, and adjust mode stops explaining itself",
+  "goal": "The grid controls have grown into a row of numbers and words that says far more than it needs to. Cut it back. Outside adjust mode the grid needs a grid switch, one button showing the current cell size and nothing else, a divider, and a gear button for adjust mode. No smallest cell shown beside it, no slider sitting on the bar, and no menu of settings when the size button is pressed. Pressing the size button drops a plain vertical slider of sizes, with automatic at the very bottom, meaning the grid follows the zoom. In adjust mode the bar loses its explanatory subtext and its origin numbers; the canvas already shows where the origin is. Hovering the origin lines to move them must not light up a guide, since a guide is not what a click there does. Clicking a guide selects it, and backspace deletes the selected one.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T21:33:24.147Z",
+  "updated": "2026-09-06T21:33:24.183Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-06, tightening what shipped as the-grid-is-worked-from-the-tool-bar-and-you-can. Their words on the current state: the toolbar shows four pixels min to thirty two pixels current and should show only the current size; clicking it opens a weird popup with a bunch of settings and should open just a vertical slider; the words Adjust Grid should be a gear icon button; in adjust mode the bar is stupid, it should not have subtext and should not have the origin position number; hovering the centre lines should not show the yellow guide since the click there drags the origin; clicking a guide should select it so backspace deletes it. The last two are behaviour, not decoration: the guide highlight and the origin grab overlap in the same place, and the guide has no selected state, so backspace has nothing to act on. Note the automatic setting is new and needs a meaning written down: pick the cell from the same level of detail ladder the drawing uses so automatic and the drawn grid can never disagree, which is the rule the snapping task also settled on. Removing the smallest cell from the bar does not mean removing the idea; say where it lives now.",
+  "acceptance": [
+    "Outside adjust mode the grid occupies four things on the tool bar and no more: the grid switch, a button reading the current cell size, a divider, and a gear button that enters adjust mode",
+    "Nothing on the bar shows the smallest cell, and no slider sits on the bar itself",
+    "Pressing the size button opens a vertical slider of sizes and nothing else, with no settings menu around it",
+    "The bottom position on that slider is automatic, and choosing it makes the cell follow the zoom; the button then reads that it is automatic",
+    "The adjust mode bar carries only its controls: no sentence explaining the mode, no origin coordinates",
+    "Hovering near the origin lines highlights the origin, not a guide, so what lights up is always what a click will do",
+    "Clicking a guide selects it, visibly, and backspace deletes the selected guide; clicking empty grid still pins a new one",
+    "Everything the removed controls used to do is still reachable, and the audit says where each went",
+    "Audit written under queue/audits/ with the bar outside the mode, the size slider open, and the bar inside the mode, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T21:33:24.147Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-06T21:33:24.182Z",
+      "note": "seq 180 -> 2"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1460,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T18:38:31.099Z",
-  "updated": "2026-09-06T18:38:31.100Z",
+  "updated": "2026-09-06T21:31:54.985Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-06 with Scripts/playtest/dock-picked-first-walk.json stage 3-measure on a marked-up screenshot: viewport 688, Measurement 674-1144, i.e. 470 points tall. Layers (251) plus Measurement (470) is 721, so the section cannot fit whole however InspectorSectionID is ordered. MeasureInspector in Sources/Photonz/LayersPanel.swift. Discovered while working the-panel-says-what-you-picked-before-it-explain, whose acceptance item for measurements is not deliverable until this lands.",
@@ -22,6 +22,11 @@
     {
       "t": "2026-09-06T18:38:31.100Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T21:31:54.985Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-06T21:31:54.984Z"
 }
