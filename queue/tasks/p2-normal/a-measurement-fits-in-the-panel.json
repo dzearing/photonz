@@ -1,0 +1,27 @@
+{
+  "id": "a-measurement-fits-in-the-panel",
+  "title": "A measurement fits in the panel",
+  "goal": "Pick a measurement on a laptop-sized window and the section holding its settings is taller than the whole panel, so no amount of scrolling shows it all at once and no rearranging of the panel can ever make it fit. Its settings need to be trimmed or grouped so a measurement is as quick to adjust as a rectangle.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1460,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T18:38:31.099Z",
+  "updated": "2026-09-06T18:38:31.100Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-09-06 with Scripts/playtest/dock-picked-first-walk.json stage 3-measure on a marked-up screenshot: viewport 688, Measurement 674-1144, i.e. 470 points tall. Layers (251) plus Measurement (470) is 721, so the section cannot fit whole however InspectorSectionID is ordered. MeasureInspector in Sources/Photonz/LayersPanel.swift. Discovered while working the-panel-says-what-you-picked-before-it-explain, whose acceptance item for measurements is not deliverable until this lands.",
+  "acceptance": [
+    "Picking a measurement in a 1200 by 720 window shows its whole section without scrolling, measured by a playtest walk that reads the dock offsets back",
+    "No setting is removed that a redline actually uses; anything folded away is one click from where it was",
+    "Scripts/playtest/dock-picked-first-walk.json still passes for a rectangle, a piece of text and a zoom callout"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T18:38:31.100Z",
+      "note": "created (manual)"
+    }
+  ]
+}

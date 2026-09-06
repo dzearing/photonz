@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1410,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:47:13.295Z",
-  "updated": "2026-09-06T14:47:13.296Z",
+  "updated": "2026-09-06T18:22:55.533Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-06 with Scripts/playtest/dock-component-first-walk.json stage 3-ordinary-layer: viewport 688, Layers 6-257, Position & Size 257-392, Color 392-497, Effects 497-655, Rectangle 655-739. The per-kind sections (annotation, text, measure, callout) sit after color and effects in InspectorSectionID. Moving them above Effects undoes inspector.sectionOrder.version 1, which moved Effects up because Corner Radius was below the fold, so this is a genuine tradeoff and probably wants a decision card rather than a guess. The migration idiom is PanelSectionOrder.moving(_:before:in:) plus a numbered orderVersion in InspectorPanel.loadOrder.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-06T14:47:13.296Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T18:22:55.533Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T18:37:23.686171Z",
+      "note": "Adversarial review, before building. The task asks for a section reorder. Measured first with a new walk (Scripts/playtest/dock-picked-first-walk.json) on a REAL marked-up screenshot at 1200x720: a screenshot open, one measurement, four rectangles, a label and a zoom callout, so the layers list is at its full height. The dock's own offsets, viewport 688: rectangle picked -> Layers 6-257, Measurements 257-344, Position & Size 344-479, Color 479-584, Effects 584-742, Rectangle 742-826, Shadow 826-897. Text picked -> Text 749-925. Callout -> Zoom Callout 749-863. Measurement -> Measurement 674-1144."
+    },
+    {
+      "t": "2026-09-06T18:37:23.686342Z",
+      "note": "Finding 1: the premise is worse than the task says. In this document the picked thing's section is not merely below the fold, its HEADER is off screen too, so there is no hint the section exists. And Effects is already cut: Corner Radius sits about 120pt into Effects, i.e. at 704, which is 16pt past the fold. So acceptance item 3 ('Corner Radius stays reachable, which is what moving Effects up bought') is ALREADY false as soon as the document has a measurement in it. The 2026-09-03 fix only holds on a document with nothing else in it."
+    },
+    {
+      "t": "2026-09-06T18:37:23.686344Z",
+      "note": "Finding 2: no order can satisfy the acceptance list. One selected layer brings 890 to 1210 points of sections into a 688 point viewport, so reordering only chooses which part falls off. Worked through every permutation: with the picked section moved directly under the layers list, a rectangle and a callout fit but text loses Corner Radius (Text 176 tall + Effects 195 pushes it to 715), and the Measurement section alone is 470 tall, so Layers (251) + Measurement (470) = 721 > 688 and it can never be whole however it is ordered. Acceptance item 2 is not deliverable by a reorder at all."
+    },
+    {
+      "t": "2026-09-06T18:37:23.686346Z",
+      "note": "Finding 3: so the real question is not 'which order' but 'the panel is over capacity, what should it do' - take you to the section named after what you picked, put it first and let something else fall off, or make room by starting the lists shorter. That is a UX call with a visible consequence either way, and the wrong guess undoes a fix the user asked for a month ago. Opening a decision."
+    },
+    {
+      "t": "2026-09-06T18:37:23.686347Z",
+      "note": "Shipped regardless of the decision: Scripts/playtest/dock-picked-first-walk.json, which reads the dock's offsets back for all four kinds and is the harness acceptance item 4 asks for. It passes today and records the failing baseline."
     }
-  ]
+  ],
+  "started": "2026-09-06T18:22:55.532Z"
 }

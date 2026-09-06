@@ -1,0 +1,71 @@
+{
+  "out": "/tmp/photonz-playtest/dock-picked-first",
+  "seed": "A screenshot open in a laptop window (1200 by 720), marked up until the layers list has grown to its full height, which is what a document looks like after ten minutes of work. Pick a rectangle, a piece of text, a measurement and a zoom callout in turn, and read the dock's own offsets back rather than trusting a picture. Two claims each time: the section named after the thing you picked is WHOLE on screen, and the Corner Radius slider is still reachable without scrolling, which is what moving Effects up bought on 2026-09-03.",
+  "setup": { "forget": ["panel", "tools", "shapes", "text", "measure", "color"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1200, "height": 720 },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "tool", "tool": "measure" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "size" },
+    { "do": "move", "at": [356, 786] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [356, 786] },
+    { "do": "wait", "seconds": 0.9 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 500], "to": [300, 560], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [340, 500], "to": [440, 560], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [480, 500], "to": [580, 560], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [620, 500], "to": [760, 620], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [240, 700] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Label" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.9 },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "drag", "from": [950, 560], "to": [1090, 660], "steps": 12 },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "0-document", "note": "the document every claim below is read off: a screenshot with a measurement, four rectangles, a label and a zoom callout on it, so the layers list is at its full height." },
+
+    { "do": "selectRow", "row": "Rectangle 4" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-rectangle", "note": "THE TEST: a rectangle picked. Rectangle has to be in dockInView (whole, not just its header), and the Corner Radius slider has to be on screen." },
+    { "do": "panel", "stage": "1-rectangle" },
+    { "do": "snapshot", "name": "dock-picked-first-1-rectangle" },
+
+    { "do": "selectRow", "row": "Text" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-text", "note": "the same for a piece of text, whose own section is the tallest of the four." },
+    { "do": "panel", "stage": "2-text" },
+    { "do": "snapshot", "name": "dock-picked-first-2-text" },
+
+    { "do": "selectRow", "row": "Measure" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-measure", "note": "the same for a measurement." },
+    { "do": "panel", "stage": "3-measure" },
+    { "do": "snapshot", "name": "dock-picked-first-3-measure" },
+
+    { "do": "selectRow", "row": "Zoom" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-callout", "note": "the same for a zoom callout: both its rows, Magnification and the shape picker." },
+    { "do": "panel", "stage": "4-callout" },
+    { "do": "snapshot", "name": "dock-picked-first-4-callout" }
+  ]
+}

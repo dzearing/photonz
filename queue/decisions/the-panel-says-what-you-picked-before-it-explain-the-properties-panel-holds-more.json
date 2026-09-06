@@ -1,0 +1,69 @@
+{
+  "id": "the-panel-says-what-you-picked-before-it-explain-the-properties-panel-holds-more",
+  "taskId": "the-panel-says-what-you-picked-before-it-explain",
+  "question": "The properties panel holds more than fits on a laptop. What should it do when you pick something?",
+  "context": "Measured on a real marked-up screenshot at 1200 by 720: one selected layer brings 890 to 1210 points of sections into a 688 point panel, so something is always below the fold. Today the part that falls off is the section named after the thing you picked, and on that document even its title is off screen.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Put what you picked first",
+      "summary": "The section named after the thing you picked (Rectangle, Text, Measurement, Zoom Callout) moves up to sit directly under the layers list, above Colour, Effects and Position & Size. Pick a rectangle and its Thickness is right there.",
+      "pros": [
+        "The panel always opens on the thing you just clicked, the way the Component section does for a copy",
+        "Nothing moves while you work: the order is fixed, so you learn it once",
+        "Fixes a rectangle, a label and a zoom callout on a laptop window"
+      ],
+      "cons": [
+        "Colour, Effects and the X Y W H boxes all shift down by the height of that section, so on a busy document the Corner Radius slider needs a scroll for a piece of text",
+        "A measurement's own section is 470 points tall and still will not fit whole, whatever the order"
+      ],
+      "mitigation": "Corner Radius is already below the fold today the moment a document has a measurement in it, so this loses less than it looks. The oversized Measurement section gets its own task."
+    },
+    {
+      "id": "b",
+      "label": "Take you to it instead",
+      "summary": "The order stays exactly as it is. When you pick something and the section named after it is off the bottom, the panel slides just far enough to show it, and slides back to the top when you pick nothing. If you have scrolled the panel yourself it stays where you left it.",
+      "pros": [
+        "Works for every kind, including a measurement, because it does not depend on everything fitting",
+        "Nobody who has learned where Corner Radius lives has to relearn anything",
+        "The panel still has one order, so a section is always in the same place relative to its neighbours"
+      ],
+      "cons": [
+        "The panel moves under your eye when you click a different thing on the canvas",
+        "The layers list slides partly off the top, which is odd if you picked from the list"
+      ],
+      "mitigation": "It only moves when the section is genuinely off screen, it moves the smallest distance that reveals it, and it animates so you can see where it went."
+    },
+    {
+      "id": "c",
+      "label": "Make room: the lists start shorter",
+      "summary": "Keep the order, but the layers list and the measurements list open about a third shorter and the Shadow section starts closed. Roughly 150 points come back, which is enough for a rectangle and a callout to show their own settings without anything else moving down.",
+      "pros": [
+        "Nothing changes place, so nothing has to be relearned",
+        "Every section gains, not just the one named after what you picked",
+        "You can still drag either list back to the height you like, and it is remembered"
+      ],
+      "cons": [
+        "You see about three layers at a glance instead of five",
+        "Not enough on its own for a piece of text or a measurement"
+      ],
+      "mitigation": "Both lists scroll and both are draggable, and the height you choose is remembered per machine."
+    },
+    {
+      "id": "d",
+      "label": "Leave the panel as it is",
+      "summary": "Picking a rectangle, a label, a measurement or a zoom callout keeps taking one scroll to reach the settings only that thing has.",
+      "pros": [
+        "No churn in a panel that has already been rearranged twice this month"
+      ],
+      "cons": [
+        "On a marked-up screenshot the section is so far down that even its title is off screen, so there is no hint the settings exist"
+      ],
+      "mitigation": "Nothing to mitigate; the scroll stays.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-06T18:37:45.291Z"
+}
