@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1240,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:00:21.673Z",
-  "updated": "2026-09-06T05:35:15.457Z",
+  "updated": "2026-09-06T06:07:56.154Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the spread gap task on 2026-09-05: its acceptance suggested demoing spread on the starter Nav Bar and it cannot be done. StarterComponents.navBar builds .free(width: 320, height: 48) with a Background (fill), a Divider (horizontal stretch + vertical bottom), a Back label pinned at x=14 and a centred Title. Turning it into a Row stack by hand pulls the Divider into the flow as an item, because isSurface needs stretch on BOTH axes. Options worth weighing: leave it Free and place the pieces with LayerPlacement (cheapest, and already half true), or make the bar a Row stack with the divider kept out of the flow, which needs a way to say \"this is chrome, not a row\" beyond isSurface. See queue/audits/2026-09-05-spread-gap.json.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-06T07:10:00.000Z",
       "note": "Filed a-control-dragged-off-the-shelf-onto-an-open-gro: the row lines a second control up in the model, but a tile dragged off the shelf onto an open bar lands beside it rather than in it, so a person cannot try that part yet."
+    },
+    {
+      "t": "2026-09-06T06:07:56.154Z",
+      "note": "The Nav Bar starter is a Row now. New rule: a piece stretched along the way a stack runs steps out of the flow and is painted to the group's own edges (ResolvedPlacement.stepsOutOfTheFlow, applied in GroupFlow.placed/arranged, PlacementEditing, LayerGeometry), so a hairline across a bar or a rail down a panel is chrome rather than a fourth row. Bar is Row, gap 12, padding 0/14/0/14, 320x48, with surface, hairline and title stepping out and the back label the one thing the row lines up. Title drawn under the controls after driving the built bar showed its full-width box swallowing clicks meant for Back. Also fixed centred text sitting 2pt right of its box middle (TextRasterizer.alignedWidth). Verified in the probe with Scripts/playtest/nav-bar-row-walk.json, real window captures; Scripts/test.sh 3652 tests green. Audit queue/audits/2026-09-05-nav-bar-row.json; follow-up filed as a-control-dragged-off-the-shelf-onto-an-open-gro."
     }
   ],
-  "started": "2026-09-06T05:35:15.456Z"
+  "started": "2026-09-06T05:35:15.456Z",
+  "completed": "2026-09-06T06:07:56.154Z"
 }
