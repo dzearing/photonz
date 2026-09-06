@@ -42,4 +42,22 @@ public enum PanelSectionOrder {
         result.insert(section, at: landing + 1)
         return result
     }
+
+    /// `section` moved to sit immediately BEFORE `anchor`, and nothing else
+    /// touched. The mirror of `moving(_:after:in:)`, for the fixes that read
+    /// as "this belongs above that": a section whose whole point is to be the
+    /// first thing you see about what you picked has no anchor underneath it
+    /// to hang off, and naming the one it must beat says the rule plainly.
+    ///
+    /// Does nothing if either id is absent, or if it is already there.
+    public static func moving(_ section: String, before anchor: String, in order: [String]) -> [String] {
+        guard section != anchor,
+              order.contains(section), let anchorIndex = order.firstIndex(of: anchor) else { return order }
+        if anchorIndex > 0, order[anchorIndex - 1] == section { return order }
+        var result = order
+        result.removeAll { $0 == section }
+        guard let landing = result.firstIndex(of: anchor) else { return order }
+        result.insert(section, at: landing)
+        return result
+    }
 }

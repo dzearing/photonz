@@ -1,0 +1,28 @@
+{
+  "id": "layout-stops-lecturing-and-starts-fitting",
+  "title": "Layout stops lecturing and starts fitting",
+  "goal": "The Layout section is by far the tallest thing in the properties panel: 269 points for a copy of a component and 489 for an original, and most of that is a paragraph of prose spelling out an arrangement the rows above already state. It pushes everything below it off the bottom of the panel. It should say the same thing in a fraction of the room.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1420,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T14:47:18.969Z",
+  "updated": "2026-09-06T14:47:18.969Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-09-06 in a 1200x720 window: for a component copy Layout ran 568-837, for an original 697-1186. Sample body text: \"Everything in this copy stays where the original put it. It keeps 10 top, 16 right, 10 bottom, 16 left clear inside its edges. It is 36 tall.\" plus Arrangement/Horizontal/Vertical rows. Source is PlacementInspector.swift. This bulk is what buried the Component section (task the-dock-opens-on-the-section-that-answers-the-l, which moved Component above it rather than fixing this).",
+  "acceptance": [
+    "The Layout section is no taller than Position and Size for a selection that is not using auto layout",
+    "The paragraph explaining the arrangement is gone or reduced to one short line",
+    "Nothing that could be set before can no longer be set",
+    "A playtest walk reads the section height back and proves the number"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T14:47:18.969Z",
+      "note": "created (manual)"
+    }
+  ]
+}

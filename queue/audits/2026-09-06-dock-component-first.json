@@ -1,0 +1,28 @@
+{
+  "feature": "The Component section comes first",
+  "epic": "ui-components",
+  "summary": "Pick a copy of a component and the panel now tells you what you picked before it tells you where it sits: the Component section, with its Version row and its knobs, sits directly under the Layers list instead of below Position and Size and Layout. On a laptop window every one of those rows used to be off the bottom of the panel.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components and Library flags on. Nothing to turn on for this: the panel simply opens in the new order, and if you had already dragged your sections around, only Component moves.",
+  "try": [
+    { "do": "Open View > Show Library and switch the shelf to Components." },
+    { "do": "Drag the Button tile onto the canvas twice: once for the original, once for a copy." },
+    { "do": "Click the copy on the canvas.", "shot": "2026-09-06-dock-component-first-copy.png" },
+    { "do": "Read down the panel without touching the scroll wheel: Layers, then Component." },
+    { "do": "Click the original instead and read down again." },
+    { "do": "Click any ordinary layer, a rectangle say, and check the panel still opens on Position and Size." },
+    { "do": "Scroll the panel down to Effects, then click the other copy on the canvas. The panel must not move." }
+  ],
+  "evaluate": [
+    "When you pick a copy, is the first thing you read the thing you wanted to know?",
+    "Does Component belong above Position and Size, or does having the numbers first matter more to you?",
+    "Selecting an original shows its name and its versions in the same slot. Does that read as the same idea as a copy's Version row, or as two different things sharing a header?",
+    "The panel deliberately never scrolls itself. Would you rather it jumped to the section that matters, or is holding still the right call?",
+    "Layers still takes the top third of the panel before any property appears. Is that list earning its space?"
+  ],
+  "rough": [
+    "Layout is still by far the tallest section in the dock: 269 points for a copy and 489 for an original, most of it a paragraph of prose explaining the arrangement. That bulk is what pushed Component off the bottom in the first place, and it is only moved out of the way, not fixed. Filed as its own task.",
+    "The same problem is still live for ordinary layers. Pick a rectangle in a laptop window and its own Rectangle section sits at 655 in a 688 point panel, below Color and Effects, so its rows are below the fold exactly as Component's were. Text, Measurement and Zoom Callout share that slot. Filed as its own task, because moving them up means pushing Effects back down, and Effects was moved up for the same reason a month ago.",
+    "No motion was added. The title of the task said the dock should open on the section that answers what you picked, which reads as the panel scrolling itself; a properties panel that scrolls under you when you click on the canvas is unpredictable, so the section was moved instead. Say if you wanted the scroll.",
+    "Screen Recording was granted for this run, so the picture above is a real capture of the window, not an offscreen render."
+  ]
+}

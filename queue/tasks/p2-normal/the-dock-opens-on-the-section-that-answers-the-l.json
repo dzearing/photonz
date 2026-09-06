@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.203Z",
-  "updated": "2026-09-06T12:16:42.225Z",
+  "updated": "2026-09-06T14:47:36.678179Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while auditing component versions on 2026-09-05: the Version row is the biggest fact about a copy and sits four sections down. Dock sections are in InspectorPanel; the walk log prints dockSections offsets, which is a cheap way to measure this.",
@@ -34,6 +34,39 @@
     {
       "t": "2026-09-06T12:16:42.225Z",
       "note": "seq 50 -> 50"
+    },
+    {
+      "t": "2026-09-06T14:33:55.153Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T14:47:36.678179Z",
+      "note": "Reproduced first, with the dock's own measurements rather than a screenshot. Probe, 1200x720 window (dock viewport 688 points), a Button component dropped twice. Copy picked: Layers 6-217, Position & Size 217-352, Layout 352-621, Component 621-771 \u2014 only the Component header peeks in at 621, every row of it is below 688. Original picked: Component 801-1047, the header not even on screen. Confirmed exactly as reported."
+    },
+    {
+      "t": "2026-09-06T14:47:36.678179Z",
+      "note": "Adversarial review BEFORE building. The title reads as 'the panel scrolls itself to the right section', and DockReveal already exists for that (it is how the Library shelf is brought into view). Rejected it: a properties panel that scrolls under you every time you click on the canvas is unpredictable, and acceptance item 3 asks for the opposite. The real cause is not the scroll position, it is that Layout, the tallest section in the dock at 269-489 points, sits between you and the thing you picked. Identity before position is also what Figma does with an instance. So: move the section, add no motion."
+    },
+    {
+      "t": "2026-09-06T14:47:36.678179Z",
+      "note": "Built: InspectorSectionID.component moved above .geometry, so the order under Layers is now Component, Position & Size, Layout. A numbered one-time migration (inspector.sectionOrder.version 2) carries the move to anyone who already has an order saved, leaving any arrangement they made by hand alone. New pure helper PanelSectionOrder.moving(_:before:in:) with 5 tests written first (mirror of the existing after: form)."
+    },
+    {
+      "t": "2026-09-06T14:47:36.678179Z",
+      "note": "Verified by measurement, not assumption, with the two-version Button that the task is really about. Copy picked: Component 257-433 in a 688 viewport, whole, with the Version row reading Default four lines under the Layers list. Original: Component 257-562, whole. Ordinary rectangle: no Component section and Position & Size still leads at 257-392, unchanged. Scrolled down to Effects and picked the copy beside it: every offset identical, the dock does not move. All four are pinned by Scripts/playtest/dock-component-first-walk.json."
+    },
+    {
+      "t": "2026-09-06T14:47:36.678179Z",
+      "note": "Scripts/test.sh green: 3867 tests, 326 suites. component-versions, copies-share-knobs, copies-share-choice, place-a-version and apply-to-versions walks all still pass."
+    },
+    {
+      "t": "2026-09-06T14:47:36.678179Z",
+      "note": "Adversarial review AFTER building, on the real app with a real screen capture. Two things left rough, both filed rather than guessed at: Layout is still the tallest section in the dock and most of it is explanatory prose (layout-stops-lecturing-and-starts-fitting), and the same bug is still live for ordinary layers \u2014 a rectangle's own Rectangle section sits at 655 in a 688 viewport (the-panel-says-what-you-picked-before-it-explain). The second one is a real tradeoff, because moving the per-kind sections up pushes Effects back down, and Effects was moved up for this exact reason a month ago, so it wants a decision rather than a guess."
+    },
+    {
+      "t": "2026-09-06T14:47:36.678179Z",
+      "note": "Audit: queue/audits/2026-09-06-dock-component-first.json, with a real screen capture (Screen Recording was granted this run)."
     }
-  ]
+  ],
+  "started": "2026-09-06T14:33:55.152Z"
 }

@@ -1,0 +1,232 @@
+{
+  "out": "/tmp/photonz-playtest/dock-component-first",
+  "seed": "A laptop-sized window, and a Button component with two versions. The Component section says WHICH version a copy is showing and holds its knobs, so it has to be readable the moment you pick the copy. Before 2026-09-06 it sat under Layout, the tallest section in the dock, which put every one of its rows below the bottom of the panel: you had to scroll to find out what you had picked. This walk reads the dock's own measurements back rather than trusting a picture, and makes four claims: a copy shows Component whole with its Version row, an original does too, an ordinary rectangle still leads with Position & Size, and a dock somebody has scrolled stays exactly where they left it when the selection changes.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1200,
+      "height": 720
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        360,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Disabled"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        400,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        700,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-copy",
+      "note": "THE POINT: a copy picked with nothing scrolled. Component is whole inside the dock, second from the top, so the Version row is the first thing under the Layers list instead of a scroll away."
+    },
+    {
+      "do": "panel",
+      "stage": "1-copy"
+    },
+    {
+      "do": "snapshot",
+      "name": "dock-component-first-1-copy"
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-original",
+      "note": "the original picked: its name and its versions are whole on screen too, where the whole section used to start below the fold."
+    },
+    {
+      "do": "panel",
+      "stage": "2-original"
+    },
+    {
+      "do": "snapshot",
+      "name": "dock-component-first-2-original"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        180
+      ],
+      "to": [
+        900,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        800,
+        240
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-ordinary-layer",
+      "note": "an ordinary rectangle: no Component section at all, and Position & Size still leads the property sections exactly as it did before."
+    },
+    {
+      "do": "panel",
+      "stage": "3-ordinary-layer"
+    },
+    {
+      "do": "snapshot",
+      "name": "dock-component-first-3-ordinary-layer"
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": -500,
+      "row": "Effects section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-scrolled-to-effects",
+      "note": "somebody has scrolled down to work in Effects on this copy. Note every offset."
+    },
+    {
+      "do": "panel",
+      "stage": "4-scrolled-to-effects"
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-other-copy-picked",
+      "note": "THE OTHER POINT: picking the copy beside it must not move the dock. Every offset here has to match stage 4 exactly."
+    },
+    {
+      "do": "panel",
+      "stage": "5-other-copy-picked"
+    }
+  ]
+}

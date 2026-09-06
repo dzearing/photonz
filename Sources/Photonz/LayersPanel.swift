@@ -65,6 +65,9 @@ struct InspectorPanel: View {
     static let collapsedKey = "inspector.collapsed"
     /// Effects joined the Color section instead of trailing every per-kind one.
     private static let orderVersionEffectsWithColor = 1
+    /// Component rose above Position & Size, so a copy says which version it is
+    /// without being scrolled to.
+    private static let orderVersionComponentAboveGeometry = 2
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
     /// The section currently in the reader's hand, and where it is being
     /// carried. See `sectionDragChanged`.
@@ -660,6 +663,12 @@ struct InspectorPanel: View {
                                               in: merged)
             orderVersion = Self.orderVersionEffectsWithColor
         }
+        if orderVersion < Self.orderVersionComponentAboveGeometry {
+            merged = PanelSectionOrder.moving(InspectorSectionID.component.rawValue,
+                                              before: InspectorSectionID.geometry.rawValue,
+                                              in: merged)
+            orderVersion = Self.orderVersionComponentAboveGeometry
+        }
         let ids = merged.compactMap { InspectorSectionID(rawValue: $0) }
         if ids != order { order = ids }
     }
@@ -912,6 +921,15 @@ enum InspectorSectionID: String, CaseIterable {
     // Above Position & Size, because the two answer the same question at
     // different scales: where do these sit, and where does this one sit.
     case arrange
+    // WHAT you have picked, before anything about where it sits: an original
+    // component's name and its versions, and a copy's Version row and knobs.
+    // Above Position & Size on purpose (2026-09-06). It used to sit under
+    // Layout, which is the tallest section in the dock, and that put the
+    // Version row — the biggest single fact about a copy — below the bottom of
+    // the panel on a laptop window: you had to scroll to find out which
+    // version you were looking at. Identity first, then where it is, then what
+    // it looks like.
+    case component
     case geometry
     case frame
     // The column layout a selected screen is designed to (Next, `next-frames`).
@@ -924,10 +942,6 @@ enum InspectorSectionID: String, CaseIterable {
     // Under Frame, because Frame says how big the box is and this says what
     // happens to what is in it when that box changes.
     case placement
-    // A main component's own properties, right beside the Frame section: both
-    // say what KIND of group you have selected, and both belong near the top
-    // where the name is worth reaching.
-    case component
     // Every color the picked layers wear, and one place to set them all at
     // once. Above the per-kind sections, because the look of a thing is what
     // you reach for first, and it sits in the SAME place whether one layer is

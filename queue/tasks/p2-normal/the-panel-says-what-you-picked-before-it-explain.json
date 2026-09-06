@@ -1,0 +1,28 @@
+{
+  "id": "the-panel-says-what-you-picked-before-it-explain",
+  "title": "The panel says what you picked before it explains itself",
+  "goal": "Pick a rectangle, a piece of text, a measurement or a zoom callout on a laptop-sized window and the section named after that thing sits below the bottom of the panel, under Color and Effects. You have to scroll to reach the settings that only that thing has. The section named after what you picked should be readable the moment you pick it, the way the Component section now is for a copy.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1410,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T14:47:13.295Z",
+  "updated": "2026-09-06T14:47:13.296Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-09-06 with Scripts/playtest/dock-component-first-walk.json stage 3-ordinary-layer: viewport 688, Layers 6-257, Position & Size 257-392, Color 392-497, Effects 497-655, Rectangle 655-739. The per-kind sections (annotation, text, measure, callout) sit after color and effects in InspectorSectionID. Moving them above Effects undoes inspector.sectionOrder.version 1, which moved Effects up because Corner Radius was below the fold, so this is a genuine tradeoff and probably wants a decision card rather than a guess. The migration idiom is PanelSectionOrder.moving(_:before:in:) plus a numbered orderVersion in InspectorPanel.loadOrder.",
+  "acceptance": [
+    "Picking a rectangle shows its Rectangle section whole, without scrolling, in a 1200 by 720 window",
+    "Picking a piece of text, a measurement and a zoom callout each do the same",
+    "Corner Radius stays reachable without scrolling for those same selections, which is what moving Effects up bought a month ago",
+    "A playtest walk reads the dock offsets back and proves all of the above rather than a person judging a screenshot"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T14:47:13.296Z",
+      "note": "created (manual)"
+    }
+  ]
+}

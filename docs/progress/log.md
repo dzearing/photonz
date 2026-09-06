@@ -9567,3 +9567,49 @@ PNGs under `queue/decisions/`). Recommended B, settings always showing.
 Task is blocked on that answer. No app code touched; suite green at 3862 tests.
 Next: build the chosen layout, starting with a real absent state for the stroke
 in PhotonzCore (TDD), then the parts list in Next, then the audit.
+
+## 2026-09-06 — the Component section comes first
+
+Task `the-dock-opens-on-the-section-that-answers-the-l`. Reproduced with the
+dock's own numbers rather than a screenshot: probe, 1200x720 window, dock
+viewport 688pt, a Button component dropped twice. Copy picked, nothing
+scrolled — Layers 6-217, Position & Size 217-352, Layout 352-621, **Component
+621-771**. Only the header peeked in; every row of it, Version included, was
+below the fold. Original picked: Component 801-1047, not on screen at all.
+
+The task's title reads as "the panel should scroll itself to the right
+section", and `DockReveal` already does that for the Library shelf. Rejected:
+a properties panel that scrolls under you every time you click on the canvas
+is unpredictable, and the task's own third acceptance item asks for the
+opposite. The cause is not the scroll position, it is that Layout — the
+tallest section in the dock at 269pt for a copy and 489pt for an original —
+stands between you and the thing you picked. So the section moved and no
+motion was added: **identity, then where it is, then what it looks like**,
+which is also how an instance reads in Figma.
+
+`InspectorSectionID.component` now sits above `.geometry`, carried to existing
+saved orders by a numbered one-time move (`inspector.sectionOrder.version` 2)
+that leaves any hand arrangement alone. New pure helper
+`PanelSectionOrder.moving(_:before:in:)`, five tests written first, mirroring
+the existing `after:` form.
+
+Pinned by `Scripts/playtest/dock-component-first-walk.json`, which makes four
+claims and reads the offsets back for each: a copy shows Component whole
+(257-433, Version row four lines under the Layers list), an original does too
+(257-562), an ordinary rectangle is untouched and still leads with Position &
+Size (257-392), and a dock scrolled down to Effects does not move a point when
+the selection changes. Suite green at 3867 tests; the five component walks
+still pass.
+
+Two rough edges filed rather than guessed at: Layout is still the tallest
+section in the dock and most of it is prose
+(`layout-stops-lecturing-and-starts-fitting`), and the same bug is still live
+for ordinary layers — a rectangle's own Rectangle section sits at 655 in a 688
+viewport (`the-panel-says-what-you-picked-before-it-explain`). That second one
+is a real tradeoff: moving the per-kind sections up pushes Effects back down,
+and Effects was moved up for this exact reason in version 1, so it wants a
+decision card.
+
+Next: the audit (`queue/audits/2026-09-06-dock-component-first.json`) asks
+whether identity-before-numbers is the right read, and whether holding the
+panel still was the right call or the user wanted the scroll after all.

@@ -61,4 +61,36 @@ import Testing
         #expect(PanelSectionOrder.moving("effects", after: "color", in: saved) == saved)
         #expect(PanelSectionOrder.moving("color", after: "effects", in: saved) == saved)
     }
+
+    @Test func movingPutsTheSectionRightBeforeItsAnchor() {
+        let saved = ["layers", "arrange", "geometry", "color", "text", "effects", "shadow", "library"]
+        let moved = PanelSectionOrder.moving("effects", before: "color", in: saved)
+        #expect(moved == ["layers", "arrange", "geometry", "effects", "color", "text", "shadow", "library"])
+    }
+
+    @Test func movingBeforeLeavesEveryOtherRelativePositionAlone() {
+        // Someone dragged Layers to the bottom and Color to the top. Only
+        // Effects moves; their two choices survive.
+        let saved = ["color", "arrange", "geometry", "text", "shadow", "effects", "library", "layers"]
+        let moved = PanelSectionOrder.moving("effects", before: "geometry", in: saved)
+        #expect(moved == ["color", "arrange", "effects", "geometry", "text", "shadow", "library", "layers"])
+    }
+
+    @Test func movingBeforeReachesTheVeryTopOfTheList() {
+        let saved = ["layers", "color", "effects", "shadow"]
+        #expect(PanelSectionOrder.moving("effects", before: "layers", in: saved)
+                == ["effects", "layers", "color", "shadow"])
+    }
+
+    @Test func movingBeforeIsANoOpWhenItIsAlreadyThere() {
+        let saved = ["layers", "effects", "color", "shadow"]
+        #expect(PanelSectionOrder.moving("effects", before: "color", in: saved) == saved)
+    }
+
+    @Test func movingBeforeDoesNothingWhenEitherSideIsMissing() {
+        let saved = ["layers", "color", "shadow"]
+        #expect(PanelSectionOrder.moving("effects", before: "color", in: saved) == saved)
+        #expect(PanelSectionOrder.moving("color", before: "effects", in: saved) == saved)
+        #expect(PanelSectionOrder.moving("color", before: "color", in: saved) == saved)
+    }
 }
