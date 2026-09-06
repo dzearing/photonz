@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1360,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:40:40.393Z",
-  "updated": "2026-09-06T17:16:01.792767Z",
+  "updated": "2026-09-06T17:16:25.303Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Landed 2026-09-06 with the drop-into-open-group task. The drop now resolves through PhotonzDocument.componentDropLanding / componentDropTarget(of:at:inside:), and the flow probe there already computes where the row parks a stand-in - extending it to an INDEX means appending the stand-in at a candidate index rather than at the end, and picking the index from the pointer against the flowed gaps. insertComponentInstance / insertStarterComponent both take an inside: context and call addLayer(_:toGroup:) which already accepts an index.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-06T17:16:01.792767Z",
       "note": "Perf note (composite path): the drag preview submits one extra composite per slot change, not per mouse move. The crisp tile change renders the same amount of work against a different document. Render performance suite unchanged: 12MP/10-layer interactive edit median 5.6ms, crisp tile at 400% median 9.6ms."
+    },
+    {
+      "t": "2026-09-06T17:16:25.303Z",
+      "note": "A drop into a row, column or grid now lands in the slot the pointer is over, not wherever the piece's left edge fell; while the drag is in the air the neighbours move apart to open the gap it will take. Core in GroupFlow.arrangedItems/slot + PhotonzDocument.dropSlot/holdingRoomForComponentDrop (11 new tests), app in EditorState.holdRoomForComponentDrag wired through CanvasNSView. Also fixed the crisp zoom tile overpainting preview submits from the settled document. Scripts/test.sh green (3959); verified live in the probe with Scripts/playtest/row-drop-slot-walk.json. Audit: queue/audits/2026-09-06-row-drop-slot.json"
     }
   ],
-  "started": "2026-09-06T16:44:13.175Z"
+  "started": "2026-09-06T16:44:13.175Z",
+  "completed": "2026-09-06T17:16:25.303Z"
 }
