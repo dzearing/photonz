@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T11:09:17.011Z",
-  "updated": "2026-09-06T15:39:18.712113Z",
+  "updated": "2026-09-06T15:39:46.842Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left out of the-layout-section-speaks-for-several-picked-lay on 2026-09-06: that task made the CHILD rows (This layer in <container>) speak for the whole selection through PlacementSelection in PhotonzCore. The Contents rows in PlacementInspector.contentRows are still keyed on one group, and so are the two things inside them: ArrangementInspector(layer:) and Layer.contentsWithTheirOwnPlacement. Both need a whole-selection reading of their own, shaped like PlacementSelection. Do NOT reuse PlacementSelection for this: that one is about where the picked layers sit in what holds them, this is about what the picked groups tell their own contents.",
@@ -79,7 +79,12 @@
     {
       "t": "2026-09-06T15:39:18.712113Z",
       "note": "audit written: queue/audits/2026-09-06-contents-for-several.json with three real window captures."
+    },
+    {
+      "t": "2026-09-06T15:39:46.842Z",
+      "note": "The Contents half of Layout now speaks for every picked group: ContentsSelection in PhotonzCore (19 tests) plus multi-target setContentPlacement/setGroupLayout/updateGroupLayout/setClipsContents, each one undo step; ArrangementInspector and PlacementInspector's Contents rows read the selection instead of one layer; the exceptions list counts across groups and names the group each layer is in. Verified on the probe app with Scripts/playtest/contents-for-several-walk.json, 11 stages, real window captures. Full suite green (3889). Audit: queue/audits/2026-09-06-contents-for-several.json. Commit ea6b6b7, pushed."
     }
   ],
-  "started": "2026-09-06T15:04:46.643Z"
+  "started": "2026-09-06T15:04:46.643Z",
+  "completed": "2026-09-06T15:39:46.842Z"
 }
