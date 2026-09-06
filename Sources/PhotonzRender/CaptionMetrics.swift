@@ -37,4 +37,22 @@ public enum CaptionMetrics {
         annotation.captionPillSize(
             forTextSize: textSize(for: draft, fontSize: annotation.captionFontSize))
     }
+
+    /// How far in from the pill's left edge the words start, in document
+    /// points. The field you type a caption in insets its draft by exactly
+    /// this, so pressing Return does not slide the words.
+    ///
+    /// It is NOT simply the padding. The committed pill centres the ink of the
+    /// words in the whole pill, which differs from the padding twice over: a
+    /// short caption's pill is widened to stay a badge, and the box the words
+    /// are measured into carries its slack on their right
+    /// (`TextRasterizer.inkOffset`).
+    public static func textInset(for draft: String, in annotation: AnnotationContent) -> CGFloat {
+        let words = committedText(draft)
+        let text = textSize(for: words, fontSize: annotation.captionFontSize)
+        let pill = annotation.captionPillSize(forTextSize: text)
+        let content = TextContent(string: words, fontName: fontName,
+                                  fontSize: annotation.captionFontSize)
+        return (pill.width - text.width) / 2 - TextRasterizer.inkOffset(content)
+    }
 }

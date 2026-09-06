@@ -293,7 +293,14 @@ extension CanvasNSView {
                                      session: TextEditSession, viewport: Viewport) {
         let zoom = viewport.zoom
         let inset = caption.captionPadding * zoom
-        editor.textContainerInset = NSSize(width: inset, height: inset)
+        // The words are typed where the committed pill draws them, which is
+        // further in than the padding: the pill centres their ink, not the box
+        // measured for them. Without this the label slides a couple of points
+        // on Return. An empty field is still a hint sitting at the padding —
+        // its bubble is stretched to the hint, not to the words.
+        let leading = CaptionMetrics.committedText(editor.string).isEmpty
+            ? inset : CaptionMetrics.textInset(for: editor.string, in: caption) * zoom
+        editor.textContainerInset = NSSize(width: leading, height: inset)
         var pill = CaptionMetrics.pillSize(for: editor.string, in: caption)
         if editor.string.isEmpty, let placeholder = (editor as? InlineTextView)?.placeholder,
            let font = editor.font {

@@ -107,6 +107,36 @@ struct CaptionMetricsTests {
                 == CaptionMetrics.pillSize(for: "Focus ring off", in: content))
     }
 
+    /// The field types its words exactly where the committed pill draws them:
+    /// the inset centres the ink, so it sits PAST the padding by the slack the
+    /// measured box carries, and past it further still on a widened pill.
+    @Test func theFieldInsetsItsDraftToWhereTheCommittedWordsLand() {
+        var content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
+        content.captionFontSize = 20
+        for draft in ["Hand off the spec", "Hi", "1"] {
+            let inset = CaptionMetrics.textInset(for: draft, in: content)
+            let text = CaptionMetrics.textSize(for: draft, fontSize: content.captionFontSize)
+            let pill = CaptionMetrics.pillSize(for: draft, in: content)
+            // Centring the ink of the words leaves the same room on the right.
+            let content1 = TextContent(string: draft, fontName: CaptionMetrics.fontName,
+                                       fontSize: content.captionFontSize)
+            let ink = TextRasterizer.inkOffset(content1)
+            #expect(abs((inset + text.width / 2 + ink) - pill.width / 2) < 0.001,
+                    "\(draft.debugDescription): inset \(inset) in a \(pill.width) pill")
+            #expect(inset > content.captionPadding,
+                    "\(draft.debugDescription): inset \(inset) vs padding \(content.captionPadding)")
+        }
+    }
+
+    /// A draft measures the text it commits as, so its inset does too.
+    @Test func theInsetIgnoresWhitespaceTheCommitWillTrim() {
+        var content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
+        #expect(CaptionMetrics.textInset(for: "  Focus ring off ", in: content)
+                == CaptionMetrics.textInset(for: "Focus ring off", in: content))
+        content.captionFontSize = 32
+        #expect(CaptionMetrics.textInset(for: "Focus ring off", in: content) > 0)
+    }
+
     @Test func pillScalesWithTheCaptionFontSize() {
         var small = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
         small.captionFontSize = 14

@@ -179,10 +179,10 @@ struct CaptionPillShapeTests {
     /// one end: a short caption's glyphs sit in their (widened) pill exactly
     /// the way a long caption's sit in their (text-sized) one.
     ///
-    /// Both are about two points left of true center, because the measured text
-    /// box carries the last glyph's trailing space. That predates the widening
-    /// and is tracked separately; what matters here is that widening does not
-    /// add to it.
+    /// Both land on true center now that the pill centers the ink rather than
+    /// the measured box (they used to sit two points left of it, together).
+    /// Where the centering itself is measured is `PillTextCentringTests`; what
+    /// matters here is that widening a pill does not move the words in it.
     @Test func theTextStaysCentredInAWidenedPill() {
         guard let widened = glyphOffCenter("H"),
               let natural = glyphOffCenter("A much longer caption") else {
@@ -190,6 +190,6 @@ struct CaptionPillShapeTests {
             return
         }
         #expect(abs(widened - natural) <= 1)
-        #expect(abs(widened) <= 3)
+        #expect(abs(widened) <= 1)
     }
 }

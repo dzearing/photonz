@@ -107,7 +107,15 @@ enum PillRasterizer {
         // this whole path exists to avoid.
         guard let glyphs = TextRasterizer.rasterize(text, size: textSize,
                                                     scale: pixelsPerPoint) else { return }
-        let textRect = CGRect(x: anchor.x - textSize.width / 2, y: anchor.y - textSize.height / 2,
+        // Centre the INK, not the measured box: the box carries its rounding
+        // and frame inset entirely to the right of the glyphs, so centring it
+        // leaves the word about two points left of the middle of the pill.
+        // Rounded to a whole device pixel so the glyph bitmap keeps landing on
+        // the pixel grid it was baked for — a fractional slide would soften
+        // every readout to fix a fraction of a point.
+        let inkOffset = (TextRasterizer.inkOffset(text) * pixelsPerPoint).rounded() / pixelsPerPoint
+        let textRect = CGRect(x: anchor.x - textSize.width / 2 - inkOffset,
+                              y: anchor.y - textSize.height / 2,
                               width: textSize.width, height: textSize.height)
         context.saveGState()
         context.translateBy(x: textRect.minX, y: textRect.maxY)

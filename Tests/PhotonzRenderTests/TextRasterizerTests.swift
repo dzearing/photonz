@@ -376,4 +376,44 @@ struct TextRasterizerTests {
         let centred = TextRasterizer.naturalSize(words("Button", .center, .middle))
         #expect(plain == centred)
     }
+
+    // MARK: - Where the ink sits in the measured box
+
+    /// The measured box always carries its slack on the right, so a word's ink
+    /// sits LEFT of the middle of it — by about the frame inset on each side,
+    /// at every size and length. This is the number a pill slides its glyphs
+    /// back by.
+    @Test("A word's ink sits left of the middle of the box measured for it")
+    func inkSitsLeftOfTheBoxCentre() {
+        for string in ["H", "12", "240 px", "A much longer caption"] {
+            for fontSize in [CGFloat(10), 20, 48] {
+                let text = TextContent(string: string, fontName: "SF Pro", fontSize: fontSize)
+                let offset = TextRasterizer.inkOffset(text)
+                #expect(offset < 0, "\(string.debugDescription) at \(fontSize): \(offset)")
+                #expect(offset > -4, "\(string.debugDescription) at \(fontSize): \(offset)")
+            }
+        }
+    }
+
+    /// Sliding by the offset lands the ink on the middle of the box, which is
+    /// the whole point of the number.
+    @Test("Sliding a word by its ink offset centres it in its box")
+    func slidingByTheOffsetCentresTheInk() {
+        for string in ["H", "12", "A much longer caption"] {
+            let text = TextContent(string: string, fontName: "SF Pro", fontSize: 20)
+            let box = TextRasterizer.naturalSize(text)
+            let line = CTLineCreateWithAttributedString(TextRasterizer.measuringString(text))
+            let ink = CTLineGetImageBounds(line, nil)
+            let centred = ink.midX - TextRasterizer.inkOffset(text)
+            #expect(abs(centred - box.width / 2) < 0.001, "\(string.debugDescription): \(centred)")
+        }
+    }
+
+    /// Nothing to centre reports no offset rather than a number a caller would
+    /// have to know to ignore.
+    @Test("An empty or multi-line string has no ink offset")
+    func nothingToCentreHasNoOffset() {
+        #expect(TextRasterizer.inkOffset(TextContent(string: "", fontSize: 20)) == 0)
+        #expect(TextRasterizer.inkOffset(TextContent(string: "two\nlines", fontSize: 20)) == 0)
+    }
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-05T23:23:11.533Z",
-  "updated": "2026-09-06T10:27:36.089Z",
+  "updated": "2026-09-06T10:28:02.001Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Same defect the arrow caption had, on the other side of the shared PillRasterizer. Confirmed by measuring: PillRasterizer.footprint for \"4\" at MeasureContent.labelFontSize/labelPadding is 32x42, and \"12\" is 39x42 — both narrower than tall. The caption fix put the floor on AnnotationContent.captionMinPillWidth (Sources/PhotonzCore/Layer.swift) and applied it in captionPillSize + estimatedCaptionSize; the measure side would want the same floor in PillRasterizer.footprint or in MeasureContent's own chip size. Deliberately NOT done with the caption fix because widening a measure chip moves geometry that MeasureChipJoinTests, MeasureCalloutClearanceTests and the callout fixture tests all assert against, so it needs its own pass over those. No point can form (the radius is already clamped to half the short side), so this is purely about the shape reading right.",
@@ -59,7 +59,7 @@
     }
   ],
   "started": "2026-09-06T10:23:51.700Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-06T10:23:20.925Z",
     "exit": 0,

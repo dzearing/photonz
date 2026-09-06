@@ -409,10 +409,14 @@ struct MeasureRenderingTests {
     }
 
     private func chipWidth(for content: MeasureContent) -> CGFloat {
-        // Same footprint the rasterizer measures: text + padding on all sides.
-        let text = TextContent(string: content.label(pixelScale: 1), fontName: "SF Pro",
-                               fontSize: content.labelPointSize)
-        return TextRasterizer.naturalSize(text).width + 2 * content.labelPadding
+        // The footprint the rasterizer DRAWS: text plus padding on all sides,
+        // floored at the badge width. Measuring without the floor put the probe
+        // ten points inside a short readout's pill, right where its digits sit,
+        // so a test aiming at fill was reading whatever the text did.
+        PillRasterizer.footprint(for: content.chipText(pixelScale: 1),
+                                 fontSize: content.labelPointSize,
+                                 padding: content.labelPadding,
+                                 minWidth: content.labelMinPillWidth).width
     }
 
     private var probeContent: MeasureContent {

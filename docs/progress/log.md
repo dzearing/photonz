@@ -9307,3 +9307,37 @@ Next: the text tool still drops its box at the raw click point. Filed as
 in the audit: a lit line keeps a drag a little past halfway, which shows up more
 when drawing than when moving, because it makes the box a cell narrower rather
 than moving it a cell.
+
+## 2026-09-06 — Words sit in the middle of their pill
+
+Every badge in the app carried its words about two points left of centre. The
+cause was not the trailing advance the task suspected: `TextRasterizer`'s
+`naturalSize` rounds the measured advance up and adds `frameInset` on each side,
+and left aligned glyphs draw flush to the box's left edge, so all of that slack
+lands on the words' right. `PillRasterizer` centred that box, not the ink in it.
+
+`TextRasterizer.inkOffset` now reports how far a single line's ink sits from the
+middle of the box measured for it, and `PillRasterizer.draw` slides the glyph
+bitmap back by it, rounded to a whole device pixel so the bitmap keeps landing
+on the pixel grid it was baked for. Nothing measures differently: no pill, no
+chip and no text layer changed size, which is why the fix went here rather than
+into `naturalSize` (that number sizes every text layer in every saved document).
+
+Two things came out of it. The caption field types its draft at the pill's
+padding, which would have made the words jump on Return, so
+`CaptionMetrics.textInset` says where the committed words land and the field
+insets by exactly that. And `MeasureRenderingTests` was probing chip fill at a
+point computed WITHOUT the badge floor, which on a short readout is where the
+digits sit: it now uses the footprint the rasterizer draws.
+
+Shared render code, so both releases have it; nothing to port.
+
+Verified in the probe app with `Scripts/playtest/words-in-the-middle-walk.json`
+(real window captures, Screen Recording granted): measured off the capture, a one
+character caption is 0.25pt off centre, "Hi" 0.00, "Primary action" 0.25, and the
+2 px, 30 px and 124 px chips land within a device pixel. All 3721 tests pass.
+Audit in `queue/audits/2026-09-06-pill-text-centring.json`.
+
+Next: the typed draft and the committed label still disagree by about half a
+screen point at 134% zoom, because screen text and the baked bitmap rasterize at
+different sizes. Recorded in the audit rather than chased.

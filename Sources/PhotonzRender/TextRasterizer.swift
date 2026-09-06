@@ -147,6 +147,28 @@ public enum TextRasterizer {
                       height: max(ceil(suggested.height), ceil(lineHeight)) + frameInset * 2)
     }
 
+    /// How far the ink of a single line sits from the middle of the box
+    /// `naturalSize` measures for it, in document points. Positive is to the
+    /// right; an empty or multi-line string is nothing to centre and reports 0.
+    ///
+    /// Anything that centres words by centring that box needs this. The box is
+    /// the measured advance width rounded UP and widened by `frameInset` on
+    /// each side, and left-aligned glyphs are drawn flush to its left edge, so
+    /// every point of that slack lands on their right and the ink sits about
+    /// two points left of the middle. That is the error nobody can name and
+    /// everybody can see in a badge, so a pill slides its glyphs back by this
+    /// and centres what a person actually looks at.
+    public static func inkOffset(_ text: TextContent) -> CGFloat {
+        // One line only: a CTLine is one line by definition, and a wrapped
+        // block's lines each sit differently, so a caller with more than one
+        // line is centring boxes and this has nothing to tell it.
+        guard !text.string.isEmpty, !text.string.contains(where: \.isNewline) else { return 0 }
+        let line = CTLineCreateWithAttributedString(measuringString(text))
+        let ink = CTLineGetImageBounds(line, nil)
+        guard ink.width > 0, ink.width.isFinite, ink.midX.isFinite else { return 0 }
+        return ink.midX - naturalSize(text).width / 2
+    }
+
     /// The document-size face `text` is set in, as a descriptor.
     ///
     /// The inline editor builds its draft font from this with a scale transform

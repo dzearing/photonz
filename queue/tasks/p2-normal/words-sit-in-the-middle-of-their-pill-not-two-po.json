@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1300,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T23:23:20.999Z",
-  "updated": "2026-09-05T23:23:21.000Z",
+  "updated": "2026-09-06T10:28:13.570Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Measured on 2026-09-05 while fixing the short caption pill: for both \"H\" in a widened pill and \"A much longer caption\" in a text-sized one, the glyph ink centre sits 2.5px left of the pill ink centre — identical for both, so it is not the widening. The cause is that TextRasterizer.naturalSize returns a box that includes the last glyph's trailing advance, and PillRasterizer.draw centres that box rather than the ink. Fix is likely to centre on the typographic bounds instead, or to trim the trailing advance in naturalSize (careful: naturalSize also sizes text layers, so check TextRasterizerTests and TextBlockMetricsTests). Tests/PhotonzRenderTests/CaptionPillShapeTests.swift has a glyphOffCenter helper that already measures this.",
+  "notes": "Measured on 2026-09-05 while fixing the short caption pill: for both \"H\" in a widened pill and \"A much longer caption\" in a text-sized one, the glyph ink centre sits 2.5px left of the pill ink centre \u2014 identical for both, so it is not the widening. The cause is that TextRasterizer.naturalSize returns a box that includes the last glyph's trailing advance, and PillRasterizer.draw centres that box rather than the ink. Fix is likely to centre on the typographic bounds instead, or to trim the trailing advance in naturalSize (careful: naturalSize also sizes text layers, so check TextRasterizerTests and TextBlockMetricsTests). Tests/PhotonzRenderTests/CaptionPillShapeTests.swift has a glyphOffCenter helper that already measures this.",
   "acceptance": [
     "The ink of a centred word is within a point of the pill's centre, measured off real pixels",
     "This holds for one character, two characters and a full sentence",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-05T23:23:21.000Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T10:28:13.570Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T10:35:00.000Z",
+      "note": "Adversarial review before building. The task note blamed the last glyph's trailing advance; measuring says otherwise. naturalSize returns ceil(advance) + 2pt of frame inset on EACH side, and left-aligned glyphs draw flush to the box's left edge, so all ~4.5pt of slack lands on their right and the ink sits 2.0 to 2.5pt left of the box centre. The note's fix (trim naturalSize) was rejected: naturalSize sizes every text layer in every saved document and every pill footprint, and acceptance says the pill's size must not change. Shortest version that delivers the value: leave every measurement alone and slide the glyph bitmap inside the pill."
+    },
+    {
+      "t": "2026-09-06T10:50:00.000Z",
+      "note": "Reproduced first, on pixels: a new PillTextCentringTests measured 1.5 to 4px left of centre for \"H\", \"1\", \"Hi\", \"12\" and a sentence at 10/20/48pt, and for 4px/12px/999px measurement chips through MeasureRasterizer. Then TextRasterizer.inkOffset (ink centre minus box centre, single line only) and PillRasterizer centring on it, rounded to a whole device pixel so the glyph bitmap keeps landing on the pixel grid it was baked for."
+    },
+    {
+      "t": "2026-09-06T11:00:00.000Z",
+      "note": "Two things fell out. MeasureRenderingTests' chip probe measured the chip WITHOUT the badge floor, so on a short readout it was aiming ten points inside the pill, right where the digits sit: fixed to the footprint the rasterizer draws. And the caption field types its draft at the pill's padding, which would now jump on Return, so CaptionMetrics.textInset (tested) says where the words land and the field insets by that."
+    },
+    {
+      "t": "2026-09-06T11:20:00.000Z",
+      "note": "Verified on the real app, not just in tests: probe build + Scripts/playtest/words-in-the-middle-walk.json, Screen Recording granted so these are real window captures. Measured off 2-three-captions-sc.png, a one character caption is 0.25pt off centre, \"Hi\" is 0.00 and \"Primary action\" 0.25 (all were 2.0 to 2.5 before). Measurement chips 2 px, 30 px and 124 px land within one device pixel. Acceptance items 1 to 3 verified off real pixels; item 4 verified by thePillsOwnSizeDoesNotChange (footprints unchanged at 35/39/217pt) and by the whole suite staying green."
+    },
+    {
+      "t": "2026-09-06T11:25:00.000Z",
+      "note": "Review of the built thing: the typed draft still sits about half a screen point left of the committed label at 134% zoom (screen text and the baked bitmap are rasterized at different sizes), down from about two points. Left as is and recorded in the audit. Also noticed a one character CAPTION pill is still much rounder than a one digit measurement chip, which is already its own queued task (an-arrow-caption-of-one-character-reads-as-a-bad), so not touched here."
+    },
+    {
+      "t": "2026-09-06T11:30:00.000Z",
+      "note": "Shared render code, so both releases get it; nothing to port. Audit: queue/audits/2026-09-06-pill-text-centring.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-06T10:28:13.569Z"
 }

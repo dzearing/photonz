@@ -1,0 +1,27 @@
+{
+  "feature": "Words sit in the middle of their pill",
+  "epic": "measure-redline",
+  "summary": "Every badge in the app carried its words about two points left of centre, at every length and size. Captions and measurement readouts now centre the ink of the words themselves, so a redlined screenshot reads as built rather than hand-drawn.",
+  "setup": "Photonz Dev, any screenshot open. Nothing to turn on: captions and measurements draw this way in both releases.",
+  "try": [
+    { "do": "Open a screenshot and press A for the arrow tool." },
+    { "do": "Drag an arrow at something and type one character, without pressing Return yet." },
+    { "do": "Look at where the character sits in the bubble, then press Return and look again: it should not move." },
+    { "do": "Draw two more captioned arrows beside it, one saying \"Hi\" and one a short sentence.", "shot": "2026-09-06-pill-text-centring-1.png" },
+    { "do": "Press I, measure a tight gap, then measure the width of a wide button.", "shot": "2026-09-06-pill-text-centring-2.png" },
+    { "do": "Zoom to 400% and look at one short badge and one long one side by side." }
+  ],
+  "evaluate": [
+    "Does a one character caption now look centred in its pill, or does it still lean one way?",
+    "Does the word move at all when you press Return, and if it does, is it enough to notice?",
+    "At 400% zoom, are the words still crisp, or has something softened them?",
+    "Do a measurement chip and an arrow caption read as the same object now?"
+  ],
+  "rough": [
+    "The words were only ever off by about two points, so the before and after is a subtle picture. Measured off the real window capture: a one character caption, a two character one and a sentence now land within a quarter of a point of the middle of their pill, where all three used to sit 2.0 to 2.5 points left of it.",
+    "The typed draft and the committed label still disagree by about half a screen point at 134% zoom, because screen text and the baked label are rasterized at different sizes. It was around two points before, and is now under a pixel on a Retina display, but it is not exactly zero.",
+    "The task suggested trimming the trailing space out of the measured text box instead. That box also sizes every text layer in every saved document, and the pill's own size was not allowed to change, so the words are slid inside the box rather than the box being resized.",
+    "An arrow caption of one character is still a much rounder pill than a one digit measurement chip (a separate queued task owns that); this only changed where the character sits inside it.",
+    "Screenshots are real window captures from the probe build, not offscreen renders."
+  ]
+}
