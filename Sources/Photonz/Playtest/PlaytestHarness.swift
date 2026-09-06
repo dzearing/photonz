@@ -907,6 +907,8 @@ private final class Run {
             case .cycleChoice: editor.cycleInstanceChoice()
             case .makeChoice: editor.makeChoice()
             case .detachInstance: editor.detachInstance()
+            case .addComponentVersion: editor.addComponentVersion()
+            case .showNextComponentVersion: editor.showNextComponentVersion()
             case .roundCorners:
                 let ids = editor.cornerRadiusSelection.layerIDs
                 if !ids.isEmpty { editor.commitCornerRadius(ids: ids, 24) }

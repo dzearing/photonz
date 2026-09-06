@@ -71,13 +71,23 @@ public struct ComponentKnobSelection: Hashable, Sendable {
     /// Whether the picked copies come from more than one original. Then there
     /// is no knob they share, and the section says so rather than going blank.
     public let hasDifferentComponents: Bool
+    /// Every version the component holds, which is the menu on the Version row.
+    /// One version is not a choice, so the row is only worth showing while this
+    /// has two or more in it (`ComponentVersions`).
+    public let versions: [ComponentVersion]
+    /// The version every picked copy is showing. Nil when they show different
+    /// ones, which is what puts Mixed in the Version row.
+    public let version: UUID?
 
     private let readings: [UUID: ComponentKnobReading]
 
     public init(componentID: UUID?, componentName: String, instances: [UUID],
                 selectionCount: Int, capableCount: Int, properties: [ComponentProperty],
                 overriddenProperties: Set<UUID>, hasDifferentComponents: Bool,
-                readings: [UUID: ComponentKnobReading]) {
+                readings: [UUID: ComponentKnobReading],
+                versions: [ComponentVersion] = [], version: UUID? = nil) {
+        self.versions = versions
+        self.version = version
         self.componentID = componentID
         self.componentName = componentName
         self.instances = instances
@@ -107,6 +117,14 @@ public struct ComponentKnobSelection: Hashable, Sendable {
     public func reading(_ propertyID: UUID) -> ComponentKnobReading {
         readings[propertyID] ?? .none
     }
+
+    /// Whether the Version row belongs on the panel: the component holds more
+    /// than one drawing of itself, so which one this copy shows is a choice.
+    public var hasVersions: Bool { versions.count > 1 }
+
+    /// Whether the picked copies show different versions, which is what puts
+    /// Mixed in the Version row.
+    public var hasMixedVersions: Bool { hasVersions && version == nil }
 
     /// Whether a knob is one at least one picked copy has answered for itself.
     public func isOverridden(_ propertyID: UUID) -> Bool {
@@ -157,7 +175,24 @@ extension PhotonzDocument {
                 overriddenProperties: [], hasDifferentComponents: true, readings: [:])
         }
         let instances = copies.filter { layer(id: $0)?.isLocked == false }
-        let properties = componentProperties(of: componentID)
+        let versions = componentVersions(of: componentID)
+        // The version they all show, or none when they differ.
+        let shown = Set(instances.compactMap { instanceVersion(of: $0) })
+        let version = shown.count == 1 ? shown.first : nil
+        // The knobs of the version they are showing. Copies on DIFFERENT
+        // versions keep only the knobs every one of those versions has, so a
+        // row on this panel is never a row one of the picked copies has no
+        // answer for.
+        // In the component's own order, so a panel speaking for copies on two
+        // versions lists the same rows in the same order every time.
+        let ordered = versions.map(\.id).filter { shown.contains($0) }
+        var properties = componentProperties(of: componentID, version: version ?? ordered.first)
+        if version == nil, ordered.count > 1 {
+            for other in ordered.dropFirst() {
+                let ids = Set(componentProperties(of: componentID, version: other).map(\.id))
+                properties.removeAll { !ids.contains($0.id) }
+            }
+        }
         var readings: [UUID: ComponentKnobReading] = [:]
         var overridden: Set<UUID> = []
         for property in properties {
@@ -173,7 +208,8 @@ extension PhotonzDocument {
             componentName: mainComponent(componentID: componentID)?.name ?? "",
             instances: instances, selectionCount: layerIDs.count, capableCount: copies.count,
             properties: properties, overriddenProperties: overridden,
-            hasDifferentComponents: false, readings: readings)
+            hasDifferentComponents: false, readings: readings,
+            versions: versions, version: version)
     }
 
     /// What one knob reads over the copies: the answer they share, or Mixed.

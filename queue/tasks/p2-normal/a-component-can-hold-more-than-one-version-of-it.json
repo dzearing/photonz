@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:43:02.752Z",
-  "updated": "2026-09-05T14:05:05.567Z",
+  "updated": "2026-09-06T02:51:30.381Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked on its decision card: the shape of versions is a product judgment, not an engineering one. What exists today: ComponentPropertyKind has text, visible, variant and color (ComponentProperties.swift:34), where `variant` is Make Alternatives, one layer swapped for another sibling inside the same original (ComponentChoice.swift). That is a shape swap, not a version of the whole component. docs/design/ui-building.md, 'What the first version deliberately does not do', defers states outright, while queue/objectives.json describes the ui-components epic as 'create, reuse, variants, overrides', so the plan and the objective disagree and the user settles it. If the answer is the full version set, this task is the model and the knob only, and the Library tile, the canvas marks and any bulk editing across versions get filed as follow-ups after it. Sync lives in ComponentInstances.swift; the per copy override machinery that landed with the colour knob on 2026-09-04 is the pattern to follow.\n\nDecision answered on 2026-09-05: option a, versions under one name. Each version is its own complete drawing, so a version can differ in any way at all, and the cost the user accepted is that a change meant for every version has to be made in each one. The mitigation they chose with it: a new version is made by duplicating an existing one, so versions start out identical. Make Alternatives (ComponentChoice.swift) stays what it is, a shape swap inside one drawing, and is not the same thing as a version.",
@@ -51,6 +51,27 @@
     {
       "t": "2026-09-05T14:05:05.567Z",
       "note": "seq 100 -> 120"
+    },
+    {
+      "t": "2026-09-06T02:51:30.380Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T02:56:10.079521Z",
+      "note": "Adversarial review before building. (1) A version has to be a drawing you can SEE to be a drawing you can edit, so a version is a real group on the canvas, not hidden data. (2) Adding it as a sibling of the original would drop a stray button into whatever screen the original happens to live in, so a new version always lands loose on the canvas just right of the original and is selected. (3) A copy's answers are keyed to knob ids: if the duplicate minted fresh ids every copy would lose its wording the moment it switched, so the duplicate keeps the knob ids and repoints them at its own layers (Layer.reidentified already does exactly this). (4) A Choice answer names a child of the version it was made in; after a swap that child is not there and today's code hides EVERY child, leaving an empty group, so applying a choice that matches nothing now leaves the group alone. (5) The Library would grow one tile per version, which is not what a shelf of components means: one tile per component, and its detail line says how many versions. (6) Cut as decoration for now: editing every version at once, a version set frame on the canvas, reordering versions. Filed as follow-ups."
+    },
+    {
+      "t": "2026-09-06T02:56:10.079521Z",
+      "note": "Plan: versionID/versionName on a main and instanceVersion on a copy (all encodeIfPresent, so old documents decode unchanged); componentVersions/addComponentVersion/renameComponentVersion in a new ComponentVersions.swift; sync resolves a copy from its version and falls back to the default with a notice when the version is gone; Version knob on a copy's panel; Versions row on the original's panel; version count on the Library tile."
+    },
+    {
+      "t": "2026-09-06T03:24:53.903651Z",
+      "note": "Built. Model in Sources/PhotonzCore/ComponentVersions.swift with versionID/versionName on a main and instanceVersion on a copy (all encodeIfPresent, so a document saved before versions is byte for byte what it was). A new version is Layer.reidentified() with the componentID put back, which keeps the knob ids and repoints them at its own layers, so a copy keeps its wording across a swap. Sync resolves a copy from its version and falls back to the first with a report; the app raises \"Version deleted, 1 copy moved to Default\". Knobs, choice options and the Adjustable list are all version-scoped, and the knob selection carries the shared version (Mixed when picked copies differ). 21 tests in ComponentVersionTests, 3562 green overall."
+    },
+    {
+      "t": "2026-09-06T03:24:53.903651Z",
+      "note": "Adversarial review of the built thing, on the real app (Scripts/playtest/component-versions-walk.json, real screen captures). Three things were clumsy and were fixed: the version chip in the layers list was squeezed to \"D...d\" (it keeps its width now and the name gives way); the chip stayed on after the second version was deleted, reading as a state you cannot leave (it only prints while a component holds several); and Edit Original on a copy showing Disabled selected the DEFAULT drawing, so you would have edited the wrong version. Left rough and filed: the canvas label does not say which version a drawing is, there is no edit-every-version-at-once, the shelf always places the first version, and the Component section sits four sections down the dock on a copy."
     }
-  ]
+  ],
+  "started": "2026-09-06T02:51:30.380Z"
 }

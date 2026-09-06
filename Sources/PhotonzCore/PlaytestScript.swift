@@ -528,6 +528,16 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case makeChoice
     /// Layer ▸ Detach Instance, so a walk can show a copy stop following.
     case detachInstance
+    /// Layer ▸ Add Version (Next, `next-components`): gives the selected
+    /// original another version by duplicating the drawing that is selected,
+    /// and selects the new one. The button is in the dock and the row is a
+    /// menu, neither of which a walk can reach, so this is the way in.
+    case addComponentVersion
+    /// Move every selected copy on to the NEXT version its component holds,
+    /// which is what picking the next row in the Version menu does. A walk
+    /// cannot open a menu in the dock, so this is how a swapped version gets
+    /// photographed.
+    case showNextComponentVersion
     /// Style the selected layer the way the Effects and Shadow sliders do:
     /// round its corners, give it a shadow, fade it. The sliders live in the
     /// dock, which a walk cannot reach with the pointer, so this is how a look

@@ -168,22 +168,34 @@ extension PhotonzDocument {
     /// name lives in one place, so the layers list, the canvas badge and the
     /// Library tile can never disagree. A blank name is refused rather than
     /// leaving a nameless tile on the shelf.
+    /// Every version of the component takes the name, because the name belongs
+    /// to the component and not to one drawing of it; which version a drawing is
+    /// is its version name, and that is a different field.
     public mutating func renameComponent(componentID: UUID, to name: String) {
-        guard let main = mainComponent(componentID: componentID),
-              let chosen = ComponentNaming.normalized(name) else { return }
-        updateLayer(id: main.id) { $0.name = chosen }
+        guard let chosen = ComponentNaming.normalized(name) else { return }
+        for version in componentVersions(of: componentID) {
+            updateLayer(id: version.layerID) { $0.name = chosen }
+        }
     }
 
-    /// What the Library's Components scope shows: one tile per main, named by
-    /// its layer. The detail line says how many copies of it are out, which is
-    /// the question a shelf raises the moment copies exist; a component nobody
-    /// has placed yet says "main".
+    /// What the Library's Components scope shows: one tile per COMPONENT, named
+    /// by its layer. The detail line says how many versions it holds and how
+    /// many copies of it are out, which are the two questions a shelf raises the
+    /// moment either exists; a component nobody has placed yet says "main".
+    ///
+    /// One tile per component and not one per version: a version is another
+    /// drawing of the same thing, so a shelf that listed them separately would
+    /// be a shelf that had lost the point of them.
     public var componentLibraryEntries: [LibraryEntry] {
-        mainComponents.compactMap { layer in
-            guard let componentID = layer.componentID else { return nil }
+        var seen: Set<UUID> = []
+        return mainComponents.compactMap { layer in
+            guard let componentID = layer.componentID, seen.insert(componentID).inserted
+            else { return nil }
             return LibraryEntry(id: componentID.uuidString, scope: .components,
                                 name: layer.name,
-                                detail: ComponentNaming.detail(instanceCount: instanceCount(of: componentID)))
+                                detail: ComponentNaming.detail(
+                                    instanceCount: instanceCount(of: componentID),
+                                    versionCount: componentVersionCount(of: componentID)))
         }
     }
 }

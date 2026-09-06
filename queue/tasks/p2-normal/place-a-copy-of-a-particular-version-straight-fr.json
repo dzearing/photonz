@@ -1,0 +1,27 @@
+{
+  "id": "place-a-copy-of-a-particular-version-straight-fr",
+  "title": "Place a copy of a particular version straight from the shelf",
+  "goal": "Dropping a component from the Library always places the first version, so making a disabled button takes two steps: drop it, then change its Version. The shelf should be able to hand you the version you want.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1370,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T03:24:19.169Z",
+  "updated": "2026-09-06T03:24:19.170Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "insertComponentInstance already takes the version through main.componentVersionID; what is missing is the choice at the shelf. Tile is LibraryComponentTile, drag payload is ComponentDrag.",
+  "acceptance": [
+    "A component with more than one version offers them where a copy is placed from",
+    "Placing one puts a copy already showing that version",
+    "A component with one version places exactly as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T03:24:19.170Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -40,10 +40,19 @@ public struct ComponentSyncReport: Hashable, Sendable {
     public var updatedInstances: Int
     /// The components whose copies moved, so a notice can name one by name.
     public var componentIDs: Set<UUID>
+    /// How many copies were showing a version that has since been deleted, and
+    /// were put back on one their component still has. Nothing else on screen
+    /// says so: the copy simply draws something else the next time you look.
+    public var strandedInstances: Int
+    /// What those copies landed on, so the notice can name it.
+    public var strandedOnVersion: String?
 
-    public init(updatedInstances: Int = 0, componentIDs: Set<UUID> = []) {
+    public init(updatedInstances: Int = 0, componentIDs: Set<UUID> = [],
+                strandedInstances: Int = 0, strandedOnVersion: String? = nil) {
         self.updatedInstances = updatedInstances
         self.componentIDs = componentIDs
+        self.strandedInstances = strandedInstances
+        self.strandedOnVersion = strandedOnVersion
     }
 
     public var isEmpty: Bool { updatedInstances == 0 }
@@ -160,7 +169,11 @@ extension PhotonzDocument {
         var used: Set<UUID> = []
         if let referenced = layer.instanceOf {
             used.insert(referenced)
-            if let main = mainComponent(componentID: referenced) {
+            // Every version of it, not only the one this copy shows: a version
+            // is a drawing of the same component, so a component that would
+            // hold itself through any of them draws forever just the same.
+            for version in componentVersions(of: referenced) {
+                guard let main = self.layer(id: version.layerID) else { continue }
                 used.formUnion(componentsUsed(by: main, depth: depth + 1))
             }
         }
@@ -292,6 +305,10 @@ extension PhotonzDocument {
                                    backgroundHex: main.group?.backgroundHex,
                                    instanceOf: componentID,
                                    followedStyle: main.style)
+        // A copy of a component with versions says which one it is showing from
+        // the moment it lands, so restacking the versions never changes what an
+        // already placed copy draws.
+        content.instanceVersion = main.componentVersionID
         // A copy arranges itself the way its original does. Without this a copy
         // of a stack is a loose heap that happens to look right until something
         // inside it changes size — which is exactly what a copy answering a
@@ -306,8 +323,8 @@ extension PhotonzDocument {
         copy.style = main.style
         // A copy arrives answering nothing: it shows exactly what the original
         // shows, and the knobs are there to be turned afterwards.
-        copy.children = resolvedChildren(of: componentID, instance: copy.id,
-                                         overrides: [], stack: [])
+        copy.children = resolvedChildren(of: componentID, version: main.componentVersionID,
+                                         instance: copy.id, overrides: [], stack: [])
 
         if let group {
             let origin = canvasBounds(of: group)?.origin ?? .zero
@@ -329,16 +346,16 @@ extension PhotonzDocument {
     /// The contents a copy should be holding: the original's, with every id
     /// derived from this copy so two layers never share one, and with any copy
     /// found inside filled in the same way.
-    private func resolvedChildren(of componentID: UUID, instance: UUID,
+    private func resolvedChildren(of componentID: UUID, version: UUID?, instance: UUID,
                                   overrides: [ComponentOverride], stack: [UUID]) -> [Layer] {
         guard stack.count < Self.componentNestingLimit, !stack.contains(componentID),
-              let main = mainComponent(componentID: componentID) else { return [] }
+              let main = mainComponent(componentID: componentID, version: version) else { return [] }
         var children = main.children.map { rebound($0, instance: instance, stack: stack + [componentID]) }
         // The original's picture first, then the few facts this copy owns
         // written over the top. That order is what lets an edit to the original
         // still reach a copy that has overridden something else.
-        applyOverrides(overrides, of: componentID, to: &children, instance: instance,
-                       contents: main.group?.contentPlacement)
+        applyOverrides(overrides, of: componentID, version: version, to: &children,
+                       instance: instance, contents: main.group?.contentPlacement)
         return children
     }
 
@@ -364,7 +381,9 @@ extension PhotonzDocument {
         guard let ga = a.group else { return b.group == nil && a.content == b.content }
         guard let gb = b.group, ga.isFrame == gb.isFrame, ga.clipsContents == gb.clipsContents,
               ga.backgroundHex == gb.backgroundHex, ga.componentID == gb.componentID,
-              ga.instanceOf == gb.instanceOf, ga.properties == gb.properties,
+              ga.instanceOf == gb.instanceOf, ga.instanceVersion == gb.instanceVersion,
+              ga.versionID == gb.versionID, ga.versionName == gb.versionName,
+              ga.properties == gb.properties,
               ga.overrides == gb.overrides, ga.instanceSize == gb.instanceSize,
               ga.contentPlacement == gb.contentPlacement else { return false }
         return !differsBeyondIdentity(ga.children, gb.children)
@@ -379,13 +398,14 @@ extension PhotonzDocument {
                          colorStyleBindings: layer.colorStyleBindings,
                          placement: layer.placement, flowFill: layer.flowFill)
         if let nested = layer.instanceOf {
-            copy.children = resolvedChildren(of: nested, instance: id,
+            let version = layer.instanceVersionID
+            copy.children = resolvedChildren(of: nested, version: version, instance: id,
                                              overrides: layer.componentOverrides, stack: stack)
             // A copy inside a component follows ITS original's look here as
             // well, rather than carrying whatever look it happened to be
             // holding when this pass started: the two are put in step in the
             // same sync, and which one runs first must not decide the answer.
-            if let inner = mainComponent(componentID: nested), var group = copy.group {
+            if let inner = mainComponent(componentID: nested, version: version), var group = copy.group {
                 copy.style = LayerStyle.following(inner.style, own: layer.style,
                                                   lastSeen: group.followedStyle)
                 group.followedStyle = inner.style
@@ -418,12 +438,28 @@ extension PhotonzDocument {
             list.map { layer in
                 var copy = layer
                 if let componentID = layer.instanceOf {
-                    guard let main = snapshot.mainComponent(componentID: componentID),
+                    // The version this copy asked for, while its component
+                    // still has it. A version somebody deleted leaves the copy
+                    // on one that exists rather than on nothing at all, and is
+                    // reported so the app can say so.
+                    var version = layer.instanceVersionID
+                    if let asked = version,
+                       snapshot.componentVersion(of: componentID, id: asked) == nil {
+                        version = nil
+                        if snapshot.mainComponent(componentID: componentID) != nil {
+                            report.strandedInstances += 1
+                            report.strandedOnVersion = snapshot.componentVersions(of: componentID)
+                                .first?.name
+                        }
+                    }
+                    guard let main = snapshot.mainComponent(componentID: componentID,
+                                                            version: version),
                           !stack.contains(componentID) else {
                         // The original is gone (or would loop): let go of the
                         // link and keep the picture.
                         var group = copy.group ?? GroupContent()
                         group.instanceOf = nil
+                        group.instanceVersion = nil
                         group.overrides = []
                         group.followedStyle = nil
                         // The size it was wearing is already in its layout, so
@@ -445,7 +481,11 @@ extension PhotonzDocument {
                     // is the copy's (`InstanceSizing`).
                     group.layout = InstanceSizing.layout(main: main, own: group.instanceSize)
                     group.contentPlacement = main.group?.contentPlacement
-                    group.children = snapshot.resolvedChildren(of: componentID, instance: layer.id,
+                    // A copy left holding a version that is gone is put back on
+                    // one that exists, in writing, so it stops asking.
+                    group.instanceVersion = version
+                    group.children = snapshot.resolvedChildren(of: componentID, version: version,
+                                                               instance: layer.id,
                                                                overrides: group.overrides,
                                                                stack: stack)
                     // The look follows part by part: everything this copy has
@@ -490,6 +530,7 @@ extension PhotonzDocument {
 extension ComponentNaming {
     /// The detail line on a component's tile: what it is, or how many copies of
     /// it are out, which is the question a shelf full of components raises.
+    /// `ComponentVersions` adds the version count on top of this.
     public static func detail(instanceCount: Int) -> String {
         switch instanceCount {
         case 0: return mainDetail

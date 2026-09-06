@@ -1794,6 +1794,26 @@ private struct LayersRow: View, Equatable {
             if componentsEnabled, display.isMainComponent || display.isComponentInstance {
                 ComponentMark(isInstance: display.isComponentInstance)
             }
+            // Which version this drawing is, when its component holds more than
+            // one. Every version carries the component's name, so without this
+            // a button with a Disabled version is two rows both called Button
+            // and there is no telling which one you are about to edit.
+            if componentsEnabled, let version = display.versionName {
+                Text(version)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    // The chip keeps its own width and the NAME gives way
+                    // instead. Every version of a component carries the same
+                    // name, so on a narrow dock the version is the word that
+                    // tells the two rows apart: a chip squeezed to "D...d" is
+                    // the one thing here that must not happen.
+                    .fixedSize()
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(Capsule().fill(.quaternary))
+                    .help("This is the \(version) version of \(display.name)")
+            }
             Spacer(minLength: 4)
             // A shut group says how much it is hiding, so the row is not a
             // dead end you have to open to understand.
@@ -1964,6 +1984,12 @@ private struct LayersRow: View, Equatable {
         if offersDetachInstance {
             Button("Detach Instance") { editorState.detachInstance() }
                 .keyboardShortcut("b", modifiers: [.command, .option])
+        }
+        // Only on an original, and only when it would work: a row that means
+        // nothing on the layer you right-clicked is a row people hunt the
+        // reason for.
+        if display.isMainComponent, editorState.canAddComponentVersion {
+            Button("Add Version") { editorState.addComponentVersion() }
         }
         // Settings, not actions: the row says what it IS and wears a checkmark,
         // so the menu reads the same whichever state the layer is in and the

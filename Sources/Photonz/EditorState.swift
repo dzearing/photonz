@@ -841,6 +841,13 @@ final class EditorState {
     /// what it does ("Wording"), and saying what it IS is one word of typing.
     var componentPropertyAwaitingName: UUID?
 
+    /// A version the author just added and has not named yet, so the Version
+    /// field on the original's section can take the focus with its text
+    /// selected. The same New Folder idiom as the component's own name: a
+    /// version lands called "Version 2", and calling it "Disabled" is one word
+    /// of typing.
+    var componentVersionAwaitingName: UUID?
+
     /// The piece somebody last tried to type over and could not, when the
     /// original could still be given a knob for it. It puts the offer on the
     /// copy's own section, which is what the notice tells them to look at: the
@@ -1735,7 +1742,16 @@ final class EditorState {
     /// Placing a copy and moving one both report nothing, because neither is
     /// an edit that reached anywhere.
     private func announceComponentSync(_ report: ComponentSyncReport) {
-        guard Experiments.shared.componentsEnabled, !report.isEmpty else { return }
+        guard Experiments.shared.componentsEnabled else { return }
+        // A copy left holding a version somebody deleted is put back on one
+        // that still exists, and nothing else on screen says so: the copy
+        // simply draws something else the next time you look at it.
+        if report.strandedInstances > 0 {
+            raiseCanvasNotice(.componentVersionGone(count: report.strandedInstances,
+                                                    version: report.strandedOnVersion))
+            return
+        }
+        guard !report.isEmpty else { return }
         let named = report.componentIDs.count == 1
             ? report.componentIDs.first.flatMap { document?.mainComponent(componentID: $0)?.name }
             : nil

@@ -1,0 +1,27 @@
+{
+  "id": "a-change-can-be-made-to-every-version-of-a-compo",
+  "title": "A change can be made to every version of a component at once",
+  "goal": "Each version of a component is its own drawing, so a change meant for all of them (a new corner radius, a renamed label) has to be made in each one by hand. There should be a way to make one edit reach every version.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1360,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T03:24:19.134Z",
+  "updated": "2026-09-06T03:24:19.135Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The cost was accepted with the decision on 2026-09-05 (each version is a complete drawing). This is the sanded-down version of that cost. Versions live as sibling mains sharing a componentID; ComponentVersions.swift holds the model.",
+  "acceptance": [
+    "An edit made once can be applied to every version of the same component in one undo step",
+    "It is clear before it runs which versions it would change",
+    "A component with one version is unaffected"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T03:24:19.135Z",
+      "note": "created (manual)"
+    }
+  ]
+}

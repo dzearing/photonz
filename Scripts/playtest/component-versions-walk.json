@@ -1,0 +1,249 @@
+{
+  "out": "/tmp/photonz-playtest/component-versions",
+  "seed": "A button has a normal look and a disabled look. Before versions those were two components that drifted apart the first time somebody edited one. The walk drops a Button, gives it a second version called Disabled, fades that drawing, then places two copies and puts one of them on Disabled.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1320,
+      "height": 920
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        360,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-original",
+      "note": "the original picked: the Component section holds a Versions block saying it is one drawing"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-versions-1-original"
+    },
+    {
+      "do": "panel",
+      "stage": "1-original"
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Disabled"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-version-added",
+      "note": "a second drawing landed beside the first, named Disabled, and it is the one selected"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-versions-2-version-added"
+    },
+    {
+      "do": "panel",
+      "stage": "2-version-added"
+    },
+    {
+      "do": "action",
+      "action": "fadeLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-version-differs",
+      "note": "the Disabled drawing is faded, so the two versions no longer look the same"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-versions-3-version-differs"
+    },
+    {
+      "do": "render",
+      "name": "component-versions-3-version-differs-doc"
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        420,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        760,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        760,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-copy-panel",
+      "note": "a copy picked: the Version row is at the top of its knobs, reading Default"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-versions-4-copy-panel"
+    },
+    {
+      "do": "panel",
+      "stage": "4-copy-panel"
+    },
+    {
+      "do": "action",
+      "action": "showNextComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-copy-disabled",
+      "note": "THE POINT: one copy now shows Disabled and the copy beside it is untouched"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-versions-5-copy-disabled"
+    },
+    {
+      "do": "panel",
+      "stage": "5-copy-disabled"
+    },
+    {
+      "do": "render",
+      "name": "component-versions-5-copy-disabled-doc"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "deleteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-version-deleted",
+      "note": "the Disabled drawing deleted: the copy that was showing it lands back on Default and the canvas says so"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-versions-6-version-deleted"
+    },
+    {
+      "do": "render",
+      "name": "component-versions-6-version-deleted-doc"
+    }
+  ]
+}

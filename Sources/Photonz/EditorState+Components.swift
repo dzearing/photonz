@@ -253,47 +253,148 @@ extension EditorState {
 
     /// "Select on Canvas" on a Components tile: answers "where is this thing?"
     /// by selecting the main itself, which hands the dock back to the layer.
-    func selectComponentOnCanvas(componentID: UUID) {
-        guard let main = document?.mainComponent(componentID: componentID) else { return }
+    /// With a version named, the drawing of THAT version: a copy showing
+    /// Disabled has to land on the Disabled drawing, or Edit Original quietly
+    /// takes you to a version you were not looking at (`ComponentVersions`).
+    func selectComponentOnCanvas(componentID: UUID, version: UUID? = nil) {
+        guard let main = document?.mainComponent(componentID: componentID, version: version)
+        else { return }
+        selectLayer(main.id, inGroup: document?.parentID(of: main.id))
+    }
+
+    // MARK: - Versions of a component (Next flag `next-components`)
+
+    /// Every version of a component, in the order the document holds them.
+    func componentVersions(of componentID: UUID) -> [ComponentVersion] {
+        guard componentsEnabled else { return [] }
+        return document?.componentVersions(of: componentID) ?? []
+    }
+
+    /// Whether Layer ▸ Add Version would do anything: one original is selected
+    /// and versions are switched on.
+    var canAddComponentVersion: Bool {
+        guard componentsEnabled, let document, actionableLayerIDs.count == 1,
+              let id = actionableLayerIDs.first,
+              let componentID = document.layer(id: id)?.componentID else { return false }
+        return document.canAddComponentVersion(componentID: componentID)
+    }
+
+    /// Layer ▸ Add Version: gives the selected original another version by
+    /// duplicating the one you are looking at, and selects the new drawing.
+    ///
+    /// Selecting it is the point: a version you cannot see is a version you
+    /// cannot edit, and the whole reason a version is a real drawing on the
+    /// canvas is that every tool already works on it. The name field opens on
+    /// it too, so naming it is typing rather than hunting.
+    @discardableResult
+    func addComponentVersion() -> UUID? {
+        guard canAddComponentVersion, let id = actionableLayerIDs.first,
+              let componentID = document?.layer(id: id)?.componentID else { return nil }
+        return addComponentVersion(componentID: componentID,
+                                   from: document?.layer(id: id)?.componentVersionID)
+    }
+
+    @discardableResult
+    func addComponentVersion(componentID: UUID, from version: UUID? = nil) -> UUID? {
+        guard componentsEnabled else { return nil }
+        discardDragPreview()
+        var added: UUID?
+        perform { added = $0.addComponentVersion(componentID: componentID, from: version) }
+        guard let added, let main = document?.mainComponent(componentID: componentID, version: added)
+        else { return nil }
+        selectLayer(main.id, inGroup: document?.parentID(of: main.id))
+        componentVersionAwaitingName = added
+        return added
+    }
+
+    func renameComponentVersion(componentID: UUID, version: UUID, to name: String) {
+        guard componentsEnabled else { return }
+        perform { $0.renameComponentVersion(componentID: componentID, version: version, to: name) }
+    }
+
+    /// Which version a copy is showing, resolved: the one it was set to while
+    /// that version exists, and the component's first otherwise.
+    func instanceVersion(of instance: UUID) -> UUID? {
+        document?.instanceVersion(of: instance)
+    }
+
+    /// Sets which version every picked copy shows. Nothing a copy owns for
+    /// itself is touched: its wording, its colours and its own size all come
+    /// with it.
+    func setInstanceVersion(instances: [UUID], to version: UUID) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        perform { $0.setInstanceVersion(instances: instances, to: version) }
+    }
+
+    /// Puts every selected copy on the NEXT version its component holds,
+    /// wrapping round at the end. The Version row is a menu in the dock, which
+    /// a scripted walk cannot open, so this is how it asks for one.
+    func showNextComponentVersion() {
+        guard componentsEnabled, let document else { return }
+        let copies = orderedSelectedLayerIDs.filter { document.layer(id: $0)?.instanceOf != nil }
+        guard let first = copies.first, let componentID = document.layer(id: first)?.instanceOf
+        else { return }
+        let versions = document.componentVersions(of: componentID)
+        guard versions.count > 1, let shown = document.instanceVersion(of: first),
+              let index = versions.firstIndex(where: { $0.id == shown }) else { return }
+        setInstanceVersion(instances: copies, to: versions[(index + 1) % versions.count].id)
+    }
+
+    /// Selects one version's drawing on the canvas, which is the way from a
+    /// copy or a list row to the thing you actually edit.
+    func selectComponentVersion(componentID: UUID, version: UUID) {
+        guard let main = document?.mainComponent(componentID: componentID, version: version) else { return }
         selectLayer(main.id, inGroup: document?.parentID(of: main.id))
     }
 
     // MARK: - Component knobs and overrides (Next flag `next-components`)
 
-    /// The knobs an original exposes, in the order it lists them.
-    func componentProperties(of componentID: UUID) -> [ComponentProperty] {
+    /// The knobs an original exposes, in the order it lists them. Each VERSION
+    /// of a component carries its own, so the panel asks about the version it
+    /// is showing (`ComponentVersions`).
+    func componentProperties(of componentID: UUID, version: UUID? = nil) -> [ComponentProperty] {
         guard componentsEnabled else { return [] }
-        return document?.componentProperties(of: componentID) ?? []
+        return document?.componentProperties(of: componentID, version: version) ?? []
     }
 
     /// What the Add Property menu lists: the layers inside the original and the
     /// knob each one could become.
-    func componentPropertyCandidates(componentID: UUID) -> [ComponentPropertyCandidate] {
+    func componentPropertyCandidates(componentID: UUID,
+                                     version: UUID? = nil) -> [ComponentPropertyCandidate] {
         guard componentsEnabled else { return [] }
-        return document?.componentPropertyCandidates(componentID: componentID) ?? []
+        return document?.componentPropertyCandidates(componentID: componentID,
+                                                     version: version) ?? []
     }
 
     @discardableResult
-    func addComponentProperty(componentID: UUID, target: UUID, kind: ComponentPropertyKind,
+    func addComponentProperty(componentID: UUID, version: UUID? = nil, target: UUID,
+                              kind: ComponentPropertyKind,
                               slot: ColorSlot? = nil) -> UUID? {
         guard componentsEnabled else { return nil }
         var added: UUID?
         perform {
-            added = $0.addComponentProperty(componentID: componentID, target: target,
-                                            kind: kind, slot: slot)
+            added = $0.addComponentProperty(componentID: componentID, version: version,
+                                            target: target, kind: kind, slot: slot)
         }
         componentPropertyAwaitingName = added
         return added
     }
 
-    func removeComponentProperty(componentID: UUID, propertyID: UUID) {
+    func removeComponentProperty(componentID: UUID, version: UUID? = nil, propertyID: UUID) {
         guard componentsEnabled else { return }
-        perform { $0.removeComponentProperty(componentID: componentID, propertyID: propertyID) }
+        perform {
+            $0.removeComponentProperty(componentID: componentID, version: version,
+                                       propertyID: propertyID)
+        }
     }
 
-    func renameComponentProperty(componentID: UUID, propertyID: UUID, to name: String) {
+    func renameComponentProperty(componentID: UUID, version: UUID? = nil, propertyID: UUID,
+                                 to name: String) {
         guard componentsEnabled else { return }
-        perform { $0.renameComponentProperty(componentID: componentID, propertyID: propertyID, to: name) }
+        perform {
+            $0.renameComponentProperty(componentID: componentID, version: version,
+                                       propertyID: propertyID, to: name)
+        }
     }
 
     /// The shapes a choice can land on: exactly what the original holds.
@@ -304,10 +405,10 @@ extension EditorState {
 
     /// The same shapes with labels a person can tell apart, which is what the
     /// choice menu lists.
-    func componentVariantOptionLabels(componentID: UUID,
+    func componentVariantOptionLabels(componentID: UUID, version: UUID? = nil,
                                       propertyID: UUID) -> [(id: UUID, label: String)] {
         guard componentsEnabled else { return [] }
-        return document?.componentVariantOptionLabels(componentID: componentID,
+        return document?.componentVariantOptionLabels(componentID: componentID, version: version,
                                                       propertyID: propertyID) ?? []
     }
 
@@ -770,7 +871,8 @@ extension EditorState {
     /// Layer ▸ Select Original: jumps from a copy to the thing every copy
     /// follows, which is where a change to all of them is made.
     func selectComponentOriginal() {
-        guard let componentID = selectedInstanceOriginal else { return }
-        selectComponentOnCanvas(componentID: componentID)
+        guard let componentID = selectedInstanceOriginal, let id = actionableLayerIDs.first
+        else { return }
+        selectComponentOnCanvas(componentID: componentID, version: instanceVersion(of: id))
     }
 }

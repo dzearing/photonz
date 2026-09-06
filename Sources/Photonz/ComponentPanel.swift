@@ -173,7 +173,11 @@ struct ComponentInspector: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            if let componentID { ComponentPropertyList(componentID: componentID) }
+            if let componentID {
+                ComponentVersionList(componentID: componentID, layerID: layer.id)
+                ComponentPropertyList(componentID: componentID,
+                                      version: live?.componentVersionID)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 4)
@@ -243,7 +247,7 @@ struct LibraryComponentInspector: View {
                         .lineLimit(2)
                         .truncationMode(.middle)
                 }
-                Text(inside(main) + copies(componentID))
+                Text(inside(main) + versions(componentID) + copies(componentID))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 HStack(spacing: 6) {
@@ -268,6 +272,12 @@ struct LibraryComponentInspector: View {
 
     private func inside(_ main: Layer) -> String {
         main.children.count == 1 ? "1 layer inside" : "\(main.children.count) layers inside"
+    }
+
+    /// How many drawings this component holds, when it holds more than one.
+    private func versions(_ componentID: UUID) -> String {
+        let count = editorState.componentVersions(of: componentID).count
+        return count > 1 ? " • \(count) versions" : ""
     }
 
     private func copies(_ componentID: UUID) -> String {
@@ -533,10 +543,13 @@ struct ComponentInstanceInspector: View {
                 ownLook
                 HStack(spacing: 6) {
                     Button("Edit Original") {
-                        editorState.selectComponentOnCanvas(componentID: componentID)
+                        // The version this copy is SHOWING, or the button takes
+                        // you to a drawing you were not looking at.
+                        editorState.selectComponentOnCanvas(componentID: componentID,
+                                                            version: selection.version)
                     }
                     .controlSize(.small)
-                    .help("Selects the original, which is where a change to every copy is made")
+                    .help("Selects the drawing this copy shows, which is where a change to every copy of it is made")
                     // Detach is here as well as in the Layer menu, because a
                     // command that lives only in a menu is a command nobody
                     // finds. It is not destructive styling: nothing is deleted,
@@ -754,6 +767,141 @@ extension NSResponder {
     }
 }
 
+// MARK: - The versions a component holds (Next, `next-components`)
+
+/// The versions of the selected original: which drawing you are looking at,
+/// what the others are called, and the one press that makes another
+/// (`ComponentVersions`).
+///
+/// A button has a normal look, a hover look and a disabled look, and before
+/// this those were three components that drifted apart the first time anybody
+/// edited one. A version is a second complete drawing under the same name, and
+/// it is an ORDINARY drawing on the canvas: every tool already works on it,
+/// which is why the row that takes you to one simply selects it.
+///
+/// A component with one version says so in a sentence rather than showing a
+/// list of one, because a list of one is a control that looks like it is
+/// missing something.
+struct ComponentVersionList: View {
+    @Environment(EditorState.self) private var editorState
+    let componentID: UUID
+    /// The drawing that is selected, so the list can say which one you are on.
+    let layerID: UUID
+
+    private var versions: [ComponentVersion] { editorState.componentVersions(of: componentID) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Divider().padding(.vertical, 2)
+            HStack(spacing: 6) {
+                Text("Versions")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                Button {
+                    editorState.addComponentVersion(componentID: componentID,
+                                                    from: editorState.document?
+                                                        .layer(id: layerID)?.componentVersionID)
+                } label: {
+                    Label("Add", systemImage: "plus")
+                }
+                .menuStyle(.borderlessButton)
+                .buttonStyle(.borderless)
+                .fixedSize()
+                .help("Copies this drawing into a second version of the same component, so a copy can show either")
+                .playtestControl("Add Version")
+            }
+            if versions.count > 1 {
+                ForEach(versions) { version in
+                    ComponentVersionRow(componentID: componentID, version: version,
+                                        isShown: version.layerID == layerID)
+                }
+            } else {
+                Text("One drawing. Adding a version copies it, so this component can hold a second look, like Disabled, under the same name.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// One version on the original's section: the one you are looking at wears an
+/// editable name, and every other one is a press that takes you to it.
+///
+/// The name is a field only on the drawing you are ON. A field for a drawing
+/// somewhere else would let you rename a thing you cannot see, and the press
+/// beside it is the honest way there: it selects that drawing, which is what
+/// editing a version means.
+private struct ComponentVersionRow: View {
+    @Environment(EditorState.self) private var editorState
+    let componentID: UUID
+    let version: ComponentVersion
+    let isShown: Bool
+
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ComponentMark(size: 10)
+                .opacity(isShown ? 1 : 0.35)
+            if isShown {
+                TextField("Version name", text: $draft)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.caption)
+                    .focused($focused)
+                    .onSubmit(commit)
+                    .nameFieldKeys(commit: commit, revert: { draft = version.name })
+                    .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+                Text("showing")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(Capsule().fill(.quaternary))
+            } else {
+                Button(version.name) {
+                    editorState.selectComponentVersion(componentID: componentID, version: version.id)
+                }
+                .buttonStyle(.link)
+                .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .help("Selects this version on the canvas, which is where it is edited")
+                .playtestControl(version.name)
+                Spacer(minLength: 0)
+            }
+        }
+        .onAppear {
+            draft = version.name
+            claimNameIfJustAdded()
+        }
+        .onChange(of: editorState.componentVersionAwaitingName) { _, _ in claimNameIfJustAdded() }
+        .onChange(of: version.name) { _, name in if !focused { draft = name } }
+    }
+
+    /// Takes the focus Add Version handed over, once, and selects the name so
+    /// the first keystroke replaces it. A version arrives called "Version 2",
+    /// which is honest and says nothing; "Disabled" is one word of typing.
+    private func claimNameIfJustAdded() {
+        guard isShown, editorState.componentVersionAwaitingName == version.id else { return }
+        editorState.componentVersionAwaitingName = nil
+        draft = version.name
+        focused = true
+        DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+    }
+
+    private func commit() {
+        guard let name = ComponentNaming.normalized(draft) else {
+            draft = version.name   // ...a blank name is refused, so put it back
+            return
+        }
+        guard name != version.name else { return }
+        editorState.renameComponentVersion(componentID: componentID, version: version.id, to: name)
+    }
+}
+
 // MARK: - What the original makes adjustable (Next, `next-components`)
 
 /// The knobs an original exposes, on the original's own section
@@ -767,13 +915,18 @@ extension NSResponder {
 struct ComponentPropertyList: View {
     @Environment(EditorState.self) private var editorState
     let componentID: UUID
+    /// Which version's knobs these are. Each version of a component is a
+    /// drawing of its own and carries its own knobs, pointed at its own layers,
+    /// so the list belongs to the drawing you have selected and not to the
+    /// component as a whole (`ComponentVersions`).
+    var version: UUID?
 
     private var properties: [ComponentProperty] {
-        editorState.componentProperties(of: componentID)
+        editorState.componentProperties(of: componentID, version: version)
     }
 
     private var candidates: [ComponentPropertyCandidate] {
-        editorState.componentPropertyCandidates(componentID: componentID)
+        editorState.componentPropertyCandidates(componentID: componentID, version: version)
     }
 
     var body: some View {
@@ -793,7 +946,8 @@ struct ComponentPropertyList: View {
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 ForEach(properties) { property in
-                    ComponentPropertyRow(componentID: componentID, property: property)
+                    ComponentPropertyRow(componentID: componentID, version: version,
+                                         property: property)
                 }
             }
         }
@@ -829,6 +983,7 @@ struct ComponentPropertyList: View {
                                 ForEach(candidate.colorSlots, id: \.self) { slot in
                                     Button("\(candidate.pathLabel) \u{00B7} \(slot.selectionTitle)") {
                                         editorState.addComponentProperty(componentID: componentID,
+                                                                         version: version,
                                                                          target: candidate.layerID,
                                                                          kind: kind, slot: slot)
                                     }
@@ -836,6 +991,7 @@ struct ComponentPropertyList: View {
                             } else {
                                 Button(candidate.menuLabel) {
                                     editorState.addComponentProperty(componentID: componentID,
+                                                                     version: version,
                                                                      target: candidate.layerID,
                                                                      kind: kind)
                                 }
@@ -859,6 +1015,7 @@ struct ComponentPropertyList: View {
 private struct ComponentPropertyRow: View {
     @Environment(EditorState.self) private var editorState
     let componentID: UUID
+    var version: UUID?
     let property: ComponentProperty
 
     @State private var draft = ""
@@ -880,7 +1037,8 @@ private struct ComponentPropertyRow: View {
                 .padding(.vertical, 1)
                 .background(Capsule().fill(.quaternary))
             Button {
-                editorState.removeComponentProperty(componentID: componentID, propertyID: property.id)
+                editorState.removeComponentProperty(componentID: componentID, version: version,
+                                                    propertyID: property.id)
             } label: {
                 Image(systemName: "minus.circle")
             }
@@ -916,7 +1074,8 @@ private struct ComponentPropertyRow: View {
             return
         }
         guard name != property.name else { return }
-        editorState.renameComponentProperty(componentID: componentID, propertyID: property.id, to: name)
+        editorState.renameComponentProperty(componentID: componentID, version: version,
+                                            propertyID: property.id, to: name)
     }
 }
 
@@ -936,14 +1095,17 @@ struct ComponentInstanceProperties: View {
     private var instances: [UUID] { selection.instances }
 
     var body: some View {
-        if properties.isEmpty {
-            Text("The original has not made anything adjustable yet. Select it and add a knob there.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
-        } else {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
+            if selection.hasVersions || !properties.isEmpty {
                 Divider().padding(.vertical, 2)
+            }
+            versionRow
+            if properties.isEmpty {
+                Text("The original has not made anything adjustable yet. Select it and add a knob there.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
                 ForEach(properties) { property in
                     HStack(spacing: 6) {
                         Text(property.name)
@@ -956,6 +1118,45 @@ struct ComponentInstanceProperties: View {
                         revert(property)
                     }
                 }
+            }
+        }
+    }
+
+    /// Which version of its component this copy shows (`ComponentVersions`).
+    ///
+    /// It sits above the knobs because it is the biggest thing about a copy:
+    /// a knob changes one fact, a version changes the whole drawing. It is only
+    /// here at all while the component holds more than one, so a component with
+    /// one drawing shows exactly the panel it always did.
+    ///
+    /// Copies showing different versions read Mixed in the closed menu, the way
+    /// every other row on this panel does, and choosing a version puts all of
+    /// them on it.
+    @ViewBuilder private var versionRow: some View {
+        if selection.hasVersions {
+            HStack(spacing: 6) {
+                Text("Version")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 74, alignment: .leading)
+                Picker("", selection: Binding(
+                    get: { selection.version ?? Self.mixedOption },
+                    set: { chosen in
+                        guard chosen != Self.mixedOption else { return }
+                        editorState.setInstanceVersion(instances: instances, to: chosen)
+                    })) {
+                    if selection.hasMixedVersions {
+                        Text(MixedValue.text)
+                            .foregroundStyle(MixedLook.style)
+                            .tag(Self.mixedOption)
+                    }
+                    ForEach(selection.versions) { version in
+                        Text(version.name).tag(version.id)
+                    }
+                }
+                .labelsHidden()
+                .controlSize(.small)
+                .help("Which drawing of this component the copy shows. Everything you have set on the copy comes with it")
             }
         }
     }
@@ -979,7 +1180,8 @@ struct ComponentInstanceProperties: View {
             // both called "Rectangle", and a menu of identical rows is a menu
             // nobody can choose from.
             let options = editorState.componentVariantOptionLabels(
-                componentID: selection.componentID ?? UUID(), propertyID: property.id)
+                componentID: selection.componentID ?? UUID(), version: selection.version,
+                propertyID: property.id)
             // The closed title is where a menu shows its value, so that is
             // where Mixed goes: a row the copies disagree on offers the word
             // rather than picking one copy's shape and printing it as if it

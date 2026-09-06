@@ -1,0 +1,29 @@
+{
+  "feature": "A component holds more than one version of itself",
+  "epic": "ui-components",
+  "summary": "One component can now carry its normal look and its disabled look under one name, and every copy picks which one it shows from a Version menu. Before this you made a second component and the two drifted apart the first time you edited one.",
+  "setup": "Photonz Dev, release Next. Flags are on by default (next-components). Open a blank canvas and show the Library on the Comps shelf.",
+  "try": [
+    { "do": "Drag the Button tile from the Library onto the canvas, then click it." },
+    { "do": "In the Component section, press Add beside Versions, and type Disabled over the name that lands selected.", "shot": "2026-09-05-component-versions-2-version-added.png" },
+    { "do": "With that new drawing still selected, drag the Effects section's Opacity slider down to about a third." },
+    { "do": "Drag the Button tile out twice more to place two copies below." },
+    { "do": "Click one copy and set the Version row at the top of its knobs to Disabled.", "shot": "2026-09-05-component-versions-5-copy-disabled.png" },
+    { "do": "Click the Default drawing and change the wording of its label, and watch which copies follow." },
+    { "do": "Select the Disabled drawing and press Command Delete.", "shot": "2026-09-05-component-versions-6-version-deleted.png" }
+  ],
+  "evaluate": [
+    "Does Add beside Versions read as making another look of this same button, rather than making a second component?",
+    "The new drawing lands loose on the canvas to the right of the one it came from. Is that where you expected to find it?",
+    "On a copy, the Version row sits above the knobs but four sections down the dock, so you scroll to reach it. Is that far enough down to be annoying?",
+    "When you deleted the version a copy was showing, did 'Version deleted, 1 copy moved to Default' tell you enough to decide whether to undo?",
+    "Two drawings on the canvas both say Button. Is the version name in the layers list enough to tell them apart, or does the canvas need to say it too?"
+  ],
+  "rough": [
+    "A change meant for every version has to be made in each one. That was the cost you accepted with the decision on 2026-09-05; a task is filed for making one edit reach them all.",
+    "The canvas label above each drawing says only the component name, so the two versions look identical from the picture alone. Filed as a follow-up.",
+    "Dropping a component from the shelf always places the first version; picking the version at the shelf is filed as a follow-up.",
+    "In a narrow dock the layers row gives the layer name away before the version chip, so a row can read 'B...' beside 'Default'. The chip is the word that tells two rows apart, so it keeps its width on purpose.",
+    "The screenshots here are real captures of the app taken by a scripted walk (Scripts/playtest/component-versions-walk.json), not offscreen renders."
+  ]
+}

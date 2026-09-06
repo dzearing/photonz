@@ -442,11 +442,24 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// It is not the layer's own id, because a copy of a main is its own
     /// component and needs an identity that did not exist before.
     public var componentID: UUID?
+    /// Set on a **main component** that is one of several versions of itself:
+    /// which version this drawing is (`ComponentVersion`). Nil on a component
+    /// that has only ever had one, which is every component saved before
+    /// versions existed.
+    public var versionID: UUID?
+    /// Set on a **main component**: what this version is called in the menu on
+    /// a copy — "Default", "Disabled". Nil while the component has one version,
+    /// because there is nothing to tell it apart from.
+    public var versionName: String?
     /// Set on an **instance**: the component this copy follows
     /// (`docs/design/ui-building.md`, step C5). Its children are not its own —
     /// the document keeps them equal to the main's, so editing the main is the
     /// only way anything inside a copy changes.
     public var instanceOf: UUID?
+    /// Set on an **instance**: which version of its component this copy shows.
+    /// Nil is a copy showing the component's first version, which is every copy
+    /// of a component that has only one.
+    public var instanceVersion: UUID?
     /// Set on a **main component**: the knobs it exposes, which are the only
     /// things a copy of it may set (`docs/design/ui-building.md`, step C6).
     /// Each one reaches one layer inside this group.
@@ -506,6 +519,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
+        case versionID, versionName, instanceVersion
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -516,6 +530,13 @@ public struct GroupContent: Hashable, Codable, Sendable {
         try c.encode(children, forKey: .children)
         try c.encodeIfPresent(componentID, forKey: .componentID)
         try c.encodeIfPresent(instanceOf, forKey: .instanceOf)
+        // Only a component somebody gave a second version to writes these, so
+        // one saved before versions existed is byte for byte what it was.
+        if componentID != nil {
+            try c.encodeIfPresent(versionID, forKey: .versionID)
+            try c.encodeIfPresent(versionName, forKey: .versionName)
+        }
+        if instanceOf != nil { try c.encodeIfPresent(instanceVersion, forKey: .instanceVersion) }
         // A group that exposes nothing and answers nothing writes neither key,
         // so a document saved before knobs existed is byte for byte what it was.
         if !properties.isEmpty { try c.encode(properties, forKey: .properties) }
@@ -555,6 +576,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
         background = try c.decodeIfPresent(Paint.self, forKey: .backgroundHex)
         componentID = try c.decodeIfPresent(UUID.self, forKey: .componentID)
         instanceOf = try c.decodeIfPresent(UUID.self, forKey: .instanceOf)
+        versionID = try c.decodeIfPresent(UUID.self, forKey: .versionID)
+        versionName = try c.decodeIfPresent(String.self, forKey: .versionName)
+        instanceVersion = try c.decodeIfPresent(UUID.self, forKey: .instanceVersion)
         properties = try c.decodeIfPresent([ComponentProperty].self, forKey: .properties) ?? []
         overrides = try c.decodeIfPresent([ComponentOverride].self, forKey: .overrides) ?? []
         followedStyle = try c.decodeIfPresent(LayerStyle.self, forKey: .followedStyle)
@@ -597,7 +621,13 @@ public enum LayerContent: Hashable, Codable, Sendable {
         // A copy of a main is a component of its own, not a second layer
         // claiming to be the same one: editing either must never move the
         // other, and the shelf must be able to tell them apart.
-        if group.componentID != nil { group.componentID = UUID() }
+        if group.componentID != nil {
+            group.componentID = UUID()
+            // ...and it is a component of ONE version again: the versions of
+            // the component it was copied from are not its.
+            group.versionID = nil
+            group.versionName = nil
+        }
         // `instanceOf` is deliberately kept: a copy of a copy is another copy
         // of the same component, which is what ⌘J on an instance has to mean,
         // and its answers come with it or a configured copy would silently

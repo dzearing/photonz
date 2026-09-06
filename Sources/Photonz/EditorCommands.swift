@@ -376,6 +376,11 @@ struct EditorCommands: Commands {
                 // be open with a component picked for it to mean anything.
                 Button("Insert Component") { editor?.insertPickedComponent() }
                     .disabled(!(editor?.canInsertPickedComponent ?? false))
+                // Add Version takes no key either: it is a thing you do once
+                // per look, from the original's own section, and a key for it
+                // would be a key nobody could name.
+                Button("Add Version") { editor?.addComponentVersion() }
+                    .disabled(!(editor?.canAddComponentVersion ?? false))
                 // Make Alternatives is ABSENT rather than dimmed when the
                 // selection cannot become a choice. Every other row here reads
                 // as something you might want on any selection; this one only

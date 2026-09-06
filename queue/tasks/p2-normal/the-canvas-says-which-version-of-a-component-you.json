@@ -1,0 +1,27 @@
+{
+  "id": "the-canvas-says-which-version-of-a-component-you",
+  "title": "The canvas says which version of a component you are looking at",
+  "goal": "When a component holds a normal and a disabled look, the two drawings sit side by side on the canvas wearing the same name, so there is no way to tell from the picture which one is which. The label above each drawing should say the version, and the copies should be readable at a glance too.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1350,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T03:24:19.099Z",
+  "updated": "2026-09-06T03:24:19.099Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The canvas mark is drawn in ComponentPanel.swift ComponentGlyph and placed by the canvas overlay that prints the component name above a main. Layer.componentVersionName is the string; PhotonzDocument.versionName(of:counts:) is the same only-while-there-are-several rule the layers row uses.",
+  "acceptance": [
+    "The label above an original names the version when its component holds more than one, and stays as it is when it holds one",
+    "A copy on the canvas can be told from a copy showing another version without opening a panel",
+    "Nothing changes for a component with a single version"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T03:24:19.099Z",
+      "note": "created (manual)"
+    }
+  ]
+}

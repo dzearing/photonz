@@ -1,0 +1,27 @@
+{
+  "id": "the-dock-opens-on-the-section-that-answers-the-l",
+  "title": "The dock opens on the section that answers the layer you just picked",
+  "goal": "Picking a copy of a component puts its Component section below Position and Size, Layout and everything else, so the Version row and the knobs are off the bottom of the dock until you scroll. The panel should show the section that says the most about what you picked without hunting for it.",
+  "epic": "interaction-foundations",
+  "priority": "p2-normal",
+  "seq": 1380,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T03:24:19.203Z",
+  "updated": "2026-09-06T03:24:19.204Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen while auditing component versions on 2026-09-05: the Version row is the biggest fact about a copy and sits four sections down. Dock sections are in InspectorPanel; the walk log prints dockSections offsets, which is a cheap way to measure this.",
+  "acceptance": [
+    "Picking a copy of a component shows its Component section without scrolling",
+    "Picking an ordinary layer still lands on what it lands on today",
+    "Nothing jumps under the pointer while you are working in a section"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T03:24:19.204Z",
+      "note": "created (manual)"
+    }
+  ]
+}

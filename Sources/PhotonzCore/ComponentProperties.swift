@@ -301,14 +301,31 @@ extension PhotonzDocument {
     /// six levels down is a knob nobody can name.
     static let componentPropertyDepthLimit = 6
 
-    /// The knobs an original exposes.
-    public func componentProperties(of componentID: UUID) -> [ComponentProperty] {
-        mainComponent(componentID: componentID)?.componentProperties ?? []
+    /// The knobs an original exposes. With `version` named, the knobs THAT
+    /// version exposes: each version of a component is a drawing of its own, so
+    /// each carries its own knobs, pointed at its own layers. A duplicate keeps
+    /// the knob ids of the version it came from, which is what lets a copy keep
+    /// its answers when it is switched between them (`ComponentVersions`).
+    public func componentProperties(of componentID: UUID,
+                                    version: UUID? = nil) -> [ComponentProperty] {
+        mainComponent(componentID: componentID, version: version)?.componentProperties ?? []
+    }
+
+    /// Every knob id any version of this component exposes, which is what "a
+    /// knob this copy could be answering" means once versions exist.
+    func componentPropertyIDs(across componentID: UUID) -> Set<UUID> {
+        var ids: Set<UUID> = []
+        for version in componentVersions(of: componentID) {
+            guard let main = layer(id: version.layerID) else { continue }
+            ids.formUnion(main.componentProperties.map(\.id))
+        }
+        return ids
     }
 
     /// One knob by id.
-    public func componentProperty(componentID: UUID, propertyID: UUID) -> ComponentProperty? {
-        componentProperties(of: componentID).first { $0.id == propertyID }
+    public func componentProperty(componentID: UUID, version: UUID? = nil,
+                                  propertyID: UUID) -> ComponentProperty? {
+        componentProperties(of: componentID, version: version).first { $0.id == propertyID }
     }
 
     /// Every layer inside the original that could become a knob, and which
@@ -323,8 +340,9 @@ extension PhotonzDocument {
     /// A copy nested inside the original is skipped whole: its contents are not
     /// the original's to expose, so a knob reaching into one would be rewritten
     /// away by the next sync.
-    public func componentPropertyCandidates(componentID: UUID) -> [ComponentPropertyCandidate] {
-        guard let main = mainComponent(componentID: componentID) else { return [] }
+    public func componentPropertyCandidates(componentID: UUID,
+                                            version: UUID? = nil) -> [ComponentPropertyCandidate] {
+        guard let main = mainComponent(componentID: componentID, version: version) else { return [] }
         let taken = Set(main.componentProperties.map { PropertyKey($0) })
         var found: [ComponentPropertyCandidate] = []
 
@@ -370,10 +388,10 @@ extension PhotonzDocument {
 
     /// Whether a layer inside the original could take this kind of knob, which
     /// is the check `addComponentProperty` makes and the menu asks first.
-    public func canAddComponentProperty(componentID: UUID, target: UUID,
+    public func canAddComponentProperty(componentID: UUID, version: UUID? = nil, target: UUID,
                                         kind: ComponentPropertyKind,
                                         slot: ColorSlot? = nil) -> Bool {
-        guard let candidate = componentPropertyCandidates(componentID: componentID)
+        guard let candidate = componentPropertyCandidates(componentID: componentID, version: version)
             .first(where: { $0.layerID == target }) else { return false }
         guard kind == .color else { return slot == nil && candidate.kinds.contains(kind) }
         // "The colour" of a box that has two is not a thing, so a colour knob
@@ -394,13 +412,14 @@ extension PhotonzDocument {
     /// option on a copy would stack a second shape on the first rather than
     /// swapping it.
     @discardableResult
-    public mutating func addComponentProperty(componentID: UUID, target: UUID,
+    public mutating func addComponentProperty(componentID: UUID, version: UUID? = nil,
+                                              target: UUID,
                                               kind: ComponentPropertyKind,
                                               slot: ColorSlot? = nil,
                                               name: String? = nil) -> UUID? {
-        guard canAddComponentProperty(componentID: componentID, target: target,
+        guard canAddComponentProperty(componentID: componentID, version: version, target: target,
                                       kind: kind, slot: slot),
-              let main = mainComponent(componentID: componentID),
+              let main = mainComponent(componentID: componentID, version: version),
               let targetLayer = layer(id: target) else { return nil }
         let chosen = ComponentNaming.normalized(name)
             ?? freshPropertyName(base: Self.defaultPropertyName(for: targetLayer, kind: kind,
@@ -418,20 +437,26 @@ extension PhotonzDocument {
 
     /// Stops exposing a knob. Every copy's answer to it goes with it: a value
     /// keyed to a knob that no longer exists is a value nothing will ever read.
-    public mutating func removeComponentProperty(componentID: UUID, propertyID: UUID) {
-        guard let main = mainComponent(componentID: componentID) else { return }
+    public mutating func removeComponentProperty(componentID: UUID, version: UUID? = nil,
+                                                 propertyID: UUID) {
+        guard let main = mainComponent(componentID: componentID, version: version) else { return }
         updateLayer(id: main.id) { layer in
             guard var group = layer.group else { return }
             group.properties.removeAll { $0.id == propertyID }
             layer.content = .group(group)
         }
+        // A knob another version still exposes is one a copy showing that
+        // version can still be answering, so the answers only go when no
+        // version has the knob left.
+        guard !componentPropertyIDs(across: componentID).contains(propertyID) else { return }
         forgetOverrides(of: componentID, propertyIDs: [propertyID])
     }
 
     /// Renames a knob. A blank name is refused rather than leaving a nameless
     /// row on every copy's panel.
-    public mutating func renameComponentProperty(componentID: UUID, propertyID: UUID, to name: String) {
-        guard let main = mainComponent(componentID: componentID),
+    public mutating func renameComponentProperty(componentID: UUID, version: UUID? = nil,
+                                                 propertyID: UUID, to name: String) {
+        guard let main = mainComponent(componentID: componentID, version: version),
               let chosen = ComponentNaming.normalized(name) else { return }
         updateLayer(id: main.id) { layer in
             guard var group = layer.group,
@@ -444,8 +469,10 @@ extension PhotonzDocument {
     /// The shapes a choice can land on: the children of the group it exposes,
     /// in the order they are stacked. This list IS the no-drift rule, because
     /// nothing outside it is an answer the model will take.
-    public func componentVariantOptions(componentID: UUID, propertyID: UUID) -> [Layer] {
-        guard let property = componentProperty(componentID: componentID, propertyID: propertyID),
+    public func componentVariantOptions(componentID: UUID, version: UUID? = nil,
+                                        propertyID: UUID) -> [Layer] {
+        guard let property = componentProperty(componentID: componentID, version: version,
+                                               propertyID: propertyID),
               property.kind == .variant,
               let target = layer(id: property.target) else { return [] }
         return target.children
@@ -457,17 +484,20 @@ extension PhotonzDocument {
     /// a menu of their names is a menu of identical rows. Repeats are numbered
     /// for DISPLAY only: nothing renames a layer behind anybody's back, and
     /// naming the layers properly makes the numbers go away.
-    public func componentVariantOptionLabels(componentID: UUID,
+    public func componentVariantOptionLabels(componentID: UUID, version: UUID? = nil,
                                              propertyID: UUID) -> [(id: UUID, label: String)] {
-        let options = componentVariantOptions(componentID: componentID, propertyID: propertyID)
+        let options = componentVariantOptions(componentID: componentID, version: version,
+                                              propertyID: propertyID)
         let labels = ComponentNaming.distinctLabels(options.map(\.name))
         return zip(options, labels).map { (id: $0.id, label: $1) }
     }
 
     /// What the original itself says for a knob: the value a copy shows until
     /// somebody sets that knob on it.
-    public func componentDefaultValue(componentID: UUID, propertyID: UUID) -> ComponentPropertyValue? {
-        guard let property = componentProperty(componentID: componentID, propertyID: propertyID),
+    public func componentDefaultValue(componentID: UUID, version: UUID? = nil,
+                                      propertyID: UUID) -> ComponentPropertyValue? {
+        guard let property = componentProperty(componentID: componentID, version: version,
+                                               propertyID: propertyID),
               let target = layer(id: property.target) else { return nil }
         return Self.value(of: property.kind, slot: property.slot, on: target)
     }
@@ -572,7 +602,7 @@ extension PhotonzDocument {
     /// the original lists them.
     public func instanceProperties(instance: UUID) -> [ComponentProperty] {
         guard let componentID = layer(id: instance)?.instanceOf else { return [] }
-        return componentProperties(of: componentID)
+        return componentProperties(of: componentID, version: instanceVersion(of: instance))
     }
 
     /// Which knobs this copy has answered for itself, as opposed to following
@@ -587,7 +617,9 @@ extension PhotonzDocument {
         if let own = copy.componentOverrides.first(where: { $0.property == propertyID }) {
             return own.value
         }
-        return componentDefaultValue(componentID: componentID, propertyID: propertyID)
+        return componentDefaultValue(componentID: componentID,
+                                     version: instanceVersion(of: instance),
+                                     propertyID: propertyID)
     }
 
     /// Whether an answer is one this knob will take. A choice may only land on
@@ -595,14 +627,18 @@ extension PhotonzDocument {
     /// to go at all.
     public func canSetInstanceOverride(instance: UUID, property propertyID: UUID,
                                        value: ComponentPropertyValue) -> Bool {
-        guard let copy = layer(id: instance), let componentID = copy.instanceOf, !copy.isLocked,
-              let property = componentProperty(componentID: componentID, propertyID: propertyID),
+        guard let copy = layer(id: instance), let componentID = copy.instanceOf, !copy.isLocked
+        else { return false }
+        let version = instanceVersion(of: instance)
+        guard let property = componentProperty(componentID: componentID, version: version,
+                                               propertyID: propertyID),
               property.kind == value.kind else { return false }
         if case .color(let answer) = value {
             // A colour the original does not have is nothing to override: the
             // knob's own slot is empty, so painting here would give the copy a
             // fill the original never defined.
-            guard componentDefaultValue(componentID: componentID, propertyID: propertyID) != nil
+            guard componentDefaultValue(componentID: componentID, version: version,
+                                        propertyID: propertyID) != nil
             else { return false }
             // ...and a name this document has never heard of is a claim nothing
             // can honour, so it is refused rather than stored.
@@ -610,7 +646,8 @@ extension PhotonzDocument {
             return colorStyle(id: styleID) != nil
         }
         guard case .variant(let option) = value else { return true }
-        return componentVariantOptions(componentID: componentID, propertyID: propertyID)
+        return componentVariantOptions(componentID: componentID, version: version,
+                                       propertyID: propertyID)
             .contains { $0.id == option }
     }
 
@@ -674,9 +711,10 @@ extension PhotonzDocument {
     /// something else: the copy takes the original's picture whole, and then
     /// the few facts it owns are written over the top.
     func applyOverrides(_ overrides: [ComponentOverride], of componentID: UUID,
+                        version: UUID? = nil,
                         to children: inout [Layer], instance: UUID,
                         contents: LayerPlacement? = nil) {
-        let properties = componentProperties(of: componentID)
+        let properties = componentProperties(of: componentID, version: version)
         guard !properties.isEmpty, !overrides.isEmpty else { return }
         let answers = Dictionary(overrides.map { ($0.property, $0.value) },
                                  uniquingKeysWith: { _, last in last })
@@ -737,6 +775,12 @@ extension PhotonzDocument {
             // child wears a derived id, so the same derivation finds it.
             guard var group = layer.group else { return }
             let wanted = ComponentIdentity.derived(instance: instance, source: option)
+            // A choice made against one version names a shape THAT version
+            // holds. Another version has its own shapes, so the answer matches
+            // nothing there, and hiding every child would leave a hole on the
+            // canvas. The version's own picture stands instead, and the answer
+            // is kept: switching back brings it straight back.
+            guard group.children.contains(where: { $0.id == wanted }) else { return }
             for index in group.children.indices {
                 group.children[index].isVisible = group.children[index].id == wanted
             }
@@ -792,7 +836,7 @@ extension PhotonzDocument {
             let inside = Set(main.selfAndDescendants.map(\.id))
             let gone = properties.filter { !inside.contains($0.target) }
             guard !gone.isEmpty else { continue }
-            dropped[componentID] = Set(gone.map(\.id))
+            dropped[componentID, default: []].formUnion(gone.map(\.id))
             updateLayer(id: main.id) { layer in
                 guard var group = layer.group else { return }
                 group.properties.removeAll { property in gone.contains { $0.id == property.id } }
@@ -800,7 +844,11 @@ extension PhotonzDocument {
             }
         }
         for (componentID, propertyIDs) in dropped {
-            forgetOverrides(of: componentID, propertyIDs: propertyIDs)
+            // A knob another version of the same component still exposes is a
+            // knob a copy can still be answering, so only the ones no version
+            // has left are forgotten.
+            forgetOverrides(of: componentID,
+                            propertyIDs: propertyIDs.subtracting(componentPropertyIDs(across: componentID)))
         }
         // An answer to a knob the original no longer exposes is dead weight
         // too, whichever way the knob went.
@@ -812,7 +860,7 @@ extension PhotonzDocument {
         var known: [UUID: Set<UUID>] = [:]
         func live(_ componentID: UUID) -> Set<UUID> {
             if let cached = known[componentID] { return cached }
-            let ids = Set(componentProperties(of: componentID).map(\.id))
+            let ids = componentPropertyIDs(across: componentID)
             known[componentID] = ids
             return ids
         }

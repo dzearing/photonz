@@ -583,8 +583,10 @@ real limit of the slices above, not an oversight.
 - **A main cannot be made from a group that already contains a main.** An
   instance inside a main is fine and updates correctly; promoting a group that
   holds a main is out, and the command is disabled with the reason on hover.
-- States, composites bound to data, prototyping connections, modes and published
-  systems stay deferred as set out above.
+- Composites bound to data, prototyping connections, modes and published systems
+  stay deferred as set out above. **States are no longer deferred**: a component
+  holds versions of itself, see "Landed: a component holds more than one
+  version" below.
 
 
 ## Landed: typed position and size (Next, `next-geometry-fields`, 2026-09-03)
@@ -2533,3 +2535,60 @@ the offer in `PlacementEditing.canFill` / `fillTitle` / `noRoomToFill` over
 ask one question), the edit in `PhotonzDocument.setFillsTheFlow`, and the row in
 `PlacementInspector.ownedByTheFlow`. Tested in `GroupFillTests`, walked by
 `Scripts/playtest/fill-the-flow-walk.json`.
+
+
+## Landed: a component holds more than one version (Next, `next-components`, 2026-09-05)
+
+A button has a normal look, a hover look and a disabled look. Until now those
+were three components, and the three drifted apart the first time anybody edited
+one. A component now holds more than one drawing of itself under one name, and
+every copy picks which one it is showing.
+
+**A version is a whole drawing, not a list of differences.** The user settled
+this on 2026-09-05, with the cost stated: a version may differ in ANY way — a
+different shape, an extra part, another arrangement — and in exchange a change
+meant for every version has to be made in each one. The mitigation chosen with
+it is that a new version is made by DUPLICATING one that already exists, so
+versions start out identical and only differ where somebody made them differ.
+
+**A version is an ordinary main on the canvas.** It selects, moves, restacks,
+hides, saves and undoes like any group, and every tool already works on it. That
+is the whole reason a version is a drawing rather than hidden data: a version
+you cannot see is a version you cannot edit. A new one lands loose on the canvas
+just to the right of the one it came from — not inside whatever holds that one,
+or adding a version to a button that lives on a screen would drop a stray button
+into the screen.
+
+**The duplicate keeps the knob ids and points them at its own layers.** That is
+what lets a copy keep the wording and the colours it chose when it is switched
+between versions; a duplicate with fresh knob ids would reset every copy the
+moment it switched. Each version carries its own knobs after that, so the
+Adjustable list belongs to the drawing you have selected.
+
+**A copy says which version it shows, in writing.** From the moment a component
+gets its second version, every version has an id and every copy names one, so
+restacking the drawings can never change what an already placed copy draws. A
+copy left holding a version somebody deleted lands back on one the component
+still has, and the canvas says so ("Version deleted · 1 copy moved to Default")
+rather than leaving it drawing nothing.
+
+**Where it is.** The Component section on the ORIGINAL grew a Versions block:
+the drawing you are on wears an editable name and the word "showing", the others
+are a press that selects them, and Add makes one. On a COPY the Version row sits
+above the knobs, because a knob changes one fact and a version changes the whole
+drawing; copies picked together that show different versions read Mixed, like
+every other row there. The layers list prints the version name beside the
+component mark, since every version carries the component's name. Edit Original
+on a copy lands on the version that copy is showing.
+
+Not in this slice: a version set drawn as one thing on the canvas, editing every
+version at once, reordering versions, and placing a copy of a particular version
+straight from the shelf.
+
+Model in `ComponentVersions.swift` (`ComponentVersion`, `componentVersions`,
+`addComponentVersion`, `setInstanceVersion`), the fields on `GroupContent`
+(`versionID`, `versionName`, `instanceVersion`), the sync in
+`PhotonzDocument.syncComponentInstances`, the panel in
+`ComponentVersionList` / `ComponentInstanceProperties.versionRow`. Tested in
+`ComponentVersionTests`, walked by
+`Scripts/playtest/component-versions-walk.json`.
