@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1500,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T20:46:35.045Z",
-  "updated": "2026-09-06T23:29:21.309Z",
+  "updated": "2026-09-06T23:36:03.884Z",
   "deps": [],
   "blockedBy": [],
   "notes": "A plain Image(systemName:) hands the segment whatever the system calls the symbol, and align.vertical.top/center/bottom carry no description at all, so PlaytestPanelPress.name(ofSegment:) returns nil and the segment is skipped. ArrowheadStyle.glyph shows the fix: build the Image through NSImage(systemSymbolName:accessibilityDescription:) and set accessibilityDescription. Doing the same to the Across row would rename its press targets from \"align center\" to \"Center\", which mixed-one-look-walk.json and any other walk pressing them would have to be updated for. Found on 2026-09-06 while giving each picture its own tooltip.\n\nDone 2026-09-06. Fix is TextVerticalAlign.glyph in LayersPanel.swift (NSImage(systemSymbolName:accessibilityDescription:) at pointSize 11, weight .medium, description also assigned explicitly). 11/medium is what Image(systemName:) already draws at inside .pickerStyle(.segmented) + .controlSize(.small), proven by a 4x offscreen pixel diff in both appearances. The Across row was left on the system's own descriptions on purpose, so the two rows read differently in a panel listing.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-06T23:45:00.000Z",
       "note": "No audit written. This names three buttons for a screen reader and unblocks a walk; there is nothing a person can sit down and judge, so a try/evaluate report would be noise. The change is covered by the segment-tooltips walk instead."
+    },
+    {
+      "t": "2026-09-06T23:36:03.883Z",
+      "note": "The Down row's three pictures now carry their own names (Top, Middle, Bottom) via NSImage accessibility descriptions in LayersPanel.swift, so a screen reader reads them and a walk can press them. segment-tooltips-walk.json presses Bottom by name; verified on the probe app with real captures (listing goes Top already on -> Bottom already on, state reads 'down bottom'). Pictures unchanged: 0 of 73728 differing pixels in a 4x offscreen diff, light and dark. 4139 tests pass. Pushed as c121dba."
     }
   ],
-  "started": "2026-09-06T23:29:21.308Z"
+  "started": "2026-09-06T23:29:21.308Z",
+  "completed": "2026-09-06T23:36:03.884Z"
 }
