@@ -1,0 +1,27 @@
+{
+  "id": "the-app-you-playtest-with-is-rebuilt-after-every",
+  "title": "The app you playtest with is rebuilt after every task again",
+  "goal": "Between tasks the loop is supposed to rebuild the app you playtest with so you are never looking at yesterday's build. That step has been failing silently since 2026-09-06, so the app on disk has not moved while work has kept landing. It should rebuild again, and it should say so out loud when it cannot.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 180,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T12:10:15.734Z",
+  "updated": "2026-09-06T12:10:15.734Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "queue/bin/refresh-dev-app.sh line 59: bundle() { PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh } is a bash syntax error (a brace group needs a ; or newline before the closing brace), so the whole script fails to parse and exits before doing anything. Introduced by 09ae00e. Nothing downstream notices because the loop does not check its exit status. Fix the quoting and add a check that the failure is reported.",
+  "acceptance": [
+    "Running the between-tasks refresh rebuilds the dev app instead of stopping with an error",
+    "A refresh that cannot rebuild leaves a visible line in the loop output saying so",
+    "The dev app that comes back is running the code that just landed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T12:10:15.734Z",
+      "note": "created (manual)"
+    }
+  ]
+}
