@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.134Z",
-  "updated": "2026-09-06T13:21:49.101Z",
+  "updated": "2026-09-06T13:42:02.744Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The cost was accepted with the decision on 2026-09-05 (each version is a complete drawing). This is the sanded-down version of that cost. Versions live as sibling mains sharing a componentID; ComponentVersions.swift holds the model.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-06T13:41:49.762233Z",
       "note": "Acceptance verified, not assumed. (1) One undo step: ComponentVersionMatchTests.everyVersionAndEveryCopyChangeInOneUndoStep drives it through History and checks the document is byte identical after one undo, including a copy that was showing the changed version; the walk's step 4 shows it on screen. (2) Clear before it runs: the button and menu row NAME the versions ('Apply to Hover and Disabled'), count them past two, and dim saying 'Other Versions Already Match' or 'No Other Version Has This Part' when there is nothing to do; three tests plus the captures. (3) One version unaffected: componentVersionApply answers nil, so no menu row, no panel section and no mutation (oneVersionOffersNothing). Scripts/test.sh green, 3839 tests."
+    },
+    {
+      "t": "2026-09-06T13:42:02.743Z",
+      "note": "Apply to Other Versions: one piece's look and wording carried to every other version of its component in one undo step. Core in Sources/PhotonzCore/ComponentVersionMatching.swift, panel row above Color/Effects plus Layer menu and layers-list menu, Applied pill. Verified by 15 new tests in ComponentVersionMatchTests (Scripts/test.sh green, 3839 tests) and by Scripts/playtest/apply-to-versions-walk.json on the probe app with real screen captures; audit at queue/audits/2026-09-06-apply-to-versions.json."
     }
   ],
-  "started": "2026-09-06T13:21:49.101Z"
+  "started": "2026-09-06T13:21:49.101Z",
+  "completed": "2026-09-06T13:42:02.744Z"
 }
