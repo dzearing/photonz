@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T14:03:15.041Z",
-  "updated": "2026-09-05T14:05:28.257836Z",
+  "updated": "2026-09-06T00:35:58.362Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-05. Evidence: queue/audits/2026-09-04-mixed-one-look.json rough 2, 3, 4 and 5 all report a control answering the several-things question its own way after the one-look pass shipped; queue/audits/2026-09-04-copy-own-color.json rough 1 reports the whole Component section vanishing on a second copy. Unblocks the-knobs-panel-speaks-for-several-copies-at-onc (p2), a-switch-says-mixed-the-way-every-other-control (p3) and a-width-the-layers-refused-stops-claiming-the-nu (p3), each of which currently has to decide this for itself. The look is already settled and lives in MixedLook.style / MixedValue.text with the rule in docs/design/mocks/shared/UX-PATTERNS.md section 4, next to the rungs written by one-rule-for-a-control-that-cannot-do-anything on 2026-09-04. This is the behaviour half of that same section.\n\nRead the existing \"What Mixed looks like\" section first: it is good and it already says that a control saying Mixed is still a control and reaches every picked layer in one undo step. This task is the part it does not cover: what a control does when it cannot speak for the selection at all, what a field shows after a set that some of the picked layers refused, and the switch, which has no mixed position on the Mac. Write it as a sibling section, not a rewrite.",
@@ -33,6 +33,27 @@
     {
       "t": "2026-09-05T14:05:05.374Z",
       "note": "seq 50 -> 60"
+    },
+    {
+      "t": "2026-09-06T00:35:58.362Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T00:50:00.000Z",
+      "note": "Adversarial review of the idea before writing. Risk 1: a rules doc nobody reads. Mitigated by siblinging it to the two sections it extends and by writing a pointer into all three unblocked task files, so the runner meets the rule before it meets the code. Risk 2: over-specifying a general theory of multi-select. Cut to the four things acceptance names, hung off one table. Risk 3: choosing the switch's look without the user. Every clause is DERIVED from rules the user already has (the segmented-row precedent for a control with no room for a word, MixedLook.style for the weight, the mixed-checkbox press cycle from the platform), not invented, and the p3 build task still ships a real capture the user can react to."
+    },
+    {
+      "t": "2026-09-06T00:52:00.000Z",
+      "note": "Checked the doc against the app before writing rather than after. Speaking-for-a-subset is already shipped practice (shadowReachNote, borderReachNote, ColorStyleSelection.members vs selectionCount/capableCount), so most of the rule DESCRIBES what is already right and only three gaps are new. One draft bullet was wrong and got corrected: I first wrote that a single control never leaves a section its siblings stay in, but colorRowSlots in EditorState+ColorStyles.swift already drops the Fill row when nothing picked has a fill while the Color section and Outline row stay, and that is correct. The rule now says the thing that leaves is the thing whose property is absent, and nothing larger."
+    },
+    {
+      "t": "2026-09-06T00:54:00.000Z",
+      "note": "Wrote docs/design/mocks/shared/UX-PATTERNS.md section 4, 'What a control DOES for several picked things', as a sibling after 'What Mixed looks like' and before 'A control that cannot act'. One table (reaches all/some/none) plus consequences, then two sub-sections: 'What a control shows after a set the picked things refused' and 'What a switch does, since a Mac switch has no third position'. Added one preview bullet at the top of section 4. Verdicts the three waiting tasks no longer have to reach: the Component section vanishing on a second copy is a BUG; copies of two different components keep the section and one sentence rather than going blank, since a knob is the same knob only when it is the same property of the same thing, never when it merely shares a name; a field reads back after the commit, never a landing computed before it; the switch stays a switch and says Mixed beside its caption, first press resolves to on."
+    },
+    {
+      "t": "2026-09-06T00:55:00.000Z",
+      "note": "Verified every symbol and every quoted string against the source: MixedValue.text, MixedLook.style, ColorStyleSelection.members/selectionCount/capableCount, colorRowSlots, shadowReachNote (quote is exact), borderReachNote, ShadowInspector/hasShadowEverywhere, the 'Enable Shadow' caption, LayersPanel component gate on selectedLayer, GeometryField.land() computing landing(parsed) before commit(parsed). No em dashes in the section. Scripts/test.sh green (exit 0), though no app code changed. No audit: acceptance forbids app changes, so there is nothing to playtest."
     }
-  ]
+  ],
+  "started": "2026-09-06T00:35:58.361Z"
 }

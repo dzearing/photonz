@@ -296,6 +296,9 @@ the dock, or a `.sheet.down` overlay.
   fields keep their number, bare handles go away. The rule is right below.
 - **Mixed is one word, one weight, in the value's own place.** The rule is
   written out below.
+- **A control over several picked things reaches all of them, some of them, or
+  none**, and that count decides what it shows and whether its section is on
+  screen at all. Disappearing is only ever the "none" answer. The rule is below.
 
 ### What Mixed looks like
 
@@ -339,6 +342,127 @@ here at all, and only a readout can say it: an arrow has no width of its own, so
 its W would otherwise be a lone letter with a gap after it. `Mixed` means the
 layers have numbers and disagree. Two different answers, two different marks,
 and a box you can type in still says "nothing set" by staying empty.
+
+### What a control DOES for several picked things
+
+Added 2026-09-05 (task `one-rule-for-a-control-that-speaks-for-several-p`).
+**What Mixed looks like** above settled the word and the weight. It did not say
+what a control DOES, so every control that shipped after it settled that part
+again on its own: the shadow switch shows plain off and explains itself in grey
+underneath, the whole Component section vanishes rather than speak for two
+copies, and W goes on showing 200 after both layers landed on 204. This is the
+behaviour half of the same rule.
+
+**Ask one question, of the control and not of the feature: how many of the
+picked things does this control reach?**
+
+| How many it reaches | What the control shows | What setting it does |
+| --- | --- | --- |
+| **All of them, agreeing** | the value | sets all of them, in one undo step |
+| **All of them, disagreeing** | `Mixed` | sets all of them to what you set, in one undo step |
+| **Some of them** | the value, or `Mixed`, for the ones it reaches | reaches only those, and one line under the section says how many, in words |
+| **None of them** | the whole section is not on screen | nothing to set |
+
+Everything below is a consequence of that table.
+
+- **Absence is not disagreement.** A thing that does not have this property at
+  all is not a thing that disagrees. Two red rectangles and a text layer with no
+  fill make a Fill row that says red, not Mixed. This is the mirror of "Mixed is
+  never absence" above: neither answer may be dressed as the other.
+  *(`ColorStyleSelection.members` is exactly the reachable subset, and
+  `selectionCount` is everything picked, so a row can say both.)*
+- **A control never changes kind because you picked another thing.** A switch
+  stays a switch, a menu stays a menu, a field stays a field. Selecting a second
+  layer must not swap a switch for a checkbox any more than it may move a
+  control to another section. Mixed is drawn INTO the control you were already
+  using.
+- **Speaking for some is the normal case, and it says so out loud.** When a
+  control reaches fewer than all the picked things, the section carries one
+  visible line saying how many and what the rest will do. Already the practice
+  and the exemplar to copy: `shadowReachNote` and `borderReachNote` in
+  `LayersPanel.swift` ("3 of the 5 selected layers have a shadow. The rows below
+  change those; the switch gives the rest one too."). One line under the
+  section, never a tip per control, same as the placement rule in **Where the
+  explanation goes** below.
+- **Disappearing is the last row of the table and nothing else.** A control goes
+  away only when NOTHING picked has its property, which is the same reason a
+  rectangle has no Text section. It never goes away because the picked things
+  disagree, because only some of them qualify, or because nobody has decided yet
+  what Mixed means there.
+  The thing that leaves is the thing whose property is absent, and nothing
+  larger. Pick two outlined boxes with no fill and the Fill row leaves while the
+  Color section and the Outline row stay, which is what the app already does:
+  `colorRowSlots` in `EditorState+ColorStyles.swift` lists only the slots the
+  picked layers actually have. A whole section leaving is that same answer when
+  every control in it is absent.
+  **So the Component section vanishing on a second copy is a bug, not the rule.**
+  Both copies have knobs; the panel reaches both; it must stay and speak for
+  them. (`LayersPanel.swift` gates that section on `selectedLayer`, one layer.
+  Fixing it is `the-knobs-panel-speaks-for-several-copies-at-onc`.)
+- **When the section applies but no control inside it is shared, the section
+  stays and says so in one sentence.** Pick copies of two different components
+  and every picked thing has knobs, so a panel that silently goes blank reads as
+  a fault. The section keeps its heading and holds one sentence in the two
+  halves the wording law asks for, who owns this and the one thing to do:
+  "These copies come from different components. Pick copies of one component to
+  set their knobs together."
+  Two controls are the same control when they are the same property of the same
+  thing, never when they merely share a name. A knob called Label on one
+  component and a knob called Label on another are two knobs, and a row that
+  averaged them would be inventing a control neither original has.
+
+#### What a control shows after a set the picked things refused
+
+- **Read back what they took. Never echo what was asked.** After a set, the
+  control shows the state the picked things are actually in, read from the
+  document after the change, not a landing worked out before it. A number in a
+  box that nothing has is the worst answer a panel can give: it is wrong, it
+  looks authoritative, and the next arrow key steps from it.
+- **All landed on the same value: show that value.** Type 200 into W over two
+  labels that both floor at 204 and the box reads 204.
+- **They landed on different values: show `Mixed`.** One label floored at 204
+  and a rectangle that took 200 do not have a number in common, and the box must
+  not pick a favourite.
+- **An arrow key steps from what is on screen**, which is now true by
+  construction, because what is on screen is what they have.
+- **Nothing moved at all: say why, do not just snap back.** The control returns
+  to the value it had and the line under the section carries the reason, in the
+  wording law's two halves. A value silently springing back reads as a control
+  that is broken rather than a selection that refused.
+- **No toast, no flash, no error.** The number changing under your hand from 200
+  to 204 IS the message. Refusing a width is ordinary, not an incident.
+
+*(`GeometryField.land()` in `GeometryInspector.swift` computes `landing(parsed)`
+BEFORE `commit(parsed)`, which is how it misses a per-layer clamp on a
+multi-layer selection. Fixing it is
+`a-width-the-layers-refused-stops-claiming-the-nu`.)*
+
+#### What a switch does, since a Mac switch has no third position
+
+A checkbox has a mixed state; a switch has on and off and nothing else. That is
+the one control the look rule cannot simply be dropped into, so it is decided
+here rather than in the middle of whatever feature meets it next.
+
+- **It stays a switch.** It does not become a checkbox when you pick a second
+  layer, per the rule above.
+- **The word goes beside the switch's own caption**, `Enable Shadow  Mixed`, the
+  same place a segmented row of pictures puts it, and for the same reason: there
+  is no room for a word inside the control, and out at the trailing edge the
+  word lands against the next column's caption.
+- **The switch itself must not read as a state anyone chose.** Off is a true
+  answer, the one that means none of them have it, so a disagreeing selection
+  may not borrow it. While it has no position the switch wears the same one step
+  quieter that `MixedLook.style` gives every other Mixed.
+- **The first press resolves to on**, for every picked layer, in one undo step,
+  the way a mixed checkbox has always behaved on this platform. The press after
+  that turns them all off. It never returns to Mixed: Mixed is a report about
+  the selection, not a state you can set.
+- **The reach line underneath stays.** It answers a different question, how many
+  the rows below reach, and the switch saying Mixed does not say that.
+
+*(`ShadowInspector` binds to `selection.hasShadowEverywhere`, which is why a
+part-shadowed selection currently reads plain off. Fixing it is
+`a-switch-says-mixed-the-way-every-other-control`.)*
 
 ### A control that cannot act
 
