@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:32:33.864Z",
-  "updated": "2026-09-06T00:40:58.421Z",
+  "updated": "2026-09-06T01:18:26.478Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The model side is already done and tested: PhotonzDocument.componentColorSelection(instances:property:) returns a ColorStyleSelection over several copies, and setInstanceColor/setInstanceColorStyle/unlinkInstanceColorStyle all take an array. What is missing is the app: LayersPanel.swift:426 gates the Component section on selectedLayer (one layer), and ComponentInstanceProperties takes a single instance UUID. InstanceColorKnob in ComponentPanel.swift already takes an array and already draws Mixed, so the colour row needs no new work. The open UX question is what Mixed looks like for a switch and for a choice menu; that is worth a decision card rather than a guess. Split out of a-copy-can-be-given-its-own-color on 2026-09-04.\n\nThe several-picked-things rule is now written: docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a control DOES for several picked things\" (2026-09-05). It settles this task's open questions rather than leaving them to a decision card: the section vanishing on a second copy is a bug, not the rule; copies of two DIFFERENT components keep the section and one sentence saying so rather than going blank; the switch knob answer is in the switch sub-section. Build to it.",
@@ -60,7 +60,12 @@
     {
       "t": "2026-09-06T02:14:00.000Z",
       "note": "verified live in the probe with Screen Recording granted. Scripts/playtest/copies-share-knobs-walk.json (11 stages: section stays, set together, ONE undo puts both back, Mixed on field and switch, first press resolves to on, typing into Mixed reaches both, two different components, speaking for two of three, Detach reaches both) and Scripts/playtest/copies-share-choice-walk.json (the other two knob kinds: a choice menu and a colour row, each reading Mixed and each setting both). Both walks end ok; Scripts/test.sh 3479 tests green."
+    },
+    {
+      "t": "2026-09-06T01:18:26.477Z",
+      "note": "The Component section stays and speaks for every picked copy: agreed values, Mixed for all four knob kinds, one undo step. ComponentKnobSelection (PhotonzCore, tested) + ComponentInstanceInspector/Properties over a selection + LayersPanel gated on the whole selection. Verified live in the probe: Scripts/playtest/copies-share-knobs-walk.json and copies-share-choice-walk.json, both ok, real captures. Scripts/test.sh 3479 green. Audit queue/audits/2026-09-05-copies-share-knobs.json."
     }
   ],
-  "started": "2026-09-06T00:40:58.420Z"
+  "started": "2026-09-06T00:40:58.420Z",
+  "completed": "2026-09-06T01:18:26.478Z"
 }
