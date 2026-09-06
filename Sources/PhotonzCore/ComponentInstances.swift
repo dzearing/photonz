@@ -109,8 +109,9 @@ enum ComponentIdentity {
 public enum ComponentDropTarget: Equatable, Sendable {
     /// Nothing would happen: the copy would end up inside itself.
     case refused
-    /// It would join this frame.
-    case frame(UUID)
+    /// It would join this container: the screen under the pointer, or the
+    /// group you have stepped inside.
+    case inside(UUID)
     /// It would land loose on the canvas.
     case canvas
 }
@@ -186,19 +187,36 @@ extension PhotonzDocument {
     /// Asked while the drag is still in the air, so the canvas can draw the
     /// answer before the button comes up, and asked again by the drop itself,
     /// so the picture and what happens can never disagree.
-    public func componentDropTarget(of componentID: UUID, at point: CGPoint) -> ComponentDropTarget {
+    ///
+    /// `context` is the group you have stepped INSIDE, so a piece let go on a
+    /// bar or a card you are arranging joins it rather than landing beside it.
+    public func componentDropTarget(of componentID: UUID, at point: CGPoint,
+                                    inside context: UUID? = nil) -> ComponentDropTarget {
         // A starter is still the app's rather than the document's until it is
         // dropped, so there is no main to reason about: it arrives whole and
-        // joins whatever frame it lands on, the way a drawn shape does.
+        // joins whatever container it lands on, the way a drawn shape does.
         let isArrivingStarter = mainComponent(componentID: componentID) == nil
             && StarterComponent(componentID: componentID) != nil
         guard isArrivingStarter || mainComponent(componentID: componentID) != nil else { return .refused }
-        guard let host = frameID(under: point) else { return .canvas }
-        if isArrivingStarter { return .frame(host) }
+        guard let host = dropHostID(under: point, inside: context) else { return .canvas }
+        if isArrivingStarter { return canDropNewLayer(intoGroup: host) ? .inside(host) : .canvas }
         // A copy landing inside its own original would draw forever, so that
         // one drop is refused rather than quietly landed somewhere else.
         if encloses(componentID: componentID, at: host) { return .refused }
-        return canInsertInstance(of: componentID, intoGroup: host) ? .frame(host) : .canvas
+        return canInsertInstance(of: componentID, intoGroup: host) ? .inside(host) : .canvas
+    }
+
+    /// Whether a brand new layer — a starter arriving off the shelf, which has
+    /// no original in this document yet — may go inside `group` (nil for the
+    /// canvas). Nothing goes inside a COPY of a component: what is in there
+    /// belongs to the original, so an edit made in it could not be kept. A
+    /// component cannot hold ITSELF this way, because the thing arriving is
+    /// not in the document at all yet.
+    public func canDropNewLayer(intoGroup group: UUID?) -> Bool {
+        guard let group else { return true }
+        guard let target = layer(id: group), target.isOpenableGroup, !target.isLocked
+        else { return false }
+        return !isInsideCopy(group)
     }
 
     /// The box a dropped copy would fill, so the canvas can outline where it
@@ -212,6 +230,46 @@ extension PhotonzDocument {
         guard let starter = StarterComponent(componentID: componentID) else { return nil }
         return StarterComponents.layer(starter, scale: max(pixelScale, 1),
                                        measure: measure).localBounds.size
+    }
+
+    /// Where a dropped piece would actually END UP, and what it would join.
+    ///
+    /// For a container that arranges nothing that is the box under the pointer,
+    /// which is what the canvas has always drawn. A row or a stack packs its
+    /// contents from its own edge, so a piece let go over the right-hand half
+    /// of a bar lands over on the left with the rest: drawing the box under the
+    /// pointer would promise somewhere the piece is not going. This asks the
+    /// flow the same question the drop is about to ask it, so the outline in
+    /// the air is where the piece lands.
+    ///
+    /// Nil where the drop would be refused, and where the id is not a component
+    /// at all.
+    public func componentDropLanding(
+        of componentID: UUID, at point: CGPoint, inside context: UUID? = nil,
+        measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize
+    ) -> (rect: CGRect, host: UUID?)? {
+        let target = componentDropTarget(of: componentID, at: point, inside: context)
+        guard target != .refused,
+              let size = componentDropSize(of: componentID, measure: measure) else { return nil }
+        let loose = CGRect(x: point.x - size.width / 2, y: point.y - size.height / 2,
+                           width: size.width, height: size.height)
+        guard case .inside(let host) = target else { return (loose, nil) }
+        guard let group = layer(id: host), group.group?.layout?.arranges == true,
+              let corner = childOrigin(of: host) else { return (loose, host) }
+        // A stand-in the size of the piece, in the group's own space, put
+        // through the very flow the drop will run. A plain box rather than an
+        // empty group: the flow measures what a piece SHOWS, and an empty group
+        // shows nothing, so the row would pack a piece of no size at all.
+        let local = loose.offsetBy(dx: -corner.x, dy: -corner.y)
+        var probe = group
+        probe.children.append(
+            Layer(name: "",
+                  content: .annotation(AnnotationContent(shape: .rectangle, start: .zero,
+                                                         end: CGPoint(x: local.width,
+                                                                      y: local.height))),
+                  frame: local))
+        guard let placed = GroupFlow.flowing(probe).children.last else { return (loose, host) }
+        return (placed.frame.offsetBy(dx: corner.x, dy: corner.y), host)
     }
 
     /// Whether the drop target sits inside the component being placed, walking
@@ -285,15 +343,21 @@ extension PhotonzDocument {
     /// Places a copy of a component with its centre on `point` in canvas
     /// coordinates, and returns the new layer's id.
     ///
-    /// With no group named, the copy lands on the frame it was dropped on, the
-    /// same rule a shape drawn there follows — otherwise dropping a button on a
-    /// phone screen would leave the button floating above the screen and moving
-    /// the screen would leave it behind.
+    /// The copy lands in whatever the drop point is inside: the screen it was
+    /// dropped on, the same rule a shape drawn there follows — otherwise
+    /// dropping a button on a phone screen would leave the button floating
+    /// above the screen and moving the screen would leave it behind — or the
+    /// group named by `context`, which is the one you have stepped inside.
     @discardableResult
     public mutating func insertComponentInstance(of componentID: UUID, at point: CGPoint,
-                                                 intoGroup group: UUID? = nil) -> UUID? {
+                                                 inside context: UUID? = nil) -> UUID? {
         guard let main = mainComponent(componentID: componentID) else { return nil }
-        if let group { guard canInsertInstance(of: componentID, intoGroup: group) else { return nil } }
+        // The one answer, asked once: the same call the canvas draws its
+        // outline from, so what a drag in the air promised is what the drop
+        // does. A copy that would land inside its own original draws forever,
+        // so it is refused here rather than trusted not to be asked for.
+        let target = componentDropTarget(of: componentID, at: point, inside: context)
+        guard target != .refused else { return nil }
         let box = main.localBounds
         // The copy's own anchor sits where the original's does relative to what
         // it holds, so the two draw identically; then the whole thing is moved
@@ -326,20 +390,15 @@ extension PhotonzDocument {
         copy.children = resolvedChildren(of: componentID, version: main.componentVersionID,
                                          instance: copy.id, overrides: [], stack: [])
 
-        if let group {
-            let origin = canvasBounds(of: group)?.origin ?? .zero
-            copy.frame = copy.frame.offsetBy(dx: -origin.x, dy: -origin.y)
-            guard addLayer(copy, toGroup: group) else { return nil }
+        // A copy that is itself a SCREEN is never swallowed: a screen dropped on
+        // a screen is a second screen, not one hidden inside the other.
+        guard !copy.isFrame, case .inside(let host) = target else {
+            addLayer(copy)
             return copy.id
         }
-        // Dropping onto a frame that the copy may not join leaves it loose on
-        // the canvas rather than refusing the drop outright.
-        let host = frameID(under: point)
-        if let host, !canInsertInstance(of: componentID, intoGroup: host) {
-            addLayer(copy)
-        } else {
-            addLayerDrawnOnFrame(copy)
-        }
+        let corner = childOrigin(of: host) ?? .zero
+        copy.frame = copy.frame.offsetBy(dx: -corner.x, dy: -corner.y)
+        guard addLayer(copy, toGroup: host) else { return nil }
         return copy.id
     }
 

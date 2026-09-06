@@ -202,7 +202,7 @@ struct ComponentInstanceTests {
         var (doc, main, componentID) = withComponent()
         #expect(!doc.canInsertInstance(of: componentID, intoGroup: main))
         #expect(doc.insertComponentInstance(of: componentID, at: CGPoint(x: 30, y: 30),
-                                            intoGroup: main) == nil)
+                                            inside: main) == nil)
     }
 
     @Test func aComponentCannotHoldACopyOfSomethingThatHoldsIt() {

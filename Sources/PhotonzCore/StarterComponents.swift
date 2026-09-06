@@ -615,12 +615,16 @@ extension PhotonzDocument {
     /// component of this document: edit it and every copy follows. Every drop
     /// after that places a copy, exactly as the shelf does for a component you
     /// made yourself, so there is never a second original claiming the name.
+    ///
+    /// `context` is the group you have stepped INSIDE: let go in there and the
+    /// starter joins that group, which is how a bar or a card you are
+    /// arranging gets added to from the shelf.
     @discardableResult
     public mutating func insertStarterComponent(
-        _ kind: StarterComponent, at point: CGPoint,
+        _ kind: StarterComponent, at point: CGPoint, inside context: UUID? = nil,
         measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize) -> UUID? {
         if mainComponent(componentID: kind.componentID) != nil {
-            return insertComponentInstance(of: kind.componentID, at: point)
+            return insertComponentInstance(of: kind.componentID, at: point, inside: context)
         }
         let palette = adoptStarterStyles(kind.usedStyles)
         var main = StarterComponents.layer(kind, scale: max(pixelScale, 1),
@@ -628,7 +632,14 @@ extension PhotonzDocument {
         let box = main.localBounds
         main.frame.origin = CGPoint(x: (point.x - box.width / 2).rounded(),
                                     y: (point.y - box.height / 2).rounded())
-        addLayerDrawnOnFrame(main)
+        if !main.isFrame, let host = dropHostID(under: point, inside: context),
+           canDropNewLayer(intoGroup: host) {
+            let corner = childOrigin(of: host) ?? .zero
+            main.frame = main.frame.offsetBy(dx: -corner.x, dy: -corner.y)
+            guard addLayer(main, toGroup: host) else { return nil }
+        } else {
+            addLayerDrawnOnFrame(main)
+        }
         addStarterKnobs(kind, to: main.id)
         return main.id
     }

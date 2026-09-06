@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T06:04:18.627Z",
-  "updated": "2026-09-06T12:16:42.193Z",
+  "updated": "2026-09-06T12:19:32.212Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while auditing the Nav Bar row (queue/audits/2026-09-05-nav-bar-row.json): a Badge dragged onto an open Nav Bar landed as a sibling at the top level. The model side already works - GroupChromeTests aSecondControlLinesUp appends a child and the row places it - so this is the drop target, not the flow. Look at the dragTile/drop path in the Library panel and the canvas drop handler.",
@@ -39,6 +39,43 @@
     {
       "t": "2026-09-06T12:16:42.192Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-09-06T12:19:32.212Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T00:00:00.000Z",
+      "note": "Adversarial review before building. Walked it as a first-timer: you drop a bar, you want a badge on it, and there is no gesture at all that puts one in - the layers list is the only way, which nobody would guess. Rejected the wider rule (ANY group under the pointer swallows a drop): a badge dropped on a button would vanish inside the button, and a bar is exactly the shape people drop things ON TOP of. Stepping inside is the one deliberate signal, and the dashed outline already says you are in there. Shortest version: one question in the model, asked by both the drag in the air and the drop."
+    },
+    {
+      "t": "2026-09-06T00:00:00.000Z",
+      "note": "Reproduced first, in the app, before changing anything (Scripts/playtest/drop-into-open-group-walk.json): stepped into a Nav Bar, dragged the Badge tile onto it, log said 'loose on the canvas' and the tree showed Badge as a top-level sibling. Cause: componentDropTarget resolved its host through frameID(under:), which only ever finds a SCREEN, so a plain group could not take a drop."
+    },
+    {
+      "t": "2026-09-06T00:00:00.000Z",
+      "note": "Model: PhotonzDocument.dropHostID(under:inside:) in Frames.swift is the new one answer - the screen under the point, or the group you have stepped inside when the point is in its room, with a screen nested inside that group still winning. componentDropTarget / insertComponentInstance / insertStarterComponent all take inside: and all route through it, so the picture and the result cannot drift. ComponentDropTarget.frame renamed .inside, since the host is no longer always a frame."
+    },
+    {
+      "t": "2026-09-06T00:00:00.000Z",
+      "note": "Adversarial review of the built thing found a real flaw: the box drawn in the air sat under the pointer, but a row packs from its own edge, so the badge landed 160pt to the LEFT of where the box promised. Added componentDropLanding, which puts a stand-in the size of the piece through the very flow the drop will run and hands back the box it comes out in. Now the box is drawn beside the back label, where the piece actually lands."
+    },
+    {
+      "t": "2026-09-06T00:00:00.000Z",
+      "note": "Two bugs the tests caught on the way: the flow stand-in was an empty group, which shows nothing, so the row packed a piece of no size; and the child coordinate conversion used canvasBounds (a group's BOX, wherever its contents start) rather than its corner, which put a piece down in the wrong place inside a plain group. Added childOrigin(of:) for that. Frames are unaffected either way, since a frame's box IS its corner."
+    },
+    {
+      "t": "2026-09-06T00:00:00.000Z",
+      "note": "Verified in the real app, not assumed. All four acceptance items pass in Scripts/playtest/drop-into-open-group-walk.json: Badge is a child of Nav Bar; the held picture logs 'joining Nav Bar' at box (540,290) which is exactly where it landed; the row lined Back, Badge and Button up at gap 12 with nothing typed; a Card dropped on bare canvas is still top level. Scripts/test.sh green, 3788 tests. Audit: queue/audits/2026-09-06-drop-into-open-group.json with two real window captures."
+    },
+    {
+      "t": "2026-09-06T00:00:00.000Z",
+      "note": "Current release untouched: every flag on this path (next-layer-groups, next-library, next-components, next-starter-components) is releases: [.next], so dropGroupContext is nil in Current and the model changes are no-ops without a context."
+    },
+    {
+      "t": "2026-09-06T00:00:00.000Z",
+      "note": "Two follow-ups filed: 'Where you let go in a row decides where the piece goes in the row' (a piece always joins at the end today) and 'A control added to a bar does not vanish behind its title' (the bar's centred Title is drawn under the controls the row packs in)."
     }
-  ]
+  ],
+  "started": "2026-09-06T12:19:32.211Z"
 }

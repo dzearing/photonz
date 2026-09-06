@@ -1,0 +1,36 @@
+{
+  "out": "/tmp/photonz-playtest/drop-into-open-group",
+  "seed": "A tile dragged off the Library shelf onto a group you have stepped inside joins that group, and the box drawn while it is still in the air is where the row will actually park it.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "dragTile", "tile": "Nav Bar", "to": [640, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-bar", "note": "the bar has landed at the top level, 320 x 48 centred on 640,300. insideGroup should be nil" },
+
+    { "do": "click", "at": [500, 300], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-inside", "note": "double clicking the back label steps INSIDE the bar: insideGroup should name Nav Bar" },
+    { "do": "snapshot", "name": "drop-1-inside" },
+
+    { "do": "dragTile", "tile": "Badge", "to": [700, 300], "hold": "drop-2-in-the-air" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-dropped", "note": "THE TEST: the Badge was let go over the RIGHT half of the open bar. It should be a CHILD of Nav Bar and lined up in the row beside the back label, and the box held in the air a moment ago should have been drawn there, not under the pointer" },
+    { "do": "snapshot", "name": "drop-3-dropped" },
+    { "do": "render", "name": "drop-3-dropped-doc" },
+
+    { "do": "dragTile", "tile": "Button", "to": [760, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-second", "note": "a second control joins the same bar and the row lines all three up with nothing typed" },
+    { "do": "snapshot", "name": "drop-4-second" },
+
+    { "do": "click", "at": [1100, 800] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dragTile", "tile": "Card", "to": [1000, 700] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-outside", "note": "back out on bare canvas, a tile dropped on empty canvas still lands at the TOP level exactly as before" },
+    { "do": "snapshot", "name": "drop-5-outside" }
+  ]
+}

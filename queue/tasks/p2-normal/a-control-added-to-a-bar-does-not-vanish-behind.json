@@ -1,0 +1,27 @@
+{
+  "id": "a-control-added-to-a-bar-does-not-vanish-behind",
+  "title": "A control added to a bar does not vanish behind its title",
+  "goal": "Add a couple of controls to the starter Nav Bar and they slide under the bar title, which is centred across the whole bar and drawn beneath them. You end up with a bar whose title has disappeared and no hint why.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1370,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T12:40:40.427Z",
+  "updated": "2026-09-06T12:40:40.428Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on 2026-09-06 in queue/audits/2026-09-06-drop-into-open-group.json: after a Badge and a Button joined the bar, the word Title was drawn under the Button and could not be seen. The bar packs its row from the left while the Title stretches the whole bar and centres in it, so the two eventually collide. queue/audits/2026-09-05-nav-bar-row.json already asked whether the title should centre on the whole bar or sit beside the back label - that judgment decides this.",
+  "acceptance": [
+    "Adding controls to the starter Nav Bar never hides its title",
+    "The title stays readable as controls are added on either side",
+    "Nothing has to be typed into the Layout section to get that"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T12:40:40.427Z",
+      "note": "created (manual)"
+    }
+  ]
+}

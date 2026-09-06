@@ -61,6 +61,13 @@ extension CanvasNSView {
         return collageSlotTarget(at: p)
     }
 
+    /// The group you have stepped inside, as a drop reads it: nil out on the
+    /// canvas, and nil while groups are switched off, which is the same
+    /// reading the marquee takes.
+    private var dropGroupContext: UUID? {
+        Experiments.shared.layerGroupsEnabled ? groupContext : nil
+    }
+
     /// The component a drag off the Library shelf is carrying, nil for
     /// everything else. Its own pasteboard type, so a dropped file and a
     /// dropped component can never be mistaken for each other.
@@ -95,18 +102,18 @@ extension CanvasNSView {
             return []
         }
         let point = viewport.documentPoint(fromView: viewPoint)
-        let target = document.componentDropTarget(of: componentID, at: point)
-        guard target != .refused,
-              let size = document.componentDropSize(of: componentID,
-                                                    measure: { TextRasterizer.naturalSize($0) }) else {
+        // One question, asked of the model: the group you have stepped inside
+        // takes the drop, so the outline says "this bar" while the button is
+        // still down, and where a row would park the piece is where the box is
+        // drawn — not under the pointer it is about to leave.
+        guard let landing = document.componentDropLanding(
+            of: componentID, at: point, inside: dropGroupContext,
+            measure: { TextRasterizer.naturalSize($0) }) else {
             dropLanding = nil
             refreshOverlays()
             return []
         }
-        let host: UUID? = if case .frame(let id) = target { id } else { nil }
-        dropLanding = (CGRect(x: point.x - size.width / 2, y: point.y - size.height / 2,
-                              width: size.width, height: size.height),
-                       host)
+        dropLanding = landing
         refreshOverlays()
         return .copy
     }

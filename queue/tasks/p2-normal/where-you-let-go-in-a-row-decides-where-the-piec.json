@@ -1,0 +1,28 @@
+{
+  "id": "where-you-let-go-in-a-row-decides-where-the-piec",
+  "title": "Where you let go in a row decides where the piece goes in the row",
+  "goal": "When you drop a control onto a bar or a card that arranges its own contents, it always goes to the end of the line, however far left you let go. Dropping halfway along should put it halfway along, so you can build a bar in the order you want without dragging pieces around afterwards.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1360,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T12:40:40.393Z",
+  "updated": "2026-09-06T12:40:40.393Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Landed 2026-09-06 with the drop-into-open-group task. The drop now resolves through PhotonzDocument.componentDropLanding / componentDropTarget(of:at:inside:), and the flow probe there already computes where the row parks a stand-in - extending it to an INDEX means appending the stand-in at a candidate index rather than at the end, and picking the index from the pointer against the flowed gaps. insertComponentInstance / insertStarterComponent both take an inside: context and call addLayer(_:toGroup:) which already accepts an index.",
+  "acceptance": [
+    "Dropping a tile between two pieces of a row puts it between them",
+    "The box drawn while the drag is in the air shows the gap it would take, and the pieces either side move aside to show it",
+    "Dropping past the last piece still puts it at the end",
+    "Dropping into a group that arranges nothing is unchanged: the piece lands where you let go"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T12:40:40.393Z",
+      "note": "created (manual)"
+    }
+  ]
+}

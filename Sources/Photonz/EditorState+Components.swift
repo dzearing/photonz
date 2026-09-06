@@ -151,8 +151,9 @@ extension EditorState {
         guard starterComponentsEnabled, document != nil else { return nil }
         discardDragPreview()
         var placed: UUID?
+        let context = dropContext
         perform {
-            placed = $0.insertStarterComponent(kind, at: point,
+            placed = $0.insertStarterComponent(kind, at: point, inside: context,
                                                measure: { TextRasterizer.naturalSize($0) })
         }
         guard let placed else { return nil }
@@ -201,6 +202,11 @@ extension EditorState {
         }
     }
 
+    /// The group a drop joins when it is let go inside one: the group you have
+    /// stepped into, or nil out on the canvas. The same reading the canvas
+    /// draws the outline from, so the promise and the result agree.
+    var dropContext: UUID? { sweepContext(groupContextID) }
+
     /// The middle of what the canvas is showing, in document coordinates.
     var visibleCanvasCentre: CGPoint {
         guard let document else { return .zero }
@@ -233,13 +239,15 @@ extension EditorState {
         // draws forever, so it is refused out loud rather than quietly ignored.
         // The same answer is what the canvas draws mid-drag, so a drag that is
         // going to be refused says so before the button comes up.
-        if document.componentDropTarget(of: componentID, at: point) == .refused {
+        if document.componentDropTarget(of: componentID, at: point,
+                                        inside: dropContext) == .refused {
             raiseComponentCycleNotice()
             return nil
         }
         discardDragPreview()
         var placed: UUID?
-        perform { placed = $0.insertComponentInstance(of: componentID, at: point) }
+        let context = dropContext
+        perform { placed = $0.insertComponentInstance(of: componentID, at: point, inside: context) }
         guard let placed else { return nil }
         selectedLibraryItemID = nil
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))

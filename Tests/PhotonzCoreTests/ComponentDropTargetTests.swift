@@ -38,7 +38,7 @@ struct ComponentDropTargetTests {
     @Test func aPointOnAFrameJoinsThatFrame() {
         var (doc, _, componentID) = withComponent()
         let frame = doc.addFrame(origin: CGPoint(x: 200, y: 200), size: CGSize(width: 300, height: 300))
-        #expect(doc.componentDropTarget(of: componentID, at: CGPoint(x: 250, y: 250)) == .frame(frame.id))
+        #expect(doc.componentDropTarget(of: componentID, at: CGPoint(x: 250, y: 250)) == .inside(frame.id))
         // ...and a point just outside it does not.
         #expect(doc.componentDropTarget(of: componentID, at: CGPoint(x: 150, y: 250)) == .canvas)
     }
@@ -63,7 +63,7 @@ struct ComponentDropTargetTests {
         var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600), layers: [])
         let frame = doc.addFrame(origin: CGPoint(x: 100, y: 100), size: CGSize(width: 200, height: 200))
         #expect(doc.componentDropTarget(of: StarterComponent.button.componentID,
-                                        at: CGPoint(x: 150, y: 150)) == .frame(frame.id))
+                                        at: CGPoint(x: 150, y: 150)) == .inside(frame.id))
         #expect(doc.componentDropTarget(of: StarterComponent.button.componentID,
                                         at: CGPoint(x: 500, y: 500)) == .canvas)
     }
@@ -74,7 +74,7 @@ struct ComponentDropTargetTests {
         var (doc, _, componentID) = withComponent()
         let frame = doc.addFrame(origin: CGPoint(x: 200, y: 200), size: CGSize(width: 300, height: 300))
         let point = CGPoint(x: 300, y: 300)
-        #expect(doc.componentDropTarget(of: componentID, at: point) == .frame(frame.id))
+        #expect(doc.componentDropTarget(of: componentID, at: point) == .inside(frame.id))
         let placed = doc.insertComponentInstance(of: componentID, at: point)!
         #expect(doc.parentID(of: placed) == frame.id)
     }

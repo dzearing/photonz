@@ -571,7 +571,8 @@ private final class Run {
             let landing = canvas.dropLandingDescription
             let answer = operation.contains(.copy) ? "would place a copy" : "refused"
             let where_ = landing.map { "box \(short($0.rect.origin)) \(short(CGPoint(x: $0.rect.width, y: $0.rect.height)))"
-                                       + ($0.host == nil ? ", loose on the canvas" : ", joining a frame") } ?? "nothing shown"
+                                       + ($0.host.flatMap { id in editor?.document?.layer(id: id)?.name }
+                                        .map { ", joining \($0)" } ?? ", loose on the canvas") } ?? "nothing shown"
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue): \(answer), \(where_)",
                  state: describe())
 
@@ -636,7 +637,8 @@ private final class Run {
                 let landing = canvas.dropLandingDescription
                 held = ", held \(hold).png showing "
                     + (landing.map { "box \(short($0.rect.origin)) \(short(CGPoint(x: $0.rect.width, y: $0.rect.height)))"
-                                     + ($0.host == nil ? ", loose on the canvas" : ", joining a frame") }
+                                     + ($0.host.flatMap { id in editor?.document?.layer(id: id)?.name }
+                                        .map { ", joining \($0)" } ?? ", loose on the canvas") }
                        ?? "no landing box")
             }
             guard canvas.performDragOperation(info) else {
@@ -717,7 +719,8 @@ private final class Run {
                 ? "would place a copy (\(answered) took it)"
                 : "refused: the pointer shows the no-entry sign"
             let shown = landing.map { "box \(short($0.rect.origin)) \(short(CGPoint(x: $0.rect.width, y: $0.rect.height)))"
-                                      + ($0.host == nil ? ", loose on the canvas" : ", joining a frame") }
+                                      + ($0.host.flatMap { id in editor?.document?.layer(id: id)?.name }
+                                        .map { ", joining \($0)" } ?? ", loose on the canvas") }
                 ?? "no landing box"
             note(number, step.name,
                  "\(url.lastPathComponent) held over \(short(at.point)) \(at.space.rawValue): \(answer), \(shown)"
@@ -1942,7 +1945,8 @@ private final class Run {
             let landing = canvas.dropLandingDescription
             held = ", held \(hold).png showing "
                 + (landing.map { "box \(short($0.rect.origin)) \(short(CGPoint(x: $0.rect.width, y: $0.rect.height)))"
-                                 + ($0.host == nil ? ", loose on the canvas" : ", joining a frame") }
+                                 + ($0.host.flatMap { id in editor?.document?.layer(id: id)?.name }
+                                        .map { ", joining \($0)" } ?? ", loose on the canvas") }
                    ?? "no landing box")
         }
         guard updated != [] else {

@@ -187,6 +187,62 @@ extension PhotonzDocument {
         return search(layers, point)
     }
 
+    /// The container a drop at a canvas point joins, nil for the top level.
+    ///
+    /// A screen adopts what is let go on it, which is `frameID(under:)` and is
+    /// every drop made out on the canvas. `context` is the group you have
+    /// STEPPED INSIDE: while you are in there, letting go anywhere in that
+    /// group's room joins the group itself, so a bar or a card you are
+    /// arranging can be added to from the shelf. Without it, a piece let go on
+    /// an open bar landed beside the bar rather than in it, and there was no
+    /// gesture that put it in.
+    ///
+    /// Being inside is the whole of the rule: let go outside the open group's
+    /// room and the ordinary answer stands, so a drop out on bare canvas lands
+    /// at the top level exactly as it always did.
+    public func dropHostID(under point: CGPoint, inside context: UUID? = nil) -> UUID? {
+        let frame = frameID(under: point)
+        guard let context, let group = layer(id: context), group.isOpenableGroup,
+              group.isVisible, !group.isLocked, !isInsideCopy(context),
+              let room = canvasBounds(of: context), room.contains(point) else { return frame }
+        // A screen INSIDE the group you are standing in is deeper still, so it
+        // wins; a screen the group merely sits on is above you and does not.
+        if let frame, frame == context || isDescendant(frame, of: context) { return frame }
+        return context
+    }
+
+    /// Where a group's CHILDREN are measured from, in canvas coordinates: its
+    /// own corner, which is the point a child's stored frame is written
+    /// against. Not the same as the group's BOX, which for a plain group is
+    /// wherever its contents happen to start.
+    public func childOrigin(of groupID: UUID) -> CGPoint? {
+        guard let group = layer(id: groupID), group.isGroup,
+              let origin = parentOrigin(of: groupID) else { return nil }
+        return CGPoint(x: origin.x + group.frame.origin.x, y: origin.y + group.frame.origin.y)
+    }
+
+    /// Whether `id` sits anywhere under `ancestor`.
+    func isDescendant(_ id: UUID, of ancestor: UUID) -> Bool {
+        var current = parentID(of: id)
+        while let here = current {
+            if here == ancestor { return true }
+            current = parentID(of: here)
+        }
+        return false
+    }
+
+    /// Whether a copy of a component sits between this layer and the canvas.
+    /// Nothing may be dropped inside a copy: what is in there belongs to the
+    /// original, so an edit made in it could not be kept.
+    func isInsideCopy(_ id: UUID) -> Bool {
+        var current: UUID? = id
+        while let here = current {
+            if layer(id: here)?.isComponentInstance == true { return true }
+            current = parentID(of: here)
+        }
+        return false
+    }
+
     /// Whether Layer ▸ Frame Selection would do anything: one unlocked layer
     /// is enough, unlike ⌘G, because putting a single thing on a screen of its
     /// own is a normal way to start.

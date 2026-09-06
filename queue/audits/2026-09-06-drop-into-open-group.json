@@ -1,0 +1,29 @@
+{
+  "feature": "A control dropped on an open group joins it",
+  "epic": "ui-layout",
+  "summary": "Step inside a bar or a card on the canvas and a tile dragged off the Library shelf now joins it instead of landing beside it, so you can build a bar up out of the shelf without touching the layers list. The box drawn while the tile is still in the air is where the piece will actually end up, even when the row moves it away from your pointer.",
+  "setup": "Photonz Dev, release Next. Flags \"Group what you selected\", \"Components in the Library from the start\" and \"Groups that arrange their own contents\" are on by default. Open a blank document and open the Library.",
+  "try": [
+    { "do": "Drag the Nav Bar tile out of the Library onto the middle of the canvas." },
+    { "do": "Double click the blue Back label on the bar. You are now inside the bar." },
+    { "do": "Drag the Badge tile out of the Library and hold it over the EMPTY RIGHT HALF of the bar without letting go.", "shot": "2026-09-06-drop-into-open-group-2.png" },
+    { "do": "Read where the outlined box is drawn: beside the back label, not under your pointer." },
+    { "do": "Let go. The badge should be inside the bar, lined up where the box promised." },
+    { "do": "Drag the Button tile onto the bar the same way and let go.", "shot": "2026-09-06-drop-into-open-group-4.png" },
+    { "do": "Press Escape to step back out, then drag the Card tile onto empty canvas: it lands at the top level as before." }
+  ],
+  "evaluate": [
+    "The box jumps away from your pointer to where the row will park the piece. Is being told the truth worth the box not following your hand?",
+    "You have to double click into the bar first. Did you expect a tile dropped on a bar to join it whether or not you had stepped inside?",
+    "The dashed outline round the bar during the drag is the same one that says you are inside it. Is one outline doing both jobs clear, or do you want the drop target to look different?",
+    "Every piece goes to the END of the row however far left you let go. How often would you want to choose the place instead?",
+    "After the drop you are still inside the bar, ready for the next tile. Is that where you wanted to be left?"
+  ],
+  "rough": [
+    "Drop a tile on a bar you have NOT stepped inside and it still lands beside the bar, silently. That is deliberate for now: making any group under the pointer swallow a drop would mean a badge dropped on a button disappears inside the button. Stepping in is the one way to say you mean it.",
+    "The piece always joins at the end of the row, wherever in the row you let go. Filed as its own task: \"Where you let go in a row decides where the piece goes in the row\".",
+    "Adding two controls to the starter Nav Bar hid its Title: the row packs from the left while the title stretches the whole bar and is drawn underneath. You can see it in the second shot, where the word Title is behind the Button. That is the bar's own design, not the drop, and it is filed as its own task.",
+    "The landing box is drawn over the selection handles of whatever you had picked before the drag, which is a little noisy at small sizes.",
+    "Screen Recording was granted for the probe, so both shots here are real window captures, not offscreen renders."
+  ]
+}
