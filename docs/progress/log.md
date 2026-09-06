@@ -9884,3 +9884,47 @@ accessibility name (the system symbols have no description), and
 `arrow-endings-walk.json` fails at step 34, which it did before this change too.
 
 Next: the queue picks the next task.
+
+## 2026-09-06 — Room that differs side to side can be a knob too
+
+A component could offer the room it keeps inside its edges only while all four
+sides agreed. Almost nothing real is built that way: a button keeps less room
+above and below than beside, and every starter control except the card is the
+same shape, so the whole starter set had no room knob at all. Making a copy of a
+button roomier, the most ordinary thing anybody wants from a component, was the
+one thing the knob could not do.
+
+The task proposed a decision card between one knob writing all four sides, a
+knob that scales the inset, and four knobs. All three were dropped. One number
+levelling four sides turns a 10/24 button into a square, which is exactly the
+"leaves its family" the goal forbids; a scale knob puts a multiplier in a field
+where every other number in the app is points; four knobs is four rows on the
+Add menu and four on a 264 point panel for one idea. The canvas Padding row
+already solved four sided room on 2026-09-04 with one control, so the knob is
+that same control rather than a new invention, and the choice is flagged on the
+audit for the user to disagree with.
+
+- `ComponentPropertyValue.room(GroupPadding)` carries four sides under the same
+  `.number` kind, so a knob is still a knob and the Add menu is unchanged.
+- `Layer.knobValue(for:)` / `setKnobValue(_:for:)` in `ComponentNumberKnob.swift`
+  replaced the one-number accessors, so what a knob reads and what it writes are
+  decided in one place.
+- `setInstanceRoom(instances:property:side:to:)` and `componentRoomSide(...)`:
+  typing one side leaves each copy's own other three where they were, and two
+  copies that disagree about one side still read the three they agree on.
+- `InstanceRoomKnob` in `ComponentPanel.swift`: closed it reads `10/24/10/24`,
+  a chevron opens Top, Right, Bottom and Left, and typing one number levels all
+  four. The chevron sits beside the FIELD rather than the word, because knob
+  names are whatever the author typed and every knob's field should start in the
+  same column.
+- On disk an answer written before this is one number, and one number has always
+  meant the same room all round, so it opens as that.
+- Verified: `Scripts/playtest/component-uneven-room-walk.json` (new), status ok,
+  real window captures. `Scripts/test.sh` green, 4081 tests.
+  Audit: `queue/audits/2026-09-06-uneven-room-knob.json`.
+
+Open: a copy cannot own one side and follow the other three; answering any side
+answers the knob. Whether that is the bargain the user wants is a question on
+the audit.
+
+Next: the queue picks the next task.
