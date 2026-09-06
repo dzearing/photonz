@@ -1,0 +1,28 @@
+{
+  "id": "a-control-dragged-off-the-shelf-onto-an-open-gro",
+  "title": "A control dragged off the shelf onto an open group goes into it",
+  "goal": "Open a group on the canvas, drag a component tile out of the Library and let go inside it, and the new piece should join that group. Today it lands beside the group instead, which means a bar or a card you are arranging cannot be added to from the shelf at all.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1410,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T06:04:18.627Z",
+  "updated": "2026-09-06T06:04:18.627Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-05 while auditing the Nav Bar row (queue/audits/2026-09-05-nav-bar-row.json): a Badge dragged onto an open Nav Bar landed as a sibling at the top level. The model side already works - GroupChromeTests aSecondControlLinesUp appends a child and the row places it - so this is the drop target, not the flow. Look at the dragTile/drop path in the Library panel and the canvas drop handler.",
+  "acceptance": [
+    "Dragging a tile from the Library onto a group you have stepped into puts the new layer inside that group",
+    "The drop outline shows the group it is about to join before you let go",
+    "A row you drop into lines the new piece up in the row with no numbers typed",
+    "Dropping on empty canvas still lands at the top level exactly as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T06:04:18.627Z",
+      "note": "created (manual)"
+    }
+  ]
+}

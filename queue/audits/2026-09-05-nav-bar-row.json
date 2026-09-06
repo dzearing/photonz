@@ -1,0 +1,46 @@
+{
+  "feature": "The starter Nav Bar arranges itself",
+  "epic": "ui-layout",
+  "summary": "The Nav Bar on the Library shelf is a row now, so dragging it wider or taller arranges itself: the back label holds the left edge, the title stays in the middle of the bar, and the hairline spans the new width and still hugs the bottom. Nothing is typed into the Layout section.",
+  "setup": "Photonz Dev, release Next, flags \"Components in the Library from the start\" and \"Groups that arrange their own contents\" (both on by default). Open a blank document.",
+  "try": [
+    {
+      "do": "Open the Library and drag the Nav Bar tile onto the canvas."
+    },
+    {
+      "do": "Drag its bottom right handle straight out to about twice the width.",
+      "shot": "2026-09-05-nav-bar-row-2.png"
+    },
+    {
+      "do": "Drag the same handle straight down to about twice the height. Watch the hairline."
+    },
+    {
+      "do": "Undo, then read the Layout section: Stack, Row, and three pieces listed with a rule of their own.",
+      "shot": "2026-09-05-nav-bar-row-4.png"
+    },
+    {
+      "do": "Double click the back label. It should be the back label that gets picked, not the title."
+    },
+    {
+      "do": "Click the middle of the bar to pick the Title, and read the grey line under its Horizontal row."
+    },
+    {
+      "do": "Type a longer word over the title and press Return. It should re-centre in place rather than grow sideways."
+    }
+  ],
+  "evaluate": [
+    "The title stays centred on the WHOLE bar rather than in the room the back label leaves. Is that the bar you wanted, or would you rather it sat beside the back label?",
+    "Reading Stack, Row, Gap 12 and three pieces with rules of their own, would you know how this bar is built?",
+    "Does \"Stretch across, Bottom down\" beside Divider tell you what the hairline is doing, or do you have to click it to find out?",
+    "Clicking the empty right half of the bar picks the Title, because the title's box is the whole bar. Does that read as wrong to you?",
+    "The bar keeps 14 points of room at each end and 12 between its contents. Are those the numbers a bar should arrive with?"
+  ],
+  "rough": [
+    "The row lines up a second control beside the back label with no numbers typed, but you cannot try that yet: dragging a tile off the shelf onto an open bar drops it BESIDE the bar, not into it. Filed as its own task.",
+    "The title's box is the whole bar and always was going to be, because that is what Stretch means for words here. It is drawn under the controls so the back label still takes its own clicks, but a click on the bar's empty space picks the Title and outlines the whole bar. The same is already true of the Text Field's placeholder; it just shows more on a bar.",
+    "The Title's W field looks typeable while the flow works that number out and puts it straight back. That is true of every stretched piece in the app, not new here, but a bar is where you notice it.",
+    "The bar still holds the size it was drawn at rather than reaching across a screen it is dropped on. That is a separate open task.",
+    "Centred words used to sit two points right of the middle of the box they were centred in, because the slack a measurement leaves sat on the far edge. That is fixed, so any centred label anywhere has moved two points left. Nothing changes for a label that was never given an alignment.",
+    "Screen Recording was granted for the probe, so both shots here are real window captures, not offscreen renders."
+  ]
+}

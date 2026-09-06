@@ -211,6 +211,11 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// and a typed number would be put straight back. Says what to do instead.
     public static let stackedReason = "The stack this is in decides where it sits. Change the group's Gap or Direction in the Layout section, or drag this past its neighbours to reorder them."
 
+    /// A piece stretched the way its stack runs is not in the line at all: it
+    /// spans the group and is painted to its edges, so the group's own size is
+    /// the number that moves it.
+    public static let spanningReason = "This spans the group it is in and is painted to the group's own edges, so the group's size decides where it sits. Change the group's size in the Layout section, or set this piece's Stretch back and it lines up with the others."
+
     /// The same for a grid.
     public static let griddedReason = "The grid this is in decides where it sits. Change the group's Columns or gaps in the Layout section, or drag this past its neighbours to reorder them."
 
@@ -281,7 +286,9 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         }
         if let owningLayout {
             canMove = false
+            let spans = layer.resolvedPlacement(in: container).stepsOutOfTheFlow(of: owningLayout)
             moveReason = switch owningLayout.kind {
+            case _ where spans: Self.spanningReason
             case .grid: Self.griddedReason
             case .stack: Self.stackedReason
             case nil: Self.huggedReason

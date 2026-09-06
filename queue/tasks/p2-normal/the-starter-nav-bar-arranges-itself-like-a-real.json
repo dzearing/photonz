@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1240,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:00:21.673Z",
-  "updated": "2026-09-05T17:00:21.674Z",
+  "updated": "2026-09-06T05:35:15.457Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the spread gap task on 2026-09-05: its acceptance suggested demoing spread on the starter Nav Bar and it cannot be done. StarterComponents.navBar builds .free(width: 320, height: 48) with a Background (fill), a Divider (horizontal stretch + vertical bottom), a Back label pinned at x=14 and a centred Title. Turning it into a Row stack by hand pulls the Divider into the flow as an item, because isSurface needs stretch on BOTH axes. Options worth weighing: leave it Free and place the pieces with LayerPlacement (cheapest, and already half true), or make the bar a Row stack with the divider kept out of the flow, which needs a way to say \"this is chrome, not a row\" beyond isSurface. See queue/audits/2026-09-05-spread-gap.json.",
@@ -23,6 +23,43 @@
     {
       "t": "2026-09-05T17:00:21.674Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T05:35:15.456Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T07:10:00.000Z",
+      "note": "Adversarial review before building. Reproduced first: the CURRENT Free bar already resizes correctly (back holds the left, title recentres, hairline spans and hugs the bottom), so acceptance 1-3 were not broken. The real gap was acceptance 4 and what the notes said: it cannot be a row, because a row counts the hairline as a fourth control and stands 320 points of nothing in the line. Rejected the cheap option (leave it Free): the Layout section would go on saying Free about something obviously shaped like a bar, and you could never add a second control to it."
+    },
+    {
+      "t": "2026-09-06T07:10:00.000Z",
+      "note": "Rejected the broad rule 'any rule on the flow's own axis pulls a piece out of the flow'. It would yank pieces out of existing stacks the moment somebody stacked a group with leftover rules on it, which is exactly the case LayerPlacementTests.aStaleRuleOnTheOwnedAxisIsInert exists to protect. Built the narrow one instead: stretching ALONG the way a stack runs steps out, because the flow is what hands out the room along itself, so a row asking for all of it was never a request it could honour. Fill is the way to say 'take what is left over' and keeps its own name."
+    },
+    {
+      "t": "2026-09-06T07:10:00.000Z",
+      "note": "Landed. ResolvedPlacement.stepsOutOfTheFlow(of:) is the rule; GroupFlow.placed now spans each stepped-out piece per axis instead of only filling the surface; arranged, wrapRooms, PlacementEditing, LayerGeometry and heightIsFilled all read it. StarterComponents.navBar is a Row (gap 12, padding 0/14/0/14, 320x48) with the surface, the hairline and the title all stepping out."
+    },
+    {
+      "t": "2026-09-06T07:10:00.000Z",
+      "note": "Title is centred on the WHOLE bar, not in the room the back label leaves. A row that put it after the back label would fail StarterComponentRenderTests.aCentredLabelIsActuallyCentred, which has always demanded the bar's title ink be within 2px of the bar's middle. Changing that is a look change the user should make, not the loop."
+    },
+    {
+      "t": "2026-09-06T07:10:00.000Z",
+      "note": "Found while doing it: centred text sat 2 points right of the middle of its box, because the slack a measurement leaves sits on the far edge and CoreText centred inside the whole stored box. Fixed in TextRasterizer.alignedWidth: centred and right-aligned words lay out in naturalSize's own constraint. Left-aligned text (every label written before alignment existed) is untouched."
+    },
+    {
+      "t": "2026-09-06T07:10:00.000Z",
+      "note": "Adversarial review of the BUILT thing, on the real app, is what caught the one regression: the title's box is the whole bar, so drawn on top it answered for every click meant for the back label (verified with a playtest, selection came back as Title). Fixed by drawing the title UNDER the controls, re-verified: clicking Back now picks Back, clicking the middle picks Title."
+    },
+    {
+      "t": "2026-09-06T07:10:00.000Z",
+      "note": "Verified in the probe with Scripts/playtest/nav-bar-row-walk.json (Screen Recording granted, real window captures). All four acceptance items hold: dragged to 640 wide the back label is still 14 in and the title still centred; dragged to 120 tall the hairline came down with the bottom and stayed 1 point; the surface fills; the Layout section reads Stack / Row / Width Fixed 640 / Height Fixed 48 / Gap 12 / Padding 0-14-0-14 with Title, Divider and Background listed as pieces with a rule of their own. Eight related auto-layout walks still run ok. Full suite 3652 tests green."
+    },
+    {
+      "t": "2026-09-06T07:10:00.000Z",
+      "note": "Filed a-control-dragged-off-the-shelf-onto-an-open-gro: the row lines a second control up in the model, but a tile dragged off the shelf onto an open bar lands beside it rather than in it, so a person cannot try that part yet."
     }
-  ]
+  ],
+  "started": "2026-09-06T05:35:15.456Z"
 }

@@ -507,10 +507,17 @@ struct LayerPlacementTests {
         #expect(inAColumn.first?.summary == "Stretch across")
         #expect(inAColumn.first?.vertical == nil)
         let row = GroupLayout(kind: .stack, direction: .row)
-        let inARow = arrangedPlate(row, label: both)
+        let inARow = arrangedPlate(row, label: LayerPlacement(horizontal: .left, vertical: .bottom))
             .contentsWithTheirOwnPlacement(arrangement: row)
         #expect(inARow.first?.summary == "Bottom down")
         #expect(inARow.first?.horizontal == nil)
+        // The same pair the other way round is not a row at all: stretched the
+        // way this stack RUNS, it spans the group's own edges, so both of its
+        // directions are its own again and both are named (`GroupChromeTests`).
+        let spanning = arrangedPlate(row, label: both)
+            .contentsWithTheirOwnPlacement(arrangement: row)
+        #expect(spanning.first?.summary == "Stretch across, Bottom down")
+        #expect(spanning.first?.horizontal == .stretch)
     }
 
     @Test("A grid decides neither direction, so both still count")
@@ -639,6 +646,11 @@ struct LayerPlacementTests {
         // Somebody set Bottom before this was ever stacked. The column decides
         // every Y, so the row is not offered any more, and hiding it must not
         // change where the layer already is.
+        //
+        // Stretch is the one exception, and it is not a stale rule: stretched
+        // the way the stack RUNS means be the size of the box, which no row can
+        // be, so the piece steps out of the flow and spans the column
+        // (`GroupChromeTests`).
         func stacked(_ rule: LayerPlacement?) -> [CGRect] {
             var narrow = box("Narrow", CGRect(x: 0, y: 40, width: 40, height: 20))
             narrow.placement = rule
@@ -650,6 +662,8 @@ struct LayerPlacementTests {
             return GroupFlow.flowing(group).children.map(\.frame)
         }
         #expect(stacked(LayerPlacement(vertical: .bottom)) == stacked(nil))
-        #expect(stacked(LayerPlacement(vertical: .stretch)) == stacked(nil))
+        #expect(stacked(LayerPlacement(vertical: .stretch))
+                    == [CGRect(x: 0, y: 0, width: 100, height: 20),
+                        CGRect(x: 0, y: 0, width: 40, height: 20)])
     }
 }

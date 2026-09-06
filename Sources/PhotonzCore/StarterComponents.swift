@@ -204,14 +204,19 @@ public enum StarterComponent: String, CaseIterable, Identifiable, Hashable, Send
     }
 
     /// How this starter lines its contents up when somebody drags it wider or
-    /// taller. A control centres its label; a card and a bar start their
+    /// taller. A control centres its label; a card and a field start their
     /// contents at the left, because that is where a title and a first line
-    /// begin. Any one piece inside says something different for itself where
+    /// begin; a bar is a row, which already decides across for itself, so all
+    /// it says is halfway down. Any one piece inside says something different for itself where
     /// it needs to (`docs/design/ui-building.md`, "Resizing places the pieces").
     var contentPlacement: LayerPlacement {
         switch self {
         case .button, .badge: LayerPlacement(horizontal: .center, vertical: .center)
-        case .textField, .navBar: LayerPlacement(horizontal: .left, vertical: .center)
+        case .textField: LayerPlacement(horizontal: .left, vertical: .center)
+        // The bar is a row, and a row decides where its contents sit across
+        // for itself. All the bar has left to say is that they sit halfway
+        // down it, whatever it is told to be.
+        case .navBar: LayerPlacement(vertical: .center)
         case .card: LayerPlacement(horizontal: .left, vertical: .top)
         }
     }
@@ -356,7 +361,10 @@ public enum StarterComponents {
             GroupLayout(kind: .stack, direction: .column, gap: pen.px(8),
                         padding: GroupPadding(pen.px(12)), width: pen.px(260))
         case .navBar:
-            .free(width: pen.px(320), height: pen.px(48))
+            GroupLayout(kind: .stack, direction: .row, gap: pen.px(12),
+                        padding: GroupPadding(top: 0, right: pen.px(14),
+                                              bottom: 0, left: pen.px(14)),
+                        width: pen.px(320), height: pen.px(48))
         }
     }
 
@@ -459,9 +467,10 @@ public enum StarterComponents {
         /// inside a control.
         func label(_ name: String, _ string: String, x: CGFloat, centerY: CGFloat,
                    size: CGFloat, weight: TextWeight = .regular, color: StarterStyle,
-                   placement: LayerPlacement? = nil) -> Layer {
-            let content = TextContent(string: string, fontSize: px(size),
+                   align: TextAlign? = nil, placement: LayerPlacement? = nil) -> Layer {
+            var content = TextContent(string: string, fontSize: px(size),
                                       colorHex: palette.style(color).colorHex, weight: weight)
+            content.alignment = align
             let natural = measure(content)
             let frame = CGRect(x: x, y: (px(centerY) - natural.height / 2).rounded(),
                                width: natural.width, height: natural.height)
@@ -539,6 +548,18 @@ public enum StarterComponents {
     /// on and as tall as a bar is, so a longer title stays centred in it
     /// rather than stretching it. A surface, a hairline along the bottom, that
     /// centred title, and a back label you can turn off.
+    ///
+    /// It is a ROW, and it is the one starter that shows what a bar is made
+    /// of. Three of its four pieces are not things the row lines up at all:
+    /// the surface is painted to the bar's own edges, the hairline spans it
+    /// and hugs its bottom, and the title spans it and centres its words on
+    /// the whole bar rather than on the room the back label leaves. What is
+    /// left in the row is the leading end of the bar, which starts with one
+    /// label — drop a second control beside it and the row lines it up with no
+    /// numbers typed anywhere.
+    ///
+    /// The three all say the same thing to get there: Stretch, along the way
+    /// the row runs. See `GroupChromeTests`.
     private static func navBar(_ pen: Pen) -> [Layer] {
         [pen.box("Background", x: 0, y: 0, width: 320, height: 48, fill: .surface,
                  placement: .fill),
@@ -546,10 +567,14 @@ public enum StarterComponents {
          // rather than fattening up when the bar gets taller.
          pen.box("Divider", x: 0, y: 47, width: 320, height: 1, fill: .border,
                  placement: LayerPlacement(horizontal: .stretch, vertical: .bottom)),
-         pen.label("Back", "Back", x: pen.px(14), centerY: 24, size: 15, color: .accent),
-         pen.centeredLabel("Title", "Title", across: 320, centerY: 24, size: 15,
-                           weight: .semibold, color: .text,
-                           placement: LayerPlacement(horizontal: .center))]
+         // The title is UNDER the controls, not over them. Its box is the
+         // whole bar, so drawn on top it would swallow every click meant for
+         // the back label and a title long enough to reach one would print
+         // over it (found on 2026-09-05, driving the built bar).
+         pen.label("Title", "Title", x: 0, centerY: 24, size: 15,
+                   weight: .semibold, color: .text, align: .center,
+                   placement: LayerPlacement(horizontal: .stretch, vertical: .center)),
+         pen.label("Back", "Back", x: pen.px(14), centerY: 24, size: 15, color: .accent)]
     }
 
     /// The smallest thing on the shelf, 20 tall and as wide as the number in

@@ -9153,3 +9153,49 @@ Verified: build clean with no new warnings and no `@preconcurrency`,
 playtest walks that drive the canvas pass.
 
 Next: `Sources/Photonz/LayersPanel.swift`, 3216 lines, is the same recipe.
+
+## 2026-09-06 — the starter Nav Bar arranges itself
+
+The Nav Bar on the Library shelf was the one starter that could not be built
+the way the app says a bar is built: a Free box of pieces pinned by hand,
+because a row counted its hairline as a fourth control and stood 320 points of
+nothing in the line ahead of the real ones.
+
+Reproduced first, and the reproduction changed the task. The Free bar already
+resized correctly — the back label held the left edge, the title recentred, the
+hairline spanned and hugged the bottom — so three of the four acceptance items
+were never broken. What was broken was the fourth: the Layout section said Free
+about something obviously shaped like a bar, and you could not add a second
+control to it.
+
+**The rule.** A piece stretched ALONG the way a stack runs steps out of the
+flow and is painted to the group's own edges, exactly as the surface stretched
+both ways already did. Across a row that is a hairline; down a column, a rail.
+Stretch there was inert before, and it was never a request the flow could
+honour: the flow is what hands out the room along itself. Fill keeps its own
+name for "take what is left over". Deliberately narrow — the broad version
+("any rule on the flow's own axis steps out") would yank pieces out of stacks
+the moment somebody stacked a group carrying leftover rules.
+
+`StarterComponents.navBar` is a Row now (gap 12, padding 0/14/0/14, 320×48).
+Its surface, hairline and title all step out; the back label is what is left in
+the row, so a second control lines up beside it with nothing typed.
+
+Two things found by driving the built bar rather than reading the diff:
+
+- The title's box is the whole bar, so drawn on TOP it answered for every click
+  meant for the back label. It is drawn under the controls now.
+- Centred words sat two points right of the middle of their box: the slack a
+  measurement leaves lives on the far edge, and CoreText was centring inside
+  the whole stored box. `TextRasterizer.alignedWidth` lays centred and
+  right-aligned words out in `naturalSize`'s own constraint. Left-aligned text
+  is untouched, which is every label written before alignment existed.
+
+Verified: `Scripts/test.sh` 3652 tests in 311 suites green,
+`Scripts/playtest/nav-bar-row-walk.json` in the probe with Screen Recording
+granted, eight related auto-layout walks still ok. Audit:
+`queue/audits/2026-09-05-nav-bar-row.json`.
+
+Next: dragging a tile off the shelf onto an open group drops it BESIDE the
+group rather than into it, so the second-control half of this cannot be tried
+yet — filed as `a-control-dragged-off-the-shelf-onto-an-open-gro`.

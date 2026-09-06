@@ -90,12 +90,29 @@ public enum TextRasterizer {
     /// a hair short makes CoreText drop the last line, and losing a word is
     /// worse than a line of text hugging the top of a box too small for it.
     private static func laidOutBox(_ text: TextContent, in box: CGRect) -> CGRect {
+        let box = alignedWidth(text, in: box)
         // `TextBlockMetrics` owns how far down the lines sit, so the field you
         // type a label in can offset its draft by exactly the same amount.
         let inset = TextBlockMetrics.topInset(for: text, in: box.size)
         guard inset > 0 else { return box }
         let needed = TextBlockMetrics.laidOutHeight(text, width: box.width)
         return CGRect(x: box.minX, y: box.maxY - inset - needed, width: box.width, height: needed)
+    }
+
+    /// The same box, as wide as the words were MEASURED to fit in.
+    ///
+    /// A text box carries `frameInset` on each side beyond the ink, which is
+    /// what `naturalSize` adds and what every box a person sees has taken back
+    /// off again. Words drawn from the left never touch it, so laying them out
+    /// in the whole box was free. Centred words are not: half of that slack
+    /// lands on their left and they sit two points right of the middle of the
+    /// box they are centred in, which is the kind of wrongness nobody can name
+    /// and everybody can see. So they line up in the width they were measured
+    /// against — `naturalSize`'s own constraint — instead.
+    private static func alignedWidth(_ text: TextContent, in box: CGRect) -> CGRect {
+        guard text.usedAlignment != .left else { return box }
+        return CGRect(x: box.minX, y: box.minY,
+                      width: max(1, box.width - frameInset * 2), height: box.height)
     }
 
     /// The attributed string a piece of content lays out as: the ONE place the

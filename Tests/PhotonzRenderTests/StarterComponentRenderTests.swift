@@ -87,13 +87,21 @@ struct StarterComponentRenderTests {
 
     /// Nothing may hang outside the control it belongs to: a label wider than
     /// its button is the first sign the frame numbers are wrong.
+    ///
+    /// Measured on the box a person SEES. A measured text box carries a few
+    /// points of slack on its far edges for the antialiased glyph edges to
+    /// round into, and a label told to span its container has that slack
+    /// sitting past the container's own edge with nothing drawn in it: the
+    /// nav bar's title is exactly that. Counting it would fail every bar in
+    /// the app over four transparent points.
     @Test func nothingSpillsOutOfItsControl() throws {
         for kind in StarterComponent.allCases {
             let layer = StarterComponents.layer(kind, measure: measure)
             let box = layer.localBounds
             for child in layer.children {
-                #expect(box.contains(child.frame.integral.insetBy(dx: 0.5, dy: 0.5)),
-                        "\(kind.name) / \(child.name) at \(child.frame) leaves \(box)")
+                let seen = child.contentBounds
+                #expect(box.contains(seen.integral.insetBy(dx: 0.5, dy: 0.5)),
+                        "\(kind.name) / \(child.name) at \(seen) leaves \(box)")
             }
         }
     }

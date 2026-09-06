@@ -2436,6 +2436,60 @@ Model and maths in `GroupLayout` and `GroupFlow` (`limitsSize`, `heldWidth`,
 `heldHeight`, `holding`), the rows in `ArrangementInspector`. Tested in
 `GroupSizeLimitsTests`, walked by `Scripts/playtest/size-limits-walk.json`.
 
+## Landed: a bar's hairline is chrome, not a row (Next, `next-auto-layout`, 2026-09-05)
+
+A bar is not only the controls on it. It is a surface, a hairline along its
+bottom edge, and then the controls. The surface already stepped out of the flow,
+because stretching BOTH ways can only mean "be the size of the box" and
+something that is the size of the box cannot decide how big the box is. A
+hairline stretches ONE way and hugs an edge on the other, and a row counted it
+as one more control and stood it in the line — 320 points of nothing, with the
+real controls pushed off the end behind it. Which is why the one starter shaped
+like a bar could not be built as a row at all, and was a Free box of pieces
+pinned by hand instead.
+
+**One rule, said about one axis instead of two.** A piece stretched along the
+way a stack RUNS steps out of the flow and is painted to the group's own edges,
+exactly as the surface is. Across a row, that is a hairline; down a column, a
+rail. Its OTHER direction still says which edge it hugs, so Bottom puts the
+hairline on the bottom of the bar whatever the bar's height becomes, and both of
+its rows stay live in the Layout section — changing either one is how it stops
+spanning and becomes a piece being arranged again. `Stretch` along the flow was
+inert before this: the flow is what hands out the room along itself, so a row
+asking for all of it was never a request the flow could honour. The way to say
+"take what is left over" is Fill, and it is a different answer with a different
+name.
+
+**The starter Nav Bar is a row now.** Drop it, drag it wider, and it arranges
+itself with nothing typed into the Layout section: the back label holds the
+room at the left edge, the hairline spans the new width and stays a hairline,
+the surface fills it, and the title stays in the middle of the whole bar rather
+than in the room the back label leaves — a title is centred on the bar it is on,
+which is what the render test has always asked of it. Three of its four pieces
+are not things the row lines up at all, and its Layout section says so: Stack,
+Row, and three pieces listed with a rule of their own. What is left in the row
+is the leading end of the bar, so a second control dropped beside the back label
+lines up with no numbers typed.
+
+**The title is drawn UNDER the controls.** Its box is the whole bar, so on top
+it would answer for every click meant for the back label — driving the built bar
+on 2026-09-05 is how that was found, not reading the diff.
+
+**Centred words line up in the width they were measured against.** A text box
+carries a couple of points on each side for the antialiased glyph edges to round
+into, sitting on the far edges because words drawn from the left never touch
+them. Centred words are not drawn from the left: half that slack landed on their
+left and put them two points right of the middle of the box they were centred
+in. They now lay out in `naturalSize`'s own constraint, so a centred label is
+centred on the box a person can see. Nothing changes for a label that has never
+been given an alignment, which is every label written before alignment existed.
+
+Rule in `ResolvedPlacement.stepsOutOfTheFlow(of:)`, applied by `GroupFlow.placed`
+(which now spans each piece per axis rather than only filling the surface),
+`GroupFlow.arranged` and `PlacementEditing`. Drawing in
+`StarterComponents.navBar`, words in `TextRasterizer.alignedWidth`. Tested in
+`GroupChromeTests`, walked by `Scripts/playtest/nav-bar-row-walk.json`.
+
 ## Landed: a row can push its contents to its two ends (Next, `next-auto-layout`, 2026-09-05)
 
 A bar is a logo at one end and buttons at the other, and one gap cannot make

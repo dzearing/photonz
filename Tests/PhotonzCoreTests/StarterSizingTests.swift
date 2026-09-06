@@ -177,6 +177,11 @@ struct StarterSizingTests {
 
     @Test("A longer nav bar title stays centred and does not widen the bar")
     func theBarHoldsItsWidthAndCentresItsTitle() {
+        // The bar is a ROW, and its title is not one of the things the row
+        // lines up: it spans the bar and centres its words on the whole of it,
+        // so a longer title re-centres in place rather than growing sideways
+        // out of a box that was only as wide as the old words
+        // (`GroupChromeTests`).
         var history = History(document: document())
         var barID: UUID?
         history.perform { barID = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
@@ -191,7 +196,7 @@ struct StarterSizingTests {
         guard let after = history.current.layer(id: barID),
               let grown = piece(after, "Title") else { Issue.record("no bar"); return }
         #expect(after.localBounds.size == before.localBounds.size)
-        #expect(grown.frame.width > title.frame.width)
+        #expect(words(grown).width == after.localBounds.width)
         #expect(abs(words(grown).midX - after.localBounds.width / 2) <= 1)
         // The hairline still spans the bar and still hugs the bottom of it.
         guard let divider = piece(after, "Divider") else { Issue.record("no divider"); return }

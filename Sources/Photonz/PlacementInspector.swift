@@ -117,7 +117,8 @@ struct PlacementInspector: View {
                     editorState.setPlacement(id: current.id, vertical: nil)
                 }
             }
-            Text(childCaption(resolved, flow, stale: stale, arranges: arranges))
+            Text(childCaption(resolved, flow, stale: stale, arranges: arranges,
+                              arrangement: arrangement(of: container)))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -159,7 +160,8 @@ struct PlacementInspector: View {
     private var isOnAScreen: Bool { container?.isFrame == true }
 
     private func childCaption(_ resolved: ResolvedPlacement, _ flow: PlacementEditing,
-                              stale: String?, arranges: Bool) -> String {
+                              stale: String?, arranges: Bool,
+                              arrangement: GroupLayout?) -> String {
         // The one layer in an arranged group that is not being arranged. Left
         // unsaid, its rows read like any other layer's while it is doing
         // something else entirely, and the Stretch that puts it there looks
@@ -168,6 +170,17 @@ struct PlacementInspector: View {
             return "Stretch both ways makes this the surface behind the rest, painted to the "
                 + "group's own edges instead of being lined up with the others. Change either "
                 + "one and it becomes one of them again."
+        }
+        // The same thing said about one direction: a hairline across a bar, a
+        // rail down a panel. Stretch is the size of the box, which is the one
+        // thing a row in this stack cannot be, so it steps out and spans the
+        // group instead. Unsaid, it reads like a row that has quietly stopped
+        // lining up.
+        if arranges, resolved.stepsOutOfTheFlow(of: arrangement) {
+            let way = arrangement?.flowsHorizontally == true ? "Across" : "Down"
+            return "\(way) is the way this group runs, so Stretch here spans the whole group "
+                + "and paints this to the group's own edges instead of giving it a place in "
+                + "the line. Change it and it lines up with the others again."
         }
         // Taking the room the stack has left over is the loudest thing a piece
         // can be doing, and it is not on either menu the other branches talk

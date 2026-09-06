@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/nav-bar-row",
+  "seed": "The starter Nav Bar is now a row, so dragging it wider arranges itself: the back label holds the left edge, the title stays in the middle of the whole bar, the hairline spans it and hugs its bottom, and the surface fills it. Nothing is typed into the Layout section, and a second control dropped on the bar lines up beside the back label on its own.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "dragTile", "tile": "Nav Bar", "to": [640, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-arrive", "note": "the bar as it lands: 320 x 48, back label in from the left, title in the middle, hairline along the bottom" },
+    { "do": "snapshot", "name": "nav-1-arrive" },
+    { "do": "render", "name": "nav-1-arrive-doc" },
+    { "do": "panel", "stage": "1-arrive" },
+
+    { "do": "drag", "from": [800, 324], "to": [1120, 324], "steps": 12 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-wider", "note": "THE TEST: dragged to twice the width with the corner handle and nothing typed. The back label should still be 14 in from the left, the title should still be in the middle of the bar, the hairline should span the new width and still hug the bottom, and the surface should fill it." },
+    { "do": "snapshot", "name": "nav-2-wider" },
+    { "do": "render", "name": "nav-2-wider-doc" },
+
+    { "do": "drag", "from": [1120, 324], "to": [1120, 396], "steps": 12 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-taller", "note": "THE TEST, the other way: dragged to 120 tall. The hairline should have come down with the bottom edge and stayed one point thick, and both labels should sit halfway down." },
+    { "do": "snapshot", "name": "nav-3-taller" },
+    { "do": "render", "name": "nav-3-taller-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-layout", "note": "the bar's Layout section: Arrangement Stack, Row, and three pieces listed as having a rule of their own -- the surface, the hairline and the title" },
+    { "do": "snapshot", "name": "nav-4-layout" },
+    { "do": "panel", "stage": "4-layout" },
+
+    { "do": "click", "at": [500, 300], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-back-picked", "note": "THE TEST: a double click on the back label picks the BACK LABEL. The title spans the whole bar, so drawn over the controls it would answer for every click on one." },
+    { "do": "snapshot", "name": "nav-5-back-picked" },
+
+    { "do": "click", "at": [640, 300] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-title-picked", "note": "the title, picked. Its Layout rows should say Horizontal Stretch, Vertical Middle, with a line saying it spans the group rather than taking a place in the row." },
+    { "do": "snapshot", "name": "nav-6-title-picked" },
+    { "do": "panel", "stage": "6-title-picked" }
+  ]
+}

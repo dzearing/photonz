@@ -124,17 +124,27 @@ enum GroupFlow {
         var out = layout.arranges
             ? arranged(fitted, rules: rules, layout: layout, bounds: bounds)
             : closedAround(fitted, rules: rules, layout: layout, bounds: bounds)
-        // A piece told to stretch BOTH ways is not one of the things being
-        // arranged: it is the surface behind them, painted to the box's own
-        // edges. The room at the edges is room INSIDE that surface, which is
-        // what a button's fill is, so it takes the whole box rather than the
-        // part left over.
+        // A piece told to stretch is not one of the things being arranged: it
+        // is painted to the box's own edges instead. Both ways makes it the
+        // surface behind everything; the way a stack RUNS makes it the
+        // hairline along a bar or the rail down a panel, spanning the group
+        // and hugging whichever edge its other direction names. The room at
+        // the edges is room INSIDE all of that, which is what a button's fill
+        // is, so it is measured from the whole box rather than the part left
+        // over.
         let box = CGRect(origin: .zero,
                          size: size(of: out, layout: layout,
                                     contentPlacement: contentPlacement,
                                     bounds: bounds, onAScreen: onAScreen))
-        for index in out.indices where rules[index].isSurface {
-            out[index] = moved(out[index], to: box, fillingHeight: true)
+        for index in out.indices where rules[index].stepsOutOfTheFlow(of: layout) {
+            let content = out[index].contentBounds
+            let x = span(size: content.width, start: 0, extent: box.width,
+                         rule: rules[index].horizontal.span)
+            let y = span(size: content.height, start: 0, extent: box.height,
+                         rule: rules[index].vertical.span)
+            out[index] = moved(out[index],
+                               to: CGRect(x: x.low, y: y.low, width: x.length, height: y.length),
+                               fillingHeight: rules[index].vertical == .stretch)
         }
         return out
     }
@@ -215,7 +225,7 @@ enum GroupFlow {
     private static func wrapRooms(_ children: [Layer], _ rules: [ResolvedPlacement],
                                   layout: GroupLayout, width: CGFloat) -> [(Int, CGFloat)] {
         let labels = children.indices.filter {
-            children[$0].text != nil && !rules[$0].isSurface
+            children[$0].text != nil && !rules[$0].stepsOutOfTheFlow(of: layout)
                 && rules[$0].horizontal != .stretch
         }
         guard !labels.isEmpty else { return [] }
@@ -243,7 +253,9 @@ enum GroupFlow {
         // be sized with the other's width already decided — so a row holding
         // two is left exactly as it was rather than given an answer nobody can
         // predict.
-        let flowing = children.indices.filter { children[$0].isVisible && !rules[$0].isSurface }
+        let flowing = children.indices.filter {
+            children[$0].isVisible && !rules[$0].stepsOutOfTheFlow(of: layout)
+        }
         let gaps = layout.usedGap * CGFloat(max(0, flowing.count - 1))
         let taken = flowing.reduce(CGFloat(0)) { $0 + children[$1].contentBounds.width }
         let outgrown = outgrowing { index in
@@ -297,7 +309,7 @@ enum GroupFlow {
             // inside the edges first would hand it a box with nothing in it
             // wherever the room is bigger than the size the group was given,
             // and a shape with no height cannot be given one back.
-            guard !rules[index].isSurface else { continue }
+            guard !rules[index].stepsOutOfTheFlow(of: layout) else { continue }
             let current = children[index].contentBounds
             // A piece told to stretch takes the room inside the edges, which on
             // a hugging axis is exactly as much room as the rest of the
@@ -462,7 +474,9 @@ enum GroupFlow {
     /// does the surface behind everything, which is not a row at all.
     private static func arranged(_ children: [Layer], rules: [ResolvedPlacement],
                                  layout: GroupLayout, bounds: Bounds) -> [Layer] {
-        let taking = children.indices.filter { children[$0].isVisible && !rules[$0].isSurface }
+        let taking = children.indices.filter {
+            children[$0].isVisible && !rules[$0].stepsOutOfTheFlow(of: layout)
+        }
         guard !taking.isEmpty else { return children }
         let items = taking.map { index in
             Item(box: children[index].contentBounds,

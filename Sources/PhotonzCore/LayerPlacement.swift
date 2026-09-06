@@ -155,6 +155,28 @@ extension ResolvedPlacement {
     /// own edges — which is exactly what a button's fill is.
     public var isSurface: Bool { horizontal == .stretch && vertical == .stretch }
 
+    /// Whether this piece steps out of `arrangement` and is painted to the
+    /// container's own edges instead of taking a place among the things it
+    /// arranges.
+    ///
+    /// Two ways to be that, and they are the same sentence said about one axis
+    /// or both. The SURFACE stretches both ways. A piece stretched along the
+    /// way a stack RUNS is the other: a hairline across a bar, a rail down a
+    /// panel. "Stretch" there says be the size of the box, which is the one
+    /// thing a row in that stack cannot be — the flow hands out the room along
+    /// itself, so a row asking for all of it is not asking to be a row. The
+    /// way to say "take what is left over" is Fill, and it is a different
+    /// answer with a different name.
+    ///
+    /// A stack only. A grid flows both ways and hands out cells, so nothing
+    /// but the surface steps out of one; a group that arranges nothing has no
+    /// flow to step out of in the first place.
+    public func stepsOutOfTheFlow(of arrangement: GroupLayout?) -> Bool {
+        if isSurface { return true }
+        guard let arrangement, arrangement.kind == .stack else { return false }
+        return arrangement.flowsHorizontally ? horizontal == .stretch : vertical == .stretch
+    }
+
     /// The same answer as a SCREEN honours it. Dragging a frame's edge moves
     /// where it clips rather than magnifying what is on it, so nothing on a
     /// screen ever scales: a piece nobody gave a rule to holds still, which in
@@ -218,7 +240,14 @@ extension Layer {
     /// and the layer is still the size of what is in it.
     public func heightIsFilled(in container: Layer?) -> Bool {
         guard let container else { return false }
-        if let layout = container.group?.layout, !layout.decidesHeight {
+        // A piece that spans its container is painted to that container's own
+        // edges, so a Stretch down it is a height the container decided
+        // whichever way the flow happens to run.
+        let layout = container.group?.layout
+        if resolvedPlacement(in: container).stepsOutOfTheFlow(of: layout) {
+            return resolvedPlacement(in: container).vertical == .stretch
+        }
+        if let layout, !layout.decidesHeight {
             // A column stack decides no heights at all, with one exception:
             // a piece told to take the room the column has left over is at a
             // height the column worked out, and its own field cannot change it.
@@ -326,18 +355,19 @@ public struct PlacementEditing: Hashable, Sendable {
     /// The same question asked of ONE piece, which the flow may not be
     /// arranging at all.
     ///
-    /// A piece stretched both ways is the surface behind the rest: it steps out
-    /// of the flow, is measured by nobody and is painted to the container's own
-    /// edges. So the flow decides neither of its directions, and both of its
-    /// rows stay live — setting one of them to something else is exactly how it
-    /// stops being the surface and becomes a piece being arranged again.
+    /// A piece that steps out of the flow — the surface stretched both ways,
+    /// the hairline stretched the way the stack runs — is measured by nobody
+    /// and painted to the container's own edges. So the flow decides neither
+    /// of its directions, and both of its rows stay live: setting one of them
+    /// to something else is exactly how it stops spanning the box and becomes
+    /// a piece being arranged again.
     ///
     /// `resolved` is that piece's answer once its own rule and the container's
     /// default are put together, or nil to ask about the flow on its own.
     public init(arrangement: GroupLayout?, placing resolved: ResolvedPlacement?,
                 onAScreen: Bool = false) {
-        self.init(arrangement: resolved?.isSurface == true ? nil : arrangement,
-                  onAScreen: onAScreen)
+        let spans = resolved?.stepsOutOfTheFlow(of: arrangement) == true
+        self.init(arrangement: spans ? nil : arrangement, onAScreen: onAScreen)
     }
 
     /// `onAScreen` says the container is a screen, whose box is a size somebody
