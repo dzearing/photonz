@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.203Z",
-  "updated": "2026-09-06T14:47:36.678179Z",
+  "updated": "2026-09-06T14:48:16.629Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while auditing component versions on 2026-09-05: the Version row is the biggest fact about a copy and sits four sections down. Dock sections are in InspectorPanel; the walk log prints dockSections offsets, which is a cheap way to measure this.",
@@ -41,7 +41,7 @@
     },
     {
       "t": "2026-09-06T14:47:36.678179Z",
-      "note": "Reproduced first, with the dock's own measurements rather than a screenshot. Probe, 1200x720 window (dock viewport 688 points), a Button component dropped twice. Copy picked: Layers 6-217, Position & Size 217-352, Layout 352-621, Component 621-771 \u2014 only the Component header peeks in at 621, every row of it is below 688. Original picked: Component 801-1047, the header not even on screen. Confirmed exactly as reported."
+      "note": "Reproduced first, with the dock's own measurements rather than a screenshot. Probe, 1200x720 window (dock viewport 688 points), a Button component dropped twice. Copy picked: Layers 6-217, Position & Size 217-352, Layout 352-621, Component 621-771 — only the Component header peeks in at 621, every row of it is below 688. Original picked: Component 801-1047, the header not even on screen. Confirmed exactly as reported."
     },
     {
       "t": "2026-09-06T14:47:36.678179Z",
@@ -61,12 +61,17 @@
     },
     {
       "t": "2026-09-06T14:47:36.678179Z",
-      "note": "Adversarial review AFTER building, on the real app with a real screen capture. Two things left rough, both filed rather than guessed at: Layout is still the tallest section in the dock and most of it is explanatory prose (layout-stops-lecturing-and-starts-fitting), and the same bug is still live for ordinary layers \u2014 a rectangle's own Rectangle section sits at 655 in a 688 viewport (the-panel-says-what-you-picked-before-it-explain). The second one is a real tradeoff, because moving the per-kind sections up pushes Effects back down, and Effects was moved up for this exact reason a month ago, so it wants a decision rather than a guess."
+      "note": "Adversarial review AFTER building, on the real app with a real screen capture. Two things left rough, both filed rather than guessed at: Layout is still the tallest section in the dock and most of it is explanatory prose (layout-stops-lecturing-and-starts-fitting), and the same bug is still live for ordinary layers — a rectangle's own Rectangle section sits at 655 in a 688 viewport (the-panel-says-what-you-picked-before-it-explain). The second one is a real tradeoff, because moving the per-kind sections up pushes Effects back down, and Effects was moved up for this exact reason a month ago, so it wants a decision rather than a guess."
     },
     {
       "t": "2026-09-06T14:47:36.678179Z",
       "note": "Audit: queue/audits/2026-09-06-dock-component-first.json, with a real screen capture (Screen Recording was granted this run)."
+    },
+    {
+      "t": "2026-09-06T14:48:16.628Z",
+      "note": "The Component section moved above Position & Size, so a copy's Version row and knobs are readable the moment you pick it. Measured on the probe at a 688pt dock: was 621-771 (only the header in view), now 257-433 whole; an original was 801-1047 (off screen), now 257-562 whole. An ordinary rectangle is unchanged and the dock never scrolls itself. Existing saved orders get a one-time move (inspector.sectionOrder.version 2). Pinned by Scripts/playtest/dock-component-first-walk.json; Scripts/test.sh green at 3867 tests; audit at queue/audits/2026-09-06-dock-component-first.json. Pushed as 2752dfb."
     }
   ],
-  "started": "2026-09-06T14:33:55.152Z"
+  "started": "2026-09-06T14:33:55.152Z",
+  "completed": "2026-09-06T14:48:16.629Z"
 }
