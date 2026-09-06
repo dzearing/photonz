@@ -2840,6 +2840,11 @@ private final class Run {
             // The floating bar's measured width, so a walk can prove a
             // change made it narrower rather than eyeballing a snapshot.
             "toolBarWidth": editor.toolBarWidth,
+            // The tool settings capsule's measured size, so a walk can say in
+            // numbers how much of the picture it covers rather than eyeballing
+            // it. Zeros mean there is no capsule at all.
+            "toolSettingsWidth": editor.toolSettingsSize.width,
+            "toolSettingsHeight": editor.toolSettingsSize.height,
             "measureMode": editor.measureToolMode.rawValue,
             "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",

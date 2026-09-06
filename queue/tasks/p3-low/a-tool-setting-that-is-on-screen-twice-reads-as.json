@@ -1,0 +1,27 @@
+{
+  "id": "a-tool-setting-that-is-on-screen-twice-reads-as",
+  "title": "A tool setting that is on screen twice reads as one thing",
+  "goal": "With the right hand panel open, the settings for the tool in your hand are now on screen in two places at once: the capsule above the tool bar and the tool section in the panel. They are one value and moving either moves both, but seeing the same control twice may read as clutter rather than as reassurance. Decide what the panel does while the capsule is up, and make it so.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1280,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T01:59:23.807Z",
+  "updated": "2026-09-06T01:59:23.808Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from queue/audits/2026-09-05-tool-settings.json rough 4. The panel sections are MeasureToolInspector, WandToolInspector, CalloutToolInspector and CropToolInspector in LayersPanel.swift, gated by InspectorSectionID .measureTool/.wandTool/.calloutTool/.cropTool. The capsule is Sources/Photonz/ToolSettingsCapsule.swift. Note that Crop keeps a panel section with no capsule (aspect is a mode), so any rule has to cover that case too. Do not just delete the panel sections: the panel is where the settings get their explaining sentence and the wand its long slider.",
+  "acceptance": [
+    "A decision card asks the user what the panel should do while the capsule is showing the same setting, with real pictures of both",
+    "Whatever is chosen is built, and the setting is still reachable with the panel hidden",
+    "With the panel open there is exactly one obvious place to change a tool setting"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T01:59:23.808Z",
+      "note": "created (manual)"
+    }
+  ]
+}

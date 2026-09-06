@@ -52,6 +52,8 @@ public enum FeatureCatalog {
 
     public static let toolOptionsFlag = "next-tool-options"
 
+    public static let toolSettingsFlag = "next-tool-settings"
+
     public static let toolGroupsFlag = "next-tool-groups"
 
     public static let toolBarFeedbackFlag = "next-tool-bar-feedback"
@@ -269,6 +271,15 @@ public enum FeatureCatalog {
                     name: toolOptionsFlag,
                     title: "Tool options off the tool bar",
                     description: "Picking up the Crop tool or the Magic Wand stops widening the floating tool bar. Crop keeps its aspect locks inside its own tool button and shows Cancel and Crop on the canvas while a crop is live; the wand's tolerance moves to a Magic Wand section in the inspector. Off means both tools lay their options out along the bar, which grows it and pushes tools into the overflow menu on a narrow window.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: toolSettingsFlag,
+                    title: "Tool settings ride above the tool bar",
+                    description: "The settings that belong to the tool in your hand, rather than to anything you have picked, get their own small capsule floating just above the tool bar: the Zoom Callout\u{2019}s shape, the Magic Wand\u{2019}s tolerance, and what Measure snaps to and shows. It is open without pressing anything, it changes as you change tools, and it disappears entirely for a tool with nothing to set, so the arrow leaves the picture clear. It is its own capsule on its own row, so the tool bar never changes width, and it wraps on a narrow window. The same settings stay in the right hand panel and the two are one thing: change either and both move. Off means these settings live only in the panel, so hiding the panel takes them away.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

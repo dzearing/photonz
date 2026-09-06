@@ -401,7 +401,8 @@ extension EditorState {
         // reserved even while no pill is up, so the legend never jumps.
         let chrome = EditorChromeLayout.bottomChrome(canvasSize: viewport.viewSize,
                                                      toolBarWidth: toolBarWidth,
-                                                     noticeSize: MeasureModeHint.reservedSize)
+                                                     noticeSize: MeasureModeHint.reservedSize,
+                                                     toolSettingsSize: toolSettingsSize)
         // With the panel closed the collapse button sits in the canvas's
         // top-right corner. It is neither content to dodge nor chrome that
         // takes the corner away: the top-right slot tucks in underneath it,

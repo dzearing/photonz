@@ -1,0 +1,28 @@
+{
+  "id": "choosing-how-much-a-callout-magnifies-before-you",
+  "title": "Choosing how much a callout magnifies before you draw it",
+  "goal": "You can now choose whether the next zoom callout is a box or a circle before you draw it, but not how much it magnifies: that number only exists on a callout you have already drawn, and it lives in the right hand panel, so with the panel hidden there is no way to it at all. The tool should carry its own starting magnification, next to its shape, and remember what you last chose.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1330,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T01:59:16.289Z",
+  "updated": "2026-09-06T01:59:16.290Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from queue/audits/2026-09-05-tool-settings.json rough 3. The capsule is Sources/Photonz/ToolSettingsCapsule.swift and its contents are decided by ToolSettingsBar.settings(for:availability:) in PhotonzCore; add a .calloutMagnification case there with a test. The tool-level shape precedent is EditorState.calloutToolShape (EditorState+MeasurePanel.swift:243) and ZoomCalloutBuilder.defaultMagnification / magnificationRange are the numbers. The picked-layer control is CalloutInspector and must not move.",
+  "acceptance": [
+    "The Zoom Callout tool carries a starting magnification next to its Shape, reachable with the right hand panel hidden",
+    "A callout drawn after changing it comes out at that magnification",
+    "The tool remembers the last magnification chosen, across windows and across launches",
+    "A callout already on the canvas is still changed in its own section of the panel, and that section is unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T01:59:16.290Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "out": "/tmp/photonz-playtest/tool-settings-capsule",
+  "setup": {
+    "forget": [
+      "panel",
+      "tools",
+      "measure",
+      "shapes"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "action",
+      "action": "hideInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-select-no-capsule",
+      "note": "the arrow has nothing to set, so there is no capsule and the bar keeps its own inset"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-select-no-capsule"
+    },
+    {
+      "do": "tool",
+      "tool": "zoomCallout"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-callout-shape",
+      "note": "panel hidden, and the callout's Shape is on screen anyway"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-callout-shape"
+    },
+    {
+      "do": "press",
+      "control": "Circle",
+      "in": "Tool Shape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-circle-chosen"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-circle-chosen"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        690
+      ],
+      "to": [
+        300,
+        760
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3b-drew-beside-the-capsule",
+      "note": "a drag in the capsule's own band but beside it still reaches the picture, so the capsule takes no room it does not cover"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "wand"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-wand-tolerance",
+      "note": "the capsule changes with the tool in hand"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-wand-tolerance"
+    },
+    {
+      "do": "tool",
+      "tool": "measure"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-measure-snap-show",
+      "note": "two settings, and the Measure hint has to stack clear of them"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-measure-snap-show"
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panel",
+      "stage": "6-panel-open"
+    },
+    {
+      "do": "describe",
+      "stage": "6-panel-open",
+      "note": "with the panel open the same settings are in both places"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-panel-open"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Snap",
+      "choose": "Edges"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "7-changed-in-capsule"
+    },
+    {
+      "do": "describe",
+      "stage": "7-changed-in-capsule",
+      "note": "changed Snap in the CAPSULE: the panel's own Snap row must now read Edges too"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Show",
+      "choose": "Spacing"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "8-changed-in-panel"
+    },
+    {
+      "do": "describe",
+      "stage": "8-changed-in-panel",
+      "note": "changed Show in the PANEL: the capsule's own Show must now read Spacing too"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-changed-in-panel"
+    }
+  ]
+}

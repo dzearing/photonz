@@ -203,6 +203,22 @@ extension Experiments {
     /// reads false and keeps both option rows in the bar.
     var toolOptionsEnabled: Bool { isEnabled(FeatureCatalog.toolOptionsFlag) }
 
+    /// `next-tool-settings`: whether the settings belonging to the tool in
+    /// hand also ride in their own small capsule above the floating tool bar,
+    /// so hiding the right hand panel does not take them away. Exists only in
+    /// the Next release's catalog, so Current always reads false and the
+    /// settings live in the panel alone.
+    var toolSettingsEnabled: Bool { isEnabled(FeatureCatalog.toolSettingsFlag) }
+
+    /// Which of the capsule's settings this release has switched on, so the
+    /// pure policy in `ToolSettingsBar` can decide what the capsule carries
+    /// without reaching for the flag store itself.
+    var toolSettingsAvailability: ToolSettingsBar.Availability {
+        ToolSettingsBar.Availability(calloutShape: calloutShapeEnabled,
+                                     measureSnap: measureCenterSnapEnabled,
+                                     measureShow: measureRolesEnabled)
+    }
+
     /// `next-callout-shape`: whether the Zoom Callout tool carries its own
     /// Shape choice while it is in hand, remembered between callouts, so a
     /// circle is one choice rather than a rectangle you go back and fix.

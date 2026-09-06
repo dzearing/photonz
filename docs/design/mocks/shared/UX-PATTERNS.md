@@ -289,8 +289,12 @@ the dock, or a `.sheet.down` overlay.
   claiming a selection in their copy and drawing nothing on canvas.
   `node shared/check-selection.mjs` fails any page that makes the claim and
   breaks the promise.
-- Tools are global; the *tool options* are contextual to the active tool (shown
-  in the options bar or the top of the Inspector).
+- Tools are global; the *tool options* are contextual to the active tool. A mode
+  lives in the tool's own button; a setting rides in the **tool settings
+  capsule**, a small glass row floating on its own line just above the tool bar,
+  and in the top of the Inspector, bound to the same value. There is no options
+  bar and there never was one: this line used to promise one, and the capsule is
+  what actually got built. D15 has the whole rule.
 - **A control that cannot act is answered by what kind of control it is**, not
   case by case: commands dim in place, choosers are replaced by their answer,
   fields keep their number, bare handles go away. The rule is right below.
@@ -632,7 +636,8 @@ Copy it: the rules are in **What a number you cannot type looks like** above.
   Tools marked `.ovf` fold into the `.tbar-more` menu when the window is narrow;
   they are never re-slotted or dropped.
 - Selecting a tool: (a) highlights it (`.tool.on`), (b) changes the canvas cursor
-  / interaction, (c) swaps the tool options in the options bar / inspector top.
+  / interaction, (c) swaps what the tool settings capsule above the bar, and the
+  top of the inspector, are showing.
 - A page that shows "drawing vectors" must show the Pen selected in the strip and
   its options, so the user understands they entered a mode, not a new app.
 - The **canonical per-app tool inventory** (ordered) is fixed in §10 decision D4.
@@ -1387,10 +1392,26 @@ text, and every future tool with modes would have done the same.
 
 **Options that are not modes do not belong in the bar at all.** A mode changes
 what a click does; everything else (Snap behaviour, which roles are shown, a
-tolerance) is a setting, and settings live in the Inspector with the rest of the
-tool's properties, or at the foot of the same flyout when they change how the
-next click behaves. The test: if it changes what the pointer does, it can be a
-mode; if it changes how the result looks or what is displayed, it is a setting.
+tolerance) is a setting. The test: if it changes what the pointer does, it can be
+a mode; if it changes how the result looks or what is displayed, it is a setting.
+
+**A setting gets a capsule of its own above the bar, and the Inspector keeps it
+too.** Settings first went to the Inspector alone, and that turned out to hide
+them: the panel gets closed often, and the shell also closes it for you on a
+narrow window, so the Zoom Callout's shape, the wand's tolerance and Measure's
+Snap and Show simply stopped existing for anyone working with the panel away.
+Decided on 2026-09-05, over the alternative of a settings foot on the tool's own
+flyout (a real NSMenu, which takes a picker but not a slider, so the wand's
+tolerance would have been demoted to stepped choices). The settings for the tool
+in hand ride in a small capsule of their own, on its own row just above the tool
+bar, open without pressing anything and changing as the tool changes. Three
+things make it safe: it is NOT part of the bar, so the bar never changes width
+whatever you pick up; it disappears entirely, taking no room, for a tool with
+nothing to set; and it wraps rather than running off the edge of the picture.
+The Inspector keeps every one of the same settings, bound to the same value, so
+changing either moves both. The cost, accepted knowingly: it covers a band
+across the bottom of the picture, which on a screenshot is often where the
+buttons being redlined are.
 
 The result the bar must hold to: **selecting any tool leaves the tool bar the
 same width it was**. If a tool needs more room to explain itself, it needs a

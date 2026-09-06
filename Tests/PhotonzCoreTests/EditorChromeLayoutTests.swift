@@ -338,6 +338,74 @@ struct EditorChromeLayoutTests {
         #expect(EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 300).width == 300)
     }
 
+    // MARK: The tool settings capsule
+
+    @Test func withNoCapsuleTheStackIsExactlyWhatItWasBefore() {
+        // The capsule is a Next flag. With it absent, or with a tool that has
+        // nothing to set, every bottom overlay must land where it always did.
+        #expect(EditorChromeLayout.aboveToolBar(toolSettingsHeight: 0)
+                == EditorChromeLayout.aboveToolBar)
+        let canvas = CGSize(width: 800, height: 600)
+        #expect(EditorChromeLayout.toolSettingsFrame(canvasSize: canvas,
+                                                     width: 300, height: 0) == nil)
+        #expect(EditorChromeLayout.toolSettingsFrame(canvasSize: canvas,
+                                                     width: 0, height: 44) == nil)
+    }
+
+    @Test func theCapsuleSitsCenteredInItsOwnRowAboveTheBar() {
+        let canvas = CGSize(width: 800, height: 600)
+        let capsule = EditorChromeLayout.toolSettingsFrame(canvasSize: canvas,
+                                                           width: 320, height: 44)
+        let bar = EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 500)
+        #expect(capsule != nil)
+        guard let capsule else { return }
+        #expect(capsule.midX == 400)
+        #expect(capsule.width == 320 && capsule.height == 44)
+        // Its own row: clear of the bar, with the same gap every stacked
+        // surface keeps, so the two never read as one control.
+        #expect(!capsule.intersects(bar))
+        #expect(bar.minY - capsule.maxY == EditorChromeLayout.toolBarStackGap)
+    }
+
+    @Test func theCapsuleNeverRunsOffTheEdgeOfThePicture() {
+        // A capsule too wide for the canvas is pulled back to the same budget
+        // the bar gets, which is what makes it wrap rather than overhang.
+        let canvas = CGSize(width: 480, height: 400)
+        let budget = EditorChromeLayout.toolBarBudget(canvasWidth: 480)
+        let capsule = EditorChromeLayout.toolSettingsFrame(canvasSize: canvas,
+                                                           width: 9_999, height: 44)
+        #expect(capsule?.width == budget)
+        #expect(capsule?.minX == EditorChromeLayout.toolBarInset)
+    }
+
+    @Test func aNoticeClearsTheCapsuleAsWellAsTheBar() {
+        // Measure is one of the tools WITH a capsule, and its hint pill parks
+        // at this exact band, so a hint that only clears the bar lands on top
+        // of the capsule the moment the tool is picked up.
+        let canvas = CGSize(width: 800, height: 600)
+        let capsuleHeight: CGFloat = 44
+        let pill = EditorChromeLayout.bottomNoticeFrame(
+            canvasSize: canvas, noticeSize: CGSize(width: 360, height: 34),
+            toolSettingsHeight: capsuleHeight)
+        let capsule = EditorChromeLayout.toolSettingsFrame(canvasSize: canvas,
+                                                           width: 320, height: capsuleHeight)
+        #expect(capsule != nil)
+        #expect(!pill.intersects(capsule!))
+        #expect(pill.maxY == capsule!.minY - EditorChromeLayout.toolBarStackGap)
+    }
+
+    @Test func theLegendKeepsClearOfTheCapsuleToo() {
+        let canvas = CGSize(width: 800, height: 600)
+        let notice = CGSize(width: 360, height: 34)
+        let chrome = EditorChromeLayout.bottomChrome(
+            canvasSize: canvas, toolBarWidth: 500, noticeSize: notice,
+            toolSettingsSize: CGSize(width: 320, height: 44))
+        #expect(chrome.count == 3)
+        // ...and with no capsule it is the two rects it always was.
+        #expect(EditorChromeLayout.bottomChrome(canvasSize: canvas, toolBarWidth: 500,
+                                                noticeSize: notice).count == 2)
+    }
+
     // MARK: Corner chrome
 
     @Test func theInspectorToggleSitsInTheTopRightCornerWhileThePanelIsClosed() {

@@ -702,6 +702,12 @@ final class EditorState {
     /// the placement then reserves the whole budget. Session chrome only.
     var toolBarWidth: CGFloat = 0
 
+    /// The tool settings capsule's measured size, reported by the editor view.
+    /// Zero when there is no capsule (the flag is off, or the tool in hand has
+    /// nothing to set), which is what every bottom overlay tests to decide
+    /// whether it has one more row to clear. Session chrome only.
+    var toolSettingsSize: CGSize = .zero
+
     /// The selected caliper's live label-size preview during a slider drag (no
     /// history); the canvas overlay reads it so the pill resizes live.
     var measureLabelPreview: (id: UUID, scale: CGFloat)?

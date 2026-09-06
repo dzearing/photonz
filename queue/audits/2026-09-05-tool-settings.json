@@ -1,0 +1,30 @@
+{
+  "feature": "Tool settings above the tool bar",
+  "epic": "ui-building",
+  "summary": "The settings that belong to the tool in your hand now ride in their own small capsule just above the floating tool bar, so hiding the right hand panel no longer takes them away. Today that is the Zoom Callout's shape, the Magic Wand's tolerance, and what Measure snaps to and shows.",
+  "setup": "Photonz Next. The flag is next-tool-settings, on by default in Next; nothing to switch on.",
+  "try": [
+    { "do": "Open a screenshot, then press Option Command L to hide the right hand panel." },
+    { "do": "Press V for the arrow. Nothing appears above the tool bar, and the bar has not moved." },
+    { "do": "Press Z for the Zoom Callout. A capsule appears above the bar with Shape.", "shot": "2026-09-05-tool-settings-1-callout.png" },
+    { "do": "Click Circle in it, then drag out a callout on the picture. It comes out round." },
+    { "do": "Press W for the Magic Wand. The capsule becomes Tolerance and a short slider." },
+    { "do": "Press I for Measure. The capsule becomes Snap and Show, and the mode hint stacks above it.", "shot": "2026-09-05-tool-settings-2-measure.png" },
+    { "do": "Press Option Command L to bring the panel back and change Show to Spacing in the panel's Measure Tool section. The capsule changes with it.", "shot": "2026-09-05-tool-settings-3-both.png" }
+  ],
+  "evaluate": [
+    "With the panel hidden, is the capsule where your eye goes when you want to change something about the tool you just picked up?",
+    "Does the band it covers along the bottom of the picture get in your way on a real screenshot, or is it far enough down to ignore?",
+    "With the panel open the same settings are on screen twice, once in the capsule and once in the panel. Does that read as one thing in two places, or as clutter?",
+    "Crop's aspect and Measure's mode are NOT in the capsule, because they already live inside their tool's press-and-hold list. Did you go looking for them here?",
+    "Is the wand's short slider in the capsule enough to nudge tolerance mid-selection, or do you still want the panel's long one?"
+  ],
+  "rough": [
+    "The cost the user accepted, in numbers, on a 1280 by 840 window: the capsule is at most 340 by 36 points (Measure, its widest) against a 1015 by 808 point picture, so it covers 1.5% of the picture, centred, in a band 76 to 112 points up from the bottom edge. The whole bottom stack now reaches 112 points up instead of 64. The tool bar itself measured 916.5 points and the active tool circle sat on the same pixel row for every tool, so the bar never moved and never changed width.",
+    "The capsule does not actually wrap yet, and cannot with today's settings: the widest it gets is 340 points and the narrowest picture the app allows is 448 points across. The wrapping is written and unit tested so the next setting added cannot break it, but nobody will see it happen today.",
+    "The goal named callout magnification, and that one did not move. Magnification belongs to a callout you have already drawn, not to the tool, and acceptance said nothing belonging to a picked layer leaves the panel. So with the panel hidden you can still choose the shape of the next callout but not resize an existing one's magnification. Filed as a follow-up: give the tool its own default magnification.",
+    "With the panel open the setting is on screen twice. Acceptance required both to stay, and they are one value (proved both ways in the walk: changed Snap in the capsule and the panel followed, changed Show in the panel and the capsule followed). Whether the panel section should stand down while the capsule is up is a judgment for the user; filed as a follow-up rather than decided here.",
+    "Screen Recording was granted, so every picture here is a real capture of the window, not an offscreen render.",
+    "Walks: Scripts/playtest/tool-settings-capsule-walk.json and tool-settings-narrow-walk.json."
+  ]
+}

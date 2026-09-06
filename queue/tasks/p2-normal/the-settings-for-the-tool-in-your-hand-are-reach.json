@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:51.061Z",
-  "updated": "2026-09-05T14:05:05.470Z",
+  "updated": "2026-09-06T01:59:43.812180Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Named as a house rule by the audit that added the newest one: queue/audits/2026-09-04-callout-shape.json rough 1 (\"With the inspector hidden there is no way to the choice at all. Every other tool setting has the same gap (the wands tolerance, crops aspect), so this follows the house rule rather than fixing it\"). queue/audits/2026-09-04-callout-one-home.json is the same story from the other side: the popover that used to hold tool settings was unreachable code, because picking up a drawing tool clears the layer selection, so the settings were moved into the panel with nowhere else to go. This is also a documented rule that reality has moved past: docs/design/mocks/shared/UX-PATTERNS.md section 6 says tool options are \"shown in the options bar or the top of the Inspector\", and there is no options bar in the app. Either build the strip the doc promises or change the doc; do not leave them disagreeing. Worth a decision card with shots before building, since it puts new chrome on screen.\n\nDecision answered on 2026-09-05: option c, a capsule above the tool bar. Not the recommended option a (press and hold the tool button); the user chose always open and next to the button over hidden until asked. The cost they accepted, in their own card: it sits over the bottom of the picture, which on a screenshot is often where the buttons being redlined are. The mitigation that made it safe: it is its own capsule on its own row rather than part of the tool bar, so the tool bar never changes width, and the capsule wraps on a narrow window. That matters because tool settings used to live inside the tool bar and made it 150 to 200 points wider the moment you picked up Measure or Crop, and that was removed on purpose. Do not put them back in the bar.",
@@ -82,7 +82,83 @@
     {
       "t": "2026-09-05T14:05:05.469Z",
       "note": "seq 130 -> 90"
+    },
+    {
+      "t": "2026-09-06T01:40:30.829Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "at": "2026-09-06T01:43:04.612265Z",
+      "note": "Adversarial review before building. The decision is answered (capsule above the bar), so the question is not whether but what goes in it and what it collides with."
+    },
+    {
+      "at": "2026-09-06T01:43:04.612265Z",
+      "note": "What belongs in it, and it is narrower than the goal's list. The goal names callout magnification, but magnification is a property of a callout you have already drawn (CalloutInspector), and acceptance says nothing belonging to a picked layer leaves the panel. So the capsule carries the four TOOL settings that are genuinely stranded: the callout tool's Shape, the wand's Tolerance, and Measure's Snap and Show. Crop's Aspect and Measure's Mode are modes and already survive a hidden panel inside the tool button's flyout, so putting them in the capsule would widen it for nothing."
+    },
+    {
+      "at": "2026-09-06T01:43:04.612265Z",
+      "note": "Biggest real risk: the bottom of the canvas is already crowded. The Measure hint pill and the crop Cancel/Crop pill both park at EditorChromeLayout.aboveToolBar, which is exactly the band the capsule now takes, and the measure legend keeps clear of bottomChrome. Measure is one of the three tools WITH a capsule, so the hint would land on top of it on day one. Fix is to make the whole stack capsule-aware rather than to nudge one pill."
+    },
+    {
+      "at": "2026-09-06T01:43:04.612265Z",
+      "note": "Second risk: the tool bar measures its own width through a background GeometryReader and that measurement drives the overflow loop. Putting the capsule in the same measured container would feed the bar the capsule's width and shed tools for no reason. The capsule goes in a VStack ABOVE the measured container, never inside it."
+    },
+    {
+      "at": "2026-09-06T01:43:04.612265Z",
+      "note": "Shortest version that delivers the value: no new settings, no moving anything out of the panel. The panel keeps every tool section exactly as it is (acceptance says so), the capsule reads and writes the same EditorState properties, so the two are one thing for free rather than by a sync mechanism."
+    },
+    {
+      "at": "2026-09-06T01:43:04.612265Z",
+      "note": "Accepted cost, to be measured in the audit: with the wand, the callout or Measure in hand the capsule covers a band across the bottom centre of the picture, which on a screenshot is often where the buttons being redlined are. Not mitigable beyond keeping it short: it is the cost the user chose over a hidden-until-asked control."
+    },
+    {
+      "at": "2026-09-06T01:43:04.612265Z",
+      "note": "Duplication is deliberate: with the panel open Tolerance appears twice, once in the capsule and once in the Magic Wand section. Acceptance requires both, and they are one value, so this is a legibility question for the audit rather than a bug."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Built behind next-tool-settings, on by default in Next. New: PhotonzCore/ToolSettingsBar.swift (what each tool carries, and the row packing, both unit tested), EditorChromeLayout.aboveToolBar(toolSettingsHeight:) / toolSettingsFrame / bottomChrome's new toolSettingsSize, and Photonz/ToolSettingsCapsule.swift (the capsule and its wrapping Layout). EditorView stacks it above the bar in the canvas's bottom overlay."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Second adversarial review, on the real app (probe, Next, Screen Recording granted). Walks: Scripts/playtest/tool-settings-capsule-walk.json and tool-settings-narrow-walk.json."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Two real faults found and fixed on the running app. First: a maxWidth frame made the glass span the whole picture, 1248pt of capsule for a 214pt setting. The capsule now hugs its content and the wrap layout takes the offered width only as the line it wraps at. Second: an empty capsule is still a stack child, so the 12pt gap above it pushed the bar up off its own inset for a tool with nothing to set; the whole branch is now conditional."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Verified in numbers, not by eye. Bar measured 916.5pt with every tool, and the active tool circle sat on pixel rows 1572 to 1627 for select, callout and measure alike: the bar neither moves nor changes width. Capsule 214x36 (callout), 235.5x30 (wand), 340.5x36 (measure), 0x0 (select and every other tool)."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Both directions of the one-value rule proved: changed Snap in the CAPSULE and the panel's Snap row followed to Edges; changed Show in the PANEL and the capsule followed to Spacing (panel dumps 7 and 8)."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Click-through checked: with the callout in hand, a drag in the capsule's own vertical band but beside it still reaches the picture (layers 1 -> 2, then undone). The capsule takes no hit area it does not cover."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Wrapping is honest but unseen: the widest capsule is 340pt and the narrowest picture the app allows is 448pt across, so with today's three tools it never has to wrap. The packing is a pure function in PhotonzCore with five tests, so the next setting added cannot break it. Said plainly in the audit."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "The animation is scoped: the stack springs the capsule in and out, and the tool bar carries .animation(nil, value: activeTool) so its accent circle keeps exactly the behaviour it had. Sliding the circle would have been a change to the bar nobody asked for."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Docs reconciled, which the task asked for: UX-PATTERNS section 6 and the tool strip line no longer promise an options bar that never existed, and D15 gained the rule for where a setting lives, with the 2026-09-05 decision and the reason the flyout option lost (a real NSMenu takes a picker but not a slider)."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Follow-ups filed: choosing-how-much-a-callout-magnifies-before-you (the goal named magnification and it did not move, because it belongs to a drawn callout rather than to the tool) and a-tool-setting-that-is-on-screen-twice-reads-as (whether the panel section should stand down while the capsule is up, which is the user's call)."
+    },
+    {
+      "at": "2026-09-06T01:59:43.812180Z",
+      "note": "Audit: queue/audits/2026-09-05-tool-settings.json with three real screen captures. Scripts/test.sh green, 3512 tests."
     }
   ],
-  "started": "2026-09-04T13:25:10.136Z"
+  "started": "2026-09-06T01:40:30.829Z"
 }

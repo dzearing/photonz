@@ -87,21 +87,54 @@ struct EditorView: View {
                     // original bug). It stays bottom-centered and clips to the
                     // canvas rather than overhanging the panel.
                     .overlay(alignment: .bottom) {
-                        GlassEffectContainer {
-                            toolbar
+                        // The bar and, on its own row above it, the settings
+                        // for the tool in hand (`next-tool-settings`). Two
+                        // surfaces, never one: tool settings used to live
+                        // INSIDE the bar and grew it by 150 to 200pt the moment
+                        // you picked up Measure, which is exactly what this
+                        // stack exists to avoid.
+                        VStack(spacing: EditorChromeLayout.toolBarStackGap) {
+                            // The `if` is the "takes no room" rule: an empty
+                            // capsule still counts as a stack child, and the
+                            // 12pt gap above it would push the bar up off its
+                            // own inset for a tool with nothing to set.
+                            if !ToolSettingsCapsule.settings(
+                                for: editorState.activeTool).isEmpty {
+                                GlassEffectContainer {
+                                    ToolSettingsCapsule()
+                                }
+                                .background(GeometryReader { proxy in
+                                    Color.clear.preference(key: ToolSettingsSizeKey.self,
+                                                           value: proxy.size)
+                                })
+                            }
+                            GlassEffectContainer {
+                                toolbar
+                            }
+                            // Measure the BAR, inside the insets. Measuring
+                            // outside them counted the 32pt of inset twice (the
+                            // budget already subtracts it) and cost the bar a
+                            // tool it had room for. The capsule is measured
+                            // separately and deliberately OUTSIDE this
+                            // container: feeding its width to the overflow loop
+                            // would shed tools the bar has room for.
+                            .background(GeometryReader { proxy in
+                                Color.clear.preference(key: ToolbarContentWidthKey.self,
+                                                       value: proxy.size.width)
+                            })
+                            // The bar keeps exactly the animation behaviour it
+                            // had: the stack's spring is for the capsule coming
+                            // and going, and letting it reach the bar would
+                            // start sliding the accent circle, which is a
+                            // change to the bar nobody asked for.
+                            .animation(nil, value: editorState.activeTool)
                         }
-                        // Measure the BAR, inside the insets. Measuring outside
-                        // them counted the 32pt of inset twice (the budget
-                        // already subtracts it) and cost the bar a tool it had
-                        // room for.
-                        .background(GeometryReader { proxy in
-                            Color.clear.preference(key: ToolbarContentWidthKey.self,
-                                                   value: proxy.size.width)
-                        })
                         .padding(.horizontal, EditorChromeLayout.toolBarInset)
                         // The one inset the bar floats at, shared with whatever
                         // stacks above it (EditorChromeLayout.aboveToolBar).
                         .padding(.bottom, EditorChromeLayout.toolBarInset)
+                        .animation(.spring(duration: 0.22),
+                                   value: editorState.activeTool)
                     }
                     // The way back to a closed panel, top-trailing. ONLY while
                     // the panel is closed: open, the same button lives in the
@@ -123,6 +156,12 @@ struct EditorView: View {
                         }
                     }
                     .clipped()  // keep a transient over-wide toolbar off the panel
+                    // What the capsule takes, so every other bottom overlay
+                    // (the Measure hint, the crop pill, the legend) clears one
+                    // more row when it is up. Zero when it is not.
+                    .onPreferenceChange(ToolSettingsSizeKey.self) { size in
+                        editorState.toolSettingsSize = size
+                    }
                     .onPreferenceChange(ToolbarContentWidthKey.self) { width in
                         toolbarContentWidth = width
                         // The legend parks clear of the bar, so it needs the
@@ -455,8 +494,11 @@ struct EditorView: View {
             .glassEffect(.regular, in: .capsule)
             // Above the tool bar, not behind it: it used to sit 14pt off the
             // bottom, inside the bar's own band, so the one line telling you
-            // what a click does was covered by the bar you had just used.
-            .padding(.bottom, EditorChromeLayout.aboveToolBar)
+            // what a click does was covered by the bar you had just used. And
+            // above the tool settings capsule when one is up, which for Measure
+            // — the tool that owns this hint — it always is.
+            .padding(.bottom, EditorChromeLayout.aboveToolBar(
+                toolSettingsHeight: editorState.toolSettingsSize.height))
             .allowsHitTesting(false)
             .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
@@ -1587,9 +1629,11 @@ struct EditorView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
-        // Clear of the floating tool bar, so the two read as a stack rather
-        // than one covering the other.
-        .padding(.bottom, EditorChromeLayout.aboveToolBar)
+        // Clear of the floating tool bar, and of the tool settings capsule
+        // when one is up, so they read as a stack rather than one covering
+        // the other.
+        .padding(.bottom, EditorChromeLayout.aboveToolBar(
+            toolSettingsHeight: editorState.toolSettingsSize.height))
         .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
@@ -2144,6 +2188,18 @@ private struct ToolbarContentWidthKey: PreferenceKey {
     static let defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = max(value, nextValue())
+    }
+}
+
+/// The tool settings capsule's measured size, read by every bottom overlay that
+/// has to stack clear of it. `.zero` when there is no capsule, so nothing moves
+/// for a tool with nothing to set.
+private struct ToolSettingsSizeKey: PreferenceKey {
+    static let defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        let next = nextValue()
+        value = CGSize(width: max(value.width, next.width),
+                       height: max(value.height, next.height))
     }
 }
 

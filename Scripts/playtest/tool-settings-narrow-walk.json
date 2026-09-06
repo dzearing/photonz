@@ -1,0 +1,16 @@
+{
+  "out": "/tmp/photonz-playtest/tool-settings-narrow",
+  "setup": { "forget": ["panel", "tools", "measure", "shapes"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 520, "height": 620 },
+    { "do": "wait", "seconds": 1.4 },
+    { "do": "tool", "tool": "measure" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-narrow-measure", "note": "520pt window, dock auto-collapsed: the capsule must wrap rather than run off the edge or push the bar off the picture" },
+    { "do": "snapshot", "name": "1-narrow-measure" },
+    { "do": "tool", "tool": "wand" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-narrow-wand" },
+    { "do": "snapshot", "name": "2-narrow-wand" }
+  ]
+}

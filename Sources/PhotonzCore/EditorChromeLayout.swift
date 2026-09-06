@@ -44,13 +44,48 @@ public enum EditorChromeLayout {
     /// invisible: the hint chip spent its life at 14pt, fully covered.
     public static let aboveToolBar: CGFloat = toolBarInset + toolBarHeight + toolBarStackGap
 
+    /// The same band, with the tool settings capsule standing in between.
+    ///
+    /// The capsule (`ToolSettingsBar`) rides on its own row above the bar for
+    /// whichever tool has something to set, so anything that used to clear
+    /// only the bar has to clear the capsule too or land on top of it. Measure
+    /// is one of the tools with a capsule AND the owner of the hint pill, so
+    /// this is not a theoretical overlap.
+    ///
+    /// A height of zero is the no-capsule case and gives back exactly
+    /// `aboveToolBar`, so nothing moves when the flag is off or the tool in
+    /// hand has nothing to set.
+    public static func aboveToolBar(toolSettingsHeight: CGFloat) -> CGFloat {
+        guard toolSettingsHeight > 0 else { return aboveToolBar }
+        return aboveToolBar + toolSettingsHeight + toolBarStackGap
+    }
+
+    /// Where the tool settings capsule sits: centred like the bar, one
+    /// `toolBarStackGap` above it, as wide as it measures but never wider than
+    /// the bar's own budget — going wider is what would push it off the edge
+    /// of the picture, and the view wraps its contents instead.
+    ///
+    /// Nil when there is no capsule, so callers can treat "no capsule" and "no
+    /// rect" as the same thing.
+    public static func toolSettingsFrame(canvasSize: CGSize,
+                                         width: CGFloat, height: CGFloat) -> CGRect? {
+        guard width > 0, height > 0 else { return nil }
+        let capped = min(width, toolBarBudget(canvasWidth: canvasSize.width))
+        return CGRect(x: (canvasSize.width - capped) / 2,
+                      y: canvasSize.height - toolBarInset - toolBarHeight
+                        - toolBarStackGap - height,
+                      width: capped, height: height)
+    }
+
     /// Where a bottom-centre notice of `noticeSize` (the Measure mode hint,
     /// the "Copied" pill) sits in a canvas of `canvasSize`: centred, its
-    /// bottom edge `aboveToolBar` off the floor. Top-left origin, like every
-    /// other rect the placement code takes.
-    public static func bottomNoticeFrame(canvasSize: CGSize, noticeSize: CGSize) -> CGRect {
+    /// bottom edge clear of the bar and of the tool settings capsule when one
+    /// is up. Top-left origin, like every other rect the placement code takes.
+    public static func bottomNoticeFrame(canvasSize: CGSize, noticeSize: CGSize,
+                                         toolSettingsHeight: CGFloat = 0) -> CGRect {
         CGRect(x: (canvasSize.width - noticeSize.width) / 2,
-               y: canvasSize.height - aboveToolBar - noticeSize.height,
+               y: canvasSize.height - aboveToolBar(toolSettingsHeight: toolSettingsHeight)
+                 - noticeSize.height,
                width: noticeSize.width, height: noticeSize.height)
     }
 
@@ -68,13 +103,20 @@ public enum EditorChromeLayout {
     }
 
     /// The chrome along the bottom of the canvas that a floating panel (the
-    /// measure legend) must never park behind: the notice pill's slot, then
-    /// the tool bar. The pill's slot is reserved whether or not a pill is up,
-    /// so the legend never has to jump when one appears for two seconds.
+    /// measure legend) must never park behind: the notice pill's slot, the
+    /// tool settings capsule if one is up, then the tool bar. The pill's slot
+    /// is reserved whether or not a pill is up, so the legend never has to
+    /// jump when one appears for two seconds.
     public static func bottomChrome(canvasSize: CGSize, toolBarWidth: CGFloat,
-                                    noticeSize: CGSize) -> [CGRect] {
-        [bottomNoticeFrame(canvasSize: canvasSize, noticeSize: noticeSize),
-         toolBarFrame(canvasSize: canvasSize, toolBarWidth: toolBarWidth)]
+                                    noticeSize: CGSize,
+                                    toolSettingsSize: CGSize = .zero) -> [CGRect] {
+        let capsule = toolSettingsFrame(canvasSize: canvasSize,
+                                        width: toolSettingsSize.width,
+                                        height: toolSettingsSize.height)
+        return [bottomNoticeFrame(canvasSize: canvasSize, noticeSize: noticeSize,
+                                  toolSettingsHeight: capsule?.height ?? 0)]
+            + (capsule.map { [$0] } ?? [])
+            + [toolBarFrame(canvasSize: canvasSize, toolBarWidth: toolBarWidth)]
     }
 
     // MARK: Corner chrome
