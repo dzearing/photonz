@@ -1,0 +1,29 @@
+{
+  "feature": "The Layout section fits",
+  "epic": "ui-layout",
+  "summary": "The Layout section used to be the tallest thing in the properties panel and most of the extra room was a paragraph restating the controls above it. It is now 297 points for a group instead of 489, and 219 instead of 269 for a copy of a component, so a group's whole Layout fits on screen with Effects underneath it.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Auto layout\" and \"Layout section\" are on by default. Any window big enough to show the panel; the numbers below were read in 1200 by 720.",
+  "try": [
+    { "do": "Open the Library shelf, switch it to Comps and drag the Button component onto the canvas twice." },
+    { "do": "Click the second Button, the copy. Read its Layout section: Arrangement Free, Padding 10/16/10/16, Horizontal Center, Vertical Middle, and one line saying Edit Original changes this for every copy.", "shot": "2026-09-06-layout-fits-copy.png" },
+    { "do": "Click the first Button, the original. Its Layout is now Arrangement, Width, Height, Clip contents, Padding and the two placement rows, with no paragraph under them.", "shot": "2026-09-06-layout-fits-original.png" },
+    { "do": "Press the chevron beside Padding. Top, Right, Bottom and Left open, exactly as they always did." },
+    { "do": "Type 20 straight over the closed Padding field. All four sides take it, the same as before." },
+    { "do": "Rest the pointer on the Free / Stack / Grid control. The explanation that used to sit under the rows is the tooltip now." },
+    { "do": "Draw three boxes, select all three and press Control Command G to stack them. The section says one line only: Nothing to spread until Width is Fixed.", "shot": "2026-09-06-layout-fits-stack.png" }
+  ],
+  "evaluate": [
+    "Reading a copy's Layout as rows of greyed answers instead of a sentence: clearer, or does it now look like controls that are broken?",
+    "Padding starting closed at 10/16/10/16: is one click to open the four sides fine, or do you set sides often enough to want them open?",
+    "With the paragraph gone, is anything about Free, Stack and Grid genuinely unclear on first meeting?",
+    "Is \"Edit Original changes this for every copy.\" enough to tell you why a copy's rows cannot be typed in?",
+    "The section is still more than twice the height of Position & Size. Does it feel like it fits now, or is it still the thing pushing Effects down?"
+  ],
+  "rough": [
+    "The task asked for a Layout section no taller than Position & Size, which is 135 points. That cannot hold while every control stays: Position & Size is two rows, and Layout is seven plus a heading. 297 is what fits without taking a control away. Getting under 135 means either dropping controls or making every row in the dock shorter, and the second is a change to the whole panel.",
+    "One long paragraph survives and I left it alone: when two picked groups are arranged DIFFERENTLY, the foot still runs five lines explaining that a pick reaches both and that the arrangement still owns one direction. That state is genuinely confusing and I would rather it over-explain than under-explain, but it is the next thing to cut if the panel is still too tall.",
+    "The explanation that moved onto the Arrangement control is a plain system tooltip, the same kind every other control in this section already uses. That means a scripted walk cannot see it, so it is the one thing here I checked by reading the code rather than by watching it appear.",
+    "The four padding side fields no longer open themselves. Nothing became unsettable and the closed field still reads all four numbers, but if you were used to them being open on a card with uneven room, that is a changed habit.",
+    "Screen Recording was granted, so every picture here is the window as a person sees it, not an offscreen render."
+  ]
+}

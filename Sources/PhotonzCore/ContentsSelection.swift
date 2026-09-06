@@ -220,14 +220,6 @@ public struct ContentsSelection: Hashable, Sendable {
         + "and in the ones that line their contents up, the arrangement still decides one "
         + "of the two directions."
 
-    /// Whether any picked group's four sides disagree, which is what opens the
-    /// sides before anybody asks — including the case where each group's own
-    /// four sides agree but the groups disagree with each other, since the one
-    /// field has no honest number for that either.
-    public var paddingDiffers: Bool {
-        groups.contains { !$0.layout.usedPadding.isUniform } || padding.isMixed
-    }
-
     // MARK: - Who is not following
 
     /// Every layer with a rule of its own, across every picked group, each one

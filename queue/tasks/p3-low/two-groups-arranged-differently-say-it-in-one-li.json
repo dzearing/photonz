@@ -1,0 +1,27 @@
+{
+  "id": "two-groups-arranged-differently-say-it-in-one-li",
+  "title": "Two groups arranged differently say it in one line",
+  "goal": "When you pick two groups that are arranged in different ways, the Layout section ends in a five line explanation of what a pick there will do. Every other case in that section now says its piece in a row or one short line, so this is the last paragraph left in it. Say the same thing in one line.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 1270,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T19:04:32.417Z",
+  "updated": "2026-09-06T19:04:32.417Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "ContentsSelection.flowsDifferNote, rendered at the foot of PlacementInspector.contentRows. Left deliberately long on 2026-09-06 when the rest of the section was cut (task layout-stops-lecturing-and-starts-fitting) because a mixed arrangement is genuinely confusing and over-explaining seemed the safer error. Measure it the same way: Scripts/playtest/layout-fits-walk.json reads dock section offsets back, and contents-for-several-walk.json already reaches the state.",
+  "acceptance": [
+    "Picking two groups with different arrangements ends the Layout section in one line, not five",
+    "The fact that a pick reaches every picked group is still said somewhere on screen",
+    "The section is measurably shorter in that state than it is today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T19:04:32.417Z",
+      "note": "created (manual)"
+    }
+  ]
+}

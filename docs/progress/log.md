@@ -9697,3 +9697,38 @@ inspector.
 
 Next: whichever option the decision lands on, plus the Measurement section
 trim.
+
+## 2026-09-06 — the Layout section stops lecturing
+
+Reproduced first, off the dock's own offsets rather than a picture. In a 1200
+by 720 window (688 points of dock) the Layout section ran 269 points for a copy
+of a component and 489 for the original, against 135 for Position & Size. Then
+measured what the 489 was actually spent on, off a real screen capture: 79
+points of paragraph, 108 points of padding side fields that opened themselves,
+and 302 of rows and controls. So the task's premise ("most of that is prose")
+held for a copy, where prose was a third of it, and not for an original.
+
+Cut three things, none of them a control. The five-line caption went entirely —
+every clause of it was a lit segment two rows above — and the teaching half of
+it moved onto the Arrangement control's tooltip. Two clauses survived because
+neither is on screen anywhere else: "Nothing to spread until Width is Fixed."
+and "Set Vertical below to Stretch to fill it." The four padding side rows now
+start closed, because the closed field has read `10/16/10/16` since 2026-09-04
+and typing one number over it still gives every side the same, so opening them
+unasked was 108 points spent saying what the row above already said. And a
+copy's paragraph became rows in the same places an original's rows sit, built
+by a new tested `GroupLayout.followedReadout` in PhotonzCore, with the size
+clause dropped because Position & Size two rows up holds the very same numbers.
+
+Measured after: a copy 219, an original 297, so an original's whole Layout now
+fits on screen with Effects underneath it. Opening the padding sides by hand
+takes it to 405 and closing them returns it to exactly 297. Pinned by
+`Scripts/playtest/layout-fits-walk.json`.
+
+Not met, and said so rather than gamed: the task asked for a section no taller
+than Position & Size. That is 135, Position & Size is two rows, and Layout is
+seven plus a heading. Getting there means dropping controls, which the same
+task forbids, or shortening every row in the dock, which is a panel-wide
+change.
+
+Next: the queue picks up whatever is top of `p2-normal`.

@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1420,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:47:18.969Z",
-  "updated": "2026-09-06T14:47:18.969Z",
+  "updated": "2026-09-06T19:04:04.948978Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-06 in a 1200x720 window: for a component copy Layout ran 568-837, for an original 697-1186. Sample body text: \"Everything in this copy stays where the original put it. It keeps 10 top, 16 right, 10 bottom, 16 left clear inside its edges. It is 36 tall.\" plus Arrangement/Horizontal/Vertical rows. Source is PlacementInspector.swift. This bulk is what buried the Component section (task the-dock-opens-on-the-section-that-answers-the-l, which moved Component above it rather than fixing this).",
@@ -23,6 +23,47 @@
     {
       "t": "2026-09-06T14:47:18.969Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T18:40:18.345Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T18:49:17.112632Z",
+      "note": "Reproduced first, off the dock's own offsets rather than a picture. Probe, 1200x720 (dock viewport 688), a Button component dropped twice. Copy picked: Layout 502-771 = 269. Original picked: Layout 585-1074 = 489. Position & Size is 135 in both. Exactly as reported."
+    },
+    {
+      "t": "2026-09-06T18:49:17.112632Z",
+      "note": "Measured what the 489 is actually spent on, off a real screen capture in a 1000x1150 window: header 31, 'Contents of Button' 22, Arrangement 30, Width 29, Height 28, Clip contents 26, Padding 26, the four side fields 108, the paragraph 79, Horizontal 26, Vertical 23, 'One layer has a rule of its own' 19, the exception row 26. So the task's premise is only half right: the paragraph is 16% of an original's Layout, not most of it. On a COPY (269) prose is 33%: a three-line sentence about the original's arrangement plus a three-line sentence about who owns it."
+    },
+    {
+      "t": "2026-09-06T18:49:17.112632Z",
+      "note": "Adversarial review BEFORE building. (1) The paragraph is pure restatement: 'Everything in this group stays where you put it' is the lit Free segment two rows up; 'It is as wide as what is inside it, plus the room at its edges' is the lit Hug segment; the limits sentence is the Smallest/Largest fields, which already open themselves when set. All of it goes, and the teaching half moves into the Arrangement control's tooltip where a first-timer looks anyway. (2) Two clauses survive because they describe something NOT on screen: why the spread switch is missing, and that Stretch on the row below makes contents fill a fixed cross size. Both cut to one short line. (3) The four padding side fields open themselves whenever the sides differ. That auto-open was justified by 'a single number that is not true' - but the closed field has read the four numbers as 10/16/10/16 since 2026-09-04, and typing over it still flattens all four, so the auto-open now costs 108 points to say what one row already says. Default them closed. (4) A copy's paragraph carries numbers with no other home (room inside the edges, gap, direction), so those become read-only rows in the same places an original's rows sit, instead of prose. Its size clause goes: Position & Size two rows up already reads H 36."
+    },
+    {
+      "t": "2026-09-06T18:49:17.112632Z",
+      "note": "Honest about acceptance item 1: 'no taller than Position and Size' means 135 points, and that is not reachable while every control stays. Position & Size is two rows; Layout for a group is Arrangement, Width, Height, Clip, Padding, Horizontal, Vertical plus the heading and any child override - seven rows minimum, about 300. Item 3 ('nothing that could be set before can no longer be set') and item 1 cannot both hold. Building the biggest cut that keeps every control and reporting the number rather than removing controls to hit it."
+    },
+    {
+      "t": "2026-09-06T19:04:04.948978Z",
+      "note": "Built, all in the shared inspector code that only Next reaches (both flags are next-scoped, so Current is untouched). ArrangementInspector: the five-line caption and manySentence are gone, and the teaching half of them is now the Arrangement picker's tooltip (ArrangementInspector.arrangementHelp). Two clauses survive because neither is on screen anywhere else, one line each: \"Nothing to spread until Width is Fixed.\" and \"Set Vertical below to Stretch to fill it.\" The limits sentence went because the Smallest and Largest fields already open themselves when set. showsSides() now defaults the four padding rows CLOSED. A copy's paragraph became rows: new GroupLayout.followedReadout(clipsContents:) in PhotonzCore, 13 tests written first, builds Direction/Columns/Gap/limits/Clip/Padding and deliberately leaves out the size, because W and H in Position & Size two rows up hold the very same numbers. PhotonzDocument.instanceArrangementShortReason replaces the three-line foot line with \"Edit Original changes this for every copy.\" Dead after all this and removed: ArrangementInspector.canSpread(_:_:) and ContentsSelection.paddingDiffers."
+    },
+    {
+      "t": "2026-09-06T19:04:04.948978Z",
+      "note": "Verified by measurement on the probe, not by assumption. Same window, same document as the reproduction. A copy of a component: Layout 502-721 = 219, was 269. The original: Layout 585-882 = 297, was 489, a 39% cut, and its whole section now fits on screen with Effects underneath it. Pressing the Padding chevron takes it to 405 and pressing it again returns it to exactly 297. Typing 20 straight over the CLOSED Padding field still gives every side the same: the Button re-hugs from 78 to 86 wide and its label moves 4 right. All four pinned by Scripts/playtest/layout-fits-walk.json."
+    },
+    {
+      "t": "2026-09-06T19:04:04.948978Z",
+      "note": "Adversarial review of the built thing. A stack now reads Arrangement, Direction, Width, Height, Gap, Padding, one line, Horizontal, Vertical - the whole section on one screen where it used to run past the fold. A copy of a stack reads Arrangement Stack, Direction Column, Gap 30, Padding 32, which is strictly more legible than the sentence it replaces. What I could not fix: with two picked groups arranged DIFFERENTLY the foot still runs five lines (ContentsSelection.flowsDifferNote); that state is genuinely confusing so I left it over-explaining, and it is the next thing to cut. And the explanation that moved onto the Arrangement control is a plain system tooltip like every other one in this section, which a scripted walk cannot see, so it is the one claim here checked by reading the code rather than by watching it appear."
+    },
+    {
+      "t": "2026-09-06T19:04:04.948978Z",
+      "note": "Acceptance: item 2 done (the paragraph is gone; two one-line clauses survive, and most selections show neither). Item 3 done (chevron still opens the sides, typing over the closed field still sets all four, every control that was there is there). Item 4 done (Scripts/playtest/layout-fits-walk.json reads the offsets back). Item 1 NOT met and cannot be as written: Position & Size is 135 and Layout is 297. Seven rows plus a heading do not fit in two rows' worth of panel, and item 3 forbids removing rows. Reported rather than gamed; the residual option (shorter rows across the whole dock) is a panel-wide change, not a change to this section."
+    },
+    {
+      "t": "2026-09-06T19:04:04.948978Z",
+      "note": "Scripts/test.sh green: 3998 tests, 338 suites. copy-layout, spread-gap, layout-for-several, clip-contents and contents-for-several walks all still pass. Design doc: docs/design/ui-building.md gained a landed section with the before/after table, and the stale line in the limits section that promised a sentence reading the limits back was corrected. Audit: queue/audits/2026-09-06-layout-fits.json with three real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-06T18:40:18.344Z"
 }

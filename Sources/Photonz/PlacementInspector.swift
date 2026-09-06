@@ -430,10 +430,12 @@ struct PlacementInspector: View {
                 }
             }
             // A copy says who owns all of this ONCE, here at the foot, so the
-            // one sentence covers the arrangement above it and the two rows
-            // right above it rather than stopping halfway down the section.
+            // one line covers the arrangement above it and the two rows right
+            // above it rather than stopping halfway down the section. One
+            // LINE: every row above is already greyed, so the foot only has to
+            // carry the thing somebody can act on.
             if contents.isFollowed {
-                Text(PhotonzDocument.instanceArrangementReason)
+                Text(PhotonzDocument.instanceArrangementShortReason)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)

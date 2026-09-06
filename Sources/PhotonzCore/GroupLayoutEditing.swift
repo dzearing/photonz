@@ -15,6 +15,15 @@ extension PhotonzDocument {
     /// an answer given here would be gone by the next redraw.
     public static let instanceArrangementReason = "A copy arranges its contents the way its original does. Use Edit Original in the Component section to change it for every copy."
 
+    /// The same thing in one line, for the foot of the Layout section.
+    ///
+    /// The long form took three lines there to say what every greyed row above
+    /// it already shows, and those three lines were a fifth of the whole
+    /// section. So the foot carries the half somebody can act on and the why
+    /// stays on the Arrangement row's tooltip.
+    public static let instanceArrangementShortReason =
+        "Edit Original changes this for every copy."
+
     /// Whether "Stack" or "Grid" would do anything: exactly one unlocked group
     /// is picked, and it is not a copy. A photo has no contents to arrange, a
     /// locked group is locked, and a copy's contents belong to its original.

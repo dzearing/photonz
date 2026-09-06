@@ -115,34 +115,55 @@ struct ArrangementInspector: View {
             // step quieter every other Mixed control does, and the word sits
             // beside the caption where there is room for it.
             .opacity(contents.arrangement.isMixed ? MixedLook.controlOpacity : 1)
+            .help(Self.arrangementHelp)
         }
         numbers()
-        Text(sentence())
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
-            .fixedSize(horizontal: false, vertical: true)
+        if let sentence = sentence() {
+            Text(sentence)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
-    /// What the section says under its rows: one group's whole story, or, for
-    /// several, the two things still true of all of them — what they are doing,
-    /// and that one pick here reaches every one.
-    private func sentence() -> String {
-        guard let one else { return manySentence() }
-        return ([caption(one.layout), spreadSentence(one.layout), sizeSentence(one),
-                 one.isFrame ? nil : one.layout.limitsSentence]
-            .compactMap { $0 }).joined(separator: " ")
+    /// The one line under the rows, and usually no line at all.
+    ///
+    /// This used to be a paragraph, and every clause of it said again what a
+    /// control two rows up already says: "Everything in this group stays where
+    /// you put it" is the lit Free segment, "It is as wide as what is inside
+    /// it" is the lit Hug segment, and the limits sentence is the Smallest and
+    /// Largest fields, which open themselves the moment one is set. Five lines
+    /// of restatement pushed the sections under this one off the bottom of the
+    /// panel, so it is gone and the teaching half of it moved into the
+    /// Arrangement control's own tooltip, where somebody meeting Stack for the
+    /// first time is already looking.
+    ///
+    /// What is left is the two things that are NOT on screen anywhere: why the
+    /// spread switch is missing, and that a stack given a size across is only
+    /// filled once the row below says Stretch. One short line each.
+    private func sentence() -> String? {
+        guard let one else { return nil }
+        let parts = [spreadSentence(one.layout), fillSentence(one)].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
 
     // MARK: - A copy, which follows its original
 
-    /// What a copy arranges to, readable and not typeable. The numbers move
-    /// into the sentence rather than into greyed-out fields: a field you cannot
-    /// type in still looks like a field, and eight of them is a section that
-    /// reads as broken rather than as owned by somebody else.
+    /// What a copy arranges to, readable and not typeable.
     ///
-    /// Who owns them is said once, at the FOOT of the whole section, under the
-    /// Horizontal and Vertical rows this hands over as well, so one sentence
-    /// covers everything above it instead of stopping halfway down.
+    /// The answers are words on rows, not fields: a field you cannot type in
+    /// still looks like a field, and eight of them is a section that reads as
+    /// broken rather than as owned by somebody else. They used to be a
+    /// paragraph instead, which took three lines to say what three rows say in
+    /// one word each and put every number a long way from the row an original
+    /// keeps it on. Same rows, same order, same words, answers greyed.
+    ///
+    /// Only what has no other home on the panel: the size is left out, because
+    /// W and H in Position & Size are two rows above this and hold the very
+    /// same numbers (`GroupLayout.followedReadout`).
+    ///
+    /// Who owns all of it is said once, at the FOOT of the whole section,
+    /// under the Horizontal and Vertical rows this hands over as well.
     @ViewBuilder
     private func followedRows() -> some View {
         row("Arrangement", mixed: contents.arrangement.isMixed) {
@@ -153,50 +174,36 @@ struct ArrangementInspector: View {
                 .foregroundStyle(.tertiary)
         }
         .help(PhotonzDocument.instanceArrangementReason)
-        Text(one.map { followedSentence($0) }
-             ?? "These \(contents.count) copies arrange their contents the way their "
-                + "originals do.")
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
-            .fixedSize(horizontal: false, vertical: true)
+        if let one {
+            ForEach(one.layout.followedReadout(clipsContents: one.clipsContents), id: \.title) {
+                readout in
+                row(readout.title) {
+                    Text(readout.value)
+                        .font(.callout)
+                        .foregroundStyle(.tertiary)
+                }
+                .help(help(for: readout, of: one))
+            }
+        } else {
+            // Three copies of three different originals have no four numbers
+            // in common, so there is nothing to put on a row.
+            Text("These \(contents.count) copies arrange their contents the way their "
+                 + "originals do.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
-    /// A copy's arrangement in one sentence, numbers and all, because a number
-    /// you cannot change is still a number worth reading off a copy.
-    private func followedSentence(_ group: ContentsSelection.Group) -> String {
-        let layout = group.layout
-        var parts: [String] = []
-        switch layout.kind {
-        case nil:
-            parts.append("Everything in this copy stays where the original put it.")
-        case .stack:
-            parts.append("Everything in this copy lines up "
-                         + "\(layout.direction.isHorizontal ? "across" : "down"), "
-                         + (canSpread(layout, group) && layout.spreadsGap
-                            ? "with the room left over shared between them."
-                            : "\(Int(layout.usedGap)) apart."))
-        case .grid:
-            parts.append("Everything in this copy fills \(layout.usedColumns) "
-                         + "\(layout.usedColumns == 1 ? "column" : "columns"), a row at a time.")
-        }
-        let room = layout.usedPadding
-        if room != .none {
-            parts.append(room.isUniform
-                ? "It keeps \(Int(room.uniform ?? 0)) clear inside its edges."
-                : "It keeps \(room.inWords) clear inside its edges.")
-        }
-        let fixed = [layout.width.map { "\(Int($0.rounded())) wide" },
-                     layout.height.map { "\(Int($0.rounded())) tall" }].compactMap { $0 }
-        if !group.isFrame, !fixed.isEmpty {
-            parts.append("It is \(fixed.joined(separator: " and ")).")
-        }
-        if !group.isFrame, let limits = layout.limitsSentence { parts.append(limits) }
-        // A copy is shown this and never asked it, like everything else about
-        // the way its original arranges its contents.
-        if !group.isFrame, group.clipsContents {
-            parts.append("It cuts off whatever does not fit inside it.")
-        }
-        return parts.joined(separator: " ")
+    /// What one read-only row says on hover. Room written clockwise needs its
+    /// sides named, the way the typeable field's tooltip names them; the rest
+    /// read as themselves.
+    private func help(for readout: LayoutReadout, of group: ContentsSelection.Group) -> String {
+        guard readout.title == "Padding" else { return "" }
+        let room = group.layout.usedPadding
+        return room.isUniform
+            ? "The room kept clear inside its edges, on all four sides."
+            : room.inWords + ", clear inside its edges."
     }
 
     @ViewBuilder
@@ -360,14 +367,6 @@ struct ArrangementInspector: View {
         .playtestField("Gap")
     }
 
-    /// Whether one group has any room to spread. A screen is a box somebody
-    /// drew, so it always has; a group has one where the axis it flows along
-    /// was given a size or is held open by a floor.
-    private func canSpread(_ layout: GroupLayout, _ group: ContentsSelection.Group) -> Bool {
-        guard layout.kind == .stack else { return false }
-        return group.isFrame || layout.couldSpread
-    }
-
     /// The room kept clear inside the edges.
     ///
     /// One field, because one number all round is what most things want, and a
@@ -435,12 +434,18 @@ struct ArrangementInspector: View {
             : "\(room.inWords). Type one number to give every side the same."
     }
 
-    /// Whether the four sides are showing. Until somebody says otherwise, room
-    /// that already differs shows itself: the single field has no honest number
-    /// to put in that case, and a chevron is not where a person should have to
-    /// go looking for the 24 they typed.
+    /// Whether the four sides are showing. Closed until somebody opens them.
+    ///
+    /// They used to open themselves whenever the sides differed, because the
+    /// single field said only "Mixed" and the 24 somebody typed at the bottom
+    /// was then nowhere on screen. That stopped being true on 2026-09-04: the
+    /// closed field reads the four numbers themselves, `10/16/10/16`, and
+    /// typing one number over it still gives every side the same. So the four
+    /// rows were spending 108 points of a 489 point section saying what the
+    /// row above them already says, which is what pushed everything below
+    /// Layout off the bottom of the panel.
     private func showsSides() -> Bool {
-        sidesOpen ?? contents.paddingDiffers
+        sidesOpen ?? false
     }
 
     /// What stands in the single field while it has no one number to show.
@@ -566,109 +571,47 @@ struct ArrangementInspector: View {
         }
     }
 
-    /// What the arrangement is doing, in words, including which axis has
-    /// stopped being yours to set. A live menu that changes nothing is worse
-    /// than a sentence saying who owns it.
-    private func caption(_ layout: GroupLayout) -> String {
-        switch layout.kind {
-        case nil:
-            return "Everything in this \(noun) stays where you put it. "
-                + "Horizontal and Vertical below say what each one does when the \(noun) "
-                + "changes size, and a piece set to Stretch both ways is the surface behind "
-                + "the rest."
-        case .stack:
-            let axis = layout.direction.isHorizontal ? "across" : "down"
-            let owned = layout.direction.isHorizontal ? "Horizontal" : "Vertical"
-            let other = layout.direction.isHorizontal ? "Vertical" : "Horizontal"
-            let spacing = contents.canSpread && layout.spreadsGap
-                ? "with the room left over shared between them"
-                : "\(Int(layout.usedGap)) apart"
-            return "Everything in this \(noun) lines up \(axis), \(spacing). "
-                + "\(owned) is the stack's now; \(other) below still says where each one sits, "
-                + "and any one layer can answer it differently for itself."
-        case .grid:
-            return "Everything in this \(noun) fills \(layout.usedColumns) "
-                + "\(layout.usedColumns == 1 ? "column" : "columns"), a row at a time. "
-                + "Horizontal and Vertical below say where each one sits inside its cell."
-        }
-    }
-
-    /// The line under the rows when they speak for SEVERAL groups.
-    ///
-    /// The single-group caption tells one group's story, four clauses of it:
-    /// which way it runs, what it is holding itself to, what its limits are.
-    /// None of that survives being said about three groups at once, so this
-    /// says the two things still true of all of them — what they are doing, and
-    /// that one pick here reaches every one.
-    private func manySentence() -> String {
-        let things = contents.plural
-        guard !contents.arrangement.isMixed else {
-            return "These \(contents.count) \(things) are not all arranged the same way. "
-                + "Pick one here and every one of them takes it."
-        }
-        if allAre(nil) {
-            return "Everything in these \(things) stays where you put it. Horizontal and "
-                + "Vertical below say what each one does when they change size."
-        }
-        if allAre(.grid) {
-            return "Everything in these \(things) fills its columns, a row at a time."
-        }
-        guard !contents.direction.isMixed else {
-            return "Everything in these \(things) lines up, each the way it was already running."
-        }
-        let across = contents.direction.value?.isHorizontal == true
-        // The half of the single-group caption that survives being said about
-        // three groups: which of the two rows below has stopped being a
-        // question, since that is true of all of them the moment they agree on
-        // a direction.
-        let owned = across ? "Horizontal" : "Vertical"
-        let other = across ? "Vertical" : "Horizontal"
-        return "Everything in these \(things) lines up \(across ? "across" : "down"). "
-            + "\(owned) is the stack's now; \(other) below still says where each one sits."
-    }
+    /// What the three words mean, for somebody meeting them for the first
+    /// time. This is the paragraph that used to sit under the rows: it is a
+    /// thing you read ONCE and never again, so it belongs on the control it
+    /// explains rather than taking five lines of a panel forever.
+    static let arrangementHelp =
+        "Free leaves everything where you put it. Stack lines them up along one direction "
+        + "with a gap you type. Grid fills rows of equal cells. Horizontal and Vertical below "
+        + "say where each one sits, and a piece set to Stretch both ways is the surface behind "
+        + "the rest rather than one of the line."
 
     /// Why a stack is not being offered the choice to spread, in one line.
     ///
     /// A stack the size of its contents has no room left over, so the switch
     /// on the Gap row is not there at all. Saying nothing would leave somebody
     /// looking for a control they have seen on another stack, so the section
-    /// says which row makes the room instead.
+    /// says which row makes the room instead. One line, and it is one of only
+    /// two the section ever says.
     private func spreadSentence(_ layout: GroupLayout) -> String? {
         guard layout.kind == .stack, !contents.canSpread else { return nil }
-        // One clause, not two sentences: it sits at the end of a paragraph
-        // that is already four lines long, and it has one thing to say.
-        return "There is nothing left over to spread until "
+        return "Nothing to spread until "
             + "\(layout.direction.isHorizontal ? "Width" : "Height") is Fixed."
     }
 
-    /// What a size of its own means for what is inside it, in words. A stack
-    /// told how wide it is does NOT widen its rows on its own — the Horizontal
-    /// row below still owns that axis — so the caption says where that switch
-    /// is rather than leaving somebody staring at a 320-wide stack of 40-wide
-    /// rows wondering what they got wrong.
-    private func sizeSentence(_ group: ContentsSelection.Group) -> String? {
+    /// Where the switch is that makes a stack's rows fill the size it was
+    /// given. A stack told how wide it is does NOT widen its rows on its own —
+    /// the Horizontal row below still owns that axis — and nothing on screen
+    /// says so, which left people staring at a 320-wide stack of 40-wide rows
+    /// wondering what they got wrong.
+    ///
+    /// Only while they are NOT filling. Once they are, the row below reads
+    /// Stretch and says it better than a sentence can.
+    private func fillSentence(_ group: ContentsSelection.Group) -> String? {
         let layout = group.layout
-        guard !group.isFrame else { return nil }
-        // A group that arranges nothing says the plainer half of the same
-        // thing: which of its two sides is the size of what is inside it.
-        guard layout.arranges else {
-            let hugs = [layout.hugsWidth ? "wide" : nil, layout.hugsHeight ? "tall" : nil]
-                .compactMap { $0 }
-            guard !hugs.isEmpty else { return nil }
-            return "It is as \(hugs.joined(separator: " and as ")) as what is inside it, "
-                + "plus the room at its edges."
-        }
-        guard layout.kind == .stack else { return nil }
+        guard !group.isFrame, layout.kind == .stack else { return nil }
         let flowsAcross = layout.direction.isHorizontal
-        guard let across = flowsAcross ? layout.usedHeight : layout.usedWidth else { return nil }
-        let word = flowsAcross ? "tall" : "wide"
-        let axis = flowsAcross ? "Vertical" : "Horizontal"
+        let across = flowsAcross ? layout.usedHeight : layout.usedWidth
+        guard across != nil else { return nil }
         let placement = group.contents
         let fills = flowsAcross ? placement.vertical == .stretch : placement.horizontal == .stretch
-        let size = Int(across.rounded())
-        return fills
-            ? "It is \(size) \(word), and everything in it fills that."
-            : "It is \(size) \(word). Set \(axis) below to Stretch and everything in it fills that."
+        guard !fills else { return nil }
+        return "Set \(flowsAcross ? "Vertical" : "Horizontal") below to Stretch to fill it."
     }
 
     /// One labelled row. The label never wraps: "Arrangement" broken over two

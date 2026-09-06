@@ -2457,8 +2457,9 @@ the Layout section sits the same twist-open **Padding** already uses. Open it
 and there are two rows, **Smallest** and **Largest**, both showing None. A
 group nobody has typed a number into is byte for byte the group it was: the
 same layout, the same file, no extra work in the flow. The rows open themselves
-whenever a limit is set, so a group that stopped growing never hides the reason,
-and the section's sentence reads it back: "It never gets narrower than 200."
+whenever a limit is set, so a group that stopped growing never hides the reason.
+(The sentence that used to read it back underneath went with the rest of the
+section's prose on 2026-09-06; the rows themselves are the readout now.)
 
 **The room a floor makes belongs to the contents.** This is the part the sketch
 of the feature got wrong and the build fixed. A floor holding a group open makes
@@ -2873,3 +2874,77 @@ number accessors in `ComponentNumberKnob.swift`, the root row in
 `ComponentProperties.swift`, called from `syncComponentInstances` and `rebound`
 in `ComponentInstances.swift`. Tested in `ComponentRootNumberKnobTests`, walked
 by `Scripts/playtest/component-own-room-walk.json`.
+
+## Landed: the Layout section stops lecturing (Next, `next-auto-layout`, 2026-09-06)
+
+Layout was by far the tallest thing in the properties panel. Measured off the
+dock's own offsets in a 1200 by 720 window, where the dock has 688 points to
+work with: **269 points for a copy of a component and 489 for an original**,
+against 135 for Position & Size. It pushed Component, Effects and Shadow off
+the bottom of the panel, which is what the earlier reorder (Component above
+Position & Size) was working around rather than fixing.
+
+Three things were spending the room, and none of them was a control.
+
+**A paragraph saying what the controls said.** Under the rows sat up to five
+lines of prose: "Everything in this group stays where you put it. Horizontal
+and Vertical below say what each one does when the group changes size, and a
+piece set to Stretch both ways is the surface behind the rest. It is as wide as
+what is inside it, plus the room at its edges." Every clause of that is a
+control two rows above it — the lit **Free** segment, the lit **Hug** segment,
+the two rows it names. The teaching half of it is a thing you read once and
+never again, so it moved onto the Arrangement control's own tooltip, where
+somebody meeting Stack for the first time is already pointing.
+
+Two clauses survived, because each describes something that is NOT on screen:
+**"Nothing to spread until Width is Fixed."** explains a switch that is
+missing, and **"Set Vertical below to Stretch to fill it."** points at the row
+that makes a stack's contents fill a size it was given. One line each, and most
+selections show neither.
+
+**Four padding fields opening themselves.** The Top/Right/Bottom/Left rows
+appeared unasked whenever the four sides disagreed, because the single field
+used to say only "Mixed" and the 24 somebody typed at the bottom was then
+nowhere on screen. That stopped being true on 2026-09-04, when the closed field
+started reading the four numbers themselves as `10/16/10/16`. So the auto-open
+was spending 108 points to say what the row above it already says, and the
+sides now start closed. The chevron still opens them, typing one number over
+the closed field still gives every side the same, and nothing became
+unsettable.
+
+**A copy's paragraph became rows.** A copy is shown how its original arranges
+its contents and refused the typing of it, so the section has answers with no
+controls to hold them. They used to be prose — "Everything in this copy stays
+where the original put it. It keeps 10 top, 16 right, 10 bottom, 16 left clear
+inside its edges. It is 36 tall." — which took three lines to say what three
+rows say in one word each. Now they are rows, in the same order and under the
+same words an ordinary group's rows carry, with the answers greyed:
+**Arrangement** Free, **Padding** 10/16/10/16. The size clause went entirely:
+W and H in Position & Size are two rows above and hold the very same numbers,
+so the panel was saying 36 three times. `GroupLayout.followedReadout` builds
+the list and is tested in `PhotonzCore`.
+
+And the three lines telling a copy who owns all this became one:
+**"Edit Original changes this for every copy."** The why stays on the
+Arrangement row's tooltip; the foot only carries the half somebody can act on.
+
+**What it measures now**, same window, same document, read back by
+`Scripts/playtest/layout-fits-walk.json`:
+
+| | Before | After |
+| --- | --- | --- |
+| A copy of a component | 269 | 219 |
+| The original | 489 | 297 |
+| The original, sides opened by hand | 489 | 405 |
+
+An original's whole Layout section now fits on screen with Effects underneath
+it, which it never did before.
+
+**What it is still not.** The task asked for a section no taller than Position
+& Size, which is 135. That cannot hold while every control stays: Position &
+Size is two rows, and Layout for a group is Arrangement, Width, Height, Clip
+contents, Padding, Horizontal and Vertical, plus its heading and any child with
+a rule of its own. Seven rows is about 300 points at this panel's row metrics.
+Getting under 135 means taking controls away or making every row in the dock
+shorter, and the second of those is a change to the whole panel, not to this
+section.

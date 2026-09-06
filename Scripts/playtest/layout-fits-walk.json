@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/layout-fits",
+  "seed": "A laptop-sized window (1200 by 720, so the dock has 688 points to work with) and a Button component dropped twice. The Layout section used to be by far the tallest thing in the panel: 269 points for a copy and 489 for an original, most of it a paragraph restating the controls two rows above it and four padding side fields opening themselves whenever the sides differed. This walk reads the dock's own offsets back rather than trusting a picture, and makes three claims: the section is far shorter than it was for both a copy and an original, everything under it is nearer the top by the same amount, and the Padding row still reads all four numbers with the sides closed so nothing became unreadable.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1200, "height": 720 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "dragTile", "tile": "Button", "to": [360, 200] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "dragTile", "tile": "Button", "to": [400, 420] },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "click", "at": [400, 420] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-copy", "note": "THE CLAIM: a copy of a component picked. Layout ran 502-771 (269 points) before 2026-09-06, with two three-line paragraphs in it. It should now be well under 200, and its Arrangement and Padding rows should read Free and 10/16/10/16 as plain words." },
+    { "do": "panel", "stage": "1-copy" },
+    { "do": "snapshot", "name": "layout-fits-1-copy" },
+
+    { "do": "click", "at": [360, 200] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-original", "note": "THE OTHER CLAIM: the original picked. Layout ran 585-1074 (489 points), of which 79 was a five-line paragraph and 108 was the four padding side fields opening themselves. It should now be around 300, and Effects and Shadow should start that much nearer the top." },
+    { "do": "panel", "stage": "2-original" },
+    { "do": "snapshot", "name": "layout-fits-2-original" },
+
+    { "do": "scrollPanel", "by": -200, "row": "Layout section" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Each side" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-sides-open", "note": "the chevron still opens the four sides, so room on one edge is one click away and nothing became unsettable. Layout goes back up by the four rows." },
+    { "do": "panel", "stage": "3-sides-open" },
+    { "do": "snapshot", "name": "layout-fits-3-sides-open" },
+
+    { "do": "press", "control": "Each side" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-sides-closed", "note": "closed again, and back to the shorter number: the same one stage 2 read." },
+    { "do": "panel", "stage": "4-sides-closed" },
+    { "do": "snapshot", "name": "layout-fits-4-sides-closed" },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "20" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-typed-over-closed", "note": "THE THIRD CLAIM: nothing became unsettable. One number typed over the closed field still gives every side the same, so the Button grows by the 4 it gained on the left and the right and the 10 it gained top and bottom." },
+    { "do": "panel", "stage": "5-typed-over-closed" },
+    { "do": "snapshot", "name": "layout-fits-5-typed-over-closed" },
+    { "do": "render", "name": "layout-fits-5-typed-over-closed-doc" }
+  ]
+}
