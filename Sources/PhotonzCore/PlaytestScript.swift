@@ -929,7 +929,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// pixel, so a panel that reflows does not break the walk, and it presses
     /// with real mouse events, so a control that is dimmed, covered or wired
     /// to nothing fails the walk the way it would fail a person.
-    case press(control: String, in: String?, count: Int, modifiers: [PlaytestModifier])
+    case press(control: String, in: String?, count: Int, modifiers: [PlaytestModifier],
+               across: CGFloat?)
     /// Write what the right hand panel is showing to the log and to
     /// `panel-<stage>.json`: every tile on the shelf, every row in the layers
     /// list, and every menu in the dock, by the names a walk has to use for
@@ -1187,8 +1188,12 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .selectRow(row: try f.string("row"), modifiers: try f.modifiers())
         case "press":
             let count = try f.optionalNumber("count").map { Int($0) } ?? 1
+            // `across` presses a control at a fraction of its own width
+            // rather than in its middle, which is the only way to put a
+            // slider's knob anywhere but halfway.
+            let across = try f.optionalNumber("across").map { CGFloat(min(max($0, 0), 1)) }
             self = .press(control: try f.string("control"), in: try f.optionalString("in"),
-                          count: max(1, count), modifiers: try f.modifiers())
+                          count: max(1, count), modifiers: try f.modifiers(), across: across)
         case "panel":
             self = .panel(stage: try f.string("stage"))
         case "scrollPanel":

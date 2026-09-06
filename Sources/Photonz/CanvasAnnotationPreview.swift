@@ -115,20 +115,48 @@ extension CanvasNSView {
             path.move(to: start)
             path.addLine(to: end)
         case .arrow:
-            // Stop the shaft inside the head (doc space → view space) so its cap
-            // doesn't poke past the tip, matching the rasterizer.
+            // Stop the shaft where the ending wants it (doc space → view space),
+            // matching the rasterizer exactly: inside a solid head, at the tip
+            // of an open one, on the near edge of a hollow dot.
+            let ending = content.arrowheadStyle
             let shaftEndDoc = Geometry.arrowShaftEnd(start: docStart, end: docEnd,
                                                      strokeWidth: content.strokeWidth,
-                                                     scale: content.arrowheadScale)
+                                                     scale: content.arrowheadScale, style: ending)
             path.move(to: start)
             path.addLine(to: viewport.viewPoint(fromDocument: shaftEndDoc))
             // Head geometry in document space (its minimum size is in doc
             // points), then mapped to view coords.
-            let head = Geometry.arrowhead(start: docStart, end: docEnd,
-                                          strokeWidth: content.strokeWidth,
-                                          scale: content.arrowheadScale)
-            headPath.addLines(between: head.map { viewport.viewPoint(fromDocument: $0) })
-            headPath.closeSubpath()
+            if let circle = Geometry.arrowheadCircle(at: docEnd, strokeWidth: content.strokeWidth,
+                                                     scale: content.arrowheadScale, style: ending) {
+                let radius = circle.radius * viewport.zoom
+                let centre = viewport.viewPoint(fromDocument: circle.center)
+                let box = CGRect(x: centre.x - radius, y: centre.y - radius,
+                                 width: 2 * radius, height: 2 * radius)
+                // A solid dot fills like a solid head; a hollow one is drawn on
+                // the SHAFT path, so it strokes at the arrow's own weight.
+                if ending == .dot {
+                    headPath.addEllipse(in: box)
+                } else {
+                    path.addEllipse(in: box)
+                }
+            } else {
+                let head = Geometry.arrowhead(start: docStart, end: docEnd,
+                                              strokeWidth: content.strokeWidth,
+                                              scale: content.arrowheadScale, style: ending)
+                    .map { viewport.viewPoint(fromDocument: $0) }
+                if head.count == 3 {
+                    if ending == .open {
+                        // Two fine strokes through the tip, on the shaft path so
+                        // they carry the line's own weight.
+                        path.move(to: head[1])
+                        path.addLine(to: head[0])
+                        path.addLine(to: head[2])
+                    } else {
+                        headPath.addLines(between: head)
+                        headPath.closeSubpath()
+                    }
+                }
+            }
         case .rectangle, .ellipse:
             // A box shape's outline can be the annotation's own stroke OR a
             // layer-style border (the Border toggle — rectangles use this, with

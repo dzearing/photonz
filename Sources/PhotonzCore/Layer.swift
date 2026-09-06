@@ -92,6 +92,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     public var end: CGPoint
     /// Arrow-only: user-facing arrowhead size multiplier (1 = the bold default).
     public var arrowheadScale: CGFloat
+    /// Arrow-only: what the arrow ENDS IN — a solid head, a fine open one, a
+    /// dot, a hollow dot, or nothing at all. The solid head is what every arrow
+    /// had before there was a choice, so it is what an older document opens as.
+    public var arrowheadStyle: ArrowheadStyle
     /// Rectangle-only: corner radius (layer-local units). 0 = sharp corners. The
     /// rasterizer draws a rounded-rect stroke, so the border follows the corners
     /// instead of being clipped away by a layer-level rounded mask.
@@ -111,6 +115,11 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     public var caption: String?
     /// Arrow-only: the caption's text size in image pixels.
     public var captionFontSize: CGFloat
+    /// Arrow-only: how round the caption pill's corners are, 0 square through
+    /// 1 fully round. A PROPORTION of the pill's half-height rather than a
+    /// number of points, so making the words bigger keeps the shape the label
+    /// was given: a badge stays a badge instead of creeping towards square.
+    public var captionRoundness: CGFloat
     /// Arrow-only: where the pill HANGS FROM, relative to the TAIL (`start`):
     /// the point on the pill's near side that stays put while the caption gets
     /// longer. Nil = the default, one `captionGap` past the tail along the
@@ -138,10 +147,12 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         self.start = start
         self.end = end
         self.arrowheadScale = arrowheadScale
+        self.arrowheadStyle = .standard
         self.cornerRadius = cornerRadius
         self.fill = fillColorHex.map { Paint(hex: $0) }
         self.caption = caption
         self.captionFontSize = captionFontSize
+        self.captionRoundness = Self.captionRoundnessDefault
         self.captionOffset = nil
         self.captionGrowth = nil
         self.captionPinned = false
@@ -154,9 +165,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case shape, strokeWidth
         case paint = "colorHex"
-        case start, end, arrowheadScale, cornerRadius
+        case start, end, arrowheadScale, arrowheadStyle, cornerRadius
         case fill = "fillColorHex"
-        case caption, captionFontSize, captionOffset, captionGrowth, captionPinned
+        case caption, captionFontSize, captionRoundness
+        case captionOffset, captionGrowth, captionPinned
     }
 
     public init(from decoder: Decoder) throws {
@@ -170,6 +182,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         end = try c.decode(CGPoint.self, forKey: .end)
         // `arrowheadScale` postdates AnnotationContent; old payloads omit it.
         arrowheadScale = try c.decodeIfPresent(CGFloat.self, forKey: .arrowheadScale) ?? 1
+        // `arrowheadStyle` postdates the head being one shape; every arrow
+        // drawn before it ended in the solid triangle and still does.
+        arrowheadStyle = try c.decodeIfPresent(ArrowheadStyle.self, forKey: .arrowheadStyle)
+            ?? .standard
         // `cornerRadius` postdates AnnotationContent too.
         cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
         // `fillColorHex` postdates both; legacy shapes are outline-only.
@@ -178,6 +194,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         caption = try c.decodeIfPresent(String.self, forKey: .caption)
         captionFontSize = try c.decodeIfPresent(CGFloat.self, forKey: .captionFontSize)
             ?? Self.captionFontSizeDefault
+        // The corner postdates the pill; every pill drawn before it was fully
+        // round, which is what 1 means.
+        captionRoundness = try c.decodeIfPresent(CGFloat.self, forKey: .captionRoundness)
+            ?? Self.captionRoundnessDefault
         // Planned placement postdates captions; absent = the tail default.
         captionOffset = try c.decodeIfPresent(CGSize.self, forKey: .captionOffset)
         // Growth direction postdates the offset; absent = along the shaft.
@@ -190,6 +210,11 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
 extension AnnotationContent {
     /// Default caption text size (image pixels) — the measure label's default.
     public static let captionFontSizeDefault: CGFloat = 20
+    /// How round a caption pill is unless it is told otherwise: fully, which is
+    /// the only shape the pill had before the corner was adjustable.
+    public static let captionRoundnessDefault: CGFloat = 1
+    /// The corner control's travel: square at one end, fully round at the other.
+    public static let captionRoundnessRange: ClosedRange<CGFloat> = 0...1
     /// The breathing space the caption planner keeps: how far the pill has to
     /// clear the arrowhead by, and how far past the tail the shaft has to run
     /// before the pill counts as sitting ON it. NOT a gap between the tail and
@@ -270,7 +295,9 @@ extension AnnotationContent {
     }
 
     /// A capsule, whatever the pill's height — the measure chip's corner.
-    public func captionCornerRadius(pillHeight: CGFloat) -> CGFloat { pillHeight / 2 }
+    public func captionCornerRadius(pillHeight: CGFloat) -> CGFloat {
+        pillHeight / 2 * min(max(captionRoundness, 0), 1)
+    }
 
     /// A generous estimate of the caption pill's footprint, used for frame
     /// reservation and hit-testing. The rasterizer measures the real text and

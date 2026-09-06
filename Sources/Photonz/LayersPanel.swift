@@ -2949,6 +2949,36 @@ struct AnnotationInspector: View {
                         format: { "\(Int($0.rounded())) px" },
                         preview: { editorState.previewCaptionFontSize(ids: $0, $1) },
                         commit: { editorState.commitCaptionFontSize(ids: $0, $1) })
+        case .labelCorners:
+            ShapeSlider(layerIDs: ids, label: "Label corners",
+                        reading: selection.number { $0.captionRoundness },
+                        range: AnnotationContent.captionRoundnessRange,
+                        format: { roundnessWord($0) },
+                        round: { $0 },
+                        preview: { editorState.previewCaptionRoundness(ids: $0, $1) },
+                        commit: { editorState.commitCaptionRoundness(ids: $0, $1) })
+                .help("How round the label's corners are, from a square box through a badge to a full pill")
+        case .headStyle:
+            // The one row in this section that is a picture rather than a
+            // number, so it carries its own caption instead of a slider's.
+            let ending = selection.reading { $0.arrowheadStyle }
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text("Ending").font(.caption).foregroundStyle(.secondary)
+                    // A glyph says what the ending IS while you are looking at
+                    // the row; the word is what you remember it by afterwards.
+                    if ending.isMixed {
+                        MixedWord()
+                    } else if let word = ArrowheadStylePicker.word(ending.value, isMixed: false) {
+                        Text(word).font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                }
+                ArrowheadStylePicker(selection: ending.value, isMixed: ending.isMixed) {
+                    editorState.setArrowheadStyle(ids: ids, $0)
+                }
+            }
+            .playtestField("Ending")
         case .headSize:
             ShapeSlider(layerIDs: ids, label: "Head Size",
                         reading: selection.number { $0.arrowheadScale },
@@ -2957,6 +2987,17 @@ struct AnnotationInspector: View {
                         round: { $0 },
                         preview: { editorState.previewAnnotationRestyle(ids: $0, arrowheadScale: $1) },
                         commit: { editorState.commitAnnotationRestyle(ids: $0, arrowheadScale: $1) })
+        }
+    }
+
+    /// What the corner row says it is on. The two ends are shapes with names,
+    /// because "Square" and "Pill" are what the user is actually after; the
+    /// middle is how far it has travelled between them.
+    private func roundnessWord(_ value: CGFloat) -> String {
+        switch value {
+        case ..<0.02: "Square"
+        case 0.98...: "Pill"
+        default: "\(Int((value * 100).rounded()))%"
         }
     }
 }

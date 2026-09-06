@@ -130,7 +130,7 @@ extension Layer {
         // for an arrow — exactly what the rasterizer draws.
         let strokeEnd = a.shape == .arrow
             ? Geometry.arrowShaftEnd(start: start, end: end, strokeWidth: a.strokeWidth,
-                                     scale: a.arrowheadScale)
+                                     scale: a.arrowheadScale, style: a.arrowheadStyle)
             : end
         // A round cap reaches half a stroke past each end and half a stroke
         // either side of the line.
@@ -141,11 +141,11 @@ extension Layer {
             minX = min(minX, p.x); maxX = max(maxX, p.x)
             minY = min(minY, p.y); maxY = max(maxY, p.y)
         }
-        if a.shape == .arrow {
-            for wing in Geometry.arrowhead(start: start, end: end, strokeWidth: a.strokeWidth,
-                                           scale: a.arrowheadScale) {
-                include(wing)
-            }
+        if a.shape == .arrow,
+           let head = Geometry.arrowheadBounds(start: start, end: end, strokeWidth: a.strokeWidth,
+                                               scale: a.arrowheadScale, style: a.arrowheadStyle) {
+            include(CGPoint(x: head.minX, y: head.minY))
+            include(CGPoint(x: head.maxX, y: head.maxY))
         }
         if a.hasCaption {
             let size = captionPillSize ?? a.estimatedCaptionSize
@@ -277,11 +277,13 @@ extension AnnotationBuilder {
                                 paint: Paint? = nil,
                                 strokeWidth: CGFloat? = nil,
                                 arrowheadScale: CGFloat? = nil,
+                                arrowheadStyle: ArrowheadStyle? = nil,
                                 cornerRadius: CGFloat? = nil,
                                 fillColorHex: String?? = nil,
                                 fill: Paint?? = nil,
                                 caption: String?? = nil,
-                                captionFontSize: CGFloat? = nil) -> Layer {
+                                captionFontSize: CGFloat? = nil,
+                                captionRoundness: CGFloat? = nil) -> Layer {
         guard var a = layer.annotation,
               let start = layer.annotationEndpoint(.start),
               let end = layer.annotationEndpoint(.end) else { return layer }
@@ -291,11 +293,13 @@ extension AnnotationBuilder {
         if let paint { a.paint = paint }
         if let strokeWidth { a.strokeWidth = strokeWidth }
         if let arrowheadScale { a.arrowheadScale = arrowheadScale }
+        if let arrowheadStyle { a.arrowheadStyle = arrowheadStyle }
         if let cornerRadius { a.cornerRadius = cornerRadius }
         if let fillColorHex { a.fillColorHex = fillColorHex }
         if let fill { a.fill = fill }
         if let caption { a.caption = caption }
         if let captionFontSize { a.captionFontSize = captionFontSize }
+        if let captionRoundness { a.captionRoundness = captionRoundness }
         var updated = layer
         updated.content = .annotation(a)
         return updating(updated, start: start, end: end)

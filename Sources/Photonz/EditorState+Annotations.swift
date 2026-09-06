@@ -145,6 +145,38 @@ extension EditorState {
         commitCaptionFontSize(ids: [layerID], size)
     }
 
+    /// Live inspector-slider caption corner (no undo step): square through
+    /// badge to full pill, over every picked arrow at once.
+    func previewCaptionRoundness(ids: [UUID], _ roundness: CGFloat) {
+        guard var doc = document else { return }
+        let targets = captionTargets(ids, in: doc)
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        for id in targets {
+            doc.updateLayer(id: id) { $0 = AnnotationBuilder.restyled($0, captionRoundness: roundness) }
+        }
+        submit(doc)
+    }
+
+    /// Letting go of it: ONE undo step however many arrows it reached, and the
+    /// corner the next arrow's label starts with. The pill keeps its size and
+    /// its spot — only the corner changes — so nothing has to be re-planned.
+    func commitCaptionRoundness(ids: [UUID], _ roundness: CGFloat) {
+        guard let doc = document else { return }
+        let targets = captionTargets(ids, in: doc)
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            for id in targets {
+                document.updateLayer(id: id) {
+                    $0 = AnnotationBuilder.restyled($0, captionRoundness: roundness)
+                }
+            }
+        }
+        annotationStyles.setCaptionRoundness(roundness, forShape: .arrow)
+        saveAnnotationStyles()
+    }
+
     /// The picked layers a caption row may touch: arrows, unlocked.
     private func captionTargets(_ ids: [UUID], in doc: PhotonzDocument) -> [UUID] {
         ids.filter {
@@ -398,6 +430,42 @@ extension EditorState {
         if let shape = styleTargetShape, shape == .arrow {
             annotationStyles.setArrowheadScale(scale, forShape: .arrow)
         }
+        saveAnnotationStyles()
+    }
+
+    /// Arrow-only: what the arrow ENDS IN. Restyles the selected arrow (one
+    /// undo step) and arms the tool, so the next arrow ends the same way.
+    ///
+    /// The frame re-pads on the way through `restyled`, which matters here more
+    /// than for any other setting: a dot hangs past the point the arrow marks,
+    /// so switching to one out of a triangle needs more room than the arrow had.
+    func setAnnotationArrowheadStyle(_ style: ArrowheadStyle) {
+        if let layer = selectedAnnotationLayer, layer.annotation?.shape == .arrow {
+            discardDragPreview()
+            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, arrowheadStyle: style) } }
+        }
+        if styleTargetShape == .arrow {
+            annotationStyles.setArrowheadStyle(style, forShape: .arrow)
+        }
+        saveAnnotationStyles()
+    }
+
+    /// The same pick from the docked inspector, over every picked arrow: one
+    /// undo step, and the ending the next arrow starts with.
+    func setArrowheadStyle(ids: [UUID], _ style: ArrowheadStyle) {
+        guard let doc = document else { return }
+        let targets = annotationRestyleTargets(ids, in: doc)
+            .filter { doc.layer(id: $0)?.annotation?.shape == .arrow }
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            for id in targets {
+                document.updateLayer(id: id) {
+                    $0 = AnnotationBuilder.restyled($0, arrowheadStyle: style)
+                }
+            }
+        }
+        annotationStyles.setArrowheadStyle(style, forShape: .arrow)
         saveAnnotationStyles()
     }
 

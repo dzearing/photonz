@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T14:13:58.308Z",
-  "updated": "2026-09-06T12:16:42.249Z",
+  "updated": "2026-09-06T15:40:20.443Z",
   "deps": [
     "a-captioned-arrow-sits-right-tight-selection-a-p"
   ],
@@ -44,6 +44,19 @@
     {
       "t": "2026-09-06T12:16:42.249Z",
       "note": "seq 90 -> 90"
+    },
+    {
+      "t": "2026-09-06T15:40:20.443Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T15:43:23.668579Z",
+      "note": "Adversarial review before building. (1) Five endings, and only the HEAD end wears one: the tail is where the caption pill hangs from, so a second control for it would fight the label. Shortest version that delivers the value. (2) 'A plain line' is no ornament at all, which makes an arrow that is just a leader line with a label on it: the redline case where you point at something and let the caption do the talking. It does overlap the Line tool, but a Line cannot carry a caption, so it earns its place. (3) The round endings are the trap: a triangle's TIP sits on the point it marks, a dot's CENTRE does, so a dot reaches past the endpoint and the layer frame has to grow or the ink clips. Frame padding and drawn bounds both get head-aware reach. (4) A hollow dot with the shaft running into it looks like a lollipop with a stick through it, so the shaft stops on the ring's near edge; the open head keeps the shaft to the tip, because that is what makes it read as one V. (5) Storing the caption corner in POINTS would be wrong: the same 8pt corner is a badge at 20px text and nearly square at 60px, so a label resize would silently change its shape. It is stored as roundness, 0 square to 1 fully round, which also makes 'unchanged for old arrows' free. (6) Cut from the mock idea: no separate tail ending, no per-end control, no numeric corner field. Two controls, five pictures and one slider."
+    },
+    {
+      "t": "2026-09-06T16:15:24.275886Z",
+      "note": "Built and reviewed on the real app. Five endings (solid head, open head, solid dot, hollow dot, plain line) live on AnnotationContent.arrowheadStyle, decoding to the solid head so older documents are untouched; the caption corner is AnnotationContent.captionRoundness, 0 square to 1 fully round, decoding to 1. Geometry owns the shapes: arrowheadCircle, arrowheadReach, arrowheadBounds, and arrowShaftEnd now takes a style, so the shaft stops inside a solid head, at the tip of an open one and on the near edge of a hollow dot. Frame padding and drawn bounds grew head-aware, which a dot needs because it hangs past the point it marks. Both settings ride in ShapeDefaults so the next arrow inherits them. Rows: Ending (a row of pictures, with the picked one named in words beside its caption) and Label corners (Square through Pill), in the dock and, for the ending, in the arrow tool's own settings; Head Size hides itself for a plain ending. SECOND REVIEW, on the built thing: (a) the dot came out NARROWER than a heavy line, so at 20pt it read as a bulge rather than a mark. Round endings got their own floor, never narrower than twice the shaft, and there is a test for it. (b) The picker floated in the middle of a column of full-width sliders; it now claims the row and sits at its leading edge. (c) A row of pictures gets one tooltip for the whole row, so no single picture can explain itself. The word beside the caption carries the meaning instead, and the per-picture tooltip is filed as each-picture-in-a-row-of-pictures-says-its-own-n. Harness: press now takes an \"across\" fraction, because a slider could only ever be pressed halfway and the square corner was therefore unprovable by a walk. Walk: Scripts/playtest/arrow-endings-walk.json. Audit: queue/audits/2026-09-06-arrow-endings.json with two real screen captures and a rendered contact sheet."
     }
-  ]
+  ],
+  "started": "2026-09-06T15:40:20.443Z"
 }

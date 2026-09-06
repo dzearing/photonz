@@ -1,0 +1,27 @@
+{
+  "id": "each-picture-in-a-row-of-pictures-says-its-own-n",
+  "title": "Each picture in a row of pictures says its own name",
+  "goal": "Rows that offer a choice as small pictures, like the arrow endings and the text alignment buttons, share one tooltip for the whole row, so resting on a picture never tells you what that picture means. Give each picture its own tooltip.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1430,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T16:15:10.084Z",
+  "updated": "2026-09-06T16:15:10.085Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "A SwiftUI Picker(.segmented) takes a single .help for the whole control; a per-segment tooltip needs the underlying NSSegmentedControl (setToolTip(_:forSegment:)) reached through an NSViewRepresentable or a view-tree walk. See Sources/Photonz/ArrowheadStylePicker.swift and the alignment rows in LayersPanel.swift. Raised by the 2026-09-06 arrow endings audit.",
+  "acceptance": [
+    "Resting on any one picture in the arrow Ending row shows a tooltip naming that ending",
+    "The same is true of the text alignment rows",
+    "The row still reads as one control, with no change to its size or spacing"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T16:15:10.085Z",
+      "note": "created (manual)"
+    }
+  ]
+}

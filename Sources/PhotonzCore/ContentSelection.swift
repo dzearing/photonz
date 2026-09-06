@@ -93,6 +93,10 @@ public enum ShapeSettingRow: String, CaseIterable, Hashable, Sendable {
     case caption
     /// How big those words are, once there are some.
     case labelSize
+    /// How round the pill round those words is: square, badge, or full pill.
+    case labelCorners
+    /// What the arrow ENDS IN.
+    case headStyle
     /// An arrowhead's size.
     case headSize
 }
@@ -104,8 +108,14 @@ extension AnnotationContent {
         if shape != .highlight { rows.append(.thickness) }
         if shape == .arrow {
             rows.append(.caption)
-            if hasCaption { rows.append(.labelSize) }
-            rows.append(.headSize)
+            if hasCaption {
+                rows.append(.labelSize)
+                rows.append(.labelCorners)
+            }
+            // Pick the ending first, then size it — and an arrow that ends in
+            // nothing is not offered a size for the nothing.
+            rows.append(.headStyle)
+            if arrowheadStyle != .plain { rows.append(.headSize) }
         }
         return rows
     }

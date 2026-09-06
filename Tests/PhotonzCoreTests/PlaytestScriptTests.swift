@@ -794,7 +794,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "press", "control": "Each side" } ] }
         """)
-        guard case .press(let control, let row, let count, let modifiers) = script.steps[0] else {
+        guard case .press(let control, let row, let count, let modifiers, _) = script.steps[0] else {
             Issue.record("press"); return
         }
         #expect(control == "Each side")
@@ -810,7 +810,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "press", "control": "Fixed", "in": "Width" } ] }
         """)
-        guard case .press(let control, let row, _, _) = script.steps[0] else {
+        guard case .press(let control, let row, _, _, _) = script.steps[0] else {
             Issue.record("press"); return
         }
         #expect(control == "Fixed")
@@ -821,11 +821,46 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "press", "control": "Direction", "count": 2, "modifiers": ["option"] } ] }
         """)
-        guard case .press(_, _, let count, let modifiers) = script.steps[0] else {
+        guard case .press(_, _, let count, let modifiers, _) = script.steps[0] else {
             Issue.record("press"); return
         }
         #expect(count == 2)
         #expect(modifiers == [.option])
+    }
+
+    /// A press lands in the middle of the control, which for a slider means
+    /// the knob goes halfway and nowhere else. `across` is how a walk puts one
+    /// on a value it names.
+    @Test func aPressCanLandPartWayAlongAControl() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "press", "control": "Slider", "in": "Label corners", "across": 0.25 } ] }
+        """)
+        guard case .press(_, _, _, _, let across) = script.steps[0] else {
+            Issue.record("press"); return
+        }
+        #expect(across == 0.25)
+    }
+
+    @Test func aPressWithNoAcrossLandsInTheMiddle() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "press", "control": "Each side" } ] }
+        """)
+        guard case .press(_, _, _, _, let across) = script.steps[0] else {
+            Issue.record("press"); return
+        }
+        #expect(across == nil)
+    }
+
+    /// A fraction outside the control is clamped onto it rather than pressing
+    /// somewhere the control is not.
+    @Test func anImpossibleAcrossIsPulledOntoTheControl() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "press", "control": "Slider", "across": 4 } ] }
+        """)
+        guard case .press(_, _, _, _, let across) = script.steps[0] else {
+            Issue.record("press"); return
+        }
+        #expect(across == 1)
     }
 
     @Test func aPressMustNameTheControl() {

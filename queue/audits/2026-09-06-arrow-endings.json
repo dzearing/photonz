@@ -1,0 +1,33 @@
+{
+  "feature": "An arrow can wear a different ending, and its label a different corner",
+  "epic": "measure-redline",
+  "summary": "An arrow no longer has to end in the same solid triangle: it can end in a fine open head, a solid dot, a hollow dot, or nothing at all, and its caption can be shaped from a full pill through a badge to a square box. Both are remembered for the next arrow you draw.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: the Ending row and the Label corners row are in the Arrow section of the right hand panel, and the Ending row is also in the arrow tool's own settings behind the colour swatch.",
+  "try": [
+    { "do": "Press A for the arrow tool and drag an arrow across the picture." },
+    { "do": "In the Arrow section on the right, click each of the five pictures in the Ending row and watch the arrow change.", "shot": "2026-09-06-arrow-endings-1.png" },
+    { "do": "Pull Thickness up to about 20 pt and click through the five endings again." },
+    { "do": "Type a word into Caption, then pull Label corners from Pill all the way down to Square." },
+    { "do": "Leave it on Square, press Escape, and draw a second arrow with a caption: it starts square too." },
+    { "do": "With no arrow picked, press S to open the arrow tool's own settings and check the Ending row there says what the next arrow will end in.", "shot": "2026-09-06-arrow-endings-2.png" },
+    { "do": "Pick the plain line ending and notice Head Size goes away, because there is no head to size." },
+    { "do": "Open a document you redlined before today and check every arrow still has its solid triangle and its round pill." }
+  ],
+  "evaluate": [
+    "Do the five little pictures tell you what each ending is before you click one, or do you have to try them?",
+    "Is the word next to the caption (Ending  Hollow dot) where you would look for it, or does it read as part of the picker?",
+    "Is the hollow dot the right size next to a heavy line, or does it want to be bigger?",
+    "Does a plain line with a caption feel like a useful redline mark, or does it just feel like a broken arrow?",
+    "Is Label corners the right name for that row, and are Square and Pill the right words at its ends?",
+    "Does the Arrow section put its rows in the order you want them: the label's three rows, and then the head's two?"
+  ],
+  "rough": [
+    "The dot's size had to be given its own floor. Sized like the triangle it came out NARROWER than a heavy line, so at 20 pt it read as a bulge in the line rather than a mark on the point; a dot is now never narrower than twice the shaft. Judge that number in the picture, it is a taste call.",
+    "The corner is stored as a proportion, 0 square to 1 fully round, not as a number of points. That is why making a label bigger keeps its shape, but it also means the readout says a percentage in the middle of the row's travel rather than a measurement. Square and Pill are named at the two ends.",
+    "The arrow tool's own settings offer the Ending but NOT Label corners, because a corner control for a caption that does not exist yet has nothing to show. The corner is still remembered from the last caption you shaped, so the next one gets it.",
+    "The Ending row's five glyphs share one tooltip for the whole row rather than one each: a segmented row of pictures hands the pointer a single help string. The picked ending's name beside the caption is what carries the meaning instead. A per-picture tooltip would be better and is filed as a follow-up.",
+    "The tool's own settings call the size row Arrowhead while the panel calls it Head Size. That disagreement is older than this change and was left alone.",
+    "Screen Recording was granted, so the two pictures here are real screen captures of the probe window. The contact sheet beside them (2026-09-06-arrow-endings-sheet.png) is the document itself, rendered: five endings at 2 pt, the same five at about 20 pt, and three captions at pill, badge and square.",
+    "Setting a slider to a value that is not halfway was impossible for a scripted walk, so the walk could not have proved the square corner. `press` now takes an `across` fraction; that is a change to the playtest harness, not to the app."
+  ]
+}

@@ -1895,6 +1895,12 @@ struct EditorView: View {
         selectedAnnotation?.arrowheadScale ?? editorState.annotationStyles.arrowheadScale(for: editorState.activeTool)
     }
 
+    /// What the picked arrow ends in, or what the next one will.
+    private var editedArrowheadStyle: ArrowheadStyle {
+        selectedAnnotation?.arrowheadStyle
+            ?? editorState.annotationStyles.arrowheadStyle(forShape: .arrow)
+    }
+
     /// Swatch showing the active tool's color; opens the style popover.
     ///
     /// When the tool is holding a SAVED colour the palette mark appears BESIDE
@@ -1962,7 +1968,9 @@ struct EditorView: View {
                     strokeWidthSlider
                 }
                 if showsArrowheadRow {
-                    arrowheadSizeSlider
+                    arrowheadStyleRow
+                    // An arrow that ends in nothing has no head to size.
+                    if editedArrowheadStyle != .plain { arrowheadSizeSlider }
                 }
             }
             .disabled(borderOff)
@@ -2070,6 +2078,24 @@ struct EditorView: View {
                     strokeWidthDraft = nil
                 }
             })
+        }
+        .frame(width: 220)
+    }
+
+    /// The five endings an arrow can wear, as pictures. Sits above the size
+    /// slider because you choose WHAT the arrow ends in before choosing how big
+    /// that is, and because a plain ending takes the size row away entirely.
+    private var arrowheadStyleRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Label("Ending", systemImage: "arrowshape.right").labelStyle(.titleOnly)
+                Spacer()
+                Text(editedArrowheadStyle.title).foregroundStyle(.secondary)
+            }
+            .font(.callout)
+            ArrowheadStylePicker(selection: editedArrowheadStyle, isMixed: false) {
+                editorState.setAnnotationArrowheadStyle($0)
+            }
         }
         .frame(width: 220)
     }

@@ -165,12 +165,68 @@ public enum Geometry {
         min(rawArrowheadLength(strokeWidth: strokeWidth, scale: scale), length * 0.85)
     }
 
+    /// How far a round ending's edge sits from the point it marks. Set so the
+    /// dot carries about the same weight of ink as the triangle it replaces
+    /// (equal area would be ×0.77 of the half-width; ×0.75 is that, rounded to
+    /// a number worth reading).
+    private static let roundHeadRadiusRatio: CGFloat = 0.75
+
+    /// A round ending's radius: driven by `scale` like every other ending, with
+    /// a floor of its OWN. The triangle's floor keeps a heavy shaft from
+    /// out-widening its head; a dot needs a bigger one, because a circle only
+    /// a fraction wider than the line it ends reads as a bulge in the line
+    /// rather than as a mark on the point. A dot is never narrower than twice
+    /// the shaft.
+    private static func roundHeadRadius(strokeWidth: CGFloat, scale: CGFloat) -> CGFloat {
+        max(baseArrowheadHalfWidth * max(scale, 0) * roundHeadRadiusRatio, max(strokeWidth, 0))
+    }
+
+    /// The circle a round ending occupies, centred on the point it marks; nil
+    /// for every ending that is not a circle.
+    ///
+    /// This is the ONE place that says how big a dot is, so the frame that
+    /// makes room for it and the rasterizer that draws it cannot drift.
+    public static func arrowheadCircle(at end: CGPoint,
+                                       strokeWidth: CGFloat, scale: CGFloat = 1,
+                                       style: ArrowheadStyle) -> (center: CGPoint, radius: CGFloat)? {
+        guard style.isRound else { return nil }
+        return (end, roundHeadRadius(strokeWidth: strokeWidth, scale: scale))
+    }
+
+    /// How far an ending's ink reaches from the point it marks, in every
+    /// direction. Frame padding is this, so an ending never clips at the edge
+    /// of its own layer.
+    public static func arrowheadReach(strokeWidth: CGFloat, scale: CGFloat = 1,
+                                      style: ArrowheadStyle) -> CGFloat {
+        let cap = max(strokeWidth, 0) / 2
+        switch style {
+        case .plain:
+            return cap
+        case .triangle:
+            return arrowheadHalfWidth(strokeWidth: strokeWidth, scale: scale)
+        case .open:
+            // An outline hangs half its own stroke outside the path it follows.
+            return arrowheadHalfWidth(strokeWidth: strokeWidth, scale: scale) + cap
+        case .dot:
+            return roundHeadRadius(strokeWidth: strokeWidth, scale: scale)
+        case .hollowDot:
+            return roundHeadRadius(strokeWidth: strokeWidth, scale: scale) + cap
+        }
+    }
+
     /// The filled triangle for an arrow's head: `[tip, leftWing, rightWing]`.
     /// The tip sits exactly at `end`; the wings sit behind it, perpendicular to
     /// the arrow's axis. Sized proportionally to `strokeWidth`, scaled by the
     /// user-facing `scale` (1 = the default, bold proportions).
+    ///
+    /// `style` picks which ending those three points describe: the solid
+    /// triangle fills them, the open head strokes the two lines through the
+    /// tip, and every other ending draws no wings at all (a circle comes from
+    /// `arrowheadCircle`, a plain line from nothing).
     public static func arrowhead(start: CGPoint, end: CGPoint,
-                                 strokeWidth: CGFloat, scale: CGFloat = 1) -> [CGPoint] {
+                                 strokeWidth: CGFloat, scale: CGFloat = 1,
+                                 style: ArrowheadStyle = .triangle) -> [CGPoint] {
+        guard style == .triangle || style == .open else { return [] }
         let dx = end.x - start.x
         let dy = end.y - start.y
         let length = hypot(dx, dy)
@@ -193,17 +249,57 @@ public enum Geometry {
     /// pokes past the sharp arrowhead tip. Sits a little inside the head so the
     /// filled triangle covers the join with no gap. Falls back to `end` for a
     /// zero-length arrow.
+    ///
+    /// Each ending wants a different stop. A solid triangle hides the cap
+    /// inside itself. An open head is one V the line runs INTO, so the shaft
+    /// reaches the tip and the join reads as a single stroke; a solid dot
+    /// covers the cap the same way a triangle does; and a hollow dot has to
+    /// stay hollow, so the shaft stops dead on its near edge rather than
+    /// skewering it.
     public static func arrowShaftEnd(start: CGPoint, end: CGPoint,
-                                     strokeWidth: CGFloat, scale: CGFloat = 1) -> CGPoint {
+                                     strokeWidth: CGFloat, scale: CGFloat = 1,
+                                     style: ArrowheadStyle = .triangle) -> CGPoint {
         let dx = end.x - start.x
         let dy = end.y - start.y
         let length = hypot(dx, dy)
         guard length > 0 else { return end }
-        let headLength = effectiveArrowheadLength(strokeWidth: strokeWidth, scale: scale, length: length)
-        // Stop 70% of the way up the head: well past the base (so the head's
-        // wide body hides the cap) but short of the tip.
-        let back = headLength * 0.7
+        let back: CGFloat
+        switch style {
+        case .open, .plain, .dot:
+            return end
+        case .triangle:
+            // Stop 70% of the way up the head: well past the base (so the head's
+            // wide body hides the cap) but short of the tip.
+            back = effectiveArrowheadLength(strokeWidth: strokeWidth, scale: scale,
+                                            length: length) * 0.7
+        case .hollowDot:
+            back = min(arrowheadCircle(at: end, strokeWidth: strokeWidth,
+                                       scale: scale, style: style)?.radius ?? 0,
+                       length)
+        }
         return CGPoint(x: end.x - dx / length * back, y: end.y - dy / length * back)
+    }
+
+    /// The box an ending's ink actually covers, or nil when it draws none.
+    /// The selection frame round an arrow follows this, so a dot's overshoot
+    /// past the point it marks is inside the box the user sees.
+    public static func arrowheadBounds(start: CGPoint, end: CGPoint,
+                                       strokeWidth: CGFloat, scale: CGFloat = 1,
+                                       style: ArrowheadStyle) -> CGRect? {
+        if let circle = arrowheadCircle(at: end, strokeWidth: strokeWidth,
+                                        scale: scale, style: style) {
+            let reach = circle.radius + (style.isOutlined ? max(strokeWidth, 0) / 2 : 0)
+            return CGRect(x: circle.center.x - reach, y: circle.center.y - reach,
+                          width: 2 * reach, height: 2 * reach)
+        }
+        let wings = arrowhead(start: start, end: end, strokeWidth: strokeWidth,
+                              scale: scale, style: style)
+        guard let first = wings.first else { return nil }
+        var box = CGRect(origin: first, size: .zero)
+        for point in wings.dropFirst() {
+            box = box.union(CGRect(origin: point, size: .zero))
+        }
+        return style.isOutlined ? box.insetBy(dx: -strokeWidth / 2, dy: -strokeWidth / 2) : box
     }
 
     /// The two leader-line segments connecting a zoom callout to its source box.

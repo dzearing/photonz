@@ -216,8 +216,11 @@ extension AnnotationContent {
         case .line:
             (strokeWidth / 2).rounded(.up)
         case .arrow:
+            // A round ending hangs past the point it marks, so this is the
+            // ending's reach in every direction, not just its width.
             max(strokeWidth / 2,
-                Geometry.arrowheadHalfWidth(strokeWidth: strokeWidth, scale: arrowheadScale)).rounded(.up)
+                Geometry.arrowheadReach(strokeWidth: strokeWidth, scale: arrowheadScale,
+                                        style: arrowheadStyle)).rounded(.up)
         case .rectangle, .ellipse, .highlight:
             0
         }

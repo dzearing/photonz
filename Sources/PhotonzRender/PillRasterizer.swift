@@ -65,14 +65,19 @@ enum PillRasterizer {
     /// drawing CoreText directly into the already-flipped context renders the
     /// text upside down. An optional `shadow` sits behind the fill only, so the
     /// border and text stay crisp.
+    /// `cornerRadius` overrides the capsule default, for the arrow caption
+    /// whose corner the user can take from square through badge to full pill.
+    /// Nil keeps the capsule every readout has always been.
     static func draw(_ string: String, at anchor: CGPoint, chipSize: CGSize,
                      fontSize: CGFloat, borderWidth: CGFloat, fill: CGColor,
                      border: CGColor, textColorHex: String, shadow: Shadow? = nil,
+                     cornerRadius: CGFloat? = nil,
                      in context: CGContext) {
         let pixelsPerPoint = Self.pixelsPerPoint(of: context)
         let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
                           width: chipSize.width, height: chipSize.height)
-        let radius = cornerRadius(for: chipSize)
+        let radius = min(max(cornerRadius ?? Self.cornerRadius(for: chipSize), 0),
+                         min(chipSize.width, chipSize.height) / 2)
         let pill = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
         context.saveGState()
         if let shadow {

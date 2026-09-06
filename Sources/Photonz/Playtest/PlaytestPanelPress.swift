@@ -28,6 +28,10 @@ struct PlaytestPressTarget {
     var detail: String
     /// Where to put the pointer, in the coordinates of `window`.
     var point: CGPoint
+    /// The control's own box, in the same coordinates. A press lands in its
+    /// middle; `pressed(across:)` moves along this instead, which is the only
+    /// way to put a slider's knob anywhere but halfway.
+    var box: CGRect = .zero
     /// Nothing happens if this is pressed, and the walk should say so rather
     /// than reporting a pass.
     var isEnabled: Bool
@@ -35,6 +39,15 @@ struct PlaytestPressTarget {
     /// popover — the colour picker above all — is a window of its own sitting
     /// on top of it, and a click meant for it has to be addressed to it.
     var window: NSWindow?
+
+    /// The same target, pressed a fraction of the way along its own width.
+    /// 0 is its left edge, 1 its right; a control with no box keeps its point.
+    func pressed(across fraction: CGFloat) -> PlaytestPressTarget {
+        guard box.width > 0 else { return self }
+        var moved = self
+        moved.point = CGPoint(x: box.minX + box.width * min(max(fraction, 0), 1), y: box.midY)
+        return moved
+    }
 }
 
 enum PlaytestPanelPress {
@@ -60,6 +73,7 @@ enum PlaytestPanelPress {
                 return PlaytestPressTarget(
                     name: label, detail: detail,
                     point: CGPoint(x: centre(ofSegment: index, in: control, box: box), y: box.midY),
+                    box: box,
                     isEnabled: control.isEnabled && control.isEnabled(forSegment: index),
                     window: control.window)
             }

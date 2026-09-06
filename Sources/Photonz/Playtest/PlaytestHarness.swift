@@ -790,8 +790,9 @@ private final class Run {
                     + " with a \(click) click",
                  state: describe())
 
-        case .press(let control, let row, let count, let modifiers):
-            try await pressControl(control, in: row, count: count, modifiers: modifiers, number: number)
+        case .press(let control, let row, let count, let modifiers, let across):
+            try await pressControl(control, in: row, count: count, modifiers: modifiers,
+                                   across: across, number: number)
 
         case .dragSection(let section, let past, let stop, let hold, let cancel):
             try await dragSection(section, past: past, stop: stop, hold: hold,
@@ -1316,8 +1317,14 @@ private final class Run {
     /// left the release nowhere to be found and stopped for good (tried
     /// 2026-09-04). Posting both first means the loop always finds its way out.
     private func pressControl(_ name: String, in row: String?, count: Int,
-                              modifiers: [PlaytestModifier], number: Int) async throws {
-        let target = try pressTarget(name, in: row)
+                              modifiers: [PlaytestModifier], across: CGFloat?,
+                              number: Int) async throws {
+        var target = try pressTarget(name, in: row)
+        // A press lands in the middle of the control, which for a slider means
+        // the knob goes halfway and nowhere else. `across` moves the press
+        // along the control's own width, so a walk can put a slider on a value
+        // it names rather than only on the one in the middle.
+        if let across { target = target.pressed(across: across) }
         guard target.isEnabled else {
             throw Failure(description: "the control \"\(target.name)\" is dimmed, so pressing it would do nothing")
         }
@@ -1351,9 +1358,10 @@ private final class Run {
         // changed to be laid out before the next step reads it.
         await sleep(0.35)
         let place = target.detail.isEmpty ? "" : " in \(target.detail)"
+        let along = across.map { " at \(Int(($0 * 100).rounded()))% across it" } ?? ""
         note(number, "press",
              "\"\(target.name)\"\(place) at window \(short(target.point)), "
-             + "\(count == 1 ? "one click" : "\(count) clicks")"
+             + "\(count == 1 ? "one click" : "\(count) clicks")" + along
              + (modifiers.isEmpty ? "" : " with \(modifiers.map(\.rawValue).joined(separator: "+"))")
              + "; " + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report,
              state: describe())
@@ -1613,7 +1621,7 @@ private final class Run {
             }
             return PlaytestPressTarget(name: target.name, detail: pieces.joined(separator: ", "),
                                        point: CGPoint(x: frame.midX, y: frame.midY),
-                                       isEnabled: true, window: window)
+                                       box: frame, isEnabled: true, window: window)
         }
         return marked + PlaytestPanelPress.segments(in: content, named: fields)
     }

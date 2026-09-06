@@ -74,21 +74,45 @@ public enum AnnotationRasterizer {
             strokeInk(path)
 
         case .arrow:
-            let head = Geometry.arrowhead(start: annotation.start, end: annotation.end,
-                                          strokeWidth: annotation.strokeWidth,
-                                          scale: annotation.arrowheadScale)
-            // Stop the shaft inside the head so its round cap can't poke past the tip.
+            let style = annotation.arrowheadStyle
+            // Where the shaft stops depends on what it runs into: inside a
+            // solid head, at the tip of an open one, on the near edge of a
+            // hollow dot so the dot stays hollow.
             let shaftEnd = Geometry.arrowShaftEnd(start: annotation.start, end: annotation.end,
                                                   strokeWidth: annotation.strokeWidth,
-                                                  scale: annotation.arrowheadScale)
+                                                  scale: annotation.arrowheadScale, style: style)
             let shaft = CGMutablePath()
             shaft.move(to: annotation.start)
             shaft.addLine(to: shaftEnd)
             strokeInk(shaft)
-            let tip = CGMutablePath()
-            tip.addLines(between: head)
-            tip.closeSubpath()
-            fillInk(tip)
+            if let circle = Geometry.arrowheadCircle(at: annotation.end,
+                                                     strokeWidth: annotation.strokeWidth,
+                                                     scale: annotation.arrowheadScale, style: style) {
+                let dot = CGPath(ellipseIn: CGRect(x: circle.center.x - circle.radius,
+                                                   y: circle.center.y - circle.radius,
+                                                   width: 2 * circle.radius,
+                                                   height: 2 * circle.radius), transform: nil)
+                if style == .dot { fillInk(dot) } else { strokeInk(dot) }
+            } else {
+                let head = Geometry.arrowhead(start: annotation.start, end: annotation.end,
+                                              strokeWidth: annotation.strokeWidth,
+                                              scale: annotation.arrowheadScale, style: style)
+                if head.count == 3 {
+                    let tip = CGMutablePath()
+                    if style == .open {
+                        // Two fine strokes through the tip, not a filled body:
+                        // wing, tip, wing, left open at the back.
+                        tip.move(to: head[1])
+                        tip.addLine(to: head[0])
+                        tip.addLine(to: head[2])
+                        strokeInk(tip)
+                    } else {
+                        tip.addLines(between: head)
+                        tip.closeSubpath()
+                        fillInk(tip)
+                    }
+                }
+            }
             if annotation.hasCaption {
                 drawCaption(annotation, border: color, in: context)
             }
@@ -166,7 +190,9 @@ public enum AnnotationRasterizer {
                             borderWidth: annotation.captionBorderWidth,
                             fill: fill, border: border,
                             textColorHex: AnnotationContent.captionTextColorHex,
-                            shadow: PillRasterizer.Shadow(), in: context)
+                            shadow: PillRasterizer.Shadow(),
+                            cornerRadius: annotation.captionCornerRadius(pillHeight: chip.height),
+                            in: context)
         return context.makeImage().map { ($0, size) }
     }
 
@@ -194,6 +220,8 @@ public enum AnnotationRasterizer {
                             borderWidth: annotation.captionBorderWidth,
                             fill: fill, border: border,
                             textColorHex: AnnotationContent.captionTextColorHex,
-                            shadow: PillRasterizer.Shadow(), in: context)
+                            shadow: PillRasterizer.Shadow(),
+                            cornerRadius: annotation.captionCornerRadius(pillHeight: chipSize.height),
+                            in: context)
     }
 }
