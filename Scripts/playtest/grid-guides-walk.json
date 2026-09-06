@@ -1,0 +1,352 @@
+{
+  "out": "/tmp/photonz-playtest/grid-guides-walk",
+  "setup": {
+    "forget": [
+      "grid",
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1560,
+      "height": 940
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "showGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-bar",
+      "note": "grid on: the tool bar capsule reads 4 -> 32 pt, carries the cell slider and an Adjust Grid button"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-toolbar"
+    },
+    {
+      "do": "press",
+      "control": "Adjust Grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-mode",
+      "note": "in the mode: readout, cell slider, Clear Guides (dimmed), Cancel, Done, hint line"
+    },
+    {
+      "do": "snapshot",
+      "name": "2b-cell-before"
+    },
+    {
+      "do": "press",
+      "control": "Cell",
+      "across": 0.62
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2c-cell",
+      "note": "cell slider dragged a quarter along: the readout beside it should have moved off 4 -> 32"
+    },
+    {
+      "do": "snapshot",
+      "name": "2c-cell-coarser"
+    },
+    {
+      "do": "press",
+      "control": "Cell",
+      "across": 0.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2c-cell",
+      "note": "cell slider moved to 16: the readout should now say 4 -> 16 pt and the grid should be drawing 16s"
+    },
+    {
+      "do": "snapshot",
+      "name": "2c-cell-16"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "2-mode"
+    },
+    {
+      "do": "move",
+      "at": [
+        416,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-hover-vertical",
+      "note": "pointer nearest a vertical line: expect that line lit"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-hover"
+    },
+    {
+      "do": "click",
+      "at": [
+        416,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-pinned-vertical",
+      "note": "expect one guide, x416, held"
+    },
+    {
+      "do": "move",
+      "at": [
+        500,
+        288
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        500,
+        288
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-pinned-horizontal",
+      "note": "pointer nearest a HORIZONTAL line: expect a second guide y288"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-two-guides"
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        288
+      ],
+      "to": [
+        500,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-dragged",
+      "note": "picked the horizontal guide up and slid it down: expect y416 and still exactly two guides"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-dragged"
+    },
+    {
+      "do": "key",
+      "key": "backspace"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "7-deleted",
+      "note": "backspace: the held guide goes, the other stays"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "8-escaped",
+      "note": "escape put everything back: expect NO guides at all and no undo step spent"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-escaped"
+    },
+    {
+      "do": "action",
+      "action": "adjustGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        288,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        608,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "9-margin",
+      "note": "two vertical guides marking a space: x288 and x608"
+    },
+    {
+      "do": "press",
+      "control": "Done"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "10-kept",
+      "note": "out of the mode, both guides drawn, one undo step spent"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-kept"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        400
+      ],
+      "to": [
+        600,
+        520
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "11-snapped",
+      "note": "a rectangle dragged out roughly between the guides: expect it to have caught them, 288 to 608"
+    },
+    {
+      "do": "snapshot",
+      "name": "11-snapped"
+    },
+    {
+      "do": "action",
+      "action": "hideGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "12-grid-off",
+      "note": "grid off: the guides are still there"
+    },
+    {
+      "do": "snapshot",
+      "name": "12-grid-off"
+    },
+    {
+      "do": "action",
+      "action": "saveLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "13-closed",
+      "note": "document closed"
+    }
+  ]
+}

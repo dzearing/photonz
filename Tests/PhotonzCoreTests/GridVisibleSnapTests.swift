@@ -127,13 +127,15 @@ struct GridVisibleSnapTests {
     @Test func aSnappedEdgeLandsOnALineTheCanvasDraws() {
         for zoom in [CGFloat(0.5), 1, 2, 4] {
             for origin in [CGFloat(0), 24, -13.5] {
-                var g = settings(4)
-                g.origin = CGPoint(x: origin, y: origin)
+                let g = settings(4)
+                // The zero point lives on the DOCUMENT now, so it arrives at
+                // the snapping call from there rather than off the settings.
+                let zero = CGPoint(x: origin, y: origin)
                 guard let step = g.snapSpacing(atZoom: zoom) else { continue }
                 let out = Snapping.snapResizedFrame(CGRect(x: 200, y: 300, width: 137.31, height: 100),
                                                     handle: .right,
                                                     canvas: CGSize(width: 4000, height: 3000),
-                                                    gridSpacing: step, gridOrigin: g.origin,
+                                                    gridSpacing: step, gridOrigin: zero,
                                                     zoom: zoom)
                 let drawn = CanvasGridLevels.lines(spacing: step, from: out.frame.maxX - step,
                                                    to: out.frame.maxX + step, origin: origin)

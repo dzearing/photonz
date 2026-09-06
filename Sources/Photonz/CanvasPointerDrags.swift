@@ -14,14 +14,15 @@ extension CanvasNSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let viewport else { return }
-        // Placing the grid's zero point owns the whole canvas: a press moves
-        // the two markers to the pointer and nothing else on the canvas can be
-        // picked up, selected or edited by accident.
-        if gridOriginAdjust != nil {
+        // Adjusting the grid owns the whole canvas: nothing on it can be picked
+        // up, selected or edited by accident. A press means one of three
+        // things, in this order — grab the zero point by its knob or its two
+        // markers, pick up a guide already pinned under the pointer, or pin a
+        // new guide on the line the pointer is lighting.
+        if gridAdjust != nil {
             window?.makeFirstResponder(self)
-            gridOriginDragging = true
-            moveGridOrigin(toViewPoint: convert(event.locationInWindow, from: nil),
-                           freeing: event.modifierFlags.contains(.command))
+            beginGridAdjustPress(at: convert(event.locationInWindow, from: nil),
+                                 freeing: event.modifierFlags.contains(.command))
             return
         }
         // Every press starts a drag that is standing on nothing and has not
@@ -507,6 +508,10 @@ extension CanvasNSView {
                            freeing: event.modifierFlags.contains(.command))
             return
         }
+        if guideDragging {
+            dragHeldGuide(toViewPoint: convert(event.locationInWindow, from: nil))
+            return
+        }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
         if var drag = cropDrag {
             let bounds = cropBounds ?? CGRect(origin: .zero, size: viewport.documentSize)
@@ -624,6 +629,7 @@ extension CanvasNSView {
                                         gridSpacing: snapping ? canvasSnapSpacing : nil,
                                         gridOrigin: canvasSnapOrigin,
                                         gridAxes: canvasSnapAxes,
+                                        guides: canvasSnapGuides,
                                         holding: snapping ? held : .none)
             // The lit grid line counts as a line the drag is standing on, so it
             // holds through a wobble exactly as a guide does.
@@ -660,6 +666,7 @@ extension CanvasNSView {
                                                             gridSpacing: canvasSnapSpacing,
                                                             gridOrigin: canvasSnapOrigin,
                                                             gridAxes: canvasSnapAxes,
+                                                            guides: canvasSnapGuides,
                                                             zoom: viewport.zoom,
                                                             holding: held)
                 }
@@ -708,6 +715,7 @@ extension CanvasNSView {
                                                             gridSpacing: canvasSnapSpacing,
                                                             gridOrigin: canvasSnapOrigin,
                                                             gridAxes: canvasSnapAxes,
+                                                            guides: canvasSnapGuides,
                                                             zoom: viewport.zoom,
                                                             holding: held)
                 }
@@ -801,6 +809,11 @@ extension CanvasNSView {
             gridOriginDragging = false
             snapHold = .none
             snapGuide = nil
+            refreshOverlays()
+            return
+        }
+        if guideDragging {
+            guideDragging = false
             refreshOverlays()
             return
         }

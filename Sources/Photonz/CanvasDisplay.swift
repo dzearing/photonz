@@ -35,19 +35,27 @@ extension CanvasNSView {
                edgeMap: EdgeMap, lumaField: LumaField,
                isCanvasSelected: Bool,
                canvasGrid: CanvasGridSettings?,
-               gridOriginAdjust: CGPoint?) {
+               canvasGridOrigin: CGPoint,
+               canvasGuides: [CanvasGuide],
+               selectedGuideID: UUID?,
+               gridAdjust: CGPoint?) {
         self.canvasGrid = canvasGrid
-        let wasPlacingGridOrigin = self.gridOriginAdjust != nil
-        if self.gridOriginAdjust != gridOriginAdjust {
-            self.gridOriginAdjust = gridOriginAdjust
+        self.canvasGridOrigin = canvasGridOrigin
+        self.canvasGuides = canvasGuides
+        self.selectedGuideID = selectedGuideID
+        let wasAdjustingGrid = self.gridAdjust != nil
+        if self.gridAdjust != gridAdjust {
+            self.gridAdjust = gridAdjust
             // Leaving the mode drops whatever the markers had caught, so a
-            // stale yellow line never outlives the placement.
-            if gridOriginAdjust == nil {
+            // stale yellow line never outlives the adjustment.
+            if gridAdjust == nil {
                 gridOriginDragging = false
+                guideDragging = false
+                guideHighlight = nil
                 snapHold = .none
                 snapGuide = nil
                 applyGrabCursor(nil, force: true)
-            } else if !wasPlacingGridOrigin {
+            } else if !wasAdjustingGrid {
                 // The mode is usually entered from a menu or a button in the
                 // panel, which leaves the keyboard there. The arrow keys are
                 // half the feature, so the canvas takes it back rather than
@@ -644,7 +652,7 @@ extension CanvasNSView {
         // the usual chrome has nothing to draw, but the two markers still catch
         // edges and the yellow line has to say which one — otherwise the pull
         // happens invisibly and reads as the markers drifting.
-        if gridOriginAdjust != nil {
+        if gridAdjust != nil {
             layerOutlineLayer.isHidden = true
             handlesLayer.isHidden = true
             rotateKnobLayer.isHidden = true

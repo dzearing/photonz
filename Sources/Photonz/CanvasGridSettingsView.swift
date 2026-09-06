@@ -22,6 +22,10 @@ import SwiftUI
 /// When the zoom has coarsened the grid, the Spacing row carries a second line
 /// saying what is actually being drawn. That is the other half of the chip's
 /// "4 → 32 pt": the chip says both numbers exist, and this says why.
+/// What is NOT here: the cell the grid works to, and where it starts. Both
+/// moved to the tool bar, where the lines they shape are in front of you while
+/// you move them. See `EditorView.gridChip`.
+///
 /// - **From where the grid is switched on.** View ▸ Grid Settings, directly
 ///   under Show Grid, opens the same popover — and switches the grid on first
 ///   if it was off, because nobody tunes a grid they cannot see.
@@ -89,20 +93,13 @@ struct CanvasGridControls: View {
                 numberRow(CanvasGridCopy.majorEvery, caption: CanvasGridCopy.majorEveryCaption,
                           suffix: "lines", value: Double(grid.majorEvery),
                           set: { editorState.setCanvasGridMajorEvery(Int($0.rounded())) })
-                numberRow(CanvasGridCopy.minimumCell, caption: CanvasGridCopy.minimumCellCaption,
-                          suffix: "pt", value: Double(grid.minimumCell),
-                          set: { editorState.setGridMinimumCell(CGFloat($0)) })
-                row(CanvasGridCopy.origin, caption: CanvasGridCopy.originCaption) {
-                    // The way into the placing mode from the place a person is
-                    // already standing when they care where the grid starts.
-                    // Also on the View menu.
-                    Button(CanvasGridOriginLabel.text(grid.origin)) {
-                        editorState.beginGridOriginPlacement()
-                    }
-                    .controlSize(.small)
-                    .playtestControl("Set grid origin",
-                                     detail: "Grid settings, \(CanvasGridOriginLabel.text(grid.origin))")
-                }
+                // Two rows are deliberately NOT here any more. The cell the
+                // grid works to has a slider on the tool bar, where you can
+                // watch the lines change as you move it, and where the grid
+                // starts is placed by taking the canvas over rather than by
+                // typing two numbers at a picture you cannot see while you
+                // type them. Both are one press away on the bar; what is left
+                // in here is only what the bar does not carry.
                 Text(CanvasGridCopy.footnote)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)

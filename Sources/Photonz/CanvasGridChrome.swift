@@ -42,6 +42,7 @@ extension CanvasNSView {
 
     func refreshCanvasGrid() {
         refreshGridOriginMarkers()
+        refreshGuideChrome()
         guard canvasGridEnabled, let settings = canvasGrid,
               let viewport, viewport.zoom > 0 else {
             hideCanvasGrid()
@@ -82,7 +83,7 @@ extension CanvasNSView {
             let path = CGMutablePath()
             for x in CanvasGridLevels.lines(spacing: level.spacing,
                                             from: topLeft.x, to: bottomRight.x,
-                                            origin: settings.origin.x) {
+                                            origin: canvasGridOrigin.x) {
                 // Whole view points keep a one point line on whole device
                 // pixels, which is the difference between a hairline and a
                 // grey smear.
@@ -93,7 +94,7 @@ extension CanvasNSView {
             if settings.axes.drawsRows {
                 for y in CanvasGridLevels.lines(spacing: level.spacing,
                                                 from: topLeft.y, to: bottomRight.y,
-                                                origin: settings.origin.y) {
+                                                origin: canvasGridOrigin.y) {
                     let vy = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: y)).y.rounded()
                     path.move(to: CGPoint(x: visible.minX, y: vy))
                     path.addLine(to: CGPoint(x: visible.maxX, y: vy))
@@ -112,7 +113,7 @@ extension CanvasNSView {
     /// a faint wash of the same colour, so the pair reads as the thing you are
     /// holding rather than as two lines of it.
     private func refreshGridOriginMarkers() {
-        guard canvasGridEnabled, let origin = gridOriginAdjust, let viewport,
+        guard canvasGridEnabled, let origin = gridAdjust, let viewport,
               bounds.width > 0.5, bounds.height > 0.5 else {
             gridOriginLayer.path = nil
             gridOriginLayer.isHidden = true

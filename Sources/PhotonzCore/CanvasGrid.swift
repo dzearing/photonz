@@ -21,7 +21,10 @@ public enum CanvasGridAxes: String, Codable, Sendable, CaseIterable {
 /// The grid you build against, drawn over the whole canvas.
 ///
 /// It is a **view preference**, not document content: it is remembered between
-/// launches, it is the same in every window, and no document carries it. It is
+/// launches, it is the same in every window, and no document carries it.
+/// Two things that USED to sit here no longer do, because they describe one
+/// picture rather than how you like to work: where the grid counts from, and
+/// the guides pinned onto it. Both live on `PhotonzDocument`. It is
 /// also drawn by the canvas rather than the renderer, so it never reaches an
 /// export, a copied picture or a redline sheet.
 ///
@@ -63,12 +66,6 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     /// measuring. It is also the step of the level-of-detail ladder, so the
     /// strong lines are never knocked out of step by a fade.
     public var majorEvery: Int
-    /// Where the grid's zero point sits, in document points. Every line, and
-    /// every pull, is measured from here rather than from the corner of the
-    /// picture: a screenshot whose content starts twenty four points in can
-    /// have the grid lined up with what is already in it. The corner is the
-    /// default, so a grid nobody has moved is where it has always been.
-    public var origin: CGPoint
     /// The finest cell the grid may DRAW, in document points, however far you
     /// zoom in. Because a drag pulls to the lines that are actually drawn, it
     /// is also the finest cell anything can land on: asking to look at eight
@@ -80,14 +77,12 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
                 axes: CanvasGridAxes = .columnsAndRows,
                 spacing: CGFloat = defaultSpacing,
                 majorEvery: Int = defaultMajorEvery,
-                origin: CGPoint = .zero,
                 minimumCell: CGFloat = noMinimumCell) {
         self.isVisible = isVisible
         self.snapsToGrid = snapsToGrid
         self.axes = axes
         self.spacing = Self.clamped(spacing: spacing)
         self.majorEvery = Self.clamped(majorEvery: majorEvery)
-        self.origin = Self.clamped(origin: origin)
         self.minimumCell = Self.clamped(minimumCell: minimumCell)
     }
 
@@ -102,6 +97,8 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
 
     /// A zero point that is not a number is no zero point: the corner is a
     /// grid you can still see, and a NaN is a canvas with nothing drawn on it.
+    /// The zero point itself lives on the DOCUMENT (`PhotonzDocument.gridOrigin`);
+    /// this stays here because it is the grid's own rule about its own number.
     public static func clamped(origin: CGPoint) -> CGPoint {
         guard origin.x.isFinite, origin.y.isFinite else { return .zero }
         return origin
@@ -129,8 +126,7 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     // a field existed still reads back, and a number edited by hand into
     // something undrawable is clamped rather than obeyed.
     private enum CodingKeys: String, CodingKey {
-        case isVisible, snapsToGrid, axes, spacing, majorEvery
-        case originX, originY, minimumCell
+        case isVisible, snapsToGrid, axes, spacing, majorEvery, minimumCell
     }
 
     public init(from decoder: Decoder) throws {
@@ -140,8 +136,6 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
                   axes: try c.decodeIfPresent(CanvasGridAxes.self, forKey: .axes) ?? .columnsAndRows,
                   spacing: try c.decodeIfPresent(CGFloat.self, forKey: .spacing) ?? Self.defaultSpacing,
                   majorEvery: try c.decodeIfPresent(Int.self, forKey: .majorEvery) ?? Self.defaultMajorEvery,
-                  origin: CGPoint(x: try c.decodeIfPresent(CGFloat.self, forKey: .originX) ?? 0,
-                                  y: try c.decodeIfPresent(CGFloat.self, forKey: .originY) ?? 0),
                   minimumCell: try c.decodeIfPresent(CGFloat.self, forKey: .minimumCell)
                       ?? Self.noMinimumCell)
     }
@@ -153,8 +147,6 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
         try c.encode(axes, forKey: .axes)
         try c.encode(spacing, forKey: .spacing)
         try c.encode(majorEvery, forKey: .majorEvery)
-        try c.encode(origin.x, forKey: .originX)
-        try c.encode(origin.y, forKey: .originY)
         try c.encode(minimumCell, forKey: .minimumCell)
     }
 
@@ -392,56 +384,148 @@ public enum CanvasGridLevels {
     }
 }
 
-/// Placing the grid's zero point: what the canvas is holding while two lines,
-/// one across and one down, are being moved about to say where the grid starts.
+/// Adjusting the grid: what the canvas is holding while the zero point is being
+/// placed and guides are being pinned onto it.
 ///
-/// It is a snapshot and a working copy. The snapshot is the WHOLE grid as it
-/// was on the way in, so leaving without keeping it puts back everything the
-/// mode touched — including the fact that placing switches the grid on, because
-/// nobody adjusts a grid they cannot see. The working copy is the two things
-/// being adjusted, the zero point and the smallest cell, and `live` is what the
-/// canvas draws while you move them, so the grid updates under the lines rather
-/// than after them.
+/// It is a snapshot and a working copy. The snapshot is everything the mode can
+/// touch as it was on the way in — the whole grid, the zero point, the guides —
+/// so leaving without keeping it puts all of it back, including the fact that
+/// adjusting switches the grid on, because nobody adjusts a grid they cannot
+/// see. The working copy is the four things being adjusted, and `liveSettings`
+/// with `origin` is what the canvas draws meanwhile, so the grid updates under
+/// the lines rather than after them.
 ///
-/// The pull is not here: the two lines catch layer edges and canvas edges
+/// Two of those four now belong to the DOCUMENT rather than to the app, so the
+/// session carries them separately from the settings: `committedOrigin` and
+/// `committedGuides` are written into the document as ONE undoable edit when
+/// you accept, which is what makes Clear Guides one undo step rather than one
+/// per guide.
+///
+/// The pull is not here: the two markers catch layer edges and canvas edges
 /// through `Snapping.snapFrameOrigin` with no box around them, which is the
 /// same call a dragged layer makes, so they behave like everything else that
 /// moves on this canvas.
-public struct CanvasGridOriginAdjustment: Equatable, Sendable {
+public struct CanvasGridAdjustment: Equatable, Sendable {
     /// The grid exactly as it was on the way in.
-    public let original: CanvasGridSettings
-    /// Where the two lines are now, in document points.
-    public var origin: CGPoint
-    /// The smallest cell the slider is currently sitting on.
-    public var minimumCell: CGFloat
+    public let originalSettings: CanvasGridSettings
+    /// The document's zero point on the way in.
+    public let originalOrigin: CGPoint
+    /// The document's guides on the way in.
+    public let originalGuides: [CanvasGuide]
 
-    public init(settings: CanvasGridSettings) {
-        original = settings
-        origin = settings.origin
+    /// Where the two markers are now, in document points.
+    public var origin: CGPoint
+    /// The cell the slider is currently sitting on.
+    public var minimumCell: CGFloat
+    /// The guides as they stand right now.
+    public private(set) var guides: [CanvasGuide]
+    /// The guide the mode is holding: the one a drag moves and backspace
+    /// deletes. Nil until something is pinned or picked up.
+    public private(set) var selectedGuideID: UUID?
+
+    public init(settings: CanvasGridSettings, origin: CGPoint, guides: [CanvasGuide]) {
+        originalSettings = settings
+        originalOrigin = CanvasGridSettings.clamped(origin: origin)
+        originalGuides = guides
+        self.origin = CanvasGridSettings.clamped(origin: origin)
         minimumCell = settings.minimumCell
+        self.guides = guides
+        selectedGuideID = nil
+    }
+
+    public var hasGuides: Bool { !guides.isEmpty }
+
+    public var selectedGuide: CanvasGuide? {
+        guides.first { $0.id == selectedGuideID }
     }
 
     /// What the canvas draws right now: the grid you came in with, with the
-    /// zero point and the smallest cell you are holding, and switched on.
-    public var live: CanvasGridSettings {
-        var settings = original
+    /// cell you are holding, and switched on.
+    public var liveSettings: CanvasGridSettings {
+        var settings = originalSettings
         settings.isVisible = true
-        settings.origin = CanvasGridSettings.clamped(origin: origin)
         settings.minimumCell = CanvasGridSettings.clamped(minimumCell: minimumCell)
         return settings
     }
 
-    /// What to keep when you accept: the live grid, unchanged.
-    public var committed: CanvasGridSettings { live }
+    /// What to keep when you accept.
+    public var committedSettings: CanvasGridSettings { liveSettings }
+    public var committedOrigin: CGPoint { CanvasGridSettings.clamped(origin: origin) }
+    public var committedGuides: [CanvasGuide] { guides }
 
     /// What to put back when you leave without keeping it.
-    public var cancelled: CanvasGridSettings { original }
+    public var cancelledSettings: CanvasGridSettings { originalSettings }
+    public var cancelledOrigin: CGPoint { originalOrigin }
+    public var cancelledGuides: [CanvasGuide] { originalGuides }
+
+    /// Pins the line under the pointer, and holds whatever is now on it.
+    /// Clicking a line that already carries a guide picks that one up rather
+    /// than stacking a second guide on top of it.
+    public mutating func pin(_ line: CanvasGuideLine) {
+        let pinned = CanvasGuides.pinning(guides, line)
+        guides = pinned.guides
+        selectedGuideID = pinned.id
+    }
+
+    public mutating func select(_ id: UUID?) {
+        selectedGuideID = id.flatMap { candidate in
+            guides.contains { $0.id == candidate } ? candidate : nil
+        }
+    }
+
+    public mutating func moveSelectedGuide(to line: CanvasGuideLine) {
+        guard let selectedGuideID else { return }
+        guides = CanvasGuides.moving(guides, id: selectedGuideID, to: line)
+    }
+
+    public mutating func deleteSelectedGuide() {
+        guard let selectedGuideID else { return }
+        guides = CanvasGuides.removing(guides, id: selectedGuideID)
+        self.selectedGuideID = nil
+    }
+
+    public mutating func clearGuides() {
+        guides = []
+        selectedGuideID = nil
+    }
 
     /// One arrow-key press: the same step a nudged layer travels, so the keys
     /// mean here what they already mean everywhere else on the canvas.
     public mutating func nudge(_ delta: CGVector) {
         guard delta.dx.isFinite, delta.dy.isFinite else { return }
         origin = CGPoint(x: origin.x + delta.dx, y: origin.y + delta.dy)
+    }
+}
+
+/// The cells the slider stops on: the sizes real UI is actually built in.
+///
+/// A continuous one to sixty four slider can be left on fourteen, and a
+/// fourteen point cell is not a cell anybody wants — it is also the one that
+/// makes the grid look broken, because fourteen points on screen is too close
+/// together to aim at, so the lines drawn are fourteens while a drag lands on
+/// hundred and twelves. Stopping on the numbers a person would type removes
+/// both problems at once, and one is still the first stop, which means no floor
+/// at all.
+public enum CanvasGridCellStops {
+    public static let all: [CGFloat] = [1, 2, 4, 8, 12, 16, 24, 32, 48, 64]
+
+    /// Where a cell sits on the slider. A cell set some other way — typed into
+    /// the settings, or restored from before the stops existed — lands on the
+    /// nearest stop rather than knocking the knob off the track. A number
+    /// exactly between two stops goes to the COARSER one, because a coarser
+    /// cell is always drawable and a finer one may not be.
+    public static func index(of cell: CGFloat) -> Int {
+        guard cell.isFinite else { return 0 }
+        var best = 0
+        for (index, stop) in all.enumerated()
+        where abs(stop - cell) <= abs(all[best] - cell) {
+            best = index
+        }
+        return best
+    }
+
+    public static func cell(at index: Int) -> CGFloat {
+        all[min(max(index, 0), all.count - 1)]
     }
 }
 
@@ -500,9 +584,31 @@ public enum CanvasGridCopy {
         "The finest cell the grid will ever draw, however far you zoom in. "
         + "Set it to 8 and you are working in eights."
 
-    public static let origin = "Starts at"
-    public static let originCaption =
-        "Where the grid counts from. Move it to line the grid up with what is already in the picture."
+    /// The mode's own readout. Not a panel row any more: where the grid starts
+    /// is set by taking the canvas over, so the number lives beside the two
+    /// markers that are placing it.
+    public static let origin = "Grid starts at"
+
+    /// The button on the tool bar that takes the canvas over, and the same
+    /// thing on the View menu.
+    public static let adjust = "Adjust Grid"
+    public static let adjustMenuItem = "Adjust Grid\u{2026}"
+    public static let adjustHelp =
+        "Place where the grid starts, and pin guides onto it."
+
+    /// The one line inside the mode. Everything the mode does, in the order a
+    /// person meets it, because none of it is guessable from an empty canvas
+    /// with two accent lines on it.
+    public static let adjustHint =
+        "Click a line to pin a guide. Drag the dot to move where the grid starts."
+
+    public static let clearGuides = "Clear Guides"
+    public static let clearGuidesHelp = "Take every pinned guide off this picture."
+
+    /// The cell the slider drives, on the tool bar and in the mode.
+    public static let cell = "Cell"
+    public static let cellHelp =
+        "The cell you are working to. The grid never draws finer than this, so a drag lands on it."
 
     /// The one line under the controls, in both places they are drawn.
     public static let footnote =
@@ -530,6 +636,6 @@ public enum CanvasGridCopy {
 
     /// Every caption, for a test that holds them all to the same standard.
     public static let captions = [gridCaption, snapCaption, linesCaption, spacingCaption,
-                                  majorEveryCaption, minimumCellCaption, originCaption, footnote]
+                                  majorEveryCaption, minimumCellCaption, footnote]
 }
 

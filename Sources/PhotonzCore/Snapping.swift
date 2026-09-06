@@ -117,6 +117,7 @@ public enum Snapping {
                                        gridSpacing: CGFloat? = nil,
                                        gridOrigin: CGPoint = .zero,
                                        gridAxes: CanvasGridAxes = .columnsAndRows,
+                                       guides: [CanvasGuide] = [],
                                        zoom: CGFloat, screenTolerance: CGFloat = 8,
                                        holding held: SnapHold = .none) -> Result {
         let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
@@ -127,11 +128,13 @@ public enum Snapping {
                          crossOrigin: proposed.y, crossLength: size.height,
                          peers: peers.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) }
                              + columnBands.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) },
+                         guideLines: CanvasGuides.positions(guides, axis: .vertical),
                          gridSpacing: gridSpacing, gridOrigin: gridOrigin.x,
                          tolerance: tolerance, held: held.x)
         let y = snapAxis(origin: proposed.y, length: size.height, canvasLength: canvas.height,
                          crossOrigin: proposed.x, crossLength: size.width,
                          peers: peers.map { Peer(along: ($0.minY, $0.maxY), cross: ($0.minX, $0.maxX)) },
+                         guideLines: CanvasGuides.positions(guides, axis: .horizontal),
                          gridSpacing: gridRows, gridOrigin: gridOrigin.y,
                          tolerance: tolerance, held: held.y)
         return Result(origin: CGPoint(x: x.origin, y: y.origin),
@@ -162,6 +165,7 @@ public enum Snapping {
                                         gridSpacing: CGFloat? = nil,
                                         gridOrigin: CGPoint = .zero,
                                         gridAxes: CanvasGridAxes = .columnsAndRows,
+                                        guides: [CanvasGuide] = [],
                                         zoom: CGFloat,
                                         screenTolerance: CGFloat = 8,
                                         minSize: CGFloat = 1,
@@ -182,7 +186,9 @@ public enum Snapping {
         if handle.movesMinX || handle.movesMaxX {
             let moving = handle.movesMinX ? proposed.minX : proposed.maxX
             let snap = snapEdge(moving, canvasLength: canvas.width, crossSpan: crossX,
-                                peers: xPeers, gridSpacing: gridSpacing, gridOrigin: gridOrigin.x,
+                                peers: xPeers,
+                                guideLines: CanvasGuides.positions(guides, axis: .vertical),
+                                gridSpacing: gridSpacing, gridOrigin: gridOrigin.x,
                                 tolerance: tolerance,
                                 held: held.x)
             let limit = handle.movesMinX ? proposed.maxX - minSize : proposed.minX + minSize
@@ -203,7 +209,9 @@ public enum Snapping {
         if handle.movesMinY || handle.movesMaxY {
             let moving = handle.movesMinY ? proposed.minY : proposed.maxY
             let snap = snapEdge(moving, canvasLength: canvas.height, crossSpan: crossY,
-                                peers: yPeers, gridSpacing: gridRows, gridOrigin: gridOrigin.y,
+                                peers: yPeers,
+                                guideLines: CanvasGuides.positions(guides, axis: .horizontal),
+                                gridSpacing: gridRows, gridOrigin: gridOrigin.y,
                                 tolerance: tolerance,
                                 held: held.y)
             let limit = handle.movesMinY ? proposed.maxY - minSize : proposed.minY + minSize
@@ -244,7 +252,8 @@ public enum Snapping {
     /// two equally good ones.
     private static func snapAxis(origin: CGFloat, length: CGFloat, canvasLength: CGFloat,
                                  crossOrigin: CGFloat, crossLength: CGFloat,
-                                 peers: [Peer], gridSpacing: CGFloat?, gridOrigin: CGFloat = 0,
+                                 peers: [Peer], guideLines: [CGFloat] = [],
+                                 gridSpacing: CGFloat?, gridOrigin: CGFloat = 0,
                                  tolerance: CGFloat, held: CGFloat? = nil)
         -> (origin: CGFloat, guide: CGFloat?, span: Span?, grid: CGFloat?) {
         let mine = Span(start: crossOrigin, end: crossOrigin + crossLength)
@@ -253,6 +262,16 @@ public enum Snapping {
             Candidate(offset: length / 2, target: canvasLength / 2, span: nil),
             Candidate(offset: length, target: canvasLength, span: nil),
         ]
+        // A pinned guide is a line somebody put there on purpose, so it comes
+        // in ahead of the other layers: where a guide and a layer edge sit on
+        // the same number the guide wins the tie. It attracts the leading edge,
+        // the middle and the trailing edge, exactly as a canvas edge does, and
+        // it draws right across the picture for the same reason.
+        for line in guideLines {
+            candidates.append(Candidate(offset: 0, target: line, span: nil))
+            candidates.append(Candidate(offset: length / 2, target: line, span: nil))
+            candidates.append(Candidate(offset: length, target: line, span: nil))
+        }
         for peer in peers {
             let span = mine.union(Span(start: peer.cross.min, end: peer.cross.max))
             let middle = (peer.along.min + peer.along.max) / 2
@@ -289,7 +308,8 @@ public enum Snapping {
     /// the box's own middle or its far side, since neither of those is what the
     /// pointer is holding.
     private static func snapEdge(_ value: CGFloat, canvasLength: CGFloat, crossSpan: Span,
-                                 peers: [Peer], gridSpacing: CGFloat?, gridOrigin: CGFloat = 0,
+                                 peers: [Peer], guideLines: [CGFloat] = [],
+                                 gridSpacing: CGFloat?, gridOrigin: CGFloat = 0,
                                  tolerance: CGFloat, held: CGFloat? = nil)
         -> (value: CGFloat, guide: CGFloat?, span: Span?, grid: CGFloat?) {
         var candidates: [Candidate] = [
@@ -297,6 +317,11 @@ public enum Snapping {
             Candidate(offset: 0, target: canvasLength / 2, span: nil),
             Candidate(offset: 0, target: canvasLength, span: nil),
         ]
+        // The dragged edge catches a pinned guide the same way it catches the
+        // canvas's own edge. See `snapAxis`.
+        for line in guideLines {
+            candidates.append(Candidate(offset: 0, target: line, span: nil))
+        }
         for peer in peers {
             let span = crossSpan.union(Span(start: peer.cross.min, end: peer.cross.max))
             candidates.append(Candidate(offset: 0, target: peer.along.min, span: span))

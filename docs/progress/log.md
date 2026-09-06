@@ -9810,3 +9810,49 @@ Next: those two follow-ups, and the rest of the ui-components queue.
 Open question for the user: a measurement's section now starts at the top but
 still runs off the bottom. Is most of it better than none of it, or does a half
 section read as broken?
+
+## 2026-09-06 — The grid moved to the tool bar, and guides pin onto it
+
+The grid used to be a readout chip that opened a popover of numbers, and where
+it started was placed from a menu item nobody found. Now the capsule beside the
+zoom carries the work: the readout ("4 → 32 pt", the grid's unit and the cell it
+is actually drawing), a slider that moves that cell, and an **Adjust Grid**
+button that takes the canvas over. The slider stops on 1, 2, 4, 8, 12, 16, 24,
+32, 48, 64 (`CanvasGridCellStops`) rather than running continuously: a 14 point
+cell is the one that makes the grid look broken, since it draws 14s while a drag
+lands on 112s. Below a canvas width of 920 the capsule sheds the slider and the
+button and is exactly the chip it was; View ▸ Adjust Grid works at any width.
+
+**Guides are new** (`CanvasGuides.swift`). Inside Adjust Grid the grid line
+nearest the pointer lights yellow — down or across, with hysteresis so it does
+not flip at a crossing — and clicking pins it. A pinned guide stays for good,
+including with the grid switched off, and joins the ONE snapping path:
+`Snapping.snapFrameOrigin` and `snapResizedFrame` take `guides:` and turn each
+one into a full-span candidate, so it catches, holds, draws and releases exactly
+the way a canvas edge does and ⌘ frees it with no new rule. Two yellows told
+apart by weight: pinned is 1pt at 70%, a snap guide is 2pt at full strength and
+lights on top of it.
+
+**Two things moved into the document.** `PhotonzDocument` now carries `guides`
+and `gridOrigin`; `CanvasGridSettings` no longer has an origin at all. Both
+describe one picture, so two windows on two documents keep their own and both
+come back on reopen. Everything else about the grid stays an app preference in
+`CanvasGridStore`. Migration: an origin saved app-wide by an earlier build is
+**dropped**, because applying it to every document opened afterwards was the
+complaint that moved it. A whole Adjust Grid session commits as one
+`History.perform`, which is what makes Clear Guides one undo step and lets
+Escape put everything back without spending one.
+
+The collision worth recording: the mock wanted one click to place the zero
+point, pin a guide, and pick a guide up. The zero point now has a grabbable dot
+at the crossing of its markers (and either marker within 8 points); everything
+else pins or picks up a guide, and the mode bar carries a hint line saying so.
+
+Verified in the probe with `Scripts/playtest/grid-guides-walk.json` (pin down,
+pin across, drag a guide, backspace, Escape restores, Done spends one undo, a
+rectangle catching both guides at 288 and 608, guides surviving the grid going
+off) and a second walk proving guides survive save, close and reopen.
+Audit: `queue/audits/2026-09-06-grid-guides.json`.
+
+Next: `arrows-lines-and-measurements-catch-pinned-guide` — annotation ends go
+down `AnnotationSnapping.snap`, which has no guides parameter yet.

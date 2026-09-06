@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T19:50:37.081Z",
-  "updated": "2026-09-06T19:50:37.117Z",
+  "updated": "2026-09-06T20:03:34.583977Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Confirmed by the user on 2026-09-06: guides are document specific, not an app preference. That settles the storage question and raises the obvious companion, which the runner should carry out rather than re-ask: the grid's ORIGIN has exactly the same argument, since a zero point aligned to the content of one screenshot is meaningless in another, so move it into the document alongside the guides. Keep the rest in CanvasGridStore as a view preference: whether the grid is shown, whether it snaps, the spacing, the smallest cell and how often a line is bold are about how you like to work, not about a particular picture, and a person switching between documents should not have the grid keep vanishing. Migration matters: an origin already saved app wide must not be silently applied to every document a person opens afterwards, so decide what an existing stored origin becomes and say so in the audit. Asked for by the user on 2026-09-06, reworking what shipped as you-can-say-where-the-grid-starts-and-how-fine-i (audit queue/audits/2026-09-05-grid-origin.json, commit fa64398). What exists to build on: the mode itself, entered only from EditorCommands.swift line 601 Set Grid Origin, which replaces the tool bar with a Cancel and Done bar carrying the smallest cell control, moves two accent lines by press or arrow keys, and returns on Return or Escape. What is new here: the tool bar readout and slider outside the mode, a tool bar way in, and locked guides, which do not exist at all today (nothing in CanvasGrid.swift mentions a guide). Guides are a new persisted thing and the first grid state that belongs to the DOCUMENT rather than the app: the grid settings live in CanvasGridStore app wide, but a guide marking a margin in one picture is meaningless in another, so put guides in the document model, Codable, and say so in the audit. They also need to join the one snapping path rather than adding a second: see snapping-pulls-to-the-grid-you-can-see-not-one-y and a-snap-that-is-showing-is-a-snap-you-get-with-no, and make the guide highlight the same one those tasks use. Yellow is already the colour of the edge snapping guide on the canvas (systemYellow in CanvasView), so a pinned guide in the same yellow reads consistently but must be told apart from a transient snap guide; say how in the audit.",
@@ -35,6 +35,39 @@
     {
       "t": "2026-09-06T19:50:37.116Z",
       "note": "seq 180 -> 4"
+    },
+    {
+      "t": "2026-09-06T19:59:32.045Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T20:03:34.583977Z",
+      "note": "adversarial review, before building. (1) The tool bar is the scarcest space in the app and already sheds the grid chip and zoom slider first. A permanent label+slider+button is ~250pt more, so the slider and the Adjust Grid button ride a NEW wider threshold: below it the chip collapses to what it is today, a readout that opens the popover."
+    },
+    {
+      "t": "2026-09-06T20:03:34.583977Z",
+      "note": "(2) Which number does the slider drive? 'shows the smallest cell and the current one, with a slider to make the current one finer or coarser' reads onto what already exists: spacing is the base unit (the smallest cell the grid is built from), minimumCell raises the floor of the ladder, and the chip already reads '4 -> 32 pt'. So the slider drives minimumCell and the readout is unchanged. Sliding to 16 makes the chip read '4 -> 16 pt' live. No new concept, both numbers on screen."
+    },
+    {
+      "t": "2026-09-06T20:03:34.583977Z",
+      "note": "(3) REAL COLLISION the mock does not see: inside the mode a click already moves the zero point, and the task now wants a click to pin a guide AND a click to pick a guide up. Three meanings, one click. Resolution: the zero point gets a grabbable knob at the crossing of its two markers (and the markers themselves within 8 screen points); everything else on the canvas pins or picks a guide. Arrow keys still nudge zero. The mode bar carries one hint line so nobody has to guess."
+    },
+    {
+      "t": "2026-09-06T20:03:34.583977Z",
+      "note": "(4) A guide highlight and a snap guide are both yellow. A pinned guide is a steady half strength full-view line; a transient snap guide is full strength and spans only the picture or the boxes involved, and it lights ON TOP of a pinned guide when a drag catches it. Steady vs arriving, dim vs bright."
+    },
+    {
+      "t": "2026-09-06T20:03:34.583977Z",
+      "note": "(5) Nearest line, vertical or horizontal, flickers at a crossing where both distances are ~0. Core picks with hysteresis: the lit axis keeps it until the other is clearly nearer."
+    },
+    {
+      "t": "2026-09-06T20:03:34.583977Z",
+      "note": "(6) Cut: no separate Show Guides toggle, no guide list, no guide colours. The shortest thing that marks a 16pt margin is pin, snap, delete, clear."
+    },
+    {
+      "t": "2026-09-06T20:03:34.583977Z",
+      "note": "(7) Undo: the whole Adjust Grid session commits as ONE document edit, so Clear Guides is one undo step and Escape puts everything back without touching history at all."
     }
-  ]
+  ],
+  "started": "2026-09-06T19:59:32.045Z"
 }

@@ -195,12 +195,28 @@ struct CanvasView: NSViewRepresentable {
     let isCanvasSelected: Bool
     /// The canvas grid to draw, or nil for the canvas exactly as it was.
     let canvasGrid: CanvasGridSettings?
-    /// The grid's zero point while it is being placed, or nil the rest of the
-    /// time. Non-nil takes the canvas over: see `CanvasNSView.mouseDown`.
-    let gridOriginAdjust: CGPoint?
+    /// Where the grid counts from, in document points. It comes from the
+    /// DOCUMENT, or from the marker being held while the grid is adjusted.
+    let canvasGridOrigin: CGPoint
+    /// The guides pinned onto this picture, drawn above everything and out of
+    /// every export. They stay on screen when the grid is switched off.
+    let canvasGuides: [CanvasGuide]
+    /// Non-nil while the grid is being adjusted, and then the canvas belongs to
+    /// the zero point and the guides: see `CanvasNSView.mouseDown`.
+    let gridAdjust: CGPoint?
+    /// The guide the mode is holding, drawn brighter than the rest.
+    let selectedGuideID: UUID?
     let onGridOriginChange: (CGPoint) -> Void
-    let onGridOriginCommit: () -> Void
-    let onGridOriginCancel: () -> Void
+    let onGridAdjustCommit: () -> Void
+    let onGridAdjustCancel: () -> Void
+    /// A click on a grid line while adjusting: pin a guide there.
+    let onGuidePin: (CanvasGuideLine) -> Void
+    /// A click on an existing guide: pick it up.
+    let onGuideSelect: (UUID?) -> Void
+    /// The held guide dragged onto another line.
+    let onGuideMove: (CanvasGuideLine) -> Void
+    /// Backspace with a guide held.
+    let onGuideDelete: () -> Void
     let onCanvasResize: (CGSize, CanvasAnchor) -> Void
     let onFillAt: (CGPoint, UUID?, Bool) -> Void
     let onFillSelected: (Bool) -> Void
@@ -230,7 +246,9 @@ struct CanvasView: NSViewRepresentable {
                    measureCandidateLevel: measureCandidateLevel,
                    measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
                    lumaField: lumaField, isCanvasSelected: isCanvasSelected,
-                   canvasGrid: canvasGrid, gridOriginAdjust: gridOriginAdjust)
+                   canvasGrid: canvasGrid, canvasGridOrigin: canvasGridOrigin,
+                   canvasGuides: canvasGuides, selectedGuideID: selectedGuideID,
+                   gridAdjust: gridAdjust)
         view.applyCrispTile(crispTile, viewport: crispTileViewport)
     }
 
@@ -301,8 +319,12 @@ struct CanvasView: NSViewRepresentable {
         view.onClearBackground = onClearBackground
         view.onWindowChange = onWindowChange
         view.onGridOriginChange = onGridOriginChange
-        view.onGridOriginCommit = onGridOriginCommit
-        view.onGridOriginCancel = onGridOriginCancel
+        view.onGridAdjustCommit = onGridAdjustCommit
+        view.onGridAdjustCancel = onGridAdjustCancel
+        view.onGuidePin = onGuidePin
+        view.onGuideSelect = onGuideSelect
+        view.onGuideMove = onGuideMove
+        view.onGuideDelete = onGuideDelete
     }
 }
 
@@ -412,9 +434,13 @@ final class CanvasNSView: NSView {
     var onWindowChange: ((NSWindow?) -> Void) = { _ in }
     /// The zero point moved to here (live, while placing the grid).
     var onGridOriginChange: ((CGPoint) -> Void) = { _ in }
-    /// ⏎ / ⎋ while placing the grid.
-    var onGridOriginCommit: (() -> Void) = { }
-    var onGridOriginCancel: (() -> Void) = { }
+    /// ⏎ / ⎋ while the grid is being adjusted.
+    var onGridAdjustCommit: (() -> Void) = { }
+    var onGridAdjustCancel: (() -> Void) = { }
+    var onGuidePin: ((CanvasGuideLine) -> Void) = { _ in }
+    var onGuideSelect: ((UUID?) -> Void) = { _ in }
+    var onGuideMove: ((CanvasGuideLine) -> Void) = { _ in }
+    var onGuideDelete: (() -> Void) = { }
 
     let contentLayer = CALayer()
     /// The visible part of the document redrawn at the zoom, laid exactly over
@@ -443,10 +469,35 @@ final class CanvasNSView: NSView {
     /// laid over them, so the answer to "what did it snap to" is a line you
     /// were already looking at. See `refreshGridSnapLines(in:)`.
     let gridSnapLayer = CAShapeLayer()
-    /// The zero point being placed, in document points, or nil when the canvas
-    /// is not in that mode. Set by `apply`, read by the grid chrome, the mouse
-    /// and the keyboard.
-    var gridOriginAdjust: CGPoint?
+    /// The guides pinned onto this picture: a steady half strength yellow line
+    /// each, running right across the view. Half strength on purpose — the
+    /// FULL strength yellow is the transient snap guide that lights on top of
+    /// one when a drag catches it, so a pinned line reads as a rule laid on the
+    /// paper and a snap reads as news.
+    let pinnedGuideLayer = CAShapeLayer()
+    /// The guide being held while the grid is adjusted, and the line under the
+    /// pointer waiting to be pinned: full strength yellow, thicker.
+    let guideHighlightLayer = CAShapeLayer()
+    /// A dot at the crossing of the two zero-point markers. It is the handle:
+    /// inside the mode a press anywhere else pins or picks up a guide, so the
+    /// zero point needs something to aim at.
+    let gridOriginKnobLayer = CAShapeLayer()
+    /// The zero point being adjusted, in document points, or nil when the
+    /// canvas is not in that mode. Set by `apply`, read by the grid chrome, the
+    /// mouse and the keyboard.
+    var gridAdjust: CGPoint?
+    /// Where the grid counts from, in document points, echoed from the
+    /// document (or from the marker being held). See `EditorState.canvasGridOrigin`.
+    var canvasGridOrigin: CGPoint = .zero
+    /// The guides pinned onto this picture, echoed from the document.
+    var canvasGuides: [CanvasGuide] = []
+    /// The guide the mode is holding.
+    var selectedGuideID: UUID?
+    /// The grid line under the pointer while the grid is being adjusted: what a
+    /// click would pin. Purely a hover state, so it lives here and nowhere else.
+    var guideHighlight: CanvasGuideLine?
+    /// True while a press is dragging the held guide about.
+    var guideDragging = false
     /// Which side of the picture the grid is currently on, or nil before it has
     /// been placed at all.
     private var canvasGridOverPicture: Bool?
@@ -1148,6 +1199,7 @@ final class CanvasNSView: NSView {
                               gridSpacing: CGFloat? = nil,
                               gridOrigin: CGPoint = .zero,
                               gridAxes: CanvasGridAxes = .columnsAndRows,
+                              guides: [CanvasGuide] = [],
                               holding held: SnapHold = .none)
         -> Snapping.FrameResult {
         let local = handleSpacePoint(p, layer: layer)
@@ -1161,6 +1213,7 @@ final class CanvasNSView: NSView {
                                                gridSpacing: gridSpacing,
                                                gridOrigin: gridOrigin,
                                                gridAxes: gridAxes,
+                                               guides: guides,
                                                zoom: viewport?.zoom ?? 1,
                                                holding: held)
         frame = result.frame
@@ -1223,7 +1276,16 @@ final class CanvasNSView: NSView {
     /// rather than beside it.
     var canvasSnapOrigin: CGPoint {
         guard canvasGridEnabled else { return .zero }
-        return canvasGrid?.origin ?? .zero
+        return canvasGridOrigin
+    }
+
+    /// The guides a drag catches. Unlike the grid they do NOT depend on the
+    /// grid being shown or on Snap to grid: you pinned each one on purpose, and
+    /// the grid was only the ruler you pinned it with. ⌘ frees a drag from them
+    /// the same way it frees it from everything else.
+    var canvasSnapGuides: [CanvasGuide] {
+        guard canvasGridEnabled else { return [] }
+        return canvasGuides
     }
 
     /// Which ways the grid's lines run, so a grid set to columns pulls sideways
@@ -1232,17 +1294,24 @@ final class CanvasNSView: NSView {
         canvasGrid?.axes ?? .columnsAndRows
     }
 
-    /// The zero point's own drag: a press anywhere on the canvas picks the
-    /// markers up, so there is no one-point line to aim at and the pair is
-    /// always exactly where you last put the pointer.
+    /// The zero point's own drag. Inside the mode a press anywhere else pins or
+    /// picks up a GUIDE, so the markers are picked up by grabbing them: the
+    /// knob at their crossing, or either line within `gridOriginGrabOnScreen`.
     var gridOriginDragging = false
+
+    /// How near the pointer has to be to a zero-point marker, in screen points,
+    /// to pick it up rather than pin a guide. Same reach a resize handle has.
+    static let gridOriginGrabOnScreen: CGFloat = 8
+    /// How near the pointer has to be to a pinned guide, in screen points, to
+    /// pick that guide up rather than pin a new one.
+    static let guideGrabOnScreen: CGFloat = 6
 
     /// Move the markers to a point on screen, pulling to the same edges and
     /// middles a dragged layer pulls to: the canvas's, and every layer's. It is
     /// the same call a layer drag makes, with no box around the point. ⌘ drops
     /// the magnets for the rest of the drag, as it does everywhere else.
     func moveGridOrigin(toViewPoint viewPoint: CGPoint, freeing: Bool) {
-        guard let viewport, gridOriginAdjust != nil else { return }
+        guard let viewport, gridAdjust != nil else { return }
         let proposed = viewport.documentPoint(fromView: viewPoint)
         let held = snapHold(freeing: freeing)
         guard !held.isFree else {
@@ -1267,7 +1336,7 @@ final class CanvasNSView: NSView {
 
     /// One arrow-key press while the markers are up.
     func nudgeGridOrigin(by delta: CGVector) {
-        guard let origin = gridOriginAdjust else { return }
+        guard let origin = gridAdjust else { return }
         snapGuide = nil
         onGridOriginChange(CGPoint(x: origin.x + delta.dx, y: origin.y + delta.dy))
         refreshOverlays()
@@ -1363,7 +1432,8 @@ final class CanvasNSView: NSView {
         for shape in [collageWellsLayer, slotHighlightLayer,
                       dropLandingLayer, dropHostFrameLayer,
                       selectionBaseLayer, selectionAntsLayer, layerOutlineLayer,
-                      multiSelectOutlineLayer, gridSnapLayer, gridOriginLayer,
+                      multiSelectOutlineLayer, gridSnapLayer, pinnedGuideLayer,
+                      gridOriginLayer, gridOriginKnobLayer, guideHighlightLayer,
                       snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
@@ -1441,6 +1511,25 @@ final class CanvasNSView: NSView {
         // lines they are placing.
         gridOriginLayer.strokeColor = NSColor.controlAccentColor.cgColor
         gridOriginLayer.lineWidth = 2
+        // The knob: the accent filled, with a white rim so it reads on a dark
+        // screenshot as well as on a light one.
+        gridOriginKnobLayer.fillColor = NSColor.controlAccentColor.cgColor
+        gridOriginKnobLayer.strokeColor = CGColor(gray: 1, alpha: 0.9)
+        gridOriginKnobLayer.lineWidth = 1.5
+        gridOriginKnobLayer.isHidden = true
+        // A pinned guide: the same yellow as a snap guide, at half strength and
+        // one point wide, so it reads as a rule laid on the paper rather than
+        // as a snap that is happening right now. When a drag catches one, the
+        // full strength snap guide lights directly on top of it.
+        pinnedGuideLayer.strokeColor = NSColor.systemYellow.withAlphaComponent(0.7).cgColor
+        pinnedGuideLayer.lineWidth = 1
+        pinnedGuideLayer.isHidden = true
+        // The line under the pointer, and the guide being held: full strength,
+        // two points, so the thing you are about to pin is unmistakably the
+        // thing you are about to pin.
+        guideHighlightLayer.strokeColor = NSColor.systemYellow.cgColor
+        guideHighlightLayer.lineWidth = 2
+        guideHighlightLayer.isHidden = true
         handlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
         handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
         rotateKnobLayer.fillColor = CGColor(gray: 1, alpha: 1)

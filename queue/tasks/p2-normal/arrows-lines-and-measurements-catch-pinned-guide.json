@@ -1,0 +1,28 @@
+{
+  "id": "arrows-lines-and-measurements-catch-pinned-guide",
+  "title": "Arrows, lines and measurements catch pinned guides too",
+  "goal": "You can pin a guide onto the picture and a dragged or resized box catches it. The end of an arrow, a line or a measurement does not: those go down a different path and slide straight past the guide. Make every end that snaps to a grid line snap to a guide as well, so a guide means the same thing wherever you are drawing.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1480,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T20:31:37.555Z",
+  "updated": "2026-09-06T20:31:37.555Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Guides landed on 2026-09-06 (audit queue/audits/2026-09-06-grid-guides.json). Snapping.snapFrameOrigin and snapResizedFrame both take a guides: [CanvasGuide] parameter and turn each guide into a full span candidate; AnnotationSnapping.snap is the other path and has no guides parameter yet. CanvasView.snappedAnnotationPoint and snappedTextOrigin are the two call sites, and both already pass gridSpacing/gridOrigin/gridAxes, so the shape of the change is the same one Snapping.swift already has. Text placement deliberately takes no guide today: a click has no opposite end and nothing is being dragged, which is the same reason it takes no edge magnet, so decide whether a guide is different before adding one there.",
+  "acceptance": [
+    "Dragging the end of an arrow or a line onto a pinned guide catches it, and the same yellow line lights that a dragged layer gets",
+    "Placing or moving the foot of a measurement catches a pinned guide the same way",
+    "Holding Command frees an end from a guide exactly as it frees it from the grid",
+    "Core tests cover an annotation end catching a guide on each axis, written before the change"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T20:31:37.555Z",
+      "note": "created (manual)"
+    }
+  ]
+}

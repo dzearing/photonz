@@ -586,7 +586,7 @@ struct EditorCommands: Commands {
                 Button(CanvasGridCopy.settingsMenuItem) {
                     editor?.showGridSettings()
                 }
-                .disabled(!hasDocument || (editor?.isPlacingGridOrigin ?? false))
+                .disabled(!hasDocument || (editor?.isAdjustingGrid ?? false))
                 // Photoshop's own key for Snap, next to the grid it pulls to.
                 // Dimmed with the grid hidden, because with no lines on the
                 // picture there is nothing to pull to.
@@ -595,13 +595,15 @@ struct EditorCommands: Commands {
                     set: { _ in editor?.toggleSnapToGrid() }))
                 .keyboardShortcut(";", modifiers: [.command, .shift])
                 .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false))
-                // Where the grid starts. It takes the canvas over, so it reads
-                // as an action with an ellipsis rather than as a switch, and it
-                // is the same door the Canvas section's Starts at button opens.
-                Button("Set Grid Origin\u{2026}") {
-                    editor?.beginGridOriginPlacement()
+                // Where the grid starts, and the guides pinned onto it. It
+                // takes the canvas over, so it reads as an action with an
+                // ellipsis rather than as a switch. The tool bar's Adjust Grid
+                // button is the same door on a canvas wide enough to hold it;
+                // this is how you get in at any width.
+                Button(CanvasGridCopy.adjustMenuItem) {
+                    editor?.beginGridAdjustment()
                 }
-                .disabled(!hasDocument || (editor?.isPlacingGridOrigin ?? false))
+                .disabled(!hasDocument || (editor?.isAdjustingGrid ?? false))
             }
             Divider()
         }

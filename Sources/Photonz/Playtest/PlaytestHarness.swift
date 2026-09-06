@@ -1165,6 +1165,7 @@ private final class Run {
             case .toggleGrid: editor.toggleCanvasGrid()
             case .showGrid: if !editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
             case .hideGrid: if editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
+            case .adjustGrid: editor.beginGridAdjustment()
             case .showGridSettings: editor.showGridSettings()
             case .selectCanvas: editor.selectCanvas()
             case .duplicateLayer: editor.duplicateSelectedLayers()
@@ -3190,6 +3191,7 @@ private final class Run {
             // which side of the picture it is on. "nothing drawn" here is the
             // grid having gone out.
             "grid": canvas?.playtestGridReport ?? "no canvas",
+            "guides": editor.playtestGuidesReport,
             // The columns each screen is showing, whether they are actually on
             // the canvas layer, and how many a drag could catch — so one line
             // answers "does the pull match the picture" for the OTHER thing a

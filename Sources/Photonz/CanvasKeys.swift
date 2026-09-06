@@ -9,11 +9,11 @@ import SwiftUI
 
 extension CanvasNSView {
     override func keyDown(with event: NSEvent) {
-        // Placing the grid's zero point takes every key the canvas would
-        // otherwise act on, so an arrow moves the markers rather than the last
-        // layer you happened to have selected, and ⏎ finishes the placement
-        // rather than opening a text box.
-        if gridOriginAdjust != nil {
+        // Adjusting the grid takes every key the canvas would otherwise act on,
+        // so an arrow moves the markers rather than the last layer you happened
+        // to have selected, ⏎ finishes the adjustment rather than opening a
+        // text box, and ⌫ takes off the guide you are holding.
+        if gridAdjust != nil {
             if let delta = Nudge.delta(keyCode: event.keyCode,
                                        large: event.modifierFlags.contains(.shift)) {
                 nudgeGridOrigin(by: delta)
@@ -21,12 +21,19 @@ extension CanvasNSView {
             }
             if event.keyCode == 36 || event.keyCode == 76 { // ⏎ / keypad ⏎
                 gridOriginDragging = false
-                onGridOriginCommit()
+                onGridAdjustCommit()
                 return
             }
             if event.keyCode == 53 { // ⎋
                 gridOriginDragging = false
-                onGridOriginCancel()
+                onGridAdjustCancel()
+                return
+            }
+            // ⌫ / ⌦ take the guide you are holding off the picture. Nothing is
+            // held until you pin one or click one, so there is no way for this
+            // to delete a guide you were not looking at.
+            if event.keyCode == 51 || event.keyCode == 117 {
+                onGuideDelete()
                 return
             }
             return

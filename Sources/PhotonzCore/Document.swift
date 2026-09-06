@@ -15,27 +15,55 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// (`docs/design/ui-building.md`, step D8). Styles live in the document
     /// they were made in, the same way components do.
     public var colorStyles: [ColorStyle]
+    /// The guides pinned onto this picture (`CanvasGuide`). They live here
+    /// rather than in the app's settings because a guide marking the left
+    /// margin of one screenshot means nothing in another: two windows on two
+    /// documents each keep their own, and closing and reopening one brings its
+    /// guides back with it.
+    public var guides: [CanvasGuide]
+    /// Where the canvas grid counts from, in document points. Here for the same
+    /// reason the guides are: a zero point lined up with the content of one
+    /// screenshot is meaningless in the next picture you open. Everything ELSE
+    /// about the grid — whether it shows, whether it snaps, its spacing, its
+    /// bold rhythm, its cell — is about how you like to work and stays an app
+    /// preference in `CanvasGridStore`.
+    public var gridOrigin: CGPoint {
+        get { storedGridOrigin }
+        // A zero point that is not a number is a canvas with nothing drawn on
+        // it, so the corner is what an unusable number becomes.
+        set { storedGridOrigin = newValue.x.isFinite && newValue.y.isFinite ? newValue : .zero }
+    }
+    private var storedGridOrigin: CGPoint
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
-                colorStyles: [ColorStyle] = []) {
+                colorStyles: [ColorStyle] = [], guides: [CanvasGuide] = [],
+                gridOrigin: CGPoint = .zero) {
         self.canvasSize = canvasSize
         self.layers = layers
         self.pixelScale = pixelScale
         self.colorStyles = colorStyles
+        self.guides = guides
+        self.storedGridOrigin = gridOrigin.x.isFinite && gridOrigin.y.isFinite ? gridOrigin : .zero
     }
 
     private enum CodingKeys: String, CodingKey {
-        case canvasSize, layers, pixelScale, colorStyles
+        case canvasSize, layers, pixelScale, colorStyles, guides, gridOriginX, gridOriginY
     }
 
     /// A document with no styles in it writes no styles key, so one saved
-    /// before styles existed is byte for byte what it was.
+    /// before styles existed is byte for byte what it was. Guides and the
+    /// grid's zero point follow the same rule.
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(canvasSize, forKey: .canvasSize)
         try c.encode(layers, forKey: .layers)
         try c.encode(pixelScale, forKey: .pixelScale)
         if !colorStyles.isEmpty { try c.encode(colorStyles, forKey: .colorStyles) }
+        if !guides.isEmpty { try c.encode(guides, forKey: .guides) }
+        if gridOrigin != .zero {
+            try c.encode(gridOrigin.x, forKey: .gridOriginX)
+            try c.encode(gridOrigin.y, forKey: .gridOriginY)
+        }
     }
 
     public init(from decoder: Decoder) throws {
@@ -46,6 +74,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         pixelScale = try c.decodeIfPresent(CGFloat.self, forKey: .pixelScale) ?? 1
         // `colorStyles` postdates it too; a document from before has none.
         colorStyles = try c.decodeIfPresent([ColorStyle].self, forKey: .colorStyles) ?? []
+        // ...and so do the guides and the grid's zero point.
+        guides = try c.decodeIfPresent([CanvasGuide].self, forKey: .guides) ?? []
+        let x = try c.decodeIfPresent(CGFloat.self, forKey: .gridOriginX) ?? 0
+        let y = try c.decodeIfPresent(CGFloat.self, forKey: .gridOriginY) ?? 0
+        storedGridOrigin = x.isFinite && y.isFinite ? CGPoint(x: x, y: y) : .zero
     }
 
     /// A new document built around a base image, which becomes the bottom layer.

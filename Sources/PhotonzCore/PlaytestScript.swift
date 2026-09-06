@@ -421,6 +421,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// View ▸ Grid Settings. Opens the grid's settings on the canvas, switching
     /// the grid on first if it was off, exactly as the menu row does.
     case showGridSettings
+    /// View ▸ Adjust Grid, the same door the tool bar's Adjust Grid button
+    /// opens: the canvas is taken over to place where the grid starts and pin
+    /// guides onto it. A walk uses it so the mode can be entered on a canvas
+    /// too narrow to carry the button.
+    case adjustGrid
     /// Pick the Canvas row, which is what a click on it in the layers dock
     /// does. A walk cannot reach the dock with the pointer, so this is how the
     /// Canvas section's own numbers get typed into.

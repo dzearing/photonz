@@ -23,10 +23,11 @@ extension CanvasNSView {
     }
 
     override func mouseMoved(with event: NSEvent) {
-        // While the zero point is being placed nothing on the canvas is
-        // hoverable: no name label lights up, no handle offers itself, and the
-        // pointer is a crosshair over the whole canvas.
-        if gridOriginAdjust != nil {
+        // While the grid is being adjusted nothing on the canvas is hoverable:
+        // no name label lights up, no handle offers itself. What the pointer
+        // does instead is light the grid line a click would pin a guide onto.
+        if gridAdjust != nil {
+            refreshGuideHighlight(at: convert(event.locationInWindow, from: nil))
             refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             return
         }
@@ -126,9 +127,16 @@ extension CanvasNSView {
     /// resize and rotate hold — so nothing switches under way. That is why
     /// every drag session bails out here rather than re-reading the pointer.
     func refreshGrabCursor(at viewPoint: CGPoint? = nil) {
-        // Placing the grid's zero point owns the pointer: a crosshair over the
-        // whole canvas, because every point on it is somewhere zero can go.
-        if gridOriginAdjust != nil { return applyGrabCursor(.crosshair, force: true) }
+        // Adjusting the grid owns the pointer: an open hand over the zero
+        // point's own markers, and a crosshair everywhere else, where a click
+        // pins or picks up a guide.
+        if gridAdjust != nil {
+            let where_ = viewPoint
+                ?? window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) }
+            let doc = where_.flatMap { point in viewport?.documentPoint(fromView: point) }
+            return applyGrabCursor(doc.flatMap { gridAdjustCursor(at: $0) } ?? .crosshair,
+                                   force: true)
+        }
         guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil,
               endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil,
               cropDrag == nil else { return }

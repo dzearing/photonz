@@ -1,0 +1,34 @@
+{
+  "feature": "The grid on the tool bar, and guides you pin onto it",
+  "epic": "ui-building",
+  "summary": "The grid is now worked from the tool bar: a readout of the cell it is drawing, a slider that makes that cell finer or coarser with the lines redrawing as you move it, and an Adjust Grid button. Inside Adjust Grid you can pin guides by clicking the grid line under the pointer, and a pinned guide stays for good, catches drags and resizes, and belongs to the picture rather than to the app.",
+  "setup": "Photonz Dev, Experiments window, release Next. The grid flag is on by default. Open any picture and switch the grid on with View ▸ Show Grid.",
+  "try": [
+    { "do": "Switch the grid on: View ▸ Show Grid.", "shot": "2026-09-06-grid-guides-1.png" },
+    { "do": "Drag the slider in the grid capsule beside the zoom and watch the lines and the number beside it change together." },
+    { "do": "Press Adjust Grid on that capsule." },
+    { "do": "Move the pointer over the picture and watch the nearest grid line light yellow, down or across." },
+    { "do": "Click to pin a guide there, then pin a second one further along.", "shot": "2026-09-06-grid-guides-2.png" },
+    { "do": "Press Done, then drag a rectangle out roughly between the two guides.", "shot": "2026-09-06-grid-guides-3.png" },
+    { "do": "Switch the grid off with View ▸ Show Grid and check the guides are still there.", "shot": "2026-09-06-grid-guides-4.png" },
+    { "do": "Press Command Z once and watch every guide go in a single step." }
+  ],
+  "evaluate": [
+    "Does the slider read as the grid's cell without a word on it, or did you have to guess what it did?",
+    "When you hovered near a crossing, did the highlight settle on the line you meant, or did it flick between down and across?",
+    "Is a pinned guide easy enough to tell from the bright yellow line a snap draws, or do the two read as the same thing?",
+    "Does dragging the dot at the crossing of the blue markers feel like the obvious way to move where the grid starts, now that a plain click pins a guide instead?",
+    "Is one undo for a whole Adjust Grid session right, or would you want each guide to undo on its own?"
+  ],
+  "rough": [
+    "The mock said a click in the mode places the zero point AND pins a guide AND picks a guide up. Three meanings for one click cannot all be true, so the zero point now has a dot at the crossing of its two markers and either marker is grabbable within 8 points; a click anywhere else pins or picks up a guide. That is a change to what the mode did before, and the bar carries a hint line saying so.",
+    "The tool bar slider has no label, only a tooltip: the readout two controls to its left already names the number and moves as you slide, and the bar has no room for a third label. Worth judging.",
+    "The cell slider stops on 1, 2, 4, 8, 12, 16, 24, 32, 48 and 64 rather than running continuously. A continuous slider could be left on 14, and a 14 point cell is the one that makes the grid look broken: it draws 14s while a drag lands on 112s, because 14 points on screen is too close together to aim at.",
+    "The whole grid capsule disappears when the grid is switched off, so with stray guides and the grid off the only way back into Adjust Grid is View ▸ Adjust Grid. Reachable, but not where your hand is.",
+    "Guides catch a dragged or resized LAYER. They do not yet catch the ends of an arrow, a line or a measurement, which go through a different snapping call. Filed as a follow-up.",
+    "What moved into the document: the guides, and where the grid counts from. Both describe one picture, so two windows on two documents each keep their own and both come back when a document is reopened. What stayed an app preference: whether the grid shows, whether it snaps, the spacing, the bold rhythm and the cell, because those are about how you like to work.",
+    "Migration: a zero point saved app-wide by an earlier build is DROPPED rather than applied to every document opened afterwards. Applying it everywhere was the exact complaint that moved it, and silently re-applying it would have been the same bug with a new home. Every picture now starts at its own corner until you place one in it.",
+    "Two yellows, told apart by weight: a pinned guide is one point at 70% and simply there, a snap guide is two points at full strength and only while a drag holds, and it lights directly on top of a pinned guide when a drag catches one.",
+    "Taken out of the settings popover: the Smallest cell field (now the slider) and the Starts at button (now Adjust Grid). What is left is Show grid, Snap to grid, Lines, Spacing and Bold every, which the tool bar does not carry."
+  ]
+}

@@ -221,19 +221,34 @@ final class EditorState {
     /// the answer is no.
     var drawnCanvasGrid: CanvasGridSettings? {
         guard Experiments.shared.canvasGridEnabled else { return nil }
-        // While the zero point is being placed the canvas draws the grid as it
-        // would be if you kept it, so the lines move under the two markers
-        // rather than after them.
-        return gridOriginAdjustment?.live ?? canvasGrid
+        // While the grid is being adjusted the canvas draws it as it would be
+        // if you kept it, so the lines move under the two markers rather than
+        // after them.
+        return gridAdjustment?.liveSettings ?? canvasGrid
     }
 
-    /// Live while the grid's zero point is being placed: the two markers, the
-    /// smallest-cell slider, and the grid the canvas is drawing meanwhile. Nil
-    /// the rest of the time, which is what every other surface reads to know
-    /// the canvas has been taken over. See `CanvasGridOriginAdjustment`.
-    private(set) var gridOriginAdjustment: CanvasGridOriginAdjustment?
+    /// Live while the grid is being adjusted: the two markers, the cell
+    /// slider, the guides being pinned, and the grid the canvas is drawing
+    /// meanwhile. Nil the rest of the time, which is what every other surface
+    /// reads to know the canvas has been taken over. See `CanvasGridAdjustment`.
+    private(set) var gridAdjustment: CanvasGridAdjustment?
 
-    var isPlacingGridOrigin: Bool { gridOriginAdjustment != nil }
+    var isAdjustingGrid: Bool { gridAdjustment != nil }
+
+    /// Where the grid counts from, in document points. It belongs to the
+    /// DOCUMENT: a zero point lined up with the content of one screenshot means
+    /// nothing in the next picture you open. While the grid is being adjusted
+    /// it is the marker you are holding instead, so the lines move under it.
+    var canvasGridOrigin: CGPoint {
+        gridAdjustment?.origin ?? document?.gridOrigin ?? .zero
+    }
+
+    /// The guides pinned onto this picture. Also the document's, for the same
+    /// reason, and also the working copy while the grid is being adjusted.
+    var canvasGuides: [CanvasGuide] {
+        guard Experiments.shared.canvasGridEnabled else { return [] }
+        return gridAdjustment?.guides ?? document?.guides ?? []
+    }
 
     /// Whether the grid's settings are open on the canvas. They hang off the
     /// grid's chip in the floating tool bar, so this is what the View menu's
@@ -245,12 +260,11 @@ final class EditorState {
     /// Open the grid's settings, from the View menu or from anywhere else that
     /// is not the chip itself.
     ///
-    /// It switches the grid ON first when it was off, for the reason placing
-    /// the zero point does: nobody adjusts a grid they cannot see, and the chip
-    /// the popover hangs off only exists while there are lines on the picture.
-    /// The chip has to be in the view tree before the popover can point at it,
-    /// so the raise waits one turn of the run loop when the grid had to be
-    /// switched on for it.
+    /// It switches the grid ON first when it was off, for the reason adjusting
+    /// it does: nobody tunes a grid they cannot see, and the chip the popover
+    /// hangs off only exists while there are lines on the picture. The chip has
+    /// to be in the view tree before the popover can point at it, so the raise
+    /// waits one turn of the run loop when the grid had to be switched on for it.
     func showGridSettings() {
         guard Experiments.shared.canvasGridEnabled else { return }
         guard !canvasGrid.isVisible else {
@@ -261,49 +275,83 @@ final class EditorState {
         Task { @MainActor in self.isGridSettingsPresented = true }
     }
 
-    /// Take the canvas over to say where the grid starts. Nothing is written
-    /// to the settings until you keep it, so leaving costs nothing.
-    func beginGridOriginPlacement() {
-        guard Experiments.shared.canvasGridEnabled, document != nil else { return }
+    /// Take the canvas over to place the zero point and pin guides. Nothing is
+    /// written to the settings or the document until you keep it, so leaving
+    /// costs nothing and takes no undo step.
+    func beginGridAdjustment() {
+        guard Experiments.shared.canvasGridEnabled, let document else { return }
         // Two modes on one canvas is one mode too many: a live crop ends first.
         if cropRect != nil { cancelCrop() }
         if activeTool != .select { setTool(.select) }
         selectedLayerID = nil
         setSelection(nil)
-        // The settings popover hangs off the chip in the tool bar, and placing
-        // the zero point takes that whole bar over: leaving it up would leave a
+        // The settings popover hangs off the chip in the tool bar, and adjusting
+        // the grid takes that whole bar over: leaving it up would leave a
         // popover pointing at a control that is no longer there.
         isGridSettingsPresented = false
-        gridOriginAdjustment = CanvasGridOriginAdjustment(settings: canvasGrid)
+        gridAdjustment = CanvasGridAdjustment(settings: canvasGrid,
+                                              origin: document.gridOrigin,
+                                              guides: document.guides)
     }
 
     func moveGridOrigin(to point: CGPoint) {
-        gridOriginAdjustment?.origin = point
+        gridAdjustment?.origin = point
     }
 
     func nudgeGridOrigin(by delta: CGVector) {
-        gridOriginAdjustment?.nudge(delta)
+        gridAdjustment?.nudge(delta)
     }
 
     func setGridMinimumCell(_ cell: CGFloat) {
-        gridOriginAdjustment?.minimumCell = CanvasGridSettings.clamped(minimumCell: cell)
+        gridAdjustment?.minimumCell = CanvasGridSettings.clamped(minimumCell: cell)
         // Outside the mode the same slider edits the grid directly.
-        if gridOriginAdjustment == nil {
+        if gridAdjustment == nil {
             canvasGrid.minimumCell = CanvasGridSettings.clamped(minimumCell: cell)
             canvasGrid.isVisible = true
         }
     }
 
-    func commitGridOriginPlacement() {
-        guard let session = gridOriginAdjustment else { return }
-        gridOriginAdjustment = nil
-        canvasGrid = session.committed
+    // MARK: - Guides, while the grid is being adjusted
+
+    /// The guide the mode is holding, or nil.
+    var selectedGuideID: UUID? { gridAdjustment?.selectedGuideID }
+
+    func pinGuide(_ line: CanvasGuideLine) { gridAdjustment?.pin(line) }
+
+    func selectGuide(_ id: UUID?) { gridAdjustment?.select(id) }
+
+    func moveSelectedGuide(to line: CanvasGuideLine) {
+        gridAdjustment?.moveSelectedGuide(to: line)
     }
 
-    func cancelGridOriginPlacement() {
-        guard let session = gridOriginAdjustment else { return }
-        gridOriginAdjustment = nil
-        canvasGrid = session.cancelled
+    func deleteSelectedGuide() { gridAdjustment?.deleteSelectedGuide() }
+
+    func clearGuides() { gridAdjustment?.clearGuides() }
+
+    var hasGuides: Bool { gridAdjustment?.hasGuides ?? !(document?.guides.isEmpty ?? true) }
+
+    /// Keep everything the mode changed. The cell is an app preference and goes
+    /// straight to the settings; the zero point and the guides belong to the
+    /// picture, so they land in ONE undoable edit — which is what makes Clear
+    /// Guides one step of undo rather than one per guide.
+    func commitGridAdjustment() {
+        guard let session = gridAdjustment else { return }
+        gridAdjustment = nil
+        canvasGrid = session.committedSettings
+        let origin = session.committedOrigin
+        let guides = session.committedGuides
+        perform(announcing: false) { document in
+            document.gridOrigin = origin
+            document.guides = guides
+        }
+    }
+
+    func cancelGridAdjustment() {
+        guard let session = gridAdjustment else { return }
+        gridAdjustment = nil
+        canvasGrid = session.cancelledSettings
+        // The document was never touched, so there is nothing to put back and
+        // no undo step to spend putting it.
     }
 
     func toggleCanvasGrid() { canvasGrid.isVisible.toggle() }
