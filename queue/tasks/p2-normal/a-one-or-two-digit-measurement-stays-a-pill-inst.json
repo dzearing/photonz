@@ -1,20 +1,20 @@
 {
   "id": "a-one-or-two-digit-measurement-stays-a-pill-inst",
   "title": "A one or two digit measurement stays a pill instead of a lozenge",
-  "goal": "When a caliper measures something small, its number chip is narrower than it is tall and reads as a lozenge standing on end rather than the badge every other readout is. Any measurement, however few digits it has, should read as the same badge.",
+  "goal": "When a caliper measures something small, its number chip is so short that the two rounded ends meet and it reads as a circle instead of the badge every longer readout is. Any measurement, however few digits it has, should read as the same badge.",
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1290,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T23:23:11.533Z",
-  "updated": "2026-09-05T23:23:11.533Z",
+  "updated": "2026-09-06T10:27:15.867266Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Same defect the arrow caption had, on the other side of the shared PillRasterizer. Confirmed by measuring: PillRasterizer.footprint for \"4\" at MeasureContent.labelFontSize/labelPadding is 32x42, and \"12\" is 39x42 — both narrower than tall. The caption fix put the floor on AnnotationContent.captionMinPillWidth (Sources/PhotonzCore/Layer.swift) and applied it in captionPillSize + estimatedCaptionSize; the measure side would want the same floor in PillRasterizer.footprint or in MeasureContent's own chip size. Deliberately NOT done with the caption fix because widening a measure chip moves geometry that MeasureChipJoinTests, MeasureCalloutClearanceTests and the callout fixture tests all assert against, so it needs its own pass over those. No point can form (the radius is already clamped to half the short side), so this is purely about the shape reading right.",
   "acceptance": [
-    "A chip reading a single digit is never narrower than its height plus about a fifth",
+    "A short readout's chip is at least 1.7 times as wide as it is tall, the badge proportion a three digit one already has, so it reads as a badge and not a circle",
     "A chip with several characters is exactly the size it is today",
     "The caliper line still meets the widened chip on its outline, with no gap and no overshoot",
     "A callout still keeps its clearance from what it is measuring at the new chip size",
@@ -24,6 +24,41 @@
     {
       "t": "2026-09-05T23:23:11.533Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T09:58:16.565Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T10:03:23.697391Z",
+      "note": "Reproduced, and the diagnosis in the notes is wrong. A caliper chip ALWAYS carries its unit, so the shortest text it ever draws is \"4 px\", never a bare \"4\": measured footprints are 55x42 at the default size (ratio 1.31), so no chip is ever narrower than it is tall. The defect is still real though: rendered side by side, \"4 px\" and \"12 px\" (1.31, 1.48) read as circles/ovals while \"120 px\" (1.74) reads as the capsule badge. The caps eat the shape, only 13px of straight run is left. So the floor has to be a badge PROPORTION, not just wider-than-tall: a ladder render at 1.31 / 1.5 / 1.75 / 2.0 / 2.25 says 1.75 is where it starts reading as a badge, and 1.75 is exactly what a three digit readout already has, so short chips join the family instead of inventing a shape. Acceptance item 1 rewritten to match."
+    },
+    {
+      "t": "2026-09-06T10:22:51.591746Z",
+      "note": "Built, tests first. MeasureContent gains labelPillHeight (the line box rule estimatedLabelSize already used, lifted out so one expression serves both), labelBadgeAspect = 1.7 and labelMinPillWidth = height x aspect; PillRasterizer.footprint takes an optional minWidth and MeasureRasterizer passes the caliper's. The floor is derived from font size and padding alone so the rasterizer (which measures glyphs) and estimatedLabelSize (which does not) compute the identical number, which is what keeps the drawn pill inside its reservation. 1.7 rather than 1.75 because 1.7 is the widest floor that leaves every already-badge readout at exactly today's size at 8, 18 and 90 px label sizes; 1.75 nudged 120 px wider by a point. New tests: MeasureChipShapeTests (core, the reservation) and MeasureChipBadgeTests (render, footprint + a pixel test that finds the chip by its own fill color and checks its drawn proportions, one digit / two digit / long). MeasureChipJoinTests now runs 4px and 12px spans too, so the join is verified against a floored chip, and its chipRect helper passes the same floor."
+    },
+    {
+      "t": "2026-09-06T10:22:51.591746Z",
+      "note": "Verified in the real app, not just offscreen. Scripts/playtest.sh Scripts/playtest/caliper-chip-join-walk.json on the probe build, Screen Recording granted, so these are real window captures: 2 px, 42 px, 30 px and 124 px on one screenshot all read as the same badge, and zoomed in the caliper legs still meet each chip's outline with no gap. Copied to queue/audits/2026-09-06-measure-chip-badge-{1,2}.png. Full suite 3712 tests green; MeasureCalloutClearanceTests (which run against a real capture, including two digit element heights) pass unchanged, which is acceptance item 4."
+    },
+    {
+      "t": "2026-09-06T10:23:20.926Z",
+      "note": "runner failed (exit 0, attempt 1): Waiting on the walk set. Meanwhile, here's where things stand. **Reproduced first, and the task's diagnosis was wrong.** The task said a short measurement's chip is \"narrower than it is tall.\" It never was: a caliper always prints its unit, so the shortest text it ever draws is `4 px` — 55 × 42 at the default size. But the complaint is real. Rendered side by side, `4 px` (1.31) and `12 px` (1.48) "
+    },
+    {
+      "t": "2026-09-06T10:23:51.701Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T10:27:15.867143Z",
+      "note": "Second run: the previous one built everything but died before finalizing, so this pass re-verified rather than trusting it. Full suite green, 3712 tests, and the four new/extended suites confirmed present and passing by name (Measure chip shape, Measure chip is a badge, Caliper chip join with its 12 spans). Measured the footprints directly instead of taking the earlier note's word: at 8/18/90 px label sizes \"4 px\" goes 1.38/1.31/1.29 to 1.75/1.72/1.73 and \"12 px\" 1.52/1.48/1.48 to the same, while \"120 px\" (1.76/1.74/1.77) and \"4321 px\" (2.04/2.00/2.05) are byte-identical to before, which is acceptance 1 and 2. Caught that Measure.swift and PillRasterizer.swift were saved a minute AFTER the audit screenshots were taken, so the captures could have predated the final constant: re-ran Scripts/playtest/caliper-chip-join-walk.json on a fresh probe build (Screen Recording granted, real window captures) and the new 4-row-gap-sc.png is identical to the stored audit shot, so the shots do show the shipped code. 4-zoomed-sc.png at 156% shows the caliper meeting the chip outline on both sides with no gap or overshoot (acceptance 3). Fixed one real defect in the audit: its rough section said the fix was 1.75 in one bullet and 1.7 in the next. Acceptance item 1 reworded from \"as wide as a three digit one (1.75x)\" to the honest 1.7, because 1.75 would have widened a three digit chip and broken item 2; the two items conflicted and item 2 wins, at a cost of under half a point."
     }
-  ]
+  ],
+  "started": "2026-09-06T10:23:51.700Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-06T10:23:20.925Z",
+    "exit": 0,
+    "message": "Waiting on the walk set. Meanwhile, here's where things stand. **Reproduced first, and the task's diagnosis was wrong.** The task said a short measurement's chip is \"narrower than it is tall.\" It never was: a caliper always prints its unit, so the shortest text it ever draws is `4 px` — 55 × 42 at the default size. But the complaint is real. Rendered side by side, `4 px` (1.31) and `12 px` (1.48) "
+  }
 }

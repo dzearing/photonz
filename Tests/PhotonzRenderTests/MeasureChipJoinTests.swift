@@ -88,7 +88,8 @@ struct MeasureChipJoinTests {
 
     private func chipRect(_ c: MeasureContent) -> CGRect {
         let size = PillRasterizer.footprint(for: c.chipText(pixelScale: 1),
-                                            fontSize: c.labelPointSize, padding: c.labelPadding)
+                                            fontSize: c.labelPointSize, padding: c.labelPadding,
+                                            minWidth: c.labelMinPillWidth)
         return c.labelRect(chipSize: size)
     }
 
@@ -158,9 +159,9 @@ struct MeasureChipJoinTests {
     }
 
     @Test(arguments: [
-        (MeasureMode.horizontal, CGFloat(22)), (.horizontal, 40), (.horizontal, 70),
-        (.horizontal, 100), (.horizontal, 200),
-        (.vertical, 22), (.vertical, 70), (.vertical, 200),
+        (MeasureMode.horizontal, CGFloat(4)), (.horizontal, 12), (.horizontal, 22),
+        (.horizontal, 40), (.horizontal, 70), (.horizontal, 100), (.horizontal, 200),
+        (.vertical, 4), (.vertical, 12), (.vertical, 22), (.vertical, 70), (.vertical, 200),
     ])
     func theCaliperReachesItsChip(mode: MeasureMode, span: CGFloat) {
         for stroke in [CGFloat(1), 2, 6] {
@@ -210,9 +211,9 @@ struct MeasureChipJoinTests {
     }
 
     @Test(arguments: [
-        (MeasureMode.horizontal, CGFloat(22)), (.horizontal, 40), (.horizontal, 70),
-        (.horizontal, 100), (.horizontal, 200),
-        (.vertical, 22), (.vertical, 70), (.vertical, 200),
+        (MeasureMode.horizontal, CGFloat(4)), (.horizontal, 12), (.horizontal, 22),
+        (.horizontal, 40), (.horizontal, 70), (.horizontal, 100), (.horizontal, 200),
+        (.vertical, 4), (.vertical, 12), (.vertical, 22), (.vertical, 70), (.vertical, 200),
     ])
     func nothingShowsThroughTheChip(mode: MeasureMode, span: CGFloat) {
         for stroke in [CGFloat(1), 2, 6] {

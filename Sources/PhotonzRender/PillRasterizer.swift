@@ -17,11 +17,24 @@ enum PillRasterizer {
         var color = CGColor(gray: 0, alpha: 0.35)
     }
 
-    /// The pill's footprint = measured text (at `fontSize`) + padding all sides.
-    static func footprint(for text: String, fontSize: CGFloat, padding: CGFloat) -> CGSize {
+    /// The pill's footprint = measured text (at `fontSize`) + padding all
+    /// sides, never narrower than `minWidth`.
+    ///
+    /// The floor is what keeps a short readout a badge: the corner radius is
+    /// half the short side, so without one a two character string draws a
+    /// circle rather than the capsule the same pill draws around a longer one.
+    /// The caller passes its own floor (`MeasureContent.labelMinPillWidth`)
+    /// because whatever reserves the frame for the pill has to compute the
+    /// identical number without measuring any glyphs, and each kind of pill
+    /// derives it from its own font size and padding. The arrow caption keeps
+    /// its floor in `AnnotationContent.captionPillSize` instead, which is why
+    /// this argument defaults to none.
+    static func footprint(for text: String, fontSize: CGFloat, padding: CGFloat,
+                          minWidth: CGFloat = 0) -> CGSize {
         let size = TextRasterizer.naturalSize(
             TextContent(string: text, fontName: "SF Pro", fontSize: fontSize))
-        return CGSize(width: size.width + 2 * padding, height: size.height + 2 * padding)
+        return CGSize(width: max(size.width + 2 * padding, minWidth),
+                      height: size.height + 2 * padding)
     }
 
     /// The pill's corner radius: half its short side, so a readout (always

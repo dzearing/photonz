@@ -449,6 +449,37 @@ extension MeasureContent {
     /// caliper's size at draw time).
     public static let cornerRadius: CGFloat = 5
 
+    /// The pill's height at this label size. The line box is 1.2 em plus 5,
+    /// plus padding above and below. SF Pro's line height is not a fixed
+    /// multiple of the size (it runs about 1.67 em at 9 pt, 1.44 em at 18 pt,
+    /// 1.22 em at 90 pt), and the old 1.3 em came up two pixels short at the
+    /// default size, which shaved the pill's bottom border off an export
+    /// whenever the readout was the outermost thing in its layer
+    /// (`CaliperChipTests`).
+    public var labelPillHeight: CGFloat { labelPointSize * 1.2 + 5 + 2 * labelPadding }
+
+    /// How much wider than tall a readout pill has to be to read as a badge.
+    ///
+    /// The corner radius is half the short side, so a chip only a little wider
+    /// than it is tall has its two semicircular caps meeting in the middle and
+    /// draws a circle: "4 px" came out 55 by 42, barely a dozen points of
+    /// straight run, sitting on the canvas beside a "120 px" capsule as if the
+    /// two were different kinds of object. 1.7 is the proportion a three digit
+    /// readout already has (73 by 42, or 1.74, at the default size), so a short
+    /// one joins the family it is already in rather than inventing a shape of its
+    /// own, and it is the widest floor that leaves every readout that already
+    /// reads as a badge at exactly the size it is, at every label size on the
+    /// slider.
+    public static let labelBadgeAspect: CGFloat = 1.7
+
+    /// The narrowest a readout pill is ever drawn. Derived from the font size
+    /// and padding alone, never from measured glyphs, because two places need
+    /// the SAME number: the rasterizer, which knows the real text width, and
+    /// `estimatedLabelSize`, which reserves the frame from a digit count and
+    /// measures nothing. A floor either of them could compute differently is a
+    /// floor the drawn pill can spill out of.
+    public var labelMinPillWidth: CGFloat { labelPillHeight * Self.labelBadgeAspect }
+
     /// A generous estimate of the chip's footprint, used by the builder to
     /// reserve frame space. Sized from the raw-pixel magnitude (an upper bound on
     /// digit count across units), so it stays stable when the unit/scale changes.
@@ -466,21 +497,15 @@ extension MeasureContent {
             // line box is 1.2 em plus 5. Sized to hold the real pill at every
             // label size, and no wider, so a guide near the edge of a narrow
             // picture is not pushed sideways for room it does not need.
-            let w = chars * (labelPointSize * 0.44 + 1.2) + 2 * labelPadding
-            let h = labelPointSize * 1.2 + 5 + 2 * labelPadding
-            return CGSize(width: w.rounded(.up), height: h.rounded(.up))
+            let w = max(chars * (labelPointSize * 0.44 + 1.2) + 2 * labelPadding, labelMinPillWidth)
+            return CGSize(width: w.rounded(.up), height: labelPillHeight.rounded(.up))
         }
         let digits = max(1, String(Int(rawDistance.rounded())).count)
         let chars = CGFloat(digits + 4) // space + up-to-2-char unit + slack
-        let w = chars * labelPointSize * 0.62 + 2 * labelPadding
-        // The line box is 1.2 em plus 5, the same rule the alignment chip
-        // uses. SF Pro's line height is not a fixed multiple of the size (it
-        // runs about 1.67 em at 9 pt, 1.44 em at 18 pt, 1.22 em at 90 pt),
-        // and the old 1.3 em came up two pixels short at the default size,
-        // which shaved the pill's bottom border off an export whenever the
-        // readout was the outermost thing in its layer (`CaliperChipTests`).
-        let h = labelPointSize * 1.2 + 5 + 2 * labelPadding
-        return CGSize(width: w.rounded(.up), height: h.rounded(.up))
+        // Floored at `labelMinPillWidth`, the same floor the rasterizer draws
+        // with, so a one or two digit readout reserves the badge it becomes.
+        let w = max(chars * labelPointSize * 0.62 + 2 * labelPadding, labelMinPillWidth)
+        return CGSize(width: w.rounded(.up), height: labelPillHeight.rounded(.up))
     }
 
     /// How far the pill's ink reaches past its reserved rect: the border is

@@ -268,7 +268,8 @@ public enum MeasureRasterizer {
             return LabelPlan(center: g.labelAnchor, size: .zero, pill: nil, leader: nil)
         }
         let size = chipFootprint(for: text, fontSize: measure.labelPointSize,
-                                 padding: measure.labelPadding)
+                                 padding: measure.labelPadding,
+                                 minWidth: measure.labelMinPillWidth)
         let center = measure.labelPosition(chipSize: size)
         let outline = Pill(rect: CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
                                         width: size.width, height: size.height),
@@ -362,9 +363,13 @@ public enum MeasureRasterizer {
         vertical ? CGPoint(x: cross, y: along) : CGPoint(x: along, y: cross)
     }
 
-    /// The chip's footprint = measured text (at `fontSize`) + padding on all sides.
-    private static func chipFootprint(for text: String, fontSize: CGFloat, padding: CGFloat) -> CGSize {
-        PillRasterizer.footprint(for: text, fontSize: fontSize, padding: padding)
+    /// The chip's footprint = measured text (at `fontSize`) + padding on all
+    /// sides, floored at `minWidth` so a one or two digit readout still reads
+    /// as the badge a longer one is (`MeasureContent.labelBadgeAspect`).
+    private static func chipFootprint(for text: String, fontSize: CGFloat, padding: CGFloat,
+                                      minWidth: CGFloat) -> CGSize {
+        PillRasterizer.footprint(for: text, fontSize: fontSize, padding: padding,
+                                 minWidth: minWidth)
     }
 
     /// One caliper leg: `foot → (rounded corner at head) → toward` (the head-line

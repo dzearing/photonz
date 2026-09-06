@@ -1,0 +1,40 @@
+{
+  "feature": "Every measurement reads as the same badge",
+  "epic": "measure-redline",
+  "summary": "A one or two digit readout used to draw as a circle, because the pill's two rounded ends met with almost no straight run between them. Short readouts now have a floor width, so a 2 px gap and a 124 px width are the same shape on the canvas.",
+  "setup": "Photonz Dev, any screenshot open. Nothing to turn on: the measure tool draws this by default in both releases.",
+  "try": [
+    {
+      "do": "Open a screenshot and press I for the measure tool."
+    },
+    {
+      "do": "Pick Gap, hover a tight space between two things, and click to measure it.",
+      "shot": "2026-09-06-measure-chip-badge-1.png"
+    },
+    {
+      "do": "Pick Size and click a wide element, so a three digit number lands beside the small one."
+    },
+    {
+      "do": "Look at the two numbers together: they should read as one kind of object."
+    },
+    {
+      "do": "Zoom in twice and look at where each caliper's line meets its number.",
+      "shot": "2026-09-06-measure-chip-badge-2.png"
+    },
+    {
+      "do": "Drag the Label size slider in the Measurement section from end to end and watch the small number."
+    }
+  ],
+  "evaluate": [
+    "Does a 2 px reading now look like the same object as a 124 px reading?",
+    "Is the extra width around a short number generous, or does it look padded out?",
+    "Does a short number ever cover something you wanted to see, now that its chip is wider?",
+    "At the smallest label size, is a short number still comfortable to read?"
+  ],
+  "rough": [
+    "The task said a short chip was narrower than it was tall. It never was: a caliper always prints its unit, so the shortest text it draws is \"4 px\" and the chip was 55 by 42. The real problem was roundness, not orientation, so the fix is a badge proportion (1.7 wide for every 1 tall) rather than a wider-than-tall floor.",
+    "1.7 rather than the 1.74 a three digit readout happens to have, for one reason: it is the widest floor that leaves every readout that already reads as a badge at exactly the size it is today, at every label size on the slider. A short chip lands about 1% narrower than a three digit one, which is under half a point at the default size.",
+    "The arrow caption uses the same pill and still has its own, much rounder floor (1.2), so an arrow captioned \"1\" still draws a near circle beside a measurement that now draws a badge. Left alone deliberately: that feature was audited on 2026-09-04 and deserves its own before and after rather than a silent restyle. Filed as its own task.",
+    "Screenshots are real window captures from the probe build, not offscreen renders."
+  ]
+}
