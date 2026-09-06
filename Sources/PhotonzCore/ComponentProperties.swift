@@ -10,7 +10,7 @@ import Foundation
 /// inside a copy is still the original's, so the only things a copy owns are
 /// its answers.
 ///
-/// There are four kinds of knob and they are deliberately the same shape as
+/// There are five kinds of knob and they are deliberately the same shape as
 /// each other: every one of them is one fact about one layer inside the
 /// original.
 ///
@@ -19,14 +19,19 @@ import Foundation
 /// - **a choice** (`.variant`) — which ONE of a group's children is drawn.
 /// - **a colour** (`.color`) — what one PART of a layer is painted: its fill,
 ///   its outline, its ink, its border.
+/// - **a number** (`.number`) — one of the numbers a layer already has: how
+///   round it is, how thick the line round it is, how far apart a stack holds
+///   its contents, how much room a group keeps inside its edges
+///   (`ComponentNumberKnob.swift`).
 ///
 /// The third is what makes "an instance can never show something the original
 /// does not define" true rather than aspirational: a choice can only land on a
 /// layer the group already holds, so there is nowhere for a copy to drift to.
 ///
-/// The fourth is the only one that names something narrower than a layer, and
-/// it has to: one box has both a fill and an outline, so a colour knob carries
-/// the slot it paints alongside the layer it reaches.
+/// The last two are the ones that name something narrower than a layer, and
+/// they have to: one box has both a fill and an outline, and both a rounding
+/// and a thickness, so those knobs carry the slot they turn alongside the layer
+/// they reach.
 
 // MARK: - The knob
 
@@ -41,6 +46,9 @@ public enum ComponentPropertyKind: String, Hashable, Codable, Sendable, CaseIter
     /// What one part of a layer is painted. The part itself is the knob's
     /// `slot`, because a box has more than one colour.
     case color
+    /// One of the numbers a layer already has. Which number is the knob's
+    /// `numberSlot`, because a box has more than one number.
+    case number
 
     /// What the knob is called where a person meets it. Plain words: nobody
     /// arrives knowing what "boolean" or "variant" means.
@@ -50,6 +58,7 @@ public enum ComponentPropertyKind: String, Hashable, Codable, Sendable, CaseIter
         case .visible: return "Show or hide"
         case .variant: return "Choice"
         case .color: return "Color"
+        case .number: return "Number"
         }
     }
 
@@ -61,9 +70,10 @@ public enum ComponentPropertyKind: String, Hashable, Codable, Sendable, CaseIter
         case .text: return "Wording"
         case .visible: return "Show"
         case .variant: return "Shape"
-        // Never reached: a colour knob is named after the part it paints, so
-        // `defaultPropertyName` answers for it before this does.
+        // Never reached: a colour and a number knob are named after the part
+        // they turn, so `defaultPropertyName` answers for them before this does.
         case .color: return "Color"
+        case .number: return "Number"
         }
     }
 
@@ -74,6 +84,7 @@ public enum ComponentPropertyKind: String, Hashable, Codable, Sendable, CaseIter
         case .visible: return "show"
         case .variant: return "choice"
         case .color: return "color"
+        case .number: return "number"
         }
     }
 }
@@ -93,14 +104,19 @@ public struct ComponentProperty: Hashable, Codable, Sendable, Identifiable {
     /// from anything written before colour knobs existed, so an old document
     /// decodes exactly as it did.
     public var slot: ColorSlot?
+    /// WHICH number, on a `.number` knob. Nil for every other kind, and absent
+    /// from the file entirely otherwise, so a document written before number
+    /// knobs existed decodes exactly as it did.
+    public var numberSlot: ComponentNumberSlot?
 
     public init(id: UUID = UUID(), name: String, kind: ComponentPropertyKind, target: UUID,
-                slot: ColorSlot? = nil) {
+                slot: ColorSlot? = nil, numberSlot: ComponentNumberSlot? = nil) {
         self.id = id
         self.name = name
         self.kind = kind
         self.target = target
         self.slot = kind == .color ? slot : nil
+        self.numberSlot = kind == .number ? numberSlot : nil
     }
 }
 
@@ -143,6 +159,8 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
     case variant(UUID)
     /// What one part of the copy is painted, and the saved colour it points at.
     case color(ComponentColorAnswer)
+    /// What one of the copy's numbers is set to.
+    case number(CGFloat)
 
     /// The kind of knob this answer fits, so an answer can never land on a
     /// knob it makes no sense for.
@@ -152,7 +170,16 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .visible: return .visible
         case .variant: return .variant
         case .color: return .color
+        case .number: return .number
         }
+    }
+
+    /// This answer with anything nobody could mean taken out of it: a number
+    /// below nought, or one that is not a number at all, comes back as nought
+    /// rather than being stored and drawn.
+    var settled: ComponentPropertyValue {
+        guard case .number(let value) = self else { return self }
+        return .number(value.isFinite ? max(0, value) : 0)
     }
 
     public var textValue: String? {
@@ -175,7 +202,14 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         return nil
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, text, visible, variant, color }
+    public var numberValue: CGFloat? {
+        if case .number(let value) = self { return value }
+        return nil
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, text, visible, variant, color, number
+    }
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
@@ -185,6 +219,7 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .visible(let flag): try c.encode(flag, forKey: .visible)
         case .variant(let id): try c.encode(id, forKey: .variant)
         case .color(let answer): try c.encode(answer, forKey: .color)
+        case .number(let value): try c.encode(value, forKey: .number)
         }
     }
 
@@ -195,6 +230,7 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .visible: self = .visible(try c.decode(Bool.self, forKey: .visible))
         case .variant: self = .variant(try c.decode(UUID.self, forKey: .variant))
         case .color: self = .color(try c.decode(ComponentColorAnswer.self, forKey: .color))
+        case .number: self = .number(try c.decode(CGFloat.self, forKey: .number))
         }
     }
 }
@@ -227,18 +263,26 @@ public struct ComponentPropertyCandidate: Hashable, Sendable {
     /// because "already exposed" is about ONE colour and not about the layer:
     /// exposing a box's fill leaves its outline on offer.
     public var colorSlots: [ColorSlot]
+    /// The numbers this layer could still offer, in the order the inspector
+    /// lists them. `.number` appears in `kinds` exactly while this is not empty,
+    /// for the same reason a colour does: "already exposed" is about ONE number
+    /// and not about the layer, so exposing a box's rounding leaves its
+    /// thickness on offer.
+    public var numberSlots: [ComponentNumberSlot]
     /// What an unnamed text layer says, so a menu of rows all reading "Text" is
     /// still a menu you can choose from. Nil for anything the author named,
     /// where the name already says which layer this is.
     public var words: String?
 
     public init(layerID: UUID, name: String, path: [String], kinds: [ComponentPropertyKind],
-                colorSlots: [ColorSlot] = [], words: String? = nil) {
+                colorSlots: [ColorSlot] = [], numberSlots: [ComponentNumberSlot] = [],
+                words: String? = nil) {
         self.layerID = layerID
         self.name = name
         self.path = path
         self.kinds = kinds
         self.colorSlots = colorSlots
+        self.numberSlots = numberSlots
         self.words = words
     }
 
@@ -360,11 +404,18 @@ extension PhotonzDocument {
                     !taken.contains(PropertyKey(target: layer.id, kind: .color, slot: $0))
                 }
                 if !slots.isEmpty { kinds.append(.color) }
+                // Numbers are counted one at a time for the same reason: a box
+                // whose rounding is already a knob still has a thickness to
+                // offer.
+                let numbers = layer.knobNumberSlots.filter {
+                    !taken.contains(PropertyKey(target: layer.id, kind: .number, numberSlot: $0))
+                }
+                if !numbers.isEmpty { kinds.append(.number) }
                 let here = path + [layer.name]
                 if !kinds.isEmpty {
                     found.append(ComponentPropertyCandidate(layerID: layer.id, name: layer.name,
                                                             path: here, kinds: kinds,
-                                                            colorSlots: slots,
+                                                            colorSlots: slots, numberSlots: numbers,
                                                             words: Self.menuWords(of: layer)))
                 }
                 // A copy's insides belong to ITS original, so there is nothing
@@ -390,14 +441,23 @@ extension PhotonzDocument {
     /// is the check `addComponentProperty` makes and the menu asks first.
     public func canAddComponentProperty(componentID: UUID, version: UUID? = nil, target: UUID,
                                         kind: ComponentPropertyKind,
-                                        slot: ColorSlot? = nil) -> Bool {
+                                        slot: ColorSlot? = nil,
+                                        numberSlot: ComponentNumberSlot? = nil) -> Bool {
         guard let candidate = componentPropertyCandidates(componentID: componentID, version: version)
             .first(where: { $0.layerID == target }) else { return false }
-        guard kind == .color else { return slot == nil && candidate.kinds.contains(kind) }
-        // "The colour" of a box that has two is not a thing, so a colour knob
-        // with no part named is refused rather than guessed at.
-        guard let slot else { return false }
-        return candidate.colorSlots.contains(slot)
+        switch kind {
+        case .color:
+            // "The colour" of a box that has two is not a thing, so a colour
+            // knob with no part named is refused rather than guessed at.
+            guard let slot, numberSlot == nil else { return false }
+            return candidate.colorSlots.contains(slot)
+        case .number:
+            // Nor is "the number" of a box that has a rounding and a thickness.
+            guard let numberSlot, slot == nil else { return false }
+            return candidate.numberSlots.contains(numberSlot)
+        case .text, .visible, .variant:
+            return slot == nil && numberSlot == nil && candidate.kinds.contains(kind)
+        }
     }
 
     /// Exposes a layer inside an original as a knob, and returns the knob's id.
@@ -416,16 +476,18 @@ extension PhotonzDocument {
                                               target: UUID,
                                               kind: ComponentPropertyKind,
                                               slot: ColorSlot? = nil,
+                                              numberSlot: ComponentNumberSlot? = nil,
                                               name: String? = nil) -> UUID? {
         guard canAddComponentProperty(componentID: componentID, version: version, target: target,
-                                      kind: kind, slot: slot),
+                                      kind: kind, slot: slot, numberSlot: numberSlot),
               let main = mainComponent(componentID: componentID, version: version),
               let targetLayer = layer(id: target) else { return nil }
         let chosen = ComponentNaming.normalized(name)
             ?? freshPropertyName(base: Self.defaultPropertyName(for: targetLayer, kind: kind,
-                                                                slot: slot),
+                                                                slot: slot, numberSlot: numberSlot),
                                  taken: main.componentProperties.map(\.name))
-        let property = ComponentProperty(name: chosen, kind: kind, target: target, slot: slot)
+        let property = ComponentProperty(name: chosen, kind: kind, target: target, slot: slot,
+                                         numberSlot: numberSlot)
         if kind == .variant { settleVariant(target: target) }
         updateLayer(id: main.id) { layer in
             guard var group = layer.group else { return }
@@ -499,11 +561,13 @@ extension PhotonzDocument {
         guard let property = componentProperty(componentID: componentID, version: version,
                                                propertyID: propertyID),
               let target = layer(id: property.target) else { return nil }
-        return Self.value(of: property.kind, slot: property.slot, on: target)
+        return Self.value(of: property.kind, slot: property.slot,
+                          numberSlot: property.numberSlot, on: target)
     }
 
     /// One layer's own answer to a kind of knob.
     static func value(of kind: ComponentPropertyKind, slot: ColorSlot? = nil,
+                      numberSlot: ComponentNumberSlot? = nil,
                       on layer: Layer) -> ComponentPropertyValue? {
         switch kind {
         case .text:
@@ -523,6 +587,13 @@ extension PhotonzDocument {
             guard let slot, let paint = layer.paint(for: slot) else { return nil }
             return .color(ComponentColorAnswer(paint: paint,
                                                styleID: layer.colorStyleID(for: slot)))
+        case .number:
+            // A number the layer has stopped having — a stack turned back into
+            // a group that arranges nothing — leaves the knob with nothing to
+            // read, and the knob stays on the list for the same reason a
+            // switched-off colour does.
+            guard let numberSlot, let value = layer.number(for: numberSlot) else { return nil }
+            return .number(value)
         }
     }
 
@@ -547,8 +618,13 @@ extension PhotonzDocument {
     /// named after the box says nothing about which of them it turns, and the
     /// rest of the app already names colours this way.
     static func defaultPropertyName(for layer: Layer, kind: ComponentPropertyKind,
-                                    slot: ColorSlot? = nil) -> String {
+                                    slot: ColorSlot? = nil,
+                                    numberSlot: ComponentNumberSlot? = nil) -> String {
         if kind == .color { return slot?.selectionTitle ?? kind.defaultName }
+        // A number knob is named the same way and for the same reason: one box
+        // has a rounding and a thickness, so a knob named after the box says
+        // nothing about which of them it turns.
+        if kind == .number { return numberSlot?.title ?? kind.defaultName }
         if ComponentNaming.isPlaceholderLayerName(layer.name) { return kind.defaultName }
         return layer.name
     }
@@ -583,13 +659,18 @@ extension PhotonzDocument {
         /// Which colour, on a colour knob, so "already exposed that way" means
         /// one colour rather than the whole layer.
         var slot: ColorSlot?
-        init(target: UUID, kind: ComponentPropertyKind, slot: ColorSlot? = nil) {
+        /// Which number, on a number knob, for the same reason.
+        var numberSlot: ComponentNumberSlot?
+        init(target: UUID, kind: ComponentPropertyKind, slot: ColorSlot? = nil,
+             numberSlot: ComponentNumberSlot? = nil) {
             self.target = target
             self.kind = kind
             self.slot = slot
+            self.numberSlot = numberSlot
         }
         init(_ property: ComponentProperty) {
-            self.init(target: property.target, kind: property.kind, slot: property.slot)
+            self.init(target: property.target, kind: property.kind, slot: property.slot,
+                      numberSlot: property.numberSlot)
         }
     }
 }
@@ -645,6 +726,13 @@ extension PhotonzDocument {
             guard let styleID = answer.styleID else { return true }
             return colorStyle(id: styleID) != nil
         }
+        if case .number = value {
+            // A number the original no longer has is nothing to override: the
+            // knob's own slot reads nothing, so setting it here would give the
+            // copy a gap its original does not define.
+            return componentDefaultValue(componentID: componentID, version: version,
+                                         propertyID: propertyID) != nil
+        }
         guard case .variant(let option) = value else { return true }
         return componentVariantOptions(componentID: componentID, version: version,
                                        propertyID: propertyID)
@@ -656,6 +744,11 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func setInstanceOverride(instance: UUID, property propertyID: UUID,
                                              value: ComponentPropertyValue) -> Bool {
+        // A number nobody could mean is settled before it is stored rather than
+        // refused: typing over a field passes through a minus sign on the way
+        // to a number, and a row that simply refused would be a row that
+        // silently did nothing.
+        let value = value.settled
         guard canSetInstanceOverride(instance: instance, property: propertyID, value: value)
         else { return false }
         updateLayer(id: instance) { layer in
@@ -729,10 +822,18 @@ extension PhotonzDocument {
                 // follows every edit to it without storing the colour twice.
                 value = .color(resolvedColorAnswer(answer, slot: slot))
             }
+            if case .number = value {
+                // A number the original has stopped having — a stack turned
+                // back into a plain group — has nothing for the copy to
+                // override. The answer is kept, so turning the stack back on
+                // brings it straight back.
+                guard let numberSlot = property.numberSlot,
+                      layer(id: property.target)?.number(for: numberSlot) != nil else { continue }
+            }
             let derived = ComponentIdentity.derived(instance: instance, source: property.target)
             Self.mutate(id: derived, in: &children, contents: contents) { layer, holder in
                 Self.apply(value, to: &layer, instance: instance, slot: property.slot,
-                           contents: holder)
+                           numberSlot: property.numberSlot, contents: holder)
             }
         }
     }
@@ -752,7 +853,8 @@ extension PhotonzDocument {
     /// group around this layer lines its contents up, which is what decides
     /// which edge a label grows from when its wording gets longer.
     private static func apply(_ value: ComponentPropertyValue, to layer: inout Layer,
-                              instance: UUID, slot: ColorSlot?, contents: LayerPlacement?) {
+                              instance: UUID, slot: ColorSlot?,
+                              numberSlot: ComponentNumberSlot?, contents: LayerPlacement?) {
         switch value {
         case .text(let string):
             guard case .text(var content) = layer.content else { return }
@@ -796,6 +898,9 @@ extension PhotonzDocument {
             } else {
                 layer.unbindColorStyle(for: slot)
             }
+        case .number(let number):
+            guard let numberSlot else { return }
+            layer.setNumber(number, for: numberSlot)
         }
     }
 

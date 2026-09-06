@@ -42,6 +42,11 @@ public enum ComponentKnobReading: Hashable, Sendable {
 
     /// The one shape they all show. Nil when they differ.
     public var optionValue: UUID? { value?.optionValue }
+
+    /// The number they all wear. Nil when they differ, which is what puts the
+    /// word Mixed in the field rather than one copy's number standing in for
+    /// everybody's.
+    public var numberValue: CGFloat? { value?.numberValue }
 }
 
 /// The copies one Component section speaks for, and what each knob reads

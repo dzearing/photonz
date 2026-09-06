@@ -9423,3 +9423,29 @@ the dock, out of a walk's pointer reach). Audit:
 
 Next: the audit asks whether the pill should offer a way to put the color back
 on offer for fills, rather than sending you to the Library.
+
+## 2026-09-06 — A knob can be a number
+
+Landed the fifth and last knob kind for components in Next (`next-components`).
+A component can now offer one of four numbers on a layer inside it — corner
+radius, thickness, gap, room inside — and every copy gets a number field it can
+set for itself while the rest of it keeps following the original.
+
+- `Sources/PhotonzCore/ComponentNumberKnob.swift` is new: `ComponentNumberSlot`
+  and the reading/writing of one number on one layer. `setCornerRadius` and
+  `setOutlineWidth` were refactored onto its two `Layer` helpers, so the canvas
+  rows and a copy's knob can never round or thicken differently.
+- `ComponentProperties.swift` gained `.number`, `ComponentProperty.numberSlot`
+  (optional, absent from the file otherwise, so old documents decode unchanged),
+  `.number(CGFloat)` as an answer, and a settling step that clamps a negative or
+  non-finite number to nought rather than refusing it.
+- The copy's row reuses `LayoutNumberField`, the same control the Gap and
+  Padding rows are, so the arrow keys, Return handing the keyboard back, the
+  rounding and the word Mixed are decided once.
+- Verified on the probe app with a new walk, `copy-own-number-walk.json`, and a
+  new `exposeNumber` playtest step. Audit:
+  `queue/audits/2026-09-06-a-knob-can-be-a-number.json`.
+
+Next: two follow-ups are queued — a knob cannot reach the original's own
+outermost group (so a card's own room inside is still not adjustable per copy),
+and room that differs side to side cannot be a knob at all.

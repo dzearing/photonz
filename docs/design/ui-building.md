@@ -592,12 +592,14 @@ real limit of the slices above, not an oversight.
   and available everywhere, and dropping one copies it into your document.
 - **Styles are per document too**, and have no token layer underneath, so there
   is no light and dark resolution of a named color yet.
-- **Four kinds of exposed property**: wording, whether a part shows, a choice
-  among shapes the main already contains, and a COLOUR (one slot of one layer:
-  its fill, outline, ink or border). No numbers and no images as properties.
-  A colour answer may be a raw paint or a saved colour, so a copy can be "the
-  danger one" and follow every later edit to that name; the knobs panel still
-  speaks for one copy at a time, so there is no Mixed reading on screen yet.
+- **Five kinds of exposed property**: wording, whether a part shows, a choice
+  among shapes the main already contains, a COLOUR (one slot of one layer: its
+  fill, outline, ink or border), and a NUMBER (one of four numbers on one layer:
+  its corner radius, the thickness of the line round it, the gap a stack holds
+  its contents apart by, or the room it keeps inside its edges). No images as
+  properties, and no numbers beyond those four. A colour answer may be a raw
+  paint or a saved colour, so a copy can be "the danger one" and follow every
+  later edit to that name.
 - **Detach is one way.** There is no re-attach; undo is the way back.
 - **A main cannot be made from a group that already contains a main.** An
   instance inside a main is fine and updates correctly; promoting a group that
@@ -1685,6 +1687,50 @@ name and whether it is hidden are still its own, which is what lets copies sit
 in different spots at all.
 
 Walked end to end by `Scripts/playtest/component-look-walk.json`.
+
+## Landed: a knob can be a number (Next, `next-components`, 2026-09-06)
+
+The fifth kind of knob, and the last one the first version left out. A copy could
+be given its own wording, its own visible pieces, its own shape and its own
+colour, but not its own number: a card original could not produce a round copy
+and a square one, or a roomy one and a tight one.
+
+- **Four numbers, not every number.** A layer carries dozens (where it sits, how
+  big it is, how faded, how far its shadow falls) and offering all of them would
+  rebuild the twenty-four row Add menu that grouping the menu by kind exists to
+  stop. The four are **Corner radius**, **Thickness**, **Gap** and **Padding**,
+  and every one of them is a number a person already types into the inspector
+  for an ordinary layer.
+- **Those four because the others are already the copy's.** Where a copy sits
+  and how big it is have always been its own; its fade, blur, rounding, border
+  and shadow have been its own part by part since C5's look-following. These
+  four sit on a layer INSIDE the original, which is the one place a copy has no
+  other way to reach.
+- **A number knob names WHICH number**, exactly as a colour knob names which
+  colour: one box has both a rounding and a thickness, so a knob called "Box"
+  would say nothing. It arrives named "Corner radius", and exposing one leaves
+  the other on offer.
+- **A layer is only offered the numbers it HAS.** A label has no corners to
+  round and no line round it, so it offers none; a group that arranges nothing
+  has no gap; and a group whose four sides of room disagree has no ONE number to
+  show, so it is not offered room at all rather than offered a field that would
+  print a number the group does not have.
+- **Rounding writes whichever number actually rounds.** A rectangle curves the
+  outline it draws and everything else has its corners masked off; the knob
+  reads and writes the one that is really rounding that layer and puts the other
+  to nought. It is the same one step the canvas's Corner Radius row takes
+  (`ComponentNumberKnob.swift`), so the two can never disagree.
+- **The field is the same field.** A knob's number field is the control the Gap
+  and Padding rows on the canvas are, so the arrow keys stepping it, Return
+  landing it and handing the keyboard back to the picture, the rounding, and the
+  word Mixed over several copies are all decided in one place.
+
+Deliberately left: a knob still cannot reach the original's OWN root, so a card
+whose room inside sits on the component's outermost group cannot hand that room
+to its copies yet (its rounding it already can, through the look-following). Room
+that differs side to side cannot be a knob. And a copy's panel can show a knob
+called "Corner radius" above the Effects section's own "Corner Radius" slider,
+which round different things; renaming the knob is one field away.
 
 ## Landed: a knob is named for what it controls (Next, `next-components`, 2026-09-03)
 

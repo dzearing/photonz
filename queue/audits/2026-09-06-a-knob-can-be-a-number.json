@@ -1,0 +1,29 @@
+{
+  "feature": "A knob can be a number",
+  "epic": "ui-components",
+  "summary": "A component can now hand a copy one of its numbers. Expose the rounding of a shape inside a card, or the gap or the room inside a stack inside it, and every copy gets a number field it can set for itself while the rest of it still follows the original.",
+  "setup": "Photonz Next, Experiments window, release Next. next-library, next-components and next-starter-components are on by default; nothing else to switch on.",
+  "try": [
+    { "do": "Draw a rectangle, then a text layer on top of it." },
+    { "do": "Select both, press Command G, then Option Command K and name it Card." },
+    { "do": "Round the rectangle: open the Card, select the rectangle, pull Corner Radius up." },
+    { "do": "Back on the Card, press Add in its Adjustable list and choose Number, then the row ending Corner radius.", "shot": "2026-09-06-copy-own-number-3-squared-sc.png" },
+    { "do": "Drop two copies of Card on the canvas from the Library." },
+    { "do": "Select one copy and type 0 into the Corner radius row in its Component section." },
+    { "do": "Select both copies at once and read the Corner radius row.", "shot": "2026-09-06-copy-own-number-6-mixed-sc.png" },
+    { "do": "Type 24 into it and watch both copies take it in one step." }
+  ],
+  "evaluate": [
+    "When you press Add, does the Number heading make it obvious what you are about to hand to every copy, or does the row read like a file path?",
+    "Does the copy's Corner radius row look like a number field you can just type into, or does it read as a readout?",
+    "The copy's panel can show a knob called Corner radius above the Effects section's own Corner Radius slider, which round different things. Is that confusing enough to fix, or does the section heading make it clear?",
+    "Four numbers are on offer: corner radius, thickness, gap, padding. Is one of them useless, and is one you reach for missing?",
+    "Every group and every picture offers a corner radius even when it has none today. Is that a useful way to round a copy, or menu noise?"
+  ],
+  "rough": [
+    "A knob cannot reach the original's own outermost group, so a card whose room inside sits on the component itself cannot hand that room to its copies. Its rounding it already can, because a copy owns its own look part by part. Filed as a follow-up.",
+    "Room that is different on each side cannot be a knob at all: there is no one number to show, so it is left off the menu rather than shown as a field that would print a number the group does not have. Filed as a follow-up.",
+    "The goal this task was written from said a number knob would let a card copy have different corner rounding. That was already true through the copy's own look, so the knob was built for numbers on layers INSIDE the original instead, which is where a copy really had no way in.",
+    "Screenshots here are real window captures from a scripted walk on the probe app, not offscreen renders."
+  ]
+}

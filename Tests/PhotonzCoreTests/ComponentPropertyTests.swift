@@ -49,9 +49,12 @@ struct ComponentPropertyTests {
         // ...and every one of them has a colour to offer, which is its own
         // kind (`ComponentColorKnobTests` is where the colours themselves are
         // pinned down).
+        // ...and a box and a group each have a number to offer as well, which
+        // is its own kind again (`ComponentNumberKnobTests`). A label has
+        // neither corners nor a line round it, so it offers none.
         #expect(kinds[c.labelID] == [.text, .visible, .color])
-        #expect(kinds[c.boxID] == [.visible, .color])
-        #expect(kinds[c.controlID] == [.visible, .variant])
+        #expect(kinds[c.boxID] == [.visible, .color, .number])
+        #expect(kinds[c.controlID] == [.visible, .variant, .number])
         // The original itself is not a knob on itself: a copy's own visibility
         // is already the copy's.
         #expect(kinds[c.main] == nil)

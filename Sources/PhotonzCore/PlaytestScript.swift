@@ -445,6 +445,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The same for a colour: expose the first colour the selected original has
     /// to offer, which is the fill of the first shape inside it.
     case exposeColor
+    /// The same for a number: expose the first number the selected original has
+    /// to offer, which is the rounding of the first shape inside it.
+    case exposeNumber
     /// Answers the selected copy's first colour knob with the document's first
     /// saved colour kept for that part. The list is a menu in the dock, which a
     /// walk cannot open, so this is how the named-colour path gets photographed.

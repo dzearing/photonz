@@ -126,9 +126,7 @@ extension PhotonzDocument {
     /// what is plainly on the canvas, so it reads the mask, and the first nudge
     /// moves that rounding onto the outline where it belongs.
     private func displayedCornerRadius(of layer: Layer, style: LayerStyle) -> CGFloat {
-        guard layer.roundsItsOwnOutline else { return style.cornerRadius }
-        let own = layer.annotation?.cornerRadius ?? 0
-        return own > 0 ? own : style.cornerRadius
+        layer.roundedCornerRadius(style: style)
     }
 
     /// One pull, every picked layer, each rounded the way it rounds. Returns
@@ -140,18 +138,12 @@ extension PhotonzDocument {
         var changed = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
-            if layer.roundsItsOwnOutline, var annotation = layer.annotation {
-                annotation.cornerRadius = radius
-                updateLayer(id: id) {
-                    $0.content = .annotation(annotation)
-                    // The old mask goes with it. Two radii fighting over one
-                    // rectangle is the thing this row exists to end, and the
-                    // mask is the one that chops the outline.
-                    $0.style.cornerRadius = 0
-                }
-            } else {
-                updateLayer(id: id) { $0.style.cornerRadius = radius }
-            }
+            // Each layer rounded the way it rounds, and the other number put to
+            // nought: two radii fighting over one rectangle is the thing this
+            // row exists to end (`ComponentNumberKnob.swift`, which is where a
+            // number knob on a copy rounds from too, so the two can never
+            // disagree).
+            updateLayer(id: id) { $0.setRoundedCorners(radius) }
             changed += 1
         }
         return changed

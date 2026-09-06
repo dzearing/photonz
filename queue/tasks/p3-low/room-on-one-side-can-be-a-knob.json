@@ -1,0 +1,28 @@
+{
+  "id": "room-on-one-side-can-be-a-knob",
+  "title": "Room on one side can be a knob",
+  "goal": "A card with 16 points of room at the sides and 10 at the top and bottom cannot offer its room to copies at all today, because a knob has to show one number and there is no single number there. This lets one side be offered on its own, so a copy can be given more room at the top without touching the other three.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1240,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T13:01:53.423Z",
+  "updated": "2026-09-06T13:01:53.423Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "ComponentNumberSlot.padding reads GroupLayout.usedPadding.uniform and returns nil when the sides disagree, so the slot is simply not offered. A per-side knob means either widening ComponentNumberSlot with four side cases or giving the slot a GroupPadding.Side. Watch the Add menu size: four extra rows per group is exactly the bloat the kind-grouped menu exists to stop, so only offer sides where they already disagree.",
+  "acceptance": [
+    "Room on one named side of a group can be offered as a knob",
+    "A copy shows it as a number field, and the other three sides stay the original's",
+    "A group whose four sides already agree still offers the single Padding knob it offers today, not four extra rows",
+    "Tests in PhotonzCore cover it before the app code is written"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T13:01:53.423Z",
+      "note": "created (manual)"
+    }
+  ]
+}

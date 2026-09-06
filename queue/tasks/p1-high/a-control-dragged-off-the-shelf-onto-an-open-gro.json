@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T06:04:18.627Z",
-  "updated": "2026-09-06T12:19:32.212Z",
+  "updated": "2026-09-06T12:41:43.980Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while auditing the Nav Bar row (queue/audits/2026-09-05-nav-bar-row.json): a Badge dragged onto an open Nav Bar landed as a sibling at the top level. The model side already works - GroupChromeTests aSecondControlLinesUp appends a child and the row places it - so this is the drop target, not the flow. Look at the dragTile/drop path in the Library panel and the canvas drop handler.",
@@ -75,7 +75,12 @@
     {
       "t": "2026-09-06T00:00:00.000Z",
       "note": "Two follow-ups filed: 'Where you let go in a row decides where the piece goes in the row' (a piece always joins at the end today) and 'A control added to a bar does not vanish behind its title' (the bar's centred Title is drawn under the controls the row packs in)."
+    },
+    {
+      "t": "2026-09-06T12:41:43.980Z",
+      "note": "A tile dropped on a group you have stepped inside now joins it. Model: dropHostID(under:inside:) in Frames.swift is the one host question; componentDropTarget/insertComponentInstance/insertStarterComponent all take inside: and route through it, and componentDropLanding draws the box where the row will actually park the piece rather than under the pointer. Verified in the real app with Scripts/playtest/drop-into-open-group-walk.json (which reproduced the old behaviour first): all four acceptance items pass. Scripts/test.sh green, 3788 tests. Audit at queue/audits/2026-09-06-drop-into-open-group.json with two real window captures. Pushed as 16bbe44."
     }
   ],
-  "started": "2026-09-06T12:19:32.211Z"
+  "started": "2026-09-06T12:19:32.211Z",
+  "completed": "2026-09-06T12:41:43.980Z"
 }

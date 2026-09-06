@@ -59,7 +59,9 @@ struct ComponentColorKnobTests {
         #expect(slots[c.boxID] == [.fill, .stroke])
         #expect(slots[c.labelID] == [.text])
         let kinds = Dictionary(uniqueKeysWithValues: candidates.map { ($0.layerID, Set($0.kinds)) })
-        #expect(kinds[c.boxID] == [.visible, .color])
+        // A box also has numbers to offer, which is its own kind
+        // (`ComponentNumberKnobTests`); a label has none.
+        #expect(kinds[c.boxID] == [.visible, .color, .number])
         #expect(kinds[c.labelID] == [.text, .visible, .color])
     }
 

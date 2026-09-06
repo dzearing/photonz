@@ -96,17 +96,13 @@ extension PhotonzDocument {
         let width = max(0, width)
         var changed = 0
         for id in layerIDs {
-            guard let layer = layer(id: id), !layer.isLocked, layer.drawsItsOwnOutline,
-                  var annotation = layer.annotation else { continue }
-            let color = layer.outlineColorHex
-            annotation.strokeWidth = width
-            annotation.colorHex = color
-            updateLayer(id: id) {
-                $0.content = .annotation(annotation)
-                // The border goes with it. Two rings round one box, one of them
-                // hidden under the other, is the thing this row exists to end.
-                $0.style.borderWidth = 0
-            }
+            guard let layer = layer(id: id), !layer.isLocked, layer.drawsItsOwnOutline
+            else { continue }
+            // The border goes with it. Two rings round one box, one of them
+            // hidden under the other, is the thing this row exists to end, and
+            // a number knob on a copy sets its thickness through the same one
+            // step (`ComponentNumberKnob.swift`).
+            updateLayer(id: id) { $0.setOutlineWidth(width) }
             changed += 1
         }
         return changed

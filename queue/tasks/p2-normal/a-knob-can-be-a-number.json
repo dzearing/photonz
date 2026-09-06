@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:26.302Z",
-  "updated": "2026-09-06T12:16:42.201Z",
+  "updated": "2026-09-06T13:03:48.833Z",
   "deps": [
     "a-copy-can-be-given-its-own-color"
   ],
@@ -52,6 +52,31 @@
       "note": "seq 10 -> 10",
       "since": "2026-09-06T12:15:05.494Z",
       "count": 2
+    },
+    {
+      "t": "2026-09-06T12:42:11.169Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T12:46:32.923Z",
+      "note": "Adversarial review before building. (1) The goal says a card copy could get \"different corner rounding\" - but that already works: a copy owns its LOOK part by part (ComponentStyle.swift, LayerStyle.following), so rounding a copy on the canvas already sticks and already has a revert. So a number knob is NOT for the copy root; it is for numbers on layers INSIDE the original, which a copy has no other way to change. Building the root case would be a second mechanism fighting the first over the same field, which is exactly the two-sliders bug CornerRadiusSelection.swift exists to end. (2) Which numbers: a layer has dozens (x, y, w, h, opacity, blur, shadow radius/offset/spread, columns, rowGap, min/max). Offering all of them rebuilds the twenty-four-row Add menu the design doc rejected. Four earn their place, and each is a number a person already types in the inspector: Corner radius, Thickness, Gap, Padding. (3) Corner radius means two different fields underneath (a rectangle curves its outline, everything else masks). The knob reads and writes whichever one actually rounds that layer, reusing the same rules as the one Corner Radius row, or it would be a knob that silently does nothing. (4) Padding is four numbers. A knob offers it only where the four agree, so the field never shows a number that is not true; a card with different room on each side is left out and filed as follow-up. (5) A copy cannot get its own room inside the ROOT of a component: the sync rewrites the copy root layout from the original every pass. Out of scope here, filed separately."
+    },
+    {
+      "t": "2026-09-06T12:46:32.923Z",
+      "note": "Plan: fifth knob kind .number with a ComponentNumberSlot (cornerRadius, thickness, gap, padding), mirroring the .color/ColorSlot shape exactly so there is one code path. Core first (TDD), then the Add menu row and a number field on the copy panel that reuses LayoutNumberField so arrow keys, Mixed and the rounding all come from one place."
+    },
+    {
+      "t": "2026-09-06T13:03:48.833Z",
+      "note": "Built. Core: ComponentNumberKnob.swift holds ComponentNumberSlot (cornerRadius, thickness, gap, padding) plus Layer.number(for:)/setNumber(_:for:), and CornerRadiusSelection.setCornerRadius and OutlineWidth.setOutlineWidth were refactored onto the same two Layer helpers so the canvas row and the knob can never round or thicken differently. ComponentProperties gained .number, ComponentProperty.numberSlot (optional, absent from the file otherwise), .number(CGFloat) as an answer, a settled step that clamps a negative or non-finite number to nought, and candidate/canAdd/apply branches. 17 new tests in ComponentNumberKnobTests. App: a Number heading in the Add menu naming which number, and InstanceNumberKnob on a copy reusing LayoutNumberField (made internal) so arrow keys, Return handing the keyboard back, the rounding and Mixed all come from one place."
+    },
+    {
+      "t": "2026-09-06T13:03:48.833Z",
+      "note": "Verified on the real app, not just tests. New playtest walk Scripts/playtest/copy-own-number-walk.json and a new exposeNumber step; probe reported Screen Recording granted, so the shots are real window captures. Confirmed: the Adjustable list shows Corner radius with a number chip; a copy typed to 0 goes square while the original stays round and the revert arrow appears; arrow keys step it 18 to 21; two copies that disagree read Mixed the way X and Y above them do; typing 24 over Mixed reaches both in one step."
+    },
+    {
+      "t": "2026-09-06T13:03:48.833Z",
+      "note": "Adversarial review of the built thing. Rough, and recorded in the audit: a knob still cannot reach the original's own outermost group, so a card whose room inside sits there cannot hand it to copies (filed a-copy-have-its-own-room-inside); room that differs side to side is not offered at all (filed room-on-one-side-can-be-a-knob); and a copy's panel can show a knob called Corner radius above the Effects section's own Corner Radius slider, which round different things, though renaming the knob is one field away. Every group and picture offers a corner radius even at nought, which is honest (the mask really does cut its corners) but is the one place the menu grew; put it to the user in the audit's evaluate list."
     }
-  ]
+  ],
+  "started": "2026-09-06T12:42:11.169Z"
 }

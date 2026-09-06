@@ -1,0 +1,29 @@
+{
+  "id": "a-copy-can-have-its-own-room-inside",
+  "title": "A copy can have its own room inside",
+  "goal": "When you build a card as one group with room kept clear inside its edges, every copy of it is stuck with the same room. This lets the person who made the card offer that room as a knob, so one copy can be roomy and the next one tight, the same way they can already differ in colour or wording.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1380,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T13:01:45.735Z",
+  "updated": "2026-09-06T13:01:45.736Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Number knobs landed 2026-09-06 but reach only layers INSIDE the original: ComponentProperties.componentPropertyCandidates walks main.children, and applyOverrides maps property.target through ComponentIdentity.derived into the copy's children. The root would need applying in three more places (placeComponentInstance, syncComponentInstances rewrite after InstanceSizing.layout, and rebound's nested-copy path). Do NOT extend this to the root's style numbers (rounding, border, opacity): a copy already owns those part by part through LayerStyle.following, and two mechanisms writing one field is the two-sliders bug CornerRadiusSelection.swift exists to end. Layout numbers only: gap and padding.",
+  "acceptance": [
+    "The room a component keeps inside its own outermost edges can be offered as a knob",
+    "A copy given its own room shows it, and keeps it when the original is edited",
+    "A copy that has not answered still follows the original when its room changes",
+    "Old documents decode unchanged",
+    "Tests in PhotonzCore cover it before the app code is written"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T13:01:45.736Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -988,6 +988,19 @@ struct ComponentPropertyList: View {
                                                                          kind: kind, slot: slot)
                                     }
                                 }
+                            } else if kind == .number {
+                                // And a number row names WHICH number, for the
+                                // same reason: one box has a rounding and a
+                                // thickness.
+                                ForEach(candidate.numberSlots, id: \.self) { slot in
+                                    Button("\(candidate.pathLabel) \u{00B7} \(slot.title)") {
+                                        editorState.addComponentProperty(componentID: componentID,
+                                                                         version: version,
+                                                                         target: candidate.layerID,
+                                                                         kind: kind,
+                                                                         numberSlot: slot)
+                                    }
+                                }
                             } else {
                                 Button(candidate.menuLabel) {
                                     editorState.addComponentProperty(componentID: componentID,
@@ -1214,6 +1227,10 @@ struct ComponentInstanceProperties: View {
             .help("Only the shapes the original holds. A copy can never show something it does not define")
         case .color:
             InstanceColorKnob(instances: instances, property: property)
+        case .number:
+            InstanceNumberKnob(instances: instances, property: property,
+                               value: isMixed ? nil : reading.numberValue)
+            Spacer(minLength: 0)
         }
     }
 
@@ -1277,6 +1294,38 @@ private struct InstanceShowKnob: View {
             // it to collide with.
             if isMixed { MixedWord() }
         }
+    }
+}
+
+/// A number knob on a copy: the same typed field every number in the inspector
+/// is, speaking for the copies it is given rather than for a layer.
+///
+/// It is a `LayoutNumberField`, the same control the Gap and Padding rows on the
+/// canvas are, so the arrow keys, Return landing the number and handing the
+/// keyboard back to the picture, the rounding and the word Mixed are all decided
+/// in one place and the two can never drift apart.
+private struct InstanceNumberKnob: View {
+    @Environment(EditorState.self) private var editorState
+    /// The copies this row answers for. Mixed is what it says when they differ.
+    let instances: [UUID]
+    let property: ComponentProperty
+    /// The number they all wear, or nil while they disagree.
+    let value: CGFloat?
+
+    var body: some View {
+        LayoutNumberField(
+            title: property.name,
+            value: value,
+            // Mixed is a report about the selection, so it stands in the
+            // field's own place, drawn the one strength every other Mixed in
+            // the dock is drawn at.
+            placeholder: value == nil ? MixedValue.text : "",
+            help: property.numberSlot?.help ?? ""
+        ) { number in
+            editorState.setInstanceOverride(instances: instances, property: property.id,
+                                            value: .number(number))
+        }
+        .playtestField(property.name)
     }
 }
 

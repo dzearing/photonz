@@ -377,12 +377,14 @@ extension EditorState {
     @discardableResult
     func addComponentProperty(componentID: UUID, version: UUID? = nil, target: UUID,
                               kind: ComponentPropertyKind,
-                              slot: ColorSlot? = nil) -> UUID? {
+                              slot: ColorSlot? = nil,
+                              numberSlot: ComponentNumberSlot? = nil) -> UUID? {
         guard componentsEnabled else { return nil }
         var added: UUID?
         perform {
             added = $0.addComponentProperty(componentID: componentID, version: version,
-                                            target: target, kind: kind, slot: slot)
+                                            target: target, kind: kind, slot: slot,
+                                            numberSlot: numberSlot)
         }
         componentPropertyAwaitingName = added
         return added
@@ -805,10 +807,12 @@ extension EditorState {
               let componentID = document?.layer(id: id)?.componentID,
               let candidate = componentPropertyCandidates(componentID: componentID)
                   .first(where: { $0.kinds.contains(kind) }) else { return }
-        // A colour knob names WHICH colour, so a walk asking for one takes the
-        // first the candidate offers, which is a shape's fill.
+        // A colour knob names WHICH colour and a number knob WHICH number, so a
+        // walk asking for one takes the first the candidate offers: a shape's
+        // fill, a shape's rounding.
         addComponentProperty(componentID: componentID, target: candidate.layerID, kind: kind,
-                             slot: kind == .color ? candidate.colorSlots.first : nil)
+                             slot: kind == .color ? candidate.colorSlots.first : nil,
+                             numberSlot: kind == .number ? candidate.numberSlots.first : nil)
     }
 
     /// Answers the selected copy's first colour knob with the first saved

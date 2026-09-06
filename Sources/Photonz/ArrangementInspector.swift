@@ -607,7 +607,10 @@ struct ArrangementInspector: View {
 /// leaving the field — the same keys the geometry fields answer to, through the
 /// same `NumberFieldEntry` rules, so no two number fields in this app can drift
 /// apart.
-private struct LayoutNumberField: View {
+/// Shared, not private: a number knob on a copy of a component is this same
+/// field (`ComponentPanel.swift`), so the arrow keys, the rounding and the word
+/// Mixed are decided once rather than twice.
+struct LayoutNumberField: View {
     /// The row's own word, which is also what the field answers to by name:
     /// it is the placeholder and the accessibility label, so a walk can put
     /// the keyboard in "Gap" the way a person puts the pointer there.

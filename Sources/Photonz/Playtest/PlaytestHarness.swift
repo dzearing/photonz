@@ -930,6 +930,7 @@ private final class Run {
             case .exposeChoice: editor.exposeFirstProperty(kind: .variant)
             case .exposeShow: editor.exposeFirstProperty(kind: .visible)
             case .exposeColor: editor.exposeFirstProperty(kind: .color)
+            case .exposeNumber: editor.exposeFirstProperty(kind: .number)
             case .knobUsesSavedColor: editor.answerFirstColorKnobWithSavedColor()
             case .cycleChoice: editor.cycleInstanceChoice()
             case .makeChoice: editor.makeChoice()
