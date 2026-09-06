@@ -1,0 +1,34 @@
+{
+  "feature": "Columns on a screen",
+  "epic": "ui-layout",
+  "summary": "A screen can now be given the columns it is designed to, twelve with a gutter and a margin by default, four on a phone. They are drawn on that screen and a drag pulls to their edges, so a box lands on a column instead of near one.",
+  "setup": "Photonz Next, and a document with a screen in it. The flag is Frames, on by default. A screen starts with no columns, so nothing changes until you ask for them, and a screenshot or a plain canvas never sees any of this.",
+  "try": [
+    { "do": "Press F, drag out a screen, then press V to get the pointer back." },
+    { "do": "Tick Show columns in the Columns section of the panel, under Frame.", "shot": "2026-09-05-screen-columns-on.png" },
+    { "do": "Press R and draw a box anywhere on that screen, then press V." },
+    { "do": "Drag the box slowly across the screen and watch it catch each column edge.", "shot": "2026-09-05-screen-columns-caught.png" },
+    { "do": "Drag it again holding Command, and check nothing pulls at all." },
+    { "do": "Type 6 into Columns and 80 into Margin, and watch the bands follow both." },
+    { "do": "Untick Show columns, drag the box again, then tick it back on: the 6 and the 80 are still there." },
+    { "do": "Press Command apostrophe to put the canvas grid up as well, and see whether the two read as two different things.", "shot": "2026-09-05-screen-columns-both.png" }
+  ],
+  "evaluate": [
+    "The bands are drawn OVER what is on the screen, so a filled box gets a faint stripe across it. Is that the right call, or should the columns go behind your work even though that hides them on a white screen?",
+    "Twelve columns with a 24 gutter and a 32 margin is what a wide screen starts with, and four with a 16 gutter on a phone. Are those the numbers you would have typed?",
+    "A drag catches a column's left edge, its right edge, and its middle. Is the middle useful, or is it one magnet too many?",
+    "The line that appears runs the height of the screen the column is on, not the whole picture. Is that enough to say which column caught you?",
+    "The columns are a soft warm wash and the canvas grid is fine cool lines. With both on at once, do they read as two different things?",
+    "You reached the numbers through a Columns section that appears when a screen is selected. Was that where you looked first?"
+  ],
+  "rough": [
+    "The columns draw OVER the screen and its contents, not behind them as the task asked. A new screen paints itself white, so a band behind it is a band nobody can see: the feature would have shipped looking broken on the very first screen anybody makes. It is the same call the canvas grid made a day earlier, and it is the first question in the evaluate list because it is the one worth arguing with.",
+    "Column edges land on WHOLE points. Twelve columns across 1440 with a 24 gutter and a 32 margin is 85.666 each, and a tool for building UI must not hand you an x of 151.333, so the remainder is spread across the row a point at a time and the outer two edges stay exactly on the margins. It does mean two neighbouring columns can differ by a point in width.",
+    "The Columns SECTION needs the screen itself selected, but the Layer menu's Show Columns acts on the screen whatever is selected lives in. So with a button on the screen picked, the menu row still works and the section is not there. Filed as a follow-up so you can say which of the two should move.",
+    "Zoomed a long way out, the magnet's reach in document points grows past the gutter, so near a screen with columns on a drag is always caught by something. That is the existing behaviour of every magnet in the app at low zoom rather than anything new here, and it is invisible at the zooms anybody places things at.",
+    "The wash gets stronger on a dark screen and fainter on a light one, judged from the screen's own surface rather than the app's theme, because a white screen in a dark app is still white. Only the white case was photographed; the dark one is the same code path with one number different and was not put in front of a camera.",
+    "Nothing new pulls where there are no columns. The walk proves it three ways: a document with no screens offers nothing, a screen with the switch off offers nothing, and the drag with the columns off moved by exactly the 37 and 11 it was asked to. There is also a core test that runs forty drag positions on a plain screenshot and checks the answer is bit for bit what it was before columns existed.",
+    "The columns are chrome, not content. The walk photographs the document offscreen straight after a snapped drag and the picture has no bands in it at all, which is what an export or a copy would give you.",
+    "Speed was not measured separately. The work added is a dozen more things for a drag to consider per mouse move, gathered once when the drag starts, plus one filled path per screen on screen; the drag in the walk, sixteen steps with a shaking hand, showed no change anybody could see. If it ever feels heavy on a canvas of twenty screens, say so and it gets a meter."
+  ]
+}

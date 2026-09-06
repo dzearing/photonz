@@ -25,6 +25,15 @@ public enum MenuToggleNames {
     public static let layersPanel = "Show Layers"
     public static let library = "Show Library"
 
+    // MARK: Layer menu
+
+    /// The selected screen's own column layout. Deliberately not called a grid:
+    /// that word belongs to the canvas-wide grid on the View menu, and the two
+    /// are different things. Kept word for word the same as the checkbox at the
+    /// top of the Columns section (`FrameColumnsCopy.show` says the same thing
+    /// in lower case, because a menu row is Title Case and a checkbox is not).
+    public static let showColumns = "Show Columns"
+
     // MARK: Capture menu, in both the editor's menu bar and the agent's
 
     public static let history = CaptureMenuNames.history
@@ -37,6 +46,7 @@ public enum MenuToggleNames {
     /// Every on/off item in the app, so a test can hold them all to the same
     /// standard and a new one added without a name here shows up as a gap.
     public static let all: [String] = [
-        grid, snapToGrid, layersPanel, library, history, layerVisible, layerLocked,
+        grid, snapToGrid, layersPanel, library, showColumns, history,
+        layerVisible, layerLocked,
     ]
 }

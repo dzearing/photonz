@@ -362,6 +362,19 @@ struct EditorCommands: Commands {
                     .disabled(editor?.document == nil)
                 Button("Frame Selection") { editor?.frameSelection() }
                     .disabled(!(editor?.canFrameSelection ?? false))
+                // The columns the selected screen is designed to, beside the
+                // rows that make a screen. No key: the canvas grid already has
+                // the obvious one, and two grid-ish chords a finger apart is
+                // how you press the wrong one every time. It acts on the screen
+                // you have picked, or on the screen whatever you have picked
+                // lives in, and it is dimmed when the selection is nowhere near
+                // one. The numbers live in the Columns section of the panel,
+                // where this same switch also sits, so nobody has to hunt for
+                // the half of the feature the menu does not carry.
+                Toggle(FrameColumnsCopy.menuItem, isOn: Binding(
+                    get: { editor?.isShowingFrameColumns ?? false },
+                    set: { _ in editor?.toggleFrameColumns() }))
+                .disabled(editor?.columnsTargetFrameID == nil)
             }
             // The component commands form their own group under the structure
             // ones. Option Command K is the key a design tool user already has

@@ -1,0 +1,27 @@
+{
+  "id": "the-columns-section-and-the-show-columns-menu-ro",
+  "title": "The Columns section and the Show Columns menu row should mean the same screen",
+  "goal": "With a screen selected you can see its Columns numbers in the panel and switch them on from the Layer menu. With a button ON that screen selected the menu row still works, but the Columns section is gone, so the same feature is half there depending on what you clicked last. Pick one behaviour and make both follow it.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1390,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T03:48:41.859Z",
+  "updated": "2026-09-06T03:48:41.859Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the audit queue/audits/2026-09-05-screen-columns.json. The menu row reads EditorState.columnsTargetFrameID, which is selectedFrameID and so walks up to the containing screen; the panel section is gated on selectedLayer.isFrame in LayersPanel.availableSections. Two options worth putting to the user: show the section for the containing screen with a header that names it (like the Layout section already does with This layer on Frame), or narrow the menu row to the selected screen only. The first is more useful, the second is more honest about what a properties panel is.",
+  "acceptance": [
+    "With a layer inside a screen selected, the Columns switch and the Columns numbers are either both reachable or both absent, never one without the other",
+    "Whichever way it goes, the section header says which screen the numbers belong to when it is not the selected thing",
+    "A screen with no columns and a document with no screens are unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T03:48:41.859Z",
+      "note": "created (manual)"
+    }
+  ]
+}

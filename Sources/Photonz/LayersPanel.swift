@@ -379,7 +379,11 @@ struct InspectorPanel: View {
         if let layer = selectedLayer {
             // A frame's own properties: its size, its clipping, its surface
             // (Next, `next-frames`). Only a frame has any of them.
-            if Experiments.shared.framesEnabled, layer.isFrame { set.insert(.frame) }
+            if Experiments.shared.framesEnabled, layer.isFrame {
+                set.insert(.frame)
+                // The columns this screen is designed to, right under its size.
+                set.insert(.columns)
+            }
             // Where the pieces sit when something is resized (Next,
             // `next-placement`). Only worth showing when there is something to
             // place: a group has contents, and a layer inside a group has a
@@ -474,7 +478,7 @@ struct InspectorPanel: View {
     /// What a piece inside a copy does not answer for. Everything here is a
     /// fact the original decides.
     private static let sectionsAPieceDoesNotOwn: Set<InspectorSectionID> = [
-        .arrange, .geometry, .frame, .placement, .color, .effects, .shadow,
+        .arrange, .geometry, .frame, .columns, .placement, .color, .effects, .shadow,
         .annotation, .callout, .text, .measure, .collage,
     ]
 
@@ -549,6 +553,10 @@ struct InspectorPanel: View {
         case .frame:
             if let layer = selectedLayer, layer.isFrame {
                 FrameInspector(layer: layer)
+            }
+        case .columns:
+            if let layer = selectedLayer, layer.isFrame {
+                FrameColumnsInspector(layer: layer)
             }
         case .placement:
             if let layer = selectedLayer {
@@ -892,6 +900,12 @@ enum InspectorSectionID: String, CaseIterable {
     case arrange
     case geometry
     case frame
+    // The column layout a selected screen is designed to (Next, `next-frames`).
+    // Directly under Frame, because Frame says how big the screen is and this
+    // says what it is laid out on. Its own section rather than three more rows
+    // inside Frame, so the app's two grid-ish things each have their own place
+    // with their own words: Columns on a screen, Grid on the canvas.
+    case columns
     // Where the pieces sit when something is resized (Next, `next-placement`).
     // Under Frame, because Frame says how big the box is and this says what
     // happens to what is in it when that box changes.
@@ -945,6 +959,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .arrange: "Arrange"
         case .geometry: "Position & Size"
         case .frame: "Frame"
+        case .columns: FrameColumnsCopy.section
         case .placement: "Layout"
         case .component: "Component"
         case .color: "Color"

@@ -496,6 +496,10 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// you dragged into it wherever you dragged it, which is every group this
     /// app has ever made and every group in every document saved before this.
     public var layout: GroupLayout?
+    /// Set on a **frame**: the column layout this screen is designed to, drawn
+    /// over it and pulling at a drag (`FrameColumns`). Nil is a screen nobody
+    /// has given columns, which is every screen made before this existed.
+    public var columns: FrameColumns?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool? = nil, backgroundHex: String? = nil,
@@ -519,7 +523,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
-        case versionID, versionName, instanceVersion
+        case versionID, versionName, instanceVersion, columns
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -564,6 +568,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
         try c.encode(true, forKey: .isFrame)
         try c.encode(clipsContents, forKey: .clipsContents)
         try c.encodeIfPresent(background, forKey: .backgroundHex)
+        // Only a screen somebody gave columns writes this key, so a document
+        // saved before columns existed is byte for byte what it was.
+        try c.encodeIfPresent(columns, forKey: .columns)
     }
 
     public init(from decoder: Decoder) throws {
@@ -585,6 +592,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         instanceSize = try c.decodeIfPresent(InstanceSize.self, forKey: .instanceSize)
         contentPlacement = try c.decodeIfPresent(LayerPlacement.self, forKey: .contentPlacement)
         layout = try c.decodeIfPresent(GroupLayout.self, forKey: .layout)
+        columns = try c.decodeIfPresent(FrameColumns.self, forKey: .columns)
     }
 }
 

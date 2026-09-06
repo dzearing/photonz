@@ -233,3 +233,82 @@ extension EditorState {
         revealJoinedScreens(joined)
     }
 }
+
+// MARK: - Columns on a screen (Next flag `next-frames`)
+//
+// The column layout one screen is designed to: twelve with a gutter on a
+// desktop, four on a phone. Drawn over that screen and pulling a drag to its
+// edges, and nowhere else in the app.
+//
+// Not the canvas grid, which covers everything, is set by a spacing, belongs to
+// the view rather than the document, and never pulls (`CanvasGridSettings`).
+extension EditorState {
+
+    /// The screen the Columns section and the Layer menu row both act on: the
+    /// selected screen, or the screen whatever is selected lives in. Selecting
+    /// a button inside a screen and asking for columns is asking for that
+    /// screen's columns, which is the only screen it could mean.
+    var columnsTargetFrameID: UUID? {
+        guard framesEnabled else { return nil }
+        return selectedFrameID
+    }
+
+    /// What that screen's columns are right now, or nil for a screen nobody
+    /// has given any.
+    var columnsTargetSettings: FrameColumns? {
+        columnsTargetFrameID.flatMap { document?.layer(id: $0)?.columns }
+    }
+
+    /// Whether the columns are showing on the screen the menu row would act on.
+    var isShowingFrameColumns: Bool {
+        columnsTargetSettings?.isVisible ?? false
+    }
+
+    /// Layer ▸ Show Columns, and the checkbox at the top of the Columns
+    /// section. Switching them off leaves every number where it was, so
+    /// switching them back on is the same layout again; a screen that has never
+    /// had any gets numbers picked for its width.
+    func setFrameColumnsVisible(_ visible: Bool) {
+        guard let id = columnsTargetFrameID else { return }
+        perform { $0.setFrameColumnsVisible(id: id, visible) }
+    }
+
+    func toggleFrameColumns() {
+        setFrameColumnsVisible(!isShowingFrameColumns)
+    }
+
+    /// One of the three typed numbers. Each one goes through history, so ⌘Z
+    /// puts a mistyped column count back.
+    func setFrameColumns(_ columns: FrameColumns) {
+        guard let id = columnsTargetFrameID else { return }
+        perform { $0.setFrameColumns(id: id, columns) }
+    }
+
+    func setFrameColumnCount(_ count: Int) {
+        guard var columns = columnsTargetSettings else { return }
+        columns.count = FrameColumns.clamped(count: count)
+        setFrameColumns(columns)
+    }
+
+    func setFrameColumnGutter(_ gutter: CGFloat) {
+        guard var columns = columnsTargetSettings else { return }
+        columns.gutter = FrameColumns.clamped(gutter: gutter)
+        setFrameColumns(columns)
+    }
+
+    func setFrameColumnMargin(_ margin: CGFloat) {
+        guard var columns = columnsTargetSettings else { return }
+        columns.margin = FrameColumns.clamped(margin: margin)
+        setFrameColumns(columns)
+    }
+
+    /// How wide one column comes out on the screen the section is showing, or
+    /// nil when the numbers leave no room for one. The panel prints it, because
+    /// "what is a column actually going to be" is the question a person is
+    /// really asking when they type a gutter.
+    var columnsTargetColumnWidth: CGFloat? {
+        guard let id = columnsTargetFrameID, let columns = columnsTargetSettings,
+              let width = document?.canvasBounds(of: id)?.width else { return nil }
+        return columns.bands(inWidth: width).first?.width
+    }
+}

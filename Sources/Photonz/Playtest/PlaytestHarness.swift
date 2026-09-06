@@ -2988,6 +2988,11 @@ private final class Run {
             // which side of the picture it is on. "nothing drawn" here is the
             // grid having gone out.
             "grid": canvas?.playtestGridReport ?? "no canvas",
+            // The columns each screen is showing, whether they are actually on
+            // the canvas layer, and how many a drag could catch — so one line
+            // answers "does the pull match the picture" for the OTHER thing a
+            // person might call a grid.
+            "columns": canvas?.playtestColumnReport ?? "no canvas",
             // The named colors in the document, and what each one paints, so a
             // walk can prove an edit to a style reached everything wearing it.
             "styles": (editor.document?.colorStyles ?? []).map {

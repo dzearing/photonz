@@ -13,6 +13,17 @@ import Foundation
 /// grid never stops you matching a real edge, and away from real edges things
 /// sit on the grid rather than near it.
 ///
+/// A screen's COLUMNS come in as peers of their own (`FrameColumns`): each
+/// column is one more box to line up with, so a column edge catches, holds,
+/// releases and draws its line exactly the way another layer's edge does, and
+/// ⌘ frees a drag from it with no new rule. The one difference is that a column
+/// band feeds the sideways axis only. A column is a sideways idea; the top and
+/// bottom of a band are the screen's own edges, and a box quietly sticking to
+/// the top of the screen it happens to be over is not what anybody asked for.
+/// With no columns showing anywhere — a screenshot, a plain canvas, a screen
+/// with the switch off — the list is empty and every answer here is bit for bit
+/// what it was before columns existed.
+///
 /// Peers are what makes this useful for building UI rather than annotating a
 /// picture: a button dragged next to another button lines up with it, sits
 /// flush against it, or centres on it, and the line that appears says which of
@@ -102,7 +113,8 @@ public enum Snapping {
     /// them keeps the frame until the pointer is clearly away from it, so the
     /// guide you can see is the guide you get. See `SnapHold`.
     public static func snapFrameOrigin(_ proposed: CGPoint, size: CGSize, canvas: CGSize,
-                                       peers: [CGRect] = [], gridSpacing: CGFloat? = nil,
+                                       peers: [CGRect] = [], columnBands: [CGRect] = [],
+                                       gridSpacing: CGFloat? = nil,
                                        gridOrigin: CGPoint = .zero,
                                        gridAxes: CanvasGridAxes = .columnsAndRows,
                                        zoom: CGFloat, screenTolerance: CGFloat = 8,
@@ -113,7 +125,8 @@ public enum Snapping {
         let gridRows = gridAxes.drawsRows ? gridSpacing : nil
         let x = snapAxis(origin: proposed.x, length: size.width, canvasLength: canvas.width,
                          crossOrigin: proposed.y, crossLength: size.height,
-                         peers: peers.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) },
+                         peers: peers.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) }
+                             + columnBands.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) },
                          gridSpacing: gridSpacing, gridOrigin: gridOrigin.x,
                          tolerance: tolerance, held: held.x)
         let y = snapAxis(origin: proposed.y, length: size.height, canvasLength: canvas.height,
@@ -145,6 +158,7 @@ public enum Snapping {
     /// box that stopped following the pointer for no visible reason.
     public static func snapResizedFrame(_ proposed: CGRect, handle: ResizeHandle,
                                         canvas: CGSize, peers: [CGRect] = [],
+                                        columnBands: [CGRect] = [],
                                         gridSpacing: CGFloat? = nil,
                                         gridOrigin: CGPoint = .zero,
                                         gridAxes: CanvasGridAxes = .columnsAndRows,
@@ -162,6 +176,7 @@ public enum Snapping {
         let crossX = Span(start: proposed.minY, end: proposed.maxY)
         let crossY = Span(start: proposed.minX, end: proposed.maxX)
         let xPeers = peers.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) }
+            + columnBands.map { Peer(along: ($0.minX, $0.maxX), cross: ($0.minY, $0.maxY)) }
         let yPeers = peers.map { Peer(along: ($0.minY, $0.maxY), cross: ($0.minX, $0.maxX)) }
 
         if handle.movesMinX || handle.movesMaxX {

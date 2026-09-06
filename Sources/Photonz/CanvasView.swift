@@ -448,6 +448,10 @@ final class CanvasNSView: NSView {
     /// The faint box around the group you are currently INSIDE, so descending
     /// into one is visible rather than a mode you have to remember.
     let groupContextLayer = CAShapeLayer()
+    /// The columns a screen is designed to (Next, `next-frames`): one filled
+    /// path holding every band of every screen showing them. See
+    /// `CanvasColumnChrome.swift`.
+    let columnChromeLayer = CAShapeLayer()
     /// A frame's name, above its top left corner: one text sublayer per frame.
     let frameChromeLayer = CALayer()
     /// The hairline at every frame's edge, so a screen has a visible boundary
@@ -868,6 +872,13 @@ final class CanvasNSView: NSView {
         /// Gathered ONCE at grab time: nothing but the dragged layer moves
         /// during a drag, so a crowded document costs nothing per frame.
         var peers: [CGRect] = []
+        /// The columns of every screen showing them, in canvas coordinates,
+        /// gathered ONCE at grab time beside the peers. They pull sideways
+        /// only, so nothing on a screen quietly sticks to its top edge, and
+        /// they are empty for every document with no screen showing columns —
+        /// which is a screenshot, a plain canvas, and a screen with the switch
+        /// off. See `FrameColumns`.
+        var columns: [CGRect] = []
         var snapped: Snapping.Result
         /// Becomes true once the pointer travels past the click tolerance;
         /// a click that never moves selects without committing a move.
@@ -896,6 +907,13 @@ final class CanvasNSView: NSView {
         /// gathered ONCE at grab time. Every member is left out: they all
         /// travel with the drag, so none of them is something to line up with.
         var peers: [CGRect] = []
+        /// The columns of every screen showing them, in canvas coordinates,
+        /// gathered ONCE at grab time beside the peers. They pull sideways
+        /// only, so nothing on a screen quietly sticks to its top edge, and
+        /// they are empty for every document with no screen showing columns —
+        /// which is a screenshot, a plain canvas, and a screen with the switch
+        /// off. See `FrameColumns`.
+        var columns: [CGRect] = []
         var snapped: Snapping.Result
         /// Becomes true once the pointer travels past the click tolerance; a
         /// press that never moves keeps the selection and does nothing else.
@@ -928,6 +946,13 @@ final class CanvasNSView: NSView {
         /// document costs nothing per frame. Empty for a layer that is rotated
         /// or skewed, whose handle space is not canvas space.
         var peers: [CGRect] = []
+        /// The columns of every screen showing them, in canvas coordinates,
+        /// gathered ONCE at grab time beside the peers. They pull sideways
+        /// only, so nothing on a screen quietly sticks to its top edge, and
+        /// they are empty for every document with no screen showing columns —
+        /// which is a screenshot, a plain canvas, and a screen with the switch
+        /// off. See `FrameColumns`.
+        var columns: [CGRect] = []
         /// The guides the last snap put down, for the overlay to draw. A resize
         /// draws the same yellow lines a move does, because it is lining up
         /// with the same things.
@@ -1004,7 +1029,8 @@ final class CanvasNSView: NSView {
     /// that says what the edge just caught.
     private func resizedFrame(for layer: Layer?, start: CGRect, handle: ResizeHandle,
                               pointer p: CGPoint, preserveAspect: Bool,
-                              peers: [CGRect] = [], gridSpacing: CGFloat? = nil,
+                              peers: [CGRect] = [], columns: [CGRect] = [],
+                              gridSpacing: CGFloat? = nil,
                               gridOrigin: CGPoint = .zero,
                               gridAxes: CanvasGridAxes = .columnsAndRows,
                               holding held: SnapHold = .none)
@@ -1016,7 +1042,8 @@ final class CanvasNSView: NSView {
         // measured at the width the drag actually settled on.
         var result = Snapping.snapResizedFrame(frame, handle: handle,
                                                canvas: viewport?.documentSize ?? .zero,
-                                               peers: peers, gridSpacing: gridSpacing,
+                                               peers: peers, columnBands: columns,
+                                               gridSpacing: gridSpacing,
                                                gridOrigin: gridOrigin,
                                                gridAxes: gridAxes,
                                                zoom: viewport?.zoom ?? 1,
@@ -1055,6 +1082,17 @@ final class CanvasNSView: NSView {
     var canvasSnapSpacing: CGFloat? {
         guard canvasGridEnabled, let viewport else { return nil }
         return canvasGrid?.snapSpacing(atZoom: viewport.zoom)
+    }
+
+    /// The columns a drag can catch, gathered at grab time.
+    ///
+    /// Only a screen showing its columns offers any, so a screenshot, a plain
+    /// canvas and a screen with the switch off each hand back nothing and drag
+    /// exactly as they always have. Switching the columns off is therefore the
+    /// whole of "stop pulling": there is no second switch to forget.
+    func columnBands(excluding ids: Set<UUID>) -> [CGRect] {
+        guard framesEnabled else { return [] }
+        return document?.columnBands(excluding: ids) ?? []
     }
 
     /// Where the grid the drag is pulling to starts. Counting from the same
@@ -1153,6 +1191,16 @@ final class CanvasNSView: NSView {
         previewSpriteLayer.contentsGravity = .resize
         previewSpriteLayer.isHidden = true
         layer?.addSublayer(previewSpriteLayer)
+
+        // The column bands (Next, `next-frames`) sit right on the picture: over
+        // everything a person has drawn, because a wash you build against has
+        // to survive the first white screen, and UNDER every piece of chrome,
+        // so a selection outline, a handle or the yellow line that says which
+        // column just caught is never seen through a wash. Their colour lands
+        // per refresh, from the surface of the screen they are drawn on.
+        columnChromeLayer.strokeColor = nil
+        columnChromeLayer.isHidden = true
+        layer?.addSublayer(columnChromeLayer)
 
         // The grid sits on the canvas surface, and which side of the picture
         // that is depends on whether it is switched on over it: see
@@ -1288,6 +1336,10 @@ final class CanvasNSView: NSView {
         frameEdgeLayer.lineWidth = 1
         frameEdgeLayer.isHidden = true
         layer?.addSublayer(frameEdgeLayer)
+        // (The column bands go in near the picture, not here: see the block
+        // beside the preview sprite.)
+        columnChromeLayer.strokeColor = nil
+        columnChromeLayer.isHidden = true
         frameChromeLayer.isHidden = true
         layer?.addSublayer(frameChromeLayer)
         // Component chrome (Next, `next-components`) sits above the frame's,
@@ -2078,6 +2130,7 @@ final class CanvasNSView: NSView {
                     layerID: id, handle: handle, startFrame: frame, frame: frame,
                     peers: Experiments.shared.alignLayersEnabled && untransformed
                         ? (document?.snapPeers(excluding: id) ?? []) : [],
+                    columns: untransformed ? columnBands(excluding: [id]) : [],
                     snapped: Snapping.FrameResult(frame: frame))
                 applyGrabCursor(CanvasCursor.cursor(for: .resize(handle),
                                                     transform: selectedLayer?.transform ?? .identity))
@@ -2141,6 +2194,7 @@ final class CanvasNSView: NSView {
                                         y: p.y - plan.bounds.origin.y),
                     peers: Experiments.shared.alignLayersEnabled
                         ? (document?.snapPeers(excluding: multiSelectedLayerIDs) ?? []) : [],
+                    columns: columnBands(excluding: multiSelectedLayerIDs),
                     snapped: Snapping.Result(origin: plan.bounds.origin),
                     copying: copyDragModifier(event))
                 refreshOverlays()
@@ -2176,6 +2230,7 @@ final class CanvasNSView: NSView {
                                 startOrigin: seen.origin,
                                 peers: Experiments.shared.alignLayersEnabled
                                     ? (document?.snapPeers(excluding: hit.id) ?? []) : [],
+                                columns: columnBands(excluding: [hit.id]),
                                 snapped: Snapping.Result(origin: hit.frame.origin),
                                 copying: copying)
         } else {
@@ -2316,6 +2371,7 @@ final class CanvasNSView: NSView {
             drag.snapped = resizedFrame(for: layer, start: drag.startFrame, handle: drag.handle,
                                         pointer: p, preserveAspect: aspect,
                                         peers: snapping ? drag.peers : [],
+                                        columns: snapping ? drag.columns : [],
                                         gridSpacing: snapping ? canvasSnapSpacing : nil,
                                         gridOrigin: canvasSnapOrigin,
                                         gridAxes: canvasSnapAxes,
@@ -2351,6 +2407,7 @@ final class CanvasNSView: NSView {
                     drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.size,
                                                             canvas: viewport.documentSize,
                                                             peers: drag.peers,
+                                                            columnBands: drag.columns,
                                                             gridSpacing: canvasSnapSpacing,
                                                             gridOrigin: canvasSnapOrigin,
                                                             gridAxes: canvasSnapAxes,
@@ -2398,6 +2455,7 @@ final class CanvasNSView: NSView {
                     drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.plan.bounds.size,
                                                             canvas: viewport.documentSize,
                                                             peers: drag.peers,
+                                                            columnBands: drag.columns,
                                                             gridSpacing: canvasSnapSpacing,
                                                             gridOrigin: canvasSnapOrigin,
                                                             gridAxes: canvasSnapAxes,
@@ -3757,6 +3815,7 @@ final class CanvasNSView: NSView {
 
     private func refreshLayerSelectionDisplay() {
         refreshGroupContextOutline()
+        refreshColumnChrome()
         refreshFrameChrome()
         refreshComponentChrome()
         // Placing the grid's zero point: nothing on the canvas is selected, so
