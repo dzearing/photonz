@@ -1,0 +1,28 @@
+{
+  "feature": "The scripted walks give the same answer every time",
+  "epic": "unmanned-loop",
+  "summary": "The set of scripted walks that proves the app still works used to answer differently depending on whether you ran one walk or all of them, so a real break and a false alarm looked the same. All 188 walks now pass, and a walk hands the next one the machine it started with instead of whatever it left behind.",
+  "setup": "A terminal in the repo. Nothing to install. The full run takes about four hours and never touches Photonz Dev, so you can keep working in the app while it goes.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/panel-press-walk.json and watch it come back ok." },
+    { "do": "Open /tmp/photonz-playtest/panel-press/panel-press-2-after-sc.png: that is the real window after the walk pressed a button in the dock.", "shot": "2026-09-06-trustworthy-walks-1.png" },
+    { "do": "Run Scripts/playtest-all.sh --no-build mixed-one-look text-height text-width tool-holds type-menu: the five walks the complaint named." },
+    { "do": "Run defaults read com.dzearing.photonz.probe, then run any walk, then run it again: the settings are the same list both times." },
+    { "do": "Open the walk's log.json and read the last setup line: it says which remembered settings had to be put back." },
+    { "do": "Run Scripts/playtest-all.sh for the whole set when you have an afternoon, then run it again and compare the two lists." }
+  ],
+  "evaluate": [
+    "Is a walk that passes alone but fails in the full run something you had already stopped trusting, or had you not noticed?",
+    "The log now names what a walk changed without declaring it. Is that a line you would act on, or noise you would scroll past?",
+    "A walk can ask for its own working copy of a picture now. Does asking for that in the walk read more clearly than a note saying to copy a file first?",
+    "Four hours for a full run, twice, is most of a day. Is that a price worth paying before a release, or does the set need to get faster first?",
+    "Nothing fails a walk for changing a setting quietly. Should it?"
+  ],
+  "rough": [
+    "The task asked for every walk to declare the settings it changes in its own setup block. Doing that would have touched about 150 walks and changed what each of them starts from, for a rule a walk can still forget. The harness now puts every setting back whether or not the walk said anything, which is the same protection without the diff, and the log names what went undeclared so a walk can be tightened when someone next reads it.",
+    "This machine's probe had months of drift in it: a remembered text size of 14, the Library parked on Comps. Three walks were failing on that alone. Those settings were cleared back to what a machine that had never run Photonz would have, and the harness now keeps them there. A different machine that has drifted the same way will need the same one-off clear.",
+    "panel-press-walk was pressing Clear Stretch, a button the surface work on 2026-09-04 took out of the app. It had been failing quietly ever since, because the full run was reading a probe bundle that predated the change. That is fixed, but it is worth knowing the old full run could report on code days old.",
+    "A full run is about four hours, most of it launching and quitting the app 188 times. Nothing here made it faster.",
+    "Verified in the probe app, Screen Recording granted, so the picture is a real window capture rather than an offscreen render."
+  ]
+}

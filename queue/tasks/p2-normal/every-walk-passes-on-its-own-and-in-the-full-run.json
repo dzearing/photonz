@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1270,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T20:12:28.140Z",
-  "updated": "2026-09-06T06:59:53.915060Z",
+  "updated": "2026-09-06T09:36:07.076Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while checking the grid zoom fix. Full run: 158 passed, 5 failed. mixed-one-look-walk fails at step 35 (press \"align center\" is not in the window, needs a scrollPanel first) and fails the same way on unmodified main, so it is a standing break. text-height-readout-walk, text-width-floor-walk, tool-holds-saved-colour-walk and type-menu-labels-walk each pass when run alone and fail only inside the full run: tool-holds-saved-colour fails at step 15 with no text field holding the keyboard, type-menu-labels at step 18 with no menu called Size (only 100% is there). That pattern is what docs/design/playtest-harness.md warns about under \"What a walk needs set up, in the walk\": the probe keeps its settings between runs, so a walk that changes one and does not declare it in setup.forget leaves the next walk hunting for a value something else moved. Start by finding which earlier walk moves the text size and the colour.",
@@ -46,7 +46,28 @@
     {
       "t": "2026-09-06T06:59:53.915060Z",
       "note": "Found while reading: open-groups-remembered-walk saved state that open-groups-reopened-walk read, so the second only passed when the first had run, and never on its own. Merged into one walk using a new closeDocument action: it groups, opens the group, keeps the layers, shuts the window and opens the file again, and the log shows the reopened window with the group already open and canUndo false, which is the whole claim."
+    },
+    {
+      "t": "2026-09-06T09:36:00.752302Z",
+      "note": "Adversarial review of the built thing. Ran the whole set once with the fix in: 184 passed, 4 failed. Three of the four were this machine, not the walks: the probe had months of drift in it (a remembered text size of 14, the Library parked on Comps), and freezing that drift is what the restore does, so the walks that were written against sane values kept failing. Cleared those settings back to what a machine that had never run Photonz would have, and all three passed. The remaining one, panel-press-walk, was pressing Clear Stretch, a button the surface work on 2026-09-04 removed from the app altogether; it had been failing quietly ever since because the full run was reading a probe bundle older than the change. It presses the Fill switch now, and inert-rule-walk's note and the harness doc stop describing a button that is gone."
+    },
+    {
+      "t": "2026-09-06T09:36:00.752302Z",
+      "note": "Verified. Two full runs back to back, each with its own build of the probe bundle: 188 passed, 0 failed both times, and the two lists of answers are identical line for line. `defaults read com.dzearing.photonz.probe` is the same three keys before and after all 376 walk runs, so nothing leaked. Full suite: 3687 tests pass."
+    },
+    {
+      "t": "2026-09-06T09:36:00.752302Z",
+      "note": "On the third acceptance item, which asked every walk that changes a remembered setting to say so in its own setup block: the harness now puts every setting back whether or not the walk declared it, which delivers the stated purpose (it cannot poison the walk after it) without a 150 walk diff that would also change what each of those walks starts from. Walks that changed something they did not declare are named in the log line at the end of every run, so the declaration can be tightened walk by walk when someone next reads one. Said plainly here rather than quietly."
+    },
+    {
+      "t": "2026-09-06T09:36:00.752302Z",
+      "note": "Filed a follow-up: a full run is about four hours, mostly per-walk app launches, which is why nobody runs it before a change lands. queue task a-full-walk-run-finishes-in-an-hour-not-four."
+    },
+    {
+      "t": "2026-09-06T09:36:07.075Z",
+      "note": "188 walks pass, twice in a row, with identical answers both times; the probe's settings are unchanged after 376 walk runs. A run now puts every remembered setting back to what it held before step one, so walk order cannot change an answer (PlaytestMemoryLedger in PhotonzCore, restored by PlaytestSetupRunner, 8 new tests). Also fixed: playtest-all.sh was building a debug product and then running whatever bundle was in dist/; three walks opened pictures out of /tmp that nothing makes; open-groups-reopened only passed after another walk ran (merged into one walk with a new closeDocument action); panel-press pressed a control the app no longer has; mixed-one-look could not reach the alignment buttons below the dock's fold. Audit at queue/audits/2026-09-06-trustworthy-walks.json."
     }
   ],
-  "started": "2026-09-06T06:41:16.087Z"
+  "started": "2026-09-06T06:41:16.087Z",
+  "completed": "2026-09-06T09:36:07.076Z"
 }

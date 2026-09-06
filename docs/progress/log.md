@@ -9242,3 +9242,28 @@ Verified in the probe app with `Scripts/playtest/grid-nudge-walk.json` (80
 steps, real window captures); audit in `queue/audits/2026-09-06-grid-nudge.json`.
 Open question for the user: whether two cells is the right size for a Shift
 nudge, and whether the X and Y fields should follow the grid too.
+
+## 2026-09-06 — The walks give the same answer every time
+
+The scripted walk set answered differently depending on whether you ran one
+walk or all of them: four passed alone and failed inside the full run, having
+been handed a remembered setting something earlier had moved. A run now puts
+every remembered setting back to what it held before step one, pass or fail, so
+the order of the walks cannot change an answer. `PlaytestMemoryLedger` is the
+pure half, with its own tests; the log line at the end of each run says what had
+to be put back and what the walk changed without declaring it.
+
+Four other ways a walk could lie, found on the way: `playtest-all.sh` built a
+debug product and then ran every walk against whatever probe bundle happened to
+be in `dist/`; three walks opened pictures out of `/tmp` that nothing in the repo
+makes; `open-groups-reopened-walk` only passed when another walk had run first
+(now one walk, using a new `closeDocument` action); and `panel-press-walk` was
+pressing Clear Stretch, a control the surface work on 2026-09-04 removed.
+`mixed-one-look-walk` could not reach the alignment buttons once they drop below
+the dock's fold, so `scrollPanel` can now scroll from anything the panel shows.
+
+188 walks pass, twice in a row, identical both times, and the probe's settings
+are unchanged after 376 walk runs.
+
+Next: the full run takes about four hours, which is why nobody runs it before a
+change lands. Filed as `a-full-walk-run-finishes-in-an-hour-not-four`.
