@@ -2448,3 +2448,68 @@ every document saved before this is byte for byte the file it always was, and
 `everyNumberRoundTrips` is the test that stops the next number added there from
 being forgotten in that list. Tested in `GroupSpreadTests`, walked by
 `Scripts/playtest/spread-gap-walk.json`.
+
+## Landed: a piece can take the room a row has left over (Next, `next-auto-layout`, 2026-09-05)
+
+The search field in the middle of a nav bar is not a width somebody chose. It is
+whatever the logo and the buttons left, and it changes every time the bar does.
+Until now every piece in a stack kept the size it was drawn at along the way the
+stack runs, so the only way to build that was to drag the field to the right
+width and drag it again the moment anything around it moved. One piece in a
+stack can now be told to take what is left instead.
+
+**Filling is about the FLOW, not about an axis.** The row that already said who
+owns the direction the stack runs in ("Set by the row", "Set by the stack") is
+now a menu with exactly two answers: that, or **Fill the row** / **Fill the
+stack**. It says "take whatever this stack has left along the way it runs", so
+flipping a row to a column goes on meaning the same thing rather than turning
+into a rule about the wrong direction. It is named after the flow because the
+panel already has a Fill three sections down — the colour inside a shape — and
+two controls a thumb apart wearing the same word is how somebody paints a
+rectangle when they meant to widen it.
+
+**It is not the Stretch that makes a surface.** Stretched BOTH ways still means
+"be the surface behind everything, painted to the box's own edges", which is
+what a button's fill is. Something that is the size of the box cannot also be
+one of the pieces sharing the box out, so a filler is its own thing and the two
+never collide: a search field that fills a bar across and fills its height down
+is still a piece being arranged.
+
+**A filler takes the leftover instead of its own size, and two split it.** What
+is left is the room inside the edges, less every other piece, less every gap.
+Two fillers split it down the middle, measured from the start so the pair lands
+exactly on the room there was and no piece is ever half a point wide. Nothing is
+ever handed less than nothing: contents already too big for the stack leave a
+filler with no room rather than a negative width, and a shape that had a size
+keeps a point of it so it can still be grabbed.
+
+**A filler beats a spreading gap.** Two things cannot both have the room left
+over. Where a piece fills, the stack goes back to sitting the typed gap apart,
+which is the answer anybody who has written a stylesheet already carries;
+sharing nought between them would close every gap and read as broken.
+
+**Setting it back gives the size back.** The flow writes the size it worked out
+straight into the piece, so without this a button tried at Fill for a second
+would be stuck at whatever the room made it with nobody left who remembers what
+it was. The size before is kept on the piece and handed back on the way out, one
+edit and one undo. Words are the exception down a column: their height is
+however tall they came out, so they go back to their own measurement.
+
+**It is only offered where it could do something,** on the same test spreading
+uses: room exists where the axis the stack FLOWS along is bigger than its
+contents. A hugging stack has none, so there is no menu at all and the caption
+under the rows says why and names the number that would change it. And while a
+piece is filling, the size field on that axis is a number to READ, not one to
+type: the flow would put a typed number straight back on its next pass, so it
+loses its box and its tip points at the two controls that do change it.
+
+Not in this slice: a container default ("everything inside fills"), which is a
+grid; growth weights, so one filler can take twice what another does; and a
+minimum a filler will not shrink below.
+
+Model in `FlowFill` and `Layer.flowFill`, the maths in `GroupFlow.alongTheFlow`,
+the offer in `PlacementEditing.canFill` / `fillTitle` / `noRoomToFill` over
+`GroupLayout.hasRoomAlongTheFlow` (which `couldSpread` now reads too, since both
+ask one question), the edit in `PhotonzDocument.setFillsTheFlow`, and the row in
+`PlacementInspector.ownedByTheFlow`. Tested in `GroupFillTests`, walked by
+`Scripts/playtest/fill-the-flow-walk.json`.

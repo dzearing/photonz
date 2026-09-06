@@ -712,12 +712,19 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// container, so a layer that has never been given one behaves exactly as
     /// it always did.
     public var placement: LayerPlacement?
+    /// Set where this piece has been told to take the room the stack holding
+    /// it has left over along the way that stack runs, instead of keeping the
+    /// size it was drawn at (`docs/design/ui-building.md`, "A piece can take
+    /// the room a row has left over"). Nil is every piece that has never been
+    /// told to, which is every piece in every document written before this.
+    public var flowFill: FlowFill?
 
     public init(id: UUID = UUID(), name: String, content: LayerContent, frame: CGRect,
                 crop: CGRect? = nil, transform: LayerTransform = .identity,
                 style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false,
                 colorStyleBindings: [ColorStyleBinding]? = nil,
-                placement: LayerPlacement? = nil) {
+                placement: LayerPlacement? = nil,
+                flowFill: FlowFill? = nil) {
         self.id = id
         self.name = name
         self.content = content
@@ -729,6 +736,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         self.isLocked = isLocked
         self.colorStyleBindings = colorStyleBindings
         self.placement = placement
+        self.flowFill = flowFill
     }
 
     /// A copy with a fresh identity, for duplicate/paste. The frame offset
@@ -739,7 +747,8 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          frame: frame.offsetBy(dx: offset.x, dy: offset.y),
                          crop: crop, transform: transform, style: style,
                          isVisible: isVisible, isLocked: false,
-                         colorStyleBindings: colorStyleBindings, placement: placement)
+                         colorStyleBindings: colorStyleBindings, placement: placement,
+                         flowFill: flowFill)
         copy.repointComponentProperties(map)
         return copy
     }
@@ -762,7 +771,8 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         let copy = Layer(name: name, content: content.reidentified(map: &map), frame: frame,
                          crop: crop, transform: transform, style: style,
                          isVisible: isVisible, isLocked: isLocked,
-                         colorStyleBindings: colorStyleBindings, placement: placement)
+                         colorStyleBindings: colorStyleBindings, placement: placement,
+                         flowFill: flowFill)
         map[id] = copy.id
         return copy
     }

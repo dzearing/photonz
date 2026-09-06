@@ -1,0 +1,29 @@
+{
+  "id": "telling-a-piece-to-take-the-room-left-over-has-a",
+  "title": "Telling a piece to take the room left over has a key of its own",
+  "goal": "Setting a piece in a stack to take the room the stack has left is only reachable by opening the panel and picking it out of a menu. It is the answer people reach for most while building a bar, so it should also be a menu item with a keyboard shortcut, the way lining a piece up already is.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 1270,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T00:33:57.133Z",
+  "updated": "2026-09-06T00:33:57.134Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The edit already exists: PhotonzDocument.setFillsTheFlow(id:_:), wrapped by EditorState.setFillsTheFlow. Whether it is offered is Layer.canFillTheFlow(in:). The existing stretchSelectionAcross / stretchSelectionDown actions are the pattern to copy, including their playtest action names.",
+  "acceptance": [
+    "An Arrange menu item turns filling on and off for the selected piece",
+    "It carries a keyboard shortcut and the shortcut is listed in the menu",
+    "It is greyed with a reason when the piece is not in a stack, or the stack has no room to spare",
+    "Pressing it a second time gives the piece back the size it had before",
+    "Tests in PhotonzCore cover when it is offered and when it is not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T00:33:57.134Z",
+      "note": "created (manual)"
+    }
+  ]
+}

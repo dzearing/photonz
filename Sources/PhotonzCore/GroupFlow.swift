@@ -38,6 +38,9 @@ enum GroupFlow {
         var box: CGRect
         var horizontal: PlacementSpan
         var vertical: PlacementSpan
+        /// True where this piece takes the room the stack has left over along
+        /// the way it runs, instead of the size in `box`.
+        var fills = false
     }
 
     /// The box the contents flow inside, one axis at a time: a number where the
@@ -369,7 +372,8 @@ enum GroupFlow {
         let items = taking.map { index in
             Item(box: children[index].contentBounds,
                  horizontal: rules[index].horizontal.span,
-                 vertical: rules[index].vertical.span)
+                 vertical: rules[index].vertical.span,
+                 fills: children[index].fillsTheFlow)
         }
         let order = flowOrder(items.map(\.box), layout: layout)
         let targets = laidOut(order.map { items[$0] }, layout: layout, bounds: bounds)
@@ -378,9 +382,12 @@ enum GroupFlow {
             let child = children[taking[position]]
             // The height in that box is only the flow's answer where the flow
             // decides heights at all, so a Stretch in a column fills nothing.
+            // A column stack decides one height all the same: the one it hands
+            // a piece told to take the room it has left over.
+            let stretched = layout.decidesHeight && items[position].vertical == .stretch
+            let fillsDown = !layout.decidesHeight && items[position].fills
             out[taking[position]] = moved(child, to: targets[slot],
-                                          fillingHeight: layout.decidesHeight
-                                              && items[position].vertical == .stretch)
+                                          fillingHeight: stretched || fillsDown)
         }
         return out
     }
@@ -454,13 +461,16 @@ enum GroupFlow {
         let crossExtent = room(horizontal ? bounds.height : bounds.width,
                                between: horizontal ? padding.vertical : padding.horizontal)
             ?? (items.map { horizontal ? $0.box.height : $0.box.width }.max() ?? 0)
+        // How much room each piece takes along the flow: the size it was drawn
+        // at, and for a piece told to fill, whatever the stack has left.
+        let lengths = alongTheFlow(items, layout: layout, bounds: bounds, horizontal: horizontal)
         // The room left over, shared out between the rows, or nil where the
         // stack holds one typed gap instead.
         let share = spread(items, layout: layout, bounds: bounds, horizontal: horizontal)
         var cursor = horizontal ? padding.left : padding.top
         var out: [CGRect] = []
         for (index, item) in items.enumerated() {
-            let along = horizontal ? item.box.width : item.box.height
+            let along = lengths[index]
             let cross = span(size: horizontal ? item.box.height : item.box.width,
                              start: crossStart, extent: crossExtent,
                              rule: horizontal ? item.vertical : item.horizontal)
@@ -477,6 +487,46 @@ enum GroupFlow {
         return out
     }
 
+    /// How much room each piece takes along the way the stack runs.
+    ///
+    /// Everything keeps the size it was drawn at except a piece told to FILL,
+    /// which takes what is left once the others, the gaps and the room at both
+    /// edges have taken theirs. It takes that room INSTEAD of its own size,
+    /// not on top of it, because "the search field is whatever is left between
+    /// the logo and the buttons" is the thing being built.
+    ///
+    /// Two fillers split what is left down the middle, measured from the START
+    /// rather than handed a share each, so the two together land exactly on
+    /// the room there was however the rounding falls. A half point is the
+    /// thing typed geometry exists to avoid.
+    ///
+    /// Nothing is ever handed less than nothing: contents already too big for
+    /// the stack leave a filler with no room rather than a negative width, and
+    /// a shape that HAD a size keeps a point of it so it can be grabbed again.
+    private static func alongTheFlow(_ items: [Item], layout: GroupLayout, bounds: Bounds,
+                                     horizontal: Bool) -> [CGFloat] {
+        var lengths = items.map { horizontal ? $0.box.width : $0.box.height }
+        let fillers = items.indices.filter { items[$0].fills }
+        let padding = layout.usedPadding
+        // A stack that is the size of its contents has nothing left over, so a
+        // piece told to fill simply keeps the size it was drawn at.
+        guard !fillers.isEmpty,
+              let extent = room(horizontal ? bounds.width : bounds.height,
+                                between: horizontal ? padding.horizontal : padding.vertical)
+        else { return lengths }
+        let others = items.indices
+            .filter { !items[$0].fills }
+            .reduce(CGFloat(0)) { $0 + lengths[$1] }
+        let gaps = layout.usedGap * CGFloat(max(0, items.count - 1))
+        let left = max(0, extent - others - gaps)
+        for (slot, index) in fillers.enumerated() {
+            let low = (left * CGFloat(slot) / CGFloat(fillers.count)).rounded()
+            let high = (left * CGFloat(slot + 1) / CGFloat(fillers.count)).rounded()
+            lengths[index] = high - low
+        }
+        return lengths
+    }
+
     /// How much leftover room each row after the first is pushed on by, or nil
     /// where this stack is not spreading at all.
     ///
@@ -488,6 +538,12 @@ enum GroupFlow {
     private static func spread(_ items: [Item], layout: GroupLayout, bounds: Bounds,
                                horizontal: Bool) -> CGFloat? {
         guard layout.spreadsContents, items.count > 1 else { return nil }
+        // Two things cannot both have the room left over. A piece told to fill
+        // takes it, and the rest go back to sitting the typed gap apart, which
+        // is the answer anybody who has written a stylesheet already carries:
+        // sharing nought between them would leave every gap closed and read as
+        // broken.
+        guard !items.contains(where: \.fills) else { return nil }
         let padding = layout.usedPadding
         guard let extent = room(horizontal ? bounds.width : bounds.height,
                                 between: horizontal ? padding.horizontal : padding.vertical)

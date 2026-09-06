@@ -346,6 +346,14 @@ extension EditorState {
         perform { $0.setPlacement(id: id, vertical: vertical) }
     }
 
+    /// Telling ONE piece to take the room the stack it is in has left over
+    /// along the way that stack runs, or to stop and go back to the size it
+    /// had before.
+    func setFillsTheFlow(id: UUID, _ fills: Bool) {
+        guard document?.layer(id: id) != nil else { return }
+        perform { $0.setFillsTheFlow(id: id, fills) }
+    }
+
     /// A canvas click that resolved through the group walk: the layer it
     /// picked and the group it picked it inside.
     func selectLayer(_ id: UUID?, inGroup context: UUID?) {

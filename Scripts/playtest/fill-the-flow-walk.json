@@ -1,0 +1,307 @@
+{
+  "out": "/tmp/photonz-playtest/fill-the-flow",
+  "seed": "One piece in a stack can take whatever room the stack has left along the way it runs, which is how the search field in the middle of a nav bar grows with the bar. The walk draws three pieces in a row, stacks them, gives the stack a width, and sets the middle one to Fill.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        100
+      ],
+      "to": [
+        200,
+        140
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        220,
+        100
+      ],
+      "to": [
+        300,
+        140
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        320,
+        100
+      ],
+      "to": [
+        400,
+        140
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        80,
+        60
+      ],
+      "to": [
+        460,
+        200
+      ],
+      "steps": 10
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Gap"
+    },
+    {
+      "do": "type",
+      "text": "12"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-no-room",
+      "note": "the middle piece inside a stack that is as big as its contents. The Horizontal row must read Set by the row as a plain word with NO menu, and the caption under the rows must say there is no room left over and name the Width field that would make some."
+    },
+    {
+      "do": "snapshot",
+      "name": "fill-1-no-room"
+    },
+    {
+      "do": "panel",
+      "stage": "1-no-room"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "700"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-room-to-spare",
+      "note": "the stack is 700 wide with room to spare. Nothing has moved yet: the three pieces are still 12 apart at the left."
+    },
+    {
+      "do": "snapshot",
+      "name": "fill-2-room-to-spare"
+    },
+    {
+      "do": "render",
+      "name": "fill-2-room-to-spare-doc"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-fill-offered",
+      "note": "the same middle piece, now that the stack has room. The Horizontal row must be a MENU reading Set by the row, and the caption must no longer be the no-room line."
+    },
+    {
+      "do": "snapshot",
+      "name": "fill-3-fill-offered"
+    },
+    {
+      "do": "panel",
+      "stage": "3-fill-offered"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Horizontal",
+      "shot": "fill-4-menu",
+      "choose": "Fill the row"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "5-filling",
+      "note": "THE TEST: the middle piece has grown to take everything the two ends and the two gaps left, so the last piece sits hard on the right edge of the stack. The Horizontal row reads Fill and the caption says what it does and that setting it back returns the old size."
+    },
+    {
+      "do": "snapshot",
+      "name": "fill-5-filling"
+    },
+    {
+      "do": "render",
+      "name": "fill-5-filling-doc"
+    },
+    {
+      "do": "panel",
+      "stage": "5-filling"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-named-in-the-list",
+      "note": "the stack itself: the list at the foot of Layout must name Rectangle 2 as a piece with a rule of its own, reading Takes the room left over."
+    },
+    {
+      "do": "snapshot",
+      "name": "fill-6-named-in-the-list"
+    },
+    {
+      "do": "panel",
+      "stage": "6-named-in-the-list"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "900"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "7-wider",
+      "note": "THE TEST: dragging the stack out to 900 grows ONLY the middle piece. The two ends are the size they were drawn."
+    },
+    {
+      "do": "snapshot",
+      "name": "fill-7-wider"
+    },
+    {
+      "do": "render",
+      "name": "fill-7-wider-doc"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Horizontal",
+      "choose": "Set by the row"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "8-set-back",
+      "note": "THE TEST: turning Fill off gives the piece back the 80 points it was drawn at, not the 600-odd the room made it."
+    },
+    {
+      "do": "snapshot",
+      "name": "fill-8-set-back"
+    },
+    {
+      "do": "render",
+      "name": "fill-8-set-back-doc"
+    },
+    {
+      "do": "panel",
+      "stage": "8-set-back"
+    }
+  ]
+}

@@ -93,6 +93,40 @@ extension PhotonzDocument {
         }
     }
 
+    /// Telling ONE piece to take the room the stack it is in has left over
+    /// along the way that stack runs, or telling it to stop.
+    ///
+    /// Stopping hands back the size the piece had before it started filling,
+    /// and nothing else could: the flow writes the size it worked out straight
+    /// into the piece, so without this a button tried at Fill for a second
+    /// would be stuck at whatever the room made it, with nobody left who
+    /// remembers what it was. One edit, one undo.
+    ///
+    /// Words are the exception down a column: their height is however tall
+    /// they came out, so they are handed back to their own measurement rather
+    /// than to a number remembered from before (`Layer.textReleasedFromFill`).
+    public mutating func setFillsTheFlow(id: UUID, _ fills: Bool) {
+        guard let layer = layer(id: id), fills != layer.fillsTheFlow else { return }
+        let across = containingGroup(of: id)?.group?.layout?.direction.isHorizontal ?? true
+        updateLayer(id: id) { out in
+            guard !fills else {
+                out.flowFill = FlowFill(sizeBefore: out.frame.standardized.size)
+                return
+            }
+            if let before = out.flowFill?.sizeBefore {
+                let box = out.frame.standardized
+                let back = CGRect(x: box.minX, y: box.minY,
+                                  width: across ? before.width : box.width,
+                                  height: across ? box.height : before.height)
+                // Handed back BY the container, so a copy does not take the
+                // width as a size of its own on the way past.
+                out = out.resized(to: back, placedByContainer: true)
+                if !across, let released = out.textReleasedFromFill { out.frame = released }
+            }
+            out.flowFill = nil
+        }
+    }
+
     /// The group a layer sits in, or nil when it sits loose on the canvas —
     /// which is also the answer to "is there a container to line this up in".
     public func containingGroup(of id: UUID) -> Layer? {

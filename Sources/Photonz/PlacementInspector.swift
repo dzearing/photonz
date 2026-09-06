@@ -61,7 +61,8 @@ struct PlacementInspector: View {
         // to the group's own edges, so neither of its directions belongs to the
         // stack and both rows stay live.
         let arranges = arrangement(of: container)?.arranges == true
-        let flow = PlacementEditing(arrangement: arrangement(of: container), placing: resolved)
+        let flow = PlacementEditing(arrangement: arrangement(of: container), placing: resolved,
+                                    onAScreen: container.isFrame)
         // What this layer still says on the axis the flow took over, so the row
         // that owns it can offer to take it off.
         let stale = flow.inertRule(in: current.placement)
@@ -89,7 +90,7 @@ struct PlacementInspector: View {
                     .fixedSize()
                 }
             } else {
-                ownedByTheFlow("Horizontal", flow, clearing: stale) {
+                ownedByTheFlow("Horizontal", flow, clearing: stale, filling: fillingRow) {
                     editorState.setPlacement(id: current.id, horizontal: nil)
                 }
             }
@@ -112,7 +113,7 @@ struct PlacementInspector: View {
                     .fixedSize()
                 }
             } else {
-                ownedByTheFlow("Vertical", flow, clearing: stale) {
+                ownedByTheFlow("Vertical", flow, clearing: stale, filling: fillingRow) {
                     editorState.setPlacement(id: current.id, vertical: nil)
                 }
             }
@@ -121,6 +122,16 @@ struct PlacementInspector: View {
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// Whether this layer takes the room its stack has left over, and how to
+    /// say otherwise. Only a layer's own rows carry it: the Contents rows speak
+    /// for everything inside a group at once, and "all of you take what is
+    /// left" is a grid, not a stack.
+    private var fillingRow: (isOn: Bool, set: (Bool) -> Void)? {
+        guard container != nil else { return nil }
+        let id = current.id
+        return (current.fillsTheFlow, { editorState.setFillsTheFlow(id: id, $0) })
     }
 
     /// The group's own default still written on the axis its flow decides, so
@@ -158,6 +169,14 @@ struct PlacementInspector: View {
                 + "group's own edges instead of being lined up with the others. Change either "
                 + "one and it becomes one of them again."
         }
+        // Taking the room the stack has left over is the loudest thing a piece
+        // can be doing, and it is not on either menu the other branches talk
+        // about, so it is said first.
+        if current.fillsTheFlow, flow.canFill, let owner = flow.flowNoun {
+            return "This takes the room \(owner) has left once everything else, the gaps and "
+                + "the room at its edges have taken theirs. Set it back and it goes to the size "
+                + "it was before."
+        }
         // A rule sitting on the axis the flow took over is the one thing on
         // these rows nobody expects, so when there is one it is what the
         // caption talks about: saying "following the group" over a row that is
@@ -175,6 +194,14 @@ struct PlacementInspector: View {
             || (flow.canSetVertical && resolved.vertical == .stretch)
         if current.text != nil, stretches {
             return "Stretch fills the box with the words placed by Align, in Text."
+        }
+        // A stack with nothing to spare is the one place the row above went
+        // quiet, so this is where it says why, with the number that would
+        // change the answer. It goes in the caption that was already here
+        // rather than as a second line: the section is short on room, and
+        // "following the group" is the less useful of the two things to say.
+        if let missing = flow.noRoomToFill {
+            return missing
         }
         // Same again for who is following whom: a rule left on the axis the
         // flow decides changes nothing, so it does not make this layer an
@@ -225,7 +252,8 @@ struct PlacementInspector: View {
                             ? effective.vertical.title
                             : (flow.setByTheFlow ?? effective.vertical.title))
             } else if !flow.canSetHorizontal {
-                ownedByTheFlow("Horizontal", flow, clearing: contentsInertRule(flow)) {
+                ownedByTheFlow("Horizontal", flow, clearing: contentsInertRule(flow),
+                               filling: nil) {
                     editorState.setContentPlacement(id: current.id, horizontal: nil)
                 }
             } else {
@@ -246,7 +274,8 @@ struct PlacementInspector: View {
             if current.isComponentInstance {
                 EmptyView()
             } else if !flow.canSetVertical {
-                ownedByTheFlow("Vertical", flow, clearing: contentsInertRule(flow)) {
+                ownedByTheFlow("Vertical", flow, clearing: contentsInertRule(flow),
+                               filling: nil) {
                     editorState.setContentPlacement(id: current.id, vertical: nil)
                 }
             } else {
@@ -374,6 +403,18 @@ struct PlacementInspector: View {
     /// label in the same column, so nothing shuffles under the pointer when a
     /// group becomes a stack, and hovering it says where the answer is set.
     ///
+    /// The stack decides WHERE each piece sits along here, but not how much
+    /// room it takes: one piece may be told to take whatever the stack has
+    /// left over, which is how a search field ends up being the part of a nav
+    /// bar the logo and the buttons did not want. So the row is a menu with
+    /// exactly two answers rather than a dead word, and it reads the answer
+    /// back the same way every other row in this section does.
+    ///
+    /// Where the stack has nothing left over the menu is not there at all: the
+    /// answer goes back to being a word and the caption under the rows says
+    /// why, because a choice that is present and changes nothing is worse than
+    /// no choice.
+    ///
     /// `clearing` is the rule still written on that axis from before the stack
     /// took it over. It does nothing today, and it is not counted as a rule of
     /// its own anywhere else, so this row is the one place it can be seen — and
@@ -382,13 +423,26 @@ struct PlacementInspector: View {
     @ViewBuilder
     private func ownedByTheFlow(_ title: String, _ flow: PlacementEditing,
                                 clearing stale: String? = nil,
+                                filling: (isOn: Bool, set: (Bool) -> Void)? = nil,
                                 clear: @escaping () -> Void = {}) -> some View {
         if let answer = flow.setByTheFlow {
             row(title) {
                 HStack(spacing: 8) {
-                    Text(answer)
-                        .font(.callout)
-                        .foregroundStyle(.tertiary)
+                    if let filling, flow.canFill, let fill = flow.fillTitle {
+                        Menu {
+                            Button(answer) { filling.set(false) }
+                            Button(fill) { filling.set(true) }
+                        } label: {
+                            menuLabel(filling.isOn ? fill : answer, following: !filling.isOn)
+                        }
+                        .menuStyle(.borderlessButton)
+                        .fixedSize()
+                        .help(PlacementEditing.fillReason(flow.flowNoun ?? "the stack"))
+                    } else {
+                        Text(answer)
+                            .font(.callout)
+                            .foregroundStyle(.tertiary)
+                    }
                     if let stale {
                         Button("Clear \(stale)", action: clear)
                             .buttonStyle(.link)

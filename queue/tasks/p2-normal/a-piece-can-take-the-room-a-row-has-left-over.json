@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:42:32.241Z",
-  "updated": "2026-09-05T14:05:05.341Z",
+  "updated": "2026-09-06T00:34:52.022557Z",
   "deps": [],
   "blockedBy": [],
   "notes": "GroupFlow.stacked() takes `along` straight from item.box on the flow axis and never reads that axis' placement rule, so today there is nothing to fill with. The cross axis already does this through span(size:start:extent:rule:) with .stretch, so the naming to reuse is there. The row that has to grow the choice is the 'owned by the flow' row in PlacementInspector.swift, which currently only says the stack decides it; childCaption is where the one line about a hugging stack goes. The pending task a-row-can-push-its-contents-to-its-two-ends edits the same function for the space between case: whichever lands first, the second reads it rather than re-deciding how leftover room is worked out. Watch the surface piece (stretch both ways), which is not one of the things being arranged and must not join the sharing.",
@@ -39,6 +39,23 @@
     {
       "t": "2026-09-05T14:05:05.340Z",
       "note": "seq 40 -> 50"
+    },
+    {
+      "t": "2026-09-06T00:06:50.075Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T00:16:37.911064Z",
+      "note": "Adversarial review before building. (1) Fill cannot reuse Stretch on the flow axis: stretch both ways already means 'surface behind the rest', and a search field that fills a nav bar across AND fills its height down would silently become the surface. So Fill is its own thing, not a sixth placement value. (2) Fill is NOT a placement at all: it is a flow property, so it rides on the layer as one optional (FlowFill) rather than adding a case to two public enums, PlacementSpan, every placement menu and LayerScaling. Flipping a stack from row to column then keeps meaning 'take the room the flow has left', which a horizontal .fill would not. (3) Fill collides with Spread (space-between): both claim the leftover. Rule: a filler wins and the others sit the typed gap apart, which is what flexbox does. The alternative leaves every gap at nought and looks broken. (4) Cut: Fill is not offered on the group's Contents row. 'Everything inside fills' is equal columns, which is what a grid already is. (5) A filler takes the leftover INSTEAD of its own size (Figma's reading), not its size plus a share, which is what 'the search field grows with the bar' means. (6) A column stack filling a text layer has to pass fillingHeight, or the text ignores the height it is handed."
+    },
+    {
+      "t": "2026-09-06T00:34:52.022557Z",
+      "note": "Built. Core: FlowFill on Layer (one optional, so a document from before decodes untouched), GroupFlow.alongTheFlow works out each piece's length along the flow, GroupLayout.hasRoomAlongTheFlow is now the one question both spreading and filling ask, PlacementEditing gains canFill / fillTitle / noRoomToFill, PhotonzDocument.setFillsTheFlow records the size on the way in and hands it back on the way out. App: the flow-owned row in PlacementInspector became a two-answer menu. 27 new tests in GroupFillTests, whole suite 3461 green."
+    },
+    {
+      "t": "2026-09-06T00:34:52.022557Z",
+      "note": "Adversarial review on the real app, driven by Scripts/playtest/fill-the-flow-walk.json against the probe (Screen Recording granted, so the pictures are real captures). Two things were clumsy and both are fixed: (1) the answer read plain 'Fill' while the Colour section three rows down also says Fill, in the same panel at the same time, so it now names the flow: 'Fill the row' / 'Fill the stack'. (2) The W field stayed typeable while the stack owned the number, so a typed width was silently put back on the next pass; it is now a number to read with a tip naming the two controls that do change it. Two rough edges filed rather than fixed: the old cross-axis Stretch has the same dead-field wart, and there is no menu item or key for filling."
     }
-  ]
+  ],
+  "started": "2026-09-06T00:06:50.074Z"
 }

@@ -201,6 +201,12 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// it over, so the tip points at the control that owns it now.
     public static let filledHeightReason = "This is stretched to fill the height of what holds it. Change that container's height, or pick a different Vertical in the Layout section."
 
+    /// Why a piece taking the room its stack has left over has no typed size
+    /// along the way that stack runs: the stack works that number out from
+    /// whatever the others left, so one typed here would be put straight back
+    /// before you saw it. Points at the two controls that do change it.
+    public static let fillingReason = "This takes the room its stack has left over, so the stack works this number out. Change the group's size in the Layout section, or set this row back from filling."
+
     /// Why a layer in a stack has no typeable position: the stack decides it,
     /// and a typed number would be put straight back. Says what to do instead.
     public static let stackedReason = "The stack this is in decides where it sits. Change the group's Gap or Direction in the Layout section, or drag this past its neighbours to reorder them."
@@ -284,14 +290,24 @@ public struct LayerGeometryEditing: Hashable, Sendable {
             canMove = true
             moveReason = nil
         }
+        // A piece taking the room its stack has left over is at a size the
+        // stack worked out, so the field on that axis is a number to READ. It
+        // is not a lock and unlocking gives it nothing back: the flow would
+        // put a typed number straight back on its next pass.
+        let filling = layer.fillsTheFlow && layer.canFillTheFlow(in: container)
+        let across = container?.group?.layout?.flowsHorizontally == true
         if layer.allowsFrameResize {
-            canSetWidth = true
-            canSetHeight = !layer.resizeWidthOnly
-            widthReason = nil
-            heightReason = layer.resizeWidthOnly
-                ? (layer.heightIsFilled(in: container) ? Self.filledHeightReason
-                                                       : Self.textHeightReason)
-                : nil
+            canSetWidth = !(filling && across)
+            canSetHeight = !layer.resizeWidthOnly && !(filling && !across)
+            widthReason = filling && across ? Self.fillingReason : nil
+            heightReason = if filling, !across {
+                Self.fillingReason
+            } else if layer.resizeWidthOnly {
+                layer.heightIsFilled(in: container) ? Self.filledHeightReason
+                                                    : Self.textHeightReason
+            } else {
+                nil
+            }
         } else {
             canSetWidth = false
             canSetHeight = false

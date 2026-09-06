@@ -1,0 +1,29 @@
+{
+  "id": "a-stretched-piece-stops-offering-a-size-you-cann",
+  "title": "A stretched piece stops offering a size you cannot type",
+  "goal": "When a piece is stretched to fill the width of the column holding it, the width box in the panel still looks like something you can type in, and a number typed there is put straight back a moment later. The box should show the number as something to read, with a line saying who decides it now, the way a piece told to take the room left over already does.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 1260,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T00:33:57.098Z",
+  "updated": "2026-09-06T00:33:57.098Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "LayerGeometryEditing.init already does this for the filling case (Self.fillingReason, added 2026-09-05 with FlowFill). The stretch case is the same shape: resolvedPlacement(in: container) is .stretch on the axis the container decides. Watch heightIsFilled(in:), which already covers half of it for text and now also answers for a column filler.",
+  "acceptance": [
+    "A piece stretched across a column stack shows its width as a plain number rather than a box you can type in",
+    "Hovering that number says the container decides it and names the control that does change it",
+    "The same for a piece stretched down a row stack and its height",
+    "A piece that is not stretched keeps its typed size exactly as it does today",
+    "Tests in PhotonzCore cover both directions, written before the change"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T00:33:57.098Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -89,6 +89,28 @@ public struct LayerPlacement: Hashable, Codable, Sendable {
     public var normalized: LayerPlacement? { isEmpty ? nil : self }
 }
 
+/// A piece told to take the room its stack has left over.
+///
+/// Filling is about the FLOW, not about an axis. It says "take whatever this
+/// stack has left along the way it runs", so a row that is flipped to a column
+/// goes on meaning the same thing, and it never collides with the Stretch that
+/// makes a piece the surface behind everything else: something painted to the
+/// box's own edges cannot also be one of the pieces sharing the box out.
+///
+/// The size it had BEFORE is kept here because nothing else could keep it. The
+/// flow writes the size it worked out straight into the piece, so a button
+/// tried at Fill for a second would otherwise be stuck at whatever the room
+/// made it, with nobody left who remembers what it was.
+public struct FlowFill: Hashable, Codable, Sendable {
+    /// The size this piece was before it started filling, so turning Fill off
+    /// hands it back.
+    public var sizeBefore: CGSize
+
+    public init(sizeBefore: CGSize) {
+        self.sizeBefore = sizeBefore
+    }
+}
+
 /// What a piece actually does, once the container's default and the piece's own
 /// override have been put together — and, for each axis, which of the two
 /// answered. The inspector needs the second half to say whether a row is
@@ -196,9 +218,26 @@ extension Layer {
     /// and the layer is still the size of what is in it.
     public func heightIsFilled(in container: Layer?) -> Bool {
         guard let container else { return false }
-        if let layout = container.group?.layout, !layout.decidesHeight { return false }
-
+        if let layout = container.group?.layout, !layout.decidesHeight {
+            // A column stack decides no heights at all, with one exception:
+            // a piece told to take the room the column has left over is at a
+            // height the column worked out, and its own field cannot change it.
+            return fillsTheFlow && (container.isFrame || layout.hasRoomAlongTheFlow)
+        }
         return resolvedPlacement(in: container).vertical == .stretch
+    }
+
+    /// Whether this piece takes the room its stack has left over along the way
+    /// that stack runs, rather than keeping the size it was drawn at.
+    public var fillsTheFlow: Bool { flowFill != nil }
+
+    /// Whether Fill is worth offering for this piece inside this container:
+    /// there has to be a flow that owns a direction, and room left over in it.
+    public func canFillTheFlow(in container: Layer?) -> Bool {
+        guard let container, let layout = container.group?.layout else { return false }
+        return PlacementEditing(arrangement: layout,
+                                placing: resolvedPlacement(in: container),
+                                onAScreen: container.isFrame).canFill
     }
 
     /// This layer's own setting with one axis changed, collapsed back to
@@ -230,6 +269,24 @@ public struct PlacementEditing: Hashable, Sendable {
     public static let rowTitle = "Set by the row"
     public static let stackTitle = "Set by the stack"
 
+    /// The one other answer that row takes: take whatever room the stack has
+    /// left along the way it runs.
+    ///
+    /// It names the flow rather than reading plain "Fill", because the panel
+    /// already has a Fill: the colour inside a shape, three sections down. Two
+    /// controls a thumb apart wearing the same word and meaning nothing like
+    /// each other is how somebody ends up painting a rectangle when they
+    /// wanted to widen it.
+    public static func fillTitle(across: Bool) -> String {
+        across ? "Fill the row" : "Fill the stack"
+    }
+
+    /// What picking it does, for the hover tip.
+    public static func fillReason(_ noun: String) -> String {
+        "Take the room \(noun) has left once the other pieces, the gaps and the room at its "
+            + "edges have taken theirs. Two pieces set to fill share it equally."
+    }
+
     /// Why, for the tip that comes up on the row, pointing at the control that
     /// owns it now.
     public static let rowReason = "The row this is in lays its contents out left to right, so it decides where each one sits across. Change the group's Gap or Direction in the Layout section."
@@ -238,6 +295,18 @@ public struct PlacementEditing: Hashable, Sendable {
     /// Whether that axis is still a question the placement rules answer.
     public let canSetHorizontal: Bool
     public let canSetVertical: Bool
+
+    /// Whether the row that says who owns the axis can also offer Fill. Only a
+    /// stack with room to spare can: one that is the size of what is inside it
+    /// has nothing left over, so the choice would be there and do nothing.
+    public let canFill: Bool
+
+    /// Why it cannot, said in the row's own caption rather than left as a dead
+    /// menu item, or nil where filling is on offer or the flow owns no axis.
+    public let noRoomToFill: String?
+
+    /// What that answer is called here, or nil where the flow owns no axis.
+    public let fillTitle: String?
 
     /// The words for the axis the flow decided, or nil where it decided
     /// neither. Only ever one axis, because a flow runs one way.
@@ -265,17 +334,25 @@ public struct PlacementEditing: Hashable, Sendable {
     ///
     /// `resolved` is that piece's answer once its own rule and the container's
     /// default are put together, or nil to ask about the flow on its own.
-    public init(arrangement: GroupLayout?, placing resolved: ResolvedPlacement?) {
-        self.init(arrangement: resolved?.isSurface == true ? nil : arrangement)
+    public init(arrangement: GroupLayout?, placing resolved: ResolvedPlacement?,
+                onAScreen: Bool = false) {
+        self.init(arrangement: resolved?.isSurface == true ? nil : arrangement,
+                  onAScreen: onAScreen)
     }
 
-    public init(arrangement: GroupLayout?) {
+    /// `onAScreen` says the container is a screen, whose box is a size somebody
+    /// drew rather than one worked out from its contents. A stack on one always
+    /// has room to spare, so the app never has to ask the layout about it.
+    public init(arrangement: GroupLayout?, onAScreen: Bool = false) {
         guard let arrangement, arrangement.kind == .stack else {
             canSetHorizontal = true
             canSetVertical = true
             setByTheFlow = nil
             reason = nil
             flowNoun = nil
+            canFill = false
+            noRoomToFill = nil
+            fillTitle = nil
             return
         }
         let across = arrangement.flowsHorizontally
@@ -284,6 +361,17 @@ public struct PlacementEditing: Hashable, Sendable {
         setByTheFlow = across ? Self.rowTitle : Self.stackTitle
         reason = across ? Self.rowReason : Self.stackReason
         flowNoun = across ? Self.rowNoun : Self.stackNoun
+        canFill = onAScreen || arrangement.hasRoomAlongTheFlow
+        noRoomToFill = canFill ? nil : Self.noRoomReason(across: across)
+        fillTitle = Self.fillTitle(across: across)
+    }
+
+    /// The line under the row where a stack has nothing left over: what is
+    /// missing, and the one number that would make the choice mean something.
+    static func noRoomReason(across: Bool) -> String {
+        "There is no room left over here: \(across ? rowNoun : stackNoun) is as big as what is "
+            + "inside it. Give it a \(across ? "Width" : "Height") in the Layout section and a "
+            + "piece can take what is left."
     }
 
     /// The rule this setting still carries on the axis the flow decides, in the
@@ -319,15 +407,19 @@ public struct PlacementOverride: Identifiable, Hashable, Sendable {
     /// True where this piece is the surface behind everything the container
     /// arranges rather than one of the things being arranged.
     public let isSurface: Bool
+    /// True where this piece takes the room the stack has left over along the
+    /// way it runs, which is a rule of its own even with no placement set.
+    public let fills: Bool
 
     public init(id: UUID, name: String,
                 horizontal: HorizontalPlacement?, vertical: VerticalPlacement?,
-                isSurface: Bool = false) {
+                isSurface: Bool = false, fills: Bool = false) {
         self.id = id
         self.name = name
         self.horizontal = horizontal
         self.vertical = vertical
         self.isSurface = isSurface
+        self.fills = fills
     }
 
     /// What this piece's own rule says, in a few words that fit beside its
@@ -340,9 +432,13 @@ public struct PlacementOverride: Identifiable, Hashable, Sendable {
         // that fills the width reads. So it says what it is instead.
         if isSurface { return "Surface behind the rest" }
         if horizontal == .stretch, vertical == .stretch { return "Stretch both ways" }
+        // Filling carries no direction word: it is about the way the stack
+        // runs, so naming an axis for it would be naming the wrong thing the
+        // day somebody flips the stack from a row to a column.
+        let takes = fills ? "Takes the room left over" : nil
         let across = horizontal.map { "\($0.title) across" }
         let down = vertical.map { "\($0.title) down" }
-        return [across, down].compactMap { $0 }.joined(separator: ", ")
+        return [takes, across, down].compactMap { $0 }.joined(separator: ", ")
     }
 }
 
@@ -364,7 +460,7 @@ extension Layer {
         let arranges = arrangement?.arranges == true
         let container = group?.contentPlacement
         return children.reversed().compactMap { child in
-            guard let placement = child.placement else { return nil }
+            let placement = child.placement
             // What the piece really does, which decides whether the flow is
             // arranging it at all: a piece stretched both ways is the surface
             // and the flow owns neither of its directions, so a rule sitting
@@ -372,12 +468,17 @@ extension Layer {
             // half of what makes this the surface.
             let resolved = LayerPlacement.resolving(child: placement, container: container)
             let flow = PlacementEditing(arrangement: arrangement, placing: resolved)
-            let horizontal = flow.canSetHorizontal ? placement.horizontal : nil
-            let vertical = flow.canSetVertical ? placement.vertical : nil
-            guard horizontal != nil || vertical != nil else { return nil }
+            let horizontal = flow.canSetHorizontal ? placement?.horizontal : nil
+            let vertical = flow.canSetVertical ? placement?.vertical : nil
+            // Taking the room left over is a rule of its own even where the
+            // piece has no placement at all, and it only counts where a flow
+            // actually runs: outside a stack there is nothing to fill.
+            let fills = child.fillsTheFlow && flow.setByTheFlow != nil
+            guard horizontal != nil || vertical != nil || fills else { return nil }
             return PlacementOverride(id: child.id, name: child.name,
                                      horizontal: horizontal, vertical: vertical,
-                                     isSurface: arranges && resolved.isSurface)
+                                     isSurface: arranges && resolved.isSurface,
+                                     fills: fills)
         }
     }
 }

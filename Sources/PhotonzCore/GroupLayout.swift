@@ -164,17 +164,23 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// that arranges nothing has no gap to spread in the first place.
     public var spreadsContents: Bool { kind == .stack && spreadsGap }
 
-    /// Whether spreading could do anything here, which is the question the
-    /// Gap row asks before it offers the choice. A stack only has room to
-    /// share where the axis it FLOWS along is bigger than its contents: a
-    /// size of its own, or a floor holding it open. A row told how tall it is
-    /// still has nothing left over across. A screen is a box somebody drew, so
-    /// the app answers that one for itself.
-    public var couldSpread: Bool {
+    /// Whether this stack has any room beyond its contents along the way it
+    /// runs. The one question behind both things that can be done with leftover
+    /// room: sharing it between the rows (the Gap row's switch) and handing it
+    /// to one piece (a piece's Fill).
+    ///
+    /// A stack only has room where the axis it FLOWS along is bigger than its
+    /// contents: a size of its own, or a floor holding it open. A row told how
+    /// tall it is still has nothing left over across. A screen is a box
+    /// somebody drew, so the app answers that one for itself.
+    public var hasRoomAlongTheFlow: Bool {
         guard kind == .stack else { return false }
         return direction.isHorizontal ? (usedWidth != nil || usedMinWidth != nil)
                                       : (usedHeight != nil || usedMinHeight != nil)
     }
+
+    /// The same question, in the words the Gap row asks it in.
+    public var couldSpread: Bool { hasRoomAlongTheFlow }
     public var usedPadding: GroupPadding { padding.used }
 
     /// The size actually used on each axis: the number given, never negative,

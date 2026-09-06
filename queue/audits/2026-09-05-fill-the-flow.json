@@ -1,0 +1,31 @@
+{
+  "feature": "A piece can take the room a row has left over",
+  "epic": "ui-layout",
+  "summary": "One piece inside a stack can now be told to take whatever room the stack has left along the way it runs, so the search field in the middle of a nav bar grows and shrinks with the bar while the logo and the buttons keep the size you drew them.",
+  "setup": "Photonz Next, auto layout on (next-auto-layout, on by default). Nothing to switch on.",
+  "try": [
+    { "do": "Draw three rectangles in a row on a blank canvas, side by side." },
+    { "do": "Select all three and press the Stack button in Layout." },
+    { "do": "Click into the group and pick the middle rectangle. Read the Horizontal row and the line under it.", "shot": "2026-09-05-fill-the-flow-1.png" },
+    { "do": "Select the group again and set Width to Fixed, then type 700." },
+    { "do": "Pick the middle rectangle again and set Horizontal to Fill the row.", "shot": "2026-09-05-fill-the-flow-2.png" },
+    { "do": "Select the group and drag its right handle wider, or type 900 into W.", "shot": "2026-09-05-fill-the-flow-3.png" },
+    { "do": "Pick the middle rectangle and set Horizontal back to Set by the row." },
+    { "do": "Try the same down a column: Direction Column, Height Fixed, then Fill the stack on one piece." }
+  ],
+  "evaluate": [
+    "The Horizontal row is where you looked for this, or did you go hunting in the group's own Layout rows first?",
+    "Does Fill the row read better than a plain Fill, given the Color section three rows down also says Fill?",
+    "When the stack has no room to spare there is no menu at all, only a line saying why. Is that the right call, or would you rather see a greyed choice you can at least point at?",
+    "Setting it back gives the piece the size it had before rather than leaving it at what the room made it. Is that what you expected, or did you want it to keep the width it was showing?",
+    "The W field goes read-only while a piece is filling. Does the number plus its hover tip tell you enough, or does the field disappearing feel like something broke?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real screen capture of the window, not an offscreen render.",
+    "The old Stretch on the CROSS axis has the same wart I just fixed for filling: a piece stretched across a column stack still shows a typeable W that the flow puts straight back on the next pass. The two now behave differently for no reason a person could guess. Filed as a follow-up.",
+    "There is no menu item or key for this, only the panel row. Every other placement answer is in the same boat, but filling is the one you reach for often enough to want a key. Filed as a follow-up.",
+    "A stack whose contents are already too big squeezes its filler to a single point with no warning anywhere. It can still be grabbed and it comes back the moment there is room, but nothing says what happened.",
+    "Two fillers split what is left equally, always. There is no way to say one should take twice what the other does, which is the next thing anybody building a real bar will ask for.",
+    "Deliberately not built: telling a whole group 'everything inside fills'. That shape is a grid, and the app already has one."
+  ]
+}
