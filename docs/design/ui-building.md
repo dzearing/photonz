@@ -2710,9 +2710,9 @@ every other row there. The layers list prints the version name beside the
 component mark, since every version carries the component's name. Edit Original
 on a copy lands on the version that copy is showing.
 
-Not in this slice: a version set drawn as one thing on the canvas, reordering
-versions, and placing a copy of a particular version straight from the shelf.
-(One edit reaching every version landed separately, below.)
+Not in this slice: a version set drawn as one thing on the canvas, and
+reordering versions. (One edit reaching every version, and placing a particular
+version straight from the shelf, landed separately, below.)
 
 Model in `ComponentVersions.swift` (`ComponentVersion`, `componentVersions`,
 `addComponentVersion`, `setInstanceVersion`), the fields on `GroupContent`
@@ -2783,3 +2783,45 @@ Model in `ComponentVersionMatching.swift` (`ComponentVersionApply`,
 `ComponentVersionApplyRow` / `ComponentVersionPieceInspector`, the menus in
 `EditorCommands` and `LayersPanel`. Tested in `ComponentVersionMatchTests`,
 walked by `Scripts/playtest/apply-to-versions-walk.json`.
+
+
+## Landed: placing a particular version straight from the shelf (Next, `next-components`, 2026-09-06)
+
+Every copy used to land showing the component's FIRST version, so a disabled
+button was two steps: drop one, then find the Version row and switch it. On a
+screen wanting four disabled buttons that is four corrections. The shelf can now
+hand you the version you asked for, and the copy arrives already showing it.
+
+**Where the choice is.** In the Component section under the shelf, the one that
+opens when you pick a tile, directly above Place a Copy: a "Place" row naming
+the version a copy off this tile will arrive as. It is there only while the
+component holds more than one drawing, so a shelf of plain components is exactly
+the shelf it always was.
+
+**Not on the tile itself.** A tile is 68 points wide and already carries a
+click, a double click and a drag; a fourth gesture on a nine point badge is a
+gesture nobody lands, and a version called "Disabled, pressed" has nowhere to be
+read there. What the tile DOES carry is the answer: it draws the chosen version's
+picture and wears its name on a small badge, so the shelf shows what you are
+about to get before you pick anything up.
+
+**Every way of placing agrees.** Dragging the tile, double clicking it, Place a
+Copy and Layer ▸ Insert Component all place the version the shelf is set to, and
+the box drawn under the pointer mid-drag is that version's size — versions may
+differ in size, so the outline in the air would otherwise promise the wrong box.
+
+**It is a state of the tool, not a fact about the picture.** The choice is not
+saved in the document: it is which version you are placing right now, like the
+tool in your hand. A version deleted after it was chosen falls back to the
+component's first rather than leaving the shelf pointing at a drawing that is
+gone, and a copy already placed can still be switched afterwards, so choosing at
+the shelf is a shortcut rather than a decision you are stuck with.
+
+The version rides along on the drag pasteboard beside the component id
+(`ComponentDrag.Payload`), so what the tile was set to when the drag started is
+what lands. Model in `PhotonzDocument.insertComponentInstance(of:at:inside:version:)`
+and `componentDropLanding(…version:)`, the shelf's own choice in
+`EditorState.shelfComponentVersionChoice` / `shelfComponentVersion(of:)`, the row
+in `LibraryComponentInspector.versionRow`. Tested in
+`ComponentVersionPlacementTests`, walked by
+`Scripts/playtest/place-a-version-walk.json`.

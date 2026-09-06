@@ -108,22 +108,52 @@ enum ComponentDrag {
     static let typeIdentifier = "com.photonz.component-id"
     static let pasteboardType = NSPasteboard.PasteboardType(typeIdentifier)
 
+    /// What a shelf tile hands over: the component, and which of its versions
+    /// the shelf was set to when the drag started (`ComponentVersions`). Nil
+    /// version means the component's first, which is every component that has
+    /// only ever had one drawing.
+    struct Payload: Hashable, Sendable {
+        var componentID: UUID
+        var version: UUID?
+    }
+
+    /// The bytes on the pasteboard: the component's id, and the version after
+    /// a slash when there is one. Plain text rather than an archive, because
+    /// this crosses nothing but this process and a person reading a log should
+    /// be able to see what was dragged.
+    static func data(componentID: UUID, version: UUID? = nil) -> Data {
+        guard let version else { return Data(componentID.uuidString.utf8) }
+        return Data("\(componentID.uuidString)/\(version.uuidString)".utf8)
+    }
+
     /// The drag a Components tile starts.
-    static func itemProvider(componentID: UUID) -> NSItemProvider {
+    static func itemProvider(componentID: UUID, version: UUID? = nil) -> NSItemProvider {
         let provider = NSItemProvider()
+        let payload = data(componentID: componentID, version: version)
         provider.registerDataRepresentation(forTypeIdentifier: typeIdentifier,
                                             visibility: .ownProcess) { completion in
-            completion(Data(componentID.uuidString.utf8), nil)
+            completion(payload, nil)
             return nil
         }
         return provider
     }
 
-    /// The component a pasteboard is carrying, nil for anything else.
-    static func componentID(on pasteboard: NSPasteboard) -> UUID? {
+    /// What a pasteboard is carrying, nil for anything that is not a component
+    /// drag. An id on its own is read as the component's first version, so a
+    /// drag written before versions existed still lands a copy.
+    static func payload(on pasteboard: NSPasteboard) -> Payload? {
         guard let data = pasteboard.data(forType: pasteboardType),
               let text = String(data: data, encoding: .utf8) else { return nil }
-        return UUID(uuidString: text)
+        let parts = text.split(separator: "/", maxSplits: 1)
+        guard let first = parts.first, let componentID = UUID(uuidString: String(first))
+        else { return nil }
+        let version = parts.count > 1 ? UUID(uuidString: String(parts[1])) : nil
+        return Payload(componentID: componentID, version: version)
+    }
+
+    /// The component a pasteboard is carrying, nil for anything else.
+    static func componentID(on pasteboard: NSPasteboard) -> UUID? {
+        payload(on: pasteboard)?.componentID
     }
 }
 
@@ -247,9 +277,10 @@ struct LibraryComponentInspector: View {
                         .lineLimit(2)
                         .truncationMode(.middle)
                 }
-                Text(inside(main) + versions(componentID) + copies(componentID))
+                Text(inside(shown(componentID) ?? main) + versions(componentID) + copies(componentID))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                versionRow(componentID)
                 HStack(spacing: 6) {
                     // Place first: the shelf exists to hand you copies, and the
                     // way back to the original is the secondary errand.
@@ -257,9 +288,14 @@ struct LibraryComponentInspector: View {
                         editorState.insertPickedComponent()
                     }
                     .controlSize(.small)
-                    .help("Puts a copy in the middle of the canvas. Dragging the tile places one where you drop it")
+                    .help(placeHelp(componentID))
+                    .playtestControl("Place a Copy", detail: "Component")
                     Button("Select Original") {
-                        editorState.selectComponentOnCanvas(componentID: componentID)
+                        // The version the shelf is set to, or the button takes
+                        // you to a drawing you were not looking at.
+                        editorState.selectComponentOnCanvas(
+                            componentID: componentID,
+                            version: editorState.shelfComponentVersion(of: componentID)?.id)
                     }
                     .controlSize(.small)
                     .help("Selects the original on the canvas")
@@ -268,6 +304,54 @@ struct LibraryComponentInspector: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 4)
         }
+    }
+
+    /// Which version a copy off this tile arrives showing
+    /// (`ComponentVersions`).
+    ///
+    /// Here rather than on the tile itself: the tile is nine points of badge
+    /// and three gestures already, and a version called "Disabled, pressed"
+    /// has nowhere to be read there. This row sits directly above Place a
+    /// Copy, which is the thing it changes, and the tile's picture and its
+    /// badge follow it, so the shelf shows what you are about to get.
+    ///
+    /// Absent for a component with one drawing, so a shelf of plain components
+    /// is exactly the shelf it always was.
+    @ViewBuilder private func versionRow(_ componentID: UUID) -> some View {
+        let versions = editorState.componentVersions(of: componentID)
+        if versions.count > 1, let shelfVersion = editorState.shelfComponentVersion(of: componentID) {
+            HStack(spacing: 6) {
+                Text("Place")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 74, alignment: .leading)
+                Picker("", selection: Binding(
+                    get: { shelfVersion.id },
+                    set: { editorState.chooseShelfComponentVersion(componentID: componentID,
+                                                                   version: $0) })) {
+                    ForEach(versions) { version in
+                        Text(version.name).tag(version.id)
+                    }
+                }
+                .labelsHidden()
+                .controlSize(.small)
+                .help("Which drawing of this component a copy off this tile arrives showing. A copy can still be switched afterwards")
+            }
+        }
+    }
+
+    /// The drawing the shelf is set to hand over, for the sentence above.
+    private func shown(_ componentID: UUID) -> Layer? {
+        guard let version = editorState.shelfComponentVersion(of: componentID)?.id else { return nil }
+        return editorState.document?.mainComponent(componentID: componentID, version: version)
+    }
+
+    private func placeHelp(_ componentID: UUID) -> String {
+        guard let shelfVersion = editorState.shelfComponentVersion(of: componentID) else {
+            return "Puts a copy in the middle of the canvas. Dragging the tile places one where you drop it"
+        }
+        return "Puts a copy showing \(shelfVersion.name) in the middle of the canvas. "
+            + "Dragging the tile places one where you drop it"
     }
 
     private func inside(_ main: Layer) -> String {
@@ -346,6 +430,23 @@ struct LibraryComponentTile: View {
 
     private var isSelected: Bool { editorState.selectedLibraryItemID == entry.id }
 
+    /// Which version this tile is set to hand over, nil for a component with
+    /// only one drawing and for a starter that is not in the document yet
+    /// (`ComponentVersions`). Everything about the tile follows it: the picture
+    /// it draws, what a drag carries and what a double click places.
+    private var shelfVersion: ComponentVersion? {
+        guard starter == nil, let componentID = layer.componentID else { return nil }
+        return editorState.shelfComponentVersion(of: componentID)
+    }
+
+    /// The drawing this tile shows: the chosen version's, or the one the shelf
+    /// handed over for a component that has only one.
+    private var shown: Layer {
+        guard let shelfVersion, shelfVersion.layerID != layer.id,
+              let drawing = editorState.document?.layer(id: shelfVersion.layerID) else { return layer }
+        return drawing
+    }
+
     var body: some View {
         VStack(spacing: LibraryShelfLayout.captionSpacing) {
             thumbnail
@@ -391,7 +492,7 @@ struct LibraryComponentTile: View {
     /// SwiftUI asks for the item all over again.
     private func dragItem() -> NSItemProvider {
         guard let componentID = layer.componentID else { return NSItemProvider() }
-        return ComponentDrag.itemProvider(componentID: componentID)
+        return ComponentDrag.itemProvider(componentID: componentID, version: shelfVersion?.id)
     }
 
     /// The picture of the component itself.
@@ -417,6 +518,24 @@ struct LibraryComponentTile: View {
             .overlay(alignment: .topLeading) {
                 ComponentMark(size: 9).padding(3)
             }
+            // Which drawing this tile would hand you, for a component that
+            // holds more than one. It is a LABEL, not a control: the tile is
+            // already a click, a double click and a drag, and a fourth gesture
+            // on a nine point badge is a gesture nobody lands. Choosing happens
+            // in the section below, where the names have room to be read.
+            .overlay(alignment: .bottomTrailing) {
+                if let shelfVersion {
+                    Text(shelfVersion.name)
+                        .font(.system(size: 8, weight: .medium))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 3)
+                        .padding(.vertical, 1)
+                        .background(Capsule().fill(.regularMaterial))
+                        .padding(2)
+                }
+            }
             // The tile's own width, which is whatever the adaptive grid handed
             // it. How much of a long component fits depends on it, so the tile
             // has to know rather than assume.
@@ -426,7 +545,7 @@ struct LibraryComponentTile: View {
     /// How big the component itself is, which is all that is needed to place
     /// its picture — and is known before the picture has been drawn, so the
     /// tile asks for the right one the first time.
-    private var componentSize: CGSize { layer.localBounds.size }
+    private var componentSize: CGSize { shown.localBounds.size }
 
     /// The width of the picture well. Falls back to the narrowest a tile can
     /// be until the grid has said, so the first frame draws something sensible
@@ -462,11 +581,15 @@ struct LibraryComponentTile: View {
     private var image: CGImage? {
         let pixels = LibraryShelfLayout.pictureSourceDimension(for: placement.size)
         if let starter { return editorState.starterThumbnail(starter, dimension: pixels) }
-        return editorState.shelfThumbnail(for: layer, dimension: pixels)
+        return editorState.shelfThumbnail(for: shown, dimension: pixels)
     }
 
     private var helpText: String {
         guard let starter else {
+            if let shelfVersion {
+                return "\(entry.name), \(entry.detail). Drag it onto the canvas, or double click to place one, "
+                    + "showing \(shelfVersion.name). Pick the tile to place a different version."
+            }
             return "\(entry.name), \(entry.detail). Drag it onto the canvas, or double click to place one."
         }
         return "\(starter.summary) Drag it onto the canvas, or double click to place one."
@@ -475,7 +598,8 @@ struct LibraryComponentTile: View {
     private func place() {
         guard let componentID = layer.componentID else { return }
         editorState.selectLibraryItem(entry.id)
-        editorState.placeComponent(componentID: componentID, at: editorState.visibleCanvasCentre)
+        editorState.placeComponent(componentID: componentID, at: editorState.visibleCanvasCentre,
+                                   version: shelfVersion?.id)
     }
 }
 

@@ -1,0 +1,180 @@
+{
+  "out": "/tmp/photonz-playtest/place-a-version",
+  "seed": "A button with a Disabled version used to take two steps to place: drop a copy, then switch it. The walk gives Button a Disabled version, sets the shelf tile to it, and drags one copy out that arrives already disabled.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1320,
+      "height": 920
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        360,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Disabled"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "fadeLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-shelf-default",
+      "note": "the tile picked: a Place row under the shelf reads Default, and the tile wears a Default badge"
+    },
+    {
+      "do": "snapshot",
+      "name": "place-a-version-1-shelf-default"
+    },
+    {
+      "do": "panel",
+      "stage": "1-shelf-default"
+    },
+    {
+      "do": "action",
+      "action": "chooseNextShelfComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-shelf-disabled",
+      "note": "THE POINT: the shelf is set to Disabled, the tile draws the faded drawing and says Disabled"
+    },
+    {
+      "do": "snapshot",
+      "name": "place-a-version-2-shelf-disabled"
+    },
+    {
+      "do": "panel",
+      "stage": "2-shelf-disabled"
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        760,
+        620
+      ],
+      "hold": "place-a-version-3-in-the-air"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-placed-disabled",
+      "note": "the copy landed already showing Disabled, in one step"
+    },
+    {
+      "do": "snapshot",
+      "name": "place-a-version-4-placed-disabled"
+    },
+    {
+      "do": "render",
+      "name": "place-a-version-4-placed-disabled-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        760,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-copy-panel",
+      "note": "the copy picked: its own Version row already reads Disabled, and it can still be switched back"
+    },
+    {
+      "do": "snapshot",
+      "name": "place-a-version-5-copy-panel"
+    },
+    {
+      "do": "panel",
+      "stage": "5-copy-panel"
+    }
+  ]
+}

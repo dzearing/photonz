@@ -183,7 +183,7 @@ struct CanvasView: NSViewRepresentable {
     let onDeleteLayer: (UUID) -> Void
     let onDeleteLayers: ([UUID]) -> Void
     let onDropImageURL: (URL, CGPoint) -> Void
-    let onDropComponent: (UUID, CGPoint) -> Void
+    let onDropComponent: (UUID, UUID?, CGPoint) -> Void
     let onDropImageURLIntoCollage: (URL, UUID, Int) -> Void
     let onAbsorbLayerIntoCollage: (UUID, UUID, Int) -> Void
     let onSwapCollageSlots: (UUID, Int, Int) -> Void
@@ -385,7 +385,7 @@ final class CanvasNSView: NSView {
     var onDropImageURLIntoCollage: ((URL, UUID, Int) -> Void) = { _, _, _ in }
     /// A component dragged off the Library shelf, dropped at a document point
     /// (Next, `next-components`).
-    var onDropComponent: ((UUID, CGPoint) -> Void) = { _, _ in }
+    var onDropComponent: ((UUID, UUID?, CGPoint) -> Void) = { _, _, _ in }
     /// A photo layer dropped onto a collage slot: (photo layer, collage, slot).
     var onAbsorbLayerIntoCollage: ((UUID, UUID, Int) -> Void) = { _, _, _ in }
     /// Two slots of one collage swapped by dragging: (collage, from, to).

@@ -36,8 +36,9 @@ extension CanvasNSView {
         dropLanding = nil
         draggedImage = nil
         refreshOverlays()
-        if let componentID = droppedComponent(sender) {
-            return dropComponent(componentID, atViewPoint: convert(sender.draggingLocation, from: nil))
+        if let dragged = droppedComponent(sender) {
+            return dropComponent(dragged.componentID, version: dragged.version,
+                                 atViewPoint: convert(sender.draggingLocation, from: nil))
         }
         // The same reading the pointer answered with: a file the canvas refused
         // in the air is refused on the way down too, so nothing can slip past a
@@ -71,8 +72,8 @@ extension CanvasNSView {
     /// The component a drag off the Library shelf is carrying, nil for
     /// everything else. Its own pasteboard type, so a dropped file and a
     /// dropped component can never be mistaken for each other.
-    private func droppedComponent(_ sender: NSDraggingInfo) -> UUID? {
-        ComponentDrag.componentID(on: sender.draggingPasteboard)
+    private func droppedComponent(_ sender: NSDraggingInfo) -> ComponentDrag.Payload? {
+        ComponentDrag.payload(on: sender.draggingPasteboard)
     }
 
     /// Follows a component drag across the canvas: works out the box the copy
@@ -82,12 +83,12 @@ extension CanvasNSView {
     /// ordinary no-entry pointer instead of accepting the drag and scolding
     /// afterwards.
     private func trackComponentDrag(_ sender: NSDraggingInfo) -> NSDragOperation {
-        guard let componentID = droppedComponent(sender) else {
+        guard let dragged = droppedComponent(sender) else {
             dropLanding = nil
             refreshOverlays()
             return []
         }
-        return trackComponentDrag(componentID,
+        return trackComponentDrag(dragged.componentID, version: dragged.version,
                                   atViewPoint: convert(sender.draggingLocation, from: nil))
     }
 
@@ -95,7 +96,8 @@ extension CanvasNSView {
     /// hold a component over the canvas without synthesising a drag session,
     /// which is the only way to photograph what a drag looks like mid air.
     @discardableResult
-    func trackComponentDrag(_ componentID: UUID, atViewPoint viewPoint: CGPoint) -> NSDragOperation {
+    func trackComponentDrag(_ componentID: UUID, version: UUID? = nil,
+                            atViewPoint viewPoint: CGPoint) -> NSDragOperation {
         guard let viewport, let document else {
             dropLanding = nil
             refreshOverlays()
@@ -107,7 +109,7 @@ extension CanvasNSView {
         // still down, and where a row would park the piece is where the box is
         // drawn — not under the pointer it is about to leave.
         guard let landing = document.componentDropLanding(
-            of: componentID, at: point, inside: dropGroupContext,
+            of: componentID, at: point, inside: dropGroupContext, version: version,
             measure: { TextRasterizer.naturalSize($0) }) else {
             dropLanding = nil
             refreshOverlays()
@@ -125,9 +127,10 @@ extension CanvasNSView {
     /// Places a copy at a point in this view, which is what a drag from the
     /// shelf ends in. Internal so a playtest can land the same drop without
     /// synthesising a drag session.
-    func dropComponent(_ componentID: UUID, atViewPoint point: CGPoint) -> Bool {
+    func dropComponent(_ componentID: UUID, version: UUID? = nil,
+                       atViewPoint point: CGPoint) -> Bool {
         guard let viewport else { return false }
-        onDropComponent(componentID, viewport.documentPoint(fromView: point))
+        onDropComponent(componentID, version, viewport.documentPoint(fromView: point))
         return true
     }
 

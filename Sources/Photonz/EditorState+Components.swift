@@ -135,12 +135,12 @@ extension EditorState {
     /// its named colors and its knobs; everything else, including a second
     /// drop of the same starter, is a copy.
     @discardableResult
-    func placeComponent(componentID: UUID, at point: CGPoint) -> UUID? {
+    func placeComponent(componentID: UUID, at point: CGPoint, version: UUID? = nil) -> UUID? {
         if let starter = StarterComponent(componentID: componentID),
            document?.mainComponent(componentID: componentID) == nil {
             return insertStarterComponent(starter, at: point)
         }
-        return insertComponentInstance(componentID: componentID, at: point)
+        return insertComponentInstance(componentID: componentID, at: point, version: version)
     }
 
     /// Brings a starter into the open document, centred on a canvas point. One
@@ -196,7 +196,8 @@ extension EditorState {
     /// and a copy you have to go and find is a copy you did not place.
     func insertPickedComponent() {
         if let componentID = selectedComponentID {
-            insertComponentInstance(componentID: componentID, at: visibleCanvasCentre)
+            insertComponentInstance(componentID: componentID, at: visibleCanvasCentre,
+                                    version: shelfComponentVersion(of: componentID)?.id)
         } else if let starter = selectedStarterComponent {
             insertStarterComponent(starter, at: visibleCanvasCentre)
         }
@@ -232,7 +233,8 @@ extension EditorState {
     /// thing you want to move next, and the shelf lets go of its tile so the
     /// dock talks about the copy rather than the component you took it from.
     @discardableResult
-    func insertComponentInstance(componentID: UUID, at point: CGPoint) -> UUID? {
+    func insertComponentInstance(componentID: UUID, at point: CGPoint,
+                                 version: UUID? = nil) -> UUID? {
         guard Experiments.shared.componentsEnabled, let document else { return nil }
         guard document.mainComponent(componentID: componentID) != nil else { return nil }
         // Dropping a component onto its own original would make a thing that
@@ -247,7 +249,10 @@ extension EditorState {
         discardDragPreview()
         var placed: UUID?
         let context = dropContext
-        perform { placed = $0.insertComponentInstance(of: componentID, at: point, inside: context) }
+        perform {
+            placed = $0.insertComponentInstance(of: componentID, at: point, inside: context,
+                                                version: version)
+        }
         guard let placed else { return nil }
         selectedLibraryItemID = nil
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))
@@ -276,6 +281,41 @@ extension EditorState {
     func componentVersions(of componentID: UUID) -> [ComponentVersion] {
         guard componentsEnabled else { return [] }
         return document?.componentVersions(of: componentID) ?? []
+    }
+
+    /// Which version this component's shelf tile is set to place: the one
+    /// chosen there, or its first. Nil for a component holding only one
+    /// drawing, because there is nothing to choose between and nothing to say.
+    ///
+    /// A version deleted after it was chosen falls back to the first rather
+    /// than leaving the shelf pointing at a drawing that is gone.
+    func shelfComponentVersion(of componentID: UUID) -> ComponentVersion? {
+        let versions = componentVersions(of: componentID)
+        guard versions.count > 1 else { return nil }
+        if let chosen = shelfComponentVersionChoice[componentID],
+           let match = versions.first(where: { $0.id == chosen }) { return match }
+        return versions.first
+    }
+
+    /// Sets the version a tile places. Nothing in the picture changes: copies
+    /// already placed keep showing what they were showing, and this is only
+    /// what the NEXT copy off this tile arrives as.
+    func chooseShelfComponentVersion(componentID: UUID, version: UUID) {
+        guard componentsEnabled,
+              componentVersions(of: componentID).contains(where: { $0.id == version })
+        else { return }
+        shelfComponentVersionChoice[componentID] = version
+    }
+
+    /// Moves this tile on to the next version its component holds, wrapping
+    /// round at the end. The tile's chooser is a menu, which a scripted walk
+    /// cannot open, so this is how a walk asks for another version.
+    func chooseNextShelfComponentVersion(componentID: UUID) {
+        let versions = componentVersions(of: componentID)
+        guard versions.count > 1, let shown = shelfComponentVersion(of: componentID),
+              let index = versions.firstIndex(where: { $0.id == shown.id }) else { return }
+        chooseShelfComponentVersion(componentID: componentID,
+                                    version: versions[(index + 1) % versions.count].id)
     }
 
     /// Whether Layer ▸ Add Version would do anything: one original is selected

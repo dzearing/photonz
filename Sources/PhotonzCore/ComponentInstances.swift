@@ -222,11 +222,17 @@ extension PhotonzDocument {
     /// The box a dropped copy would fill, so the canvas can outline where it
     /// is going at the size it will actually be. Nil for an id that is not a
     /// component at all.
+    ///
+    /// `version` says which drawing, for a component that holds more than one:
+    /// versions may differ in size, so the outline in the air has to be the
+    /// size of the one being placed.
     public func componentDropSize(
-        of componentID: UUID,
+        of componentID: UUID, version: UUID? = nil,
         measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize
     ) -> CGSize? {
-        if let main = mainComponent(componentID: componentID) { return main.localBounds.size }
+        if let main = mainComponent(componentID: componentID, version: version) {
+            return main.localBounds.size
+        }
         guard let starter = StarterComponent(componentID: componentID) else { return nil }
         return StarterComponents.layer(starter, scale: max(pixelScale, 1),
                                        measure: measure).localBounds.size
@@ -246,11 +252,13 @@ extension PhotonzDocument {
     /// at all.
     public func componentDropLanding(
         of componentID: UUID, at point: CGPoint, inside context: UUID? = nil,
+        version: UUID? = nil,
         measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize
     ) -> (rect: CGRect, host: UUID?)? {
         let target = componentDropTarget(of: componentID, at: point, inside: context)
         guard target != .refused,
-              let size = componentDropSize(of: componentID, measure: measure) else { return nil }
+              let size = componentDropSize(of: componentID, version: version, measure: measure)
+        else { return nil }
         let loose = CGRect(x: point.x - size.width / 2, y: point.y - size.height / 2,
                            width: size.width, height: size.height)
         guard case .inside(let host) = target else { return (loose, nil) }
@@ -348,10 +356,17 @@ extension PhotonzDocument {
     /// dropping a button on a phone screen would leave the button floating
     /// above the screen and moving the screen would leave it behind — or the
     /// group named by `context`, which is the one you have stepped inside.
+    ///
+    /// `version` is which drawing the copy arrives showing, for a component
+    /// that holds more than one (`ComponentVersions`). Naming none is the
+    /// component's first, which is what every copy used to be; naming one the
+    /// component does not hold falls back to the first rather than refusing,
+    /// so a stale choice still places something.
     @discardableResult
     public mutating func insertComponentInstance(of componentID: UUID, at point: CGPoint,
-                                                 inside context: UUID? = nil) -> UUID? {
-        guard let main = mainComponent(componentID: componentID) else { return nil }
+                                                 inside context: UUID? = nil,
+                                                 version: UUID? = nil) -> UUID? {
+        guard let main = mainComponent(componentID: componentID, version: version) else { return nil }
         // The one answer, asked once: the same call the canvas draws its
         // outline from, so what a drag in the air promised is what the drop
         // does. A copy that would land inside its own original draws forever,

@@ -566,6 +566,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// cannot open a menu in the dock, so this is how a swapped version gets
     /// photographed.
     case showNextComponentVersion
+    /// Move the PICKED Library tile on to the next version its component
+    /// holds, which is what the Place menu under the shelf does. That menu is
+    /// one a walk cannot open, so this is how a tile set to another version
+    /// gets photographed, dragged and dropped.
+    case chooseNextShelfComponentVersion
     /// Layer ▸ Apply to Other Versions (Next, `next-components`): pushes the
     /// selected piece's look and wording onto the same piece in every other
     /// version of its component. The row is in a menu a walk cannot open, so

@@ -566,7 +566,10 @@ private final class Run {
                 throw Failure(description: "no component is picked on the Library shelf to drag")
             }
             let p = try viewPoint(at)
-            let operation = canvas.trackComponentDrag(componentID, atViewPoint: p)
+            // Whatever the shelf tile is set to hand over, so a walk drags the
+            // version a person would be dragging (`ComponentVersions`).
+            let version = editor?.shelfComponentVersion(of: componentID)?.id
+            let operation = canvas.trackComponentDrag(componentID, version: version, atViewPoint: p)
             await sleep(0.15)
             let landing = canvas.dropLandingDescription
             let answer = operation.contains(.copy) ? "would place a copy" : "refused"
@@ -587,14 +590,17 @@ private final class Run {
             }
             // Through the same pasteboard the real drag writes, so the type
             // identifier and the payload are exercised, not just the placing.
+            let version = editor?.shelfComponentVersion(of: componentID)?.id
             let board = NSPasteboard(name: NSPasteboard.Name("photonz.playtest.componentDrag"))
             board.clearContents()
-            board.setData(Data(componentID.uuidString.utf8), forType: ComponentDrag.pasteboardType)
-            guard ComponentDrag.componentID(on: board) == componentID else {
+            board.setData(ComponentDrag.data(componentID: componentID, version: version),
+                          forType: ComponentDrag.pasteboardType)
+            guard ComponentDrag.payload(on: board)
+                    == ComponentDrag.Payload(componentID: componentID, version: version) else {
                 throw Failure(description: "the component drag payload did not survive the pasteboard")
             }
             let p = try viewPoint(at)
-            guard canvas.dropComponent(componentID, atViewPoint: p) else {
+            guard canvas.dropComponent(componentID, version: version, atViewPoint: p) else {
                 throw Failure(description: "the canvas refused the component drop")
             }
             await sleep(0.2)
@@ -937,6 +943,10 @@ private final class Run {
             case .detachInstance: editor.detachInstance()
             case .addComponentVersion: editor.addComponentVersion()
             case .showNextComponentVersion: editor.showNextComponentVersion()
+            case .chooseNextShelfComponentVersion:
+                if let componentID = editor.selectedComponentID {
+                    editor.chooseNextShelfComponentVersion(componentID: componentID)
+                }
             case .applyToOtherComponentVersions: editor.applyToOtherComponentVersions()
             case .roundCorners:
                 let ids = editor.cornerRadiusSelection.layerIDs

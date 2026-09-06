@@ -1,0 +1,28 @@
+{
+  "feature": "Place a particular version straight from the shelf",
+  "epic": "ui-components",
+  "summary": "A component that holds more than one drawing can now hand you the one you want off the Library shelf: pick the tile, choose the version under Place, and every copy you drag out arrives already showing it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components and versions are on by default.",
+  "try": [
+    { "do": "Open the Library, switch it to Comps, and drag the Button tile onto the canvas." },
+    { "do": "Click the button you just placed, then choose Layer > Add Version, type Disabled and press Return." },
+    { "do": "With that new drawing still selected, fade it in Effects so the two versions look different." },
+    { "do": "Click the Button tile on the shelf and look at the Component section under it: a Place row now names the version.", "shot": "2026-09-06-place-a-version-shelf-sc.png" },
+    { "do": "Set Place to Disabled and watch the tile: it redraws as the faded button and wears a Disabled badge." },
+    { "do": "Drag the tile onto an empty part of the canvas.", "shot": "2026-09-06-place-a-version-placed-sc.png" },
+    { "do": "Click the copy that landed: its own Version row already reads Disabled, and you can still switch it back." }
+  ],
+  "evaluate": [
+    "Is the Place row where you would look for it, or did you expect to choose the version on the tile itself?",
+    "Does the tile redrawing as the chosen version tell you enough, or do you want the badge to say more?",
+    "The choice sticks until you change it, so the next drag places Disabled too. Is that what you want, or should the shelf go back to the first version after one placement?",
+    "The word Place above a Place a Copy button: does that read cleanly, or should the row say Version like the row on a copy does?",
+    "Is a badge on every multi-version tile useful, or noise once you have a shelf full of them?"
+  ],
+  "rough": [
+    "The badge sits over the bottom right of the tile picture, so on a narrow dock it covers a corner of the drawing. A long version name truncates there too; the full name is in the Place row and the tooltip.",
+    "The tile's badge is a label, not a control. Choosing from the tile would need a fourth gesture on a 68 point tile, on top of click, double click and drag, so the choice went to the section below where the names have room. If you want it on the tile, that is a small follow-up.",
+    "Nothing about this is saved with the document: reopening a file starts every tile back on the first version. It is a state of the tool rather than a fact about the picture, but it is worth knowing.",
+    "Screen Recording was granted for this run, so both shots are real captures of the window, not offscreen renders."
+  ]
+}

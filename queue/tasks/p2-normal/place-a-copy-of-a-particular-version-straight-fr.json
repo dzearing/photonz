@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.169Z",
-  "updated": "2026-09-06T13:43:32.964Z",
+  "updated": "2026-09-06T13:56:10.041Z",
   "deps": [],
   "blockedBy": [],
   "notes": "insertComponentInstance already takes the version through main.componentVersionID; what is missing is the choice at the shelf. Tile is LibraryComponentTile, drag payload is ComponentDrag.",
@@ -34,7 +34,28 @@
     {
       "t": "2026-09-06T13:43:32.964Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T13:56:00.683381Z",
+      "note": "Adversarial review before building. The obvious build (a menu on the tile) fails twice: a 68pt tile already carries click, double click and drag, so a fourth gesture on a 9pt badge is one nobody lands, and a version name like \"Disabled, pressed\" has nowhere to be read at 8pt. Considered one tile per version (explodes a shelf of five components into fifteen tiles, all wearing the same name) and a right click menu (invisible, and drag would still place the first version). Built the shortest thing that fixes the actual complaint: the choice goes in the Component section under the shelf, directly above Place a Copy, and the TILE shows the answer by drawing that version and wearing its name."
+    },
+    {
+      "t": "2026-09-06T13:56:00.683381Z",
+      "note": "Core, test first: insertComponentInstance(of:at:inside:version:), componentDropSize(of:version:) and componentDropLanding(...version:) so the box drawn mid drag is the placed version's size. 8 new tests in ComponentVersionPlacementTests; full suite 3847 tests green."
+    },
+    {
+      "t": "2026-09-06T13:56:00.683381Z",
+      "note": "App: the drag pasteboard carries the version beside the component id (ComponentDrag.Payload, id/version text), so what the tile was set to when the drag started is what lands. EditorState.shelfComponentVersionChoice holds the choice per component, out of the document on purpose. Drag, double click, Place a Copy and Layer > Insert Component all agree. Playtest step chooseNextShelfComponentVersion, walk Scripts/playtest/place-a-version-walk.json."
+    },
+    {
+      "t": "2026-09-06T13:56:00.683381Z",
+      "note": "Reviewed on the real app (probe, Screen Recording granted). Walk photographs the shelf set to Disabled and a copy landing already disabled in one step. Rough edges recorded in the audit: the badge overlaps the bottom right of the tile picture, long version names truncate there, and the choice is not saved with the document."
+    },
+    {
+      "t": "2026-09-06T13:56:10.041Z",
+      "note": "The Component section under the shelf grew a Place row naming the version a copy off that tile arrives as; the tile draws that version and wears its name. Drag, double click, Place a Copy and Layer > Insert Component all agree, and the box drawn mid drag is that version's size. Core: insertComponentInstance(...version:) + componentDropLanding(...version:), 8 new tests, full suite 3847 green. Walked on the probe app with Screen Recording granted (Scripts/playtest/place-a-version-walk.json); audit queue/audits/2026-09-06-place-a-version.json."
     }
   ],
-  "started": "2026-09-06T13:43:32.963Z"
+  "started": "2026-09-06T13:43:32.963Z",
+  "completed": "2026-09-06T13:56:10.041Z"
 }

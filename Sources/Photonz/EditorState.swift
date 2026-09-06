@@ -422,6 +422,17 @@ final class EditorState {
     /// selection, and picking anything on the canvas or in the layers list
     /// clears the tile. So the inspector always describes exactly one thing.
     var selectedLibraryItemID: String?
+    /// Which version each component's Library tile is set to place, by
+    /// component id (Next, `next-components`). A component that holds a normal
+    /// and a disabled drawing can hand you either one straight off the shelf,
+    /// and the tile shows the one it would place.
+    ///
+    /// Deliberately NOT in the document: which version you are placing right
+    /// now is a state of the tool, like the tool in your hand, and saving it
+    /// would make two people open the same file set to different shelves. Read
+    /// it through `shelfComponentVersion(of:)`, which falls back to the first
+    /// version when the chosen one has since been deleted.
+    var shelfComponentVersionChoice: [UUID: UUID] = [:]
     /// Row-click bookkeeping for the Layers and Measurements lists: the anchor
     /// a shift-click ranges from and the rows the last shift-click swept in.
     /// The selection itself lives in `selectedLayerID` /
