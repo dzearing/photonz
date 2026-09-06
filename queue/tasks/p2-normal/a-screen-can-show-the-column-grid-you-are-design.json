@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-03T17:31:39.166Z",
-  "updated": "2026-09-06T03:48:53.906Z",
+  "updated": "2026-09-06T03:49:26.309Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED on its decision card until the user answers, because it puts something new on screen. From the ui-grid mock, and named as unbuilt in the rough list of queue/audits/2026-09-03-auto-layout.json: the mock layout grid is a column overlay you eyeball against, not a container that positions what it holds, and only the container was built. Ships behind next-frames since only a screen carries one, or its own Next flag if the runner prefers; either way on by default in Next. The overlay is chrome, not content: it belongs with the canvas overlays in CanvasView, not in the render path, so it can never reach an export. Whether it also snaps is the card question, and the answer decides whether LayerSnapping is touched at all.\n\nDecision answered on 2026-09-05: option b, columns you can see AND stick to. The user picked the snapping over the draw-only overlay, having turned down guides that pulled at a drag once before, so the mitigation they chose with it is load bearing: it only ever pulls on a screen with an overlay switched on, and a screenshot or a plain canvas must feel exactly as it does today. Test that explicitly.\n\nTriage 2026-09-05: there is now a second grid in the queue, a-grid-you-can-switch-on-that-thins-and-thickens at p1, asked for by the user the same morning. That one is a canvas wide grid you build against, spacing based, belonging to the canvas; this one is a per screen column guide with a count, a gutter and a margin. They must read as one idea rather than two grids with different words, and the audit for whichever lands second has to say how a person tells them apart.\n\nVocabulary settled 2026-09-05 by the canvas grid task, which landed first (a-grid-you-can-switch-on-that-thins-and-thickens, audit queue/audits/2026-09-05-canvas-grid.json). That feature owns the word GRID: canvas wide, set by a spacing with an every Nth line stronger, a view preference no document carries, switched with View > Show Grid on Command apostrophe, numbers in the Canvas section of the panel, and it never pulls at a drag. So this one must NOT be called a grid anywhere a person can read. Call it COLUMNS: drawn on one screen, set by a column count with a gutter and a margin, saved with the document, and the only one of the two that pulls a drag to its edges. Suggested wording: a Columns section on a selected screen, with Columns, Gutter and Margin; on the Layer menu, Show Columns on This Screen. Keep 'grid' out of the labels, the menu rows and the help text. The two can be on at once, so check they read as two different things on screen and not as one broken one: the canvas grid draws in the accent mixed most of the way into grey at low alpha, so pick something visibly different for the column bands rather than the same ink at a different strength. For the drawing pattern, copy Sources/Photonz/CanvasGridChrome.swift: chrome layers on CanvasNSView, paths in view coordinates, only the visible part built, so it can never reach an export.",
@@ -73,7 +73,12 @@
     {
       "at": "2026-09-06T03:48:53.905Z",
       "note": "Adversarial review of the built thing. The Columns SECTION needs the screen itself picked while the MENU row acts on the screen the selection lives in, so with a button picked the feature is half there. Not fixed here because which way it should go is a UX call: filed as the-columns-section-and-the-show-columns-menu-ro. Everything else in the acceptance list is verified rather than assumed."
+    },
+    {
+      "t": "2026-09-06T03:49:26.308Z",
+      "note": "Columns on a screen shipped in Next behind next-frames: a count, gutter and margin on a selected screen, drawn over it as a warm wash, pulling a drag to the column edges through the same peer snapping a layer edge uses, freed by Command, and never in an export. Core FrameColumns plus column snapping, 33 new tests, full suite green at 3595. Verified in the probe with Scripts/playtest/screen-columns-walk.json (real captures, Screen Recording granted): default 12x24/32, typed 6 and 80 land, a drag caught column six's edge with the box exactly on it, Command drags free, switching off stops the pull and keeps the numbers, and the offscreen render after a snapped drag has no bands. Audit queue/audits/2026-09-05-screen-columns.json. One follow-up filed: the Columns section and the Show Columns menu row disagree about which screen they mean."
     }
   ],
-  "started": "2026-09-06T03:26:32.237Z"
+  "started": "2026-09-06T03:26:32.237Z",
+  "completed": "2026-09-06T03:49:26.309Z"
 }
