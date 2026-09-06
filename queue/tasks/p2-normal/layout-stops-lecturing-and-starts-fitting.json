@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1420,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:47:18.969Z",
-  "updated": "2026-09-06T19:04:04.948978Z",
+  "updated": "2026-09-06T19:04:58.561Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-06 in a 1200x720 window: for a component copy Layout ran 568-837, for an original 697-1186. Sample body text: \"Everything in this copy stays where the original put it. It keeps 10 top, 16 right, 10 bottom, 16 left clear inside its edges. It is 36 tall.\" plus Arrangement/Horizontal/Vertical rows. Source is PlacementInspector.swift. This bulk is what buried the Component section (task the-dock-opens-on-the-section-that-answers-the-l, which moved Component above it rather than fixing this).",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-06T19:04:04.948978Z",
       "note": "Scripts/test.sh green: 3998 tests, 338 suites. copy-layout, spread-gap, layout-for-several, clip-contents and contents-for-several walks all still pass. Design doc: docs/design/ui-building.md gained a landed section with the before/after table, and the stale line in the limits section that promised a sentence reading the limits back was corrected. Audit: queue/audits/2026-09-06-layout-fits.json with three real screen captures."
+    },
+    {
+      "t": "2026-09-06T19:04:58.560Z",
+      "note": "Layout is 297 points for a group (was 489) and 219 for a copy (was 269), read back by Scripts/playtest/layout-fits-walk.json on the probe. Cut the five-line caption (moved to the Arrangement tooltip), stopped the four padding side fields opening themselves, and turned a copy's paragraph into rows via a new tested GroupLayout.followedReadout. Every control that was there is still there. Acceptance 2, 3 and 4 met; acceptance 1 (no taller than Position & Size, 135) is not reachable while every control stays and is reported in the log and the audit. Scripts/test.sh green, 3998 tests. Audit: queue/audits/2026-09-06-layout-fits.json. Shipped in 84a70e2."
     }
   ],
-  "started": "2026-09-06T18:40:18.344Z"
+  "started": "2026-09-06T18:40:18.344Z",
+  "completed": "2026-09-06T19:04:58.561Z"
 }
