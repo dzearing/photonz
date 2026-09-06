@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1460,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T18:38:31.099Z",
-  "updated": "2026-09-06T21:31:54.985Z",
+  "updated": "2026-09-06T21:45:05.446Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-06 with Scripts/playtest/dock-picked-first-walk.json stage 3-measure on a marked-up screenshot: viewport 688, Measurement 674-1144, i.e. 470 points tall. Layers (251) plus Measurement (470) is 721, so the section cannot fit whole however InspectorSectionID is ordered. MeasureInspector in Sources/Photonz/LayersPanel.swift. Discovered while working the-panel-says-what-you-picked-before-it-explain, whose acceptance item for measurements is not deliverable until this lands.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-06T21:44:50.563563Z",
       "note": "Post-build review. The one thing I could not guard: there is no playtest step that resizes the dock, so the 220pt case was checked by setting inspector.width directly rather than by a walk. Two judgment calls worth the user's eye, both in the audit's evaluate list: Details is closed on first sight, so someone who used the coordinate readouts has to learn the word Details holds them; and Copy Measurement now shares a line with the fold instead of standing alone. Neither is a UX question I could ask without building it first, which is why they are audit questions rather than a decision card."
+    },
+    {
+      "t": "2026-09-06T21:45:05.445Z",
+      "note": "Measurement section 470pt -> 279pt: settings are one-line rows and the read-only numbers fold behind a Details row (closed by default, remembered). Verified with dock-picked-first-walk.json, which now claims the WHOLE section is on screen (344-623 in a 688 viewport) instead of just its header, opens Details to prove nothing was removed, and still passes for the rectangle, text, callout and arrow. 4090 tests green. Audit: queue/audits/2026-09-06-measure-fits-in-the-panel.json"
     }
   ],
-  "started": "2026-09-06T21:31:54.984Z"
+  "started": "2026-09-06T21:31:54.984Z",
+  "completed": "2026-09-06T21:45:05.446Z"
 }

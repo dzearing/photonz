@@ -274,13 +274,13 @@ import Testing
     }
 
     @Test func everyStopIsANumberSomebodyWouldType() {
-        #expect(CanvasGridCellStops.all == [1, 2, 4, 8, 12, 16, 24, 32, 48, 64])
+        #expect(CanvasGridCellStops.all == [1, 4, 8, 12, 16, 24, 32, 48, 64])
     }
 
     @Test func aCellLandsOnTheNearestStop() {
-        #expect(CanvasGridCellStops.index(of: 16) == 5)
-        #expect(CanvasGridCellStops.index(of: 14) == 5)
-        #expect(CanvasGridCellStops.index(of: 13) == 4)
+        #expect(CanvasGridCellStops.index(of: 16) == 4)
+        #expect(CanvasGridCellStops.index(of: 14) == 4)
+        #expect(CanvasGridCellStops.index(of: 13) == 3)
         #expect(CanvasGridCellStops.index(of: 1000) == CanvasGridCellStops.all.count - 1)
         #expect(CanvasGridCellStops.index(of: CGFloat.nan) == 0)
     }
@@ -288,5 +288,81 @@ import Testing
     @Test func anIndexOffTheEndClampsRatherThanCrashes() {
         #expect(CanvasGridCellStops.cell(at: -5) == 1)
         #expect(CanvasGridCellStops.cell(at: 99) == 64)
+    }
+
+    // MARK: Automatic
+
+    /// The bottom stop is "automatic", and automatic is not a fourth way of
+    /// choosing a cell: it is no floor, so the cell is whatever the drawing
+    /// ladder is already using at this zoom. One ladder, so the number the
+    /// canvas draws and the number a drag lands on can never disagree.
+    @Test func automaticIsTheBottomStopAndMeansNoFloor() {
+        #expect(CanvasGridCellStops.automatic == CanvasGridSettings.noMinimumCell)
+        #expect(CanvasGridCellStops.cell(at: 0) == CanvasGridCellStops.automatic)
+        #expect(CanvasGridCellStops.isAutomatic(CanvasGridCellStops.automatic))
+        #expect(!CanvasGridCellStops.isAutomatic(16))
+    }
+
+    @Test func automaticFollowsTheZoomOnTheSameLadderTheGridDraws() {
+        let automatic = CanvasGridSettings(isVisible: true, spacing: 4,
+                                           minimumCell: CanvasGridCellStops.automatic)
+        #expect(automatic.cellIsAutomatic)
+        // Whatever the zoom, the cell automatic works to IS the rung being
+        // drawn, which is the rung a drag lands on.
+        for zoom: CGFloat in [0.25, 0.5, 1, 2, 4] {
+            let live = automatic.liveSpacing(atZoom: zoom)
+            #expect(automatic.snapSpacing(atZoom: zoom) == live)
+            #expect(live >= automatic.spacing)
+        }
+        // Zooming in brings finer lines, so automatic gets finer with them.
+        #expect(automatic.liveSpacing(atZoom: 4) < automatic.liveSpacing(atZoom: 0.5))
+    }
+
+    /// The button on the tool bar carries the SETTING, not the drawing: a cell
+    /// somebody chose reads as that number, and automatic says it is automatic
+    /// rather than showing a number that changes as the canvas is zoomed.
+    @Test func theSizeButtonReadsTheCellOrSaysAutomatic() {
+        var settings = CanvasGridSettings(isVisible: true, spacing: 4, minimumCell: 16)
+        #expect(settings.cellButtonText == "16 pt")
+        settings.minimumCell = CanvasGridCellStops.automatic
+        #expect(settings.cellButtonText == CanvasGridCopy.automaticCell)
+    }
+
+    /// The tooltip is where the second number lives now: what the canvas is
+    /// actually drawing at this zoom, said only when it differs from the cell.
+    @Test func theSizeButtonExplainsItselfWhenTheZoomHasCoarsenedIt() {
+        let settings = CanvasGridSettings(isVisible: true, spacing: 4, minimumCell: 8)
+        let live = settings.liveSpacing(atZoom: 0.25)
+        #expect(live > 8)
+        let help = settings.cellButtonHelp(atZoom: 0.25)
+        #expect(help.contains(CanvasGridNumber.text(live)))
+        // At a zoom where the cell IS what is drawn, there is no second number
+        // to explain, so the tooltip just says what the button does.
+        #expect(!settings.cellButtonHelp(atZoom: 2).contains("at this zoom"))
+    }
+
+    // MARK: Where a stop sits on the vertical slider
+
+    /// Bottom is automatic, top is the coarsest cell: the track reads the way
+    /// the sizes do, finest at the bottom.
+    @Test func theTrackRunsFromAutomaticAtTheBottom() {
+        #expect(CanvasGridCellStops.fraction(atIndex: 0) == 0)
+        #expect(CanvasGridCellStops.fraction(atIndex: CanvasGridCellStops.all.count - 1) == 1)
+        #expect(CanvasGridCellStops.index(atFraction: 0) == 0)
+        #expect(CanvasGridCellStops.index(atFraction: 1) == CanvasGridCellStops.all.count - 1)
+    }
+
+    @Test func aPointOnTheTrackPicksTheNearestStop() {
+        let count = CanvasGridCellStops.all.count
+        for index in 0..<count {
+            let fraction = CanvasGridCellStops.fraction(atIndex: index)
+            #expect(CanvasGridCellStops.index(atFraction: fraction) == index)
+            // A hand that is not quite on the tick still lands on it.
+            #expect(CanvasGridCellStops.index(atFraction: fraction + 0.02) == index)
+        }
+        // Off the end of the track in either direction clamps.
+        #expect(CanvasGridCellStops.index(atFraction: -3) == 0)
+        #expect(CanvasGridCellStops.index(atFraction: 9) == count - 1)
+        #expect(CanvasGridCellStops.index(atFraction: .nan) == 0)
     }
 }

@@ -34,10 +34,12 @@ extension CanvasNSView {
         let held = gridAdjust != nil ? selectedGuideID : nil
         let pinned = CGMutablePath()
         let bright = CGMutablePath()
+        var selected: CanvasGuide?
         for guide in canvasGuides {
             // The guide being held draws in the bright path, so what you picked
             // up is unmistakably what you picked up.
             let path = guide.id == held ? bright : pinned
+            if guide.id == held { selected = guide }
             appendGuide(guide.line, to: path, in: viewport)
         }
         // The line a click would pin. Only while adjusting, and never on top of
@@ -52,6 +54,7 @@ extension CanvasNSView {
         pinnedGuideLayer.isHidden = pinned.isEmpty
         guideHighlightLayer.path = bright
         guideHighlightLayer.isHidden = bright.isEmpty
+        refreshSelectedGuideKnob(selected, in: viewport)
         refreshGridOriginKnob(in: viewport)
     }
 
@@ -82,6 +85,10 @@ extension CanvasNSView {
     /// The handle on the zero point: a dot where its two markers cross. Inside
     /// the mode a press anywhere else pins or picks up a guide, so the zero
     /// point needs something to aim at rather than the whole canvas.
+    ///
+    /// It grows while the pointer is anywhere the zero point would answer a
+    /// press, which is the whole length of both markers rather than the dot
+    /// alone. See `gridOriginHot`.
     private func refreshGridOriginKnob(in viewport: Viewport) {
         guard let origin = gridAdjust else {
             gridOriginKnobLayer.path = nil
@@ -89,11 +96,39 @@ extension CanvasNSView {
             return
         }
         let point = viewport.viewPoint(fromDocument: origin)
-        let radius: CGFloat = 5
+        let radius: CGFloat = gridOriginHot || gridOriginDragging ? 7 : 5
         let box = CGRect(x: point.x.rounded() - radius, y: point.y.rounded() - radius,
                          width: radius * 2, height: radius * 2)
         gridOriginKnobLayer.path = CGPath(ellipseIn: box, transform: nil)
         gridOriginKnobLayer.isHidden = false
+    }
+
+    /// The knob on the guide that is SELECTED: a dot on the line, halfway down
+    /// the view. A guide had no selected state at all before, only the same
+    /// bright yellow the line under the pointer wears, so there was no way to
+    /// tell which guide a press of \u{232B} was about to take off the picture. The
+    /// knob is the difference: the line under the pointer is a bare line, and
+    /// the one you have hold of wears the handle.
+    private func refreshSelectedGuideKnob(_ guide: CanvasGuide?, in viewport: Viewport) {
+        guard gridAdjust != nil, let guide else {
+            selectedGuideKnobLayer.path = nil
+            selectedGuideKnobLayer.isHidden = true
+            return
+        }
+        let radius: CGFloat = 5
+        let centre: CGPoint
+        switch guide.axis {
+        case .vertical:
+            let x = viewport.viewPoint(fromDocument: CGPoint(x: guide.position, y: 0)).x.rounded()
+            centre = CGPoint(x: x, y: bounds.midY.rounded())
+        case .horizontal:
+            let y = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: guide.position)).y.rounded()
+            centre = CGPoint(x: bounds.midX.rounded(), y: y)
+        }
+        let box = CGRect(x: centre.x - radius, y: centre.y - radius,
+                         width: radius * 2, height: radius * 2)
+        selectedGuideKnobLayer.path = CGPath(ellipseIn: box, transform: nil)
+        selectedGuideKnobLayer.isHidden = false
     }
 
     // MARK: - Hovering
@@ -104,10 +139,22 @@ extension CanvasNSView {
     func refreshGuideHighlight(at viewPoint: CGPoint) {
         guard gridAdjust != nil, let viewport, let settings = canvasGrid else {
             guideHighlight = nil
+            gridOriginHot = false
             return
         }
         let zoom = max(viewport.zoom, 0.0001)
         let point = viewport.documentPoint(fromView: viewPoint)
+        // What lights up is what a press will do. Anywhere along the zero
+        // point's two markers a press takes hold of the ZERO POINT, so no grid
+        // line lights there: the markers thicken and their knob grows instead.
+        // Lighting a guide there was the canvas offering one thing and doing
+        // another.
+        gridOriginHot = grabsGridOrigin(at: point)
+        guard !gridOriginHot else {
+            guideHighlight = nil
+            refreshOverlays()
+            return
+        }
         guideHighlight = CanvasGuidePick.line(near: point,
                                               spacing: settings.liveSpacing(atZoom: zoom),
                                               origin: canvasGridOrigin,
@@ -177,7 +224,9 @@ extension CanvasNSView {
     // MARK: - What is under the pointer
 
     /// Whether a press at this document point takes hold of the zero point.
-    private func grabsGridOrigin(at point: CGPoint) -> Bool {
+    /// Also what the hover asks, so the highlight and the press can never
+    /// disagree about who owns the pointer.
+    func grabsGridOrigin(at point: CGPoint) -> Bool {
         guard let origin = gridAdjust, let viewport else { return false }
         let reach = Self.gridOriginGrabOnScreen / max(viewport.zoom, 0.0001)
         return abs(point.x - origin.x) <= reach || abs(point.y - origin.y) <= reach

@@ -130,6 +130,10 @@ extension CanvasNSView {
         path.move(to: CGPoint(x: bounds.minX, y: y))
         path.addLine(to: CGPoint(x: bounds.maxX, y: y))
         gridOriginLayer.path = path
+        // Thicker while the pointer is anywhere a press would take hold of
+        // them, so the answer to "what am I about to move" is the markers
+        // themselves rather than a grid line lighting up somewhere else.
+        gridOriginLayer.lineWidth = gridOriginHot || gridOriginDragging ? 3 : 2
         gridOriginLayer.isHidden = false
     }
 
@@ -151,6 +155,18 @@ extension CanvasNSView {
         // one line of the log answers "does the pull match the picture".
         let pull = canvasSnapSpacing.map { String(format: "%g", Double($0)) } ?? "nothing"
         return "zoom \(zoom) · \(drawn.count) rungs · \(strengths) · \(side) · pulls to \(pull)"
+            + (gridAdjust == nil ? "" : " · lit \(playtestLitLine)")
+    }
+
+    /// What is lit under the pointer inside the adjust mode, in one word: the
+    /// zero point, the grid line a click would pin, or nothing. The whole
+    /// promise of the mode is that this is also what a press would DO, so a
+    /// walk can hold it to that.
+    var playtestLitLine: String {
+        if gridOriginHot { return "origin" }
+        guard let line = guideHighlight else { return "nothing" }
+        let axis = line.axis == .vertical ? "x" : "y"
+        return axis + CanvasGridNumber.text(line.position)
     }
 
     /// Whether a person can see the grid at all at this instant: something

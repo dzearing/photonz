@@ -606,105 +606,44 @@ struct EditorView: View {
         }
     }
 
-    /// The bar that replaces the tools while the grid is being adjusted: where
-    /// the zero point is now, the cell, the guides, and the two ways out.
+    /// The bar that replaces the tools while the grid is being adjusted: the
+    /// cell, the guides, and the two ways out.
     ///
-    /// The readout is not decoration. Half the point of the mode is landing
-    /// zero on something exact — the left edge of a screenshot's content, say —
-    /// and you cannot check by eye that the markers came to rest on 24, 16.
-    ///
-    /// The hint line is not decoration either. Nothing on an empty canvas with
-    /// two accent lines on it says that hovering lights a grid line or that
-    /// clicking pins a guide, and a feature nobody can find is a feature that
-    /// does not exist.
+    /// It says nothing else. It used to carry where the zero point had got to
+    /// and a line explaining what a click does, and both were words parked in
+    /// front of the picture they were describing: the canvas already draws the
+    /// zero point, in the accent, at full strength, and the line under the
+    /// pointer lights up as you move it, which is the explanation happening
+    /// rather than being read. What the mode is FOR is on the gear that opens
+    /// it, before you are in it.
     @ViewBuilder private var gridAdjustBar: some View {
-        let cell = editorState.gridAdjustment?.minimumCell ?? CanvasGridSettings.noMinimumCell
-        let origin = editorState.gridAdjustment?.origin ?? .zero
+        @Bindable var state = editorState
         let hasGuides = editorState.gridAdjustment?.hasGuides ?? false
-        VStack(spacing: 4) {
-            HStack(spacing: 14) {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(CanvasGridCopy.origin)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.secondary)
-                    Text(CanvasGridOriginLabel.text(origin))
-                        .font(.system(size: 13, weight: .semibold).monospacedDigit())
-                }
-                .frame(minWidth: 92, alignment: .leading)
-                Divider().frame(height: 24)
-                gridCellSlider(cell, reading: editorState.gridAdjustment?.liveSettings
-                    .spacingChipText(atZoom: editorState.zoom))
-                Divider().frame(height: 24)
-                // Dimmed with nothing pinned rather than hidden, so the bar
-                // does not change width the moment you pin your first guide.
-                Button(CanvasGridCopy.clearGuides) { editorState.clearGuides() }
-                    .disabled(!hasGuides)
-                    .help(CanvasGridCopy.clearGuidesHelp)
-                    .playtestControl(CanvasGridCopy.clearGuides, detail: "Adjust Grid bar")
-                Divider().frame(height: 24)
-                Button("Cancel") { editorState.cancelGridAdjustment() }
-                    .help("Put the grid and its guides back as they were (\u{238B})")
-                    .playtestControl("Cancel", detail: "Adjust Grid bar")
-                Button("Done") { editorState.commitGridAdjustment() }
-                    .keyboardShortcut(.return, modifiers: [])
-                    .buttonStyle(.borderedProminent)
-                    .help("Keep the zero point, the cell and the guides (\u{23CE})")
-                    .playtestControl("Done", detail: "Adjust Grid bar")
-            }
-            Text(CanvasGridCopy.adjustHint)
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
+        HStack(spacing: 12) {
+            CanvasGridSizeButton(settings: editorState.drawnCanvasGrid ?? editorState.canvasGrid,
+                                 isPresented: $state.isGridCellSizesPresented)
+            Divider().frame(height: 24)
+            // Dimmed with nothing pinned rather than hidden, so the bar
+            // does not change width the moment you pin your first guide.
+            Button(CanvasGridCopy.clearGuides) { editorState.clearGuides() }
+                .disabled(!hasGuides)
+                .help(CanvasGridCopy.clearGuidesHelp)
+                .playtestControl(CanvasGridCopy.clearGuides, detail: "Adjust Grid bar")
+            Divider().frame(height: 24)
+            Button("Cancel") { editorState.cancelGridAdjustment() }
+                .help("Put the grid and its guides back as they were (\u{238B})")
+                .playtestControl("Cancel", detail: "Adjust Grid bar")
+            Button("Done") { editorState.commitGridAdjustment() }
+                .keyboardShortcut(.return, modifiers: [])
+                .buttonStyle(.borderedProminent)
+                .help("Keep the zero point, the cell and the guides (\u{23CE})")
+                .playtestControl("Done", detail: "Adjust Grid bar")
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
         .transition(.opacity.combined(with: .move(edge: .bottom)))
-    }
-
-    /// The cell the grid works to. The slider stops on the sizes real UI is
-    /// built in (`CanvasGridCellStops`) rather than running continuously, so it
-    /// cannot be left on a fourteen — a cell too fine to aim at, where the grid
-    /// draws fourteens and a drag lands on hundred and twelves.
-    ///
-    /// Drawn the same way inside the mode and on the tool bar outside it,
-    /// because it is the same control doing the same thing: outside the mode it
-    /// writes straight to the grid, inside it writes to the working copy that
-    /// Escape puts back.
-    /// `reading` is what the number beside it says. Inside the mode it is the
-    /// SAME two-number readout the tool bar carries outside it — the grid's
-    /// unit and the cell it is working to, "4 → 16 pt" — so the mode and the
-    /// bar never say different things about the same grid. On the tool bar the
-    /// readout is already two controls away, so there is nothing to repeat and
-    /// the slider goes bare.
-    private func gridCellSlider(_ cell: CGFloat, compact: Bool = false,
-                                reading: String? = nil) -> some View {
-        let value = Binding(
-            get: { Double(CanvasGridCellStops.index(of: cell)) },
-            set: { editorState.setGridMinimumCell(CanvasGridCellStops.cell(at: Int($0.rounded()))) })
-        return HStack(spacing: 8) {
-            if !compact {
-                Text(CanvasGridCopy.cell)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-            }
-            Slider(value: value, in: 0...Double(CanvasGridCellStops.all.count - 1), step: 1)
-                .frame(width: compact ? 104 : 130)
-                .help(CanvasGridCopy.cellHelp)
-                .playtestControl(CanvasGridCopy.cell,
-                                 detail: "\(Int(cell.rounded())) pt")
-            // On the tool bar the number is NOT repeated here. The readout two
-            // controls to the left already says what the cell is — "4 → 16 pt",
-            // the grid's unit and the cell it is working to — and it moves as
-            // the slider moves, so a third number beside the slider would be
-            // the same fact said twice with no room to spare. Inside the mode
-            // there is no readout, so the number belongs there.
-            if let reading {
-                Text(verbatim: reading)
-                    .font(.system(size: 11).monospacedDigit())
-                    .frame(width: 72, alignment: .leading)
-            }
-        }
     }
 
     /// Move the visible tool count to the largest set that fits `toolbarBudget`.
@@ -721,93 +660,58 @@ struct EditorView: View {
         if fitted != toolbarVisibleCount { toolbarVisibleCount = fitted }
     }
 
-    /// The grid's own capsule: a glass bar beside the zoom that appears the
-    /// instant the grid does. It carries the whole of working the grid — what
-    /// the lines are worth, a slider that makes the cell finer or coarser with
-    /// the grid redrawing as it moves, and the button that takes the canvas
-    /// over to place where the grid starts and pin guides onto it.
+    /// The grid's own capsule: a glass bar beside the zoom carrying the whole
+    /// of working the grid in four things and no more — the switch that draws
+    /// it, a button reading the cell it works to, a divider, and the gear that
+    /// takes the canvas over to place where it starts and pin guides onto it.
     ///
-    /// It exists because turning the grid on used to change the picture and
-    /// nothing else, leaving the numbers behind a click on the Canvas row of
-    /// the layers list that nobody makes. Now the settings appear beside the
-    /// lines they shape, at the moment they arrive — no tip to dismiss, and
-    /// nothing to know in advance.
+    /// It got here by losing things. It used to read the grid's unit and the
+    /// cell together ("4 \u{2192} 32 pt"), park a slider on the bar beside them, and
+    /// spell out Adjust Grid in words, which is a row of numbers and sentences
+    /// permanently in front of the picture, saying more while you work than
+    /// anybody needs. The cell is now one number behind one button, and the
+    /// grid's other settings — spacing, bold lines, which way they run, the
+    /// magnet — are on the View menu and in the Canvas section of the panel,
+    /// which is where you go when you are tuning a grid rather than using one.
     ///
-    /// It is only there while the grid is showing (a door into settings for a
-    /// grid that is off is a door into an empty room, and this bar has no width
-    /// to spare) and only on a canvas roomy enough to hold it, which is the
-    /// same width the zoom slider needs. On anything narrower the View menu's
-    /// Show Grid and Grid Settings are still the whole feature.
+    /// The switch is here rather than only on the View menu because a capsule
+    /// that appeared and vanished with the grid could not be the thing that
+    /// turned the grid on. It is on a canvas roomy enough to hold it, the same
+    /// width the zoom slider needs; on anything narrower the View menu is the
+    /// whole feature.
     @ViewBuilder private var gridChip: some View {
         @Bindable var state = editorState
-        if Experiments.shared.canvasGridEnabled, editorState.canvasGrid.isVisible,
-           editorState.document != nil,
+        if Experiments.shared.canvasGridEnabled, editorState.document != nil,
            EditorChromeLayout.showsGridChip(canvasWidth: canvasContentWidth) {
-            HStack(spacing: 10) {
-            Button {
-                editorState.isGridSettingsPresented.toggle()
-            } label: {
-                HStack(spacing: 4) {
+            let showing = editorState.canvasGrid.isVisible
+            HStack(spacing: 8) {
+                Button { editorState.toggleCanvasGrid() } label: {
                     Image(systemName: "grid")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                    // What the lines on screen are WORTH right now, which is
-                    // not always the number that was typed: a four point grid
-                    // draws its thirty two point rung at 100%, so the chip
-                    // reads "4 → 32 pt" and the picture stops
-                    // disagreeing with the field in silence. Monospaced digits
-                    // and one fixed width for both forms, so typing 4 into 128
-                    // cannot resize the chip underneath the popover you are
-                    // typing in.
-                    Text(editorState.canvasGrid.spacingChipText(atZoom: editorState.zoom))
-                        .font(.system(.caption, design: .monospaced).weight(.medium))
-                        .foregroundStyle(Color.primary)
-                        .lineLimit(1)
-                        // Both forms live in one fixed width, so nothing in the
-                        // bar moves when the second number arrives. 56pt holds
-                        // "128 pt" and "4 → 32 pt" outright, and the rare four
-                        // digit pairing shrinks a little rather than truncating
-                        // a number a person is reading. Centred like the zoom
-                        // readout beside it, so a short value stays between its
-                        // glyph and its chevron instead of drifting off one.
-                        .minimumScaleFactor(0.75)
-                        .frame(width: 56)
-                        .background(Color.clear)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 8, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 14, weight: .medium))
                 }
-                .fixedSize()
-                .frame(height: 28)
-                .contentShape(.rect)
-            }
-            .buttonStyle(.borderless)
-            .fixedSize()
-            .help(editorState.canvasGrid.liveSpacingNote(atZoom: editorState.zoom)
-                  ?? "Grid settings: spacing, bold lines, where it starts")
-            .playtestControl(
-                "Grid settings",
-                detail: "Tool bar, \(editorState.canvasGrid.spacingChipText(atZoom: editorState.zoom))")
-            .popover(isPresented: $state.isGridSettingsPresented, arrowEdge: .top) {
-                CanvasGridSettingsPopover()
-            }
-            // The controls only on a canvas wide enough to hold them. Below
-            // that threshold the readout above is the whole capsule, exactly
-            // what it was, and both of these are still on the View menu.
-            // See `EditorChromeLayout.showsGridSlider`.
-            if EditorChromeLayout.showsGridSlider(canvasWidth: canvasContentWidth) {
+                .buttonStyle(.tool(isActive: showing))
+                .help(CanvasGridCopy.showGridHelp)
+                .playtestControl(MenuToggleNames.grid,
+                                 detail: "Tool bar, \(showing ? "on" : "off")")
+                // The grid's other settings still open here, because the View
+                // menu's Grid Settings has to appear somewhere and this is the
+                // switch it sits under on that menu.
+                .popover(isPresented: $state.isGridSettingsPresented, arrowEdge: .top) {
+                    CanvasGridSettingsPopover()
+                }
+                CanvasGridSizeButton(settings: editorState.canvasGrid,
+                                     isPresented: $state.isGridCellSizesPresented)
                 Divider().frame(height: 20)
-                gridCellSlider(editorState.canvasGrid.minimumCell, compact: true)
-                Divider().frame(height: 20)
-                Button(CanvasGridCopy.adjust) { editorState.beginGridAdjustment() }
-                    .buttonStyle(.borderless)
-                    .font(.system(size: 11, weight: .medium))
-                    .help(CanvasGridCopy.adjustHelp)
-                    .playtestControl(CanvasGridCopy.adjust, detail: "Tool bar")
-            }
+                Button { editorState.beginGridAdjustment() } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 14, weight: .medium))
+                }
+                .buttonStyle(.tool())
+                .help(CanvasGridCopy.adjustHelp)
+                .playtestControl(CanvasGridCopy.adjust, detail: "Tool bar")
             }
             .fixedSize()
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .glassEffect(.regular, in: .capsule)
             .contentShape(.capsule)

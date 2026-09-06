@@ -1,60 +1,204 @@
 {
   "out": "/tmp/photonz-playtest/grid-live-spacing-walk",
   "setup": {
-    "forget": ["grid", "shapes", "tools", "panel"]
+    "forget": [
+      "grid",
+      "shapes",
+      "tools",
+      "panel"
+    ]
   },
   "steps": [
-    { "do": "appearance", "value": "light" },
-    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
-    { "do": "wait", "seconds": 0.6 },
-
-    { "do": "action", "action": "selectCanvas" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Show grid" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "1-grid-on-at-100", "note": "THE TEST: a four point grid at 100% draws 32 point lines. The chip in the tool bar must say so, reading 4 to 32 pt rather than a bare 4 pt." },
-    { "do": "snapshot", "name": "live-spacing-1-chip" },
-
-    { "do": "press", "control": "Grid settings" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "2-settings-open", "note": "Under the Spacing field, a line says the grid is showing 32 pt lines and that a drag lands on those." },
-    { "do": "snapshot", "name": "live-spacing-2-note" },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.4 },
-
-    { "do": "pinch", "to": 4, "steps": 24 },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "3-zoomed-to-400", "note": "At 400% the four point lines are drawn, so the two numbers become one: the chip reads 4 pt." },
-    { "do": "snapshot", "name": "live-spacing-3-zoomed-in" },
-
-    { "do": "press", "control": "Grid settings" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "4-nothing-to-explain", "note": "With the grid you set on screen there is no second line under Spacing." },
-    { "do": "snapshot", "name": "live-spacing-4-no-note" },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.4 },
-
-    { "do": "pinch", "to": 0.25, "steps": 32 },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "5-zoomed-to-25", "note": "At 25% the finest lines drawn are 256 apart, and the chip follows." },
-    { "do": "snapshot", "name": "live-spacing-5-zoomed-out" },
-
-    { "do": "action", "action": "zoomToFit" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "action", "action": "selectCanvas" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Snap to grid" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "6-magnet-off", "note": "Turning the magnet off must not change what the lines are worth: the chip still names both numbers, and the line under Spacing no longer talks about a drag." },
-    { "do": "snapshot", "name": "live-spacing-6-snap-off" },
-
-    { "do": "appearance", "value": "dark" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Grid settings" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "snapshot", "name": "live-spacing-7-dark" },
-    { "do": "key", "key": "escape" },
-    { "do": "appearance", "value": "light" },
-    { "do": "wait", "seconds": 0.4 }
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Show grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-grid-on-at-100",
+      "note": "THE TEST: a four point grid at 100% draws 32 point lines. The tool bar's size button reads the cell that was chosen, Auto, and the grid's settings carry the number the canvas is actually drawing."
+    },
+    {
+      "do": "snapshot",
+      "name": "live-spacing-1-chip"
+    },
+    {
+      "do": "action",
+      "action": "showGridSettings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-settings-open",
+      "note": "Under the Spacing field, a line says the grid is showing 32 pt lines and that a drag lands on those."
+    },
+    {
+      "do": "snapshot",
+      "name": "live-spacing-2-note"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "pinch",
+      "to": 4,
+      "steps": 24
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-zoomed-to-400",
+      "note": "At 400% the four point lines are drawn, so the grid you set and the grid you see are the same."
+    },
+    {
+      "do": "snapshot",
+      "name": "live-spacing-3-zoomed-in"
+    },
+    {
+      "do": "action",
+      "action": "showGridSettings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-nothing-to-explain",
+      "note": "With the grid you set on screen there is no second line under Spacing."
+    },
+    {
+      "do": "snapshot",
+      "name": "live-spacing-4-no-note"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "pinch",
+      "to": 0.25,
+      "steps": 32
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-zoomed-to-25",
+      "note": "At 25% the finest lines drawn are 256 apart, and the settings say so."
+    },
+    {
+      "do": "snapshot",
+      "name": "live-spacing-5-zoomed-out"
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Snap to grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-magnet-off",
+      "note": "Turning the magnet off must not change what the lines are worth: the line under Spacing simply stops talking about a drag."
+    },
+    {
+      "do": "snapshot",
+      "name": "live-spacing-6-snap-off"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "showGridSettings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "live-spacing-7-dark"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
   ]
 }

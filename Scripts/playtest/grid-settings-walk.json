@@ -1,93 +1,324 @@
 {
   "out": "/tmp/photonz-playtest/grid-settings-walk",
   "setup": {
-    "forget": ["grid", "shapes", "tools", "panel"]
+    "forget": [
+      "grid",
+      "shapes",
+      "tools",
+      "panel"
+    ]
   },
   "steps": [
-    { "do": "appearance", "value": "light" },
-    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
-    { "do": "wait", "seconds": 0.6 },
-
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [240, 220], "to": [560, 380] },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.4 },
-
-    { "do": "describe", "stage": "1-nothing-picked", "note": "A first timer, with a shape picked and the Canvas row never clicked. The grid is off and nothing on screen says it exists." },
-    { "do": "menus", "stage": "view-menu", "menu": "View" },
-    { "do": "snapshot", "name": "grid-settings-1-off" },
-
-    { "do": "action", "action": "toggleGrid" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "2-grid-on", "note": "THE TEST: switching the grid on the way Command apostrophe does, with a SHAPE still picked rather than the Canvas. A chip appears in the tool bar beside the zoom reading 4 pt. That chip is the whole answer to where the settings are: it arrives with the lines." },
-    { "do": "snapshot", "name": "grid-settings-2-chip" },
-
-    { "do": "press", "control": "Grid settings" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "3-settings-open", "note": "One press on the chip and every grid setting is on the canvas, each number with one line saying what it does. Nothing was selected to get here." },
-    { "do": "snapshot", "name": "grid-settings-3-open" },
-
-    { "do": "focus", "field": "Spacing" },
-    { "do": "type", "text": "8" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "focus", "field": "Bold every" },
-    { "do": "type", "text": "4" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "4-eights-bold-four", "note": "THE TEST from the task: eight points, every fourth line bold, typed by someone who never went near the layers list. The chip behind the popover now reads 8 pt." },
-    { "do": "snapshot", "name": "grid-settings-4-eights" },
-
-    { "do": "press", "control": "Columns", "in": "Lines" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "snapshot", "name": "grid-settings-5-columns" },
-    { "do": "press", "control": "Columns and rows", "in": "Lines" },
-    { "do": "wait", "seconds": 0.5 },
-
-    { "do": "press", "control": "Show grid" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "5b-switched-off-from-inside", "note": "Switching the grid off from inside its own settings. The lines go, the chip the popover was hanging off goes with them, and the popover has to leave cleanly rather than stranding itself over the bar." },
-    { "do": "snapshot", "name": "grid-settings-5b-off-from-inside" },
-    { "do": "action", "action": "toggleGrid" },
-    { "do": "wait", "seconds": 0.5 },
-
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "6-closed", "note": "Escape puts the settings away and leaves the grid it just tuned." },
-    { "do": "snapshot", "name": "grid-settings-6-closed" },
-
-    { "do": "action", "action": "showGridSettings" },
-    { "do": "wait", "seconds": 0.7 },
-    { "do": "describe", "stage": "7-from-the-menu", "note": "The View menu's Grid Settings row opens the same thing, and the numbers typed a moment ago are still in it." },
-    { "do": "snapshot", "name": "grid-settings-7-from-menu" },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.4 },
-
-    { "do": "action", "action": "toggleGrid" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "8-grid-off", "note": "Grid off: the chip goes with the lines, so the bar is exactly what it was before." },
-    { "do": "snapshot", "name": "grid-settings-8-off" },
-
-    { "do": "action", "action": "showGridSettings" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "9-menu-switches-it-on", "note": "THE TEST: Grid Settings from a standing start with the grid off. It switches the grid on first, because nobody judges a spacing against a canvas with no lines on it, and then opens the settings." },
-    { "do": "snapshot", "name": "grid-settings-9-on-from-off" },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.4 },
-
-    { "do": "action", "action": "selectCanvas" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "panel", "stage": "canvas-section" },
-    { "do": "describe", "stage": "10-canvas-section", "note": "The old route still works: the Canvas row shows the identical controls, because both places draw one view." },
-    { "do": "snapshot", "name": "grid-settings-10-canvas-row" },
-
-    { "do": "appearance", "value": "dark" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Grid settings" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "snapshot", "name": "grid-settings-11-dark" },
-    { "do": "key", "key": "escape" },
-    { "do": "appearance", "value": "light" },
-    { "do": "wait", "seconds": 0.4 }
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        220
+      ],
+      "to": [
+        560,
+        380
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-nothing-picked",
+      "note": "A first timer, with a shape picked and the Canvas row never clicked. The grid is off and nothing on screen says it exists."
+    },
+    {
+      "do": "menus",
+      "stage": "view-menu",
+      "menu": "View"
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-1-off"
+    },
+    {
+      "do": "action",
+      "action": "toggleGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-grid-on",
+      "note": "THE TEST: switching the grid on the way Command apostrophe does, with a SHAPE still picked rather than the Canvas. The grid's capsule in the tool bar lights its switch, and the gear beside it is one press from everything the grid can do."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-2-chip"
+    },
+    {
+      "do": "action",
+      "action": "showGridSettings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-settings-open",
+      "note": "View then Grid Settings puts every grid setting on the canvas, each number with one line saying what it does. Nothing was selected to get here."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-3-open"
+    },
+    {
+      "do": "focus",
+      "field": "Spacing"
+    },
+    {
+      "do": "type",
+      "text": "8"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Bold every"
+    },
+    {
+      "do": "type",
+      "text": "4"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-eights-bold-four",
+      "note": "THE TEST from the task: eight points, every fourth line bold, typed by someone who never went near the layers list."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-4-eights"
+    },
+    {
+      "do": "press",
+      "control": "Columns",
+      "in": "Lines"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-5-columns"
+    },
+    {
+      "do": "press",
+      "control": "Columns and rows",
+      "in": "Lines"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Show grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5b-switched-off-from-inside",
+      "note": "Switching the grid off from inside its own settings. The lines go, the switch in the bar goes quiet, and the popover has to leave cleanly rather than stranding itself over the bar."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-5b-off-from-inside"
+    },
+    {
+      "do": "action",
+      "action": "toggleGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-closed",
+      "note": "Escape puts the settings away and leaves the grid it just tuned."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-6-closed"
+    },
+    {
+      "do": "action",
+      "action": "showGridSettings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "7-from-the-menu",
+      "note": "The View menu's Grid Settings row opens the same thing, and the numbers typed a moment ago are still in it."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-7-from-menu"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "toggleGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "8-grid-off",
+      "note": "Grid off: the lines go and the switch goes quiet, but the capsule stays, because it is the thing that turns the grid back on."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-8-off"
+    },
+    {
+      "do": "action",
+      "action": "showGridSettings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-menu-switches-it-on",
+      "note": "THE TEST: Grid Settings from a standing start with the grid off. It switches the grid on first, because nobody judges a spacing against a canvas with no lines on it, and then opens the settings."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-9-on-from-off"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panel",
+      "stage": "canvas-section"
+    },
+    {
+      "do": "describe",
+      "stage": "10-canvas-section",
+      "note": "The old route still works: the Canvas row shows the identical controls, because both places draw one view."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-10-canvas-row"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "showGridSettings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-settings-11-dark"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
   ]
 }

@@ -482,6 +482,15 @@ final class CanvasNSView: NSView {
     /// inside the mode a press anywhere else pins or picks up a guide, so the
     /// zero point needs something to aim at.
     let gridOriginKnobLayer = CAShapeLayer()
+    /// A dot on the guide that is SELECTED, which is the one \u{232B} takes off the
+    /// picture. Without it a selected guide wore the same bright yellow as the
+    /// line under the pointer and there was no way to tell them apart.
+    let selectedGuideKnobLayer = CAShapeLayer()
+    /// Whether the pointer is somewhere the zero point would answer a press:
+    /// its knob, or anywhere along either of its two markers. While it is, no
+    /// grid line lights up, because a click there moves the zero point rather
+    /// than pinning a guide.
+    var gridOriginHot = false
     /// The zero point being adjusted, in document points, or nil when the
     /// canvas is not in that mode. Set by `apply`, read by the grid chrome, the
     /// mouse and the keyboard.
@@ -1434,6 +1443,7 @@ final class CanvasNSView: NSView {
                       selectionBaseLayer, selectionAntsLayer, layerOutlineLayer,
                       multiSelectOutlineLayer, gridSnapLayer, pinnedGuideLayer,
                       gridOriginLayer, gridOriginKnobLayer, guideHighlightLayer,
+                      selectedGuideKnobLayer,
                       snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
@@ -1530,6 +1540,14 @@ final class CanvasNSView: NSView {
         guideHighlightLayer.strokeColor = NSColor.systemYellow.cgColor
         guideHighlightLayer.lineWidth = 2
         guideHighlightLayer.isHidden = true
+        // The handle on the guide you have hold of: the same yellow filled,
+        // with a white rim so it reads on a dark screenshot as well as a light
+        // one — the zero point's knob in the guides' colour, because it is the
+        // same idea.
+        selectedGuideKnobLayer.fillColor = NSColor.systemYellow.cgColor
+        selectedGuideKnobLayer.strokeColor = CGColor(gray: 1, alpha: 0.9)
+        selectedGuideKnobLayer.lineWidth = 1.5
+        selectedGuideKnobLayer.isHidden = true
         handlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
         handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
         rotateKnobLayer.fillColor = CGColor(gray: 1, alpha: 1)

@@ -34,7 +34,7 @@
     {
       "do": "describe",
       "stage": "1-bar",
-      "note": "grid on: the tool bar capsule reads 4 -> 32 pt, carries the cell slider and an Adjust Grid button"
+      "note": "grid on: the capsule is the switch, the size button, a divider and the gear"
     },
     {
       "do": "snapshot",
@@ -51,16 +51,15 @@
     {
       "do": "describe",
       "stage": "2-mode",
-      "note": "in the mode: readout, cell slider, Clear Guides (dimmed), Cancel, Done, hint line"
+      "note": "in the mode: the size button, Clear Guides (dimmed), Cancel, Done. Nothing else"
     },
     {
       "do": "snapshot",
-      "name": "2b-cell-before"
+      "name": "2-mode-bar"
     },
     {
       "do": "press",
-      "control": "Cell",
-      "across": 0.62
+      "control": "Cell"
     },
     {
       "do": "wait",
@@ -68,21 +67,16 @@
     },
     {
       "do": "describe",
-      "stage": "2c-cell",
-      "note": "cell slider dragged a quarter along: the readout beside it should have moved off 4 -> 32"
+      "stage": "2c-sizes",
+      "note": "the sizes, open on the mode's own bar: Auto at the foot"
     },
     {
       "do": "snapshot",
-      "name": "2c-cell-coarser"
+      "name": "2c-sizes"
     },
     {
       "do": "press",
-      "control": "Cell",
-      "across": 0.0
-    },
-    {
-      "do": "wait",
-      "seconds": 0.4
+      "control": "16 pt"
     },
     {
       "do": "wait",
@@ -90,16 +84,20 @@
     },
     {
       "do": "describe",
-      "stage": "2c-cell",
-      "note": "cell slider moved to 16: the readout should now say 4 -> 16 pt and the grid should be drawing 16s"
+      "stage": "2c-cell-16",
+      "note": "cell 16: the button reads 16 pt and the grid draws 16s"
     },
     {
       "do": "snapshot",
       "name": "2c-cell-16"
     },
     {
+      "do": "key",
+      "key": "escape"
+    },
+    {
       "do": "wait",
-      "seconds": 0.4
+      "seconds": 0.5
     },
     {
       "do": "snapshot",

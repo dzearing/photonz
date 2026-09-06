@@ -14,17 +14,18 @@ import SwiftUI
 /// reachable three ways, and they are the SAME controls each time rather than
 /// three arrangements that drift apart:
 ///
-/// - **From the grid itself.** While the grid is showing, a chip sits in the
-///   floating tool bar beside the zoom reading what the lines on screen are
-///   worth, and pressing it opens these in a popover. It appears at the instant
-///   the lines do, which is the moment a person wants it.
+/// - **From the grid itself.** The grid's capsule in the floating tool bar
+///   carries the switch that draws it, the cell it works to, and the gear that
+///   takes the canvas over; these settings open on that switch, which is where
+///   View \u{25B8} Grid Settings raises them too.
 ///
 /// When the zoom has coarsened the grid, the Spacing row carries a second line
-/// saying what is actually being drawn. That is the other half of the chip's
-/// "4 → 32 pt": the chip says both numbers exist, and this says why.
-/// What is NOT here: the cell the grid works to, and where it starts. Both
-/// moved to the tool bar, where the lines they shape are in front of you while
-/// you move them. See `EditorView.gridChip`.
+/// saying what is actually being drawn. It is the only place that number is
+/// written down now: the tool bar's size button reads the cell that was CHOSEN,
+/// so that its number and the slider behind it can never disagree.
+/// What is NOT here: the cell the grid works to, and where it starts. Both are
+/// on the tool bar, where the lines they shape are in front of you while you
+/// move them. See `EditorView.gridChip` and `CanvasGridSizeButton`.
 ///
 /// - **From where the grid is switched on.** View ▸ Grid Settings, directly
 ///   under Show Grid, opens the same popover — and switches the grid on first
@@ -94,12 +95,13 @@ struct CanvasGridControls: View {
                           suffix: "lines", value: Double(grid.majorEvery),
                           set: { editorState.setCanvasGridMajorEvery(Int($0.rounded())) })
                 // Two rows are deliberately NOT here any more. The cell the
-                // grid works to has a slider on the tool bar, where you can
-                // watch the lines change as you move it, and where the grid
-                // starts is placed by taking the canvas over rather than by
-                // typing two numbers at a picture you cannot see while you
-                // type them. Both are one press away on the bar; what is left
-                // in here is only what the bar does not carry.
+                // grid works to is a button on the tool bar with the sizes
+                // behind it, where you can watch the lines change as you pick
+                // one, and where the grid starts is placed by taking the
+                // canvas over rather than by typing two numbers at a picture
+                // you cannot see while you type them. Both are one press away
+                // on the bar; what is left in here is only what it does not
+                // carry.
                 Text(CanvasGridCopy.footnote)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)

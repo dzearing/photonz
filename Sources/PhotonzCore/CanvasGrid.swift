@@ -202,6 +202,33 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
         return "\(CanvasGridNumber.text(spacing)) \u{2192} \(CanvasGridNumber.text(live)) pt"
     }
 
+    /// Whether the cell follows the zoom rather than being pinned to a size
+    /// somebody chose. See `CanvasGridCellStops.automatic`.
+    public var cellIsAutomatic: Bool { CanvasGridCellStops.isAutomatic(minimumCell) }
+
+    /// What the size button on the tool bar reads: the cell that was CHOSEN,
+    /// or that it is following the zoom.
+    ///
+    /// It says the setting rather than the drawing on purpose. A button that
+    /// read the drawing would change its number as the canvas was zoomed while
+    /// the slider behind it stayed where it was put, and a control that
+    /// disagrees with the thing it opens is worse than one number less. What
+    /// the canvas is actually drawing, when the zoom has coarsened it, is in
+    /// the button's tooltip.
+    public var cellButtonText: String {
+        cellIsAutomatic ? CanvasGridCopy.automaticCell
+                        : "\(CanvasGridNumber.text(Self.clamped(minimumCell: minimumCell))) pt"
+    }
+
+    /// The size button's tooltip: what the button is for, plus what the canvas
+    /// is drawing right now when the zoom has taken it off the cell.
+    public func cellButtonHelp(atZoom zoom: CGFloat) -> String {
+        let live = liveSpacing(atZoom: zoom)
+        let base = cellIsAutomatic ? CanvasGridCopy.cellAutomaticHelp : CanvasGridCopy.cellHelp
+        guard !cellIsAutomatic, abs(live - minimumCell) > 1e-9 else { return base }
+        return base + " Showing \(CanvasGridNumber.text(live)) pt lines at this zoom."
+    }
+
     /// The one line under the Spacing field that explains the second number,
     /// or nil when there is no second number to explain.
     public func liveSpacingNote(atZoom zoom: CGFloat) -> String? {
@@ -507,7 +534,21 @@ public struct CanvasGridAdjustment: Equatable, Sendable {
 /// both problems at once, and one is still the first stop, which means no floor
 /// at all.
 public enum CanvasGridCellStops {
-    public static let all: [CGFloat] = [1, 2, 4, 8, 12, 16, 24, 32, 48, 64]
+    public static let all: [CGFloat] = [1, 4, 8, 12, 16, 24, 32, 48, 64]
+
+    /// The bottom of the slider, and what a grid nobody has touched is set to.
+    ///
+    /// Automatic is not a fourth way of choosing a cell. It is NO floor, so the
+    /// cell is whatever rung the drawing ladder is already on at this zoom —
+    /// the finest lines still far enough apart to aim at. That is deliberately
+    /// the same ladder the canvas draws with and the same one a drag lands on,
+    /// so automatic and the picture can never disagree: zoom in and the cell
+    /// gets finer with the lines, zoom out and it coarsens with them.
+    public static var automatic: CGFloat { CanvasGridSettings.noMinimumCell }
+
+    /// Whether a cell is the automatic one, judged by the stop it lands on so
+    /// a number saved before the stops existed still reads as automatic.
+    public static func isAutomatic(_ cell: CGFloat) -> Bool { index(of: cell) == 0 }
 
     /// Where a cell sits on the slider. A cell set some other way — typed into
     /// the settings, or restored from before the stops existed — lands on the
@@ -526,6 +567,25 @@ public enum CanvasGridCellStops {
 
     public static func cell(at index: Int) -> CGFloat {
         all[min(max(index, 0), all.count - 1)]
+    }
+
+    /// Where a stop sits on the size slider: 0 at the BOTTOM, which is
+    /// automatic, and 1 at the top, which is the coarsest cell. The slider is
+    /// vertical and the sizes read the way they are drawn, finest at the foot.
+    public static func fraction(atIndex index: Int) -> CGFloat {
+        guard all.count > 1 else { return 0 }
+        let clamped = min(max(index, 0), all.count - 1)
+        return CGFloat(clamped) / CGFloat(all.count - 1)
+    }
+
+    /// The stop nearest a point on that track. Off either end clamps rather
+    /// than running out of stops, so a drag that overshoots rests on the last
+    /// one instead of doing nothing.
+    public static func index(atFraction fraction: CGFloat) -> Int {
+        guard fraction.isFinite, all.count > 1 else { return 0 }
+        let steps = CGFloat(all.count - 1)
+        let raw = (fraction * steps).rounded()
+        return min(max(Int(raw), 0), all.count - 1)
     }
 }
 
@@ -596,19 +656,23 @@ public enum CanvasGridCopy {
     public static let adjustHelp =
         "Place where the grid starts, and pin guides onto it."
 
-    /// The one line inside the mode. Everything the mode does, in the order a
-    /// person meets it, because none of it is guessable from an empty canvas
-    /// with two accent lines on it.
-    public static let adjustHint =
-        "Click a line to pin a guide. Drag the dot to move where the grid starts."
-
     public static let clearGuides = "Clear Guides"
     public static let clearGuidesHelp = "Take every pinned guide off this picture."
 
-    /// The cell the slider drives, on the tool bar and in the mode.
+    /// The cell the size button reads and the slider behind it drives, on the
+    /// tool bar and in the mode.
     public static let cell = "Cell"
     public static let cellHelp =
         "The cell you are working to. The grid never draws finer than this, so a drag lands on it."
+    /// The bottom of the size slider, and what the button reads while it is
+    /// chosen. Short, because it is a button on the tool bar and the sizes
+    /// above it are two characters each.
+    public static let automaticCell = "Auto"
+    public static let cellAutomaticHelp =
+        "The cell follows the zoom: the grid works to the finest lines you can still aim at."
+
+    /// The switch on the tool bar, and what it does.
+    public static let showGridHelp = "Draw the grid over the picture so you can build to it."
 
     /// The one line under the controls, in both places they are drawn.
     public static let footnote =

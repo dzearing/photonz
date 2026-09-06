@@ -262,23 +262,6 @@ public enum EditorChromeLayout {
         canvasWidth >= gridChipMinCanvasWidth
     }
 
-    /// The narrowest canvas that also gets the grid's CONTROLS on the bar: the
-    /// cell slider and the Adjust Grid button, beside the readout.
-    ///
-    /// They are a second threshold rather than part of the chip's because they
-    /// are not the same size of thing. The chip is a readout with a chevron,
-    /// under 115pt; the slider with its number and the button beside it are
-    /// another 275pt on top of that, which is most of a tool family. So on a
-    /// wide canvas the grid is worked from the bar, and as the picture narrows
-    /// the bar sheds the controls first and keeps the readout, which still
-    /// opens every setting in a popover. Adjust Grid is on the View menu at any
-    /// width, so nothing becomes unreachable.
-    public static let gridSliderMinCanvasWidth: CGFloat = gridChipMinCanvasWidth + 300
-
-    public static func showsGridSlider(canvasWidth: CGFloat) -> Bool {
-        canvasWidth >= gridSliderMinCanvasWidth
-    }
-
     /// The narrowest canvas on which the CROP tool's options still lay
     /// themselves out along the tool bar.
     ///

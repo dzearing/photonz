@@ -1,0 +1,353 @@
+{
+  "out": "/tmp/photonz-playtest/grid-bar-two-buttons",
+  "setup": {
+    "forget": [
+      "grid",
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1560,
+      "height": 940
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-grid-off",
+      "note": "the capsule is there with the grid off: switch, size button, divider, gear"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-grid-off"
+    },
+    {
+      "do": "press",
+      "control": "Show Grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-grid-on",
+      "note": "switch lit, grid drawn, size button reads Auto"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-grid-on"
+    },
+    {
+      "do": "press",
+      "control": "Cell"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-sizes",
+      "note": "the sizes: a vertical slider, Auto at the very bottom, nothing else in the popover"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-sizes"
+    },
+    {
+      "do": "press",
+      "control": "16 pt"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-sixteen",
+      "note": "cell 16: the knob moved to 16, the grid draws 16s and the button reads 16 pt"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-sixteen"
+    },
+    {
+      "do": "press",
+      "control": "Auto"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-auto",
+      "note": "back to automatic: the cell follows the zoom, the button reads Auto"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-auto"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Adjust Grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-mode",
+      "note": "in the mode: size button, Clear Guides, Cancel, Done. No sentence, no origin numbers"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-mode"
+    },
+    {
+      "do": "move",
+      "at": [
+        400,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "7-lit-line",
+      "note": "out on the paper: a grid line is lit, and that line is what a click pins"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-lit-line"
+    },
+    {
+      "do": "move",
+      "at": [
+        3,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "8-lit-origin",
+      "note": "on the zero point's marker: expect lit origin, NOT a guide line"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-lit-origin"
+    },
+    {
+      "do": "move",
+      "at": [
+        400,
+        3
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "9-lit-origin-across",
+      "note": "the other marker, far from where it crosses: still the origin, still no guide"
+    },
+    {
+      "do": "move",
+      "at": [
+        416,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        416,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "10-pinned",
+      "note": "one guide at x416, selected, wearing its knob"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-pinned"
+    },
+    {
+      "do": "move",
+      "at": [
+        500,
+        288
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        500,
+        288
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "11-second",
+      "note": "a second guide at y288, and now IT is the selected one"
+    },
+    {
+      "do": "snapshot",
+      "name": "11-second"
+    },
+    {
+      "do": "move",
+      "at": [
+        417,
+        500
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        417,
+        500
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "12-reselected",
+      "note": "clicking the first guide again picks it back up: x416 selected, still two guides"
+    },
+    {
+      "do": "snapshot",
+      "name": "12-reselected"
+    },
+    {
+      "do": "key",
+      "key": "backspace"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "13-deleted",
+      "note": "backspace took off the selected one: only y288 left"
+    },
+    {
+      "do": "snapshot",
+      "name": "13-deleted"
+    },
+    {
+      "do": "drag",
+      "from": [
+        3,
+        400
+      ],
+      "to": [
+        200,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "14-origin-moved",
+      "note": "dragging the marker moved the zero point: gridStart should read 200, 0"
+    },
+    {
+      "do": "snapshot",
+      "name": "14-origin-moved"
+    },
+    {
+      "do": "press",
+      "control": "Done"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "15-kept",
+      "note": "out of the mode: the guide stayed, the bar is the four things again"
+    },
+    {
+      "do": "snapshot",
+      "name": "15-kept"
+    },
+    {
+      "do": "action",
+      "action": "showGridSettings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "16-settings",
+      "note": "View > Grid Settings still has a home: it opens on the switch, carrying spacing, bold every, lines and the magnet"
+    },
+    {
+      "do": "snapshot",
+      "name": "16-settings"
+    }
+  ]
+}

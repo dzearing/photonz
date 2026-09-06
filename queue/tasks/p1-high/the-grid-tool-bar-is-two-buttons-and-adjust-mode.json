@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T21:33:24.147Z",
-  "updated": "2026-09-06T21:33:24.183Z",
+  "updated": "2026-09-06T22:10:21.944458Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-06, tightening what shipped as the-grid-is-worked-from-the-tool-bar-and-you-can. Their words on the current state: the toolbar shows four pixels min to thirty two pixels current and should show only the current size; clicking it opens a weird popup with a bunch of settings and should open just a vertical slider; the words Adjust Grid should be a gear icon button; in adjust mode the bar is stupid, it should not have subtext and should not have the origin position number; hovering the centre lines should not show the yellow guide since the click there drags the origin; clicking a guide should select it so backspace deletes it. The last two are behaviour, not decoration: the guide highlight and the origin grab overlap in the same place, and the guide has no selected state, so backspace has nothing to act on. Note the automatic setting is new and needs a meaning written down: pick the cell from the same level of detail ladder the drawing uses so automatic and the drawn grid can never disagree, which is the rule the snapping task also settled on. Removing the smallest cell from the bar does not mean removing the idea; say where it lives now.",
@@ -32,6 +32,39 @@
     {
       "t": "2026-09-06T21:33:24.182Z",
       "note": "seq 180 -> 2"
+    },
+    {
+      "t": "2026-09-06T21:45:53.371Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T22:10:21.944458Z",
+      "note": "adversarial review before building: (1) the mock-ish ask says the bar needs a grid switch, but the capsule only existed while the grid was ON, so a switch on it could never turn it on. Decided the capsule is always there when the canvas is wide enough, which is also what makes the switch the door back in. (2) Cutting the settings popover off the size button would have left View > Grid Settings with nowhere to appear, so those settings now open on the switch instead. (3) Automatic had to mean something: it is minimumCell == noMinimumCell, i.e. NO floor, so the cell is the rung the drawing ladder is already on. Same ladder as the drawing and the snapping, so automatic can never disagree with the picture. (4) Shortest version: no chevron on the size button and no second number on it. The number it reads is the SETTING, not the drawing, so it can never disagree with the slider behind it; what the canvas is actually drawing at a coarse zoom is in the tooltip and under Spacing in the settings."
+    },
+    {
+      "t": "2026-09-06T22:10:21.944458Z",
+      "note": "built: CanvasGridCellStops dropped the 2 pt stop (below the default spacing it did nothing) and gained automatic/isAutomatic and the track fraction maths; CanvasGridSettings gained cellIsAutomatic, cellButtonText and cellButtonHelp; CanvasGridCopy lost adjustHint and gained automaticCell, cellAutomaticHelp, showGridHelp. New Sources/Photonz/CanvasGridCellSlider.swift holds CanvasGridSizeButton (the bar button + its popover) and CanvasGridCellSlider (the vertical stop slider, press a size or drag the knob). EditorView.gridChip is now switch + size + divider + gear; gridAdjustBar lost the origin readout and the hint line and uses the same size button. EditorChromeLayout.showsGridSlider is gone with its second threshold."
+    },
+    {
+      "t": "2026-09-06T22:10:21.944458Z",
+      "note": "canvas: refreshGuideHighlight now asks grabsGridOrigin first and sets gridOriginHot, so no grid line lights anywhere along the zero point's markers; the markers thicken to 3pt and their knob grows to 7pt instead. The selected guide draws a yellow knob (selectedGuideKnobLayer) so it can be told from the line under the pointer, which is what backspace had no visible target for."
+    },
+    {
+      "t": "2026-09-06T22:10:21.944458Z",
+      "note": "found and fixed while playtesting: escape in the adjust mode with the sizes popover open cancelled the whole adjustment and threw away every pinned guide. cancelGridAdjustment now closes the sizes first."
+    },
+    {
+      "t": "2026-09-06T22:10:21.944458Z",
+      "note": "verified in the probe: Scripts/playtest/grid-bar-two-buttons-walk.json (new) proves the four controls, the slider picking 16 pt (grid pulls to 16) and Auto (back to 32), lit origin on both markers, guide select/reselect/backspace, and that View > Grid Settings still opens. grid-guides, grid-settings, grid-live-spacing and grid-nudge walks updated for the new controls and all pass. Scripts/test.sh green, 4095 tests."
+    },
+    {
+      "t": "2026-09-06T22:10:21.944458Z",
+      "note": "where the removed controls went: smallest cell -> the size button and its slider; the chip's two-number readout -> the size button's tooltip and the line under Spacing in the grid's settings; the settings popover -> the same popover, now hanging off the switch, still raised by View > Grid Settings; Adjust Grid in words -> the gear, with the words in its tooltip and on the View menu."
+    },
+    {
+      "t": "2026-09-06T22:10:21.944458Z",
+      "note": "audit: queue/audits/2026-09-06-grid-tool-bar.json with five real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-06T21:45:53.371Z"
 }

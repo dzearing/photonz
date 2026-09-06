@@ -434,34 +434,26 @@ struct EditorChromeLayoutTests {
     }
 }
 
-/// The grid's capsule sheds in two steps as the picture narrows: the controls
-/// go first, then the readout, and the View menu carries the whole feature at
-/// any width.
+/// The grid's capsule is one thing now: four controls that fit or do not. It
+/// used to shed the slider first and keep a readout, back when the slider sat
+/// on the bar; the cell is a button today, so there is nothing left to shed.
 @Suite("The grid's tool bar capsule")
 struct GridToolBarCapsuleTests {
 
-    @Test func aWideCanvasGetsTheWholeThing() {
-        let wide = EditorChromeLayout.gridSliderMinCanvasWidth + 100
-        #expect(EditorChromeLayout.showsGridChip(canvasWidth: wide))
-        #expect(EditorChromeLayout.showsGridSlider(canvasWidth: wide))
+    @Test func aRoomyCanvasGetsIt() {
+        #expect(EditorChromeLayout.showsGridChip(
+            canvasWidth: EditorChromeLayout.gridChipMinCanvasWidth + 100))
     }
 
-    @Test func theControlsGoBeforeTheReadoutDoes() {
-        let between = (EditorChromeLayout.gridChipMinCanvasWidth
-                       + EditorChromeLayout.gridSliderMinCanvasWidth) / 2
-        #expect(EditorChromeLayout.showsGridChip(canvasWidth: between))
-        #expect(!EditorChromeLayout.showsGridSlider(canvasWidth: between))
+    @Test func aCrampedCanvasDoesNot() {
+        #expect(!EditorChromeLayout.showsGridChip(
+            canvasWidth: EditorChromeLayout.gridChipMinCanvasWidth - 1))
     }
 
-    @Test func aCrampedCanvasGetsNeither() {
-        let narrow = EditorChromeLayout.gridChipMinCanvasWidth - 1
-        #expect(!EditorChromeLayout.showsGridChip(canvasWidth: narrow))
-        #expect(!EditorChromeLayout.showsGridSlider(canvasWidth: narrow))
-    }
-
-    /// The controls need more room than the readout, never less.
-    @Test func theSliderThresholdIsTheWiderOfTheTwo() {
-        #expect(EditorChromeLayout.gridSliderMinCanvasWidth
-                > EditorChromeLayout.gridChipMinCanvasWidth)
+    /// The grid asks for exactly the room the zoom slider asks for, so the bar
+    /// sheds both together rather than in a stutter.
+    @Test func itIsTheSameThresholdTheZoomSliderUses() {
+        #expect(EditorChromeLayout.gridChipMinCanvasWidth
+                == EditorChromeLayout.zoomSliderMinCanvasWidth)
     }
 }

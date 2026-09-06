@@ -10009,3 +10009,47 @@ too, four rows shorter there since Name, Role and Details are Next-only flags.
 Next: the audit at `queue/audits/2026-09-06-measure-fits-in-the-panel.json` asks
 whether inline rows read faster than stacked captions, and whether `Details` is
 a specific enough word for where the coordinates went.
+
+## 2026-09-06 — The grid tool bar is four things, and adjust mode stops explaining itself
+
+The grid's capsule used to read `4 → 32 pt`, park a cell slider on the bar and
+spell out `Adjust Grid` in words, and pressing the readout opened every setting
+the grid has. It is now a switch, a button reading the cell, a divider and a
+gear, and nothing else.
+
+The size button says the cell that was CHOSEN, not the cell the canvas is
+drawing: a button whose number moved while the slider behind it stayed put is a
+control that disagrees with the thing it opens. What the canvas is drawing at a
+coarse zoom is in the tooltip and, as before, under Spacing in the settings.
+Pressing it drops a vertical column of the sizes real UI is built in, `Auto` at
+the very bottom, press one or drag the knob. `Auto` is not a fourth way of
+choosing a cell: it is NO floor, so the cell is the rung the level-of-detail
+ladder is already on, which is the same ladder the canvas draws with and a drag
+lands on. Automatic can therefore never disagree with the picture.
+
+The capsule now stays on the bar with the grid switched off, because a switch
+that vanishes with the thing it switches cannot turn it back on. The settings
+popover moved onto that switch, so `View ▸ Grid Settings` still has somewhere to
+appear.
+
+Two behaviours, not decoration. Anywhere along the zero point's two markers a
+press takes hold of the ZERO POINT, so no grid line lights there any more: the
+markers thicken and their knob grows instead, and what lights up is always what
+a click will do. And the guide you have hold of wears a knob, which it needed
+before `⌫` could be said to delete "the selected one" — until now it wore the
+same bright yellow as the line under the pointer.
+
+The mode's bar lost its origin readout and its explaining sentence, as asked.
+The origin is still checkable: a walk reads `gridStart` out of the playtest
+state, and the drag still catches canvas and layer edges.
+
+Found while playtesting: `⎋` with the sizes open cancelled the whole adjustment
+and threw away every pinned guide. It closes the sizes first now.
+
+Verified in the probe with the new `grid-bar-two-buttons-walk`; the grid-guides,
+grid-settings, grid-live-spacing and grid-nudge walks were updated for the new
+controls and all four pass. 4095 unit tests green.
+
+Next: the audit at `queue/audits/2026-09-06-grid-tool-bar.json` asks whether the
+size button reads as a button, whether `Auto` belongs at the bottom, and whether
+the mode is still guessable with its sentence gone.

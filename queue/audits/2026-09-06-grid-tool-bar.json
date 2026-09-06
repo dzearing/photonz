@@ -1,0 +1,33 @@
+{
+  "feature": "The grid tool bar, cut back to four things",
+  "epic": "ui-building",
+  "summary": "The grid's capsule in the tool bar is now a switch, one button reading the cell size, a divider and a gear. Pressing the size button drops a vertical slider of sizes with Auto at the foot; inside the adjust mode the bar has lost its explaining sentence and its origin numbers, hovering the zero point's lines lights the zero point instead of a guide, and the guide you have hold of wears a knob so backspace has something visible to act on.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Any document.",
+  "try": [
+    { "do": "Look at the capsule beside the zoom: switch, size, divider, gear, and nothing else.", "shot": "2026-09-06-grid-bar-2-grid-on-sc.png" },
+    { "do": "Press the grid switch to draw the grid over the picture." },
+    { "do": "Press the size button and read the column: sizes above, Auto at the very bottom.", "shot": "2026-09-06-grid-bar-3-sizes-sc.png" },
+    { "do": "Press 16 pt, then drag the knob up and down the column and watch the lines change under it." },
+    { "do": "Press Auto and zoom in and out: the cell follows the zoom, and the button says Auto rather than a number." },
+    { "do": "Press the gear. The bar is the size, Clear Guides, Cancel, Done.", "shot": "2026-09-06-grid-bar-6-mode-sc.png" },
+    { "do": "Move the pointer onto either of the two accent lines: the lines thicken and NO yellow guide lights.", "shot": "2026-09-06-grid-bar-8-lit-origin-sc.png" },
+    { "do": "Click a grid line to pin a guide, click a second one, then click the first again and press backspace.", "shot": "2026-09-06-grid-bar-12-reselected-sc.png" }
+  ],
+  "evaluate": [
+    "Is four controls the right amount, or is the capsule still one thing too many for something you are not thinking about while you work?",
+    "Does the size button read like a button, or like a label that happens to have a number in it?",
+    "Is Auto at the bottom the right end of the column, or would you look for it at the top with the other end being finest?",
+    "Should the button say Auto on its own, or Auto and the size the canvas is actually drawing right now?",
+    "Inside the mode, with no sentence left to read, is it obvious enough that clicking a line pins a guide and dragging the accent lines moves where the grid starts?",
+    "Is a small dot on the line enough to say which guide backspace will take off?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the real window, not an offscreen render.",
+    "The capsule is now on the bar whether the grid is drawn or not. It used to appear with the lines and vanish with them, but a switch that disappears when the thing is off cannot be the thing that turns it on. Say if you would rather it went back to appearing only with the grid, with the switch living on the View menu alone.",
+    "The size button reads the cell you CHOSE, not the cell the canvas is drawing. Zoomed far out those differ, and only the tooltip says so. The alternative was a button whose number moved while the slider behind it stayed put, which is worse, but it does mean the old 4 to 32 reading is gone from the surface. It still lives under Spacing in the grid's settings.",
+    "The mode's explaining line is gone as asked. What is left to teach it is the line lighting up under the pointer and the gear's own tooltip, which nobody reads. If the mode turns out to be unguessable, the fix is a first-run cue, not the sentence back.",
+    "Nothing on the bar says a guide can be deleted; backspace is discovered by trying it.",
+    "The selected guide's knob sits halfway down the view, so a guide running through the middle of the picture puts its knob near the zero point's knob. They are different colours, yellow against the accent, but they are close.",
+    "Found and fixed on the way: escape inside the adjust mode with the sizes open used to cancel the WHOLE mode and lose every pinned guide. Escape now closes the sizes first and the mode survives."
+  ]
+}

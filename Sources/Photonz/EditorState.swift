@@ -257,6 +257,12 @@ final class EditorState {
     /// the settings it edits are the app's.
     var isGridSettingsPresented = false
 
+    /// Whether the sizes are open under the tool bar's cell button. Its own
+    /// flag, and its own popover: the size slider is the ONE thing that button
+    /// opens, so it can never come up carrying the rest of the settings with
+    /// it. Per window, like the settings it sits beside.
+    var isGridCellSizesPresented = false
+
     /// Open the grid's settings, from the View menu or from anywhere else that
     /// is not the chip itself.
     ///
@@ -289,6 +295,7 @@ final class EditorState {
         // the grid takes that whole bar over: leaving it up would leave a
         // popover pointing at a control that is no longer there.
         isGridSettingsPresented = false
+        isGridCellSizesPresented = false
         gridAdjustment = CanvasGridAdjustment(settings: canvasGrid,
                                               origin: document.gridOrigin,
                                               guides: document.guides)
@@ -336,6 +343,7 @@ final class EditorState {
     /// Guides one step of undo rather than one per guide.
     func commitGridAdjustment() {
         guard let session = gridAdjustment else { return }
+        isGridCellSizesPresented = false
         gridAdjustment = nil
         canvasGrid = session.committedSettings
         let origin = session.committedOrigin
@@ -348,6 +356,14 @@ final class EditorState {
 
     func cancelGridAdjustment() {
         guard let session = gridAdjustment else { return }
+        // \u{238B} takes one thing at a time, innermost first. With the sizes open
+        // on the mode's own bar it closes those and the mode stays: pressing
+        // escape to shut a popover and losing every guide you had pinned is
+        // the kind of thing nobody presses escape a second time after.
+        if isGridCellSizesPresented {
+            isGridCellSizesPresented = false
+            return
+        }
         gridAdjustment = nil
         canvasGrid = session.cancelledSettings
         // The document was never touched, so there is nothing to put back and

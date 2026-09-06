@@ -3214,6 +3214,10 @@ private final class Run {
             // grid having gone out.
             "grid": canvas?.playtestGridReport ?? "no canvas",
             "guides": editor.playtestGuidesReport,
+            // Where the grid counts from. The adjust bar stopped printing it
+            // when it stopped explaining itself, so this is how a walk proves
+            // the zero point landed where it was dragged.
+            "gridStart": CanvasGridOriginLabel.text(editor.canvasGridOrigin),
             // The columns each screen is showing, whether they are actually on
             // the canvas layer, and how many a drag could catch — so one line
             // answers "does the pull match the picture" for the OTHER thing a
