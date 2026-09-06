@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1260,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:38:05.176Z",
-  "updated": "2026-09-06T06:40:14.073Z",
+  "updated": "2026-09-06T06:40:38.338Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. Nudge.swift in PhotonzCore holds the step; CanvasGridSettings.snapSpacing is the grid step to use. TDD in core.",
@@ -39,7 +39,12 @@
     {
       "t": "2026-09-06T06:40:14.072Z",
       "note": "Built and verified in the probe app (Scripts/playtest/grid-nudge-walk.json, 80 steps, ok, Screen Recording granted). Nudge in PhotonzCore now takes a NudgeGrid (live cell, origin, axes) and returns the travel to the next line; CanvasKeys passes CanvasView.canvasNudgeGrid, which reads snapSpacing(atZoom:) so the keys and a drag agree. Walk numbers, 4 pt grid at 100% so the live cell is 32: box drawn off grid at 110 -> 128 on the first press (rejoins), -> 160, up 100 -> 96, shift -> 224 (two cells), command -> 225 (one point), snap off -> 226 (one point), two picked -> both travel 30 and the block lands on 256, at 400% -> 260 (four points, the step follows the lines). Snap to grid now shows its caption on the surface instead of only in a tooltip, and the caption says the arrow keys step by those lines. Audit: queue/audits/2026-09-06-grid-nudge.json."
+    },
+    {
+      "t": "2026-09-06T06:40:38.337Z",
+      "note": "Arrow keys now step by the grid: Nudge takes the live cell, origin and axes and travels to the next line, so an off-grid layer rejoins on the first press and every press after is a whole cell. Shift is whole cells (the old ten points rounded up, never fewer than two), Command frees one press, columns-only grids step sideways, multi-selections move off the block's corner. Snap to grid says so in a visible caption. Verified in the probe app (Scripts/playtest/grid-nudge-walk.json, 80 steps, real captures) and 3677 core tests green. Audit: queue/audits/2026-09-06-grid-nudge.json"
     }
   ],
-  "started": "2026-09-06T06:24:29.362Z"
+  "started": "2026-09-06T06:24:29.362Z",
+  "completed": "2026-09-06T06:40:38.338Z"
 }
