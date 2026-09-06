@@ -1,0 +1,30 @@
+{
+  "feature": "A color dropped on the Library becomes a saved color",
+  "epic": "ui-components",
+  "summary": "A color you like can now be dragged out of any swatch and let go on the Library, where it asks for a name and becomes a tile every color row can reach. Until now a color could be carried from swatch to swatch but there was nowhere to put one down and keep it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Library, Styles and Color drag on, which is the default in Next.",
+  "try": [
+    { "do": "Draw a rectangle and give its Fill a color you like." },
+    { "do": "Open the Library and set its shelf to Media, so it is showing screenshots rather than colors." },
+    { "do": "Drag the Fill swatch down over the Library and HOLD it there. The whole Library lights up and says Save this color.", "shot": "2026-09-06-shelf-color-drop-in-flight.png" },
+    { "do": "Let go. The shelf turns to Styles and a name box opens above it with your color beside it.", "shot": "2026-09-06-shelf-color-drop-naming.png" },
+    { "do": "Press Escape. Nothing was saved and the shelf goes back to Media." },
+    { "do": "Drag the Fill swatch onto the Library again, type Brand, press Return. The tile lands on the Styles shelf and the Fill row is exactly as you left it.", "shot": "2026-09-06-shelf-color-drop-saved.png" },
+    { "do": "Press Command Z once. Brand comes off the shelf in one step." },
+    { "do": "Drag a color in from another app's color well, or from the system Colors panel, and drop it on the Library the same way." }
+  ],
+  "evaluate": [
+    "Holding a color over the Library, is it obvious that letting go will KEEP the color rather than paint something with it?",
+    "The whole Library panel takes the drop, not just the tiles. Does that feel generous, or does it feel like you cannot aim at anything in particular?",
+    "The shelf jumps to Styles the moment you let go, before you have typed a name. Does seeing where the color is going help, or is the jump jarring?",
+    "The name box opens on Color, Color 2, Color 3 with the text selected. Is typing over it the right amount of work, or would you rather it were blank?",
+    "Escape puts the shelf back on the scope you were looking at. Did you notice, and did it feel right?"
+  ],
+  "rough": [
+    "Only the Library's contents take the drop, not its section header. Aim at the header strip and nothing lights up. The content below it is ten times taller so this is unlikely to be hit, but it is a seam.",
+    "A color already on the shelf can be saved a second time under a second name. That is deliberate, since one blue really is both Brand and Link, but nothing on screen warns you while the color is in the air. The shelf does say which name already has it, but only to the accessibility reader.",
+    "A color saved this way is offered for every part of a layer, because it came off no particular row. A color saved from the Fill row is offered for fills only. Whether the shelf should guess from where you dragged it is an open question.",
+    "The Library has to be showing for there to be anything to drop on. With the panel collapsed or hidden there is no target at all.",
+    "Verified live: the probe had Screen Recording, so all three pictures here are real screen captures of the window rather than offscreen renders. A scripted walk (Scripts/playtest/colour-onto-the-library-walk.json) checks the shelf lights up on a non-Styles scope, that Escape leaves nothing behind, that the source row is untouched after saving, and that one undo removes the tile."
+  ]
+}

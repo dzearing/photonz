@@ -110,3 +110,48 @@ public enum ColorDrop {
         return sentence + "."
     }
 }
+
+// MARK: - Letting a colour go on the Library shelf
+
+extension ColorDrop {
+
+    /// The Library shelf as somewhere to let a colour go.
+    ///
+    /// Every other drop target in the app PAINTS with the colour. This one
+    /// KEEPS it: letting go asks for a name and the colour becomes a tile you
+    /// can reach from any colour row afterwards. So the shelf has none of a
+    /// swatch's refusals — it wears nothing, it lets go of nothing, and it
+    /// holds a ramp as happily as a flat colour — and the only reason it ever
+    /// stays dark is that there is nowhere to save a colour to.
+    public struct Shelf: Hashable, Sendable {
+        /// Whether saved colours are on at all. False is the whole reason the
+        /// shelf would refuse a colour.
+        public var canSave: Bool
+        /// The name of a colour already on the shelf that draws the same, when
+        /// there is one. The drop is still taken — one blue really is both
+        /// Brand and Link — but it is said out loud first.
+        public var alreadySaved: String?
+
+        public init(canSave: Bool = true, alreadySaved: String? = nil) {
+            self.canSave = canSave
+            self.alreadySaved = alreadySaved
+        }
+    }
+
+    /// What the Library shelf would do with the paint being held over it.
+    public static func answer(dropping paint: Paint, on shelf: Shelf) -> Answer {
+        guard shelf.canSave else {
+            return Answer(landing: nil, note: "Saved colors are turned off.")
+        }
+        // Nothing is flattened and nothing is let go of: the shelf keeps the
+        // paint exactly as it arrived.
+        let landing = Landing(paint: paint, flattened: false, letsGoOf: nil)
+        if let name = shelf.alreadySaved {
+            return Answer(landing: landing,
+                          note: "\(name) is already this color. Saving keeps a second one.")
+        }
+        return Answer(landing: landing,
+                      note: "Saves this \(ColorStyleNaming.subject(paint)) "
+                          + "under a name you choose.")
+    }
+}

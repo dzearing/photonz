@@ -90,12 +90,88 @@ extension EditorState {
     /// one field is open at a time and the selection is what it is about.
     func beginNamingColorStyle(slot: ColorSlot) {
         guard colorStylesEnabled else { return }
+        // One field at a time, wherever it was opened from.
+        colorStyleShelfNaming = nil
         colorStyleNaming = ColorStyleNamingRequest(slot: slot)
     }
 
     /// Escape, or the name landing: the field closes.
     func endNamingColorStyle() {
         colorStyleNaming = nil
+    }
+
+    // MARK: - A color let go of on the Library shelf
+
+    /// What the Library shelf would do with the paint being held over it right
+    /// now. The shelf lights up on this answer, so what it promises while the
+    /// colour is in the air is exactly what letting go does.
+    func colorShelfDrop(_ paint: Paint) -> ColorDrop.Answer {
+        let shelf = ColorDrop.Shelf(canSave: colorStylesEnabled && document != nil,
+                                    alreadySaved: colorStyles.first {
+                                        $0.paint.draws(sameAs: paint)
+                                    }?.name)
+        return ColorDrop.answer(dropping: paint, on: shelf)
+    }
+
+    /// A colour let go of on the Library shelf: the name field opens with that
+    /// colour beside it, and nothing is saved until the name lands.
+    ///
+    /// Asking FIRST is the whole point. Quietly making one called "Color 1"
+    /// would contradict the decision every other way of saving a colour
+    /// already keeps, and would leave a tile nobody meant to make.
+    ///
+    /// The shelf turns to Styles as the colour lands, BEFORE the name is
+    /// typed, so the field is above the shelf the colour is joining rather
+    /// than above a wall of screenshots that then vanishes on Return. Escape
+    /// puts the shelf back, so a drop nobody meant to make leaves the Library
+    /// exactly as it found it.
+    func beginNamingDroppedColor(_ paint: Paint) {
+        guard colorShelfDrop(paint).lightsUp else { return }
+        colorStyleNaming = nil
+        // A second colour dropped while the field is still open keeps the
+        // shelf the FIRST one interrupted, which is the one Escape owes.
+        let before = colorStyleShelfNaming?.scopeBefore ?? libraryScope
+        colorStyleShelfNaming = DroppedColorNaming(paint: paint, scopeBefore: before)
+        showColorStyleShelf()
+    }
+
+    /// Escape, or the field losing its colour: nothing was made, so there is
+    /// nothing to undo either, and the shelf goes back to whatever it was
+    /// showing before the colour arrived.
+    func endNamingDroppedColor() {
+        guard let naming = colorStyleShelfNaming else { return }
+        colorStyleShelfNaming = nil
+        libraryScope = naming.scopeBefore
+    }
+
+    /// The name lands: the colour goes on the shelf, and the row it was
+    /// dragged off is left exactly as it was — a drop here KEEPS a colour, it
+    /// does not paint with one.
+    @discardableResult
+    func saveDroppedColorStyle(name: String) -> UUID? {
+        guard let naming = colorStyleShelfNaming else { return nil }
+        colorStyleShelfNaming = nil
+        // No slot, so no roles: a colour saved from the shelf came off no
+        // particular row and is offered on all of them.
+        return saveColorStyle(paint: naming.paint, name: name)
+    }
+
+    /// Which shelf the Library is showing. It lives in settings rather than in
+    /// this object because the panel remembers it across launches, so this is
+    /// the one place that reads and writes it by hand.
+    private var libraryScope: String {
+        get {
+            UserDefaults.standard.string(forKey: LibraryPanel.scopeKey)
+                ?? LibraryScope.media.rawValue
+        }
+        set { UserDefaults.standard.set(newValue, forKey: LibraryPanel.scopeKey) }
+    }
+
+    /// The name the shelf's field opens on: one nobody is using yet, and named
+    /// for what it is, so a saved ramp is offered "Gradient" over "Color 4".
+    func suggestedColorStyleName(paint: Paint) -> String {
+        let base = PhotonzDocument.colorStyleNameBase(for: paint)
+        return document?.freshColorStyleName(base: base) ?? base
     }
 
     /// Every style in the open document, as shelf items.

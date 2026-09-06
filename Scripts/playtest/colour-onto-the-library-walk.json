@@ -1,0 +1,78 @@
+{
+  "out": "/tmp/photonz-playtest/colour-onto-the-library",
+  "setup": { "forget": ["panel", "color", "shapes"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1500, "height": 950 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 180], "to": [520, 380], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "showMediaShelf" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "1-media-shelf",
+      "note": "the Library is showing its Media shelf, and the box's fill is #B0184A"
+    },
+    { "do": "snapshot", "name": "library-1-media-shelf" },
+
+    {
+      "do": "dragColor",
+      "from": "Fill",
+      "onto": "Library",
+      "hold": "library-2-in-flight",
+      "expect": "takes"
+    },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "2-asked-for-a-name",
+      "note": "the shelf lit up on the MEDIA scope; letting go turned it to Styles and opened the name field over the empty shelf, and nothing is saved yet"
+    },
+    { "do": "panel", "stage": "2-asked-for-a-name" },
+    { "do": "snapshot", "name": "library-3-asked-for-a-name" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "describe",
+      "stage": "3-escaped",
+      "note": "Escape left no colour on the shelf and put the Library back on Media: colorStyles must still be empty"
+    },
+    { "do": "panel", "stage": "3-escaped" },
+    { "do": "snapshot", "name": "library-5-escaped" },
+
+    {
+      "do": "dragColor",
+      "from": "Fill",
+      "onto": "Library",
+      "expect": "takes"
+    },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Brand" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+    {
+      "do": "describe",
+      "stage": "4-saved",
+      "note": "Brand is on the Styles shelf and the Fill row is exactly as it was: its own colour #B0184A, wearing no style"
+    },
+    { "do": "panel", "stage": "4-saved" },
+    { "do": "snapshot", "name": "library-4-saved" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "5-one-undo",
+      "note": "ONE undo took Brand back off the shelf and nothing else changed"
+    },
+    { "do": "panel", "stage": "5-one-undo" }
+  ]
+}

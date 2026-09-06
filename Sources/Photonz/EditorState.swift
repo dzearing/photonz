@@ -839,6 +839,15 @@ final class EditorState {
     /// only one field is ever open, and so a walk can open one.
     var colorStyleNaming: ColorStyleNamingRequest?
 
+    /// The color let go of on the Library shelf that is waiting for a name.
+    ///
+    /// A second piece of state rather than a case of the request above,
+    /// because the two have different lifetimes: a row's half-typed name
+    /// belongs to the layers that were picked when it opened and goes when the
+    /// selection moves on, while a color dropped on the shelf is about nothing
+    /// but itself and stays put until it is named or dropped.
+    var colorStyleShelfNaming: DroppedColorNaming?
+
     /// A colour drag in flight: the paint being pushed at the canvas frame by
     /// frame, held out of history until the drag is let go of.
     ///

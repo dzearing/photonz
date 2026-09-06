@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1390,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:18:14.244Z",
-  "updated": "2026-09-06T14:18:14.244Z",
+  "updated": "2026-09-06T18:00:40.463Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the colour drag task on 2026-09-06 rather than built with it. It is NOT the cheap half of that task: the app deliberately asks for a name BEFORE a saved colour exists (see the naming field in ColorStyleRow and the comment above it), so a shelf drop that quietly made one called \"Color 1\" would contradict a decision already made. Doing it right means opening that same field from the shelf. EditorState.saveColorStyle(paint:name:slot:) is the call underneath; the shelf is LibraryPanel.swift and the Styles tiles are LibraryStyleTile in ColorStylePanel.swift. The drop vocabulary already exists: ColorDrag.acceptedTypes and ColorDrag.payloadInFlight().",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-06T14:18:14.244Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T17:43:35.166Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T17:47:06.316Z",
+      "note": "Adversarial review before building. (1) The mock idea \"drop a colour to save it\" has no home for the name field: the row keeps its field under the row, so the shelf gets one between the search box and the tiles, with a swatch of the colour beside it so you can see what you are naming. (2) A ring alone does not say WHAT letting go does; the shelf gets a short \"Save this colour\" pill while the colour is in the air, because the whole point of the feature is that nobody knows the shelf takes a drop. (3) Acceptance 4: rather than refusing a drop outside Styles, the shelf takes it in EVERY scope and saving switches to Styles, which every other save path already does (showColorStyleShelf). A dead zone in three of four scopes would be the confusing answer. (4) Dropping a colour already on the shelf is allowed rather than refused: a second name for one colour is a real thing to want, and the tip says which name already has it. (5) Cut from the idea: no slot/role inference from the source swatch. A colour saved with no roles is offered everywhere, which is the friendlier default and one less string format to depend on."
+    },
+    {
+      "t": "2026-09-06T18:00:40.462Z",
+      "note": "Built: ColorDrop.Shelf + ColorDrop.answer(dropping:on:Shelf) in PhotonzCore (6 tests, written first); LibraryColorDrop.swift holds the drop modifier, the ring plus the \"Save this color\" pill, and the naming field; EditorState gained colorStyleShelfNaming / beginNamingDroppedColor / endNamingDroppedColor / saveDroppedColorStyle; LibraryPanel wears the modifier and shows the field between the search box and the tiles. Gated on next-color-drag AND next-styles, so Current is untouched and there is nothing to port. The playtest dragColor step now accepts onto: \"Library\"."
+    },
+    {
+      "t": "2026-09-06T18:00:40.463Z",
+      "note": "Second adversarial pass, on the real app. The first build switched the shelf to Styles only on SAVE, so you named a colour above a wall of screenshots and the shelf then changed under you on Return. Changed it: the shelf turns to Styles as the colour LANDS, and Escape turns it back to the scope you were on, so the field always sits above the shelf the colour is joining and a drop nobody meant to make leaves the Library exactly as it found it. Left alone deliberately: the new tile is not selected after saving, because picking a Library tile clears the layer selection and would deselect the shape the colour came off."
+    },
+    {
+      "t": "2026-09-06T18:00:40.463Z",
+      "note": "Verified by Scripts/playtest/colour-onto-the-library-walk.json on the probe (Screen Recording granted, so the pictures are real captures). Acceptance 1: the shelf lit up on the MEDIA scope and the drop opened the name field. Acceptance 2: styles reads \"Brand #B0184A · 0 used\" and selectedColors still reads \"fill #B0184A\" with no style, so the source row is untouched. Acceptance 3: after Escape, styles is empty and the shelf is back on Media. Acceptance 4: it lights up in every scope and turns to Styles on the drop; the audit says so. Scripts/test.sh green (3981 tests), and the existing colour-onto-a-swatch walk still passes."
     }
-  ]
+  ],
+  "started": "2026-09-06T17:43:35.166Z"
 }

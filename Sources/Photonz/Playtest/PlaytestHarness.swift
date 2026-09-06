@@ -2053,7 +2053,7 @@ private final class Run {
             throw Failure(description: "the window has no content view")
         }
         let source = try colorWell(from)
-        let destination = try colorWell(onto)
+        let destination = try colorDropTarget(onto)
         guard let payload = source.payload else {
             throw Failure(description: "the \"\(from)\" colour cannot be picked up")
         }
@@ -2091,6 +2091,23 @@ private final class Run {
                 + ", drop \(landed ? "landed" : "did not land")\(held)",
              state: describe())
     }
+
+    /// Where a colour can be let go of: a swatch, named by the row it sits on,
+    /// or the Library shelf, which is named as itself because it belongs to no
+    /// row and takes a colour to KEEP it rather than to paint with it.
+    private func colorDropTarget(_ name: String) throws -> PanelTargetView {
+        if name.caseInsensitiveCompare(Self.libraryShelfTarget) == .orderedSame,
+           let shelf = try panelTargets().first(where: {
+               $0.kind == .row && $0.name == Self.libraryShelfTarget
+           }) {
+            return shelf
+        }
+        return try colorWell(name)
+    }
+
+    /// The name the Library shelf answers to as a drop target, which is the
+    /// name it wears in the dock.
+    private static let libraryShelfTarget = "Library"
 
     /// A colour swatch in the panel, named by the row it sits on. Every swatch
     /// answers to the word Color, so the row's own word is what tells Fill's

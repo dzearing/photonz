@@ -60,6 +60,13 @@ struct LibraryPanel: View {
         VStack(alignment: .leading, spacing: 8) {
             scopePicker
             searchField
+            // A colour let go of on the shelf asks for its name HERE, right
+            // above the tiles it is about to join, rather than in a dialog
+            // over the picture. Same field, same keys, as the one a colour row
+            // opens.
+            if let dropped = editorState.colorStyleShelfNaming {
+                LibraryColorNamingField(paint: dropped.paint)
+            }
             tiles
             resizeHandle
         }
@@ -68,6 +75,9 @@ struct LibraryPanel: View {
         // Switching scope with a search still running would show an empty
         // shelf for a reason that is not on screen anymore.
         .onChange(of: scopeRaw) { query = "" }
+        // The one place in the app a dropped colour is KEPT rather than
+        // painted with.
+        .libraryColorDrop()
     }
 
     // MARK: Scope and search
