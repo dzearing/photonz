@@ -5,18 +5,18 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1250,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:38:05.136Z",
-  "updated": "2026-09-05T20:41:32.577Z",
+  "updated": "2026-09-06T06:08:26.348Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. CanvasGridLevels.minimumOnScreenSpacing is 8 view points and strength() is zero at the floor, so at zoom 1 a 4pt grid draws its first rung at 32. CanvasGridSettings.snapSpacing deliberately returns the configured spacing rather than the finest drawn rung, because a pull that changed with the zoom would be its own kind of jumping. Options worth weighing: show the drawn spacing beside the Spacing field; draw the set spacing faintly below the floor; or offer a Snap to setting separate from the drawn spacing.",
+  "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. CanvasGridLevels.minimumOnScreenSpacing is 8 view points and strength() is zero at the floor, so at zoom 1 a 4pt grid draws its first rung at 32. CanvasGridSettings.snapSpacing deliberately returns the configured spacing rather than the finest drawn rung, because a pull that changed with the zoom would be its own kind of jumping. Options worth weighing: show the drawn spacing beside the Spacing field; draw the set spacing faintly below the floor; or offer a Snap to setting separate from the drawn spacing. RESOLVED 2026-09-06: the chip reads liveSpacing, which is the same rung snapSpacing pulls to, and the Spacing row carries the explanation. The third original acceptance item ('zooming never changes where a drag lands') was superseded by the p1 task snapping-pulls-to-the-grid-you-can-see-not-one-y and was replaced rather than restored.",
   "acceptance": [
-    "With a grid set to any spacing, a person can tell at a glance what the lines they are looking at are worth",
+    "With a grid set to any spacing, the tool bar chip says what the lines on screen are worth right now",
     "An edge that has landed on a grid line never looks like it has landed between two lines",
-    "Zooming in and out never changes where a drag lands"
+    "Opening the grid settings explains the second number, and says nothing about a drag when snapping is off"
   ],
   "log": [
     {
@@ -26,6 +26,23 @@
     {
       "t": "2026-09-05T20:41:32.577Z",
       "note": "Half of this was answered on 2026-09-05 by the p1 task snapping-pulls-to-the-grid-you-can-see-not-one-y: the pull now comes off the same ladder the drawing uses, so an edge can no longer land between two drawn lines. What is LEFT of this task is the first acceptance item only, saying somewhere on screen what the lines you are looking at are worth right now (at 100% a grid set to 4 draws and pulls to 32). The third acceptance item, 'zooming in and out never changes where a drag lands', is SUPERSEDED: the user filed the p1 task later asking for exactly the opposite, and it shipped. Do not restore it."
+    },
+    {
+      "t": "2026-09-06T06:08:26.348Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T06:22:53.905797Z",
+      "note": "Adversarial review before building. The two options left in the notes were: say what the lines are worth, or draw the set spacing faintly below the floor. Drawing 4 pt lines four screen points apart is the grey wash the ladder exists to prevent, so that one was dropped. A separate 'snap to' setting was also dropped: the p1 task already tied the pull to the drawn ladder, and a second spacing number would be one more thing to keep in your head. Shortest thing that delivers the value: the chip already in the bar stops reporting only the typed number."
+    },
+    {
+      "t": "2026-09-06T06:22:53.905797Z",
+      "note": "Shipped. CanvasGridSettings.liveSpacing(atZoom:) is the one answer to 'what are these lines worth', shared by the chip and by snapSpacing, so the readout and the pull cannot drift. spacingChipText(atZoom:) reads '4 pt' when the two agree and '4 \u2192 32 pt' when the zoom has coarsened the grid; liveSpacingNote(atZoom:) is the second line under the Spacing field (both places the controls are drawn) and the chip's tooltip. Chip text frame 38 -> 56pt, centred; EditorChromeLayout's threshold arithmetic doc updated (bar 587 against a 588 budget at the 620pt threshold, so the chip keeps the zoom slider's threshold). Tests: Tests/PhotonzCoreTests/GridLiveSpacingTests.swift, 3665 tests green. Walk: Scripts/playtest/grid-live-spacing-walk.json, verified on real captures at 100%, 400% and 25% with Screen Recording granted."
+    },
+    {
+      "t": "2026-09-06T06:22:53.905797Z",
+      "note": "Review of the built thing: the note under Spacing ran to three lines and was the darkest text in the popover, so it was tightened to two ('Showing 32 pt lines at this zoom, and a drag lands on those. Zoom in for 4 pt.'). With the magnet off it drops the drag clause. The chip was trailing aligned and left a gap after its glyph at short values, so it is centred like the zoom readout beside it."
     }
-  ]
+  ],
+  "started": "2026-09-06T06:08:26.347Z"
 }

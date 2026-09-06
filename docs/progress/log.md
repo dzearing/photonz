@@ -9199,3 +9199,21 @@ granted, eight related auto-layout walks still ok. Audit:
 Next: dragging a tile off the shelf onto an open group drops it BESIDE the
 group rather than into it, so the second-control half of this cannot be tried
 yet — filed as `a-control-dragged-off-the-shelf-onto-an-open-gro`.
+
+## 2026-09-06 — The grid you set is the grid you see
+
+The tool bar's grid chip used to report the number typed into Spacing, which at
+100% with a 4 pt grid is not the grid on screen: the level of detail ladder
+draws the 32 pt rung, and since the p1 snapping task that is also what a drag
+lands on. The chip now reads what the lines are worth, `4 → 32 pt`, and settles
+back to a single number the moment the zoom brings the set spacing back. One
+core answer, `CanvasGridSettings.liveSpacing(atZoom:)`, feeds both the chip and
+`snapSpacing`, so the readout and the pull cannot drift apart again. The Spacing
+row in the grid settings (popover and Canvas panel alike) carries the second
+line that explains it, and drops its mention of a drag when the magnet is off.
+
+Verified with `Scripts/playtest/grid-live-spacing-walk.json` on real window
+captures at 100%, 400% and 25%; audit in
+`queue/audits/2026-09-06-grid-live-spacing.json`. Next: whatever the queue hands
+out; the open question for the user is whether the arrow reads the right way
+round.

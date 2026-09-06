@@ -121,10 +121,8 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
         max(Self.clamped(spacing: spacing), Self.clamped(minimumCell: minimumCell))
     }
 
-    /// The spacing as a chip in the tool bar shows it. It is the number that
-    /// was TYPED, not `drawnSpacing`, because the chip is the door to the field
-    /// holding it: a readout that disagreed with the field it opens would read
-    /// as the app arguing with itself.
+    /// The spacing as it was TYPED, with its unit. This is what the Spacing
+    /// field holds; what the canvas is drawing right now is `liveSpacing`.
     public var spacingText: String { "\(CanvasGridNumber.text(spacing)) pt" }
 
     // Stored settings outlive the shape of this type, so a blob written before
@@ -182,6 +180,42 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
         return CanvasGridLevels.snapSpacing(among: CanvasGridLevels.levels(spacing: drawnSpacing,
                                                                           majorEvery: majorEvery,
                                                                           zoom: zoom))
+    }
+
+    /// What the lines on screen are WORTH right now, in document points.
+    ///
+    /// A grid set to four points draws thirty two point lines at 100%, because
+    /// four screen points apart is a grey wash rather than a grid. So the
+    /// number that describes the picture is not always the number that was
+    /// typed, and this is the one that describes the picture: the finest rung
+    /// far enough apart on screen to aim at, which is the same rung a drag
+    /// lands on.
+    ///
+    /// It does NOT depend on the magnet. Turning snapping off changes what a
+    /// drag does, not what the lines are worth, so the readout stays put.
+    public func liveSpacing(atZoom zoom: CGFloat) -> CGFloat {
+        let base = drawnSpacing
+        guard zoom.isFinite, zoom > 0 else { return base }
+        let levels = CanvasGridLevels.levels(spacing: base, majorEvery: majorEvery, zoom: zoom)
+        return CanvasGridLevels.snapSpacing(among: levels) ?? levels.first?.spacing ?? base
+    }
+
+    /// The chip in the tool bar: one number while the grid you set is the grid
+    /// you see, and both numbers the moment they part company. The set number
+    /// stays on the left because the chip is the door to the field holding it,
+    /// and the arrow says which way the canvas went.
+    public func spacingChipText(atZoom zoom: CGFloat) -> String {
+        let live = liveSpacing(atZoom: zoom)
+        guard abs(live - spacing) > 1e-9 else { return spacingText }
+        return "\(CanvasGridNumber.text(spacing)) \u{2192} \(CanvasGridNumber.text(live)) pt"
+    }
+
+    /// The one line under the Spacing field that explains the second number,
+    /// or nil when there is no second number to explain.
+    public func liveSpacingNote(atZoom zoom: CGFloat) -> String? {
+        let live = liveSpacing(atZoom: zoom)
+        guard abs(live - spacing) > 1e-9 else { return nil }
+        return CanvasGridCopy.liveSpacingNote(set: spacing, live: live, snaps: snapsToGrid)
     }
 }
 
@@ -473,6 +507,20 @@ public enum CanvasGridCopy {
     public static let footnote =
         "Zoom out and the fine lines fade away, zoom in and they come back, so the grid stays readable. "
         + "It is drawn on the canvas, never into the picture."
+
+    /// Said under the Spacing field when the canvas cannot draw the spacing
+    /// that was asked for and is drawing a coarser rung instead. It names both
+    /// numbers, because the whole complaint was that only one of them was ever
+    /// on screen.
+    public static func liveSpacingNote(set: CGFloat, live: CGFloat, snaps: Bool) -> String {
+        let setText = CanvasGridNumber.text(set)
+        let liveText = CanvasGridNumber.text(live)
+        let pull = snaps ? ", and a drag lands on those" : ""
+        // Two lines in the popover, not three: the first says what is on
+        // screen, the second says how to get what was asked for.
+        return "Showing \(liveText) pt lines at this zoom" + pull
+            + ". Zoom in for \(setText) pt."
+    }
 
     /// What the button that opens all of this is called, on the View menu.
     public static let settingsMenuItem = "Grid Settings\u{2026}"

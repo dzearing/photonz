@@ -690,14 +690,27 @@ struct EditorView: View {
                     Image(systemName: "grid")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
-                    // The live spacing, in the same weight the bar's other
-                    // pressable values wear. Monospaced digits so typing 4 into
-                    // 128 cannot resize the chip underneath the popover you are
+                    // What the lines on screen are WORTH right now, which is
+                    // not always the number that was typed: a four point grid
+                    // draws its thirty two point rung at 100%, so the chip
+                    // reads "4 → 32 pt" and the picture stops
+                    // disagreeing with the field in silence. Monospaced digits
+                    // and one fixed width for both forms, so typing 4 into 128
+                    // cannot resize the chip underneath the popover you are
                     // typing in.
-                    Text(editorState.canvasGrid.spacingText)
+                    Text(editorState.canvasGrid.spacingChipText(atZoom: editorState.zoom))
                         .font(.system(.caption, design: .monospaced).weight(.medium))
                         .foregroundStyle(Color.primary)
-                        .frame(width: 38, alignment: .trailing)
+                        .lineLimit(1)
+                        // Both forms live in one fixed width, so nothing in the
+                        // bar moves when the second number arrives. 56pt holds
+                        // "128 pt" and "4 → 32 pt" outright, and the rare four
+                        // digit pairing shrinks a little rather than truncating
+                        // a number a person is reading. Centred like the zoom
+                        // readout beside it, so a short value stays between its
+                        // glyph and its chevron instead of drifting off one.
+                        .minimumScaleFactor(0.75)
+                        .frame(width: 56)
                         .background(Color.clear)
                     Image(systemName: "chevron.down")
                         .font(.system(size: 8, weight: .semibold))
@@ -713,8 +726,11 @@ struct EditorView: View {
             .padding(.vertical, 10)
             .glassEffect(.regular, in: .capsule)
             .contentShape(.capsule)
-            .help("Grid settings: spacing, bold lines, where it starts")
-            .playtestControl("Grid settings", detail: "Tool bar, \(editorState.canvasGrid.spacingText)")
+            .help(editorState.canvasGrid.liveSpacingNote(atZoom: editorState.zoom)
+                  ?? "Grid settings: spacing, bold lines, where it starts")
+            .playtestControl(
+                "Grid settings",
+                detail: "Tool bar, \(editorState.canvasGrid.spacingChipText(atZoom: editorState.zoom))")
             .popover(isPresented: $state.isGridSettingsPresented, arrowEdge: .top) {
                 CanvasGridSettingsPopover()
             }

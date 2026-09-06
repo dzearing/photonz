@@ -15,9 +15,13 @@ import SwiftUI
 /// three arrangements that drift apart:
 ///
 /// - **From the grid itself.** While the grid is showing, a chip sits in the
-///   floating tool bar beside the zoom reading its spacing, and pressing it
-///   opens these in a popover. It appears at the instant the lines do, which is
-///   the moment a person wants it.
+///   floating tool bar beside the zoom reading what the lines on screen are
+///   worth, and pressing it opens these in a popover. It appears at the instant
+///   the lines do, which is the moment a person wants it.
+///
+/// When the zoom has coarsened the grid, the Spacing row carries a second line
+/// saying what is actually being drawn. That is the other half of the chip's
+/// "4 → 32 pt": the chip says both numbers exist, and this says why.
 /// - **From where the grid is switched on.** View ▸ Grid Settings, directly
 ///   under Show Grid, opens the same popover — and switches the grid on first
 ///   if it was off, because nobody tunes a grid they cannot see.
@@ -72,6 +76,7 @@ struct CanvasGridControls: View {
                 }
                 numberRow(CanvasGridCopy.spacing, caption: CanvasGridCopy.spacingCaption,
                           suffix: "pt", value: Double(grid.spacing),
+                          note: grid.liveSpacingNote(atZoom: editorState.zoom),
                           set: { editorState.setCanvasGridSpacing(CGFloat($0)) })
                 numberRow(CanvasGridCopy.majorEvery, caption: CanvasGridCopy.majorEveryCaption,
                           suffix: "lines", value: Double(grid.majorEvery),
@@ -101,7 +106,13 @@ struct CanvasGridControls: View {
     /// One labelled row with its one line of explanation underneath. The
     /// caption is under the pair rather than beside it so a long sentence never
     /// squeezes the control it is describing.
+    ///
+    /// `note` is a SECOND line, present only when the canvas is doing something
+    /// the number in the field does not say by itself. It sits under the
+    /// caption in the plainer colour, because it is about the picture in front
+    /// of you rather than about what the control is for.
     @ViewBuilder private func row<Content: View>(_ label: String, caption: String,
+                                                 note: String? = nil,
                                                  @ViewBuilder _ content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 8) {
@@ -116,6 +127,12 @@ struct CanvasGridControls: View {
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
+            if let note {
+                Text(note)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .playtestField(label)
     }
@@ -143,9 +160,9 @@ struct CanvasGridControls: View {
     /// panel, and hands the keyboard back afterwards so the next letter picks
     /// a tool.
     @ViewBuilder private func numberRow(_ label: String, caption: String, suffix: String,
-                                        value: Double,
+                                        value: Double, note: String? = nil,
                                         set: @escaping (Double) -> Void) -> some View {
-        row(label, caption: caption) {
+        row(label, caption: caption, note: note) {
             TextField(label, value: Binding(get: { value }, set: { set($0) }),
                       format: .number.precision(.fractionLength(0)).grouping(.never))
                 .textFieldStyle(.roundedBorder)

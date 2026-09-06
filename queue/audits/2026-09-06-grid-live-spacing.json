@@ -1,0 +1,27 @@
+{
+  "feature": "The grid you set is the grid you see",
+  "epic": "ui-building",
+  "summary": "The grid chip in the tool bar now reads what the lines on screen are actually worth, not just the number you typed: at 100% a 4 pt grid reads \"4 → 32 pt\", because 32 is what is drawn and what a drag lands on. Zoom in and the two numbers become one again.",
+  "setup": "Photonz Dev, Experiments window, release Next. The canvas grid flag is on by default. Any document will do.",
+  "try": [
+    { "do": "Open any picture and press Command apostrophe to show the grid.", "shot": "2026-09-06-grid-live-spacing-1.png" },
+    { "do": "Read the grid chip in the tool bar, left of the zoom. At 100% it says 4 → 32 pt." },
+    { "do": "Press the chip and read the line under the Spacing field.", "shot": "2026-09-06-grid-live-spacing-2.png" },
+    { "do": "Press Escape, then zoom to 400%. The chip settles to 4 pt and the line under Spacing is gone." },
+    { "do": "Zoom out to 25%. The chip reads 4 → 256 pt, which is the spacing of the lines you can count." },
+    { "do": "Drag a layer at each zoom and check it lands on the number the chip is showing on the right of the arrow." },
+    { "do": "Turn Snap to grid off and watch the chip: the numbers do not move, only the mention of a drag leaves the line under Spacing." }
+  ],
+  "evaluate": [
+    "Reading the chip cold, is it obvious that 4 is what you set and 32 is what you are looking at?",
+    "Is the arrow the right way round, or would you rather see the live number first?",
+    "Is the second line under Spacing worth the two lines it takes, or is the chip enough on its own?",
+    "Does the chip changing as you zoom feel informative or restless?",
+    "Would you rather the app simply refused to keep a 4 pt grid it cannot draw, and said so once?"
+  ],
+  "rough": [
+    "The chip is 18pt wider than it was, so it needs the same canvas width the zoom slider does. Nothing else in the bar moved.",
+    "The task also offered drawing the set spacing faintly below the readable floor. That was not built: at 100% a 4 pt grid is 4 screen points apart, which is the grey wash the level of detail ladder exists to prevent.",
+    "Screen Recording was granted for this run, so both pictures here are real window captures, not offscreen renders."
+  ]
+}
