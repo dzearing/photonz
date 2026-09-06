@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1380,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:01:45.735Z",
-  "updated": "2026-09-06T17:42:42.440265Z",
+  "updated": "2026-09-06T17:42:59.142Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Number knobs landed 2026-09-06 but reach only layers INSIDE the original: ComponentProperties.componentPropertyCandidates walks main.children, and applyOverrides maps property.target through ComponentIdentity.derived into the copy's children. The root would need applying in three more places (placeComponentInstance, syncComponentInstances rewrite after InstanceSizing.layout, and rebound's nested-copy path). Do NOT extend this to the root's style numbers (rounding, border, opacity): a copy already owns those part by part through LayerStyle.following, and two mechanisms writing one field is the two-sliders bug CornerRadiusSelection.swift exists to end. Layout numbers only: gap and padding.",
@@ -31,12 +31,17 @@
     },
     {
       "t": "2026-09-06T17:29:18.477306Z",
-      "note": "Adversarial review before building. (1) The hole is real, not a flourish: build a card as a stack with 16 of room, want one copy roomy and the next tight, and the Add menu under Number lists every layer INSIDE the card and not the card. Nothing says why, so it reads as a bug. (2) Shortest version wins: nothing new appears on screen. The Add menu row, the copy's number field, the revert arrow are all generic already, so the whole feature is one more row in a menu that already exists. No new control, no new panel. (3) Cut the decorative half. Offering the root's rounding and line thickness would be worse than useless: a copy already owns those part by part through LayerStyle.following, and two mechanisms writing one field is exactly the two-sliders bug CornerRadiusSelection exists to end. Layout numbers only, gap and room. (4) Collision checked: a copy that owns its own width writes into the same layout as a room answer. Different fields, but the order has to be size first and the answer over the top, so neither silently wins. (5) The menu row will read 'Card \u00b7 Padding', the component's own name. A child named 'Card' too would read the same; that is the ambiguity two same-named children already have, so it is accepted rather than invented around. (6) The real trap: the flow pass runs BEFORE the copies are refilled, so an answer that only moves the copy's own layout would leave the contents where the old room put them until the NEXT edit, unless the sync counts the copy as updated. Fixing that is part of this task, not an afterthought."
+      "note": "Adversarial review before building. (1) The hole is real, not a flourish: build a card as a stack with 16 of room, want one copy roomy and the next tight, and the Add menu under Number lists every layer INSIDE the card and not the card. Nothing says why, so it reads as a bug. (2) Shortest version wins: nothing new appears on screen. The Add menu row, the copy's number field, the revert arrow are all generic already, so the whole feature is one more row in a menu that already exists. No new control, no new panel. (3) Cut the decorative half. Offering the root's rounding and line thickness would be worse than useless: a copy already owns those part by part through LayerStyle.following, and two mechanisms writing one field is exactly the two-sliders bug CornerRadiusSelection exists to end. Layout numbers only, gap and room. (4) Collision checked: a copy that owns its own width writes into the same layout as a room answer. Different fields, but the order has to be size first and the answer over the top, so neither silently wins. (5) The menu row will read 'Card · Padding', the component's own name. A child named 'Card' too would read the same; that is the ambiguity two same-named children already have, so it is accepted rather than invented around. (6) The real trap: the flow pass runs BEFORE the copies are refilled, so an answer that only moves the copy's own layout would leave the contents where the old room put them until the NEXT edit, unless the sync counts the copy as updated. Fixing that is part of this task, not an afterthought."
     },
     {
       "t": "2026-09-06T17:42:42.440265Z",
       "note": "Built and reviewed on the real app. The component itself is now the first row on the Add menu, offering Gap and Padding only. The answer lands in the copy's own layout, written after the size the copy owns, and the sync now counts a changed layout as a changed copy so the flow pass runs again in the SAME edit (finding 6 from the pre-build review, confirmed and fixed). Nested copies carry their own room out through rebound, so which of the two sync passes runs first does not decide what a copy of the outer component shows. 17 new tests in ComponentRootNumberKnobTests, written first; full suite 3976 green. Walked on the probe with Scripts/playtest/component-own-room-walk.json, Screen Recording granted, so the audit carries real window captures: three cards, two on the original's room and one on its own 40, then the original tightened to 4 and only the copy that answered nothing following. Post-build review, what is still rough: room that DIFFERS side to side is offered nothing at all, which excludes every starter control except the card, since a button keeps less room above than beside. That is the common case and it is a UX call (one knob for four sides? four knobs?), so it is filed as its own task rather than guessed at here. Also honest: a card with no surface of its own shows its room only through the selection box and through contents that stretch; on a card with a background it would read at a glance."
+    },
+    {
+      "t": "2026-09-06T17:42:59.141Z",
+      "note": "The component itself is now the first row on the Add menu, offering Gap and Padding on its own outermost edges; a copy's answer lands in its own layout and its contents move in the same edit. 17 new tests in ComponentRootNumberKnobTests, full suite 3976 green, walked on the probe (Screen Recording granted) with component-own-room-walk.json. Audit + real captures in queue/audits/2026-09-06-component-own-room.json. Pushed as 98ffd43."
     }
   ],
-  "started": "2026-09-06T17:24:27.477Z"
+  "started": "2026-09-06T17:24:27.477Z",
+  "completed": "2026-09-06T17:42:59.142Z"
 }
