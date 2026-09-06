@@ -237,19 +237,36 @@ extension AnnotationContent {
         captionFontSize * MeasureContent.labelPadding / MeasureContent.labelFontSize
     }
 
-    /// The narrowest a caption pill is ever drawn: a fifth wider than the pill
-    /// is tall, so a one character caption (or an empty field) still reads as a
-    /// badge lying on its side rather than a lozenge standing on end.
+    /// The height a caption pill is assumed to draw at, without measuring a
+    /// single glyph — the line box plus padding top and bottom, in the same
+    /// shape a measure readout's `labelPillHeight` takes. It is deliberately a
+    /// hair generous: SF Pro's line box is about 1.19 em plus the two points of
+    /// slack `TextRasterizer` leaves on each side, and this has to be at least
+    /// the drawn height at every caption size or the badge floor below comes
+    /// out short of its proportion on the canvas
+    /// (`CaptionPillShapeTests.theAssumedPillHeightIsNeverShorterThanTheDrawnOne`).
+    public var captionPillHeight: CGFloat {
+        captionFontSize * 1.2 + 5 + 2 * captionPadding
+    }
+
+    /// The narrowest a caption pill is ever drawn: `labelBadgeAspect` wider
+    /// than the pill is tall, so a one character caption (or an empty field)
+    /// still reads as a badge lying on its side rather than a lozenge standing
+    /// on end.
+    ///
+    /// It is the measure readout's proportion, not a number of its own. A
+    /// caption and a measurement are the same pill, and a "1" beside a "4 px"
+    /// used to be a nearly round bubble (1.2 wide for tall) next to a badge
+    /// (1.7), which read as two different kinds of object on one canvas.
     ///
     /// Derived from the font size and padding alone, never from measured
     /// glyphs, because two places need the SAME number: the rasterizer, which
     /// knows the real text height, and `estimatedCaptionSize`, which reserves
     /// the frame from a character count and has no text measurement at all. A
     /// floor either of them could compute differently is a floor the drawn pill
-    /// can spill out of. `captionFontSize * 1.4` is SF Pro's line height, which
-    /// is what the measured text height comes back as.
+    /// can spill out of.
     public var captionMinPillWidth: CGFloat {
-        (captionFontSize * 1.4 + 2 * captionPadding) * 1.2
+        captionPillHeight * MeasureContent.labelBadgeAspect
     }
 
     /// The pill's fill tone: the arrow color darkened the way the measure

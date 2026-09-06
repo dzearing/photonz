@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T10:22:02.590Z",
-  "updated": "2026-09-06T12:16:42.264Z",
+  "updated": "2026-09-06T16:31:18.199Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Follow-up from the measure chip badge task (2026-09-06). MeasureContent.labelBadgeAspect is 1.7 and MeasureContent.labelMinPillWidth floors PillRasterizer.footprint via the minWidth argument. AnnotationContent.captionMinPillWidth (Sources/PhotonzCore/Layer.swift) still multiplies its line box by 1.2, which works out to about 1.18 of the drawn pill height: measured, a \"1\" caption at the default size is 54.9 by 46.6. Point captionMinPillWidth at MeasureContent.labelBadgeAspect and re-run AnnotationCaptionTests, the caption placement fixtures and Scripts/playtest/short-caption-pill-walk.json. Not done in the same pass because arrow captions were audited on 2026-09-04 at the current shape and this deserves its own before and after.",
+  "notes": "Follow-up from the measure chip badge task (2026-09-06). MeasureContent.labelBadgeAspect is 1.7 and MeasureContent.labelMinPillWidth floors PillRasterizer.footprint via the minWidth argument. AnnotationContent.captionMinPillWidth (Sources/PhotonzCore/Layer.swift) still multiplies its line box by 1.2, which works out to about 1.18 of the drawn pill height: measured, a \"1\" caption at the default size is 54.9 by 46.6. Point captionMinPillWidth at MeasureContent.labelBadgeAspect and re-run AnnotationCaptionTests, the caption placement fixtures and Scripts/playtest/short-caption-pill-walk.json. Not done in the same pass because arrow captions were audited on 2026-09-04 at the current shape and this deserves its own before and after.\n\nDONE 2026-09-06: the floor is now captionPillHeight * MeasureContent.labelBadgeAspect. captionPillHeight is NEW and is the piece that matters: the old captionFontSize * 1.4 line box is an UNDER-estimate of what SF Pro measures back at small sizes, so multiplying it by 1.7 gave 1.67 on the canvas. Anything else that needs a caption pill height without glyphs to measure should use captionPillHeight, not a fresh constant.",
   "acceptance": [
     "A one character caption is at least 1.7 times as wide as it is tall, the same proportion a short measurement now uses",
     "A caption long enough to be a badge on its own is exactly the size it is today",
@@ -32,6 +32,31 @@
     {
       "t": "2026-09-06T12:16:42.264Z",
       "note": "seq 110 -> 110"
+    },
+    {
+      "t": "2026-09-06T16:31:18.199Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T16:45:00.000Z",
+      "note": "Adversarial review before building. The one real objection: a lone digit in a circle is the conventional redline step marker, and widening it to a badge trades one convention for another. Went ahead because the goal is explicit that the caption and the measure readout are one pill, and because the roundness control still spans square to full pill. Shortest version: move the floor, touch nothing about placement, the shaft join or the text centring."
+    },
+    {
+      "t": "2026-09-06T16:50:00.000Z",
+      "note": "Measured first rather than assuming. Pointing captionMinPillWidth straight at labelBadgeAspect would NOT have delivered 1.7 on the canvas: the old formula assumed a line box of captionFontSize * 1.4, but SF Pro measures back taller than that at small sizes (1.75 em at 8pt, 1.4 at 20pt, 1.21 at 160pt), so the floor was computed against a pill shorter than the one drawn and came out at 1.67. Added AnnotationContent.captionPillHeight (captionFontSize * 1.2 + 5 + 2 * captionPadding), the same shape MeasureContent.labelPillHeight takes, which is an upper bound at every size, and floored the width at captionPillHeight * MeasureContent.labelBadgeAspect."
+    },
+    {
+      "t": "2026-09-06T16:55:00.000Z",
+      "note": "Tests first: CaptionPillShapeTests gained aShortCaptionDrawsTheSameBadgeAShortMeasurementDoes (drawn pill and drawn INK, four short captions x five sizes) and theAssumedPillHeightIsNeverShorterThanTheDrawnOne (the invariant the floor rests on). AnnotationCaptionTests's 1.2 assertions now read MeasureContent.labelBadgeAspect, plus theFloorIsTheSameBadgeProportionAMeasurementUses; theMinimumWidthScalesWithTheFontSize no longer expects exactly double, because the line box carries a fixed five points, the same way a measure chip's does. Scripts/test.sh green: 3948 tests, 334 suites."
+    },
+    {
+      "t": "2026-09-06T17:05:00.000Z",
+      "note": "Verified on the real app, not just in tests. New walk Scripts/playtest/caption-badge-walk.json puts a 30 px measurement and a \"1\" caption side by side; ran it once with the change stashed and once with it in, so the audit carries a real before and after crop. Screen Recording was granted for the probe, so both are window captures. Also re-ran short-caption-pill-walk.json: \"1\", \"Hi\" and \"Primary action\" now read as one family, the shaft meets each pill flush, and no caption ran off the picture."
+    },
+    {
+      "t": "2026-09-06T17:10:00.000Z",
+      "note": "Acceptance: (1) one character caption drawn at >= 1.7 aspect, pinned by test at 8/10/20/48/90pt; (2) a caption already wide enough is byte-identical, pinned by aLongCaptionIsStillJustItsTextPlusPadding; (3) shaft join flush in both captures, MeasureChipJoin/caption join tests green; (4) clearance and on-picture clamping unchanged, CaptionDropPlacementTests and the placement fixtures green; (5) real capture in queue/audits/2026-09-06-caption-badge-1-sc.png. Audit written. Found and filed one thing NOT fixed here: estimatedCaptionSize reserves a height about two points short of the drawn pill (task a-caption-reserves-the-room-its-pill-really-need)."
     }
-  ]
+  ],
+  "started": "2026-09-06T16:31:18.198Z"
 }

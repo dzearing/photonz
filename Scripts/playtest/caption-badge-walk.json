@@ -1,0 +1,36 @@
+{
+  "out": "/tmp/photonz-playtest/caption-badge",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "click", "at": [640, 740] },
+    { "do": "move", "at": [700, 740] },
+    { "do": "click", "at": [700, 740] },
+    { "do": "move", "at": [700, 690] },
+    { "do": "click", "at": [700, 690] },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [420, 690], "to": [380, 540], "steps": 12 },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "type", "text": "1" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-badge-beside-measurement", "note": "a one character arrow caption and a short measurement readout side by side: both should be the same badge shape" },
+    { "do": "snapshot", "name": "1-badge-beside-measurement" },
+    { "do": "render", "name": "1-badge-beside-measurement" }
+  ]
+}

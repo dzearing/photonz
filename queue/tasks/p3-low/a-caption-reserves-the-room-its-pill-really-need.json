@@ -1,0 +1,27 @@
+{
+  "id": "a-caption-reserves-the-room-its-pill-really-need",
+  "title": "A caption reserves the room its pill really needs, top to bottom",
+  "goal": "When the app sets aside room on the picture for an arrow caption, it works out the bubble height from an old guess that comes out about two points short of the bubble it actually draws. Nothing clips today because there is spare room for the shadow, but the number should be right.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 1260,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T16:42:13.681Z",
+  "updated": "2026-09-06T16:42:13.681Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "AnnotationContent.estimatedCaptionSize (Sources/PhotonzCore/Layer.swift) computes its height as captionFontSize * 1.3 + 2 * captionPadding. Measured: at 20pt the drawn pill is 45.78 tall and the estimate reserves 44; at 8pt the drawn pill is 21.11 and the estimate reserves 18. captionPillHeight (added 2026-09-06 for the badge floor) is the correct upper bound (captionFontSize * 1.2 + 5 + 2 * captionPadding) and is pinned by CaptionPillShapeTests.theAssumedPillHeightIsNeverShorterThanTheDrawnOne. Point the estimate at it. Watch CaptionDropPlacementTests and the caption placement fixtures: a taller reservation can change which direction a pill grows near an edge.",
+  "acceptance": [
+    "The room reserved for a caption is at least as tall as the pill that gets drawn, at every caption size the slider offers",
+    "A caption near the bottom edge of a picture still lands in the same place it does today",
+    "Existing caption placement tests and the caption playtest walks all still pass"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T16:42:13.681Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -633,14 +633,14 @@ struct AnnotationCaptionPillTests {
     }
 
     /// A caption with almost nothing in it is still a pill lying on its side,
-    /// never a lozenge standing on end: the floor is a fifth wider than the
-    /// pill is tall.
+    /// never a lozenge standing on end: the floor is the badge proportion a
+    /// short measurement uses, so the two labels are one shape.
     @Test func aTinyCaptionKeepsAPillsProportions() {
         var content = arrowContent(caption: "i")
         content.captionFontSize = 20
         // A single narrow glyph: far narrower than the pill is tall.
         let pill = content.captionPillSize(forTextSize: CGSize(width: 5, height: 28))
-        #expect(pill.width >= pill.height * 1.2)
+        #expect(pill.width >= pill.height * MeasureContent.labelBadgeAspect)
     }
 
     /// Even a caption field with nothing typed in it yet.
@@ -648,7 +648,17 @@ struct AnnotationCaptionPillTests {
         var content = arrowContent(caption: "")
         content.captionFontSize = 20
         let pill = content.captionPillSize(forTextSize: CGSize(width: 0, height: 28))
-        #expect(pill.width >= pill.height * 1.2)
+        #expect(pill.width >= pill.height * MeasureContent.labelBadgeAspect)
+    }
+
+    /// The caption's floor and the measure readout's are the same proportion,
+    /// applied to each label's own pill height: a one character caption beside
+    /// a two digit measurement reads as the same object.
+    @Test func theFloorIsTheSameBadgeProportionAMeasurementUses() {
+        var content = arrowContent(caption: "i")
+        content.captionFontSize = 20
+        #expect(content.captionMinPillWidth
+                == content.captionPillHeight * MeasureContent.labelBadgeAspect)
     }
 
     /// The floor never touches a caption that has real words in it.
@@ -660,14 +670,24 @@ struct AnnotationCaptionPillTests {
         #expect(pill.width == text.width + 2 * content.captionPadding)
     }
 
-    /// The floor is a proportion, not a constant: a 40pt caption's minimum is
-    /// twice a 20pt one's.
+    /// The floor is a proportion, not a constant: it grows with the caption's
+    /// size, so a pill is the same badge whatever size it is set at. (Not
+    /// exactly double at double the size: the line box carries a fixed five
+    /// points that does not scale, the same way a measure chip's does.)
     @Test func theMinimumWidthScalesWithTheFontSize() {
+        var last: CGFloat = 0
+        for size in [CGFloat(8), 20, 40, 90] {
+            var content = arrowContent(caption: "i")
+            content.captionFontSize = size
+            #expect(content.captionMinPillWidth > last, "the floor did not grow by \(size)pt")
+            last = content.captionMinPillWidth
+        }
         var small = arrowContent(caption: "i")
         small.captionFontSize = 20
         var big = small
         big.captionFontSize = 40
-        #expect(big.captionMinPillWidth == small.captionMinPillWidth * 2)
+        let doubled = big.captionMinPillWidth / small.captionMinPillWidth
+        #expect(doubled > 1.85 && doubled < 2, "doubling the size scaled the floor by \(doubled)")
     }
 
     /// The reserved box has to CONTAIN what is drawn. The estimate is measured

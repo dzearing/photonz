@@ -1,0 +1,28 @@
+{
+  "feature": "A short arrow caption is the same badge a short measurement is",
+  "epic": "measure-redline",
+  "summary": "An arrow captioned with one character now draws the same wide badge a two digit measurement draws. It used to come out a nearly round bubble sitting beside a badge, so the two labels read as different kinds of object on the same picture.",
+  "setup": "Photonz Dev, Experiments window, release Next. Arrow captions are on by default there.",
+  "try": [
+    { "do": "Open any screenshot." },
+    { "do": "Press I for the ruler and click out a short distance, about 30 pixels, then click again to park its readout." },
+    { "do": "Press A, then drag a short arrow so its tail lands beside that readout." },
+    { "do": "Type a single character for the label, for example 1, and press Return.", "shot": "2026-09-06-caption-badge-1-sc.png" },
+    { "do": "Look at the two pills side by side and check they are the same shape.", "shot": "2026-09-06-caption-badge-2-before-after.png" },
+    { "do": "Add two more arrows beside it, one labelled Hi and one labelled Primary action.", "shot": "2026-09-06-caption-badge-3-sc.png" },
+    { "do": "Drag the caption size slider from its smallest to its largest and watch the one character pill keep its proportion." }
+  ],
+  "evaluate": [
+    "Do the one character label and the short measurement now read as the same object?",
+    "Is a lone number in a wide badge still obviously a step marker, or did the circle read better as one?",
+    "A one character label and a two character label are now the same width. Does that regularity look deliberate or does it look padded?",
+    "Does the arrow still meet the wider pill cleanly, with no gap and nothing poking through?",
+    "At the largest caption size, is the widened pill still comfortable on the picture, or does it take too much room?"
+  ],
+  "rough": [
+    "The floor moved from 1.2 times the pill height to 1.7, which is the measure readout's own number rather than a second one invented for captions. Anything that was already 1.7 wide or wider is untouched, so only very short labels change.",
+    "This trades one convention for another. Redline step markers are often drawn as circles, and a lone 1 in a wide badge is a different look. The corner radius control still goes from square to full pill, but it cannot make the pill narrow again.",
+    "The width floor is computed from the caption's size without measuring any glyphs, so the box the app reserves and the pill it draws agree. The reserved HEIGHT is still figured from an older estimate that comes out about two points short of the drawn pill at the default size. Nothing clips today because the reservation carries twelve points of shadow slack, but it is wrong and a follow-up task now covers it.",
+    "Screen Recording is granted for the loop's probe build, so every picture here is a real window capture, not an offscreen render. The second one is a crop: the old shape on top, the new one underneath."
+  ]
+}

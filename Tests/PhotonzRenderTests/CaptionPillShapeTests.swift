@@ -93,7 +93,7 @@ struct CaptionPillShapeTests {
             Issue.record("expected a rendered pill")
             return
         }
-        #expect(pill.width >= pill.height * 1.2)
+        #expect(pill.width >= pill.height * MeasureContent.labelBadgeAspect)
         let ink = inkBounds(px)
         #expect(ink.width > ink.height)
     }
@@ -103,9 +103,50 @@ struct CaptionPillShapeTests {
             Issue.record("expected a rendered pill")
             return
         }
-        #expect(pill.width >= pill.height * 1.2)
+        #expect(pill.width >= pill.height * MeasureContent.labelBadgeAspect)
         let ink = inkBounds(px)
         #expect(ink.width > ink.height)
+    }
+
+    /// The caption and the measure readout are one shape. A short caption used
+    /// to draw a nearly round bubble (55 by 46 at the default size, an aspect
+    /// of 1.2) beside a short measurement's badge, so the two labels read as
+    /// different kinds of object. Measured off the drawn ink, at every size the
+    /// app offers.
+    @Test func aShortCaptionDrawsTheSameBadgeAShortMeasurementDoes() {
+        for caption in ["", "i", "1", "Hi"] {
+            for fontSize in [8.0, 10.0, 20.0, 48.0, 90.0] {
+                guard let (px, pill) = render(caption, fontSize: fontSize) else {
+                    Issue.record("expected a rendered pill for \(caption.debugDescription)")
+                    continue
+                }
+                #expect(pill.width >= pill.height * MeasureContent.labelBadgeAspect,
+                        "\(caption.debugDescription) at \(fontSize)pt draws \(pill)")
+                // The border is stroked centered on the pill's edge, so the ink
+                // grows by the same amount in both directions: what carries
+                // over from the geometry is the DIFFERENCE between the sides,
+                // not the ratio.
+                let ink = inkBounds(px)
+                #expect(ink.width - ink.height >= pill.width - pill.height - 1,
+                        "\(caption.debugDescription) at \(fontSize)pt inks \(ink) for \(pill)")
+            }
+        }
+    }
+
+    /// The floor is computed from the font size alone, because the frame
+    /// reservation has no glyphs to measure — so the height it assumes has to
+    /// be at least the height the pill really draws at, or the badge
+    /// proportion comes out short of 1.7 on the canvas.
+    @Test func theAssumedPillHeightIsNeverShorterThanTheDrawnOne() {
+        for caption in ["", "1", "A much longer caption"] {
+            for fontSize in [8.0, 10.0, 20.0, 48.0, 90.0, 160.0] {
+                var content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
+                content.captionFontSize = fontSize
+                let drawn = CaptionMetrics.pillSize(for: caption, in: content).height
+                #expect(content.captionPillHeight >= drawn,
+                        "\(caption.debugDescription) at \(fontSize)pt draws \(drawn) tall, assumed \(content.captionPillHeight)")
+            }
+        }
     }
 
     @Test func aLongCaptionIsStillJustItsTextPlusPadding() {
