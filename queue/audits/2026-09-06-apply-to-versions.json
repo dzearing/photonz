@@ -1,0 +1,29 @@
+{
+  "feature": "One edit reaching every version of a component",
+  "epic": "ui-components",
+  "summary": "A component's versions are separate drawings, so a change meant for all of them used to be made in each one by hand. Now you make it once and one press carries that piece's look and wording to every other version, in one undo step, without disturbing how each version is arranged.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components and Library are on by default; no new flag.",
+  "try": [
+    { "do": "View, Show Library, then drag the Button tile onto an empty canvas." },
+    { "do": "Click the button, then press Add Version in the Component section and name it Hover." },
+    { "do": "With the new Hover drawing selected, pull Opacity down to about 60 percent so the two versions really differ." },
+    { "do": "Click the Default drawing on the left, then double click its blue Background to step inside." },
+    { "do": "Drag Corner Radius up to 24. Only Default rounds; Hover is still square.", "shot": "2026-09-06-apply-to-versions-1.png" },
+    { "do": "Press Apply to Hover in the Component section, just above Color.", "shot": "2026-09-06-apply-to-versions-2.png" },
+    { "do": "Press Command Z once and watch both versions go back together." }
+  ],
+  "evaluate": [
+    "Does the Apply button sit where your eye already is after moving the Corner Radius slider, or did you look for it in a menu first?",
+    "Does naming the versions on the button itself, Apply to Hover, tell you enough before you press it?",
+    "Is it right that Hover keeps its own fade after the rounding is applied, or did you expect the two drawings to end up identical?",
+    "The button stays visible and dimmed, reading Other Versions Already Match, when there is nothing to carry. Is that reassuring or is it clutter?",
+    "Would you want this to happen automatically as you edit, rather than being a press?"
+  ],
+  "rough": [
+    "Only the piece you have selected travels, never what is inside it. Changing a label inside a group means selecting the label, not the group. That felt right in use but it is a rule you have to learn.",
+    "Position and size never travel, so moving a piece in one version does not move it in the others. Text is the exception: its box comes with its words, because the same words in the same type need the same room. A text layer somebody deliberately stretched wider in one version would be squashed back.",
+    "When the same piece cannot be found in another version, that version is named as left out rather than guessed at. Matching goes by knob first, then by position when the name there agrees, then by a unique name. Position alone was tried first and got it wrong: a version that had grown an extra part at the front had that part repainted with the button's colour.",
+    "There is no way yet to carry several edits from several pieces in one press. Each piece is its own press.",
+    "Screen Recording was granted for the loop's probe app, so both shots above are real captures of the window, not offscreen renders."
+  ]
+}

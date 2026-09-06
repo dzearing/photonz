@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.134Z",
-  "updated": "2026-09-06T12:16:42.214Z",
+  "updated": "2026-09-06T13:21:49.101Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The cost was accepted with the decision on 2026-09-05 (each version is a complete drawing). This is the sanded-down version of that cost. Versions live as sibling mains sharing a componentID; ComponentVersions.swift holds the model.",
@@ -30,6 +30,27 @@
     {
       "t": "2026-09-06T12:16:42.214Z",
       "note": "seq 30 -> 30"
+    },
+    {
+      "t": "2026-09-06T13:21:49.101Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T13:25:45.333319Z",
+      "note": "Adversarial review before building. (1) The mock-ish reading of this task is 'edit every version at once' (a linked multi-edit mode). Rejected: a mode you have to enter is a mode you forget you are in, and it fights the whole point of versions, which is that they may differ anywhere. (2) Second candidate: 'make the other versions match this one' pushing the WHOLE drawing. Rejected outright: it deletes exactly the divergence the feature exists to protect. (3) Shortest thing that delivers the value: you edit ONE PIECE in the version you are looking at, then one command pushes that piece's look and wording onto the same piece in every other version. Position, size (except text, whose box is its wording), and what is inside a piece never travel, so a version that is arranged differently or has an extra part survives. (4) First-time-user stop: 'which piece is the same piece?' Versions start as duplicates, so the counterpart is found by knob id first (knob ids survive duplication by design), then by the piece's place inside the drawing, then by a unique name. A version with no counterpart is named as skipped rather than silently missed. (5) Acceptance 2 is met by the MENU TITLE naming the versions it would change, and by the row reading 'Other Versions Already Match' and dimming when there is nothing to do, so nobody presses it and wonders."
+    },
+    {
+      "t": "2026-09-06T13:41:49.762233Z",
+      "note": "Built. Core: ComponentVersionMatching.swift (ComponentVersionApply, componentVersionApply(from:), applyToOtherComponentVersions(from:), Layer.wearingTheLookAndWording(of:)). Style, colour-style bindings, annotation paint/rounding, group background and the whole TextContent travel; frame origin never does, frame size only for text (its box is its wording); children never do. Counterpart matching: knob id, then position when the name there agrees, then a unique name. NOTE the position rule earned its name condition the hard way: position alone repainted a version's extra Glow with the button's colour in the first test run, which is exactly the silent-wrong-piece failure this feature must not have. App: a Component section on a piece inside a versioned original (ComponentVersionPieceInspector), the same row under the Versions list on the original (ComponentVersionApplyRow), Layer menu, layers-list context menu, an Applied pill (CopyConfirmation.componentVersionsMatched), and a playtest action."
+    },
+    {
+      "t": "2026-09-06T13:41:49.762233Z",
+      "note": "Adversarial review of the built thing, on the probe app. (a) First pass put the command only in the Layer menu, which is wrong: you have just moved the Corner Radius slider in the dock, and the answer to 'do I have to do that twice more' has to be beside the slider you moved. Added the Component section on the piece, which now sits directly above Color and Effects. (b) Second pass caught a dishonest sentence: standing on the DRAWING rather than a piece inside it, the caption read 'Button already looks and reads the same in every other version' when only the drawing's own surface was compared. Reworded for that case so it says surface, and says the pieces inside are carried one at a time. (c) Left rough and recorded in the audit: only the selected piece travels, never its contents; a text layer somebody deliberately stretched in one version would be squashed back to the source's box."
+    },
+    {
+      "t": "2026-09-06T13:41:49.762233Z",
+      "note": "Acceptance verified, not assumed. (1) One undo step: ComponentVersionMatchTests.everyVersionAndEveryCopyChangeInOneUndoStep drives it through History and checks the document is byte identical after one undo, including a copy that was showing the changed version; the walk's step 4 shows it on screen. (2) Clear before it runs: the button and menu row NAME the versions ('Apply to Hover and Disabled'), count them past two, and dim saying 'Other Versions Already Match' or 'No Other Version Has This Part' when there is nothing to do; three tests plus the captures. (3) One version unaffected: componentVersionApply answers nil, so no menu row, no panel section and no mutation (oneVersionOffersNothing). Scripts/test.sh green, 3839 tests."
     }
-  ]
+  ],
+  "started": "2026-09-06T13:21:49.101Z"
 }

@@ -393,8 +393,13 @@ struct InspectorPanel: View {
             // piece is not theirs to change and what is.
             // (A copy gets the same slot, however many are picked; that is the
             // whole-selection test below rather than this one-layer one.)
+            // ...and a piece inside an ORIGINAL whose component holds more
+            // than one drawing, because that is where somebody who has just
+            // rounded a corner is standing when they wonder whether they now
+            // have to do it twice more (`ComponentVersionMatching`).
             if Experiments.shared.componentsEnabled,
-               layer.isMainComponent || editorState.selectedComponentPiece != nil {
+               layer.isMainComponent || editorState.selectedComponentPiece != nil
+                || editorState.componentVersionApply != nil {
                 set.insert(.component)
             }
             // A picked callout's own settings. Present whenever one is
@@ -576,6 +581,12 @@ struct InspectorPanel: View {
                 // Clicked into a copy: the section answers for the COPY, not
                 // for the piece, because the piece has nothing of its own.
                 ComponentPieceInspector(piece: piece)
+            } else if let plan = editorState.componentVersionApply {
+                // Clicked into an ORIGINAL that has other versions. The piece
+                // itself is edited by every ordinary control above; the one
+                // thing this section adds is the way that edit reaches the
+                // other drawings.
+                ComponentVersionPieceInspector(plan: plan)
             }
         case .color:
             SelectionColorInspector()
@@ -2065,6 +2076,13 @@ private struct LayersRow: View, Equatable {
         // reason for.
         if display.isMainComponent, editorState.canAddComponentVersion {
             Button("Add Version") { editorState.addComponentVersion() }
+        }
+        // Only on a piece of an original that has other versions, and it names
+        // them, so the row answers "what would this touch" before it is
+        // pressed. Same rule as the Layer menu.
+        if let title = editorState.applyToOtherComponentVersionsTitle {
+            Button(title) { editorState.applyToOtherComponentVersions() }
+                .disabled(!editorState.canApplyToOtherComponentVersions)
         }
         // Settings, not actions: the row says what it IS and wears a checkmark,
         // so the menu reads the same whichever state the layer is in and the

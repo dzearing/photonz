@@ -2710,9 +2710,9 @@ every other row there. The layers list prints the version name beside the
 component mark, since every version carries the component's name. Edit Original
 on a copy lands on the version that copy is showing.
 
-Not in this slice: a version set drawn as one thing on the canvas, editing every
-version at once, reordering versions, and placing a copy of a particular version
-straight from the shelf.
+Not in this slice: a version set drawn as one thing on the canvas, reordering
+versions, and placing a copy of a particular version straight from the shelf.
+(One edit reaching every version landed separately, below.)
 
 Model in `ComponentVersions.swift` (`ComponentVersion`, `componentVersions`,
 `addComponentVersion`, `setInstanceVersion`), the fields on `GroupContent`
@@ -2721,3 +2721,65 @@ Model in `ComponentVersions.swift` (`ComponentVersion`, `componentVersions`,
 `ComponentVersionList` / `ComponentInstanceProperties.versionRow`. Tested in
 `ComponentVersionTests`, walked by
 `Scripts/playtest/component-versions-walk.json`.
+
+
+## Landed: one edit reaching every version (Next, `next-components`, 2026-09-06)
+
+The cost accepted with the choice above was that a change meant for every
+version has to be made in each one: a new corner radius on a button gets typed
+three times, and the third time it gets typed wrong. This is that cost sanded
+down, and it is deliberately the SMALL answer.
+
+**What it is not.** Not a mode you enter to edit every version together: a mode
+you have to enter is a mode you forget you are in, and it fights the whole point
+of versions, which is that they may differ anywhere. Not "make the other
+versions match this one" over the whole drawing either: that deletes exactly the
+divergence versions exist to hold.
+
+**What it is.** You edit ONE PIECE in the drawing you are looking at, the
+ordinary way, with the ordinary controls. Then one press gives the same piece in
+every other version this piece's LOOK and WORDING: its colours, rounding,
+border, shadow, fade, the saved colours it points at, and the words themselves.
+Where each piece sits, how big it is, and what is inside it never travel — so a
+version that arranges its pieces differently, or has a part the others do not,
+comes through untouched. Text is the one exception on size: a text layer's box
+IS its wording, so the same words in the same type take the same room.
+
+**It names what it would change, before it runs.** The row reads "Apply to
+Hover and Disabled", not "Apply to Other Versions", because "what is this about
+to touch" is the question somebody asks with their hand on the button. Once
+there are more names than a row can carry it counts them instead. When every
+other version already matches it says so and dims, rather than being a button
+you press and watch do nothing, and a version with no matching piece is NAMED as
+left out rather than quietly missed.
+
+Standing on the DRAWING itself rather than on a piece inside it carries only
+that drawing's own surface, and the sentence beside the button says so: claiming
+"Button already matches" when only its surface does would be a lie about the
+whole thing.
+
+**Where it is.** A Component section on the piece itself, right above Color and
+Effects: you have just moved the Corner Radius slider, and the answer to "do I
+now have to do that twice more" belongs beside the slider you moved, not only in
+a menu you would have to know to look in. The same row sits under the Versions
+list on the original, and the same command is in the Layer menu and the layers
+list's context menu.
+
+**Matching the same piece across drawings**, strongest first: a knob (a
+duplicate keeps the knob ids, so an adjustable piece has an exact handle in
+every version), then its place inside the drawing WHEN the name there agrees,
+then its name when exactly one piece over there wears it. Position alone was
+tried and is wrong: a version that grew a glow at the front would have had the
+glow repainted with the button's colour. When none of the three answers, the
+version is skipped and said to be skipped.
+
+One `History.perform`, so one undo step however many versions it reached, and
+every copy of every version it touched follows inside that same step.
+
+Model in `ComponentVersionMatching.swift` (`ComponentVersionApply`,
+`componentVersionApply`, `applyToOtherComponentVersions`,
+`Layer.wearingTheLookAndWording(of:)`), the pill in
+`CopyConfirmation.componentVersionsMatched`, the panel in
+`ComponentVersionApplyRow` / `ComponentVersionPieceInspector`, the menus in
+`EditorCommands` and `LayersPanel`. Tested in `ComponentVersionMatchTests`,
+walked by `Scripts/playtest/apply-to-versions-walk.json`.

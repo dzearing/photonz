@@ -566,6 +566,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// cannot open a menu in the dock, so this is how a swapped version gets
     /// photographed.
     case showNextComponentVersion
+    /// Layer ▸ Apply to Other Versions (Next, `next-components`): pushes the
+    /// selected piece's look and wording onto the same piece in every other
+    /// version of its component. The row is in a menu a walk cannot open, so
+    /// this is how one edit reaching every version gets photographed.
+    case applyToOtherComponentVersions
     /// Style the selected layer the way the Effects and Shadow sliders do:
     /// round its corners, give it a shadow, fade it. The sliders live in the
     /// dock, which a walk cannot reach with the pointer, so this is how a look

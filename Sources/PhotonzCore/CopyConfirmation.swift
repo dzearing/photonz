@@ -54,6 +54,12 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// (`ComponentVersions`). Nothing else on screen says so: the copy
         /// simply draws something else the next time you look at it.
         case componentVersionGone(count: Int, version: String?)
+        /// One piece's look and wording was pushed onto the same piece in
+        /// every other version of its component
+        /// (`ComponentVersionMatching`). The versions it reached are drawings
+        /// somewhere else on the canvas, usually scrolled off it, so without a
+        /// word on screen the command looks like it did nothing at all.
+        case componentVersionsMatched(piece: String, versions: [String])
         /// Something stopped following what it came from: a color let go of a
         /// named style, a part of a copy's look was set by hand, a copy was
         /// ungrouped, or an original was deleted out from under its copies
@@ -94,7 +100,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         // under the time it takes to read a sentence naming two things and
         // decide what to do about it.
         case .linksBroken, .componentPieceRefused, .toolColorStyle,
-             .componentVersionGone: return Self.breakLifetime
+             .componentVersionGone, .componentVersionsMatched: return Self.breakLifetime
         default: return Self.lifetime
         }
     }
@@ -121,6 +127,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentDetached: return "Detached"
         case .componentChoiceMade: return "Choice added"
         case .componentVersionGone: return "Version deleted"
+        case .componentVersionsMatched: return "Applied"
         case .componentPieceRefused(let refusal): return refusal.title
         case .linksBroken(let report): return report.title
         case .toolColorStyle(let notice): return notice.title
@@ -156,6 +163,9 @@ public struct CopyConfirmation: Hashable, Sendable {
             let copies = count == 1 ? "1 copy" : "\(count) copies"
             guard let version, !version.isEmpty else { return "\(copies) moved to another version" }
             return "\(copies) moved to \(version)"
+        case .componentVersionsMatched(let piece, let versions):
+            guard !versions.isEmpty else { return piece }
+            return "\(piece) now matches in \(ComponentVersionApply.list(versions))"
         case .componentPieceRefused(let refusal):
             return refusal.detail
         case .linksBroken(let report):

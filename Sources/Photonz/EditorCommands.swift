@@ -394,6 +394,19 @@ struct EditorCommands: Commands {
                 // would be a key nobody could name.
                 Button("Add Version") { editor?.addComponentVersion() }
                     .disabled(!(editor?.canAddComponentVersion ?? false))
+                // Apply to Other Versions is ABSENT unless the selected piece
+                // is part of an original that HAS other versions, because on
+                // anything else it is a row about a feature you are not using.
+                // When it is there it NAMES them — "Apply to Hover and
+                // Disabled" — so nobody has to press it to find out what it
+                // would touch, and it dims saying why when there is nothing to
+                // do. No key: it is the follow-up to an edit you just made,
+                // and every key a design tool user has in their fingers for
+                // this belongs to something else.
+                if let title = editor?.applyToOtherComponentVersionsTitle {
+                    Button(title) { editor?.applyToOtherComponentVersions() }
+                        .disabled(!(editor?.canApplyToOtherComponentVersions ?? false))
+                }
                 // Make Alternatives is ABSENT rather than dimmed when the
                 // selection cannot become a choice. Every other row here reads
                 // as something you might want on any selection; this one only

@@ -816,6 +816,9 @@ struct ComponentVersionList: View {
                     ComponentVersionRow(componentID: componentID, version: version,
                                         isShown: version.layerID == layerID)
                 }
+                // The way one edit reaches the drawings listed above it, right
+                // under the list that names them.
+                ComponentVersionApplyRow()
             } else {
                 Text("One drawing. Adding a version copies it, so this component can hold a second look, like Disabled, under the same name.")
                     .font(.caption)
@@ -899,6 +902,76 @@ private struct ComponentVersionRow: View {
         }
         guard name != version.name else { return }
         editorState.renameComponentVersion(componentID: componentID, version: version.id, to: name)
+    }
+}
+
+/// The one press that carries an edit to every other version
+/// (`ComponentVersionMatching`).
+///
+/// A version is a whole drawing, so a change meant for all of them would
+/// otherwise be typed once per version, and the third time it gets typed
+/// wrong. This gives the same piece in every other version the look and the
+/// wording of the one you are on. Where each piece sits, how big it is and
+/// what is inside it stay as they are, so a version that is arranged
+/// differently or has a part the others do not is not flattened by it.
+///
+/// It NAMES the versions it would change rather than saying "other versions",
+/// because "what is this about to touch" is the question somebody asks with
+/// their hand on the button. When there is nothing to carry it says so and
+/// dims, which is the honest answer to a button you would otherwise press and
+/// watch do nothing.
+struct ComponentVersionApplyRow: View {
+    @Environment(EditorState.self) private var editorState
+
+    private var plan: ComponentVersionApply? { editorState.componentVersionApply }
+
+    var body: some View {
+        if let plan {
+            VStack(alignment: .leading, spacing: 4) {
+                Button(plan.title) { editorState.applyToOtherComponentVersions() }
+                    .controlSize(.small)
+                    .disabled(!plan.wouldChangeAnything)
+                    .help(plan.help)
+                    .playtestControl("Apply to Other Versions")
+                Text(plan.help)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.top, 2)
+        }
+    }
+}
+
+/// What the dock says about a piece INSIDE an original whose component holds
+/// more than one version.
+///
+/// Without this the section is empty exactly where it is most wanted: you have
+/// just rounded a corner or retyped a label with the controls above, and the
+/// question in your head is "do I now have to do that twice more". The answer
+/// belongs next to the slider you just moved, not only in a menu you would
+/// have to know to look in.
+struct ComponentVersionPieceInspector: View {
+    @Environment(EditorState.self) private var editorState
+    let plan: ComponentVersionApply
+
+    private var componentName: String {
+        editorState.document?.mainComponent(componentID: plan.componentID)?.name ?? "this component"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                ComponentMark(size: 11)
+                Text("\(plan.pieceName), in the \(plan.sourceVersion.name) drawing of \(componentName)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            ComponentVersionApplyRow()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 4)
     }
 }
 

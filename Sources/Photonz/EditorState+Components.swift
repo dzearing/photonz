@@ -348,6 +348,48 @@ extension EditorState {
         setInstanceVersion(instances: copies, to: versions[(index + 1) % versions.count].id)
     }
 
+    // MARK: - One edit reaching every version (Next flag `next-components`)
+
+    /// What Layer ▸ Apply to Other Versions would do from the one selected
+    /// piece, or nil when there is nothing here it could apply to: the
+    /// selection is not one thing, it is not part of an original, or its
+    /// component has only the one version.
+    ///
+    /// Worked out BEFORE the command runs, because the row has to say which
+    /// versions it is about to change while your hand is still on the menu.
+    var componentVersionApply: ComponentVersionApply? {
+        guard componentsEnabled, let document, actionableLayerIDs.count == 1,
+              let id = actionableLayerIDs.first else { return nil }
+        return document.componentVersionApply(from: id)
+    }
+
+    /// What that row says. Nil when the row should not be there at all — it is
+    /// absent rather than dimmed on a selection it could never mean anything
+    /// for, and dimmed with a reason on one where it simply has nothing to do.
+    var applyToOtherComponentVersionsTitle: String? { componentVersionApply?.title }
+
+    var canApplyToOtherComponentVersions: Bool {
+        componentVersionApply?.wouldChangeAnything ?? false
+    }
+
+    /// Layer ▸ Apply to Other Versions: gives the same piece in every other
+    /// version of this component the selected piece's look and wording, in one
+    /// undo step, and says on the canvas which versions it reached.
+    ///
+    /// The pill is the whole point of announcing it: the versions it changed
+    /// are other drawings on the canvas, usually scrolled off it, so without a
+    /// word on screen the command looks like it did nothing.
+    func applyToOtherComponentVersions() {
+        guard componentsEnabled, let plan = componentVersionApply, plan.wouldChangeAnything,
+              let id = actionableLayerIDs.first else { return }
+        discardDragPreview()
+        // The ordinary "copies followed" pill is suppressed: the copies DID
+        // follow, but the thing that just happened is the one this says.
+        perform(announcing: false) { $0.applyToOtherComponentVersions(from: id) }
+        raiseCanvasNotice(.componentVersionsMatched(piece: plan.pieceName,
+                                                    versions: plan.changing.map(\.version.name)))
+    }
+
     /// Selects one version's drawing on the canvas, which is the way from a
     /// copy or a list row to the thing you actually edit.
     func selectComponentVersion(componentID: UUID, version: UUID) {
