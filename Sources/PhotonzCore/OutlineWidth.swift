@@ -37,7 +37,7 @@ extension Layer {
     /// The wider of the two, because the border is painted OVER the stroke: a
     /// 4pt stroke under a 6pt border is a 6pt ring, and reading 4 there would
     /// be a row denying what is plainly on the canvas.
-    var outlineWidth: CGFloat {
+    public var outlineWidth: CGFloat {
         guard let annotation else { return style.borderWidth }
         return max(annotation.strokeWidth, style.borderWidth)
     }

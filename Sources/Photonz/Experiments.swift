@@ -191,6 +191,13 @@ extension Experiments {
     /// release's catalog, so Current always reads false.
     var arrowCaptionsEnabled: Bool { isEnabled(FeatureCatalog.arrowCaptionsFlag) }
 
+    /// `next-shape-parts`: whether the panel shows one list of the parts a
+    /// layer paints — Fill, Outline, Shadow — each with its own switch, colour
+    /// and settings, in place of the scattered Color, Effects, shape and
+    /// Shadow rows. Exists only in the Next release's catalog, so Current
+    /// always reads false.
+    var shapePartsEnabled: Bool { isEnabled(FeatureCatalog.shapePartsFlag) }
+
     /// `next-grab-cue`: whether the pointer turns into a hand over a pill that
     /// drags on its own (an arrow's caption, a measurement's number). Exists
     /// only in the Next release's catalog, so Current always reads false.

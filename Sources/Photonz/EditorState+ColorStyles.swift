@@ -340,6 +340,41 @@ extension EditorState {
         }
     }
 
+    // MARK: - The parts a layer is made of (`next-shape-parts`)
+
+    /// The rows the parts list shows: Fill, Outline, Text, Shadow, each one
+    /// speaking for everything picked. The model itself lives in
+    /// `PhotonzCore/LayerParts.swift`; this is just the selection it reads.
+    var layerPartRows: [LayerPartRow] {
+        guard let document else { return [] }
+        return document.layerPartRows(layerIDs: colorStyleTargetIDs)
+    }
+
+    /// The tick on the Outline row: takes the line off every picked layer, or
+    /// puts it back, in one step one undo reverses.
+    ///
+    /// Switching off remembers the width it took away, so switching straight
+    /// back on brings the same ring back rather than a default one. The memory
+    /// is this window's, not the document's: an outline that is off is off, and
+    /// nothing about the saved file records what it used to be.
+    func setOutlineEnabled(ids: [UUID], on: Bool) {
+        guard let document else { return }
+        let targets = ids.filter { document.layer(id: $0)?.isLocked == false }
+        guard !targets.isEmpty else { return }
+        if !on {
+            for id in targets {
+                guard let layer = document.layer(id: id), layer.hasOutline else { continue }
+                rememberedOutlineWidths[id] = layer.drawsItsOwnOutline
+                    ? layer.outlineWidth : layer.style.borderWidth
+            }
+        }
+        discardDragPreview()
+        perform {
+            _ = $0.setOutlineEnabled(layerIDs: targets, on: on,
+                                     restoring: self.rememberedOutlineWidths)
+        }
+    }
+
     /// What one color row shows: the picked layers that have a color in this
     /// slot, what they are painted, and the style painting them when they all
     /// wear one. One layer picked or twenty, this is the same reading, which is

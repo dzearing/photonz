@@ -48,6 +48,8 @@ public enum FeatureCatalog {
 
     public static let arrowCaptionsFlag = "next-arrow-captions"
 
+    public static let shapePartsFlag = "next-shape-parts"
+
     public static let grabCueFlag = "next-grab-cue"
 
     public static let toolOptionsFlag = "next-tool-options"
@@ -182,6 +184,15 @@ public enum FeatureCatalog {
                     name: arrowCaptionsFlag,
                     title: "Arrow captions",
                     description: "Right after you draw an arrow, type a label and it lands in a pill at the arrow's tail, styled like the measure readout. Press Esc to skip, or drag again to draw the next arrow. Double-click an arrow to add or edit its caption.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: shapePartsFlag,
+                    title: "A layer is made of parts",
+                    description: "One list for everything a layer paints: Fill, Outline and Shadow, each with a tick that switches it on or off, the colour it paints, and its own settings folding open underneath. A rectangle\'s outline can be taken off for the first time. The Border row leaves Effects and the Thickness row leaves the shape\'s own section, because both are the Outline part now, and the Shadow section folds into the same list.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

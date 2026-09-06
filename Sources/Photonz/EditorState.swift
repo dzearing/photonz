@@ -32,6 +32,11 @@ final class EditorState {
     var readyEdgeMaps: [UUID: EdgeMapAnalyzer.Analysis] = [:]
     /// Refs whose analysis is in flight (don't kick it twice).
     @ObservationIgnored var edgeMapAnalysisPending: Set<UUID> = []
+    /// The width each layer's outline had when the parts list took it off, so
+    /// switching it straight back on brings the same ring back rather than a
+    /// default one. This window's memory, not the document's: an outline that
+    /// is off is off, and the saved file records nothing about what it was.
+    @ObservationIgnored var rememberedOutlineWidths: [UUID: CGFloat] = [:]
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
 

@@ -5,9 +5,9 @@ anything added later such as an inner shadow or a glow. Written down before any
 of it was built, because it changes the shape of every inspector and a model
 half-applied is worse than the mess it replaced.
 
-Status: **model agreed here, panel layout awaiting a decision** (see the decision
-card for `one-way-to-add-colour-and-remove-any-part-of-a-s`). Nothing below is
-built yet.
+Status: **built in Next**, behind `next-shape-parts` (on by default there).
+The layout was the user's call and they took it on 2026-09-06: *one list,
+settings unfold*. Current is untouched.
 
 ## Why
 
@@ -58,8 +58,8 @@ will arrive as one more row with a switch, a colour and its own settings.
 | Layer | Parts |
 | --- | --- |
 | Rectangle, ellipse | Fill · Outline · Shadow |
-| Line, arrow, highlight | Colour · Shadow |
-| Text | Colour · Shadow |
+| Line, arrow | Colour (no switch: the line IS the shape) · Shadow |
+| Highlight, text | Colour (no switch) · Outline · Shadow |
 | Picture, frame, group, callout | Fill (a frame's surface) · Outline · Shadow |
 | Later | Inner shadow · Glow, on any of them |
 
@@ -81,11 +81,16 @@ back the colour and settings it had, so switching off is never destructive and
 never loses what you had set.
 
 **Every switch means the same thing underneath.** A colour that can be absent is
-already stored as an absent colour (`setAnnotationFill(nil)`); the outline needs
-the same, a stored width of zero or an absent stroke, so that "off" is a real
-document state that saves, reopens, undoes and copies like any other. Nothing
-about how an existing document draws changes: a rectangle with a 4pt outline
-today has its Outline part on at 4pt.
+stored as an absent colour (`setAnnotationFill(nil)`); an outline that is off is
+a width of zero, which is a real document state that saves, reopens, undoes and
+copies like any other, and which the rasterizer has always drawn as no line at
+all. Nothing about how an existing document draws changes: a rectangle with a
+4pt outline today has its Outline part on at 4pt.
+
+The one thing "off" does NOT keep is the width it took away: that is remembered
+by the window rather than the document, so switching straight back on restores
+it, and reopening the file tomorrow brings the outline back at the width a fresh
+one wears. Undo restores it exactly, either way.
 
 ### What is NOT a part
 
@@ -99,10 +104,9 @@ today has its Outline part on at 4pt.
 
 The original complaint asked for the outline's colour, thickness and corner
 radius to sit in one place. This model puts colour and thickness in one place
-and leaves radius out, for the reason above: it is not the outline's. Radius
-moves out of Effects and into the shape's own section beside Head Size, so it
-sits with the other things that describe the shape rather than under a heading
-that means "laid over the top".
+and leaves radius out, for the reason above: it is not the outline's. It stays
+where every layer can reach it, under Effects, beside the other two things that
+are laid over whatever the layer is made of.
 
 ### Naming
 
@@ -129,11 +133,43 @@ picked says so underneath, the way Fill already does.
 This is why the parts do not become sections named after the shape: the heading
 has to hold still when the selection changes.
 
-## What is still open
+## The panel
 
-Where the parts sit on the panel — one list with settings that unfold, one list
-with settings always showing, or a section per part — changes the shape of every
-inspector in the app, so it is a decision for the user rather than a choice to
-make here. The three layouts are drawn in the decision brief at
-`queue/decisions/`. Everything above this heading is settled regardless of which
-one wins.
+One section, headed **Appearance**, in the slot the Color section used to hold.
+Inside it one row per part: the part's name, a tick, the colour it paints, and a
+chevron where the part has settings of its own. Click the chevron (or the name)
+and that part's settings unfold underneath; open another and the first folds
+away, so the section stays short whatever is switched on. The part you left open
+stays open as you pick other layers, and across launches.
+
+A rectangle's whole panel goes from four sections to three:
+
+| Before | After |
+| --- | --- |
+| Color: Fill (tick) · Outline (no tick) | Appearance: Fill · Outline · Shadow |
+| Effects: Opacity · Blur · Corner Radius | Effects: Opacity · Blur · Corner Radius |
+| Rectangle: Thickness | *(gone: Thickness is the Outline part's Width)* |
+| Shadow: Enable Shadow · five sliders | *(gone: the Shadow row)* |
+
+Two things did not go where the original report asked, and both are deliberate:
+
+- **Corner Radius stays under Effects.** It is a property, not a setting of the
+  outline (a box with no outline still has rounded corners), and it is ONE row
+  that also rounds a screenshot, a frame and a group. Moving it into the shape's
+  own section would leave every layer that is not a shape with nowhere to round
+  its corners, or bring back the second Corner Radius slider that
+  `CornerRadiusRow` exists to have ended.
+- **A shape and a picture picked together show two Outline rows**, one for each
+  kind of ring, each saying which of the picked layers it reaches. They are one
+  part, but the colour underneath is stored in two different slots and a single
+  row cannot yet paint both. Followed up separately; it does not come up in a
+  single selection, which is where the panel is used.
+
+### Where the code is
+
+- `PhotonzCore/LayerParts.swift` — the model: what a part is, which parts a
+  selection has, and switching the outline on and off. Tested in
+  `Tests/PhotonzCoreTests/LayerPartsTests.swift`.
+- `Photonz/PartsInspector.swift` — the list, the rows and the unfolding.
+- The old `SelectionColorInspector` and `ShadowInspector` are still what Current
+  draws, unchanged.

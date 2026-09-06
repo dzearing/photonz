@@ -1,0 +1,29 @@
+{
+  "feature": "One way to add, colour and remove any part of a shape",
+  "epic": "ui-building",
+  "summary": "Everything a layer paints is now one list called Appearance: Fill, Outline and Shadow, each with a tick that switches it on or off, the colour it paints, and its own settings folding open underneath. A rectangle's outline can be taken off, which was impossible before.",
+  "setup": "Photonz Dev, release Next. The flag is next-shape-parts, on by default. A rectangle's panel goes from four sections to three: the Rectangle section and the Shadow section are gone.",
+  "try": [
+    { "do": "Draw a rectangle. Look at the Appearance section: three rows, three ticks.", "shot": "2026-09-06-shape-parts-1-rectangle.png" },
+    { "do": "Untick Outline. The ring goes, and the row keeps only its name and its tick.", "shot": "2026-09-06-shape-parts-2-outline-off.png" },
+    { "do": "Tick it again, then click the chevron at the end of the Outline row to open Width." },
+    { "do": "Tick Shadow and open it. The outline's Width folds away as the shadow's five sliders open.", "shot": "2026-09-06-shape-parts-3-shadow-open.png" },
+    { "do": "Press Cmd-Z twice and watch the shadow and then the outline come back." },
+    { "do": "Drop a screenshot on the canvas and tick its Outline: the same row, the same Width.", "shot": "2026-09-06-shape-parts-4-picture.png" },
+    { "do": "Draw an arrow. Its one colour is called Color and has no tick, because an arrow with no line is nothing." }
+  ],
+  "evaluate": [
+    "Reading Fill, Outline, Shadow down one column, is it obvious that they are the same kind of thing?",
+    "Is a tick the right control for switching a part on, or did the shadow's old switch read better?",
+    "Does folding the outline away when you open the shadow ever cost you something, or does the shorter panel win?",
+    "Appearance is the new name for what used to be Color. Does that heading say what is under it?",
+    "Corner Radius stayed under Effects rather than moving in with the outline. Is that where you look for it?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real capture of the window, not an offscreen render.",
+    "Take an outline off, save, reopen, and switching it back on gives you a 4pt line rather than the width you had. The width is remembered by the window, not the file. Undo restores it exactly.",
+    "Taking an outline off does not arm the tool the way emptying a fill does, so the next rectangle you draw still comes out with one. Worth deciding which behaviour you want.",
+    "Pick a rectangle and a screenshot together and you get two rows both called Outline, one for each kind of ring, each saying which layers it reaches. One row cannot yet paint both.",
+    "Against the model in docs/design/shape-parts.md, Corner Radius did not move into the shape's own section as the report asked: it is one row that also rounds screenshots, frames and groups, and those have no shape section to move it to."
+  ]
+}

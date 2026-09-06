@@ -353,7 +353,12 @@ struct InspectorPanel: View {
         // anything with a color is picked, one layer or twenty: a color that
         // moved to a different section the moment you shift-clicked a second
         // layer was a color you had to find again for no reason.
-        if !editorState.colorRowSlots.isEmpty {
+        if Experiments.shared.shapePartsEnabled {
+            // One list of the parts the picked layers paint (`next-shape-parts`),
+            // in the same slot the Color section held: it IS the Color section,
+            // widened to hold each colour's switch and settings beside it.
+            if !editorState.layerPartRows.isEmpty { set.insert(.color) }
+        } else if !editorState.colorRowSlots.isEmpty {
             set.insert(.color)
         }
         // Fade, blur, corners, border and shadow, for EVERYTHING picked. Like
@@ -363,7 +368,10 @@ struct InspectorPanel: View {
         // is a selection of locked layers and nothing else.
         if editorState.hasRestylableSelection {
             set.insert(.effects)
-            set.insert(.shadow)
+            // The shadow is a PART, and with `next-shape-parts` on it is a row
+            // in the parts list with the fill and the outline rather than a
+            // section of its own with a switch nothing else has.
+            if !Experiments.shared.shapePartsEnabled { set.insert(.shadow) }
         }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present
@@ -371,7 +379,7 @@ struct InspectorPanel: View {
         // keep their settings instead of losing them the moment a second one
         // is picked, and a highlight (which has nothing but a color) still
         // brings no section rather than an empty one headed with its name.
-        if !editorState.shapeSelection.rows.isEmpty {
+        if !AnnotationInspector.visibleRows(editorState.shapeSelection).isEmpty {
             set.insert(.annotation)
         }
         // And the picked text's own type: font, size, weight, alignment. Three
@@ -545,6 +553,10 @@ struct InspectorPanel: View {
         if id == .libraryItem {
             return (LibraryScope(rawValue: libraryScopeRaw) ?? .media).itemTitle
         }
+        // With the parts list on, this section is no longer only colours: it
+        // holds every part the picked layers paint, each with its switch and
+        // its own settings. Appearance is what it is.
+        if id == .color, Experiments.shared.shapePartsEnabled { return "Appearance" }
         guard Experiments.shared.colorStylesEnabled else { return id.title }
         switch id {
         case .annotation:
@@ -612,7 +624,11 @@ struct InspectorPanel: View {
                 ComponentVersionPieceInspector(plan: plan)
             }
         case .color:
-            SelectionColorInspector()
+            if Experiments.shared.shapePartsEnabled {
+                PartsInspector()
+            } else {
+                SelectionColorInspector()
+            }
         case .annotation:
             AnnotationInspector()
         case .callout:
@@ -2586,7 +2602,11 @@ struct EffectsInspector: View {
             // pixels, so a rectangle used to carry two sliders for one ring with
             // the border quietly covering the stroke. A shape's width is the
             // Thickness row in its own section now; see `OutlineWidth.swift`.
-            let borders = selection.borders
+            // With `next-shape-parts` on, this ring is the Outline part and its
+            // width sits with its own switch and colour up in Appearance.
+            let borders = Experiments.shared.shapePartsEnabled
+                ? LayerStyleSelection(members: [], selectionCount: selection.selectionCount)
+                : selection.borders
             if !borders.isEmpty {
                 LayerStyleSlider(layerIDs: borders.layerIDs, label: "Border",
                                  reading: borders.number { $0.borderWidth }, range: 0...20,
@@ -2635,6 +2655,15 @@ struct EffectsInspector: View {
 /// (10.6) — all of them over the whole selection.
 struct ShadowInspector: View {
     @Environment(EditorState.self) private var editorState
+    /// Whether the section draws its own on/off switch. The parts list
+    /// (`next-shape-parts`) puts that switch up on the Shadow row with every
+    /// other part's, and borrows only the rows below it.
+    var showsSwitch = true
+    /// Same for the colour, which sits on the row in the parts list.
+    var showsColor = true
+    /// Whether this is a section of its own, with a section's padding. Inside
+    /// the parts list it is already indented under the row it belongs to.
+    var inset = true
 
     var body: some View {
         // The layers that have a shadow to talk about. A label whose halo its
@@ -2646,16 +2675,18 @@ struct ShadowInspector: View {
         let ids = shadows.layerIDs
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Toggle(isOn: Binding(
-                    get: { selection.hasShadowEverywhere },
-                    set: { editorState.setSelectionShadowEnabled($0) })) {
-                    Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
+                if showsSwitch {
+                    Toggle(isOn: Binding(
+                        get: { selection.hasShadowEverywhere },
+                        set: { editorState.setSelectionShadowEnabled($0) })) {
+                        Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
+                    }
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .help(shadowSwitchHelp(selection))
+                    .playtestControl("Enable Shadow",
+                                     detail: selection.hasShadowEverywhere ? "Shadow, on" : "Shadow, off")
                 }
-                .toggleStyle(.switch)
-                .controlSize(.mini)
-                .help(shadowSwitchHelp(selection))
-                .playtestControl("Enable Shadow",
-                                 detail: selection.hasShadowEverywhere ? "Shadow, on" : "Shadow, off")
                 // A shadow is ONE part of the look: its softness, size,
                 // distance, direction, opacity and colour are six controls for
                 // the one thing a person means by "the shadow", so there is one
@@ -2682,7 +2713,7 @@ struct ShadowInspector: View {
                                      range: 0...40, format: points) { style, v in
                         style.shadow?.radius = CGFloat(v)
                     }
-                    shadowColorPicker(ids)
+                    if showsColor { ShadowColorWell() }
                 }
                 LayerStyleSlider(layerIDs: ids, label: "Size",
                                  reading: shadows.number { $0.shadow?.spread ?? 0 },
@@ -2708,11 +2739,12 @@ struct ShadowInspector: View {
                                  format: { "\(Int(($0 * 100).rounded()))%" }) { style, v in
                     style.shadow?.opacity = v
                 }
-                SelectionStyleNotes(notes: [shadowColorNote(shadows)], caption: nil)
+                SelectionStyleNotes(notes: [showsColor ? shadowColorNote(shadows) : nil],
+                                    caption: nil)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
+        .padding(.horizontal, inset ? 14 : 0)
+        .padding(.vertical, inset ? 8 : 0)
     }
 
     /// How many of the picked layers this section is talking to, in words,
@@ -2739,25 +2771,33 @@ struct ShadowInspector: View {
             : "Turns the shadow on or off"
     }
 
-    private var shadowColorReading: StyleReading<String> {
-        editorState.layerStyleSelection.shadows.reading { $0.shadow?.colorHex ?? "#000000" }
-    }
-
     private func shadowColorNote(_ shadows: LayerStyleSelection) -> String? {
         guard shadows.reading({ $0.shadow?.colorHex ?? "#000000" }).isMixed else { return nil }
         return "Shadow colors differ. Picking one paints them all."
     }
+}
 
-    private func shadowColorPicker(_ ids: [UUID]) -> some View {
+/// What the shadow is painted, over every picked layer that has one.
+///
+/// Its own view because it sits in two places: beside Blur in the Shadow
+/// section, and on the Shadow row of the parts list, where every other part
+/// keeps its colour.
+struct ShadowColorWell: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        let shadows = editorState.layerStyleSelection.shadows
+        let ids = shadows.layerIDs
+        let reading = shadows.reading { $0.shadow?.colorHex ?? "#000000" }
         // The same picker every other color row opens. A shadow keeps its own
-        // Opacity slider in this section, so the picker is not offered a second
+        // Opacity slider in its settings, so the picker is not offered a second
         // one that would fight with it.
-        ColorWellButton(hex: shadowColorReading.value ?? "#000000",
+        ColorWellButton(hex: reading.value ?? "#000000",
                         name: "Shadow",
                         supportsOpacity: false,
                         // The same preview-and-commit path the Blur and Size
-                        // sliders in this section already take, so a shadow
-                        // recolours under the drag and lands in one step.
+                        // sliders take, so a shadow recolours under the drag
+                        // and lands in one step.
                         onPreview: { hex in
             editorState.previewLayerStyle(ids: ids) { $0.shadow?.colorHex = hex }
         }) { hex in
@@ -2765,6 +2805,7 @@ struct ShadowInspector: View {
             editorState.commitLayerStyle(ids: ids)
             editorState.recordRecentColor(hex: hex)
         }
+        .disabled(ids.isEmpty)
     }
 }
 
@@ -2888,11 +2929,7 @@ struct AnnotationInspector: View {
     var body: some View {
         let selection = editorState.shapeSelection
         let ids = selection.layerIDs
-        let rows = selection.rows.filter {
-            // Captions are a Next feature; without it an arrow is a plain
-            // arrow and neither the field nor its size row belongs here.
-            Experiments.shared.arrowCaptionsEnabled || ($0 != .caption && $0 != .labelSize)
-        }
+        let rows = Self.visibleRows(selection)
         if !rows.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(rows, id: \.self) { row in
@@ -2917,6 +2954,22 @@ struct AnnotationInspector: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
+        }
+    }
+
+    /// The rows this section actually shows, which is also what decides whether
+    /// the section is there at all: a rectangle whose only setting was its
+    /// Thickness brings no section once that width has moved into the Outline
+    /// part, rather than an empty heading with its name on it.
+    static func visibleRows(_ selection: ShapeSelection) -> [ShapeSettingRow] {
+        selection.rows.filter { row in
+            // Captions are a Next feature; without it an arrow is a plain
+            // arrow and neither the field nor its size row belongs here.
+            guard Experiments.shared.arrowCaptionsEnabled
+                    || (row != .caption && row != .labelSize) else { return false }
+            // The width of the line round a shape is the Outline part's own
+            // setting now (`next-shape-parts`), and it is called Width there.
+            return !(Experiments.shared.shapePartsEnabled && row == .thickness)
         }
     }
 
@@ -3071,7 +3124,7 @@ private struct CornerRadiusRow: View {
 /// While the shapes differ the readout says Mixed and the knob sits at the
 /// first picked shape's number, so the position is a starting point rather
 /// than a claim. The moment the knob moves they agree, and it says so.
-private struct ShapeSlider: View {
+struct ShapeSlider: View {
     let layerIDs: [UUID]
     let label: String
     let reading: StyleReading<CGFloat>

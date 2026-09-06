@@ -1,0 +1,29 @@
+{
+  "id": "one-outline-row-when-a-shape-and-a-picture-are-p",
+  "title": "One Outline row when a shape and a picture are picked together",
+  "goal": "Pick a rectangle and a screenshot at the same time and the settings panel shows two rows both called Outline, because the two draw their ring in different ways underneath. A person sees one duplicated setting. Make it one row that reaches both.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1280,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T19:40:23.123Z",
+  "updated": "2026-09-06T19:40:23.124Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the shape-parts work on 2026-09-06 (docs/design/shape-parts.md). A shape paints ColorSlot.stroke, everything else paints ColorSlot.border, and ColorStyleSelection plus the whole saved-styles path is keyed by slot, so one row cannot yet read or write both. PhotonzCore/LayerParts.swift builds the two rows; each carries a reachNote so nothing is silently lost today.",
+  "acceptance": [
+    "Picking a shape and a picture together shows exactly one Outline row",
+    "Its tick switches the ring on and off for both kinds in one step",
+    "Its colour paints both kinds in one step",
+    "Its Width sets both kinds in one step",
+    "A single selection of either kind is unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T19:40:23.124Z",
+      "note": "created (manual)"
+    }
+  ]
+}
