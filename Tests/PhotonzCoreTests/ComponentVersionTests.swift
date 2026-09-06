@@ -333,6 +333,62 @@ struct ComponentVersionTests {
         #expect(rowNames() == [nil])
     }
 
+    // MARK: - Telling two drawings apart on the canvas
+
+    @Test func theCanvasSaysNothingAboutVersionsUntilThereAreSeveral() {
+        var c = withComponent()
+        c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 300, y: 300))
+        // One version is nothing to tell apart, so no drawing wears a version.
+        #expect(c.doc.canvasVersionNames().isEmpty)
+    }
+
+    @Test func everyOriginalOnTheCanvasNamesItsVersion() {
+        var c = withComponent()
+        let disabled = c.doc.addComponentVersion(componentID: c.componentID)!
+        c.doc.renameComponentVersion(componentID: c.componentID, version: disabled, to: "Disabled")
+        let second = c.doc.mainComponent(componentID: c.componentID, version: disabled)!
+        let names = c.doc.canvasVersionNames()
+        // Two boxes side by side both called Button: the label says which.
+        #expect(names[c.main] == "Default")
+        #expect(names[second.id] == "Disabled")
+    }
+
+    @Test func aCopyShowingAnotherVersionSaysSoOnTheCanvas() {
+        var c = withComponent()
+        let disabled = c.doc.addComponentVersion(componentID: c.componentID)!
+        c.doc.renameComponentVersion(componentID: c.componentID, version: disabled, to: "Disabled")
+        let plain = c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 300, y: 300))!
+        let odd = c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 500, y: 300))!
+        c.doc.setInstanceVersion(instance: odd, to: disabled)
+        let names = c.doc.canvasVersionNames()
+        // The odd one out speaks and the ordinary one stays quiet, so a screen
+        // built out of twelve plain buttons does not wear twelve labels.
+        #expect(names[odd] == "Disabled")
+        #expect(names[plain] == nil)
+    }
+
+    @Test func aCopyOfAComponentBackToOneVersionIsQuietAgain() {
+        var c = withComponent()
+        let disabled = c.doc.addComponentVersion(componentID: c.componentID)!
+        let copy = c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 300, y: 300))!
+        c.doc.setInstanceVersion(instance: copy, to: disabled)
+        #expect(c.doc.canvasVersionNames()[copy] == "Version 2")
+        let second = c.doc.mainComponent(componentID: c.componentID, version: disabled)!
+        c.doc.removeLayers(ids: [second.id])
+        #expect(c.doc.canvasVersionNames().isEmpty)
+    }
+
+    @Test func aCopyInsideAScreenSaysItsVersionToo() {
+        var c = withComponent()
+        let disabled = c.doc.addComponentVersion(componentID: c.componentID)!
+        c.doc.renameComponentVersion(componentID: c.componentID, version: disabled, to: "Disabled")
+        let copy = c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 300, y: 300))!
+        c.doc.setInstanceVersion(instance: copy, to: disabled)
+        let screen = c.doc.groupLayers(ids: [copy], name: "Home")!
+        #expect(c.doc.parentID(of: copy) == screen.id)
+        #expect(c.doc.canvasVersionNames()[copy] == "Disabled")
+    }
+
     // MARK: - What a saved document holds
 
     @Test func aComponentWithOneVersionSavesExactlyAsItAlwaysDid() throws {

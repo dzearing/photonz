@@ -1,0 +1,29 @@
+{
+  "feature": "The canvas says which version of a component you are looking at",
+  "epic": "ui-components",
+  "summary": "A component that holds a normal and a disabled look puts two drawings on the canvas that used to be labelled the same word. Each one now says which version it is after its name, and a copy showing something other than the usual version says so above itself.",
+  "setup": "Photonz Dev, Experiments window, release Next, flags Library and next-components on (both on by default).",
+  "try": [
+    { "do": "Open the Library's Comps shelf and drag the Button tile onto an empty canvas." },
+    { "do": "Click the button, then press Add on the Versions row in the Component section and name the new version Disabled." },
+    { "do": "Read the two labels above the two buttons.", "shot": "2026-09-06-canvas-version-labels-originals.png" },
+    { "do": "Turn Opacity down to about 35% so the Disabled drawing looks different." },
+    { "do": "Drag the Button tile out twice more, lower down, to place two copies." },
+    { "do": "Click the right hand copy and set its Version row to Disabled." },
+    { "do": "Read what is above each of the two copies.", "shot": "2026-09-06-canvas-version-labels-copies.png" },
+    { "do": "Select the Disabled original and delete it, then check every label goes back to plain Button." }
+  ],
+  "evaluate": [
+    "Reading the two originals, can you tell at a glance which drawing you are about to edit?",
+    "Is the version dimmer than the name the right weight, or should it be a chip with its own background so it reads as a separate thing?",
+    "A copy showing the usual version says nothing at all. Is that the right quiet, or do you want every copy to name its version once the component has more than one?",
+    "The label now runs wider than a small button. Does a caption wider than the thing it names look deliberate or look broken?",
+    "The middle dot between the name and the version: does it read as a separator, or would a slash or a bracket be clearer?"
+  ],
+  "rough": [
+    "A copy only speaks when it is showing something other than the component's first version. Labelling every copy would put twelve chips all reading Default on a screen built out of twelve ordinary buttons, so the odd one out is the only one that talks. That means a silent copy means two different things: this component has one version, or this copy is on the usual one.",
+    "The caption widens past the box it names when the name plus the version will not fit, because otherwise the name is the part that gets cut and every version carries the same name anyway. It still stops at the same 240 point cap every canvas name obeys, so a very long component name still truncates and the version stays whole.",
+    "A copy's version is drawn in the component violet even while the copy is selected, unlike an original's name which turns the selection accent. A copy's version is a caption and cannot be clicked or renamed, so it does not borrow the colour that means 'this word answers a click'.",
+    "While you are typing a new name into a component's label the version disappears with it, because the typing field stands where the whole caption was. It comes back when you press Return."
+  ]
+}

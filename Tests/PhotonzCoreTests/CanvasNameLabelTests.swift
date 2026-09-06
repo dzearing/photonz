@@ -28,6 +28,39 @@ struct CanvasNameLabelTests {
         #expect(CanvasNameLabels.box(forFrameRect: tiny).width == CanvasNameLabels.minimumWidth)
     }
 
+    @Test("A name that must print whole widens its box instead of losing letters")
+    func fittingWholeTextWidensTheBox() {
+        let small = CGRect(x: 0, y: 100, width: 70, height: 30)
+        // A component wearing its version after its name: "Button \u{00B7} Disabled"
+        // is 110 points of text above a 70 point button, and the version is
+        // the word that tells two drawings apart, so nothing may be cut.
+        let label = CanvasNameLabel(id: UUID(), frameRect: small, textWidth: 110,
+                                    leadingInset: 14, fitsWholeText: true)
+        #expect(CanvasNameLabels.box(for: label).width == 110)
+        // ...and the click follows the letters it can now read.
+        #expect(CanvasNameLabels.hitBox(for: label).width > 110)
+        // A label that does not ask keeps the old, box-sized behaviour: the
+        // strip stays the width of the button, less the room the mark takes,
+        // and the letters past it are cut off.
+        let plain = CanvasNameLabel(id: UUID(), frameRect: small, textWidth: 110, leadingInset: 14)
+        #expect(CanvasNameLabels.box(for: plain).width == small.width - 14)
+    }
+
+    @Test("Even a name that must print whole stops at the cap")
+    func fittingWholeTextStopsAtTheCap() {
+        let label = CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 4000,
+                                    fitsWholeText: true)
+        #expect(CanvasNameLabels.box(for: label).width == CanvasNameLabels.maximumWidth)
+    }
+
+    @Test("A widened name takes its real width into account when names stack")
+    func fittingWholeTextIsStackedByItsRealInk() {
+        let small = CGRect(x: 0, y: 100, width: 70, height: 30)
+        let label = CanvasNameLabel(id: UUID(), frameRect: small, textWidth: 110,
+                                    leadingInset: 14, fitsWholeText: true)
+        #expect(CanvasNameLabels.chipBox(for: label).width == 124)
+    }
+
     @Test("The clickable area is the width of the text, not the width of the box")
     func hitBoxFollowsTheText() {
         let hit = CanvasNameLabels.hitBox(forFrameRect: frame, textWidth: 42)

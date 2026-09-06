@@ -23,12 +23,24 @@ public struct CanvasNameLabel: Hashable, Sendable, Identifiable {
     /// How far right of the box's left edge the letters begin, leaving room for
     /// a mark drawn in front of them. Zero for a plain screen name.
     public let leadingInset: CGFloat
+    /// Whether the box grows to fit the whole text rather than cutting it off
+    /// at the box's own width.
+    ///
+    /// A component wearing which version it is after its name sets this. Every
+    /// version of a component carries the component's name, so on a button
+    /// eighty points wide "Button \u{00B7} Disabled" would be cut back to "Button"
+    /// and the one word that tells two drawings apart would be the word that
+    /// went missing. A caption a little wider than a small box is normal
+    /// chrome; a caption that says nothing is not.
+    public let fitsWholeText: Bool
 
-    public init(id: UUID, frameRect: CGRect, textWidth: CGFloat, leadingInset: CGFloat = 0) {
+    public init(id: UUID, frameRect: CGRect, textWidth: CGFloat, leadingInset: CGFloat = 0,
+                fitsWholeText: Bool = false) {
         self.id = id
         self.frameRect = frameRect
         self.textWidth = textWidth
         self.leadingInset = leadingInset
+        self.fitsWholeText = fitsWholeText
     }
 }
 
@@ -65,23 +77,31 @@ public enum CanvasNameLabels {
 
     /// Where the name draws for a box drawn at `frameRect`, with `leadingInset`
     /// points reserved at the left for a mark in front of the letters.
-    public static func box(forFrameRect frameRect: CGRect, leadingInset: CGFloat = 0) -> CGRect {
+    ///
+    /// `fitting` is text that must print whole: the box widens to hold it, up
+    /// to the same cap every name obeys. Zero, which is nearly every name,
+    /// leaves the box the size of the thing it names and lets a long name
+    /// truncate as it always did.
+    public static func box(forFrameRect frameRect: CGRect, leadingInset: CGFloat = 0,
+                           fitting ink: CGFloat = 0) -> CGRect {
         let strip = CGRect(x: frameRect.minX,
                            y: frameRect.minY - height - gap,
                            width: max(min(frameRect.width, maximumWidth), minimumWidth),
                            height: height)
-        guard leadingInset > 0 else { return strip }
+        guard leadingInset > 0 || ink > 0 else { return strip }
         // The mark eats into the strip rather than pushing the name past the
         // box's right edge, but a narrow box still keeps somewhere to print.
+        let printable = max(strip.width - leadingInset, minimumWidth)
         return CGRect(x: strip.minX + leadingInset,
                       y: strip.minY,
-                      width: max(strip.width - leadingInset, minimumWidth),
+                      width: min(max(printable, ink), maximumWidth),
                       height: strip.height)
     }
 
     /// Where the name draws for `label`.
     public static func box(for label: CanvasNameLabel) -> CGRect {
-        box(forFrameRect: label.frameRect, leadingInset: label.leadingInset)
+        box(forFrameRect: label.frameRect, leadingInset: label.leadingInset,
+            fitting: label.fitsWholeText ? label.textWidth : 0)
     }
 
     /// The area a click on that name lands in: the letters plus a little slop,
@@ -93,8 +113,8 @@ public enum CanvasNameLabels {
     /// The mark and the name read as one small chip, and a click that lands on
     /// the chip and does nothing is the kind of miss nobody forgives.
     public static func hitBox(forFrameRect frameRect: CGRect, textWidth: CGFloat,
-                             leadingInset: CGFloat = 0) -> CGRect {
-        let box = box(forFrameRect: frameRect, leadingInset: leadingInset)
+                             leadingInset: CGFloat = 0, fitting ink: CGFloat = 0) -> CGRect {
+        let box = box(forFrameRect: frameRect, leadingInset: leadingInset, fitting: ink)
         let letters = min(max(textWidth, minimumHitWidth), box.width)
         return CGRect(x: box.minX - slop - leadingInset,
                       y: box.minY - slop,
@@ -107,7 +127,8 @@ public enum CanvasNameLabels {
     /// The area a click on `label` lands in.
     public static func hitBox(for label: CanvasNameLabel) -> CGRect {
         hitBox(forFrameRect: label.frameRect, textWidth: label.textWidth,
-               leadingInset: label.leadingInset)
+               leadingInset: label.leadingInset,
+               fitting: label.fitsWholeText ? label.textWidth : 0)
     }
 
     // MARK: Two names that want the same spot
@@ -189,7 +210,8 @@ public enum CanvasNameLabels {
             result.append(CanvasNameLabel(id: label.id,
                                           frameRect: label.frameRect.offsetBy(dx: 0, dy: -lift),
                                           textWidth: label.textWidth,
-                                          leadingInset: label.leadingInset))
+                                          leadingInset: label.leadingInset,
+                                          fitsWholeText: label.fitsWholeText))
         }
         return result
     }

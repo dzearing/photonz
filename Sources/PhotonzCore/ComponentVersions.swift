@@ -265,6 +265,64 @@ extension PhotonzDocument {
     }
 }
 
+// MARK: - Telling two drawings apart on the canvas
+
+extension PhotonzDocument {
+
+    /// The version each drawing on the canvas should say it is, by layer id.
+    ///
+    /// Every version of a component carries the component's name, so a button
+    /// with a Disabled version puts two boxes on the canvas both labelled
+    /// Button. This is what the label adds after the name so the picture says
+    /// which one you are looking at, the same rule the layers list uses.
+    ///
+    /// An original speaks whenever its component holds more than one version.
+    /// A COPY only speaks when it is showing something other than the first
+    /// version: a screen built out of twelve ordinary buttons would otherwise
+    /// wear twelve labels all saying the same word, and the thing worth
+    /// spotting is the odd one out.
+    ///
+    /// Empty for a document with no versions anywhere, which is every document
+    /// until somebody asks for a second version, so the canvas draws exactly
+    /// what it always did.
+    ///
+    /// One walk of the tree and one pass over the mains, because the canvas
+    /// asks for this again on every pan, zoom and nudge.
+    public func canvasVersionNames() -> [UUID: String] {
+        var byComponent: [UUID: [ComponentVersion]] = [:]
+        for main in mainComponents {
+            guard let componentID = main.componentID else { continue }
+            var versions = byComponent[componentID] ?? []
+            versions.append(ComponentVersion(id: main.componentVersionID ?? main.id,
+                                             name: main.componentVersionName
+                                               ?? ComponentNaming.versionName(at: versions.count),
+                                             layerID: main.id))
+            byComponent[componentID] = versions
+        }
+        byComponent = byComponent.filter { $0.value.count > 1 }
+        guard !byComponent.isEmpty else { return [:] }
+
+        var names: [UUID: String] = [:]
+        for versions in byComponent.values {
+            for version in versions { names[version.layerID] = version.name }
+        }
+        for layer in allLayers {
+            guard let componentID = layer.instanceOf,
+                  let versions = byComponent[componentID], let first = versions.first
+            else { continue }
+            // A copy pointing at a version that has since been deleted falls
+            // back to the first, exactly as `instanceVersion(of:)` does, so the
+            // label never names a drawing that is no longer there.
+            let shown = layer.instanceVersionID.flatMap { id in
+                versions.first { $0.id == id }
+            } ?? first
+            guard shown.id != first.id else { continue }
+            names[layer.id] = shown.name
+        }
+        return names
+    }
+}
+
 // MARK: - What they are called
 
 extension ComponentNaming {

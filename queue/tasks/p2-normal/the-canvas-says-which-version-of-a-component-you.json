@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1350,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.099Z",
-  "updated": "2026-09-06T03:24:19.099Z",
+  "updated": "2026-09-06T12:09:39.944257Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The canvas mark is drawn in ComponentPanel.swift ComponentGlyph and placed by the canvas overlay that prints the component name above a main. Layer.componentVersionName is the string; PhotonzDocument.versionName(of:counts:) is the same only-while-there-are-several rule the layers row uses.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-06T03:24:19.099Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T11:53:53.496Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T12:09:39.944257Z",
+      "note": "Adversarial review before building: the mock idea 'label every copy too' would put twelve chips reading Default on a screen made of twelve ordinary buttons. Cut it down to the odd one out: an original always names its version once its component holds more than one (same rule the layers row uses), a COPY only speaks when it is showing something other than the first version. Shortest thing that delivers the value."
+    },
+    {
+      "t": "2026-09-06T12:09:39.944257Z",
+      "note": "Core: PhotonzDocument.canvasVersionNames() in ComponentVersions.swift, one walk, empty for every document without versions. Five tests in ComponentVersionTests."
+    },
+    {
+      "t": "2026-09-06T12:09:39.944257Z",
+      "note": "App: CanvasNameChip carries a version; CanvasComponents draws the name then the version after a middle dot, dimmer on an original, full violet on a copy."
+    },
+    {
+      "t": "2026-09-06T12:09:39.944257Z",
+      "note": "Live playtest found the first cut broken: on an 81% zoom button the strip was 54pt wide and the version ate the whole name, so the label read '. Default' with no Button in it. Fixed in core with CanvasNameLabel.fitsWholeText: a label carrying a version widens its box to fit, still capped at 240. Three tests in CanvasNameLabelTests."
+    },
+    {
+      "t": "2026-09-06T12:09:39.944257Z",
+      "note": "Verified live on Photonz Probe with Screen Recording granted (Scripts/playtest.sh Scripts/playtest/component-versions-walk.json): originals read 'Button . Default' and 'Button . Disabled', the plain copy wears its bare diamond, the Disabled copy says Disabled, and deleting the second original puts every label back to plain Button. Audit 2026-09-06-canvas-version-labels.json with two -sc.png captures."
+    },
+    {
+      "t": "2026-09-06T12:09:39.944257Z",
+      "note": "Scripts/test.sh green: 3771 tests. Next only (all of it behind next-components), Current untouched."
     }
-  ]
+  ],
+  "started": "2026-09-06T11:53:53.495Z"
 }

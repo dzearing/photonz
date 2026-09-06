@@ -30,13 +30,31 @@ extension CanvasNSView {
     // MARK: What is on screen
 
     /// One chip in the strip above the boxes: a screen's name, a component's
-    /// name behind its mark, or the lone mark a copy wears.
+    /// name behind its mark, or the mark a copy wears.
     struct CanvasNameChip {
         enum Kind { case screen, component, copyMark }
         let layer: Layer
         let label: CanvasNameLabel
         let kind: Kind
+        /// Which version of its component this drawing is, when the component
+        /// holds more than one (`PhotonzDocument.canvasVersionNames`). Nil on
+        /// everything else, which is nearly every chip.
+        let version: String?
     }
+
+    /// The gap between a name and the version printed after it.
+    static let versionGap: CGFloat = 5
+
+    /// How wide `version` prints in the name font, zero for no version.
+    static func versionWidth(_ version: String?) -> CGFloat {
+        guard let version, !version.isEmpty else { return 0 }
+        return ((versionSeparator + version) as NSString)
+            .size(withAttributes: [.font: nameLabelFont]).width.rounded(.up)
+    }
+
+    /// The middle dot that keeps "Button" and "Disabled" from reading as one
+    /// long name. A copy has no name in front of it, so it prints none.
+    static let versionSeparator = "\u{00B7} "
 
     /// Everything drawn in that strip, in the order it draws, back to front:
     /// screens, then components, then the marks on copies. That order is what
@@ -53,17 +71,30 @@ extension CanvasNSView {
     func canvasNameChips() -> [CanvasNameChip] {
         guard let viewport, let document else { return [] }
         var chips: [CanvasNameChip] = []
+        // Which drawings say which version they are, worked out once for the
+        // whole canvas rather than per chip, and empty for every document that
+        // has never been given a second version.
+        let versions = componentsEnabled ? document.canvasVersionNames() : [:]
         func append(_ layer: Layer, inset: CGFloat, kind: CanvasNameChip.Kind) {
             guard layer.isVisible, let bounds = document.canvasBounds(of: layer.id),
                   bounds.width > 0, bounds.height > 0 else { return }
             let rect = viewRect(forDocRect: bounds, in: viewport)
-            let width = kind == .copyMark ? 0 : (layer.name as NSString)
-                .size(withAttributes: [.font: Self.nameLabelFont]).width
+            let version = kind == .screen ? nil : versions[layer.id]
+            // A copy has no name of its own, so its ink is the version alone.
+            let name = kind == .copyMark ? 0 : (layer.name as NSString)
+                .size(withAttributes: [.font: Self.nameLabelFont]).width.rounded(.up)
+            let width = name + (name > 0 && version != nil ? Self.versionGap : 0)
+                + Self.versionWidth(version)
             chips.append(CanvasNameChip(layer: layer,
                                         label: CanvasNameLabel(id: layer.id, frameRect: rect,
-                                                               textWidth: width.rounded(.up),
-                                                               leadingInset: inset),
-                                        kind: kind))
+                                                               textWidth: width,
+                                                               leadingInset: inset,
+                                                               // A version is the word that tells
+                                                               // two drawings apart, so a small box
+                                                               // widens its caption rather than
+                                                               // cutting the name off in front of it.
+                                                               fitsWholeText: version != nil),
+                                        kind: kind, version: version))
         }
         if framesEnabled, document.hasFrames {
             for frame in document.frames {
@@ -75,11 +106,15 @@ extension CanvasNSView {
         }
         for main in markedComponents { append(main, inset: Self.componentMarkInset, kind: .component) }
         for copy in markedComponentInstances {
-            append(copy, inset: Self.componentGlyphSize, kind: .copyMark)
+            // A copy with a version to say gets the same air after its mark
+            // that a component's name gets; a bare mark needs none.
+            append(copy, inset: versions[copy.id] == nil
+                    ? Self.componentGlyphSize : Self.componentMarkInset,
+                   kind: .copyMark)
         }
         let stacked = CanvasNameLabels.stacked(chips.map(\.label))
         return zip(chips, stacked).map {
-            CanvasNameChip(layer: $0.layer, label: $1, kind: $0.kind)
+            CanvasNameChip(layer: $0.layer, label: $1, kind: $0.kind, version: $0.version)
         }
     }
 
