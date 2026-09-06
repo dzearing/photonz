@@ -28,7 +28,8 @@ struct PartsInspector: View {
     /// Which part is unfolded. Remembered across selections and across
     /// launches: someone who works in shadows all afternoon should not have to
     /// open the shadow again on every box they click.
-    @AppStorage("inspector.openPart") private var openPart = ""
+    @AppStorage(PartsInspector.openPartKey) private var openPart = ""
+    static let openPartKey = "inspector.openPart"
 
     var body: some View {
         let rows = editorState.layerPartRows

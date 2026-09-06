@@ -26,6 +26,26 @@
     {
       "t": "2026-09-06T21:31:54.985Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T21:35:27.623077Z",
+      "note": "Reproduced with the dock walk: viewport 688, Layers 6-257, Measurements 257-344, Measurement 344-814. The dock does NOT scroll to the picked section, so Measurement has to fit in 344pt, not 470. Cut needed: 126pt."
+    },
+    {
+      "t": "2026-09-06T21:35:27.623077Z",
+      "note": "Adversarial review before building. (1) The section runs TWO row idioms at once: five stacked fields (caption on its own line above a half-width control) and three inline swatch rows (caption left). The stacked half is pure waste: Size|Spacing, Logical|Actual and 1px|2px|3px are all about 120pt wide in a 227pt column, so each caption line buys nothing and costs 13pt. Making all of them inline is both shorter and one idiom instead of two. (2) From/To/Distance/Units is not settings at all, it is a readout, and Units restates the Unit picker three rows above it. Distance restates the number already drawn on the canvas. (3) The spec-line preview under Copy Measurement is a third restatement of the same numbers. (4) The app already settled this exact problem once: the parts list folds a part's settings open under the row you click, explicitly so five sliders cannot push the sections below off the bottom. Reuse that idiom rather than inventing one. Plan: inline rows for Name/Role/Unit/Thickness/Label size, and fold every read-only number plus the spec line into one Details row, closed by default, remembered across launches. Nothing is removed."
+    },
+    {
+      "t": "2026-09-06T21:44:50.563563Z",
+      "note": "Built. Every setting is a one-line row (shared row(_:), 62pt label column), and the read-only From/To/Distance/Edge/Items/Units grid plus the spec-line preview fold behind a Details row at the foot, closed by default, remembered in inspector.measureDetailsOpen. Copy Measurement stays out in the open on that same line. Measurement went 470 -> 279pt: the walk now reads Measurement 344-623 in a 688 viewport with the section in dockInView."
+    },
+    {
+      "t": "2026-09-06T21:44:50.563563Z",
+      "note": "Acceptance verified. (1) dock-picked-first-walk.json upgraded from sectionHeaderInView to sectionInView for the measurement and passes. (2) Nothing removed: the walk presses Details, snapshots the numbers coming back (344-710 open), presses it again and re-asserts the section fits. (3) The walk still passes for the rectangle (Appearance), the text, the zoom callout and the arrow. Also checked by hand at the dock's narrowest 220pt with the fold open: no clipping. 4090 unit tests green."
+    },
+    {
+      "t": "2026-09-06T21:44:50.563563Z",
+      "note": "Post-build review. The one thing I could not guard: there is no playtest step that resizes the dock, so the 220pt case was checked by setting inspector.width directly rather than by a walk. Two judgment calls worth the user's eye, both in the audit's evaluate list: Details is closed on first sight, so someone who used the coordinate readouts has to learn the word Details holds them; and Copy Measurement now shares a line with the fold instead of standing alone. Neither is a UX question I could ask without building it first, which is why they are audit questions rather than a decision card."
     }
   ],
   "started": "2026-09-06T21:31:54.984Z"

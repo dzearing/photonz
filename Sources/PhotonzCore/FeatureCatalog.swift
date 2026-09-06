@@ -219,7 +219,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: measurePanelFlag,
                     title: "Measurements panel",
-                    description: "Lists every measurement in the layers panel with its own eye, name, and value, adds a count to the toolbar, and puts From, To, Distance, and export shortcuts in the inspector. The panel menu can show, hide, or clear them all, or copy them as a text spec list.",
+                    description: "Lists every measurement in the layers panel with its own eye, name, and value, adds a count to the toolbar, and puts From, To and Distance behind a Details fold in the inspector, beside Copy Measurement. The panel menu can show, hide, or clear them all, or copy them as a text spec list.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

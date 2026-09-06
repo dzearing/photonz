@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/dock-picked-first",
-  "seed": "A screenshot open in a laptop window (1200 by 720), marked up until the layers list has grown to its full height, which is what a document looks like after ten minutes of work. Pick a rectangle, a piece of text, a measurement and a zoom callout in turn, and read the dock's own offsets back rather than trusting a picture. The claim, one waitFor per selection so the walk FAILS rather than reports: the section named after the thing you picked is whole on screen without anyone scrolling. Two exceptions, both stated in the steps: a measurement's own section is far taller than the panel however it is ordered, so it claims only that its header is on screen (making it fit is `a-measurement-fits-in-the-panel`), and a plain rectangle no longer HAS a section of its own since the parts list took its one row, so what it claims is that the section its settings did move into is on screen.",
+  "seed": "A screenshot open in a laptop window (1200 by 720), marked up until the layers list has grown to its full height, which is what a document looks like after ten minutes of work. Pick a rectangle, a piece of text, a measurement and a zoom callout in turn, and read the dock's own offsets back rather than trusting a picture. The claim, one waitFor per selection so the walk FAILS rather than reports: the section named after the thing you picked is whole on screen without anyone scrolling. One exception, stated in the steps: a plain rectangle no longer HAS a section of its own since the parts list took its one row, so what it claims is that the section its settings did move into is on screen. A measurement claims the whole section like everything else, and then opens the Details fold to prove the numbers that fold away are one click from where they were.",
   "setup": { "forget": ["panel", "tools", "shapes", "text", "measure", "color"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1200, "height": 720 },
@@ -64,10 +64,19 @@
 
     { "do": "selectRow", "row": "Measure" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "waitFor", "condition": "sectionHeaderInView", "value": "Measurement", "timeout": 4 },
-    { "do": "describe", "stage": "3-measure", "note": "a measurement: its section is 470pt tall against a 688pt panel with a 251pt layers list above it, so the whole-section claim is impossible by any order. The claim here is the honest one, that its header is on screen so you can see the settings exist and scroll to them." },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Measurement", "timeout": 4 },
+    { "do": "describe", "stage": "3-measure", "note": "THE TEST for a measurement, and the one this walk used to have to give up on: the section was 470pt tall against a 344pt slot, so no ordering could fit it. Its settings now read one to a line and its read-only numbers fold away, and the whole section is in dockInView." },
     { "do": "panel", "stage": "3-measure" },
     { "do": "snapshot", "name": "dock-picked-first-3-measure" },
+
+    { "do": "press", "control": "Details" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3b-measure-details", "note": "and nothing was taken away: one click on Details puts From, To, Distance, Units and the exact spec line back, which is what makes the trim a fold rather than a deletion." },
+    { "do": "panel", "stage": "3b-measure-details" },
+    { "do": "snapshot", "name": "dock-picked-first-3b-measure-details" },
+    { "do": "press", "control": "Details" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Measurement", "timeout": 4 },
 
     { "do": "selectRow", "row": "Zoom" },
     { "do": "wait", "seconds": 0.8 },

@@ -3523,6 +3523,12 @@ struct MeasureInspector: View {
     /// the draft must not land on the new selection.
     @State private var draftLayerID: UUID?
     @FocusState private var nameFocused: Bool
+    /// Whether the read-only numbers at the foot of the section are unfolded.
+    /// Remembered across selections and across launches, like the parts list's
+    /// open row: someone checking coordinates all afternoon should not have to
+    /// open the fold again on every measurement they click.
+    @AppStorage(MeasureInspector.detailsOpenKey) private var isDetailsOpen = false
+    static let detailsOpenKey = "inspector.measureDetailsOpen"
 
     private var content: MeasureContent? {
         editorState.document?.layer(id: layer.id)?.measure
@@ -3536,12 +3542,12 @@ struct MeasureInspector: View {
 
     var body: some View {
         if let c = content {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 // The same rename the Measurements row offers on double-click
                 // (decision D3), reachable from Properties too. It commits
                 // through the same call, so it is one undo step either way.
                 if Experiments.shared.measurePanelEnabled {
-                    field("Name") {
+                    row("Name") {
                         TextField("Measurement name", text: $nameDraft)
                             .textFieldStyle(.roundedBorder)
                             .controlSize(.small)
@@ -3568,7 +3574,7 @@ struct MeasureInspector: View {
                 // Spacing, each with its own remembered color set. Alignment
                 // guides are their own kind, so they don't offer it.
                 if Experiments.shared.measureRolesEnabled, c.alignment == nil {
-                    field("Role") {
+                    row("Role") {
                         Picker("Role", selection: Binding(
                             get: { c.role },
                             set: { editorState.setMeasureRole($0) })) {
@@ -3581,7 +3587,7 @@ struct MeasureInspector: View {
                               + "with the last-used role.")
                     }
                 }
-                field("Unit") {
+                row("Unit") {
                     Picker("Unit", selection: Binding(
                         get: { c.unit },
                         set: { editorState.setMeasureUnit($0) })) {
@@ -3594,7 +3600,7 @@ struct MeasureInspector: View {
                     .help("Both read out in px. Logical is the on-screen size (like CSS px, the "
                           + "default); Actual is raw device pixels, 2× larger on a Retina screenshot.")
                 }
-                field("Thickness") {
+                row("Thickness") {
                     Picker("Thickness", selection: Binding(
                         get: { c.strokeWidth },
                         set: { editorState.setMeasureThickness($0) })) {
@@ -3604,14 +3610,14 @@ struct MeasureInspector: View {
                     }
                     .labelsHidden().pickerStyle(.segmented).controlSize(.small)
                 }
-                field("Label size") {
+                row("Label size") {
                     // During a drag the committed doc hasn't changed, so read the
                     // live preview value (else the thumb snaps back / resets).
                     let liveScale = editorState.measureLabelPreview?.scale ?? c.labelScale
                     let px = liveScale * MeasureContent.labelFontSize
                     let lo = Double(MeasureContent.labelSizeRangePx.lowerBound)
                     let hi = Double(MeasureContent.labelSizeRangePx.upperBound)
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         Slider(value: Binding(
                             get: { Double(px) },
                             set: { editorState.previewMeasureLabelScale(CGFloat($0) / MeasureContent.labelFontSize) }),
@@ -3625,7 +3631,7 @@ struct MeasureInspector: View {
                             .controlSize(.small)
                         Text("\(Int(px.rounded())) px")
                             .font(.caption).monospacedDigit().foregroundStyle(.secondary)
-                            .frame(width: 42, alignment: .trailing)
+                            .frame(width: 38, alignment: .trailing)
                     }
                 }
                 // Three swatches, no extra sliders: Stroke = caliper ink + the
@@ -3648,8 +3654,7 @@ struct MeasureInspector: View {
                     editorState.setMeasureTextColor($0, commit: true)
                 }
                 if Experiments.shared.measurePanelEnabled {
-                    geometryGrid(c)
-                    copySection
+                    detailsSection(c)
                 }
             }
             .padding(.horizontal, 14)
@@ -3670,6 +3675,59 @@ struct MeasureInspector: View {
         editorState.renameLayer(id: layer.id, to: trimmed)
     }
 
+    /// The foot of the section: the one action that belongs beside a picked
+    /// measurement, and a fold holding every number it can tell you about
+    /// itself.
+    ///
+    /// The numbers used to sit open, and between them and the spec-line preview
+    /// they were half the section's height — which is how the section came to
+    /// be 470pt tall against a 344pt slot and could not be made to fit by any
+    /// ordering of the dock. None of them is a setting: Distance restates the
+    /// number already drawn on the canvas, Units restates the Unit row three
+    /// rows above, and the spec line restates both. So they fold, the way a
+    /// part's settings fold in the parts list, and the fold is remembered
+    /// across launches: open it once and it stays open.
+    @ViewBuilder private func detailsSection(_ c: MeasureContent) -> some View {
+        Divider().opacity(0.4)
+        HStack(spacing: 8) {
+            Button {
+                withAnimation(.easeOut(duration: 0.14)) { isDetailsOpen.toggle() }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .rotationEffect(.degrees(isDetailsOpen ? 90 : 0))
+                    Text("Details").font(.caption)
+                }
+                .foregroundStyle(.secondary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Where this measurement's feet sit, how far apart they are, and the "
+                  + "exact line Copy Measurement puts on the clipboard")
+            .playtestControl("Details", detail: isDetailsOpen ? "open" : "closed")
+            Spacer(minLength: 0)
+            Button("Copy Measurement") { editorState.copyMeasurement(id: layer.id) }
+                .controlSize(.small)
+                .help("Copies this one measurement's spec line as text, ready to paste into a thread")
+        }
+        .playtestField("Details")
+        if isDetailsOpen {
+            VStack(alignment: .leading, spacing: 4) {
+                geometryGrid(c)
+                // The exact line that lands on the clipboard, so the button
+                // needs no explaining. Selectable, like the readouts above it.
+                if let line = specLine {
+                    Text(line)
+                        .font(.caption2).monospaced().foregroundStyle(.tertiary)
+                        .lineLimit(1).truncationMode(.tail)
+                        .textSelection(.enabled)
+                }
+            }
+            .transition(.opacity)
+        }
+    }
+
     /// The mock's read-only From / To / Distance / Units grid (§6): the feet in
     /// document coordinates and the span, straight from `caliperGeometry()` —
     /// no new model state. A guide (§9) reads Length instead of Distance, and
@@ -3678,7 +3736,6 @@ struct MeasureInspector: View {
         let frame = editorState.document?.layer(id: layer.id)?.frame ?? layer.frame
         let g = c.caliperGeometry()
         let scale = editorState.document?.pixelScale ?? 1
-        Divider().opacity(0.4)
         VStack(alignment: .leading, spacing: 4) {
             readoutRow("From", point(g.footA, in: frame, scale: scale))
             readoutRow("To", point(g.footB, in: frame, scale: scale))
@@ -3736,35 +3793,12 @@ struct MeasureInspector: View {
     @ViewBuilder private func readoutRow(_ label: String, _ value: String) -> some View {
         HStack(spacing: 8) {
             Text(label).font(.caption).foregroundStyle(.secondary)
-                .frame(width: 52, alignment: .leading)
+                .frame(width: Self.labelWidth, alignment: .leading)
             Text(value)
                 .font(.caption)
                 .monospacedDigit()
                 .textSelection(.enabled)
             Spacer(minLength: 0)
-        }
-    }
-
-    /// The one hand-off action that belongs beside ONE selected measurement
-    /// (§7): its own spec line, as text. This section used to carry Copy
-    /// Image and Export PNG, straight from the mock, but both act on the whole
-    /// document, so sitting under a selected measurement they read as if they
-    /// exported that measurement. Whole-document export lives in File, where
-    /// every other whole-document action already lives.
-    @ViewBuilder private var copySection: some View {
-        Divider().opacity(0.4)
-        VStack(alignment: .leading, spacing: 4) {
-            Button("Copy Measurement") { editorState.copyMeasurement(id: layer.id) }
-                .controlSize(.small)
-                .help("Copies this one measurement's spec line as text, ready to paste into a thread")
-            // The exact line that lands on the clipboard, so the button needs
-            // no explaining. Selectable, like the readouts above it.
-            if let line = specLine {
-                Text(line)
-                    .font(.caption2).monospaced().foregroundStyle(.tertiary)
-                    .lineLimit(1).truncationMode(.tail)
-                    .textSelection(.enabled)
-            }
         }
     }
 
@@ -3776,16 +3810,31 @@ struct MeasureInspector: View {
         return MeasureSpecList.specLine(for: current, in: document)
     }
 
-    /// A compact labeled control matching the Effects panel: a small secondary
-    /// caption above the control, full width.
-    @ViewBuilder private func field<Content: View>(_ label: String,
-                                                   @ViewBuilder _ content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+    /// One setting, on one line: its name on the left, its control on the
+    /// right, the way the colour rows below already read.
+    ///
+    /// These used to stack the caption on its own line ABOVE a full-width
+    /// control, which is the Effects panel's shape. It is the wrong shape here:
+    /// every control in this section — two segments, three segments, a short
+    /// slider — is about half the column wide, so the caption line bought
+    /// nothing and cost a line of height each time, and the section ended up
+    /// speaking two row languages, stacked at the top and inline at the bottom.
+    /// One language, five lines shorter.
+    @ViewBuilder private func row<Content: View>(_ label: String,
+                                                 @ViewBuilder _ content: () -> Content) -> some View {
+        HStack(spacing: 8) {
             Text(label).font(.caption).foregroundStyle(.secondary)
+                .lineLimit(1).minimumScaleFactor(0.85)
+                .frame(width: Self.labelWidth, alignment: .leading)
             content()
+            Spacer(minLength: 0)
         }
         .playtestField(label)
     }
+
+    /// Wide enough for "Thickness" and "Label size", the two longest names in
+    /// the section, so every control in it starts at the same left edge.
+    private static let labelWidth: CGFloat = 62
 
     /// One color row: caption on the left, swatch next to it, so the three
     /// swatches line up in a column.
@@ -3800,11 +3849,8 @@ struct MeasureInspector: View {
     @ViewBuilder private func swatchRow(_ label: String, hex: String,
                                         supportsOpacity: Bool = false,
                                         set: @escaping (String) -> Void) -> some View {
-        HStack(spacing: 8) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
-                .frame(width: 44, alignment: .leading)
+        row(label) {
             ColorWellButton(hex: hex, name: label, supportsOpacity: supportsOpacity, onCommit: set)
-            Spacer(minLength: 0)
         }
     }
 }

@@ -42,6 +42,10 @@ extension PlaytestMemory {
              EditorState.inspectorWidthKey, LibraryPanel.scopeKey,
              InspectorPanel.sectionOrderKey, InspectorPanel.sectionOrderVersionKey,
              InspectorPanel.collapsedKey,
+             // The folds INSIDE sections, which last across launches the same
+             // way the sections' own collapse does: the parts list's open row
+             // and the Measurement section's Details.
+             PartsInspector.openPartKey, MeasureInspector.detailsOpenKey,
              LayersListView.heightKey, LibraryPanel.heightKey]
         case .grid:
             [EditorState.canvasGridKey]

@@ -9963,3 +9963,49 @@ Next: the audit at `queue/audits/2026-09-06-colour-off-the-shelf.json` asks
 whether carrying the NAME is what the tile should mean, and whether the palette
 mark on the ring is doing too much work now that it says both "a saved colour is
 arriving" and "a saved colour is being let go of".
+
+## 2026-09-06 — A measurement fits in the panel
+
+Picking a measurement on a 1200 by 720 window used to give you a settings
+section 470 points tall in a 688 point panel, with the layers list and the
+Measurements group taking the first 344 of it. No ordering of the dock could
+make it fit, which is why `dock-picked-first-walk.json` had a hole in it: for
+every other kind of layer it claimed the whole section was on screen, and for a
+measurement it climbed down to claiming the header was.
+
+It is 279 points now, and the walk makes the same claim for a measurement it
+makes for everything else.
+
+Two changes, both in `MeasureInspector` (`Sources/Photonz/LayersPanel.swift`).
+
+The section was speaking two row languages: Name, Role, Unit, Thickness and
+Label size stacked their caption on a line of its own above a full-width
+control, while Stroke, Chip and Text put the caption on the left. The stacked
+half was pure waste, because every control in the section is about half the
+column wide, so the caption line bought nothing and cost a line each time. They
+are all inline rows now, one shared `row(_:)` and one label column, which is
+five lines shorter and one idiom instead of two.
+
+And the read-only numbers folded. From, To, Distance, Units, a guide's Edge and
+Items, and the spec-line preview were half the section's height and none of
+them is a setting: Distance restates the number drawn on the canvas, Units
+restates the Unit row three rows above it, the spec line restates both, and a
+guide's verdict is already a chip beside the guide. They sit behind a `Details`
+row at the foot of the section, closed by default, remembered across launches
+the way the parts list remembers its open row. `Copy Measurement` stayed out in
+the open, on the same line.
+
+Nothing was removed. Details is one click, and `inspector.measureDetailsOpen`
+joined the `panel` memory a walk can forget, along with the parts list's
+`inspector.openPart`, which had been missing from that list.
+
+Verified with `Scripts/playtest/dock-picked-first-walk.json`: Measurement is
+344-623 against a 688 point viewport and `dockInView` names it, the walk presses
+Details, reads the numbers back, and presses it again to prove the section still
+fits. Also checked by hand at the dock's narrowest, 220 points: nothing clips.
+4090 unit tests green. The row shape lives in a shared file so Current gets it
+too, four rows shorter there since Name, Role and Details are Next-only flags.
+
+Next: the audit at `queue/audits/2026-09-06-measure-fits-in-the-panel.json` asks
+whether inline rows read faster than stacked captions, and whether `Details` is
+a specific enough word for where the coordinates went.

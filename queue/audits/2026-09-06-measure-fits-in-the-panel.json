@@ -1,0 +1,29 @@
+{
+  "feature": "A measurement fits in the panel",
+  "epic": "ui-components",
+  "summary": "Pick a measurement on a laptop-sized window and its whole settings section is now on screen at once. It went from 470 points tall to 279: every setting reads one to a line, and the read-only numbers it used to print underneath fold away behind a Details row you can open once and leave open.",
+  "setup": "Photonz Dev, Experiments window, release Next. No new flag. Nothing was removed: Details starts closed and remembers whichever way you leave it.",
+  "try": [
+    { "do": "Open a screenshot in a laptop-sized window and mark it up: a measurement, a few rectangles, a label and a zoom callout, so the layers list is at full height." },
+    { "do": "Click the measurement in the layers list. The whole Measurement section is on screen, Name down to the Text colour, with Position & Size starting below it.", "shot": "2026-09-06-measure-fits-closed.png" },
+    { "do": "Change the Unit to Actual, then pull Label size. Every row is one line: name on the left, control on the right." },
+    { "do": "Click Details at the foot of the section. From, To, Distance, Units and the exact line Copy Measurement copies all come back.", "shot": "2026-09-06-measure-fits-details.png" },
+    { "do": "Click Details again to close it, then click a different measurement. It stays closed, and stays that way after a relaunch." },
+    { "do": "Press Copy Measurement and paste into a note. The spec line is unchanged." },
+    { "do": "Drag the panel's left edge all the way in, to its narrowest. Every row still fits, including Thickness and the Copy Measurement button." }
+  ],
+  "evaluate": [
+    "With the whole section on screen, can you restyle a measurement without your eye leaving the panel?",
+    "Name on the left and the control on the right: does that read faster than the caption sitting on its own line above, or does it feel cramped?",
+    "Details is closed the first time you see it. Would you know the coordinates are in there, or does the word need to be more specific?",
+    "Copy Measurement now shares a line with Details rather than standing on its own. Is it still obviously a button you can press?",
+    "The Name field is narrower than it was. Is it still wide enough for the names you actually give measurements?"
+  ],
+  "rough": [
+    "The numbers that fold away are all restatements, which is why folding them was the cut: Distance repeats the number drawn on the canvas, Units repeats the Unit row three rows above, and the spec line repeats both. For an alignment guide the Edge and Items rows fold too, and their verdict chip is already drawn on the canvas beside the guide.",
+    "Measured, not guessed. Same walk, same document: Measurement was 344 to 814 in a 688 point panel, it is 344 to 623 now, and the walk's claim was upgraded from its header is on screen to the whole section is on screen. With Details open it is 344 to 710, so opening the fold does push the foot of the section below the fold again.",
+    "The narrowest panel was tested by hand at 220 points and nothing clips, but there is no playtest step that resizes the dock, so that one is not guarded by the walk the way the rest is.",
+    "Screen Recording was granted for this run, so both pictures are real window captures, not offscreen renders.",
+    "The row shape changed in a file both releases share, so Current's measurement section gets the same one-line rows. Current has no Name row, no Role row and no Details fold (both are Next-only flags), so there it is simply four rows shorter than it was."
+  ]
+}
