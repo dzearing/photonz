@@ -40,6 +40,10 @@ public enum TextRasterizer {
                                  borderColorHex: String = "#000000",
                                  scale: CGFloat = 1) -> CGImage? {
         guard scale > 0, scale.isFinite else { return nil }
+        // Words that stay on one line give way here, before anything is laid
+        // out, so everything below — the box, the alignment, the halo — is
+        // working on the string that actually fits.
+        let text = truncating(text, toFit: size.width)
         let width = Int((size.width * scale).rounded())
         let height = Int((size.height * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
@@ -99,6 +103,41 @@ public enum TextRasterizer {
         return CGRect(x: box.minX, y: box.maxY - inset - needed, width: box.width, height: needed)
     }
 
+    /// `text` cut down to what fits `width`, with an ellipsis where the rest
+    /// was — the answer a bar title gives when it is longer than the bar has
+    /// room for.
+    ///
+    /// Only words told to stay on one line are ever cut: everything else wraps,
+    /// and cutting a paragraph short would lose words nobody asked to lose. A
+    /// string that already fits comes straight back, unchanged, so a label with
+    /// room to spare is byte for byte what it was before any of this existed.
+    ///
+    /// The cut lands on a cluster boundary rather than a byte one, so an emoji
+    /// or an accented letter is never split down the middle, and any spaces
+    /// left dangling before the ellipsis go with it.
+    static func truncating(_ text: TextContent, toFit width: CGFloat) -> TextContent {
+        guard text.staysOnOneLine == true, !text.string.isEmpty else { return text }
+        // The words lay out in the width they were measured against, which is
+        // the box less the inset it carries on each side.
+        let room = max(1, width - frameInset * 2)
+        guard naturalSize(text).width - frameInset * 2 > room else { return text }
+        var token = text
+        token.string = ellipsis
+        let tokenWidth = CTLineGetTypographicBounds(
+            CTLineCreateWithAttributedString(attributedString(token)), nil, nil, nil)
+        let typesetter = CTTypesetterCreateWithAttributedString(attributedString(text))
+        let fits = CTTypesetterSuggestClusterBreak(typesetter, 0, max(1, room - tokenWidth))
+        let string = text.string as NSString
+        let head = string.substring(to: min(max(0, fits), string.length))
+        var out = text
+        out.string = head.trimmingCharacters(in: .whitespacesAndNewlines) + ellipsis
+        return out
+    }
+
+    /// What stands in for the words that did not fit. One character, not three
+    /// dots, so it is one glyph wide and reads as a cut rather than a pause.
+    private static let ellipsis = "…"
+
     /// The same box, as wide as the words were MEASURED to fit in.
     ///
     /// A text box carries `frameInset` on each side beyond the ink, which is
@@ -129,6 +168,11 @@ public enum TextRasterizer {
     public static func naturalSize(_ text: TextContent,
                                    maxWidth: CGFloat = .greatestFiniteMagnitude,
                                    minWidth: CGFloat = 0) -> CGSize {
+        // Words that stay on one line have nothing to wrap at, so the room
+        // they are measured against says nothing about how big they are. Same
+        // answer `TextMeasurement` gives, which is the point: the model and
+        // the drawing must not disagree about how tall a title is.
+        let maxWidth = text.staysOnOneLine == true ? CGFloat.greatestFiniteMagnitude : maxWidth
         let font = font(for: text)
         let lineHeight = CTFontGetAscent(font) + CTFontGetDescent(font) + CTFontGetLeading(font)
         // The floor applies to the whole frame width, but never exceeds maxWidth

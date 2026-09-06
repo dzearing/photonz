@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 13,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T22:11:31.645Z",
-  "updated": "2026-09-06T22:38:07.670Z",
+  "updated": "2026-09-06T22:42:46.666Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-06. The keys are already in the right shape to change: CanvasTextEditing.swift line 498 has one editor used for both jobs, switched by commitsOnPlainReturn, which is set true only for the caption at line 101; the ordinary text editor already commits on Command and Return at line 515 and types a newline on plain Return, which is exactly the behaviour wanted here. So the change is largely to stop treating the caption as a single line case and to let ArrowCaptionEntry (Sources/PhotonzCore/ArrowCaptionEntry.swift) map Return to type rather than commit, keeping its rule that letters always type even when they are tool shortcuts. The sizing is the real work: AnnotationContent.estimatedCaptionSize (Layer.swift line 325) assumes one line, computing height as the font size times 1.3 plus padding and width from a character count, and the rasterizer measures the real text separately; both need to understand lines, and the estimate must still reserve at least what the drawing uses or the pill will clip at the frame edge. Watch the interaction with two open tasks: the one giving the pill a minimum width and a clamped corner radius, and the one making the tail meet the pill's near edge; a taller pill changes where its near edge is, so whichever lands last must keep the other's rule.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-06T22:38:07.670Z",
       "note": "Verified on the probe with a new walk (Scripts/playtest/caption-two-lines-walk.json, 78 steps, ok): Return dropped a line, Command and Return landed 'Focus ring\\nis two pixels off' unchanged from the bubble that was on screen, a diagonal arrow took two lines, Escape after four typed lines left the arrow with no caption at all, and a click away landed two lines. Eleven other caption walks and the redline walk still pass; arrow-endings-walk fails at step 34 for a reason already queued and confirmed pre-existing. Fourteen walks that used Return to finish a caption were updated to Command and Return. Audit: queue/audits/2026-09-06-arrow-caption-lines.json with three real screen captures."
+    },
+    {
+      "t": "2026-09-06T22:42:46.665Z",
+      "note": "Return types a line in an arrow caption, Command Return or a click away lands it, and the pill grows to hold the lines and stays attached to the arrow. Shipped in Next (shared caption code behind next-arrow-captions): ArrowCaptionEntry, AnnotationContent sizing and corner, PillRasterizer centring, the canvas field and the panel's Caption field. Full suite green (4112) and verified on the probe with Scripts/playtest/caption-two-lines-walk.json; twelve other caption walks still pass. Audit: queue/audits/2026-09-06-arrow-caption-lines.json. Commit f095dc8, pushed."
     }
   ],
-  "started": "2026-09-06T22:12:24.950Z"
+  "started": "2026-09-06T22:12:24.950Z",
+  "completed": "2026-09-06T22:42:46.666Z"
 }

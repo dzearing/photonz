@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1470,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T19:18:35.998Z",
-  "updated": "2026-09-06T19:18:35.998Z",
+  "updated": "2026-09-06T23:06:03.118131Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-06 while landing a-control-added-to-a-bar-does-not-vanish-behind. The title is now an in-flow Fill item, so GroupFlow.wrapRooms treats it like any other row label and wraps it to the room left over (Title box goes 248x36 in a 48-tall bar). Before that change it was Stretch and overhung sideways instead. Probably wants a per-layer no-wrap answer, or a rule that a row whose height is a typed number never wraps a label past that height. See docs/design/ui-building.md, \"A field and a bar keep their width on purpose\".",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-06T19:18:35.998Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T22:43:44.412Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T23:06:03.118131Z",
+      "note": "Reproduced in core first: a retitled starter Nav Bar leaves its Title box 252x40 at y=15 in a 48 tall bar, hanging 7 points below the hairline. Two causes, not one. GroupFlow.wrapRooms bails when two labels look outgrown, and a very long title starves the Back label so BOTH look outgrown, so the flow wrapped nothing; then arranged -> moved -> Layer.resized re-wrapped the text at the fill width AFTER the vertical placement had been decided from the one-line height."
+    },
+    {
+      "t": "2026-09-06T23:06:03.118131Z",
+      "note": "Adversarial review before building. A height cap does not answer this: two lines of 15 point type are 40 tall and fit inside a 48 tall bar, so a cap gives a centred two-line title, which is not what a bar does. Going back to Stretch reintroduces the overlap the previous task fixed. The honest answer is a per-layer one-line answer, which is white-space: nowrap in CSS and a fixed text box in Figma: a real auto-layout primitive, not a nav bar special case. Shortest version that delivers it: model flag, honoured by the flow and the resize, set on the bar title, and truncation in the renderer so the cut reads as a cut rather than a short title."
+    },
+    {
+      "t": "2026-09-06T23:06:03.118131Z",
+      "note": "Built: TextContent.staysOnOneLine (Codable, nil = wraps, so nothing existing changes). TextMeasurement.size gives the one-line answer whatever room it is asked about; GroupFlow.wrapRooms leaves such labels alone; Layer.resized keeps the box one line tall at whatever width it is handed; TextRasterizer.truncating cuts on a cluster boundary and appends one ellipsis character; TextRasterizer.naturalSize ignores maxWidth for one-line text. Nav Bar starter's title sets it."
+    },
+    {
+      "t": "2026-09-06T23:06:03.118131Z",
+      "note": "Real app review found two more things the core tests could not. Retitling on the canvas rebuilds TextContent from the new-text style and dropped the answer, so the flag never reached the document (fixed in PhotonzDocument.commitTextEdit, which is the one place that knows both the old box and the new words). And the inline field wrapped the draft to two lines while typing and snapped back to one on Return; the session now carries the answer and the field stays one line, growing to the right, so what you see while typing is what lands."
+    },
+    {
+      "t": "2026-09-06T23:06:03.118131Z",
+      "note": "Verified in the real app: Scripts/playtest/bar-title-one-line-walk.json against Photonz Probe with Screen Recording granted, so the pictures are real captures. Long title lands on one line ending in an ellipsis with the hairline intact, a short title comes back whole and centred, and the bar is unchanged on arrival. Full suite 4127 tests green. Audit: queue/audits/2026-09-06-bar-title-one-line.json."
+    },
+    {
+      "t": "2026-09-06T23:06:03.118131Z",
+      "note": "Left undone and filed: a-label-sits-two-points-low-in-the-middle-of-a-b (cross-axis centring loses half the measuring slack, predates this) and a-label-that-fills-a-row-is-placed-before-it-kno (the general wrap-after-placement bug this title now dodges rather than fixes)."
     }
-  ]
+  ],
+  "started": "2026-09-06T22:43:44.412Z"
 }

@@ -338,8 +338,9 @@ public enum StarterComponents {
     ///   the line under it down rather than grow through it.
     /// - A **nav bar** is a box on both sides. A bar is as wide as the screen
     ///   it sits on and as tall as a bar is; neither is anything to do with
-    ///   what its title says, and a title too long for it stays centred and
-    ///   overhangs, exactly as it would in a real one.
+    ///   what its title says. The title takes whatever room the back label
+    ///   leaves, stays on one line, and ends in an ellipsis where that room
+    ///   runs out, exactly as it would in a real one.
     ///
     /// `pen` scales every number to the document, so a Retina capture gets a
     /// card 520 pixels wide rather than a half-size one.
@@ -576,6 +577,14 @@ public enum StarterComponents {
         // hands out every width and position on the first pass.
         var title = pen.label("Title", "Title", x: back.frame.maxX + pen.px(12), centerY: 24,
                               size: 15, weight: .semibold, color: .text, align: .center)
+        // A bar title is one line, always. It takes the room the bar has left
+        // and gives way at the end of it, because a bar is as tall as a bar is
+        // and a long title is no reason for words to fall out of the bottom of
+        // one.
+        if case .text(var words) = title.content {
+            words.staysOnOneLine = true
+            title.content = .text(words)
+        }
         title.flowFill = FlowFill(sizeBefore: title.frame.standardized.size)
         return [pen.box("Background", x: 0, y: 0, width: 320, height: 48, fill: .surface,
                         placement: .fill),

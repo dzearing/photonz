@@ -1,0 +1,179 @@
+{
+  "out": "/tmp/photonz-playtest/bar-title-one-line",
+  "seed": "A bar title stays on one line. The walk drops a Nav Bar, types a title far longer than the bar has room for, and the picture is the only proof that matters: the words stay on one line inside the bar, ending in an ellipsis, instead of wrapping onto a second line that hangs out of the bottom through the hairline.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Nav Bar",
+      "to": [
+        620,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-arrive",
+      "note": "the bar as it arrives: 320 x 48, Back on the left, Title in the middle"
+    },
+    {
+      "do": "snapshot",
+      "name": "bar-title-1-arrive"
+    },
+    {
+      "do": "render",
+      "name": "bar-title-1-arrive-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        300
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        300
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Notifications, alerts and everything else you missed"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2a-typing",
+      "note": "mid-edit: what the field shows while a long title is being typed into the bar"
+    },
+    {
+      "do": "snapshot",
+      "name": "bar-title-2a-typing"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "click",
+      "at": [
+        1080,
+        780
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-one-line",
+      "note": "THE TEST: the title is still one line inside the 48 tall bar, cut off with an ellipsis where the room ran out. Nothing hangs below the hairline."
+    },
+    {
+      "do": "snapshot",
+      "name": "bar-title-2-one-line"
+    },
+    {
+      "do": "render",
+      "name": "bar-title-2-one-line-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        300
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        300
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Inbox"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "click",
+      "at": [
+        1080,
+        780
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-short-again",
+      "note": "THE TEST: a short title comes back whole, in the middle of the bar, with no ellipsis and nothing left over from the long one."
+    },
+    {
+      "do": "snapshot",
+      "name": "bar-title-3-short-again"
+    },
+    {
+      "do": "render",
+      "name": "bar-title-3-short-again-doc"
+    }
+  ]
+}

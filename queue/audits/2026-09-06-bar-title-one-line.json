@@ -1,0 +1,26 @@
+{
+  "feature": "A bar title stays on one line",
+  "epic": "ui-layout",
+  "summary": "A Nav Bar title now stays on one line however long you make it, ending in an ellipsis where the bar runs out of room, instead of wrapping onto a second line that hung out of the bottom of the bar through its own hairline.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: drop a Nav Bar from the Library's Comps shelf.",
+  "try": [
+    { "do": "Open the Library and drag the Nav Bar tile onto an empty canvas." },
+    { "do": "Double click the bar, then double click its Title to start typing." },
+    { "do": "Type \"Notifications, alerts and everything else you missed\" and watch the field while you type.", "shot": "2026-09-06-bar-title-typing.png" },
+    { "do": "Press Return.", "shot": "2026-09-06-bar-title-one-line-sc.png" },
+    { "do": "Double click the title again and type \"Inbox\", then press Return.", "shot": "2026-09-06-bar-title-short-again.png" },
+    { "do": "Drag the bar wider by its right handle and watch how much of the title comes back." }
+  ],
+  "evaluate": [
+    "Is the ellipsis the answer you expected, rather than the title shrinking or the bar growing?",
+    "While you are typing, the field stays on one line and runs out past the right of the bar. Is seeing all of what you typed worth the field sticking out?",
+    "The title is centred in the room the Back label leaves, not in the whole bar. Does that read as centred to you?",
+    "Should a label you draw yourself be able to say \"one line\" too, or is a bar title the only place that belongs?"
+  ],
+  "rough": [
+    "There is no control for it. Only the Nav Bar starter's title says it stays on one line; a text layer you draw yourself still wraps. If that is wanted, it wants a home in the panel and a decision about where.",
+    "A Nav Bar already sitting in a document from before today keeps the old wrapping title. A starter is a drawing made at drop time and nothing rewrites one in place, so drop a fresh bar to see this.",
+    "The title's ink sits about two points below the middle of the bar. That is the measuring slack a text box carries landing on one side, it predates this change, and it is filed separately.",
+    "Renderer note: the truncation runs only for text marked one line, and every other label returns from the check before measuring anything, so the composite path is unchanged for everything that existed before today."
+  ]
+}

@@ -44,6 +44,16 @@ public struct TextContent: Hashable, Codable, Sendable {
     public var alignment: TextAlign?
     /// And down it, or nil for the top edge.
     public var verticalAlignment: TextVerticalAlign?
+    /// True where these words are one line and stay one line, however narrow
+    /// the box around them gets — a bar title, a field's label, a row's name.
+    /// Nil, and text wraps to whatever room it is given, which is what every
+    /// piece of text did before this existed.
+    ///
+    /// A bar is 48 points tall because a bar is 48 points tall, and its title
+    /// has no say in that. So the words are never re-wrapped by anything, the
+    /// box stays exactly one line tall, and a title too long for the room ends
+    /// in an ellipsis where the room ran out, the way a real one does.
+    public var staysOnOneLine: Bool?
 
     public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24,
                 colorHex: String = "#FFFFFF", weight: TextWeight = .regular,
@@ -70,6 +80,9 @@ public struct TextContent: Hashable, Codable, Sendable {
         alignment = try container.decodeIfPresent(TextAlign.self, forKey: .alignment)
         verticalAlignment = try container.decodeIfPresent(TextVerticalAlign.self,
                                                           forKey: .verticalAlignment)
+        // And so does this: text saved before it wraps, which is the answer a
+        // missing key has always meant.
+        staysOnOneLine = try container.decodeIfPresent(Bool.self, forKey: .staysOnOneLine)
     }
 }
 

@@ -24,9 +24,15 @@ public enum TextMeasurement {
     }
 
     /// The size `text` needs, wrapped at `maxWidth`.
+    ///
+    /// Words that stay on one line have nothing to wrap at, so the room is
+    /// ignored and the answer is always the one-line size. Asking here rather
+    /// than at every call site is what keeps the estimate and the real
+    /// measurement from disagreeing about it.
     public static func size(of text: TextContent,
                             wrappingAt maxWidth: CGFloat = .greatestFiniteMagnitude) -> CGSize {
-        (installed.measure ?? estimated)(text, maxWidth)
+        let room = text.staysOnOneLine == true ? CGFloat.greatestFiniteMagnitude : maxWidth
+        return (installed.measure ?? estimated)(text, room)
     }
 
     /// The narrowest the WORDS in a text box go. Below this a caption is a
@@ -203,8 +209,17 @@ extension Layer {
     /// narrower by hand is not — that width is an answer, and a box that only
     /// happens to sit inside something narrow must not lose it.
     var wrapsToItsContainer: Bool {
-        guard case .text = content else { return false }
+        guard case .text(let content) = self.content else { return false }
+        guard content.staysOnOneLine != true else { return false }
         return textHugsItsWords
+    }
+
+    /// Whether these are words that stay on one line whatever the container
+    /// around them decides. A container hands one a width and nothing else:
+    /// the box is one line tall before and after.
+    var textStaysOnOneLine: Bool {
+        guard case .text(let content) = self.content else { return false }
+        return content.staysOnOneLine == true
     }
 
     /// This text box narrowed to the room its container has for it, with the

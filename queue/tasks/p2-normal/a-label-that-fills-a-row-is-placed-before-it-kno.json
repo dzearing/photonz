@@ -1,0 +1,27 @@
+{
+  "id": "a-label-that-fills-a-row-is-placed-before-it-kno",
+  "title": "A label that fills a row is placed before it knows how tall it is",
+  "goal": "Put a long label in a row and tell it to take the room left over. The row works out where it goes from the size it had before the words wrapped, so the wrapped label lands too high and can hang out of the bottom of the container.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1520,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T23:05:45.258Z",
+  "updated": "2026-09-06T23:05:45.259Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on 2026-09-06 while landing the one-line bar title. Two parts. (1) GroupFlow.wrapRooms bails when two labels look outgrown, and a very long label starves every sibling so they all look outgrown: filter the bail to labels the container has not already decided a width for, or answer the single filler outright since its room is not ambiguous. (2) GroupFlow.arranged places from contentBounds, then moved -> Layer.resized re-wraps the text at the new fill width, so the height grows AFTER the placement was decided. The one-line bar title dodges both because its height never changes.",
+  "acceptance": [
+    "A wrapped label that fills a row is centred on the height it actually ends up",
+    "Nothing a row draws hangs outside the row when a label in it wraps",
+    "A row with a label that does not wrap is unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T23:05:45.259Z",
+      "note": "created (manual)"
+    }
+  ]
+}

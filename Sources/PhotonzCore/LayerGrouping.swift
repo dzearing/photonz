@@ -244,6 +244,13 @@ extension PhotonzDocument {
                                     child: existing.placement,
                                     container: parentID(of: id)
                                         .flatMap { layer(id: $0)?.group?.contentPlacement }).horizontal)
+        // Whether these words stay on one line is a fact about the BOX, not
+        // about the style the editor typed them in: the new-text style has
+        // never heard of the bar this title sits in. Without this, retitling a
+        // Nav Bar turned its title back into something that wraps and the words
+        // fell out of the bottom of the bar.
+        var content = content
+        content.staysOnOneLine = existing.text?.staysOnOneLine
         updateLayer(id: id) {
             $0.content = .text(content)
             $0.frame = local

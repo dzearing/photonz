@@ -220,7 +220,17 @@ extension Layer {
         if case .text(let content) = content, resizeWidthOnly {
             let box = frame.standardized
             let width = box.width
-            if fillingHeight {
+            if content.staysOnOneLine == true {
+                // One line, and a new width is no argument against that: the
+                // box takes the width it was handed and stays exactly as tall
+                // as one line of these words. A title too long for the width
+                // ends in an ellipsis rather than falling out of the bottom of
+                // the bar it is in (`docs/design/ui-building.md`, "A title
+                // stays on one line").
+                let line = TextMeasurement.size(of: content).height
+                layer.frame = CGRect(x: box.minX, y: box.minY, width: width,
+                                     height: fillingHeight ? max(box.height, line) : line)
+            } else if fillingHeight {
                 // Told to fill the box it is in: it keeps the height it was
                 // handed, and the words sit in it wherever Align says. Never
                 // less than the words need, because a room too small to hold

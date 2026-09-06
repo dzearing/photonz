@@ -71,6 +71,33 @@ struct InlineTextCommitTests {
         #expect(c.doc.layer(id: boxID)?.text == nil)
     }
 
+    /// A bar title stays on one line, and typing a new one over it does not
+    /// quietly turn it back into something that wraps. The inline editor
+    /// builds its content out of the new-text style, which has never heard of
+    /// the box it is landing on, so the box's own answers have to survive the
+    /// trip. (Reported 2026-09-06: a long title wrapped out of the bottom of
+    /// its bar.)
+    @Test func wordsThatStayOnOneLineGoOnStayingOnOneLine() {
+        var one = TextContent(string: "Title")
+        one.staysOnOneLine = true
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024),
+                                  layers: [Layer(name: "Title", content: .text(one),
+                                                 frame: CGRect(x: 10, y: 10,
+                                                               width: 56, height: 20))])
+        let id = doc.layers[0].id
+        doc.commitTextEdit(id: id, content: TextContent(string: "A much longer title"),
+                           canvasFrame: CGRect(x: 10, y: 10, width: 56, height: 20))
+        #expect(doc.layer(id: id)?.text?.staysOnOneLine == true)
+        // And a box that never said it was one line is not given the answer.
+        var plain = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024),
+                                    layers: [text("Label", "Body", CGRect(x: 10, y: 10,
+                                                                          width: 56, height: 20))])
+        let plainID = plain.layers[0].id
+        plain.commitTextEdit(id: plainID, content: TextContent(string: "Longer body"),
+                             canvasFrame: CGRect(x: 10, y: 10, width: 56, height: 20))
+        #expect(plain.layer(id: plainID)?.text?.staysOnOneLine == nil)
+    }
+
     /// A button centres its label, so re-wording it keeps it centred rather
     /// than growing off the right edge from wherever the caret was.
     @Test func aCentredLabelStaysCentred() {

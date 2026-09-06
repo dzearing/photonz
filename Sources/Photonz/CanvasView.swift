@@ -1013,6 +1013,12 @@ final class CanvasNSView: NSView {
         /// the session holds the placement and stamps it back on instead.
         var alignment: TextAlign?
         var verticalAlignment: TextVerticalAlign?
+        /// True where the box being re-edited is one line and stays one line —
+        /// a bar title. Rides on the session for the same reason the placement
+        /// does: the font picker's style has never heard of the bar, so
+        /// without this the draft wrapped into the bar's room while you typed
+        /// and snapped back to one line on Return.
+        var staysOnOneLine: Bool?
     }
     var textSession: TextEditSession?
     /// The session's editor overlay, positioned/scaled to track the viewport.

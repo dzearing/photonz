@@ -221,12 +221,13 @@ enum GroupFlow {
     /// Everything the container does not decide the width of is left out:
     /// anything that is not text, the surface behind everything, a piece
     /// already told to stretch (which is handed the room anyway, on its way to
-    /// the box), and every label that already fits.
+    /// the box), a label that stays on one line (a width is all a container
+    /// gets to say about one of those), and every label that already fits.
     private static func wrapRooms(_ children: [Layer], _ rules: [ResolvedPlacement],
                                   layout: GroupLayout, width: CGFloat) -> [(Int, CGFloat)] {
         let labels = children.indices.filter {
             children[$0].text != nil && !rules[$0].stepsOutOfTheFlow(of: layout)
-                && rules[$0].horizontal != .stretch
+                && rules[$0].horizontal != .stretch && !children[$0].textStaysOnOneLine
         }
         guard !labels.isEmpty else { return [] }
         let padding = layout.usedPadding

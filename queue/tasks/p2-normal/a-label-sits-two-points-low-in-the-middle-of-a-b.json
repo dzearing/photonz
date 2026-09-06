@@ -1,0 +1,27 @@
+{
+  "id": "a-label-sits-two-points-low-in-the-middle-of-a-b",
+  "title": "A label sits two points low in the middle of a bar",
+  "goal": "Centre a label inside a container and its words land about two points below the true middle. It is small enough that nobody can name it and big enough that everybody can see a title looking slightly low in a bar.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1510,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T23:05:45.223Z",
+  "updated": "2026-09-06T23:05:45.224Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on 2026-09-06 while landing the one-line bar title. A measured text box carries 4 points of slack (TextMeasurement.slack, 2 a side). GroupFlow.moved sets the frame origin to the VISIBLE (content) origin and lets the slack hang past the far edges, which is right along the flow but puts a cross-axis centred box half the slack low. Nav Bar title lands at frame y=15 in a 48 tall bar, content 17..35, middle 26 against the bar middle 24. Look at GroupFlow.moved and GroupFlow.stacked cross-axis span.",
+  "acceptance": [
+    "A centred label inside a fixed height container has equal room above and below the words",
+    "A label centred in a bar looks centred against the bar drawn behind it",
+    "Labels lined up left, right or top are unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T23:05:45.224Z",
+      "note": "created (manual)"
+    }
+  ]
+}

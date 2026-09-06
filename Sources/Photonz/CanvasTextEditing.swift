@@ -36,7 +36,8 @@ extension CanvasNSView {
         }
         textSession = TextEditSession(layerID: layerID, origin: origin,
                                       alignment: style.alignment,
-                                      verticalAlignment: style.verticalAlignment)
+                                      verticalAlignment: style.verticalAlignment,
+                                      staysOnOneLine: style.staysOnOneLine)
 
         let editor = makeInlineEditor()
         editor.string = string
@@ -195,6 +196,7 @@ extension CanvasNSView {
         if let session = textSession, session.captionStyle == nil {
             stored.alignment = session.alignment
             stored.verticalAlignment = session.verticalAlignment
+            stored.staysOnOneLine = session.staysOnOneLine
         }
         textEditorContent = stored
         textEditorZoom = viewport.zoom
@@ -255,10 +257,18 @@ extension CanvasNSView {
         // across what holds it — keeps the room it has, exactly as the commit
         // does, so re-wording one re-wraps in place.
         let room = roomyBox(session)
-        let box = TextBlockMetrics.frameSize(for: draft,
+        var box = TextBlockMetrics.frameSize(for: draft,
                                              maxWidth: textWrapWidth(origin: session.origin),
                                              roomyWidth: room.width, roomyHeight: room.height,
                                              hugsShortWords: Experiments.shared.placementEnabled)
+        // Words that stay on one line are TYPED on one line. The field keeps
+        // the room the box has while they fit in it, and grows out to the right
+        // once they do not, so what you are looking at while you type is the
+        // one line that lands. Wrapping the draft into the bar's room and then
+        // snapping it back to one line on Return is the jump this avoids.
+        if draft.staysOnOneLine == true {
+            box.width = max(box.width, TextRasterizer.naturalSize(draft).width)
+        }
         // Words that sit low in a roomy box are typed low in it too.
         editor.textContainerInset = NSSize(width: 0,
                                            height: TextBlockMetrics.topInset(for: draft, in: box) * zoom)

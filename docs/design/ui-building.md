@@ -554,6 +554,32 @@ itself whenever the two things that decide its shape change:
   A paragraph somebody dragged narrower by hand is not touched. That width is
   an answer, not a derivation.
 
+### A title stays on one line (landed 2026-09-06)
+
+Some words are one line and stay one line. A bar title is the plain case: a bar
+is 48 points tall because a bar is 48 points tall, and what its title says has
+no vote in that. Before this, typing a long title into the starter Nav Bar wrapped
+it onto a second line that hung out of the bottom of the bar, straight through
+its own hairline.
+
+So a piece of text carries one more answer, `TextContent.staysOnOneLine`:
+
+- **A container hands it a width and nothing else.** It is never re-wrapped by a
+  stack, a grid, a ceiling or a typed width, and its box is exactly one line tall
+  before and after. `TextMeasurement.size` gives the one-line answer whatever room
+  it is asked about, so the model and the drawing cannot disagree about how tall
+  a title is.
+- **It gives way with an ellipsis.** Words longer than the box get cut where the
+  room ran out and end in a single "…" character, the way a real bar title does.
+  The cut lands on a cluster boundary, so nothing splits down the middle of an
+  emoji, and a dangling space goes with the words it followed.
+- **Nothing else changes.** It is nil on every piece of text anybody has ever
+  drawn, and nil means wrap, which is what all of them did. Only the Nav Bar
+  starter's title sets it today.
+
+There is no control for it yet. That is the honest limit of this slice: a label
+you draw yourself still wraps, and only the starter bar knows it is a bar.
+
 Nothing else re-measures. Moving a layer, restyling it, or changing anything
 that is not its width, its words or the room around it leaves the box exactly
 as it was, so a document that was laid out by hand is never quietly re-flowed
@@ -2417,8 +2443,9 @@ live for whatever is selected, which is where a person actually reads it.
 **A field and a bar keep their width on purpose.** A field 74 points wide
 because "Name" is short is not a place to type, and a bar is as wide as the
 screen it sits on, never as wide as its title. So the width is a number and the
-wording wraps inside it. A nav bar title too long for the room the row leaves it
-wraps in that room rather than running out past the controls beside it.
+wording wraps inside it. A nav bar title is the exception that proves it: it
+takes whatever room the back label leaves, stays on one line, and ends in an
+ellipsis where that room runs out (see "A title stays on one line").
 
 **The card is the one that ARRANGES.** It is a column stack, not a box that
 closes around what is in it, and that is the whole reason it works: a title
@@ -2442,9 +2469,9 @@ drawings themselves carry the placement each piece needs. Tested in
 Not in this slice, and both worth knowing: a starter already sitting in a
 document keeps the shape it was dropped with, because a starter is a drawing
 made at drop time and nothing rewrites one in place. And a text field with a
-long placeholder WRAPS rather than truncating with an ellipsis, because a text
-layer has nothing that clips; growing downward is the honest shape when nothing
-can be hidden.
+long placeholder WRAPS rather than truncating with an ellipsis, because a field
+is a place to type and growing downward loses nothing; only text told it stays
+on one line gives way with an ellipsis.
 
 ## Landed: a container can be told the smallest and largest it may get (Next, `next-auto-layout`, 2026-09-05)
 
