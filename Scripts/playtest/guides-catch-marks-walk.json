@@ -1,0 +1,368 @@
+{
+  "out": "/tmp/photonz-playtest/guides-catch-marks-walk",
+  "setup": {
+    "forget": [
+      "grid",
+      "tools",
+      "shapes",
+      "measure",
+      "panel",
+      "text"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1560,
+      "height": 940
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "showGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Adjust Grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Cell"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "16 pt"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "move",
+      "at": [
+        416,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        416,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        504,
+        288
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        504,
+        288
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Done"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-pinned",
+      "note": "two guides pinned: a vertical at x416 and a horizontal at y288"
+    },
+    {
+      "do": "action",
+      "action": "hideGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-grid-off",
+      "note": "grid off so nothing quantizes: anything that lands on 416 or 288 from here landed on a GUIDE"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-guides-only"
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        500
+      ],
+      "to": [
+        411,
+        504
+      ],
+      "steps": 8,
+      "hold": "3-arrow-holding"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-arrow",
+      "note": "arrow dropped 5 points short of the vertical guide: expect its tip on x416"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-arrow"
+    },
+    {
+      "do": "tool",
+      "tool": "line"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        560
+      ],
+      "to": [
+        412,
+        563
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-line",
+      "note": "a line's end, same guide: expect x416"
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        620,
+        120
+      ],
+      "to": [
+        624,
+        283
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4b-across",
+      "note": "an arrow drawn DOWN the picture, ending 5 points short of the horizontal guide: expect its point on y288"
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        411,
+        340
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Caption"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4c-text",
+      "note": "a caption clicked 5 points short of the vertical guide: expect its box to start at x416"
+    },
+    {
+      "do": "snapshot",
+      "name": "4c-text"
+    },
+    {
+      "do": "tool",
+      "tool": "measure"
+    },
+    {
+      "do": "measureMode",
+      "mode": "distance"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "move",
+      "at": [
+        411,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        411,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "move",
+      "at": [
+        340,
+        660
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        340,
+        660
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-measure",
+      "note": "the caliper's far foot was clicked 5 points short of the guide: expect a foot on x416"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-measure"
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        200
+      ],
+      "to": [
+        411,
+        204
+      ],
+      "steps": 8,
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-command",
+      "note": "the same arrow drawn with Command held: expect its tip at 411, free of the guide"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-command"
+    }
+  ]
+}

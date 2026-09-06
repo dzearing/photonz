@@ -72,6 +72,17 @@ public enum AnnotationSnapping {
     ///   drawn line rather than beside it.
     /// - gridAxes: a grid set to columns draws nothing across, so the other
     ///   axis has no line to land on.
+    /// - guides: the lines pinned onto this picture. They catch the end the
+    ///   same way they catch a dragged layer — same reach, same yellow line,
+    ///   same release under ⌘ — because a guide that means one thing while you
+    ///   drag a box and nothing while you draw an arrow is not a guide, it is a
+    ///   trick. Two things follow from a guide being PINNED rather than found:
+    ///   it outranks the grid underneath it (see `onGrid`, which leaves a
+    ///   caught axis alone), and unlike a border detected in the picture it is
+    ///   not gated by the way the mark points, so an arrow drawn along a pinned
+    ///   line comes out lying exactly on it. The cost is that a sloping arrow
+    ///   whose tip passes near a guide takes it and slopes a few points more;
+    ///   ⌘ is the answer there, as it is everywhere else on the canvas.
     public static func snap(_ point: CGPoint, shape: AnnotationShape?,
                             opposite: CGPoint?, edges: EdgeMap, zoom: CGFloat,
                             free: Bool = false,
@@ -80,12 +91,21 @@ public enum AnnotationSnapping {
                             gridHolding: SnapHold = .none,
                             gridSpacing: CGFloat? = nil,
                             gridOrigin: CGPoint = .zero,
-                            gridAxes: CanvasGridAxes = .columnsAndRows) -> EdgeSnapping.Snap {
+                            gridAxes: CanvasGridAxes = .columnsAndRows,
+                            guides: [CanvasGuide] = []) -> EdgeSnapping.Snap {
         guard !free else { return EdgeSnapping.Snap(point: point) }
+        let guideLines = EdgeSnapping.GuideLines(
+            vertical: CanvasGuides.positions(guides, axis: .vertical),
+            horizontal: CanvasGuides.positions(guides, axis: .horizontal))
         guard let shape else {
             // A frame or a zoom callout: a plain box, no edge magnets, but the
-            // grid holds it exactly as it holds a rectangle.
-            return onGrid(EdgeSnapping.Snap(point: point), pointer: point, opposite: opposite,
+            // grid holds it exactly as it holds a rectangle — and so does a
+            // guide, which is a line somebody put there rather than one found
+            // in the picture.
+            return onGrid(onGuides(EdgeSnapping.Snap(point: point), pointer: point,
+                                   lines: guideLines, zoom: zoom,
+                                   screenTolerance: screenTolerance, holding: holding),
+                          pointer: point, opposite: opposite,
                           allowed: (true, true), zoom: zoom, screenTolerance: screenTolerance,
                           holding: gridHolding, spacing: gridSpacing, origin: gridOrigin,
                           axes: gridAxes)
@@ -93,7 +113,8 @@ public enum AnnotationSnapping {
         // What this pointer would catch on its own, with no memory of the drag.
         var snap = EdgeSnapping.snap(point, edges: edges, zoom: zoom,
                                      screenTolerance: screenTolerance,
-                                     includeCenters: false, snapToPixelGrid: true)
+                                     includeCenters: false, snapToPixelGrid: true,
+                                     guides: guideLines)
         // …then the drag's memory, but only where it is still the best answer.
         //
         // A caught line keeps a drag until the pointer is clearly away from it,
@@ -116,20 +137,55 @@ public enum AnnotationSnapping {
             snap = EdgeSnapping.snap(point, edges: edges, zoom: zoom,
                                      screenTolerance: screenTolerance,
                                      includeCenters: false, snapToPixelGrid: true,
-                                     holding: kept)
+                                     guides: guideLines, holding: kept)
         }
+        // The gate asks which borders FOUND IN THE PICTURE this mark is aimed
+        // at, so it has nothing to say about a line somebody pinned: a guide
+        // survives it, exactly as the grid underneath does.
         let allowed = axes(shape: shape, opposite: opposite, moving: point)
-        if !allowed.x {
+        if !allowed.x, !isPinned(snap.guideX, on: .vertical, in: guides) {
             snap.point.x = point.x.rounded()
             snap.guideX = nil
         }
-        if !allowed.y {
+        if !allowed.y, !isPinned(snap.guideY, on: .horizontal, in: guides) {
             snap.point.y = point.y.rounded()
             snap.guideY = nil
         }
         return onGrid(snap, pointer: point, opposite: opposite, allowed: allowed,
                       zoom: zoom, screenTolerance: screenTolerance, holding: gridHolding,
                       spacing: gridSpacing, origin: gridOrigin, axes: gridAxes)
+    }
+
+    /// Whether the line that captured is one of the pinned guides rather than
+    /// a border detected in the picture. `CanvasGuides.sameLine` is the same
+    /// tolerance that decides two guides are one guide.
+    private static func isPinned(_ value: CGFloat?, on axis: CanvasGuideAxis,
+                                 in guides: [CanvasGuide]) -> Bool {
+        guard let value else { return false }
+        return guides.contains { $0.axis == axis
+            && abs($0.position - value) <= CanvasGuides.sameLine }
+    }
+
+    /// Catches a shapeless box on a pinned guide: the guides alone, no borders
+    /// from the picture and no rounding, because that is the whole of what a
+    /// frame, a zoom callout or a placed caption has ever been offered.
+    private static func onGuides(_ snap: EdgeSnapping.Snap, pointer: CGPoint,
+                                 lines: EdgeSnapping.GuideLines, zoom: CGFloat,
+                                 screenTolerance: CGFloat,
+                                 holding: SnapHold) -> EdgeSnapping.Snap {
+        guard !lines.isEmpty else { return snap }
+        var snap = snap
+        let x = EdgeSnapping.snapValue(pointer.x, toGuides: lines.vertical, zoom: zoom,
+                                       screenTolerance: screenTolerance,
+                                       snapToPixelGrid: false, holding: holding.x)
+        snap.point.x = x.value
+        snap.guideX = x.guide
+        let y = EdgeSnapping.snapValue(pointer.y, toGuides: lines.horizontal, zoom: zoom,
+                                       screenTolerance: screenTolerance,
+                                       snapToPixelGrid: false, holding: holding.y)
+        snap.point.y = y.value
+        snap.guideY = y.guide
+        return snap
     }
 
     /// Puts whatever no real edge caught onto the nearest line of the canvas

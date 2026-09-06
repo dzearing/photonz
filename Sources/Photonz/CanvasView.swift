@@ -891,7 +891,8 @@ final class CanvasNSView: NSView {
                                            gridHolding: drawGridHold,
                                            gridSpacing: canvasSnapSpacing,
                                            gridOrigin: canvasSnapOrigin,
-                                           gridAxes: canvasSnapAxes)
+                                           gridAxes: canvasSnapAxes,
+                                           guides: canvasSnapGuides)
         snapGuide = (snap.guideX, snap.guideY)
         annotationGridSnap = (snap.gridX, snap.gridY)
         snapHold.caught(x: snap.guideX, y: snap.guideY)
@@ -913,9 +914,13 @@ final class CanvasNSView: NSView {
     /// - No edge magnets. Text has never had them, and a click carries no
     ///   direction to say which border it meant, so a caption dropped near a
     ///   line of the screenshot would jump onto that line's baseline.
-    /// - No one cell floor, and no guide. A click has no opposite end to be
-    ///   floored away from, and nothing is being dragged for a line to light
-    ///   under.
+    /// - No one cell floor. A click has no opposite end to be floored away
+    ///   from, so there is no shape for a minimum size to protect.
+    /// - Pinned guides, though. They are the one kind of line that is not
+    ///   guessed from the picture: you put each one there by hand, on purpose,
+    ///   and a caption is exactly the thing people line up on a margin they
+    ///   pinned. Nothing lights up for it, because a click is over before a
+    ///   line could be read — the caption simply lands on the guide.
     /// - No snap memory, in either direction. One click stands on nothing and
     ///   leaves nothing behind for the next gesture to stand on.
     func snappedTextOrigin(_ p: CGPoint, event: NSEvent) -> CGPoint {
@@ -925,7 +930,8 @@ final class CanvasNSView: NSView {
                                        free: event.modifierFlags.contains(.command),
                                        gridSpacing: canvasSnapSpacing,
                                        gridOrigin: canvasSnapOrigin,
-                                       gridAxes: canvasSnapAxes).point
+                                       gridAxes: canvasSnapAxes,
+                                       guides: canvasSnapGuides).point
     }
 
     /// The grid lines the shape being DRAWN is standing on, lit while the drag

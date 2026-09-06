@@ -127,13 +127,27 @@ extension CanvasNSView {
         return [(.footA, g.footA), (.footB, g.footB), (.head, g.labelAnchor)]
     }
 
-    /// The lines the measurements already on the canvas offer a dragged FOOT:
-    /// their feet lines, head lines and ends, so two calipers can share a start
-    /// line. Empty while the Next flag is off. Pass nil to exclude nothing (a
-    /// caliper being placed is not a layer yet).
+    /// The lines a dragged FOOT lands on besides the picture's own borders: the
+    /// guides pinned onto this document, and the lines the measurements already
+    /// on the canvas offer (their feet, heads and ends, so two calipers can
+    /// share a start line). Pass nil to exclude nothing (a caliper being placed
+    /// is not a layer yet).
+    ///
+    /// The pinned guides come first, so where a guide and another caliper's
+    /// line sit on the same number the guide wins the tie: you pinned it on
+    /// purpose and the caliper only happens to be there. They are also the half
+    /// that does not depend on the measurement flag — a guide catches a foot
+    /// for the same reason it catches a dragged box.
     func measureGuideLines(excluding id: UUID?) -> EdgeSnapping.GuideLines {
-        guard Experiments.shared.measureGuideSnapEnabled, let document else { return .none }
-        return MeasureSnapping.lines(in: document, excluding: id)
+        let pinned = canvasSnapGuides
+        var lines = EdgeSnapping.GuideLines(
+            vertical: CanvasGuides.positions(pinned, axis: .vertical),
+            horizontal: CanvasGuides.positions(pinned, axis: .horizontal))
+        guard Experiments.shared.measureGuideSnapEnabled, let document else { return lines }
+        let measurements = MeasureSnapping.lines(in: document, excluding: id)
+        lines.vertical += measurements.vertical
+        lines.horizontal += measurements.horizontal
+        return lines
     }
 
     /// The lines a dragged READOUT CHIP lines up with: where the other chips

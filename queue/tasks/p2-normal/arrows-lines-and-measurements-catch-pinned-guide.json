@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1480,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T20:31:37.555Z",
-  "updated": "2026-09-06T20:31:37.555Z",
+  "updated": "2026-09-06T23:06:57.663Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Guides landed on 2026-09-06 (audit queue/audits/2026-09-06-grid-guides.json). Snapping.snapFrameOrigin and snapResizedFrame both take a guides: [CanvasGuide] parameter and turn each guide into a full span candidate; AnnotationSnapping.snap is the other path and has no guides parameter yet. CanvasView.snappedAnnotationPoint and snappedTextOrigin are the two call sites, and both already pass gridSpacing/gridOrigin/gridAxes, so the shape of the change is the same one Snapping.swift already has. Text placement deliberately takes no guide today: a click has no opposite end and nothing is being dragged, which is the same reason it takes no edge magnet, so decide whether a guide is different before adding one there.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-06T20:31:37.555Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T23:06:57.663Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T23:22:00.630991Z",
+      "note": "review before building: the risk in this idea is not whether a guide should catch an arrow, it is which AXIS it may catch. An arrow's edge magnets are gated by the way the arrow points, so a level arrow only takes borders down the picture. Gating a pinned guide the same way would mean you could never draw an arrow that lies along a guide, which is the case people would actually pin one for. The canvas grid is already ungated for the same reason (a grid line is never unrelated), so a guide, which somebody placed by hand, is ungated too. Cost, recorded in the audit: a sloping arrow whose tip passes near a guide takes it and slopes a little more. Command frees it. Shortest version that delivers the value: the ends of arrows, lines and boxes, the feet of a caliper, and a clicked caption. Left out on purpose: the caliper's number (a label, not a measured point) and the selection rubber band (which never caught the grid either)."
+    },
+    {
+      "t": "2026-09-06T23:22:00.630991Z",
+      "note": "tests first: Tests/PhotonzCoreTests/AnnotationGuideSnappingTests.swift, twelve cases covering a tip on a vertical guide, an end on a horizontal one, both axes at once, a shapeless box, the ungated cross axis, guide over grid, grid away from a guide, a detected edge still beating a farther guide, Command, the hold through a wobble, and no guides changing nothing."
+    },
+    {
+      "t": "2026-09-06T23:22:00.630991Z",
+      "note": "built: AnnotationSnapping.snap takes guides: [CanvasGuide] and feeds them to EdgeSnapping as GuideLines (so a guide outranks a detected edge at equal distance without overwhelming a border under the pointer); the axis gate now spares a line that is one of the pinned guides; a shapeless box (frame, zoom callout, text click) gets a guides-only pass before the grid quantize. CanvasView.snappedAnnotationPoint and snappedTextOrigin pass canvasSnapGuides. CanvasMeasure.measureGuideLines now always includes the pinned guides, first, with the measurement-derived lines after and still behind their flag, so every caliper foot path (first click, second click, handle drag) catches one."
+    },
+    {
+      "t": "2026-09-06T23:22:00.630991Z",
+      "note": "verified in the probe: Scripts/playtest/guides-catch-marks-walk.json pins x416 and y288, switches the grid OFF so nothing else can quantize, and draws each mark five points short of a guide. Results from log.json: arrow tip 416, line end 416, arrow drawn downward 288, caption box origin x416, caliper feet (200,620) to (416,620), and the same arrow with Command held stops at 411. The held snapshot shows the bright snap line on the guide while the arrow is still under the button. Scripts/test.sh green (4139 tests); grid-guides, text-on-the-grid and snap-hold-foot walks re-run clean."
+    },
+    {
+      "t": "2026-09-06T23:22:00.630991Z",
+      "note": "audit: queue/audits/2026-09-06-guides-catch-marks.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-06T23:06:57.662Z"
 }

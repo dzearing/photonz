@@ -1,0 +1,29 @@
+{
+  "feature": "Pinned guides catch what you draw",
+  "epic": "ui-building",
+  "summary": "A guide you pin onto the picture now catches the ends of the things you draw as well as the boxes you drag: an arrow's tip, a line's end, a caliper's foot and a caption you click down all land on it, with the same yellow line and the same Command to get away from it.",
+  "setup": "Photonz Dev, release Next. The grid flag is on by default. Open any picture, switch the grid on with View ▸ Show Grid, then press Adjust Grid on the tool bar to pin a guide or two.",
+  "try": [
+    { "do": "Switch the grid on: View ▸ Show Grid." },
+    { "do": "Press Adjust Grid, click one line down the picture and one across it to pin two guides, then press Done." },
+    { "do": "Switch the grid off again with View ▸ Show Grid, so the guides are the only lines left." },
+    { "do": "Press A for the arrow tool and drag an arrow that ends a few points short of the vertical guide.", "shot": "2026-09-06-guides-catch-marks-arrow-sc.png" },
+    { "do": "Press I for Measure and click two feet, putting the second one a few points short of the same guide.", "shot": "2026-09-06-guides-catch-marks-measure-sc.png" },
+    { "do": "Press T and click a caption down a few points short of the guide." },
+    { "do": "Draw one more arrow at the guide with Command held, and watch it stay exactly where you let go." }
+  ],
+  "evaluate": [
+    "When a tip catches a guide, can you tell the catch happened, or does the brighter yellow read as the same line you pinned?",
+    "Is the reach right for drawing? A guide grabs from about eight points away, the same as a dragged box.",
+    "A caption clicked near a guide now lines its left edge up on it. Is that welcome, or does a click feel like it should land exactly where you clicked?",
+    "Drawing an arrow along a guide makes it come out lying exactly on the guide. Does that feel like help or like interference?",
+    "With the grid switched off and only guides pinned, is it clear why the drawing still jumps?"
+  ],
+  "rough": [
+    "An arrow catches a guide whichever way it points, unlike a border found in the picture, which a level arrow can only catch down the way it is pointing. That is what lets you draw an arrow that lies exactly along a guide, and the price is that a slightly sloping arrow whose tip passes near a guide takes it and slopes a few points more. Command is the way out.",
+    "The caliper's number (the head) still lines up only with the other numbers on the canvas, not with pinned guides. It is a label rather than a measured point, so a guide has nothing to say about where it parks.",
+    "A caliper's measuring line is levelled after both feet are placed, so a horizontal caliper can catch a vertical guide and not a horizontal one. That is how the caliper has always worked, not something this changed.",
+    "The rubber band of the selection tools still does not catch a guide. It never caught the grid either, so it was left alone.",
+    "Screen Recording was granted, so the two pictures are real captures of the window, one taken with the arrow still under the button."
+  ]
+}
