@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T14:13:58.308Z",
-  "updated": "2026-09-06T15:40:20.443Z",
+  "updated": "2026-09-06T16:16:25.145Z",
   "deps": [
     "a-captioned-arrow-sits-right-tight-selection-a-p"
   ],
@@ -56,7 +56,12 @@
     {
       "t": "2026-09-06T16:15:24.275886Z",
       "note": "Built and reviewed on the real app. Five endings (solid head, open head, solid dot, hollow dot, plain line) live on AnnotationContent.arrowheadStyle, decoding to the solid head so older documents are untouched; the caption corner is AnnotationContent.captionRoundness, 0 square to 1 fully round, decoding to 1. Geometry owns the shapes: arrowheadCircle, arrowheadReach, arrowheadBounds, and arrowShaftEnd now takes a style, so the shaft stops inside a solid head, at the tip of an open one and on the near edge of a hollow dot. Frame padding and drawn bounds grew head-aware, which a dot needs because it hangs past the point it marks. Both settings ride in ShapeDefaults so the next arrow inherits them. Rows: Ending (a row of pictures, with the picked one named in words beside its caption) and Label corners (Square through Pill), in the dock and, for the ending, in the arrow tool's own settings; Head Size hides itself for a plain ending. SECOND REVIEW, on the built thing: (a) the dot came out NARROWER than a heavy line, so at 20pt it read as a bulge rather than a mark. Round endings got their own floor, never narrower than twice the shaft, and there is a test for it. (b) The picker floated in the middle of a column of full-width sliders; it now claims the row and sits at its leading edge. (c) A row of pictures gets one tooltip for the whole row, so no single picture can explain itself. The word beside the caption carries the meaning instead, and the per-picture tooltip is filed as each-picture-in-a-row-of-pictures-says-its-own-n. Harness: press now takes an \"across\" fraction, because a slider could only ever be pressed halfway and the square corner was therefore unprovable by a walk. Walk: Scripts/playtest/arrow-endings-walk.json. Audit: queue/audits/2026-09-06-arrow-endings.json with two real screen captures and a rendered contact sheet."
+    },
+    {
+      "t": "2026-09-06T16:16:25.144Z",
+      "note": "Five arrow endings (solid head, open head, solid dot, hollow dot, plain line) and an adjustable caption corner (square to full pill), both remembered for the next arrow and both decoding to what an older document had. Model + geometry in PhotonzCore, drawing in PhotonzRender, rows in the dock and in the arrow tool's own settings. 3938 tests green; verified live in the probe with Scripts/playtest/arrow-endings-walk.json. Audit: queue/audits/2026-09-06-arrow-endings.json with two real screen captures and a rendered sheet of every ending at two weights and three caption corners. Pushed as 86f03f9."
     }
   ],
-  "started": "2026-09-06T15:40:20.443Z"
+  "started": "2026-09-06T15:40:20.443Z",
+  "completed": "2026-09-06T16:16:25.145Z"
 }
