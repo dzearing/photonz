@@ -9732,3 +9732,46 @@ task forbids, or shortening every row in the dock, which is a panel-wide
 change.
 
 Next: the queue picks up whatever is top of `p2-normal`.
+
+## 2026-09-06 — A bar's title keeps its own room
+
+Add a Badge and a Button to the starter Nav Bar and the word Title used to
+vanish. The bar's row packed its controls from the left while the title lay
+across the whole bar, centred on it and drawn underneath, so the third control
+always reached the middle and stood on the title with nothing on screen saying
+where it went. The 2026-09-05 nav bar audit had already asked which way to fix
+it, and the user answered on 2026-09-06: the title takes the room that is left.
+
+Built that. In `StarterComponents.navBar` the Title stops being Stretch across
+(out of the flow, spanning the bar) and becomes an ordinary row item with
+`flowFill` set, drawn after the back label so the row reads left to right. Its
+own placement is nil now, so it follows the bar's Middle down and the Layout
+section lists it as "Takes the room left over". That fixes the collision by
+construction, because the row hands the title what remains AFTER everything
+else has taken its width, and it gives the bar two ends for nothing: let go
+before the title and a control joins the leading end, let go past it and the
+row pushes it out to the far edge.
+
+Tests first, and the fallout was updated honestly rather than papered over:
+`GroupChromeTests` grew the drop-two-controls case and the mitigation case
+(hide the back label and the title is dead centre again), `StarterSizingTests`
+now asks that a longer title re-centres in its ROOM, the render test centres
+the ink on the title's box rather than on the image, `RowDropSlotTests` reads
+Title in the row order and asserts that holding room open for a drop takes the
+room out of the title instead of shoving the badges along, and
+`DropIntoOpenGroupTests` says a tile let go on the far half lines up at the far
+end. 4001 tests green.
+
+Verified on the built app with the probe and a real window capture:
+`Scripts/playtest/title-keeps-its-room-walk.json`, pictures in
+`queue/audits/2026-09-06-nav-bar-title.json`.
+
+Two roughs, both recorded. The accepted one: on a bar carrying a back label and
+nothing else the title sits about 24 points right of the bar's exact middle.
+The new one: a title too long for the room left over now wraps to a second line
+and hangs about 3 points below the bar's hairline, where before it stayed on
+one line and overhung sideways. Filed as
+`a-long-bar-title-wraps-out-of-the-bottom-of-its` rather than widened into this
+task.
+
+Next: the queue picks up whatever is top of `p2-normal`.

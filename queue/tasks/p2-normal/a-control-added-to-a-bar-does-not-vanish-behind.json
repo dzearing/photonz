@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1370,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:40:40.427Z",
-  "updated": "2026-09-06T19:05:32.796Z",
+  "updated": "2026-09-06T19:20:03.941Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-06 in queue/audits/2026-09-06-drop-into-open-group.json: after a Badge and a Button joined the bar, the word Title was drawn under the Button and could not be seen. The bar packs its row from the left while the Title stretches the whole bar and centres in it, so the two eventually collide. queue/audits/2026-09-05-nav-bar-row.json already asked whether the title should centre on the whole bar or sit beside the back label - that judgment decides this.",
@@ -74,7 +74,12 @@
     {
       "t": "2026-09-06T19:20:00.000Z",
       "note": "Adversarial review of the built thing. Two roughs recorded in the audit. The accepted one: on a bar with only a back label the title sits about 24 points right of the middle. The new one: a title too long for the room left now wraps to a second line and hangs below the bar's hairline, where before it overhung sideways. Filed as a-long-bar-title-wraps-out-of-the-bottom-of-its rather than widened into this task."
+    },
+    {
+      "t": "2026-09-06T19:20:03.940Z",
+      "note": "The starter Nav Bar's title joins the row and takes the room left over (Sources/PhotonzCore/StarterComponents.swift), so controls added to the bar can never cover it and the bar gets a leading and a trailing end for free. Full suite green (4001 tests); verified on the built app with a real window capture via Scripts/playtest/title-keeps-its-room-walk.json. Audit: queue/audits/2026-09-06-nav-bar-title.json. Follow-up filed for a long title wrapping out of the bottom of the bar."
     }
   ],
-  "started": "2026-09-06T19:05:32.796Z"
+  "started": "2026-09-06T19:05:32.796Z",
+  "completed": "2026-09-06T19:20:03.941Z"
 }
