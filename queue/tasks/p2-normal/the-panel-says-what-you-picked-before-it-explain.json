@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1410,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:47:13.295Z",
-  "updated": "2026-09-06T18:22:55.533Z",
+  "updated": "2026-09-06T18:39:39.910Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-06 with Scripts/playtest/dock-component-first-walk.json stage 3-ordinary-layer: viewport 688, Layers 6-257, Position & Size 257-392, Color 392-497, Effects 497-655, Rectangle 655-739. The per-kind sections (annotation, text, measure, callout) sit after color and effects in InspectorSectionID. Moving them above Effects undoes inspector.sectionOrder.version 1, which moved Effects up because Corner Radius was below the fold, so this is a genuine tradeoff and probably wants a decision card rather than a guess. The migration idiom is PanelSectionOrder.moving(_:before:in:) plus a numbered orderVersion in InspectorPanel.loadOrder.",
@@ -47,6 +47,10 @@
     {
       "t": "2026-09-06T18:37:23.686347Z",
       "note": "Shipped regardless of the decision: Scripts/playtest/dock-picked-first-walk.json, which reads the dock's offsets back for all four kinds and is the harness acceptance item 4 asks for. It passes today and records the failing baseline."
+    },
+    {
+      "t": "2026-09-06T18:39:39.909Z",
+      "note": "Measured before building and the reorder cannot deliver: one selected layer brings 890-1210pt of sections into a 688pt panel, and the Measurement section alone is 470pt, so no order fits. Shipped Scripts/playtest/dock-picked-first-walk.json (acceptance item 4) which reads the dock offsets back for all four kinds and records the failing baseline with a real capture. Opened a decision with four options and a brief; filed a-measurement-fits-in-the-panel for the 470pt section."
     }
   ],
   "started": "2026-09-06T18:22:55.532Z"

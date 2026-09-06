@@ -9675,3 +9675,25 @@ another window, or from another app. Follow-up filed: "A saved colour can be
 dragged off the Library shelf", which is the missing source.
 
 Next: the queue picks up whatever is top of `p2-normal`.
+
+## 2026-09-06 — the panel says what you picked
+
+Measured the Next dock before touching it. New walk
+`Scripts/playtest/dock-picked-first-walk.json` opens a real screenshot, marks
+it up with a measurement, four rectangles, a label and a zoom callout so the
+layers list reaches full height, then picks each kind and reads the dock's own
+section offsets back. Viewport 688: a picked rectangle's own section sits at
+742-826 (heading included, so nothing hints it exists), text at 749-925, zoom
+callout at 749-863, measurement at 674-1144. Effects is cut too, putting Corner
+Radius at about 704 — the 2026-09-03 fix stops holding as soon as a document
+has a measurement in it.
+
+No reorder can satisfy the task: one selected layer brings 890-1210pt into a
+688pt panel, and the Measurement section alone is 470pt against a 251pt layers
+list. So `the-panel-says-what-you-picked-before-it-explain` is blocked on a
+decision (four options, brief with the capture in `queue/decisions/`), and
+`a-measurement-fits-in-the-panel` is filed for the oversized Measurement
+inspector.
+
+Next: whichever option the decision lands on, plus the Measurement section
+trim.
