@@ -4,12 +4,12 @@
   "goal": "When you drag a selection band while you are inside a group, the band should look different from one drawn out on the canvas, so you can tell at a glance whether you are about to pick the pieces inside a button or whole layers off the top of the document.",
   "epic": "ui-building",
   "priority": "p3-low",
-  "seq": 1290,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T02:24:34.951Z",
-  "updated": "2026-09-06T02:24:34.951Z",
+  "updated": "2026-09-06T12:16:42.317Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left rough by a-sweep-inside-a-group-picks-the-layers-in-that (2026-09-05). The sweep is now scoped to the group you are inside, but the only cue on screen is the faint dotted context box round the group (CanvasGroups.swift groupContextLayer), which is deliberately quiet and easy to miss. The band itself is marqueeLayer in CanvasView.swift and is identical either way. Cheapest honest option is probably to tint or inset the band while marqueeContext is non-nil. Worth confirming with the user that the cue is wanted at all before building: the dotted box may already be enough.",
@@ -23,6 +23,14 @@
     {
       "t": "2026-09-06T02:24:34.951Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.600Z",
+      "note": "seq 1290 -> 90"
+    },
+    {
+      "t": "2026-09-06T12:16:42.317Z",
+      "note": "seq 90 -> 90"
     }
   ]
 }

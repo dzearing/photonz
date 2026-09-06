@@ -1,0 +1,37 @@
+{
+  "id": "the-rules-say-whether-a-guide-drawn-on-the-canva",
+  "title": "The rules say whether a guide drawn on the canvas goes over your work or under it",
+  "goal": "Two features in two days were asked for a guide drawn behind the picture, and both shipped it drawn in front instead, each working the reasoning out from scratch: a grid behind your work is invisible the moment you draw a filled box, and a column band behind a white screen is a band nobody can see. That is the right answer, and it is written down nowhere, so the next person to add a guide will argue it out a third time or get it wrong. Write the rule down where guides are designed.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T12:14:41.845Z",
+  "updated": "2026-09-06T12:16:42.323Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-06. Evidence: queue/audits/2026-09-05-canvas-grid.json rough 1 (the grid is drawn OVER your layers, a deliberate change from the plain reading of the ask) and queue/audits/2026-09-05-screen-columns.json rough 1 (the columns draw OVER the screen and its contents, the same call the canvas grid made a day earlier). Grep of docs/design/mocks/shared/UX-PATTERNS.md and docs/design/overview.md finds no rule about it. Section 3 (panels and surfaces taxonomy) is the natural home, or a new short section beside it.",
+  "acceptance": [
+    "The interaction rules doc carries a short rule saying which canvas guides draw over your work and which draw under it, and why",
+    "It says what a guide must do so it does not read as part of the picture, since the ones we have are washes and hairlines rather than solid fills",
+    "It says that a guide is never in an export or a copy, which both features already do quietly",
+    "The grid and the screen columns are both named as the cases it comes from",
+    "Anyone drawing a new guide in a mock can follow it without asking"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T12:14:41.845Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.606Z",
+      "note": "seq 1310 -> 100"
+    },
+    {
+      "t": "2026-09-06T12:16:42.323Z",
+      "note": "seq 100 -> 100"
+    }
+  ]
+}

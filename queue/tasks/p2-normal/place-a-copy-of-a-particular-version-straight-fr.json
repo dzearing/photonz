@@ -4,12 +4,12 @@
   "goal": "Dropping a component from the Library always places the first version, so making a disabled button takes two steps: drop it, then change its Version. The shelf should be able to hand you the version you want.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 1370,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.169Z",
-  "updated": "2026-09-06T03:24:19.170Z",
+  "updated": "2026-09-06T12:16:42.220Z",
   "deps": [],
   "blockedBy": [],
   "notes": "insertComponentInstance already takes the version through main.componentVersionID; what is missing is the choice at the shelf. Tile is LibraryComponentTile, drag payload is ComponentDrag.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-06T03:24:19.170Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.512Z",
+      "note": "seq 1370 -> 40"
+    },
+    {
+      "t": "2026-09-06T12:16:42.220Z",
+      "note": "seq 40 -> 40"
     }
   ]
 }

@@ -3,13 +3,13 @@
   "title": "A knob can be a number",
   "goal": "A component can offer a number as a knob, so one card original can produce copies with different corner rounding or different room inside, without any of them leaving the family.",
   "epic": "ui-components",
-  "priority": "p3-low",
+  "priority": "p2-normal",
   "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:26.302Z",
-  "updated": "2026-09-05T14:03:40.441Z",
+  "updated": "2026-09-06T12:16:42.201Z",
   "deps": [
     "a-copy-can-be-given-its-own-color"
   ],
@@ -38,6 +38,20 @@
     {
       "t": "2026-09-05T14:03:40.440Z",
       "note": "seq 5 -> 10"
+    },
+    {
+      "t": "2026-09-06T12:14:05.326Z",
+      "note": "priority p3-low -> p2-normal"
+    },
+    {
+      "t": "2026-09-06T12:14:24.994Z",
+      "note": "Triage 2026-09-06: p3 to p2. Its dep a-copy-can-be-given-its-own-color is done, and this is the last missing knob kind in the focus epic."
+    },
+    {
+      "t": "2026-09-06T12:16:42.201Z",
+      "note": "seq 10 -> 10",
+      "since": "2026-09-06T12:15:05.494Z",
+      "count": 2
     }
   ]
 }

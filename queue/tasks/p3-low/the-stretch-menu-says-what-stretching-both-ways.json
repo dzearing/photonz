@@ -4,12 +4,12 @@
   "goal": "Inside a stack or a grid, stretching one piece both ways turns it into the surface the others sit on. The app now names it that once it has happened, but nothing tells you beforehand: you find the idea by trying it and then reading a list at the foot of the panel. The menu that does it should say what it is about to do.",
   "epic": "ui-layout",
   "priority": "p3-low",
-  "seq": 60,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T14:03:26.842Z",
-  "updated": "2026-09-05T14:03:40.608Z",
+  "updated": "2026-09-06T12:16:42.294Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-05. Evidence: queue/audits/2026-09-04-surface-in-a-stack.json rough 2, \"Nothing announces the idea. You only learn that stretching both ways makes a piece the background by doing it and then reading the list, or by landing on the piece. There is no hint on the Stretch menu itself.\" That task named the surface everywhere it already exists (the list at the foot of Layout, and the piece's own row) and deliberately left the menu alone. The wording to match is \"Surface behind the rest\". Panel code is PlacementInspector.swift; the Free group wording is \"Stretch both ways\" and stays.",
@@ -31,6 +31,14 @@
     {
       "t": "2026-09-05T14:03:40.608Z",
       "note": "seq 1250 -> 60"
+    },
+    {
+      "t": "2026-09-06T12:15:05.577Z",
+      "note": "seq 60 -> 50"
+    },
+    {
+      "t": "2026-09-06T12:16:42.294Z",
+      "note": "seq 50 -> 50"
     }
   ]
 }

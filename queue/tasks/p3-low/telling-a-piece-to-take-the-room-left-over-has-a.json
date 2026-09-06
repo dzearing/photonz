@@ -4,12 +4,12 @@
   "goal": "Setting a piece in a stack to take the room the stack has left is only reachable by opening the panel and picking it out of a menu. It is the answer people reach for most while building a bar, so it should also be a menu item with a keyboard shortcut, the way lining a piece up already is.",
   "epic": "ui-layout",
   "priority": "p3-low",
-  "seq": 1270,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T00:33:57.133Z",
-  "updated": "2026-09-06T00:33:57.134Z",
+  "updated": "2026-09-06T12:16:42.306Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The edit already exists: PhotonzDocument.setFillsTheFlow(id:_:), wrapped by EditorState.setFillsTheFlow. Whether it is offered is Layer.canFillTheFlow(in:). The existing stretchSelectionAcross / stretchSelectionDown actions are the pattern to copy, including their playtest action names.",
@@ -24,6 +24,14 @@
     {
       "t": "2026-09-06T00:33:57.134Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.587Z",
+      "note": "seq 1270 -> 70"
+    },
+    {
+      "t": "2026-09-06T12:16:42.306Z",
+      "note": "seq 70 -> 70"
     }
   ]
 }

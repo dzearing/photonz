@@ -4,24 +4,38 @@
   "goal": "One of the scripted walks that checks a mixed text selection stops partway through because the row of text alignment buttons it wants to press has scrolled out of the panel, so nothing is checking that part of the app any more.",
   "epic": "unmanned-loop",
   "priority": "p3-low",
-  "seq": 1240,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T18:08:22.808Z",
-  "updated": "2026-09-05T18:08:22.809Z",
+  "updated": "2026-09-06T12:16:42.334Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Confirmed pre-existing on 2026-09-05: it fails identically on a stashed pre-change build. Fails at step 35 (press): the control \"align center\" is not in the window; scroll to it with a scrollPanel step first. The panel builds only the rows on screen, so the walk needs a scrollPanel step before that press, or a taller window. Five other walks failed in the same playtest-all run and all five pass on their own, so those are shared-state cascade and this is the only real one.",
+  "notes": "Confirmed pre-existing on 2026-09-05: it fails identically on a stashed pre-change build. Fails at step 35 (press): the control \"align center\" is not in the window; scroll to it with a scrollPanel step first. The panel builds only the rows on screen, so the walk needs a scrollPanel step before that press, or a taller window. Five other walks failed in the same playtest-all run and all five pass on their own, so those are shared-state cascade and this is the only real one. Merged with the-mixed-look-walk-reaches-the-alignment-button on 2026-09-06 (same walk, same step 35, same cause); that one is dropped.",
   "acceptance": [
     "Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json passes on its own",
     "It passes twice in a row, so it is not depending on state a previous run left behind",
-    "Scripts/playtest-all.sh reports it as ok"
+    "Scripts/playtest-all.sh reports it as ok",
+    "The walk still checks the thing it was written to check: a mixed selection taking one look",
+    "If the walk turns out to be right and the app wrong, the app bug is fixed rather than the walk loosened"
   ],
   "log": [
     {
       "t": "2026-09-05T18:08:22.809Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:14:02.738Z",
+      "note": "Triage 2026-09-06: folded in the duplicate the-mixed-look-walk-reaches-the-alignment-button, keeping its point that a real app bug must be fixed rather than the walk loosened."
+    },
+    {
+      "t": "2026-09-06T12:15:05.618Z",
+      "note": "seq 1240 -> 120"
+    },
+    {
+      "t": "2026-09-06T12:16:42.334Z",
+      "note": "seq 120 -> 120"
     }
   ]
 }

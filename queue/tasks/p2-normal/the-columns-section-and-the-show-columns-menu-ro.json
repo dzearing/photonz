@@ -4,12 +4,12 @@
   "goal": "With a screen selected you can see its Columns numbers in the panel and switch them on from the Layer menu. With a button ON that screen selected the menu row still works, but the Columns section is gone, so the same feature is half there depending on what you clicked last. Pick one behaviour and make both follow it.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 1390,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:48:41.859Z",
-  "updated": "2026-09-06T03:48:41.859Z",
+  "updated": "2026-09-06T12:16:42.232Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the audit queue/audits/2026-09-05-screen-columns.json. The menu row reads EditorState.columnsTargetFrameID, which is selectedFrameID and so walks up to the containing screen; the panel section is gated on selectedLayer.isFrame in LayersPanel.availableSections. Two options worth putting to the user: show the section for the containing screen with a header that names it (like the Layout section already does with This layer on Frame), or narrow the menu row to the selected screen only. The first is more useful, the second is more honest about what a properties panel is.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-06T03:48:41.859Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.524Z",
+      "note": "seq 1390 -> 60"
+    },
+    {
+      "t": "2026-09-06T12:16:42.232Z",
+      "note": "seq 60 -> 60"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Each version of a component is its own drawing, so a change meant for all of them (a new corner radius, a renamed label) has to be made in each one by hand. There should be a way to make one edit reach every version.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 1360,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.134Z",
-  "updated": "2026-09-06T03:24:19.135Z",
+  "updated": "2026-09-06T12:16:42.214Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The cost was accepted with the decision on 2026-09-05 (each version is a complete drawing). This is the sanded-down version of that cost. Versions live as sibling mains sharing a componentID; ComponentVersions.swift holds the model.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-06T03:24:19.135Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.506Z",
+      "note": "seq 1360 -> 30"
+    },
+    {
+      "t": "2026-09-06T12:16:42.214Z",
+      "note": "seq 30 -> 30"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "An arrow captioned with a single character draws a nearly round bubble, while a measurement of the same length now draws a badge. Both come from the same pill, so they should be the same shape.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 1430,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T10:22:02.590Z",
-  "updated": "2026-09-06T10:22:02.591Z",
+  "updated": "2026-09-06T12:16:42.264Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the measure chip badge task (2026-09-06). MeasureContent.labelBadgeAspect is 1.7 and MeasureContent.labelMinPillWidth floors PillRasterizer.footprint via the minWidth argument. AnnotationContent.captionMinPillWidth (Sources/PhotonzCore/Layer.swift) still multiplies its line box by 1.2, which works out to about 1.18 of the drawn pill height: measured, a \"1\" caption at the default size is 54.9 by 46.6. Point captionMinPillWidth at MeasureContent.labelBadgeAspect and re-run AnnotationCaptionTests, the caption placement fixtures and Scripts/playtest/short-caption-pill-walk.json. Not done in the same pass because arrow captions were audited on 2026-09-04 at the current shape and this deserves its own before and after.",
@@ -24,6 +24,14 @@
     {
       "t": "2026-09-06T10:22:02.591Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.550Z",
+      "note": "seq 1430 -> 110"
+    },
+    {
+      "t": "2026-09-06T12:16:42.264Z",
+      "note": "seq 110 -> 110"
     }
   ]
 }

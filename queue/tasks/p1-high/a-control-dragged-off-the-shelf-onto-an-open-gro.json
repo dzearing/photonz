@@ -3,13 +3,13 @@
   "title": "A control dragged off the shelf onto an open group goes into it",
   "goal": "Open a group on the canvas, drag a component tile out of the Library and let go inside it, and the new piece should join that group. Today it lands beside the group instead, which means a bar or a card you are arranging cannot be added to from the shelf at all.",
   "epic": "ui-layout",
-  "priority": "p2-normal",
-  "seq": 1410,
+  "priority": "p1-high",
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T06:04:18.627Z",
-  "updated": "2026-09-06T06:04:18.627Z",
+  "updated": "2026-09-06T12:16:42.193Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while auditing the Nav Bar row (queue/audits/2026-09-05-nav-bar-row.json): a Badge dragged onto an open Nav Bar landed as a sibling at the top level. The model side already works - GroupChromeTests aSecondControlLinesUp appends a child and the row places it - so this is the drop target, not the flow. Look at the dragTile/drop path in the Library panel and the canvas drop handler.",
@@ -23,6 +23,22 @@
     {
       "t": "2026-09-06T06:04:18.627Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:14:05.291Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-06T12:14:25.000Z",
+      "note": "Triage 2026-09-06: p2 to p1. Design review judged this the harshest hole in the focus: you cannot add to a bar or a card from the shelf at all, which is the middle of the build-a-component loop. Evidence: queue/audits/2026-09-05-nav-bar-row.json rough 1."
+    },
+    {
+      "t": "2026-09-06T12:15:05.479Z",
+      "note": "seq 1410 -> 10"
+    },
+    {
+      "t": "2026-09-06T12:16:42.192Z",
+      "note": "seq 10 -> 10"
     }
   ]
 }

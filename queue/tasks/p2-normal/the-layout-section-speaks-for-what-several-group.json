@@ -4,12 +4,12 @@
   "goal": "Pick two or more groups and the part of Layout that says what a group tells everything inside it disappears, so arranging them means doing it one group at a time. It should stay and speak for all of them, the way the rows about where the groups themselves sit already do.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 1440,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T11:09:17.011Z",
-  "updated": "2026-09-06T11:09:17.012Z",
+  "updated": "2026-09-06T12:16:42.243Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left out of the-layout-section-speaks-for-several-picked-lay on 2026-09-06: that task made the CHILD rows (This layer in <container>) speak for the whole selection through PlacementSelection in PhotonzCore. The Contents rows in PlacementInspector.contentRows are still keyed on one group, and so are the two things inside them: ArrangementInspector(layer:) and Layer.contentsWithTheirOwnPlacement. Both need a whole-selection reading of their own, shaped like PlacementSelection. Do NOT reuse PlacementSelection for this: that one is about where the picked layers sit in what holds them, this is about what the picked groups tell their own contents.",
@@ -23,6 +23,14 @@
     {
       "t": "2026-09-06T11:09:17.012Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.534Z",
+      "note": "seq 1440 -> 80"
+    },
+    {
+      "t": "2026-09-06T12:16:42.243Z",
+      "note": "seq 80 -> 80"
     }
   ]
 }

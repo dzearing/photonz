@@ -1,0 +1,32 @@
+{
+  "id": "a-bug-filed-at-the-end-of-a-task-has-been-reprod",
+  "title": "A bug filed at the end of a task has been reproduced, not just read",
+  "goal": "A task that finished last night filed a top priority bug saying the loop had stopped rebuilding the app you playtest with, so nobody was seeing their work. It was not true: the check that found it ran the wrong shell against the script, and the rebuild had in fact run and succeeded minutes earlier. A follow-up filed from reading rather than running costs a whole task cycle at the top of the queue, so the instructions a task runner works from should require the same standard for a bug it files as for the work it does.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 150,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T12:16:37.314Z",
+  "updated": "2026-09-06T12:16:42.352Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-06. Evidence: the-app-you-playtest-with-is-rebuilt-after-every, created 12:10 UTC, dropped in the same triage pass. Its notes said queue/bin/refresh-dev-app.sh was a bash syntax error; the file is #!/bin/zsh and zsh -n is clean, queue/loop.log holds 180 successful refreshes with the last at 05:10:36 the same morning, and go-loop.sh:125 already prints a line when a refresh fails, which the task also said was missing. queue/bin/runner-prompt.md has no rule about reproducing a bug before filing it (grep for reproduce finds nothing).",
+  "acceptance": [
+    "The runner instructions say a follow-up that claims something is broken must carry the command that shows it broken, and its output",
+    "They say to run a script the way the machine runs it rather than reading it or checking it with another shell",
+    "They say what to do when it cannot be reproduced: file it as something to look into rather than as a bug, at normal priority",
+    "The daily triage pass is told to spot-check the evidence on any new top priority bug before it is allowed to run first"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T12:16:37.315Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:16:42.352Z",
+      "note": "seq 1240 -> 150"
+    }
+  ]
+}

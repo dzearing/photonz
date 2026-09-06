@@ -4,12 +4,12 @@
   "goal": "With the grid on, every shape you draw now starts and ends on the grid lines, but clicking with the text tool still drops the text box exactly where the pointer was. A caption placed on graph paper should sit on the paper like everything else.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 1420,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T09:56:32.137Z",
-  "updated": "2026-09-06T09:56:32.138Z",
+  "updated": "2026-09-06T12:16:42.238Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-06 while doing a-shape-you-draw-lands-on-the-grid-like-everythi. CanvasPointerDrags mouseDown line 90: `if tool == .text { beginTextSession(layerID: nil, at: p) }` uses the raw document point and never goes near snappedAnnotationPoint, so no edge magnet and no grid. Text is placed by a CLICK, not a drag, so there is no opposite end and no one cell floor to worry about: it just wants the point quantized. AnnotationSnapping.snap with shape nil and opposite nil already does exactly that (it is what the frame tool uses on its press), so this should be a one line change plus a test.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-06T09:56:32.138Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.529Z",
+      "note": "seq 1420 -> 70"
+    },
+    {
+      "t": "2026-09-06T12:16:42.238Z",
+      "note": "seq 70 -> 70"
     }
   ]
 }

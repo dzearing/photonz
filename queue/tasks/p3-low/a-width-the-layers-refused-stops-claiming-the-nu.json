@@ -4,12 +4,12 @@
   "goal": "Pick two labels and type 200 into W. Both boxes go to 204, because a text box will not go narrower than its own words, but the W field goes on showing 200. The number in the box has to be the number the layers actually took, or the next arrow key steps from a width nothing has.",
   "epic": "ui-components",
   "priority": "p3-low",
-  "seq": 40,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T21:25:38.283Z",
-  "updated": "2026-09-05T14:03:40.542Z",
+  "updated": "2026-09-06T12:16:42.282Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/GeometryInspector.swift, GeometryField.land(): it already calls landing(parsed) and shows display(landed), so the miss is that landing() is computed before commit and does not see the per-layer clamp for a multi-layer selection. Reproduced in Scripts/playtest/mixed-one-look-walk.json (step focus W, type 200): the tree reports both text layers at 204 while the field reads 200. Found while doing mixed-reads-the-same-way-in-every-control.\n\nDecided 2026-09-05 in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a control shows after a set the picked things refused\": read back from the document AFTER the commit, never a landing worked out before it. All landed the same shows that number, landed differently shows Mixed, nothing moved snaps back with the reason in the line under the section, and no toast either way.",
@@ -27,6 +27,14 @@
     {
       "t": "2026-09-05T14:03:40.541Z",
       "note": "seq 1230 -> 40"
+    },
+    {
+      "t": "2026-09-06T12:15:05.566Z",
+      "note": "seq 40 -> 30"
+    },
+    {
+      "t": "2026-09-06T12:16:42.282Z",
+      "note": "seq 30 -> 30"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Running the whole set of scripted walks takes about four hours, and proving it repeats takes eight. That is long enough that nobody runs it before a change lands, so breaks are found days later by someone else. Make the set fast enough to run whenever it matters.",
   "epic": "unmanned-loop",
   "priority": "p3-low",
-  "seq": 1300,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T08:49:16.486Z",
-  "updated": "2026-09-06T08:49:16.487Z",
+  "updated": "2026-09-06T12:16:42.346Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-06: 188 walks, roughly 75 seconds each. Most of it is per-walk overhead rather than the walk. Every walk quits and relaunches the whole app (Scripts/probe-app.sh), and each launch also compiles and runs Scripts/permcheck.swift for the Grants line and polls up to 3s for dist/probe-grants.json. Candidates, cheapest first: cache the permcheck answer for the run; skip the grants poll when a previous launch already answered; drop the per-walk quit-relaunch by teaching the probe to take a second --playtest script without restarting, which is the big one. Watch out: walks currently rely on a fresh process for their starting state, and the harness now restores remembered settings at the end of every run, so a shared process would need that restore to happen between scripts too.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-06T08:49:16.487Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.634Z",
+      "note": "seq 1300 -> 140"
+    },
+    {
+      "t": "2026-09-06T12:16:42.346Z",
+      "note": "seq 140 -> 140"
     }
   ]
 }

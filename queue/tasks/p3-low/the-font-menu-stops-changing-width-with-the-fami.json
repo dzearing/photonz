@@ -4,12 +4,12 @@
   "goal": "The Text section jumps sideways as you try fonts, because the family menu resizes itself to whatever is picked. It should hold one width like the menus beside it.",
   "epic": "ui-building",
   "priority": "p3-low",
-  "seq": 20,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:33.437Z",
-  "updated": "2026-09-05T14:03:40.475Z",
+  "updated": "2026-09-06T12:16:42.271Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rough line from queue/audits/2026-09-04-type-menu-labels.json: \"The Font menu still sizes itself to whatever family is picked, so a long family name makes it wider than the others.\" The other menus in that section were given captions in the same task, so this is the last row that does not match. Panel code: Sources/Photonz/LayersPanel.swift Text section.",
@@ -34,6 +34,14 @@
     {
       "t": "2026-09-05T14:03:40.475Z",
       "note": "seq 6 -> 20"
+    },
+    {
+      "t": "2026-09-06T12:15:05.556Z",
+      "note": "seq 20 -> 10"
+    },
+    {
+      "t": "2026-09-06T12:16:42.271Z",
+      "note": "seq 10 -> 10"
     }
   ]
 }

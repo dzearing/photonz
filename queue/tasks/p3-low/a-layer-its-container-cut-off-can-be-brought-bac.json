@@ -1,0 +1,36 @@
+{
+  "id": "a-layer-its-container-cut-off-can-be-brought-bac",
+  "title": "A layer its container cut off can be brought back in one step",
+  "goal": "A layer that its container has clipped away now wears a mark in the Layers list saying it is out of view, and the tip tells you to move it or to turn Clip contents off. Both of those are several steps away, and the fastest way back today is typing a new Y into the panel. The mark should offer the way back where it already tells you about the problem.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T12:14:41.878Z",
+  "updated": "2026-09-06T12:16:42.329Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-06. Evidence: queue/audits/2026-09-06-out-of-view.json rough 3, There is no one-click way back, and rough 4, the mark lives in the Layers list only. Small follow-up to the marking work that landed the same day; the mark and its tip are RowOutOfView.swift plus OutOfView in the app layer.",
+  "acceptance": [
+    "The row of a layer that is out of view offers a way to bring it back into its container",
+    "Taking it puts the layer somewhere visible inside the container, and one undo puts it back where it was",
+    "It is offered on a layer inside a screen too, not only inside a group with Clip contents on",
+    "A layer that is only half out of view is unchanged, since it is not marked in the first place"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T12:14:41.879Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:15:05.612Z",
+      "note": "seq 1320 -> 110"
+    },
+    {
+      "t": "2026-09-06T12:16:42.329Z",
+      "note": "seq 110 -> 110"
+    }
+  ]
+}

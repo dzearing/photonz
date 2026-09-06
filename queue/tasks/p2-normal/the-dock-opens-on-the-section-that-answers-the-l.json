@@ -2,14 +2,14 @@
   "id": "the-dock-opens-on-the-section-that-answers-the-l",
   "title": "The dock opens on the section that answers the layer you just picked",
   "goal": "Picking a copy of a component puts its Component section below Position and Size, Layout and everything else, so the Version row and the knobs are off the bottom of the dock until you scroll. The panel should show the section that says the most about what you picked without hunting for it.",
-  "epic": "interaction-foundations",
+  "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 1380,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.203Z",
-  "updated": "2026-09-06T03:24:19.204Z",
+  "updated": "2026-09-06T12:16:42.225Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while auditing component versions on 2026-09-05: the Version row is the biggest fact about a copy and sits four sections down. Dock sections are in InspectorPanel; the walk log prints dockSections offsets, which is a cheap way to measure this.",
@@ -22,6 +22,18 @@
     {
       "t": "2026-09-06T03:24:19.204Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:13:53.981Z",
+      "note": "Triage 2026-09-06: retagged from interaction-foundations (staged next) to ui-components. It is about the Component section of a copy being four sections down, which serves the focus directly."
+    },
+    {
+      "t": "2026-09-06T12:15:05.518Z",
+      "note": "seq 1380 -> 50"
+    },
+    {
+      "t": "2026-09-06T12:16:42.225Z",
+      "note": "seq 50 -> 50"
     }
   ]
 }

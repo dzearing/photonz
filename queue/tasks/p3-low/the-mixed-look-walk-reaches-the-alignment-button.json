@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 1230,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T16:43:44.710Z",
-  "updated": "2026-09-05T16:43:44.711Z",
+  "updated": "2026-09-06T12:14:02.772Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fails at step 35: press \"align center\" -> the control is not in the window; scroll to it with a scrollPanel step first. Confirmed pre-existing on 2026-09-05 by running it against the pre-split EditorState.swift, so it is not fallout from the extension split. Likely just needs a scrollPanel step before the press, but check first whether the panel grew and pushed the row off.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-05T16:43:44.711Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:14:02.771Z",
+      "note": "duplicate of the-mixed-one-look-walk-reaches-the-alignment-bu, which is the better written of the two and carries the same evidence"
     }
   ]
 }

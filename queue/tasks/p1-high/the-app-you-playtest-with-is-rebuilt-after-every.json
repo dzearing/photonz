@@ -1,15 +1,15 @@
 {
   "id": "the-app-you-playtest-with-is-rebuilt-after-every",
   "title": "The app you playtest with is rebuilt after every task again",
-  "goal": "Between tasks the loop is supposed to rebuild the app you playtest with so you are never looking at yesterday's build. That step has been failing silently since 2026-09-06, so the app on disk has not moved while work has kept landing. It should rebuild again, and it should say so out loud when it cannot.",
+  "goal": "Between tasks the loop rebuilds the app you playtest with, so you are never looking at yesterday’s build. That step has been failing silently since 2026-09-06, so the app on disk has not moved while forty six tasks landed. Until it works again nothing built for the focus can actually be tried, which is what makes this worth doing ahead of feature work. It should rebuild again, and it should say so out loud when it cannot.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 180,
-  "status": "pending",
+  "seq": 5,
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:10:15.734Z",
-  "updated": "2026-09-06T12:10:15.734Z",
+  "updated": "2026-09-06T12:16:25.791Z",
   "deps": [],
   "blockedBy": [],
   "notes": "queue/bin/refresh-dev-app.sh line 59: bundle() { PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh } is a bash syntax error (a brace group needs a ; or newline before the closing brace), so the whole script fails to parse and exits before doing anything. Introduced by 09ae00e. Nothing downstream notices because the loop does not check its exit status. Fix the quoting and add a check that the failure is reported.",
@@ -22,6 +22,26 @@
     {
       "t": "2026-09-06T12:10:15.734Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:14:24.987Z",
+      "note": "Triage 2026-09-06: reproduced with bash -n queue/bin/refresh-dev-app.sh, which reports a syntax error at line 78 from the brace group opened on line 59, so the script exits before doing anything. Goal now says how it unblocks the focus, which is what a next-epic task at p1 has to say."
+    },
+    {
+      "t": "2026-09-06T12:15:05.487Z",
+      "note": "seq 180 -> 20"
+    },
+    {
+      "t": "2026-09-06T12:15:15.465Z",
+      "note": "seq 20 -> 5"
+    },
+    {
+      "t": "2026-09-06T12:16:25.757Z",
+      "note": "Correction, same pass: my earlier note ran bash -n against a #!/bin/zsh script. Under zsh the file parses (zsh -n is clean; zsh allows a brace group without the separator bash wants). The refresh is not broken: queue/loop.log has 180 runs of \"dist/Photonz Dev.app rebuilt and relaunched\", the most recent at 05:10:36 today, and dist/Photonz Dev.app/Contents/MacOS/Photonz Dev carries that timestamp. The second claim is wrong too: go-loop.sh line 125 already checks the exit status and prints \"dev app refresh failed; see the log\" when it fails. Nothing to fix."
+    },
+    {
+      "t": "2026-09-06T12:16:25.791Z",
+      "note": "not a bug: the script is zsh and parses, the dev app was rebuilt at 05:10 today (180 successful runs in the log), and go-loop.sh already reports a failed refresh. Filed off a bash -n check of a zsh script."
     }
   ]
 }

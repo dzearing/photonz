@@ -1,0 +1,46 @@
+{
+  "id": "a-stretched-piece-stops-offering-a-size-you-cann",
+  "title": "Every number the app works out for you stops looking like one you can type",
+  "goal": "The app already shows a number it decides rather than you, such as the height of a line of text, as plain text with a note saying who decides it. Three other numbers did not get the same treatment: a piece stretched across a stack, a piece told to take the room left over, and a label the app wrapped inside its container all still show a box you can type into, and a number typed there is put straight back a moment later. Every number the app decides should look and behave the same way, wherever it turns up.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T00:33:57.098Z",
+  "updated": "2026-09-06T12:16:42.207Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "LayerGeometryEditing.init already does this for the filling case (Self.fillingReason, added 2026-09-05 with FlowFill). The stretch case is the same shape: resolvedPlacement(in: container) is .stretch on the axis the container decides. Watch heightIsFilled(in:), which already covers half of it for text and now also answers for a column filler. Broadened on 2026-09-06 from the stretch case alone: three audits in one cycle reported the same wart (2026-09-05-fill-the-flow rough2, 2026-09-05-nav-bar-row rough3, 2026-09-05-words-that-wrap rough3). The rule already exists in docs/design/mocks/shared/UX-PATTERNS.md section 4, What a number you cannot type looks like; it was only ever applied to the text height case. LayerGeometryEditing.init already does the filling case (Self.fillingReason).",
+  "acceptance": [
+    "A piece stretched across a column stack shows its width as a plain number rather than a box you can type into, and the same for a stretched height down a row stack",
+    "A label the app wrapped inside its container shows the width the container decided, the same plain way",
+    "Hovering any of them says who decides the number now and names the control that does change it",
+    "A piece whose size is its own keeps its typed box exactly as it is today",
+    "Tests in PhotonzCore cover each case, written before the change",
+    "A screenshot in the audit shows a typed number and a decided number side by side"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T00:33:57.098Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T12:14:05.359Z",
+      "note": "priority p3-low -> p2-normal"
+    },
+    {
+      "t": "2026-09-06T12:14:24.978Z",
+      "note": "Triage 2026-09-06: broadened to every decided number and moved p3 to p2. The rule is written down and keeps getting missed one case at a time."
+    },
+    {
+      "t": "2026-09-06T12:15:05.500Z",
+      "note": "seq 1260 -> 20"
+    },
+    {
+      "t": "2026-09-06T12:16:42.207Z",
+      "note": "seq 20 -> 20"
+    }
+  ]
+}
