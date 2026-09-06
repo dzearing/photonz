@@ -10098,3 +10098,22 @@ first; the grid-guides, text-on-the-grid and snap-hold-foot walks re-run clean.
 Next: the audit at `queue/audits/2026-09-06-guides-catch-marks.json` asks
 whether the brighter yellow reads as a catch at all when it lands on top of the
 guide you pinned, and whether a caption clicked near a guide should move.
+
+## 2026-09-06 — the arrow endings walk runs to the end again
+
+The scripted walk that photographs the five arrow endings stopped at step 34
+asking for a "Slider" in "Thickness". Reproduced first, then dumped the panel
+with a one-arrow probe walk: the row is genuinely gone. The shape-parts
+redesign (`c72ed55`) took `.thickness` out of `AnnotationInspector.visibleRows`
+whenever `next-shape-parts` is on, and the width now lives in the parts list as
+"Width", folded under the chevron of the arrow's stroke row — which for an
+arrow is titled "Color", because a non-switchable outline is named for its ink.
+
+Fixed in the walk, not the app: unfold the Color part once, then pull Width.
+Once only, since `PartsInspector.openPart` is `@AppStorage` and persists across
+selections, and `forget: ["panel"]` resets that key so every run starts folded.
+Two clean runs, status ok, 98 steps; thin row 4pt, thick row 13pt, and the
+pill/badge/square caption picture is back. `Scripts/test.sh` green.
+
+Next: filed "Making an arrow thicker takes one click, not three" — the most
+common redline adjustment is now two clicks deep behind a row named Color.
