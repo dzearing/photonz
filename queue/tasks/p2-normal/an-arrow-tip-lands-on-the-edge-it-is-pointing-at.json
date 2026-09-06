@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1200,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T15:09:22.762Z",
-  "updated": "2026-09-06T03:50:01.812Z",
+  "updated": "2026-09-06T04:36:24.968Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised on 2026-09-05 while auditing the captioned-arrow fixes. The user reported the tail stopping a few pixels short of what it points at; measured, the tip lands exactly on the endpoint at every zoom, pixel scale, stroke width and head scale, so the geometry is right and the AIM is what is short. At 100% on a pixelScale 2 capture, viewport zoom is 0.5, so one pointer point is two image pixels. EdgeSnapping already exists and MeasureHandleDrag uses it (CanvasView around line 2020, axisGated + EdgeSnapping.snap with the edgeMap); annotation endpoint drags and the create drag apply no snapping at all. Reuse the same call, the same guide layer, and the same modifier gate.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-06T05:00:00.000Z",
       "note": "Verified in Photonz Probe with Scripts/playtest/arrow-tip-snap-walk.json on the settings-pane-2x fixture (Save Changes button detected at x 233..481, y 755..816). Flat arrow aimed at 484 lands on 481, keeping y. Upright arrow aimed at 752 lands on 755, keeping x. Diagonal arrow lands on the corner (232, 816). The same arrow's TIP and TAIL handles snap when re-dragged. Command holds the tip at 484 exactly; Shift does too, because the 45 degree constraint owns the point. A rectangle dragged loosely round the button comes out (232, 755, 249, 61), which is the button. 4x renders cropped at each tip show no gap; corner-guide-sc.png is a real screen capture of the crossed yellow guides mid-drag."
+    },
+    {
+      "t": "2026-09-06T04:36:24.968Z",
+      "note": "Arrow, line and box endpoints magnetize to the picture's detected borders with the caliper's yellow guide. New PhotonzCore/AnnotationSnapping (16 tests, written first) gated by the direction the MARK points, not the hand; wired into the create-drag anchor, the create-drag move and the endpoint-drag move; snappingEdgeMap now runs for drawing tools too. Also fixed the magnet defeating itself: a line caught mid-sweep used to ride along and park the tip 24px short of the aim. Verified in the probe with Scripts/playtest/arrow-tip-snap-walk.json (tips land on 481 / 755 / the corner 232,816; tip and tail handles snap; Command and Shift refuse; a loose rectangle comes out hugging the button; zero guides going back on themselves) plus 13 related walks green and Scripts/test.sh at 3611. Audit: queue/audits/2026-09-05-arrow-tip-snap.json. Commit 3cc3f8f, pushed."
     }
   ],
-  "started": "2026-09-06T03:50:01.811Z"
+  "started": "2026-09-06T03:50:01.811Z",
+  "completed": "2026-09-06T04:36:24.968Z"
 }
