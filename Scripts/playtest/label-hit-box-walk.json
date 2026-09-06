@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/label-hit-box",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [900, 760], "to": [600, 760], "steps": 12 },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "type", "text": "Save all the changes here" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "describe", "stage": "1-label-placed", "note": "a sentence label hanging to the right of the tail at 900: the pill line should read 1022.4, 760, so the label ends around x 1145" },
+    { "do": "snapshot", "name": "1-label-placed" },
+
+    { "do": "move", "at": [1185, 760] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [1185, 760] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-click-past-label", "note": "clicked 40pt past the far edge of the label, on blank picture. selection must NOT hold the arrow, and cue must be none" },
+    { "do": "snapshot", "name": "2-click-past-label" },
+
+    { "do": "move", "at": [1022, 760] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [1022, 760] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-click-on-label", "note": "clicked the middle of the label itself: the arrow must be selected again" },
+    { "do": "snapshot", "name": "3-click-on-label" },
+
+    { "do": "click", "at": [750, 760] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-click-on-shaft", "note": "clicked the shaft between tail and head: still the arrow" }
+  ]
+}

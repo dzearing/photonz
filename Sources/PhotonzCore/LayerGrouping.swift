@@ -104,8 +104,11 @@ extension PhotonzDocument {
     /// as the context so the next click stays at that level. A click on the
     /// screen's own empty surface still picks the screen itself.
     public func selectionTarget(at point: CGPoint, zoom: CGFloat = 1,
-                                inside context: UUID?) -> (id: UUID, context: UUID?)? {
-        guard let hit = hitTestPath(point, zoom: zoom) else { return nil }
+                                inside context: UUID?,
+                                captionPillSize: CaptionPillSizing? = nil)
+    -> (id: UUID, context: UUID?)? {
+        guard let hit = hitTestPath(point, zoom: zoom, captionPillSize: captionPillSize)
+        else { return nil }
         // Walk out from where we are: the deepest context the click is
         // actually inside wins, so clicking a sibling keeps you at that level.
         var candidate = context
@@ -147,10 +150,13 @@ extension PhotonzDocument {
     /// step back out of the group you were working in. Nil too when nothing
     /// was hit.
     public func extendTarget(at point: CGPoint, zoom: CGFloat = 1,
-                             inside context: UUID?) -> UUID? {
+                             inside context: UUID?,
+                             captionPillSize: CaptionPillSizing? = nil) -> UUID? {
         // A context whose group has since gone means the top level.
         let level = context.flatMap { layer(id: $0) != nil ? $0 : nil }
-        guard let pick = selectionTarget(at: point, zoom: zoom, inside: level) else { return nil }
+        guard let pick = selectionTarget(at: point, zoom: zoom, inside: level,
+                                         captionPillSize: captionPillSize)
+        else { return nil }
         if pick.context == level { return pick.id }
         // What sits on a screen is one click away from the canvas, so a
         // ⇧-click reaches it too. Without this the gesture would quietly stop
@@ -166,9 +172,12 @@ extension PhotonzDocument {
     /// which is when a double click means whatever it already meant (opening a
     /// text layer for typing, a caption for editing).
     public func descendTarget(at point: CGPoint, zoom: CGFloat = 1,
-                              inside context: UUID?) -> (id: UUID, context: UUID)? {
-        guard let hit = hitTestPath(point, zoom: zoom),
-              let current = selectionTarget(at: point, zoom: zoom, inside: context),
+                              inside context: UUID?,
+                              captionPillSize: CaptionPillSizing? = nil)
+    -> (id: UUID, context: UUID)? {
+        guard let hit = hitTestPath(point, zoom: zoom, captionPillSize: captionPillSize),
+              let current = selectionTarget(at: point, zoom: zoom, inside: context,
+                                            captionPillSize: captionPillSize),
               let currentPath = path(of: current.id),
               layer(id: current.id)?.isGroup == true,
               hit.count > currentPath.count,

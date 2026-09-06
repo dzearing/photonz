@@ -21,18 +21,32 @@ extension CanvasNSView {
     func groupAwarePick(at point: CGPoint, zoom: CGFloat) -> (id: UUID, context: UUID?)? {
         guard let document else { return nil }
         guard groupSelectionEnabled else {
-            return document.hitTest(point, zoom: zoom).map { ($0.id, nil) }
+            return document.hitTest(point, zoom: zoom,
+                                    captionPillSize: Self.captionPillSizing)
+                .map { ($0.id, nil) }
         }
-        return document.selectionTarget(at: point, zoom: zoom, inside: groupContext)
+        return document.selectionTarget(at: point, zoom: zoom, inside: groupContext,
+                                        captionPillSize: Self.captionPillSizing)
     }
+
+    /// How a click sizes an arrow's label: the measured pill, so the only
+    /// picture that picks the arrow up is the picture the label covers. The
+    /// document model's own estimate reserves room far past a sentence's far
+    /// edge, which used to mean a click on the button underneath grabbed the
+    /// arrow instead. See `CaptionPillSizing` and `CaptionPillSizing.swift`.
+    static let captionPillSizing: CaptionPillSizing = { $0.measuredCaptionPillSize }
 
     /// The layer a ⇧-click adds to the selection, or drops from it. Nil when
     /// the click cannot join the selection where you already are — nothing
     /// under the pointer, or the canvas outside the group you are inside.
     func groupAwareExtend(at point: CGPoint, zoom: CGFloat) -> UUID? {
         guard let document else { return nil }
-        guard groupSelectionEnabled else { return document.hitTest(point, zoom: zoom)?.id }
-        return document.extendTarget(at: point, zoom: zoom, inside: groupContext)
+        guard groupSelectionEnabled else {
+            return document.hitTest(point, zoom: zoom,
+                                    captionPillSize: Self.captionPillSizing)?.id
+        }
+        return document.extendTarget(at: point, zoom: zoom, inside: groupContext,
+                                     captionPillSize: Self.captionPillSizing)
     }
 
     /// The layer a DOUBLE click selects: one level deeper than a plain click.
@@ -41,7 +55,8 @@ extension CanvasNSView {
     /// arrow's caption.
     func groupAwareDescent(at point: CGPoint, zoom: CGFloat) -> (id: UUID, context: UUID)? {
         guard groupSelectionEnabled, let document else { return nil }
-        return document.descendTarget(at: point, zoom: zoom, inside: groupContext)
+        return document.descendTarget(at: point, zoom: zoom, inside: groupContext,
+                                      captionPillSize: Self.captionPillSizing)
     }
 
     /// The copy a layer is a piece of, nil for everything that is not inside

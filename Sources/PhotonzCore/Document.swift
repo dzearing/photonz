@@ -232,15 +232,22 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// The topmost editable layer under a canvas point. Top-down order;
     /// invisible and locked layers never hit. `zoom` keeps stroke hit slop
     /// constant in screen points.
-    public func hitTest(_ point: CGPoint, zoom: CGFloat = 1) -> Layer? {
-        hitTestPath(point, zoom: zoom).flatMap { layer(atPath: $0) }
+    ///
+    /// `captionPillSize` measures an arrow caption's pill, so a click beside a
+    /// label lands on what is under the pointer rather than on the arrow. See
+    /// `CaptionPillSizing`.
+    public func hitTest(_ point: CGPoint, zoom: CGFloat = 1,
+                        captionPillSize: CaptionPillSizing? = nil) -> Layer? {
+        hitTestPath(point, zoom: zoom, captionPillSize: captionPillSize)
+            .flatMap { layer(atPath: $0) }
     }
 
     /// The same search, reported as a tree path, so a caller that wants the
     /// GROUP a click landed in rather than the layer itself can walk back up.
     /// A hidden or locked group is skipped whole: nothing inside it can be
     /// picked without unhiding or unlocking it first.
-    public func hitTestPath(_ point: CGPoint, zoom: CGFloat = 1) -> [Int]? {
+    public func hitTestPath(_ point: CGPoint, zoom: CGFloat = 1,
+                            captionPillSize: CaptionPillSizing? = nil) -> [Int]? {
         func search(_ list: [Layer], _ point: CGPoint, _ prefix: [Int]) -> [Int]? {
             for index in list.indices.reversed() {
                 let layer = list[index]
@@ -260,7 +267,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                     // Nothing inside was hit, but a frame is a surface of its
                     // own: its empty room picks the frame itself.
                     if layer.isFrame, layer.localBounds.contains(point) { return prefix + [index] }
-                } else if layer.contains(canvasPoint: point, zoom: zoom) {
+                } else if layer.contains(canvasPoint: point, zoom: zoom,
+                                         captionPillSize: captionPillSize) {
                     return prefix + [index]
                 }
             }

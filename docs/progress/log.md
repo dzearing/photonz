@@ -9613,3 +9613,37 @@ decision card.
 Next: the audit (`queue/audits/2026-09-06-dock-component-first.json`) asks
 whether identity-before-numbers is the right read, and whether holding the
 panel still was the right call or the user wanted the scroll after all.
+
+## 2026-09-06 — a click only picks up an arrow where the arrow is
+
+An arrow with a label on it answered to clicks far past the end of its label.
+The label's footprint in the hit test was `AnnotationContent.estimatedCaptionSize`,
+the model's generous reservation: 408pt wide for a sentence that draws 245, so
+163pt of blank picture past the far edge picked the arrow up instead of the
+button underneath it. The drop, the edge clamp and the pill's drag grab were
+already taking a measured pill; the hit test was the one left, because it needs
+a measurement threaded through `hitTest` and every caller and PhotonzCore
+cannot lay out type.
+
+Reproduced first, in the real app: with the measurement withheld, a scripted
+click 40pt past a 25 character label came back with the Arrow selected
+(`Scripts/playtest/label-hit-box-walk.json`).
+
+The fix is a closure, not a cache. `CaptionPillSizing` in PhotonzCore is a
+`(AnnotationContent) -> CGSize?`; `Layer.contains`, `PhotonzDocument.hitTest`
+and `hitTestPath`, and `selectionTarget` / `extendTarget` / `descendTarget` all
+take one, defaulting to nil so nothing that does not care changes. The app
+hands all three canvas gestures `CanvasNSView.captionPillSizing`, which
+measures through `CaptionMetrics`. Caching the pill on the layer was the other
+option in the task notes and was rejected: it would put a rendering
+measurement in a pure Codable model and go stale on every font size, caption
+and release change.
+
+Current is untouched — arrow captions are a next-only flag, so `hasCaption` is
+never true there. Perf: measuring one caption costs 21.7µs, so a click on a
+document with twenty labels stays under half a millisecond; `CaptionCostTests`
+pins a 200µs ceiling. Suite green at 3945 tests.
+
+Next: the audit (`queue/audits/2026-09-06-label-hit-box.json`) asks whether the
+six points of give around a label is right, or whether the label should be
+exactly its own edge.

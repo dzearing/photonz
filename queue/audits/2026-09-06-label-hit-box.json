@@ -1,0 +1,28 @@
+{
+  "feature": "Clicking beside an arrow's label",
+  "epic": "measure-redline",
+  "summary": "An arrow with a label now only picks up where the arrow or the label actually is. Blank picture past the end of a sentence used to answer to the arrow for another 163 points, so a click aimed at the button underneath grabbed the arrow instead.",
+  "setup": "Photonz Dev, Experiments window, release Next. Arrow captions are on by default there.",
+  "try": [
+    { "do": "Open a screenshot with a button in it." },
+    { "do": "Press A, then drag an arrow so its tip lands on the button and its tail points out into empty space." },
+    { "do": "Type a full sentence for the label, for example Save all the changes here, and press Return.", "shot": "2026-09-06-label-hit-box-1.png" },
+    { "do": "Press V for the pointer." },
+    { "do": "Click the blank picture just past the far end of the label, about a finger width out.", "shot": "2026-09-06-label-hit-box-2.png" },
+    { "do": "Click the label itself, then the shaft, and check both still pick the arrow up." },
+    { "do": "Try the same with a two letter label, where the guess and the real label are close together." }
+  ],
+  "evaluate": [
+    "Does the arrow now let go exactly where your eye says the label ends?",
+    "Is the label still easy to hit on the first try, or did it get fussy?",
+    "Clicking just past the label now picks whatever is underneath instead. Is that what you expected, or did you want the click to do nothing at all?",
+    "There is still about six points of give around the label, the same give a thin arrow gets. Is that give right, or should the label be exactly its own edge?",
+    "Does dragging the label by its middle still feel the same as before?"
+  ],
+  "rough": [
+    "The give around the label is six screen points, matching what every stroke on the canvas gets and matching the grab the drag already used. A label is a big target and may not need any give at all, but keeping the two the same means the hand cue and the press never disagree.",
+    "A click landing on blank picture inside the arrow's padded box now falls through to whatever is under it. On a plain capture the background is locked, so nothing gets selected. On a document with an unlocked layer under the arrow, that layer gets picked, which is right but is a change of behavior worth watching.",
+    "The label is measured on every click now, once per captioned arrow. That costs about 22 microseconds each, so a document with twenty labels spends under half a millisecond deciding what a click landed on. A test pins the budget.",
+    "Screen Recording is granted for the loop's probe build, so the two pictures here are real window captures, not offscreen renders."
+  ]
+}

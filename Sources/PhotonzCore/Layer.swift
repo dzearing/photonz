@@ -383,6 +383,16 @@ extension AnnotationContent {
     }
 }
 
+/// How big an arrow caption's pill REALLY is, asked of whoever can lay out
+/// type. PhotonzCore cannot, so its own `estimatedCaptionSize` is a generous
+/// reservation — 408pt wide for a sentence that measures 245 — which is right
+/// for keeping a frame big enough and wrong for anything a hand aims at.
+///
+/// Hit-testing takes one of these so a click lands on the label a person can
+/// see. Returning nil for a caption means "no measurement here", and the
+/// estimate stands in.
+public typealias CaptionPillSizing = @Sendable (AnnotationContent) -> CGSize?
+
 /// The silhouette of a zoom callout's box and its source outline. Circle is
 /// drawn as a maximal rounded rect (a capsule when the box isn't square), so
 /// box and outline read as the same shape at different aspect ratios.
@@ -1043,7 +1053,13 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// so hit-testing inverts it and tests against the untransformed frame.
     /// Lines/arrows hit near their stroke, not their whole (mostly empty)
     /// padded bounding box; `zoom` keeps that slop constant in screen points.
-    public func contains(canvasPoint point: CGPoint, zoom: CGFloat = 1) -> Bool {
+    ///
+    /// `captionPillSize` measures an arrow caption's pill (only PhotonzRender
+    /// can lay out type). Without one the caption's own generous estimate
+    /// stands in, and blank picture well past the end of a label answers to
+    /// the arrow.
+    public func contains(canvasPoint point: CGPoint, zoom: CGFloat = 1,
+                         captionPillSize: CaptionPillSizing? = nil) -> Bool {
         var p = point
         if !transform.isIdentity {
             let center = CGPoint(x: frame.midX, y: frame.midY)
@@ -1059,10 +1075,10 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             // The caption pill hangs off the tail with no stroke of its own, so
             // its footprint is hittable too — same rule as the measure chip.
             if a.hasCaption {
-                let anchor = a.captionAnchor()
-                let size = a.estimatedCaptionSize
-                let chip = CGRect(x: frame.minX + anchor.x - size.width / 2,
-                                  y: frame.minY + anchor.y - size.height / 2,
+                let size = captionPillSize?(a) ?? a.estimatedCaptionSize
+                let centre = a.captionPillCenter(forPillSize: size)
+                let chip = CGRect(x: frame.minX + centre.x - size.width / 2,
+                                  y: frame.minY + centre.y - size.height / 2,
                                   width: size.width, height: size.height)
                 if chip.insetBy(dx: -tolerance, dy: -tolerance).contains(p) { return true }
             }
@@ -1086,7 +1102,9 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                 // screen to be hit either.
                 return false
             }
-            return group.children.contains { $0.contains(canvasPoint: local, zoom: zoom) }
+            return group.children.contains {
+                $0.contains(canvasPoint: local, zoom: zoom, captionPillSize: captionPillSize)
+            }
         }
         if var m = measure {
             // Hit near the drawn strokes (the squared-U outline), not the padded
