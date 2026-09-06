@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T12:09:51.061Z",
-  "updated": "2026-09-06T01:59:43.812180Z",
+  "updated": "2026-09-06T02:00:02.526Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-04. Named as a house rule by the audit that added the newest one: queue/audits/2026-09-04-callout-shape.json rough 1 (\"With the inspector hidden there is no way to the choice at all. Every other tool setting has the same gap (the wands tolerance, crops aspect), so this follows the house rule rather than fixing it\"). queue/audits/2026-09-04-callout-one-home.json is the same story from the other side: the popover that used to hold tool settings was unreachable code, because picking up a drawing tool clears the layer selection, so the settings were moved into the panel with nowhere else to go. This is also a documented rule that reality has moved past: docs/design/mocks/shared/UX-PATTERNS.md section 6 says tool options are \"shown in the options bar or the top of the Inspector\", and there is no options bar in the app. Either build the strip the doc promises or change the doc; do not leave them disagreeing. Worth a decision card with shots before building, since it puts new chrome on screen.\n\nDecision answered on 2026-09-05: option c, a capsule above the tool bar. Not the recommended option a (press and hold the tool button); the user chose always open and next to the button over hidden until asked. The cost they accepted, in their own card: it sits over the bottom of the picture, which on a screenshot is often where the buttons being redlined are. The mitigation that made it safe: it is its own capsule on its own row rather than part of the tool bar, so the tool bar never changes width, and the capsule wraps on a narrow window. That matters because tool settings used to live inside the tool bar and made it 150 to 200 points wider the moment you picked up Measure or Crop, and that was removed on purpose. Do not put them back in the bar.",
@@ -158,7 +158,12 @@
     {
       "at": "2026-09-06T01:59:43.812180Z",
       "note": "Audit: queue/audits/2026-09-05-tool-settings.json with three real screen captures. Scripts/test.sh green, 3512 tests."
+    },
+    {
+      "t": "2026-09-06T02:00:02.525Z",
+      "note": "The settings for the tool in hand ride in their own capsule above the floating tool bar, behind next-tool-settings (on by default in Next): callout Shape, wand Tolerance, Measure Snap and Show. New PhotonzCore/ToolSettingsBar.swift (contents + row packing, unit tested), EditorChromeLayout capsule-aware bottom chrome, Photonz/ToolSettingsCapsule.swift. Verified on the running probe with Screen Recording granted: bar stayed 916.5pt and its accent circle on the same pixel row for every tool, capsule 0x0 for tools with nothing to set, both directions of the shared-value rule proved from the panel dumps, and a drag beside the capsule still reaches the picture. Scripts/test.sh green, 3512 tests. Audit queue/audits/2026-09-05-tool-settings.json with three real captures; UX-PATTERNS reconciled; two follow-ups filed."
     }
   ],
-  "started": "2026-09-06T01:40:30.829Z"
+  "started": "2026-09-06T01:40:30.829Z",
+  "completed": "2026-09-06T02:00:02.526Z"
 }
