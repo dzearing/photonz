@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T21:33:24.147Z",
-  "updated": "2026-09-06T22:10:21.944458Z",
+  "updated": "2026-09-06T22:11:09.039Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-06, tightening what shipped as the-grid-is-worked-from-the-tool-bar-and-you-can. Their words on the current state: the toolbar shows four pixels min to thirty two pixels current and should show only the current size; clicking it opens a weird popup with a bunch of settings and should open just a vertical slider; the words Adjust Grid should be a gear icon button; in adjust mode the bar is stupid, it should not have subtext and should not have the origin position number; hovering the centre lines should not show the yellow guide since the click there drags the origin; clicking a guide should select it so backspace deletes it. The last two are behaviour, not decoration: the guide highlight and the origin grab overlap in the same place, and the guide has no selected state, so backspace has nothing to act on. Note the automatic setting is new and needs a meaning written down: pick the cell from the same level of detail ladder the drawing uses so automatic and the drawn grid can never disagree, which is the rule the snapping task also settled on. Removing the smallest cell from the bar does not mean removing the idea; say where it lives now.",
@@ -64,7 +64,12 @@
     {
       "t": "2026-09-06T22:10:21.944458Z",
       "note": "audit: queue/audits/2026-09-06-grid-tool-bar.json with five real screen captures."
+    },
+    {
+      "t": "2026-09-06T22:11:09.038Z",
+      "note": "The grid capsule is a switch, a size button, a divider and a gear; the size button opens a vertical slider of sizes with Auto at the foot (Auto = no floor, so the cell rides the same ladder the grid draws with). The adjust bar lost its sentence and its origin numbers, the zero point's markers light instead of a guide when the pointer is on them, and the selected guide wears a knob so backspace has a visible target. Also fixed: escape with the sizes open used to cancel the whole mode and lose every guide. Verified in the probe with grid-bar-two-buttons-walk plus four updated grid walks; 4095 tests green. Audit: queue/audits/2026-09-06-grid-tool-bar.json"
     }
   ],
-  "started": "2026-09-06T21:45:53.371Z"
+  "started": "2026-09-06T21:45:53.371Z",
+  "completed": "2026-09-06T22:11:09.039Z"
 }
