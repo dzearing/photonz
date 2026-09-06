@@ -36,6 +36,20 @@ public enum ZoomCalloutBuilder {
     /// the source is a handful of pixels and the box is a wall.
     public static let magnificationRange: ClosedRange<CGFloat> = 1.25...6
 
+    /// `value` pulled inside what the slider offers, for the number the TOOL
+    /// holds as opposed to the one a drawn callout holds.
+    ///
+    /// The two are deliberately not treated alike. A drawn callout's number
+    /// comes out of its frame, so a corner pull can legitimately leave it at
+    /// 9.4x and the slider stretches to show it. The tool's number is only
+    /// ever set from its own control, so anything outside the range is a
+    /// corrupt stored value, and coming back as something drawable beats
+    /// coming back as a callout nobody can see past.
+    public static func clampedMagnification(_ value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return defaultMagnification }
+        return min(max(value, magnificationRange.lowerBound), magnificationRange.upperBound)
+    }
+
     /// The slider's range with `value` guaranteed inside it.
     ///
     /// Dragging a callout's corner sets its magnification from the frame, so

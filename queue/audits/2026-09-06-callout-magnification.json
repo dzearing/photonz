@@ -1,0 +1,31 @@
+{
+  "feature": "Choosing how much a callout magnifies before you draw it",
+  "epic": "ui-building",
+  "summary": "The Zoom Callout tool now carries how much the next callout magnifies, beside its shape, so a 4x callout is a choice you make before the drag instead of a 2x one you go back and resize. It sits in the capsule above the tool bar, so it is there with the right hand panel hidden, and the tool keeps whatever you last set.",
+  "setup": "Photonz Next. The flag is next-callout-magnification, on by default in Next; nothing to switch on.",
+  "try": [
+    { "do": "Open a screenshot, then press Option Command L to hide the right hand panel." },
+    { "do": "Press Z for the Zoom Callout. The capsule above the bar now says Shape and Magnification, at 2.0x.", "shot": "2026-09-06-callout-magnification-1-capsule.png" },
+    { "do": "Drag a small box over something. The callout comes out twice the size of the box you dragged." },
+    { "do": "Press Z again and pull Magnification to about 4.0x in the capsule." },
+    { "do": "Drag a box the same size somewhere else. That callout comes out twice as big as the first, and is placed clear of it." },
+    { "do": "Press Option Command L to bring the panel back, then press Z. The Zoom Callout Tool section says 4.0x too.", "shot": "2026-09-06-callout-magnification-2-both.png" },
+    { "do": "Click the first callout and pull the Magnification slider in its own Callout section. Press Z again: the tool is still on 4.0x." },
+    { "do": "Quit and reopen the app, press Z: the tool is still on 4.0x." }
+  ],
+  "evaluate": [
+    "Before you draw, does a number on its own mean anything, or would you rather see the size the callout is about to be?",
+    "The capsule is now about 440 points wide for this tool, against Measure's 340. Does it cover too much of the bottom of the picture?",
+    "The slider runs 1.25x to 6x with nothing to catch on. Do you want it to click onto whole numbers, or is smooth right?",
+    "A drawn callout's slider and the tool's slider look identical and are deliberately separate. Is that clear from the screen, or does changing one make you expect the other to follow?",
+    "Is a slider the right control here at all, or would 2x 3x 4x buttons get you there faster?"
+  ],
+  "rough": [
+    "Drawing big now happens in one step, so a big drag times a big number gets big fast: a 360 by 240 point region at 4x fills a 1440 by 960 canvas edge to edge. It is placed on the canvas rather than off it and one undo takes it back, but there is no warning before the drag.",
+    "The number is exact only to what your hand can land on. Neither slider snaps, so 3.0x takes care; the drawn callout's slider has always been like this and the tool's now matches it rather than inventing a second behaviour.",
+    "A window already open does not follow a change made in another window; a window opened after it does. That is how every tool memory in the app works (shape, text size, colours), and this one is no different.",
+    "Screen Recording was granted, so both pictures here are real captures of the window, not offscreen renders.",
+    "Persistence could not be shown by two walks end to end: the playtest harness deliberately puts every remembered setting back as it found it. It was proved from both sides instead - the choice is written into the app's own settings while the app runs, and a launch that starts with 4.0x in its settings comes up on 4.0x and draws its first callout at 4.0x.",
+    "Walk: Scripts/playtest/callout-magnification-walk.json."
+  ]
+}

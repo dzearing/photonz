@@ -23,8 +23,11 @@ struct ToolSettingsBarTests {
         }
     }
 
-    @Test func theZoomCalloutCarriesItsShape() {
-        #expect(ToolSettingsBar.settings(for: .zoomCallout, availability: .all) == [.calloutShape])
+    @Test func theZoomCalloutCarriesItsShapeThenItsMagnification() {
+        // Shape stays first because it was there first: a setting added later
+        // goes after the one a person has already learned the position of.
+        #expect(ToolSettingsBar.settings(for: .zoomCallout, availability: .all)
+                == [.calloutShape, .calloutMagnification])
     }
 
     @Test func theWandCarriesItsTolerance() {
@@ -37,10 +40,21 @@ struct ToolSettingsBarTests {
     }
 
     @Test func aSettingItsFlagHasTurnedOffIsNotShown() {
-        let noSnap = ToolSettingsBar.Availability(calloutShape: true,
+        let noSnap = ToolSettingsBar.Availability(calloutShape: true, calloutMagnification: true,
                                                   measureSnap: false, measureShow: true)
         #expect(ToolSettingsBar.settings(for: .measure, availability: noSnap) == [.measureShow])
         #expect(ToolSettingsBar.settings(for: .zoomCallout, availability: .none).isEmpty)
+        // Either half of the callout's pair can be off on its own, and the
+        // other still shows rather than taking the capsule down with it.
+        let shapeOnly = ToolSettingsBar.Availability(calloutShape: true, calloutMagnification: false,
+                                                    measureSnap: true, measureShow: true)
+        #expect(ToolSettingsBar.settings(for: .zoomCallout, availability: shapeOnly)
+                == [.calloutShape])
+        let magnificationOnly = ToolSettingsBar.Availability(
+            calloutShape: false, calloutMagnification: true,
+            measureSnap: true, measureShow: true)
+        #expect(ToolSettingsBar.settings(for: .zoomCallout, availability: magnificationOnly)
+                == [.calloutMagnification])
         // The wand's tolerance answers to no flag of its own: it is the wand.
         #expect(ToolSettingsBar.settings(for: .wand, availability: .none) == [.wandTolerance])
     }
@@ -50,6 +64,9 @@ struct ToolSettingsBarTests {
             #expect(!setting.title.isEmpty)
         }
         #expect(ToolSetting.calloutShape.title == "Shape")
+        // The same word the panel puts on it, in both places it appears, so
+        // the tool's number and a drawn callout's number read as one idea.
+        #expect(ToolSetting.calloutMagnification.title == "Magnification")
         #expect(ToolSetting.wandTolerance.title == "Tolerance")
         #expect(ToolSetting.measureSnap.title == "Snap")
         #expect(ToolSetting.measureShow.title == "Show")

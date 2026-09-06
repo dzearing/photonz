@@ -91,6 +91,8 @@ public enum FeatureCatalog {
 
     public static let calloutShapeFlag = "next-callout-shape"
 
+    public static let calloutMagnificationFlag = "next-callout-magnification"
+
     public static let canvasGridFlag = "next-canvas-grid"
 
     // MARK: - Definitions
@@ -406,6 +408,15 @@ public enum FeatureCatalog {
                     name: calloutShapeFlag,
                     title: "Choose a zoom callout\u{2019}s shape before you draw it",
                     description: "Picking up the Zoom Callout tool puts a Zoom Callout Tool section in the inspector with one choice in it: Rectangle or Circle. The box you drag out previews in the shape you chose and the callout lands in it, and the tool keeps that choice for the next one and after a relaunch. Off means every callout is drawn as a rectangle and the only way to a circle is to draw one first and change it in the callout\u{2019}s own section.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: calloutMagnificationFlag,
+                    title: "Choose how much a callout magnifies before you draw it",
+                    description: "The Zoom Callout tool carries a Magnification slider beside its Shape, in the settings capsule above the tool bar and in the Zoom Callout Tool section of the panel, so you can say how much the next callout blows up what it points at before you drag it out. It starts at 2\u{00D7}, which is what callouts have always been drawn at, and the tool keeps whatever you last set for the next one and after a relaunch. Drawing at the right size the first time also means the callout is placed clear of the picture\u{2019}s other callouts at that size, instead of growing over them when you resize it afterwards. A callout already on the canvas is still resized by its own Magnification slider, and pulling its corners never changes what the tool holds. Off means every new callout comes out at 2\u{00D7} and the only way to a bigger one is to draw it and then resize it.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

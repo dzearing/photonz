@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1330,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T01:59:16.289Z",
-  "updated": "2026-09-06T01:59:16.290Z",
+  "updated": "2026-09-06T11:25:13.011Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-05-tool-settings.json rough 3. The capsule is Sources/Photonz/ToolSettingsCapsule.swift and its contents are decided by ToolSettingsBar.settings(for:availability:) in PhotonzCore; add a .calloutMagnification case there with a test. The tool-level shape precedent is EditorState.calloutToolShape (EditorState+MeasurePanel.swift:243) and ZoomCalloutBuilder.defaultMagnification / magnificationRange are the numbers. The picked-layer control is CalloutInspector and must not move.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-06T01:59:16.290Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T11:25:13.011Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T11:27:23.164464Z",
+      "note": "Adversarial review before building. (1) The existing CalloutStyles doc says magnification must not be remembered because 'it comes out of the drag'. Half true: a corner pull sets it, but the DRAG never does \u2014 every new callout is hardcoded 2x. So the tool has a starting magnification whether we admit it or not; the real hazard the comment names is the tool quietly absorbing whatever the last corner pull left behind. Design rule taken from it: the tool's number changes ONLY when you move the tool's own control, never when a placed callout is resized. (2) Value beyond 'draw then resize': resizing a placed callout grows it around its own centre, so it can end up over another callout or off the picture; drawing at the right magnification lets placement pick a clear spot first time. (3) Shortest version: one short slider plus a readout, exactly the wand tolerance control already in the capsule, not a stepper or a numeric field. (4) Order: Shape stays first and Magnification is added after it, in both the capsule and the panel's Zoom Callout Tool section, so a setting that is already there does not get shoved. (5) Width check: Shape (~164pt) + 18 + Magnification (~222pt) is about 404pt against the 448pt narrowest picture the app allows, so it still does not wrap."
+    },
+    {
+      "t": "2026-09-06T11:38:10.533282Z",
+      "note": "Built. Core: CalloutStyles gains a clamped magnification (ZoomCalloutBuilder.clampedMagnification), ToolSetting gains .calloutMagnification and the zoom callout's capsule list is now [shape, magnification] behind its own Availability flag. App: next-callout-magnification in the Next catalog (on by default), EditorState.calloutToolMagnification persisted to the calloutStyles blob, addZoomCallout passes it, a short slider plus readout in the capsule and a Magnification row in the panel's Zoom Callout Tool section. Verified live in the probe with Scripts/playtest/callout-magnification-walk.json: tool at 2x draws 2.0x; pulling the PICKED callout to 4.0x leaves the tool on 2.0x (the tool never absorbs a resize); tool armed to 4x draws 4.0x and the second callout is placed clear of the first at that size; back to 2x draws 2.0x again. Persistence proved both ways because the walk harness restores settings at teardown: the choice is written into the app's settings while it runs, and a launch seeded with 4.0x comes up on 4.0x. Scripts/test.sh green, 3756 tests. Screen Recording was granted, so the audit carries real window captures."
+    },
+    {
+      "t": "2026-09-06T11:38:10.533436Z",
+      "note": "Adversarial review of the built thing. Kept: the capsule is now ~440pt wide for this tool against Measure's 340pt, so it covers more of the bottom band - flagged for the user rather than shrunk, since trimming the slider buys ~12pt and costs precision. Kept: neither slider snaps, so 3.0x takes a careful hand; matching the drawn callout's existing slider beat inventing a second behaviour. Found and left as a note: a 360x240pt region at 4x now fills a 1440x960 canvas in one drag, which is placed on canvas and undoable but unannounced. Audit at queue/audits/2026-09-06-callout-magnification.json."
     }
-  ]
+  ],
+  "started": "2026-09-06T11:25:13.011Z"
 }

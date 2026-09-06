@@ -464,7 +464,7 @@ struct InspectorPanel: View {
         // (`next-callout-shape`). Same test as the wand's tolerance: it changes
         // what the drag produces, not what the pointer does, so it is a setting
         // and settings live here.
-        if editorState.activeTool == .zoomCallout, Experiments.shared.calloutShapeEnabled {
+        if editorState.activeTool == .zoomCallout, CalloutToolInspector.hasAnySetting {
             set.insert(.calloutTool)
         }
         // A piece INSIDE a copy owns nothing. Its size, its colors, its type
@@ -2238,32 +2238,66 @@ struct CropToolInspector: View {
 
 // MARK: - Zoom Callout tool properties (D15)
 
-/// The Zoom Callout tool's own property, shown while the tool is in hand:
-/// whether the next callout is a box or a circle.
+/// The Zoom Callout tool's own properties, shown while the tool is in hand:
+/// whether the next callout is a box or a circle, and how much it magnifies.
 ///
-/// The shape used to be reachable only after the fact, in a picked callout's
-/// own section, so getting a circle meant drawing a rectangle and then going to
-/// fix it. It is a setting by D15's test — it changes what the drag produces,
-/// not what the pointer does — so it belongs with the tool's properties, and
-/// the tool keeps whatever you last chose.
+/// Both used to be reachable only after the fact, in a picked callout's own
+/// section, so getting a round 4× callout meant drawing a 2× rectangle and then
+/// going to fix it twice. They are settings by D15's test — they change what
+/// the drag produces, not what the pointer does — so they belong with the
+/// tool's properties, and the tool keeps whatever you last chose.
+///
+/// Same order as the capsule above the tool bar, because they are the same two
+/// settings: whichever place you learn them in, the other reads the same.
 struct CalloutToolInspector: View {
     @Environment(EditorState.self) private var editorState
 
+    /// Either half can be off on its own, so each row asks for itself.
+    static var hasAnySetting: Bool {
+        Experiments.shared.calloutShapeEnabled || Experiments.shared.calloutMagnificationEnabled
+    }
+
     var body: some View {
         @Bindable var state = editorState
-        VStack(alignment: .leading, spacing: 2) {
-            Text("Shape").font(.caption).foregroundStyle(.secondary)
-            Picker("Shape", selection: $state.calloutToolShape) {
-                ForEach(ZoomCalloutShape.allCases, id: \.self) { shape in
-                    Text(shape.title).tag(shape)
+        VStack(alignment: .leading, spacing: 10) {
+            if Experiments.shared.calloutShapeEnabled {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Shape").font(.caption).foregroundStyle(.secondary)
+                    Picker("Shape", selection: $state.calloutToolShape) {
+                        ForEach(ZoomCalloutShape.allCases, id: \.self) { shape in
+                            Text(shape.title).tag(shape)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .controlSize(.small)
+                    .help("What the next callout is drawn in. The box you drag out previews "
+                          + "in the same shape, and a callout already on the canvas is "
+                          + "switched in its own section.")
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .controlSize(.small)
-            .help("What the next callout is drawn in. The box you drag out previews "
-                  + "in the same shape, and a callout already on the canvas is "
-                  + "switched in its own section.")
+            if Experiments.shared.calloutMagnificationEnabled {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text("Magnification").font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Text(ZoomCalloutBuilder
+                            .magnificationLabel(editorState.calloutToolMagnification))
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                    // The tool's number is not a document edit, so unlike the
+                    // picked callout's slider there is nothing to preview and
+                    // nothing to undo: it just moves.
+                    Slider(value: Binding(get: { state.calloutToolMagnification },
+                                          set: { state.calloutToolMagnification = $0 }),
+                           in: ZoomCalloutBuilder.magnificationRange)
+                        .controlSize(.small)
+                        .help("How much bigger the next callout draws the region it points at. "
+                              + "A callout already on the canvas is resized by the slider in "
+                              + "its own section.")
+                }
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)

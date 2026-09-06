@@ -238,11 +238,54 @@ struct CalloutStylesTests {
         #expect(layer?.zoomCallout?.shape == .rectangle)
     }
 
+    @Test func startsAtTheMagnificationCalloutsHaveAlwaysBeenDrawnAt() {
+        // Two, which is what every callout came out at before the tool had a
+        // number of its own: nobody who never touches this notices it exists.
+        #expect(CalloutStyles().magnification == ZoomCalloutBuilder.defaultMagnification)
+    }
+
+    @Test func newCalloutTakesTheRememberedMagnification() {
+        var styles = CalloutStyles()
+        styles.magnification = 4
+        let layer = ZoomCalloutBuilder.layer(from: CGPoint(x: 20, y: 30), to: CGPoint(x: 80, y: 90),
+                                             canvas: CGSize(width: 400, height: 300),
+                                             magnification: styles.magnification)
+        #expect(layer?.zoomCallout?.magnification == 4)
+        // ...and the frame it is placed in is that much bigger than the source,
+        // so the callout lands at its final size rather than being resized into
+        // whatever space is left.
+        #expect(layer!.frame.width == layer!.zoomCallout!.sourceRect.width * 4)
+    }
+
+    @Test func theToolNumberStaysInsideWhatTheSliderOffers() {
+        // A corner pull can leave a PLACED callout at 9.4x, and the slider
+        // stretches to show that. The TOOL's own number never does: it is only
+        // ever set from the control, so anything outside the range is a corrupt
+        // stored value and comes back as something drawable.
+        var styles = CalloutStyles()
+        styles.magnification = 20
+        #expect(styles.magnification == ZoomCalloutBuilder.magnificationRange.upperBound)
+        styles.magnification = 0.2
+        #expect(styles.magnification == ZoomCalloutBuilder.magnificationRange.lowerBound)
+        styles.magnification = .nan
+        #expect(styles.magnification == ZoomCalloutBuilder.defaultMagnification)
+        #expect(CalloutStyles(magnification: 99).magnification
+                == ZoomCalloutBuilder.magnificationRange.upperBound)
+    }
+
     @Test func survivesARoundTripThroughStorage() throws {
         var styles = CalloutStyles()
         styles.shape = .circle
+        styles.magnification = 3.5
         let data = try JSONEncoder().encode(styles)
         #expect(try JSONDecoder().decode(CalloutStyles.self, from: data) == styles)
+    }
+
+    @Test func aStoredNumberOutsideTheRangeComesBackDrawable() throws {
+        let data = Data("{\"shape\":\"circle\",\"magnification\":42}".utf8)
+        let styles = try JSONDecoder().decode(CalloutStyles.self, from: data)
+        #expect(styles.magnification == ZoomCalloutBuilder.magnificationRange.upperBound)
+        #expect(styles.shape == .circle)
     }
 
     /// A blob written before the tool remembered anything still decodes, and
@@ -250,5 +293,15 @@ struct CalloutStylesTests {
     @Test func emptyStoredBlobDecodesToTheDefault() throws {
         let data = Data("{}".utf8)
         #expect(try JSONDecoder().decode(CalloutStyles.self, from: data) == CalloutStyles())
+    }
+
+    /// A memory written when the tool only remembered its silhouette still
+    /// decodes, and says two, so an existing install draws exactly what it drew
+    /// yesterday until somebody moves the new slider.
+    @Test func aMemoryFromBeforeTheNumberExistedStillDecodes() throws {
+        let data = Data("{\"shape\":\"circle\"}".utf8)
+        let styles = try JSONDecoder().decode(CalloutStyles.self, from: data)
+        #expect(styles.shape == .circle)
+        #expect(styles.magnification == ZoomCalloutBuilder.defaultMagnification)
     }
 }

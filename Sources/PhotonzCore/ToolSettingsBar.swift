@@ -13,6 +13,8 @@ import Foundation
 public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
     /// Whether the next zoom callout is drawn in a box or in a circle.
     case calloutShape
+    /// How much the next zoom callout magnifies the region it points at.
+    case calloutMagnification
     /// How far a color may drift and still join the wand's selection.
     case wandTolerance
     /// What a measure point magnetizes to: edges, or edges and centers.
@@ -25,6 +27,7 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
     public var title: String {
         switch self {
         case .calloutShape: "Shape"
+        case .calloutMagnification: "Magnification"
         case .wandTolerance: "Tolerance"
         case .measureSnap: "Snap"
         case .measureShow: "Show"
@@ -49,18 +52,21 @@ public enum ToolSettingsBar {
     /// nothing.
     public struct Availability: Hashable, Sendable {
         public var calloutShape: Bool
+        public var calloutMagnification: Bool
         public var measureSnap: Bool
         public var measureShow: Bool
 
-        public init(calloutShape: Bool, measureSnap: Bool, measureShow: Bool) {
+        public init(calloutShape: Bool, calloutMagnification: Bool,
+                    measureSnap: Bool, measureShow: Bool) {
             self.calloutShape = calloutShape
+            self.calloutMagnification = calloutMagnification
             self.measureSnap = measureSnap
             self.measureShow = measureShow
         }
 
-        public static let all = Availability(calloutShape: true,
+        public static let all = Availability(calloutShape: true, calloutMagnification: true,
                                              measureSnap: true, measureShow: true)
-        public static let none = Availability(calloutShape: false,
+        public static let none = Availability(calloutShape: false, calloutMagnification: false,
                                               measureSnap: false, measureShow: false)
     }
 
@@ -70,7 +76,11 @@ public enum ToolSettingsBar {
     public static func settings(for tool: Tool, availability: Availability) -> [ToolSetting] {
         switch tool {
         case .zoomCallout:
-            availability.calloutShape ? [.calloutShape] : []
+            // Shape first because it was there first: a setting added later
+            // goes after the one whose position a person has already learned.
+            [.calloutShape, .calloutMagnification].filter {
+                $0 == .calloutShape ? availability.calloutShape : availability.calloutMagnification
+            }
         case .wand:
             // The wand's tolerance answers to no flag of its own: a wand with
             // no tolerance is not a wand.

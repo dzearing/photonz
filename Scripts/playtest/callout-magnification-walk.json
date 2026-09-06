@@ -1,0 +1,60 @@
+{
+  "out": "/tmp/photonz-playtest/callout-magnification",
+  "setup": { "forget": ["panel", "tools", "shapes"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "hideInspector" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "action", "action": "armCalloutRectangle" },
+    { "do": "action", "action": "armCalloutDefaultMagnification" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-tool-in-hand", "note": "panel hidden, tool in hand: the capsule carries Shape and Magnification, and calloutToolMagnification reads 2.0x, what callouts have always been drawn at" },
+    { "do": "snapshot", "name": "calloutmag-1-capsule" },
+
+    { "do": "drag", "from": [300, 260], "to": [420, 340], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "2-drawn-at-two", "note": "nothing touched: the callout in the tree says 2.0x" },
+
+    { "do": "action", "action": "magnifyCallout" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-resized-callout", "note": "the PICKED callout pulled to 4.0x in its own section: the tree says 4.0x and calloutToolMagnification must STILL say 2.0x, the tool never absorbs a resize" },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "action", "action": "armCalloutMagnification" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-armed-at-four", "note": "the TOOL's slider pulled to 4.0x with the panel still hidden" },
+    { "do": "snapshot", "name": "calloutmag-2-armed-four" },
+
+    { "do": "drag", "from": [820, 260], "to": [940, 340], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "5-drawn-at-four", "note": "the next callout comes out 4.0x, placed clear of the first at that size" },
+    { "do": "snapshot", "name": "calloutmag-3-drawn-four" },
+    { "do": "render", "name": "calloutmag-4-two-callouts" },
+
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "6-picked-callout-section" },
+    { "do": "describe", "stage": "6-picked-callout-section", "note": "a drawn callout is still changed in its own Callout section, unchanged: Magnification then Shape" },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "waitFor", "condition": "tool", "value": "zoomCallout" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "7-tool-section" },
+    { "do": "describe", "stage": "7-tool-section", "note": "tool in hand and nothing picked: the Zoom Callout Tool section carries Shape then Magnification, and it still reads 4.0x, so the tool kept the choice" },
+    { "do": "snapshot", "name": "calloutmag-5-panel-and-capsule" },
+
+    { "do": "action", "action": "armCalloutDefaultMagnification" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "drag", "from": [300, 600], "to": [420, 680], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "8-back-to-two", "note": "put back to 2.0x: the next callout is small again" },
+    { "do": "render", "name": "calloutmag-6-back-to-two" },
+    { "do": "snapshot", "name": "calloutmag-7-final" }
+  ]
+}

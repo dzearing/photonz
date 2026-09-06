@@ -262,6 +262,7 @@ extension EditorState {
         guard let document,
               let layer = ZoomCalloutBuilder.layer(from: start, to: end,
                                                    canvas: document.canvasSize,
+                                                   magnification: calloutToolMagnification,
                                                    shape: calloutToolShape,
                                                    avoiding: document.placedZoomCalloutRects) else { return }
         perform { $0.addLayerDrawnOnFrame(layer) }

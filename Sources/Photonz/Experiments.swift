@@ -215,6 +215,7 @@ extension Experiments {
     /// without reaching for the flag store itself.
     var toolSettingsAvailability: ToolSettingsBar.Availability {
         ToolSettingsBar.Availability(calloutShape: calloutShapeEnabled,
+                                     calloutMagnification: calloutMagnificationEnabled,
                                      measureSnap: measureCenterSnapEnabled,
                                      measureShow: measureRolesEnabled)
     }
@@ -225,6 +226,13 @@ extension Experiments {
     /// Exists only in the Next release's catalog, so Current always reads
     /// false and every callout is drawn as a rectangle.
     var calloutShapeEnabled: Bool { isEnabled(FeatureCatalog.calloutShapeFlag) }
+
+    /// `next-callout-magnification`: whether the Zoom Callout tool also carries
+    /// how much the NEXT callout magnifies, remembered between callouts, so a
+    /// 4× callout is a choice made before the drag rather than a 2× one
+    /// you go back and resize. Exists only in the Next release's catalog, so
+    /// Current always reads false and every callout starts at 2×.
+    var calloutMagnificationEnabled: Bool { isEnabled(FeatureCatalog.calloutMagnificationFlag) }
 
     /// `next-tool-groups`: whether the floating tool bar lays its tools out
     /// as families (`ToolBarLayout.families`), with Line / Rectangle / Ellipse

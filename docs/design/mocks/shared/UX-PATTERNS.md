@@ -1409,8 +1409,9 @@ a mode; if it changes how the result looks or what is displayed, it is a setting
 **A setting gets a capsule of its own above the bar, and the Inspector keeps it
 too.** Settings first went to the Inspector alone, and that turned out to hide
 them: the panel gets closed often, and the shell also closes it for you on a
-narrow window, so the Zoom Callout's shape, the wand's tolerance and Measure's
-Snap and Show simply stopped existing for anyone working with the panel away.
+narrow window, so the Zoom Callout's shape and magnification, the wand's
+tolerance and Measure's Snap and Show simply stopped existing for anyone working
+with the panel away.
 Decided on 2026-09-05, over the alternative of a settings foot on the tool's own
 flyout (a real NSMenu, which takes a picker but not a slider, so the wand's
 tolerance would have been demoted to stepped choices). The settings for the tool
@@ -1423,6 +1424,15 @@ The Inspector keeps every one of the same settings, bound to the same value, so
 changing either moves both. The cost, accepted knowingly: it covers a band
 across the bottom of the picture, which on a screenshot is often where the
 buttons being redlined are.
+
+**A setting the tool holds is not the same setting a drawn layer holds, and it
+never learns from it.** The Zoom Callout carries how much the NEXT callout
+magnifies, beside its shape; a callout already on the picture carries its own,
+in its own Inspector section. They read the same word and look the same, and
+they are separate values on purpose: pulling a drawn callout's corners, or its
+own slider, must never quietly re-arm the tool with whatever that resize landed
+on. Added 2026-09-06 with the callout's magnification, and the rule holds for
+every tool memory that comes after it.
 
 The result the bar must hold to: **selecting any tool leaves the tool bar the
 same width it was**. If a tool needs more room to explain itself, it needs a

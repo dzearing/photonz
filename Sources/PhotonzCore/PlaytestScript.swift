@@ -590,6 +590,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// tool in your hand and before any callout exists. Also in the dock, so
     /// also out of a pointer's reach.
     case armCalloutCircle, armCalloutRectangle
+    /// The Zoom Callout TOOL's Magnification slider, the number the NEXT
+    /// callout comes out at: pulled to 4x, and put back to the 2x every
+    /// callout used to be drawn at. Also in the dock and the settings capsule,
+    /// so also out of a pointer's reach.
+    case armCalloutMagnification, armCalloutDefaultMagnification
     case setTextSize, setTextWeight
     /// The same menus set the other way, so a walk can put the picked labels
     /// into a known state whatever the last walk left the new-text default at.

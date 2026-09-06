@@ -979,6 +979,10 @@ private final class Run {
                 editor.calloutToolShape = .circle
             case .armCalloutRectangle:
                 editor.calloutToolShape = .rectangle
+            case .armCalloutMagnification:
+                editor.calloutToolMagnification = 4
+            case .armCalloutDefaultMagnification:
+                editor.calloutToolMagnification = ZoomCalloutBuilder.defaultMagnification
             case .setTextSize:
                 let ids = editor.textSelection.layerIDs
                 if !ids.isEmpty { editor.setTextStyle(ids: ids, fontSize: 14) }
@@ -2898,6 +2902,13 @@ private final class Run {
                 if let annotation = layer.annotation {
                     line += " stroke \(Int(annotation.strokeWidth.rounded()))"
                 }
+                // How much a callout magnifies and what it is drawn in, so a
+                // walk can prove what came out of a drag without reading a
+                // picture.
+                if let callout = layer.zoomCallout {
+                    line += " \(ZoomCalloutBuilder.magnificationLabel(callout.magnification))"
+                        + " \(callout.shape.rawValue)"
+                }
                 tree.append(line)
                 let inner = CGPoint(x: origin.x + layer.frame.origin.x,
                                     y: origin.y + layer.frame.origin.y)
@@ -2961,6 +2972,11 @@ private final class Run {
             // What the Zoom Callout tool is set to draw. A walk reads this to
             // prove the choice survives the drag and reaches the next callout.
             "calloutToolShape": editor.calloutToolShape.rawValue,
+            // ...and how much it is set to magnify. A walk reads this beside
+            // the callout's own magnification to prove the two are separate:
+            // resizing a drawn callout must never move the tool's number.
+            "calloutToolMagnification":
+                ZoomCalloutBuilder.magnificationLabel(editor.calloutToolMagnification),
             "toolFillPaint": Self.describe(paint: editor.activeToolFillPaint),
             // The SAVED colour the tool is holding, outline and inside, or
             // "none". A tool holding Accent draws shapes that follow Accent

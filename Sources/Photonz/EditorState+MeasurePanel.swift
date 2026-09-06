@@ -249,6 +249,36 @@ extension EditorState {
     func rememberCalloutShape(_ shape: ZoomCalloutShape) {
         guard Experiments.shared.calloutShapeEnabled, calloutStyles.shape != shape else { return }
         calloutStyles.shape = shape
+        saveCalloutStyles()
+    }
+
+    /// How much the NEXT callout magnifies what it points at. The tool section
+    /// and the capsule read and write this; with the flag off it is always two,
+    /// which is what every callout has always been drawn at.
+    ///
+    /// Deliberately one-way: this is written only from the tool's own control,
+    /// never from a placed callout's slider or a pull on its corners, so the
+    /// tool cannot quietly pick up whatever the last resize left behind.
+    var calloutToolMagnification: CGFloat {
+        get {
+            Experiments.shared.calloutMagnificationEnabled
+                ? calloutStyles.magnification : ZoomCalloutBuilder.defaultMagnification
+        }
+        set { rememberCalloutMagnification(newValue) }
+    }
+
+    /// Absorbs a magnification choice into the tool's memory and persists it.
+    func rememberCalloutMagnification(_ magnification: CGFloat) {
+        let clamped = ZoomCalloutBuilder.clampedMagnification(magnification)
+        guard Experiments.shared.calloutMagnificationEnabled,
+              calloutStyles.magnification != clamped else { return }
+        calloutStyles.magnification = clamped
+        saveCalloutStyles()
+    }
+
+    /// One writer for the callout tool's memory, so "it stays how I left it"
+    /// needs no bookkeeping at the call sites.
+    private func saveCalloutStyles() {
         if let data = try? JSONEncoder().encode(calloutStyles) {
             UserDefaults.standard.set(data, forKey: Self.calloutStylesKey)
         }

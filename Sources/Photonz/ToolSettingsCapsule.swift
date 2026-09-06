@@ -83,6 +83,24 @@ struct ToolSettingsCapsule: View {
             .fixedSize()
             .help("What the next callout is drawn in. A callout already on the "
                   + "canvas is switched in its own section of the panel.")
+        case .calloutMagnification:
+            // The same short track and readout the wand's tolerance uses, and
+            // the same number the picked callout's slider shows, so the one
+            // idea looks the same in all three places.
+            HStack(spacing: 6) {
+                Slider(value: Binding(get: { editorState.calloutToolMagnification },
+                                      set: { editorState.calloutToolMagnification = $0 }),
+                       in: ZoomCalloutBuilder.magnificationRange)
+                    .controlSize(.small)
+                    .frame(width: 96)
+                Text(ZoomCalloutBuilder.magnificationLabel(editorState.calloutToolMagnification))
+                    .font(.system(size: 11).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30, alignment: .trailing)
+            }
+            .help("How much bigger the next callout draws the region it points at. "
+                  + "A callout already on the canvas is resized in its own section "
+                  + "of the panel.")
         case .wandTolerance:
             // Short track plus the number: the panel has the long track and the
             // sentence explaining it, this is the one you nudge mid-selection.
