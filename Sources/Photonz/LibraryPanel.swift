@@ -27,7 +27,7 @@ struct LibraryPanel: View {
     /// The tile area's max height, resizable and persisted, the same way the
     /// layers area is: a long shelf must not shove the rest of the dock off
     /// the bottom.
-    @AppStorage("inspector.libraryHeight") private var maxHeight = 220.0
+    @AppStorage(LibraryPanel.heightKey) private var maxHeight = 220.0
     @State private var query = ""
     /// How much room the shelf has across, which is all that has to be
     /// measured: the rest of the height is arithmetic.
@@ -37,6 +37,8 @@ struct LibraryPanel: View {
     @State private var shelfReveal = ShelfRevealScratch()
 
     static let scopeKey = "library.scope"
+    /// How tall the shelf may get, remembered across launches.
+    static let heightKey = "inspector.libraryHeight"
     static let minHeight: CGFloat = 104
     static let maxAllowedHeight: CGFloat = 560
     /// How many tiles one scope draws at once. Search runs over everything and
@@ -335,16 +337,23 @@ struct LibraryPanel: View {
         }
     }
 
-    @ViewBuilder
+    /// How tall the shelf would be with nothing capping it. Before anything
+    /// has measured the dock there is no honest answer, so it stands at its
+    /// ceiling for that one frame, exactly as `shelfHeight` does.
+    private var shelfContentHeight: CGFloat {
+        guard shelfWidth > 0 else { return maxHeight }
+        return LibraryShelfLayout.contentHeight(tileCount: tileCount, width: shelfWidth)
+    }
+
+    /// The grab bar decides for itself whether there is anything to resize: an
+    /// empty shelf, or one holding a single row of tiles, offers none.
     private var resizeHandle: some View {
-        // Nothing to resize while the shelf is empty, so no grab bar either.
-        if !isEmpty {
-            PanelAreaResizeHandle(maxHeight: $maxHeight,
-                              currentHeight: shelfHeight,
+        PanelAreaResizeHandle(maxHeight: $maxHeight,
+                              area: "Library",
+                              contentHeight: shelfContentHeight,
                               minHeight: Self.minHeight,
                               maxAllowedHeight: Self.maxAllowedHeight,
                               help: "Drag to resize the Library")
-        }
     }
 }
 

@@ -1,0 +1,49 @@
+{
+  "out": "/tmp/photonz-playtest/panel-grip",
+  "setup": {
+    "forget": ["panel", "groups", "tools", "measure"],
+    "captures": [
+      "fixtures/photonz-grip-tile-1.png",
+      "fixtures/photonz-grip-tile-2.png",
+      "fixtures/photonz-grip-tile-3.png",
+      "fixtures/photonz-grip-tile-4.png"
+    ]
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "short-list" },
+    { "do": "snapshot", "name": "1-short-list" },
+    { "do": "dragHandle", "area": "Layers", "expect": "absent" },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "long-list" },
+    { "do": "snapshot", "name": "2-long-list" },
+
+    { "do": "dragHandle", "area": "Layers", "by": 90, "hold": "3-grip-held" },
+    { "do": "snapshot", "name": "4-taller" },
+    { "do": "dragHandle", "area": "Layers", "by": -140 },
+    { "do": "snapshot", "name": "5-shorter" },
+    { "do": "dragHandle", "area": "Layers", "by": 400 },
+    { "do": "snapshot", "name": "6-all-the-way-open" },
+
+    { "do": "action", "action": "showLibrary" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "panel", "stage": "library" },
+    { "do": "dragHandle", "area": "Library", "by": -40 },
+    { "do": "snapshot", "name": "7-library-shorter" },
+    { "do": "dragHandle", "area": "Library", "by": 400 },
+    { "do": "snapshot", "name": "8-library-open" },
+
+    { "do": "describe", "stage": "end", "note": "the grab bar is absent under a one row list and moves the area under a long one" }
+  ]
+}

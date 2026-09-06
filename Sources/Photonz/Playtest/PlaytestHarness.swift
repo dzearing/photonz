@@ -773,6 +773,9 @@ private final class Run {
             try await dragSection(section, past: past, stop: stop, hold: hold,
                                   cancel: cancel, number: number)
 
+        case .dragHandle(let area, let by, let expect, let hold):
+            try await dragHandle(area, by: by, expect: expect, hold: hold, number: number)
+
         case .panel(let stage):
             let inventory = try readPanel()
             write(json: inventory, to: "panel-\(stage).json")
@@ -1344,6 +1347,88 @@ private final class Run {
              + "; in hand \(inHand); while carrying, \(promise)"
              + "; order \(before.joined(separator: ", ")) -> \(after.joined(separator: ", "))",
              state: describe())
+    }
+
+    /// Drag the grab bar under a resizable panel area, and say what it did.
+    ///
+    /// It drives the bar's own handlers rather than posting mouse events, for
+    /// the reason written on `PanelAreaHandleProbe`: SwiftUI gestures do not
+    /// answer synthesized ones. What a walk drives here is the whole of the
+    /// resize — where the pointer is, what the area decides to be, what gets
+    /// remembered — and the one thing it does not cover is the six lines of
+    /// gesture that turn a press into those calls.
+    private func dragHandle(_ area: String, by: CGFloat,
+                            expect: PlaytestHandleExpectation,
+                            hold: String?, number: Int) async throws {
+        let window = try requireWindow()
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let probe = PanelAreaHandleProbe.shared
+        guard let handle = probe.handle(named: area) else {
+            throw Failure(description: "there is no resizable area called \"\(area)\" in the panel; "
+                + "there is \(probe.names.isEmpty ? "none at all, so is the panel on screen?" : probe.names.joined(separator: ", "))")
+        }
+        let start = handle.reading
+        func pt(_ value: CGFloat) -> String { "\(Int(value.rounded()))pt" }
+        func measurements(_ reading: PanelAreaHandleReading) -> String {
+            "\(pt(reading.height)) tall, content \(pt(reading.contentHeight)), "
+                + "floor \(pt(reading.minHeight)), ceiling \(pt(reading.maxAllowedHeight))"
+        }
+        guard expect == .moves else {
+            guard !start.isShown else {
+                throw Failure(description: "\(area) is drawing a grab bar and this step expected none: "
+                    + "the area is \(measurements(start)), so a drag has room to move it")
+            }
+            note(number, "dragHandle",
+                 "\(area) offers no grab bar, as expected: \(measurements(start))",
+                 state: describe())
+            return
+        }
+        guard start.isShown else {
+            throw Failure(description: "\(area) has no grab bar to drag: \(measurements(start))")
+        }
+        // Where the drag SHOULD leave it: the same arithmetic the bar itself
+        // uses, so this is a claim about the area and not about the code.
+        let wanted = PanelAreaResize.draggedHeight(base: start.height, translation: by,
+                                                   contentHeight: start.contentHeight,
+                                                   minHeight: start.minHeight,
+                                                   maxAllowedHeight: start.maxAllowedHeight)
+        let steps = 8
+        for i in 1...steps {
+            handle.carry(by * CGFloat(i) / CGFloat(steps))
+            await sleep(0.02)
+        }
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        handle.end()
+        await sleep(0.4)
+        let after = probe.handle(named: area)?.reading ?? start
+        guard abs(after.height - wanted) <= 1 else {
+            throw Failure(description: "\(area) was \(pt(start.height)) tall, "
+                + "the bar was dragged \(pt(abs(by))) \(by < 0 ? "up" : "down"), "
+                + "and it is \(pt(after.height)) now, where it should be \(pt(wanted)) "
+                + "(content \(pt(start.contentHeight)), floor \(pt(start.minHeight)), "
+                + "ceiling \(pt(start.maxAllowedHeight)))")
+        }
+        note(number, "dragHandle",
+             "\(area) dragged \(pt(abs(by))) \(by < 0 ? "up" : "down")\(held); "
+                + "\(pt(start.height)) -> \(pt(after.height)) "
+                + "(content \(pt(after.contentHeight)), remembered ceiling "
+                + "\(pt(rememberedCeiling(for: area))))",
+             state: describe())
+    }
+
+    /// What the app will read back on its next launch for this area, so a walk
+    /// can prove a dragged height is remembered and not only drawn.
+    private func rememberedCeiling(for area: String) -> CGFloat {
+        let key = area.caseInsensitiveCompare("Library") == .orderedSame
+            ? LibraryPanel.heightKey : LayersListView.heightKey
+        return CGFloat(UserDefaults.standard.double(forKey: key))
     }
 
     /// The one thing in the panel called this, or a refusal that says what IS

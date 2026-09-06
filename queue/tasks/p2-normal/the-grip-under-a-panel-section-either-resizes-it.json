@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 9,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T19:05:01.877Z",
-  "updated": "2026-09-05T19:05:01.914Z",
+  "updated": "2026-09-05T23:48:14.648Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 with a screenshot showing two rows and a grip that does nothing. Cause found by reading LayersPanel.swift: the grip writes to maxHeight (PanelAreaResizeHandle around line 1013, bound at line 1222), but the list is drawn at viewport equals min(natural, maxHeight) where natural is the height the rows actually need (line 1094). With a short list natural is well under maxHeight, so dragging moves maxHeight between its bounds and min(natural, maxHeight) never changes: nothing happens. It cannot even shrink, because minHeight is 120 (line 1073) and a two row list needs less than that, so the floor is already above the content. The code comments say the quiet part out loud: only meaningful once the list is tall enough to scroll, but always shown so the affordance is discoverable. That trade is the bug, since a visible grip with a resize cursor promises something it cannot do. Decide between the two options in the goal and say which in the audit; hiding it when it cannot act is the smaller change, letting the area grow past its content is the more useful one if an oversized empty area is acceptable.",
@@ -29,6 +29,19 @@
     {
       "t": "2026-09-05T19:05:01.914Z",
       "note": "seq 1270 -> 9"
+    },
+    {
+      "t": "2026-09-05T23:48:14.648Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-05T23:52:29.881Z",
+      "note": "Read the code. Both grips (layers list, Library shelf) share PanelAreaResizeHandle: the drag writes a stored CEILING, while the area is drawn at min(content, ceiling). With content under the ceiling the drag moves a number nothing reads. Shrinking is dead too, since the ceiling floors at minHeight (120 layers, 104 library) and a two row list needs about 120. Plan: put the arithmetic in PhotonzCore (tested), hide the grip when min(content, maxAllowed) is not above the floor, clamp the drag to the content, and drive it from a playtest step so the walk proves it, before and after."
+    },
+    {
+      "t": "2026-09-05T23:58:31.112Z",
+      "note": "Reproduced live in the probe app (walk /tmp/photonz-repro/grip-repro.json, driven by a new dragHandle playtest step). A picture opened with one layer: the layers area is 80pt tall, its content is 80pt, its floor is 120pt. The grab bar is drawn anyway. Dragging it 120pt DOWN: area 80pt -> 80pt, remembered ceiling moved 200. Dragging 60pt UP: area 80pt -> 80pt, remembered ceiling moved to 120, the floor. So both directions are dead, for the two reasons in the notes: the area is min(content, ceiling) so a ceiling above the content changes nothing, and the ceiling cannot go under 120 while the content is 80. Only the drag being a no-op is new information; the bar being drawn at all is the fault to fix."
     }
-  ]
+  ],
+  "started": "2026-09-05T23:48:14.648Z"
 }

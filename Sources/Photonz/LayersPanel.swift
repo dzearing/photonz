@@ -1312,45 +1312,102 @@ struct InspectorResizeHandle: View {
 /// tiles): drag it to set how tall that area may get before it scrolls on its
 /// own, so the sections below it stay in view. One idiom, so every resizable
 /// area in the dock feels the same.
+///
+/// It is drawn only while there is something to resize. The area is as tall as
+/// its content or the ceiling this bar sets, whichever is smaller, so under a
+/// list shorter than the floor every ceiling draws the same picture — and a bar
+/// that turns the pointer into a resize cursor and then moves nothing is worse
+/// than no bar at all. `PanelAreaResize` in PhotonzCore owns that rule and the
+/// arithmetic under it.
 struct PanelAreaResizeHandle: View {
     /// The persisted ceiling, owned by the caller's `@AppStorage`.
     @Binding var maxHeight: Double
-    /// The area's ACTUAL height right now (content, capped). Dragging bases off
-    /// this rather than the stored ceiling — which can exceed short content —
-    /// so the bar tracks the cursor 1:1 instead of needing a big pull to catch
-    /// up.
-    let currentHeight: CGFloat
+    /// What a walk calls this area: "Layers", "Library".
+    let area: String
+    /// How tall the area would be with nothing capping it. Dragging is bounded
+    /// by this, so every point of the drag moves the area under the pointer.
+    let contentHeight: CGFloat
     let minHeight: CGFloat
     let maxAllowedHeight: CGFloat
     let help: String
 
     @State private var dragStartHeight: Double?
+    /// Whether the pointer is on the bar, so the resize cursor is pushed and
+    /// popped exactly once each.
+    @State private var isHovering = false
+
+    /// How tall the area is right now: its content, capped.
+    private var height: CGFloat {
+        PanelAreaResize.height(contentHeight: contentHeight, ceiling: CGFloat(maxHeight))
+    }
+
+    /// Whether there is a bar at all. Under content shorter than the floor
+    /// there is nothing a ceiling could change, so nothing is drawn and the
+    /// pointer stays as it was.
+    private var isShown: Bool {
+        PanelAreaResize.isResizable(contentHeight: contentHeight,
+                                    minHeight: minHeight,
+                                    maxAllowedHeight: maxAllowedHeight)
+    }
 
     var body: some View {
-        Capsule()
-            .fill(.tertiary)
-            .frame(width: 32, height: 4)
-            .frame(maxWidth: .infinity)
-            .frame(height: 12)
-            .contentShape(Rectangle())
-            .onHover { inside in
-                if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
-            }
-            .gesture(
-                // GLOBAL space: the handle moves as the area resizes, so a
-                // local-space translation would be measured against the moving
-                // handle and jiggle.
-                DragGesture(coordinateSpace: .global)
-                    .onChanged { value in
-                        let base = dragStartHeight ?? Double(currentHeight)
-                        if dragStartHeight == nil { dragStartHeight = Double(currentHeight) }
-                        maxHeight = min(Double(maxAllowedHeight),
-                                        max(Double(minHeight), base + value.translation.height))
+        Group {
+            if isShown {
+                Capsule()
+                    .fill(.tertiary)
+                    .frame(width: 32, height: 4)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 12)
+                    .contentShape(Rectangle())
+                    .onHover { inside in
+                        guard inside != isHovering else { return }
+                        isHovering = inside
+                        if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
                     }
-                    .onEnded { _ in dragStartHeight = nil }
-            )
-            .help(help)
+                    // The bar can now go away under the pointer, when the last
+                    // rows that made it worth having are deleted. Without this
+                    // the resize cursor it pushed would stay on screen with
+                    // nothing under it to resize.
+                    .onDisappear {
+                        if isHovering { isHovering = false; NSCursor.pop() }
+                    }
+                    .gesture(
+                        // GLOBAL space: the handle moves as the area resizes, so a
+                        // local-space translation would be measured against the moving
+                        // handle and jiggle.
+                        DragGesture(coordinateSpace: .global)
+                            .onChanged { carry($0.translation.height) }
+                            .onEnded { _ in end() }
+                    )
+                    .help(help)
+            } else {
+                // The bar's room, kept, so a list does not shift the sections
+                // under it by twelve points as it crosses the threshold.
+                Color.clear.frame(height: 12)
+            }
+        }
+        .panelAreaHandleProbe(
+            PanelAreaHandleReading(area: area, isShown: isShown, height: height,
+                                   contentHeight: contentHeight, minHeight: minHeight,
+                                   maxAllowedHeight: maxAllowedHeight),
+            carry: carry, end: end)
     }
+
+    /// The pointer has travelled `translation` points down from where it took
+    /// hold. Bases off the area's ACTUAL height rather than the stored ceiling
+    /// — which can sit above short content — so the bar tracks the cursor one
+    /// for one instead of needing a big pull to catch up.
+    private func carry(_ translation: CGFloat) {
+        let base = dragStartHeight ?? Double(height)
+        if dragStartHeight == nil { dragStartHeight = Double(height) }
+        maxHeight = Double(PanelAreaResize.storedCeiling(base: CGFloat(base),
+                                                        translation: translation,
+                                                        contentHeight: contentHeight,
+                                                        minHeight: minHeight,
+                                                        maxAllowedHeight: maxAllowedHeight))
+    }
+
+    private func end() { dragStartHeight = nil }
 }
 
 // MARK: - Layers section
@@ -1382,10 +1439,12 @@ struct LayersListView: View {
     /// of layers spent a third of the panel on a list you were not looking at
     /// and pushed the look of the thing off the bottom. Drag the grabber under
     /// the list to give it back as much room as you want; that sticks.
-    @AppStorage("inspector.layersHeight") private var maxHeight = 200.0
+    @AppStorage(LayersListView.heightKey) private var maxHeight = 200.0
     /// Measured height of the Canvas row, the one row that is always built.
     @State private var canvasRowHeight: CGFloat = 38
 
+    /// How tall the layers area may get, remembered across launches.
+    static let heightKey = "inspector.layersHeight"
     static let minHeight: CGFloat = 120
     static let maxAllowedHeight: CGFloat = 600
 
@@ -1531,12 +1590,14 @@ struct LayersListView: View {
         .animation(.spring(duration: 0.25), value: displays.map(\.row))
     }
 
-    /// A grabber under the list — drag to resize the layer area's max height.
-    /// Only meaningful once the list is tall enough to scroll, but always shown
-    /// so the affordance is discoverable.
+    /// A grabber under the list: drag it to resize the layer area. It is there
+    /// only while the list is taller than the area's floor, since below that
+    /// the list is already showing everything it has and no drag could change
+    /// the picture.
     private func resizeHandle(natural: CGFloat) -> some View {
         PanelAreaResizeHandle(maxHeight: $maxHeight,
-                              currentHeight: min(natural, maxHeight),
+                              area: "Layers",
+                              contentHeight: natural,
                               minHeight: Self.minHeight,
                               maxAllowedHeight: Self.maxAllowedHeight,
                               help: "Drag to resize the layers area")

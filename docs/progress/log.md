@@ -9015,3 +9015,42 @@ of window width).
 
 Next: the queue. Open question in the audit — scrolled, a passing section's grip
 can peek from behind the pinned button's edge.
+
+## 2026-09-05 — the panel's grab bar resizes, or it is not there
+
+The bar under the layers list was drawn, turned the pointer into a resize
+cursor, and moved nothing. Reproduced first, live in the probe: with a picture
+open and one layer in the list, the area is 80pt tall, its content is 80pt, its
+floor is 120pt, and dragging the bar 120pt down left it at 80pt while quietly
+moving a remembered ceiling nothing on screen reads; dragging it 60pt up left it
+at 80pt too and pushed that ceiling down to the floor. Two causes, both in the same pairing: the
+area is drawn at `min(content, ceiling)` while the drag writes the ceiling, so a
+ceiling above short content is a number nothing reads, and the ceiling cannot go
+below the floor, which short content is already under.
+
+- `PanelAreaResize` (PhotonzCore, tested) owns the two rules. There is a bar
+  only while `min(content, hard ceiling)` is above the floor; a drag travels
+  between the floor and the content's own height, so every point of it moves the
+  area one for one. Pulling all the way to the bottom remembers the HIGHEST
+  ceiling rather than today's content, so a list that gains a row still gains
+  the room for it.
+- `PanelAreaResizeHandle` takes the content height instead of the current one
+  and decides for itself whether to draw anything; both areas that have a bar
+  (the layers list, the Library shelf) go through it, so the rule is one rule.
+  Where it draws nothing it keeps its 12pt, so sections under a list do not jump
+  as the list crosses the threshold, and it pops the resize cursor if it goes
+  away under the pointer.
+- The remembered heights (`inspector.layersHeight`, `inspector.libraryHeight`)
+  are now named by their owners and included in a walk's `forget: ["panel"]`, so
+  a walk that drags a bar is repeatable.
+- New playtest step `dragHandle`: drags a named area's bar by so many points and
+  checks what it did, or asserts there is no bar at all. It drives the bar's own
+  handlers, for the reason `dragSection` does. Walk:
+  `Scripts/playtest/panel-grip-walk.json` (short list: no bar; long list:
+  200 -> 290 -> 150 -> 360, the whole list; Library: 220 -> 180 -> 560). A
+  second launch proved the height comes back: left at 140pt, reopened at 140pt.
+- Audit: `queue/audits/2026-09-05-panel-grip.json`.
+
+Next: the queue. Open question in the audit — whether three rows is the right
+floor for the layers area, and whether pulling all the way open should mean
+"let it grow" as it now does.

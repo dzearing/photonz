@@ -639,6 +639,14 @@ public enum PlaytestDropZone: String, CaseIterable, Hashable, Codable, Sendable 
     case above, inside, below
 }
 
+/// What a walk expects of the grab bar under a resizable panel area.
+public enum PlaytestHandleExpectation: String, CaseIterable, Hashable, Codable, Sendable {
+    /// There is a bar, and dragging it moves the area point for point.
+    case moves
+    /// There is no bar, because there is nothing a drag could change.
+    case absent
+}
+
 /// How far a carried dock section travels before the walk lets go of it.
 public enum PlaytestSectionStop: String, CaseIterable, Hashable, Codable, Sendable {
     /// Past the middle of the section named, which is the line it moves aside
@@ -809,6 +817,18 @@ public enum PlaytestStep: Sendable, Equatable {
     /// enough to touch it, which is where nothing should happen yet.
     case dragSection(section: String, past: String, stop: PlaytestSectionStop,
                      hold: String?, cancel: Bool)
+    /// Drag the grab bar under a resizable area of the right hand panel —
+    /// "Layers", "Library" — `by` points down, negative being up, and check
+    /// what it did. `expect: "moves"` (the default) requires a bar that is
+    /// there and an area that ends up exactly where the drag left it;
+    /// `expect: "absent"` requires no bar at all, which is the right answer
+    /// for a list too short for any ceiling to change. `hold` names a picture
+    /// taken with the bar still held.
+    ///
+    /// It drives the bar's own handlers rather than posting mouse events, for
+    /// the reason written on `PanelAreaHandleProbe`: SwiftUI gestures do not
+    /// answer synthesized ones.
+    case dragHandle(area: String, by: CGFloat, expect: PlaytestHandleExpectation, hold: String?)
     /// Click a row in the layers list by the name it shows, the way a person
     /// picks a layer out of the list rather than off the picture. `modifiers`
     /// read as they do under a pointer: shift ranges from the anchor row,
@@ -879,7 +899,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
-        "dragFile", "dragRow", "dragSection", "dragTile", "dropComponent",
+        "dragFile", "dragHandle", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelMenu", "pinch", "press",
         "readClipboard", "render", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
@@ -916,6 +936,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragTile: "dragTile"
         case .dragRow: "dragRow"
         case .dragSection: "dragSection"
+        case .dragHandle: "dragHandle"
         case .selectRow: "selectRow"
         case .press: "press"
         case .panel: "panel"
@@ -1049,6 +1070,21 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .dragRow(row: try f.string("row"), onto: try f.string("onto"),
                             zone: zone, hold: try f.optionalString("hold"))
+        case "dragHandle":
+            let expect: PlaytestHandleExpectation = if fields["expect"] == nil {
+                .moves
+            } else {
+                try f.enumValue("expect", PlaytestHandleExpectation.self)
+            }
+            // A step that asks for no movement is asking for nothing to drag,
+            // so the two ways of saying it must not disagree.
+            let by = try f.optionalNumber("by") ?? 0
+            if expect == .moves, abs(by) < 1 {
+                throw PlaytestScriptError.invalidField(index: index, step: name, field: "by",
+                                                       reason: "must move the bar at least a point")
+            }
+            self = .dragHandle(area: try f.string("area"), by: CGFloat(by),
+                               expect: expect, hold: try f.optionalString("hold"))
         case "dragSection":
             let stop: PlaytestSectionStop = if fields["stop"] == nil {
                 .middle

@@ -40,7 +40,8 @@ extension PlaytestMemory {
             [EditorState.inspectorVisibleKey, EditorState.libraryVisibleKey,
              EditorState.inspectorWidthKey, LibraryPanel.scopeKey,
              InspectorPanel.sectionOrderKey, InspectorPanel.sectionOrderVersionKey,
-             InspectorPanel.collapsedKey]
+             InspectorPanel.collapsedKey,
+             LayersListView.heightKey, LibraryPanel.heightKey]
         case .grid:
             [EditorState.canvasGridKey]
         }

@@ -1,0 +1,29 @@
+{
+  "feature": "The grab bar under a panel section",
+  "epic": "ui-building",
+  "summary": "The bar under the layers list and under the Library shelf now resizes that area for real, in both directions, and it is not drawn at all when the area is already showing everything it has. Before this, a short list carried a bar that turned the pointer into a resize cursor and then ignored every drag.",
+  "setup": "Photonz Dev, release Next. Any screenshot open, the right hand panel showing (Option Command L).",
+  "try": [
+    { "do": "Open a screenshot, so the layers list has one or two rows in it.", "shot": "2026-09-05-panel-grip-1.png" },
+    { "do": "Run the pointer along the bottom edge of the layers list: there is no bar there now, and the pointer stays an arrow." },
+    { "do": "Pick the Background row, then choose Layer > Duplicate Layer six or seven times to fill the list." },
+    { "do": "Drag the bar that has appeared under the list downward: the list grows under the pointer, point for point.", "shot": "2026-09-05-panel-grip-2.png" },
+    { "do": "Drag it back up: the list shrinks the same way and stops at about three rows." },
+    { "do": "Drag it down until it will go no further, which is the whole list showing.", "shot": "2026-09-05-panel-grip-3.png" },
+    { "do": "Duplicate one more layer: the list keeps the room for it rather than starting to scroll." },
+    { "do": "Quit Photonz, open it again, and check the layers area comes back the height you left it." }
+  ],
+  "evaluate": [
+    "With one or two layers, does the missing bar read as tidy, or as something that has gone away?",
+    "Dragging the bar down stops when the whole list is showing rather than opening empty space. Is that where you expect it to stop?",
+    "Pulled all the way open, the area keeps growing as you add layers. Is that what pulling it all the way open means to you?",
+    "Three rows is as short as the layers area goes. Is that the right floor, or would you pull it shorter?",
+    "Does the Library's bar feel like the same control as the layers one?"
+  ],
+  "rough": [
+    "The bar keeps its twelve points of room when it is not drawn, so the sections under a list do not jump as the list crosses the threshold. Nothing is drawn in that space, but the gap under a short list is a little airier than it would otherwise be.",
+    "Pulling all the way open now remembers no ceiling at all rather than today's height. Without that, a person who opened a three row list fully would have quietly capped it at three rows, and the fourth layer would have had nowhere to go. It is a change of meaning for that one end of the drag.",
+    "The Library's own too-short-to-resize case is covered by tests rather than by the walk: this machine's screenshot folder always has enough pictures to fill two rows of tiles, so a shelf with one row could not be staged live.",
+    "Screen Recording was granted for this run, so every picture here is a real capture of the window."
+  ]
+}
