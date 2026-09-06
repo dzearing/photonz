@@ -27,7 +27,8 @@ extension PlaytestMemory {
         case .text:
             [EditorState.textStylesKey]
         case .color:
-            [EditorState.recentColorsKey, EditorState.foregroundFillKey, EditorState.backgroundFillKey]
+            [EditorState.recentColorsKey, EditorState.foregroundFillKey, EditorState.backgroundFillKey,
+             DesignedColorPicker.scopeKey]
         case .shapes:
             [EditorState.annotationStylesKey, EditorState.calloutStylesKey]
         case .measure:
@@ -44,6 +45,8 @@ extension PlaytestMemory {
              LayersListView.heightKey, LibraryPanel.heightKey]
         case .grid:
             [EditorState.canvasGridKey]
+        case .frames:
+            [EditorState.lastFrameSizeKey]
         }
     }
 }
@@ -53,6 +56,28 @@ extension PlaytestMemory {
 struct PlaytestSetupRunner {
     /// Files this run put into the capture folder, to take away again.
     private(set) var lentCaptures: [URL] = []
+    /// The walk's own empty folder, made fresh for this run and thrown away
+    /// at the end. A walk names a file in it as "scratch/<name>".
+    private(set) var scratchDirectory: URL?
+    /// Every remembered setting as it stood before step one, so the machine can
+    /// be put back exactly as the walk found it. Taken for ALL of them, not
+    /// only the ones a walk declared, because the walk that poisons the next
+    /// one is by definition the walk that did not know it was changing
+    /// anything.
+    private var settingsBefore: [String: Data] = [:]
+    /// What this walk declared, kept so the log can say what it changed on top
+    /// of that.
+    private var declared: [PlaytestMemory] = []
+    /// Whether a reading was ever taken. A script that does not even parse
+    /// fails before setup runs, and putting settings "back" from a reading
+    /// that was never taken would wipe every one of them.
+    private var tookReading = false
+
+    /// Which keys belong to which area of memory, read from the memories
+    /// themselves so a renamed setting cannot slip out of the net.
+    private static var allKeys: [PlaytestMemory: [String]] {
+        Dictionary(uniqueKeysWithValues: PlaytestMemory.allCases.map { ($0, $0.defaultsKeys) })
+    }
 
     /// Performs the setup, returning what to say about it in the log.
     ///
@@ -60,6 +85,9 @@ struct PlaytestSetupRunner {
     /// picture, or a name already taken in the capture folder — because a walk
     /// that starts anyway is a walk whose failure means nothing.
     mutating func perform(_ setup: PlaytestSetup, besides scriptURL: URL) throws -> String {
+        settingsBefore = Self.readSettings()
+        tookReading = true
+        declared = setup.forget
         var said: [String] = []
         if !setup.forget.isEmpty {
             let keys = setup.forget.flatMap(\.defaultsKeys)
@@ -74,6 +102,10 @@ struct PlaytestSetupRunner {
         if !setup.captures.isEmpty {
             let placed = try lend(setup.captures, besides: scriptURL)
             said.append("lent the capture folder \(placed.joined(separator: ", "))")
+        }
+        if !setup.scratch.isEmpty {
+            let placed = try makeScratch(setup.scratch, besides: scriptURL)
+            said.append("gave the walk its own copy of \(placed.joined(separator: ", "))")
         }
         return said.isEmpty ? "nothing asked for" : said.joined(separator: "; ")
     }
@@ -106,6 +138,88 @@ struct PlaytestSetupRunner {
             placed.append(source.lastPathComponent)
         }
         return placed
+    }
+
+    /// Makes the walk an empty folder of its own and copies its files into it.
+    ///
+    /// Fresh every run, so a walk that writes beside the picture it opened —
+    /// keeping layers next to it, say — starts from the same nothing every
+    /// time instead of finding what it wrote last time.
+    private mutating func makeScratch(_ files: [String], besides scriptURL: URL) throws -> [String] {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-playtest-scratch-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        scratchDirectory = folder
+        var placed: [String] = []
+        for file in files {
+            let source = file.hasPrefix("/")
+                ? URL(fileURLWithPath: file)
+                : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
+            guard FileManager.default.fileExists(atPath: source.path) else {
+                throw PlaytestSetupError(
+                    description: "setup asks for the scratch file \"\(file)\", and there is no such file at \(source.path)")
+            }
+            try FileManager.default.copyItem(
+                at: source, to: folder.appendingPathComponent(source.lastPathComponent))
+            placed.append(source.lastPathComponent)
+        }
+        return placed
+    }
+
+    /// Throws the walk's own folder away, with everything it wrote in it.
+    mutating func clearScratch() -> String? {
+        guard let folder = scratchDirectory else { return nil }
+        try? FileManager.default.removeItem(at: folder)
+        scratchDirectory = nil
+        return "threw away the walk's own folder"
+    }
+
+    /// Puts every remembered setting back to what it was before step one, and
+    /// says what had to be put back.
+    ///
+    /// This is what stops the ORDER of the walks changing their answers. A walk
+    /// runs against a machine that remembers things, the way a person's does,
+    /// and hands the next walk the machine it started with. Called however the
+    /// run ends, so a walk that failed halfway still leaves nothing behind.
+    mutating func restoreSettings() -> String {
+        guard tookReading else { return "the walk never started, so nothing was touched" }
+        let ledger = PlaytestMemoryLedger(before: settingsBefore,
+                                          after: Self.readSettings(),
+                                          keys: Self.allKeys)
+        for (key, value) in ledger.restore {
+            if let value, let restored = Self.decode(value) {
+                UserDefaults.standard.set(restored, forKey: key)
+            } else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+        if !ledger.restore.isEmpty { UserDefaults.standard.synchronize() }
+        let quiet = ledger.undeclared(given: declared)
+        guard !quiet.isEmpty else { return ledger.report }
+        // Not a failure: the machine is already back. It is the line whoever
+        // writes the next walk wants, because a setting this walk changed
+        // without saying so is one it may be reading later without saying so.
+        return ledger.report + "; changed without saying so: "
+            + quiet.map(\.rawValue).joined(separator: ", ")
+    }
+
+    /// Every remembered setting, encoded so two readings can be compared and
+    /// one of them handed back. A property list of one element takes whatever
+    /// `UserDefaults` holds — a flag, a word, a number, a blob — without this
+    /// having to know which.
+    private static func readSettings() -> [String: Data] {
+        var reading: [String: Data] = [:]
+        for key in PlaytestMemory.allCases.flatMap(\.defaultsKeys) {
+            guard let value = UserDefaults.standard.object(forKey: key),
+                  let data = try? PropertyListSerialization.data(
+                    fromPropertyList: [value], format: .binary, options: 0) else { continue }
+            reading[key] = data
+        }
+        return reading
+    }
+
+    private static func decode(_ data: Data) -> Any? {
+        (try? PropertyListSerialization.propertyList(from: data, format: nil) as? [Any])??.first
     }
 
     /// Takes back everything this run lent the capture folder. Called however

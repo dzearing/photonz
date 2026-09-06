@@ -128,16 +128,23 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// the Library's Media shelf has them, and take away again afterwards.
     /// Paths are relative to the script, or absolute.
     public var captures: [String]
+    /// Files to copy into an empty folder of the walk's own, which the walk
+    /// names as "scratch/<file>" and which is thrown away at the end. This is
+    /// for a walk that WRITES beside the picture it opened — saving layers next
+    /// to it, say — so it starts from the same nothing every time and leaves no
+    /// trace. Paths are relative to the script, or absolute.
+    public var scratch: [String]
 
-    public init(forget: [PlaytestMemory] = [], captures: [String] = []) {
+    public init(forget: [PlaytestMemory] = [], captures: [String] = [], scratch: [String] = []) {
         self.forget = forget
         self.captures = captures
+        self.scratch = scratch
     }
 
-    public var isEmpty: Bool { forget.isEmpty && captures.isEmpty }
+    public var isEmpty: Bool { forget.isEmpty && captures.isEmpty && scratch.isEmpty }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["forget", "captures"]
+    static let knownKeys = ["forget", "captures", "scratch"]
 
     init(fields raw: Any?) throws {
         guard let raw, !(raw is NSNull) else {
@@ -161,7 +168,9 @@ public struct PlaytestSetup: Sendable, Equatable {
             }
             return memory
         }
-        self.init(forget: forget, captures: try Self.words(fields["captures"], field: "captures"))
+        self.init(forget: forget,
+                  captures: try Self.words(fields["captures"], field: "captures"),
+                  scratch: try Self.words(fields["scratch"], field: "scratch"))
     }
 
     private static func words(_ raw: Any?, field: String) throws -> [String] {
@@ -184,7 +193,8 @@ public struct PlaytestSetup: Sendable, Equatable {
 public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// The font, size, weight and colour a new text block is made in.
     case text
-    /// The recent colours and the foreground and background fills.
+    /// The recent colours, the foreground and background fills, and which
+    /// tab the colour picker opens on.
     case color
     /// The look a new shape, arrow or callout is drawn in: its paint, its
     /// stroke, its corner radius and whether it has a fill at all.
@@ -202,6 +212,8 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// how often one of them is stronger, and whether it draws rows as well as
     /// columns.
     case grid
+    /// The size a new frame is offered at, which is the last one chosen.
+    case frames
 }
 
 /// A key the script can press, named the way a person would type it: a single
@@ -330,6 +342,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// back the next time the same file is opened, which no dialog-driven save
     /// could do from a background process.
     case saveLayers
+    /// Shut the editor window this walk is driving, the way a person closes a
+    /// document. The next `open` then builds a window from scratch, reading the
+    /// file and the app's memory again, which is the only way one walk can
+    /// prove what comes BACK when a document is opened afresh. Without it that
+    /// proof needs a second walk, and a walk that only passes when another one
+    /// ran first is not a walk that can be trusted.
+    case closeDocument
     /// Open the New Canvas sheet, so a walk can photograph it. A snapshot
     /// taken while a sheet is up photographs the sheet.
     case newCanvasDialog

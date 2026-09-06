@@ -156,6 +156,10 @@ private final class Run {
         // Anything the setup lent goes back first, so a walk that failed
         // halfway leaves nothing of its own in a person's Screenshots folder.
         if let returned = setupRunner.returnCaptures() { note(steps, "setup", returned) }
+        if let cleared = setupRunner.clearScratch() { note(steps, "setup", cleared) }
+        // Then every remembered setting, so the walk after this one starts from
+        // the machine this one did rather than from whatever this one left.
+        note(steps, "setup", setupRunner.restoreSettings())
         var done: [String: Any] = [
             "status": status, "steps": steps, "script": scriptURL.path, "out": out.path,
             "seconds": (Date().timeIntervalSince(startedAt) * 100).rounded() / 100,
@@ -163,6 +167,22 @@ private final class Run {
         if let error { done["error"] = error }
         note(steps, "done", status == "ok" ? "walk complete" : (error ?? status))
         write(json: done, to: "done.json")
+    }
+
+    /// Where a walk's file lives: its own scratch folder when the path starts
+    /// with "scratch/", an absolute path as given, and anything else beside the
+    /// script, so a walk travels with its fixtures.
+    private func fileURL(_ file: String) throws -> URL {
+        if file.hasPrefix("scratch/") {
+            guard let folder = setupRunner.scratchDirectory else {
+                throw Failure(description: "\"\(file)\" names the walk's own folder, and this walk never asked "
+                    + "for one; add \"scratch\" to its setup block naming the files it wants a copy of")
+            }
+            return folder.appendingPathComponent(String(file.dropFirst("scratch/".count)))
+        }
+        return file.hasPrefix("/")
+            ? URL(fileURLWithPath: file)
+            : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
     }
 
     private func write(json: Any, to name: String) {
@@ -184,10 +204,7 @@ private final class Run {
             try await blank(canvas: canvas, window: size, card: card, number: number)
 
         case .open(let file, let size):
-            // Relative to the script, like `out`, so a walk travels with its fixture.
-            let url = file.hasPrefix("/")
-                ? URL(fileURLWithPath: file)
-                : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
+            let url = try fileURL(file)
             try await open(url, size: size, number: number)
 
         case .wait(let seconds):
@@ -590,9 +607,7 @@ private final class Run {
             // shelf arrives on.
             let canvas = try requireCanvas()
             let window = try requireWindow()
-            let url = file.hasPrefix("/")
-                ? URL(fileURLWithPath: file)
-                : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
+            let url = try fileURL(file)
             guard FileManager.default.fileExists(atPath: url.path) else {
                 throw Failure(description: "there is no file at \(url.path) to drop")
             }
@@ -640,9 +655,7 @@ private final class Run {
             // one.
             let canvas = try requireCanvas()
             let window = try requireWindow()
-            let url = file.hasPrefix("/")
-                ? URL(fileURLWithPath: file)
-                : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
+            let url = try fileURL(file)
             guard FileManager.default.fileExists(atPath: url.path) else {
                 throw Failure(description: "there is no file at \(url.path) to drag")
             }
@@ -785,7 +798,7 @@ private final class Run {
             let rows = try panelTargets().filter { $0.kind == .row }
             let target: PanelTargetView
             if let row {
-                target = try panelTarget(row, kind: .row)
+                target = try panelScrollTarget(row)
             } else if let any = rows.first {
                 target = any
             } else {
@@ -845,6 +858,17 @@ private final class Run {
             // program; nobody should have to unpick log.json to quote a menu.
             try? Data(reading.utf8).write(to: out.appendingPathComponent("menus-\(stage).txt"))
             note(number, step.name, reading, state: tree)
+
+        case .action(let action) where action == .closeDocument:
+            let closing = try requireWindow()
+            closing.close()
+            editor = nil
+            window = nil
+            canvas = nil
+            hovered = nil
+            await sleep(0.5)
+            note(number, step.name, "closeDocument; \(PlaytestHarness.readyEditors.count) editor(s) still open",
+                 state: describe())
 
         case .action(let action):
             let editor = try requireEditor()
@@ -1164,6 +1188,8 @@ private final class Run {
                 if let id = editor.selectedLayerID {
                     editor.setContentPlacement(id: id, horizontal: .stretch)
                 }
+            case .closeDocument:
+                break  // handled above, where there is still a window to close
             case .closeSheets:
                 editor.isExportDialogPresented = false
                 editor.isNewFrameDialogPresented = false
@@ -1223,6 +1249,28 @@ private final class Run {
                 + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
         }
         return match
+    }
+
+    /// Something in the panel to scroll from, named the way the walk names it.
+    ///
+    /// A row in the layers list first, since that is the list most walks are
+    /// crawling down. Anything else the panel is showing after that: the dock's
+    /// own column scrolls too, and a control below its fold — the alignment
+    /// buttons once a second layer is picked and an Arrange section arrives —
+    /// can be reached no other way, because the layers list is not the list it
+    /// is in.
+    private func panelScrollTarget(_ name: String) throws -> PanelTargetView {
+        let all = try panelTargets()
+        if let row = all.first(where: { $0.kind == .row && $0.name == name }) { return row }
+        if let other = all.first(where: { $0.name == name })
+            ?? all.first(where: { $0.detail == name })
+            ?? all.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
+            return other
+        }
+        let seen = all.map { $0.detail.isEmpty ? $0.name : "\($0.name) / \($0.detail)" }
+            .joined(separator: ", ")
+        throw Failure(description: "nothing called \"\(name)\" is in the panel to scroll from; the ones that are: "
+            + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
     }
 
     /// Presses a control in the panel by the words on it.

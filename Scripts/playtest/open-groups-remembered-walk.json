@@ -1,7 +1,12 @@
 {
   "out": "/tmp/photonz-playtest/open-groups-remembered",
+  "seed": "Two rectangles are grouped, the group is opened by double clicking into it, the layers are kept beside the picture, and then the document is shut and opened again from nothing. The group has to come back already open, with an empty undo stack, which is the whole claim. The walk works on its own copy of the picture, so what it writes beside it never outlives the run and the walk starts from the same nothing every time.",
+  "setup": {
+    "forget": ["groups"],
+    "scratch": ["../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png"]
+  },
   "steps": [
-    { "do": "open", "file": "/tmp/photonz-open-groups/card.png", "width": 1240, "height": 900 },
+    { "do": "open", "file": "scratch/settings-pane-2x.png", "width": 1240, "height": 900 },
     { "do": "wait", "seconds": 0.6 },
 
     { "do": "tool", "tool": "rectangle" },
@@ -28,6 +33,14 @@
 
     { "do": "action", "action": "saveLayers" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "3-saved", "note": "the layers are kept beside the picture, so the next run opens the same document" }
+    { "do": "describe", "stage": "3-saved", "note": "the layers are kept beside the picture, so opening it again brings them back" },
+
+    { "do": "action", "action": "closeDocument" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "open", "file": "scratch/settings-pane-2x.png", "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "panel", "stage": "4-reopened" },
+    { "do": "describe", "stage": "4-reopened", "note": "nothing has been clicked in this window: the group must already be open, and undo must have nothing in it" },
+    { "do": "snapshot", "name": "open-groups-3-reopened" }
   ]
 }

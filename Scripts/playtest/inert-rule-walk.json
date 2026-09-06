@@ -131,7 +131,7 @@
     {
       "do": "describe",
       "stage": "2-dead-rule",
-      "note": "the layer whose only rule is down: Vertical must read Set by the stack and offer to clear the Stretch still written on it"
+      "note": "the layer whose only rule is down: it is the surface the stack grows on, so its Vertical stays a live menu rather than being frozen with a link to clear it"
     },
     {
       "do": "snapshot",

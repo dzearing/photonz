@@ -792,12 +792,12 @@ struct PlaytestScriptTests {
     /// one. A press names the words on the control, never a pixel.
     @Test func aWalkCanPressAControlInThePanelByItsName() throws {
         let script = try decode("""
-        { "steps": [ { "do": "press", "control": "Clear Stretch" } ] }
+        { "steps": [ { "do": "press", "control": "Each side" } ] }
         """)
         guard case .press(let control, let row, let count, let modifiers) = script.steps[0] else {
             Issue.record("press"); return
         }
-        #expect(control == "Clear Stretch")
+        #expect(control == "Each side")
         #expect(row == nil)
         #expect(count == 1)
         #expect(modifiers.isEmpty)
@@ -1038,6 +1038,19 @@ struct PlaytestScriptTests {
         #expect(script.setup.captures == ["fixtures/probe.png"])
     }
 
+    // A walk that opens a picture and then saves layers beside it needs a copy
+    // of its own. Two walks were opening one out of /tmp that nothing in the
+    // repo makes, so they passed on the machine that had it and nowhere else.
+    @Test("A walk asks for its own copy of a picture to work on")
+    func setupNamesTheScratchFiles() throws {
+        let script = try decode("""
+        { "setup": { "scratch": ["fixtures/card.png"] },
+          "steps": [ { "do": "open", "file": "scratch/card.png" } ] }
+        """)
+        #expect(script.setup.scratch == ["fixtures/card.png"])
+        #expect(!script.setup.isEmpty)
+    }
+
     // A misspelled memory is the whole point of naming them: it has to come
     // back naming the ones that exist, not silently forget nothing.
     @Test("An unknown memory says which ones there are")
@@ -1097,6 +1110,6 @@ struct PlaytestScriptTests {
     // list is discoverable from the error text.
     @Test func everyMemoryNameIsAPlainWord() throws {
         #expect(PlaytestMemory.allCases.map(\.rawValue)
-                == ["text", "color", "shapes", "measure", "tools", "groups", "panel", "grid"])
+                == ["text", "color", "shapes", "measure", "tools", "groups", "panel", "grid", "frames"])
     }
 }

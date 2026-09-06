@@ -177,6 +177,11 @@
       "seconds": 0.8
     },
     {
+      "do": "scrollPanel",
+      "row": "Text section",
+      "by": -160
+    },
+    {
       "do": "press",
       "control": "align center",
       "in": "Across"

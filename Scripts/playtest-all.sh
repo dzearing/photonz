@@ -21,8 +21,15 @@ for arg in "$@"; do
   esac
 done
 
-[[ $BUILD == 1 ]] && Scripts/probe-app.sh --quit >/dev/null 2>&1
-[[ $BUILD == 1 ]] && swift build -Xswiftc -DPHOTONZ_PLAYTEST >/dev/null 2>&1
+# Build the PROBE BUNDLE, which is the thing every walk below then runs
+# against. A plain `swift build` here would warm a debug product nothing in
+# this script ever launches, and the run would quietly report on whatever
+# bundle happened to be sitting in dist/ (found 2026-09-05).
+if [[ $BUILD == 1 ]]; then
+  Scripts/probe-app.sh --quit >/dev/null 2>&1
+  echo "==> Building the probe bundle..."
+  Scripts/build-app.sh --probe >/dev/null || { echo "!! probe build failed"; exit 1; }
+fi
 
 PASSED=0
 FAILED=()

@@ -857,8 +857,9 @@ final class EditorState {
     /// The size the next frame gets when it is dropped with a plain click, and
     /// what the New Frame dialog opens on: whatever you made last, so building
     /// a second phone screen costs one click.
+    static let lastFrameSizeKey = "frames.lastSize"
     @ObservationIgnored
-    @AppStorage("frames.lastSize") var lastFrameSizeRaw = ""
+    @AppStorage(EditorState.lastFrameSizeKey) var lastFrameSizeRaw = ""
 
     /// Every copy this window has pasted off the clipboard as it stands now,
     /// in the order they landed. Pasting again steps past the last of them, so

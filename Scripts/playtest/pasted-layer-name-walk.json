@@ -4,7 +4,7 @@
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1340, "height": 900 },
     { "do": "wait", "seconds": 1 },
 
-    { "do": "dropImage", "file": "/tmp/photonz-placed-names/Hero banner.png", "at": [320, 300] },
+    { "do": "dropImage", "file": "fixtures/Hero banner.png", "at": [320, 300] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "1-placed",
       "note": "one picture placed: the row reads Hero banner" },

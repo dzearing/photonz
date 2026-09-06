@@ -83,6 +83,43 @@ struct PlaytestWalkSetupTests {
         }
     }
 
+    /// Same again for the walk's own working copies, and for the other half of
+    /// it: a step that names "scratch/..." in a walk that never asked for a
+    /// folder would fail at run time on a machine nobody is watching.
+    @Test("Every file a walk works on a copy of exists, and nothing names a folder it never asked for")
+    func scratchFilesExistAndAreAskedFor() throws {
+        for file in try Self.walkFiles() {
+            let script = try PlaytestScript.decode(try Data(contentsOf: file))
+            var copies: Set<String> = []
+            for scratch in script.setup.scratch {
+                let url = scratch.hasPrefix("/")
+                    ? URL(fileURLWithPath: scratch)
+                    : file.deletingLastPathComponent().appendingPathComponent(scratch).standardizedFileURL
+                #expect(FileManager.default.fileExists(atPath: url.path), """
+                    \(file.lastPathComponent) works on a copy of "\(scratch)", and there \
+                    is no such file at \(url.path).
+                    """)
+                copies.insert(url.lastPathComponent)
+            }
+            let text = try String(decoding: Data(contentsOf: file), as: UTF8.self)
+            for named in Self.scratchPaths(in: text) {
+                #expect(copies.contains(named), """
+                    \(file.lastPathComponent) names "scratch/\(named)", and its setup block never \
+                    asked for a copy of it. Add the file to "scratch" in setup, or the walk fails \
+                    the moment it runs anywhere.
+                    """)
+            }
+        }
+    }
+
+    /// The names a walk uses after `scratch/`, read out of the text so a step
+    /// that takes a file in some future shape is covered without being listed.
+    private static func scratchPaths(in text: String) -> [String] {
+        text.components(separatedBy: "\"scratch/").dropFirst().compactMap { rest in
+            rest.firstIndex(of: "\"").map { String(rest[rest.startIndex..<$0]) }
+        }
+    }
+
     /// A menu in the dock wears its own value, so a walk that names one by the
     /// words on it is naming something that changes the moment the walk uses
     /// it. The row it sits on holds still; that is its name.

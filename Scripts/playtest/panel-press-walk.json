@@ -126,7 +126,7 @@
     {
       "do": "describe",
       "stage": "1-before",
-      "note": "the layer inside the stack whose only rule is Stretch down: its Vertical row is owned by the stack and offers Clear Stretch"
+      "note": "the layer inside the stack: its Fill is on, and the switch on the Fill row is a plain button in the dock"
     },
     {
       "do": "snapshot",
@@ -134,7 +134,8 @@
     },
     {
       "do": "press",
-      "control": "Clear Stretch"
+      "control": "Switch",
+      "in": "Fill"
     },
     {
       "do": "wait",
@@ -147,7 +148,7 @@
     {
       "do": "describe",
       "stage": "2-after",
-      "note": "after the press the dead rule is gone, so no Clear button is left in the Layout section"
+      "note": "after the press the Fill is off, which is how a plain button press in the dock is proved to have landed rather than merely aimed"
     },
     {
       "do": "snapshot",

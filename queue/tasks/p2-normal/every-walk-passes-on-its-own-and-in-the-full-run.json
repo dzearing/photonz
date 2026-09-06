@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1270,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T20:12:28.140Z",
-  "updated": "2026-09-05T20:12:28.141Z",
+  "updated": "2026-09-06T06:59:53.915060Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while checking the grid zoom fix. Full run: 158 passed, 5 failed. mixed-one-look-walk fails at step 35 (press \"align center\" is not in the window, needs a scrollPanel first) and fails the same way on unmodified main, so it is a standing break. text-height-readout-walk, text-width-floor-walk, tool-holds-saved-colour-walk and type-menu-labels-walk each pass when run alone and fail only inside the full run: tool-holds-saved-colour fails at step 15 with no text field holding the keyboard, type-menu-labels at step 18 with no menu called Size (only 100% is there). That pattern is what docs/design/playtest-harness.md warns about under \"What a walk needs set up, in the walk\": the probe keeps its settings between runs, so a walk that changes one and does not declare it in setup.forget leaves the next walk hunting for a value something else moved. Start by finding which earlier walk moves the text size and the colour.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-05T20:12:28.141Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T06:41:16.087Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T06:59:53.915060Z",
+      "note": "Reproduced first. mixed-one-look-walk fails alone as well as in the full run, so it is a standing break, not an ordering one: with two layers picked the dock gains an Arrange section and the Across row (align left/center/right) drops below the fold, so step 35 has nothing to press. The other four pass when run as a group of five, which matches the report that only the FULL run breaks them."
+    },
+    {
+      "t": "2026-09-06T06:59:53.915060Z",
+      "note": "Adversarial review of the idea before building. The task asks every walk that changes a remembered setting to declare it. Declaring it starts the walk clean, which is good, but it does NOT stop that walk leaving the setting changed for the next one, and there are ~190 walks, most of which change something (picking a tool, drawing a shape, choosing a colour all write a setting). Requiring a declaration everywhere would be a 150 file diff that also changes what each of those walks starts from, which is a lot of new risk for a rule a walk can still forget to follow. The shorter thing that delivers the same value: the harness puts EVERY remembered setting back to what it was before step one as the run ends, declared or not. Order then cannot change an answer, by construction, and no walk has to remember anything."
+    },
+    {
+      "t": "2026-09-06T06:59:53.915060Z",
+      "note": "Found while reading: Scripts/playtest-all.sh built the wrong thing. Its build step ran `swift build -Xswiftc -DPHOTONZ_PLAYTEST`, a DEBUG product nothing in the script ever launches, while every walk then ran --no-build against whatever probe bundle happened to be sitting in dist/. A full run could report on code that was days old. It now builds the probe bundle."
+    },
+    {
+      "t": "2026-09-06T06:59:53.915060Z",
+      "note": "Found while reading: three walks opened pictures out of /tmp that nothing in the repo makes (/tmp/photonz-open-groups/card.png and /tmp/photonz-placed-names/Hero banner.png, both copies of Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png). They passed only on this machine. The three drop walks now use a fixture in the repo; the open-groups walk asks for its own working copy."
+    },
+    {
+      "t": "2026-09-06T06:59:53.915060Z",
+      "note": "Found while reading: open-groups-remembered-walk saved state that open-groups-reopened-walk read, so the second only passed when the first had run, and never on its own. Merged into one walk using a new closeDocument action: it groups, opens the group, keeps the layers, shuts the window and opens the file again, and the log shows the reopened window with the group already open and canUndo false, which is the whole claim."
     }
-  ]
+  ],
+  "started": "2026-09-06T06:41:16.087Z"
 }

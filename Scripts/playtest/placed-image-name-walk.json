@@ -6,7 +6,7 @@
     { "do": "describe", "stage": "0-opened",
       "note": "one picture open, nothing placed yet: the Layers list holds only Background" },
 
-    { "do": "dropImage", "file": "/tmp/photonz-placed-names/Hero banner.png", "at": [320, 300] },
+    { "do": "dropImage", "file": "fixtures/Hero banner.png", "at": [320, 300] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "1-dropped-from-finder",
       "note": "a file dragged in from the Finder: the layer is called Hero banner, the file without its extension, not Pasted Image" },

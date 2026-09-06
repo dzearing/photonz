@@ -134,24 +134,51 @@ or fail. The `setup` line is logged as step 0, so the log says what was done.
 | --- | --- | --- |
 | `forget` | a list of memories (below) | Those settings go back to the values a machine that had never run Photonz would have, before the first step. |
 | `captures` | picture files, relative to the script or absolute | Each is copied into the capture folder (`~/Pictures/Screenshots`) so the Library's Media shelf has it, and taken away again at the end. A name already taken there fails the walk rather than writing over someone's screenshot. |
+| `scratch` | files, relative to the script or absolute | Each is copied into an EMPTY FOLDER OF THE WALK'S OWN, made fresh for the run and thrown away at the end. The walk names one as `"scratch/<file name>"` wherever a step takes a file. This is for a walk that WRITES beside the picture it opened — `saveLayers` keeps the layers next to it — so it starts from the same nothing every time and leaves nothing behind. |
 
 The memories a walk can forget, by the word it uses:
 
 | Word | What goes back to new |
 | --- | --- |
 | `text` | The font, size, weight and colour a new text block is made in. |
-| `color` | The recent colours, and the foreground and background fills. |
+| `color` | The recent colours, the foreground and background fills, and which tab the colour picker opens on. |
 | `shapes` | The look a new shape, arrow or callout is drawn in: paint, stroke, corner radius, and whether it has a fill at all. |
 | `measure` | The Measure mode and the saved measure looks. |
 | `tools` | Which tool each family in the toolbar stands for, and the wand's reach. |
 | `groups` | Which groups in the layers list are open. |
 | `panel` | Whether the dock and the Library are showing, how wide the dock is, which shelf the Library is on, and the order and collapsed state of the dock's sections. |
 | `grid` | Whether the canvas grid is on, how far apart its lines are, how often one is stronger, and whether it draws rows as well as columns. |
+| `frames` | The size a new frame is offered at, which is the last one made. |
 
 A walk that reads a setting it never set is the one to think about here. Drawing
 a rectangle and then opening its Fill colour needs `"forget": ["shapes"]`,
 because the shape tool remembers the look it was last left holding, and a
 rectangle left with no fill at all has no Fill colour to open.
+
+### A walk hands the next one the machine it started with
+
+`forget` says what a walk needs at the START. The END is the harness's job, and
+it does it for every walk whether or not the walk said anything: as a run
+finishes, pass or fail, every remembered setting in the table above goes back to
+exactly the value it held before step one, and the `setup` line at the foot of
+the log says which areas had to be put back.
+
+This is what makes the ORDER of the walks stop mattering. Before it, four walks
+passed on their own and failed inside the full run (2026-09-05): something
+earlier had moved a text size, a colour or the dock under them, and the failure
+said nothing about the app at all. A walk still watches the app remember things
+while it runs, which is the point of the probe keeping its settings — it just
+cannot spend that memory on the walk after it.
+
+When a walk changes a setting it never declared, the same log line names it
+("changed without saying so: text, panel"). Nothing fails over that, since the
+machine is already back; it is the line to read when you want to know what a
+walk is quietly touching, and therefore what it may be quietly reading.
+
+A walk that has to prove what comes BACK when a document is opened afresh does
+it inside itself, with `closeDocument` and a second `open`. Handing that proof
+to a second walk, which is how it used to be done, made a walk that only passed
+when another one had run first.
 
 `Scripts/playtest-all.sh` runs every walk in the folder and prints a line each.
 Run it twice in a row: the same answers both times is what says the set can be
@@ -188,16 +215,16 @@ by a value an earlier step of the same walk chose.
 | `readClipboard` | `stage` | Logs the clipboard's types and text. |
 | `selectRow` | `row`, optional `modifiers` | Clicks a row in the layers list by the name it shows, the way a person picks a layer out of the list instead of off the picture. Modifiers read as they do under a pointer: shift ranges from the anchor row, command adds or removes. This is the only way to select a LOCKED layer, since a click on the picture falls straight through one. Fails with the list of rows that ARE there. |
 | `panel` | `stage` | Writes what the RIGHT HAND PANEL, and any popover open on top of it, are showing to the log and to `panel-<stage>.json`: every tile on the Library shelf, every row in the layers list, every control a `press` can land on (with the row it is on and whether it is far enough up the dock to be reached where it is), and every menu in the dock, by the names the steps below use for them. The `menus` step for the panel, and the first step to write when a walk cannot find something. |
-| `press` | `control`, optional `in` `count` `modifiers` | Presses something in the RIGHT HAND PANEL, or in a popover open on top of it, by the words on it: a button ("Clear Stretch"), one segment of a picker ("Row", "Fixed"), a row that goes somewhere. `in` names the row it sits on, for when the same word appears twice — the Layout section holds a Hug and a Fixed for Width and another pair for Height, so `{"control": "Fixed", "in": "Width"}`. The press is real mouse events posted to the app's queue, never the control's action called behind its back, so a control that is covered or wired to nothing fails the walk. Fails with the list of controls that ARE there; a `panel` step prints the same list. |
+| `press` | `control`, optional `in` `count` `modifiers` | Presses something in the RIGHT HAND PANEL, or in a popover open on top of it, by the words on it: a button ("Each side"), one segment of a picker ("Row", "Fixed"), a row that goes somewhere. `in` names the row it sits on, for when the same word appears twice — the Layout section holds a Hug and a Fixed for Width and another pair for Height, so `{"control": "Fixed", "in": "Width"}`. The press is real mouse events posted to the app's queue, never the control's action called behind its back, so a control that is covered or wired to nothing fails the walk. Fails with the list of controls that ARE there; a `panel` step prints the same list. |
 | `panelMenu` | `menu`, optional `shot` `choose` | Opens a menu INSIDE the window by the row it sits on ("Size", "Vertical") or, for a menu on no named row, by the words on its button ("Add"). Name it by its row wherever there is one: a menu wears its own value, so a walk that called it "24 pt" is naming something the very next field changes. A `panel` step reads them "Size (24 pt)": the name first, then what it is showing. writes its rows to the log, and closes it. `shot` names a real screen capture of the menu in place over the panel, written to `<shot>-sc.png` — the only kind of picture of a menu there is, since a menu is drawn outside this process and renders blank offscreen. `choose` picks one of its rows by title instead of closing with nothing chosen. Needs the Screen Recording grant for the picture; the rows reach the log either way. |
-| `scrollPanel` | `by`, optional `row` | Scrolls the panel list `by` points, negative going DOWN the list. The log says how many rows were on screen before and after, which rows arrived, how many row bodies were built, and what it cost the main thread. Name a `row` to pick which list; leave it out for the layers list wherever it is sitting, which is what a walk crawling down a long list wants, since the row it started from scrolls away and stops being built. The layers list builds only the rows you can see, so this is the only way to reach the rest. A synthesised wheel is usually swallowed by a SwiftUI scroll area, so the step falls back to scrolling directly and SAYS which of the two happened. |
+| `scrollPanel` | `by`, optional `row` | Scrolls the panel list `by` points, negative going DOWN the list. The log says how many rows were on screen before and after, which rows arrived, how many row bodies were built, and what it cost the main thread. Name a `row` to pick which list, by a row in the layers list or by anything else the panel is showing — naming a dock section ("Text section") scrolls the dock's own column, which is the only way to reach a control that has gone below its fold, as the alignment buttons do the moment a second layer is picked and an Arrange section arrives. Leave it out for the layers list wherever it is sitting, which is what a walk crawling down a long list wants, since the row it started from scrolls away and stops being built. The layers list builds only the rows you can see, so this is the only way to reach the rest. A synthesised wheel is usually swallowed by a SwiftUI scroll area, so the step falls back to scrolling directly and SAYS which of the two happened. |
 | `dragTile` | `tile`, `to`, optional `space` `hold` | Picks a tile up off the Library shelf by its name and lets it go on the picture, through the canvas's own drag destination — the same calls a drop from the Finder makes, carrying the very payload the tile's own drag hands over. A capture tile can be named by the caption it shows ("10 hours ago") or, better for a walk that has to keep working, by its file name. `hold` names a picture taken while it is still in the air, which is the only moment the landing outline exists. |
 | `dragHandle` | `area`, optional `by` `expect` `hold` | Drags the grab bar under a resizable area of the right hand panel — `Layers`, `Library` — `by` points down, negative being up, and CHECKS what it did. The log line says how tall the area was, how tall it is now, how tall its content wants to be, and the ceiling that got remembered for the next launch. `expect` says what the walk is claiming: `moves` (the default) needs a bar that is there and an area that lands exactly where the drag left it, and `absent` needs no bar at all, which is the right answer for a list too short for any ceiling to change. `hold` names a picture taken with the bar still held. It drives the bar's own handlers rather than posting mouse events, the same wall `dragSection` hits. `Scripts/playtest/panel-grip-walk.json` is the walk that reads it. |
 | `dragSection` | `section`, `past`, optional `stop` `hold` `cancel` | Picks a SECTION of the right hand panel up by its title and carries it up or down the column, then lets go. `past` names the section it is carried past; `stop` says how far — `middle` (the default), just beyond that section's middle, which is the line it moves aside on, or `touching`, only far enough to touch its near edge, where nothing should happen yet. `hold` names a picture taken with the section still in the air, the only moment there is anything lifted off the panel to photograph. `cancel` presses Escape instead of letting go. The log line says what is in hand, what the panel is promising while it is carried (a reorder is not a drop, so the honest answer is nothing), and the section order before and after. It drives the dock's own carry rather than posting mouse events, because SwiftUI gestures do not answer synthesized ones — the same wall `dragComponent` hits. |
 | `dragRow` | `row`, `onto`, optional `zone` `hold` | Picks a row up in the layers list by its name and lets go of it on another row: `above` it (the default), `below` it, or `inside` it when that row is a group. `hold` names a picture taken before letting go, which is the only moment the line that says what will happen is on screen. |
 | `menuShot` | `menu`, `name`, optional `ticked` `unticked` | Opens one of the app's OWN menu-bar menus over the probe window and photographs it, to `<name>-sc.png`. A `menus` step reads the words and the checkmarks exactly, but it is not a picture, and a menu draws outside this process so an offscreen render of it comes back blank: this is the only way an audit can SHOW what a menu looks like. `ticked` and `unticked` name the rows that must, and must not, be wearing a checkmark, so the step is a test and not only a picture. A row with nothing behind it is refused rather than asserted, because its state is the default it would wear with no document at all. To read window scoped rows live, open the Capture History first (`shortcut` on ⇧⌘H) and leave it up: it takes key, and that is enough for SwiftUI to fill in the focused window. Needs the Screen Recording grant for the picture; the rows reach the log either way. |
 | `menus` | `stage`, optional `menu` | Writes the app's own menu bar to the log and to `menus-<stage>.json` (plus a `.txt` you can read): every menu, item, shortcut, submenu and enabled state, plus the windows that are open. `menu` narrows it to one top-level menu by title ("Capture"). This is how a runner names a real menu item instead of one guessed from the source, and it needs no privacy grant of any kind. See below for what the dimming is worth. |
-| `action` | `action` | Calls the editor directly: `copySpecList`, `copyImage`, `hideAllMeasurements`, `showAllMeasurements`, `hideInspector`, `showInspector`, `showGrid`, `hideGrid` (which SET the grid rather than flipping it, so a walk's starting point does not depend on what the last walk left behind), `zoomIn`, `zoomOut`, `zoomToFit`, `undo`, `redo`, `newCanvasDialog`, `selectCanvas`, `saveLayers` (keeps the layers beside the picture the window was opened from, which is how a walk proves what comes back on the next open), and more (`PlaytestAction` is the full list). The inspector toggle is a button, the zoom commands are menu chords, and the Canvas row is in the dock where a walk cannot click, so this is how a walk gets a wide canvas or a big picture. An action always goes in the `action` field: `{ "do": "frameSelection" }` is refused, and the error says the line to write instead. |
+| `action` | `action` | Calls the editor directly: `copySpecList`, `copyImage`, `hideAllMeasurements`, `showAllMeasurements`, `hideInspector`, `showInspector`, `showGrid`, `hideGrid` (which SET the grid rather than flipping it, so a walk's starting point does not depend on what the last walk left behind), `zoomIn`, `zoomOut`, `zoomToFit`, `undo`, `redo`, `newCanvasDialog`, `selectCanvas`, `saveLayers` (keeps the layers beside the picture the window was opened from), `closeDocument` (shuts the window this walk is driving, so the next `open` builds one from scratch — the pair is how ONE walk proves what comes back when a document is opened afresh), and more (`PlaytestAction` is the full list). The inspector toggle is a button, the zoom commands are menu chords, and the Canvas row is in the dock where a walk cannot click, so this is how a walk gets a wide canvas or a big picture. An action always goes in the `action` field: `{ "do": "frameSelection" }` is refused, and the error says the line to write instead. |
 
 ## Reaching into the right hand panel
 
@@ -256,7 +283,7 @@ Tiles and rows say their own names: each hangs an invisible marker behind itself
 (`PanelTarget.swift`) carrying the name a person reads and the same drag closure
 the pointer uses, so a walk can never pick up something a person could not.
 
-A control does the same with `playtestControl("Clear Stretch")`, and the row it
+A control does the same with `playtestControl("Each side")`, and the row it
 sits on is named with `playtestField("Width")` — put that on the whole row, word
 and control together. A row is never pressed itself, since the middle of a row
 is its empty space; it only lends its word to whatever it holds, so two rows
@@ -284,7 +311,7 @@ The names, as of September 2026:
 | A copy's own look | `Revert Blur`, `Revert Shadow`, … | the name says which |
 | Shadow | `Enable Shadow` | there is one |
 | Frame | `Clip contents` | there is one (a screen's own switch) |
-| Layout | `Clear Stretch`, `Each side`, `Clip contents`, the pickers | `in: "Width"`, `in: "Height"` |
+| Layout | `Each side`, `Clip contents`, the pickers | `in: "Width"`, `in: "Height"` |
 | The colour picker | see below | `in: "Paint type"`, `in: "Swatches"`, … |
 
 `Twist` is the triangle that opens a group. It matters more than it looks: the

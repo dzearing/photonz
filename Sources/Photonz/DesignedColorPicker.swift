@@ -91,7 +91,10 @@ struct DesignedColorPicker: View {
     /// ignored, and only a genuinely different paint reopens the picker.
     @State private var lastSent: Paint?
     @State private var format: ColorFormat = .hsl
-    @AppStorage("colorPickerScope") private var scopeName = Scope.shades.rawValue
+    /// Named here rather than spelled again in the playtest setup runner, so a
+    /// rename cannot quietly drop it out of the settings a walk puts back.
+    static let scopeKey = "colorPickerScope"
+    @AppStorage(DesignedColorPicker.scopeKey) private var scopeName = Scope.shades.rawValue
     @State private var hexField = ""
     @State private var isSampling = false
     @State private var isNaming = false

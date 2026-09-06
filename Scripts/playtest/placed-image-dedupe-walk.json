@@ -6,19 +6,19 @@
     { "do": "describe", "stage": "0-opened",
       "note": "one picture open, nothing placed yet: the Layers list holds only Background" },
 
-    { "do": "dropImage", "file": "/tmp/photonz-placed-names/Hero banner.png", "at": [320, 300] },
+    { "do": "dropImage", "file": "fixtures/Hero banner.png", "at": [320, 300] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "1-first-copy",
       "note": "the first copy keeps the plain file name: the row reads Hero banner, with no number on it" },
     { "do": "snapshot", "name": "1-first-copy" },
 
-    { "do": "dropImage", "file": "/tmp/photonz-placed-names/Hero banner.png", "at": [560, 420] },
+    { "do": "dropImage", "file": "fixtures/Hero banner.png", "at": [560, 420] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "2-second-copy",
       "note": "the same file dropped again: the new row reads Hero banner 2 and the first one still reads Hero banner" },
     { "do": "snapshot", "name": "2-second-copy" },
 
-    { "do": "dropImage", "file": "/tmp/photonz-placed-names/Hero banner.png", "at": [800, 540] },
+    { "do": "dropImage", "file": "fixtures/Hero banner.png", "at": [800, 540] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "3-third-copy",
       "note": "a third drop counts on: Hero banner, Hero banner 2, Hero banner 3, three rows you can tell apart" },
@@ -26,7 +26,7 @@
 
     { "do": "action", "action": "renameSelectedLayer" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "dropImage", "file": "/tmp/photonz-placed-names/Hero banner.png", "at": [1000, 660] },
+    { "do": "dropImage", "file": "fixtures/Hero banner.png", "at": [1000, 660] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "4-after-a-rename",
       "note": "the third row was renamed by hand and keeps that name: the next drop takes the free number and never touches the typed one" },
