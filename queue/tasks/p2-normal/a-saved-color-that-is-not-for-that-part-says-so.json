@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1340,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T02:50:17.797Z",
-  "updated": "2026-09-06T11:39:40.926Z",
+  "updated": "2026-09-06T11:53:23.397Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The third fall-through in PhotonzDocument.wearingArmedColorStyles: colorStyles(for: slot) no longer contains the id, and the fourth, where the tool draws no inside at all so a name must not switch one on. PhotonzDocument.armedColorStyleMissingHere in Sources/PhotonzCore/ToolColorStyleNotices.swift only covers the case where the document has never heard of the id; extend it with a second kind, or add one beside it. The pill and the wording already exist (ToolColorStyleNotice, CopyConfirmation.Subject.toolColorStyle).\n\nDone: the third fall-through now speaks. The fourth (tool holds a name for a part it draws nothing in) stays silent on purpose and has a test on it: no UI path reaches it, since every way of clearing a fill also lets go of the name, and a box asked for without an inside is what was asked for. Left undone on purpose: the pill offers no way back (the fix is the Library tickboxes); the audit asks the user whether it should.",
@@ -39,8 +39,13 @@
     },
     {
       "t": "2026-09-06T11:53:09.275204Z",
-      "note": "Verified on the probe (Screen Recording granted, real capture): Scripts/playtest/saved-colour-not-for-that-part-walk.json. Save a fill colour as Brand, keep it for outlines only, draw a second box: the pill reads 'Brand is not for fills \u00b7 The Rectangle\u2019s inside is the plain color the tool remembers, not a saved color'. A third box after it faded says nothing. Needed one new playtest action, keepStylesForOutlinesOnly, because the Styles shelf tickboxes are in the dock and a walk cannot reach them with the pointer. Audit queue/audits/2026-09-06-saved-color-not-for-that-part.json with the capture beside it."
+      "note": "Verified on the probe (Screen Recording granted, real capture): Scripts/playtest/saved-colour-not-for-that-part-walk.json. Save a fill colour as Brand, keep it for outlines only, draw a second box: the pill reads 'Brand is not for fills · The Rectangle’s inside is the plain color the tool remembers, not a saved color'. A third box after it faded says nothing. Needed one new playtest action, keepStylesForOutlinesOnly, because the Styles shelf tickboxes are in the dock and a walk cannot reach them with the pointer. Audit queue/audits/2026-09-06-saved-color-not-for-that-part.json with the capture beside it."
+    },
+    {
+      "t": "2026-09-06T11:53:23.397Z",
+      "note": "A tool holding a saved color this picture keeps for other parts now says so once when it draws, naming the part left plain: 'Brand is not for fills - The Rectangle's inside is the plain color the tool remembers, not a saved color'. New notForThisPart kind in PhotonzCore/ToolColorStyleNotices.swift with 8 tests (suite 3763 green); shown through the canvas pill behind next-styles. Verified on the probe with a real capture, Scripts/playtest/saved-colour-not-for-that-part-walk.json. Audit queue/audits/2026-09-06-saved-color-not-for-that-part.json."
     }
   ],
-  "started": "2026-09-06T11:39:40.925Z"
+  "started": "2026-09-06T11:39:40.925Z",
+  "completed": "2026-09-06T11:53:23.397Z"
 }
