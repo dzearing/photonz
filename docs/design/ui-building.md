@@ -473,6 +473,19 @@ Nesting needs a way in and a way out, and both keys are already busy.
   is reached the same way a plain click reaches it, so picking two buttons on a
   screen is a click and a ⇧-click. And it never starts a drag — the press is
   about what is selected.
+- **A sweep picks at the level you are on** (2026-09-05). Once you have stepped
+  inside a group, a rubber band takes in that group's own pieces and nothing
+  above them, so a band round two of the three things in a button picks those
+  two instead of the button whole, or nothing at all. A nested group inside it
+  still comes whole, a screen that cuts off what leaves it never hands over
+  what it is hiding, and a copy of a component has no level to sweep inside at
+  all. ⇧ adds within the same level, the way a ⇧-click does, so a selection can
+  never end up made of one piece and one whole layer from the top. Out on the
+  canvas nothing changes: the same band picks whole groups and loose layers.
+  The level is read at the PRESS, because a press on bare canvas lets go of the
+  selection and letting go is what puts you back at the top. A click on bare
+  canvas that lets go still steps you back out, whether one piece was picked or
+  five (2026-09-05: it used to step out only for one).
 
 ## The flag each step ships behind
 

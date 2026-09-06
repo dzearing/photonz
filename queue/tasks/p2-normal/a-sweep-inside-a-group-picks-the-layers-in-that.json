@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:56.839Z",
-  "updated": "2026-09-05T14:05:05.503Z",
+  "updated": "2026-09-06T02:26:15.537Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Open thread carried by the last two manager passes, now confirmed in code: Sources/PhotonzCore/Document.swift:277 layerIDs(fullyInside:) filters the top level layers array only and never descends. There is no notion of which group you are in anywhere in Sources/Photonz (no activeGroup or enteredGroup), so the cheapest honest reading is the parent of the current selection. Canvas side is CanvasView.swift around line 1483.",
+  "notes": "Shipped 2026-09-05. Core: PhotonzDocument.layerIDs(fullyInside:inside:) in Sources/PhotonzCore/Document.swift now takes the group you have stepped inside, moves the band into that group's children's space, takes a nested group whole, skips hidden/locked pieces, refuses a component copy (isOpenableGroup) and honours a group that clips what leaves it; nil or an id that is not an openable group falls back to today's top-level sweep. 12 tests in Tests/PhotonzCoreTests/SweepInsideAGroupTests.swift. App: CanvasNSView latches marqueeContext at the PRESS (the press itself lets go of the selection, which is what puts you back at the top level) and carries it through onSelectionChange/onAddSweptLayers into EditorState.setSelection(_:captureLayers:inside:) and addSweptLayersToSelection(in:inside:), both resolving it through sweepContext(). The original note here claimed the app had no notion of which group you are in and suggested reading the parent of the selection: that was out of date, EditorState.groupContextID already carries it and is what a click resolves against.",
   "acceptance": [
     "While the selection is inside a group, a rubber band sweep considers that group children and nothing above them",
     "With nothing selected, or with a top level layer selected, a sweep behaves exactly as it does today",
@@ -43,6 +43,57 @@
     {
       "t": "2026-09-05T14:05:05.502Z",
       "note": "seq 80 -> 100"
+    },
+    {
+      "t": "2026-09-06T02:00:35.693Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T02:23:05.257444Z",
+      "note": "Adversarial review, before building. (1) The task notes said there is no notion of which group you are in. That is out of date: EditorState.groupContextID plus PhotonzDocument.selectionTarget/extendTarget/descendTarget already carry it, and the canvas draws it as a faint dashed box. So the honest reading is that context, not the parent of the selection, and no new state was invented."
+    },
+    {
+      "t": "2026-09-06T02:23:05.257444Z",
+      "note": "(2) The real trap: a plain press on bare canvas LETS GO of the selection, and letting go is what puts you back at the top level, so by the time the band is released the level it was swept at is already gone. The level is therefore latched at the press (CanvasNSView.marqueeContext) and carried to the commit."
+    },
+    {
+      "t": "2026-09-06T02:23:05.257444Z",
+      "note": "(3) Shortest version that delivers the value: one optional argument on Document.layerIDs(fullyInside:inside:), the same argument the click walk already takes. No new model, no isolation mode, no new chrome."
+    },
+    {
+      "t": "2026-09-06T02:23:05.257444Z",
+      "note": "(4) What the walk exposed: with several pieces picked inside a group, a click on bare canvas cleared the selection but LEFT you inside the group (selectedLayerFrame is nil for a multi-selection, so the press never called selectLayer(nil)). The next wide sweep then still looked inside the group, which breaks 'at the top level nothing changes'. Fixed: a bare-canvas click that lets go now steps back out too, matching what a click already does with one layer picked."
+    },
+    {
+      "t": "2026-09-06T02:23:05.257444Z",
+      "note": "Shipped. Core: Document.layerIDs(fullyInside:inside:) descends into the context group, moves the band into the children's space, takes a nested group whole, skips hidden/locked pieces, refuses a component copy (isOpenableGroup) and honours a screen that clips what leaves it. Falls back to today's top-level sweep for nil / unknown / not-a-group. 13 tests in Tests/PhotonzCoreTests/SweepInsideAGroupTests.swift, written first."
+    },
+    {
+      "t": "2026-09-06T02:23:05.257444Z",
+      "note": "App: CanvasNSView latches marqueeContext at the press and uses it for the live mid-sweep outlines and both commits; onSelectionChange and onAddSweptLayers carry it; EditorState.setSelection(_:captureLayers:inside:) and addSweptLayersToSelection(in:inside:) resolve it through sweepContext() (nil unless next-layer-groups is on and the id really is a group you can be inside) and leave groupContextID standing where the sweep caught something."
+    },
+    {
+      "t": "2026-09-06T02:23:05.257444Z",
+      "note": "Verified in the probe: Scripts/playtest/sweep-in-group-walk.json. Inside the group a band round two of three picks exactly those two (insideGroup stays Group); a shift sweep adds the third; a bare-canvas click steps out; the same wide band at the top level picks Group + Rectangle 4, never the pieces. Scripts/test.sh green (3524 tests)."
+    },
+    {
+      "t": "2026-09-06T02:25:44.871Z",
+      "note": "runner failed (exit 0, attempt 1): Waiting on the full walk suite. Meanwhile, here's where things stand. **What landed** - `Sources/PhotonzCore/Document.swift` \u2014 `layerIDs(fullyInside:inside:)` now takes the group you have stepped inside. It moves the band into that group's children's space, takes a nested group whole, skips hidden and locked pieces, refuses a component copy, and honours a screen that clips what leaves it. Nil, an "
+    },
+    {
+      "t": "2026-09-06T02:26:15.537Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T02:29:08.507841Z",
+      "note": "Second run: the first one shipped the code but died before committing, and it had touched Sources/PhotonzCore/Document.swift AFTER its playtest, so that verification was stale. Re-ran Scripts/playtest/sweep-in-group-walk.json against the code as it stands. All six stages hold: inside the group a band round two of three picks exactly those two with insideGroup still Group, a shift sweep adds the third, a bare-canvas click lets go AND steps back out, and the same wide band at the top level picks Group + Rectangle 4 and never the pieces. Scripts/test.sh green, 3524 tests in 302 suites. Audit screenshots replaced with the fresh -sc.png captures (Screen Recording granted), so the pictures match the shipped code."
     }
-  ]
+  ],
+  "started": "2026-09-06T02:26:15.537Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-06T02:25:44.870Z",
+    "exit": 0,
+    "message": "Waiting on the full walk suite. Meanwhile, here's where things stand. **What landed** - `Sources/PhotonzCore/Document.swift` \u2014 `layerIDs(fullyInside:inside:)` now takes the group you have stepped inside. It moves the band into that group's children's space, takes a nested group whole, skips hidden and locked pieces, refuses a component copy, and honours a screen that clips what leaves it. Nil, an "
+  }
 }

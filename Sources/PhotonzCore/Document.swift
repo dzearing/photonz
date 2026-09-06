@@ -274,25 +274,60 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// inside — not intersecting — so sweeping around a cluster never grabs a
     /// long arrow that merely passes through. Locked layers (the background)
     /// and hidden layers never join.
-    public func layerIDs(fullyInside rect: CGRect) -> [UUID] {
+    ///
+    /// `context` is the group you have stepped INSIDE, the same one a click
+    /// resolves against (`selectionTarget(at:zoom:inside:)`). A band swept
+    /// while you are in there picks from that group's own pieces and nothing
+    /// above them, so working on the three things inside a button never ends
+    /// with two whole layers off the top of the document selected instead.
+    /// Nil — or an id that is not a group you can be inside — is the top
+    /// level, which is every sweep in a document without groups.
+    public func layerIDs(fullyInside rect: CGRect, inside context: UUID? = nil) -> [UUID] {
         guard rect.width > 0, rect.height > 0 else { return [] }
-        return layers.filter { layer in
-            guard layer.isVisible, !layer.isLocked else { return false }
-            // A group is grabbed whole or not at all: sweeping across half a
-            // button never pulls its label out of it.
-            // The box you can see: a band swept round a label's words catches
-            // it, rather than stopping four points short of an edge that is
-            // not drawn.
-            var bounds = layer.isGroup ? layer.localBounds : layer.withoutSlack(layer.frame)
-            if !layer.isGroup, !layer.transform.isIdentity {
-                let corners = layer.transformedCorners
-                guard let first = corners.first else { return false }
-                bounds = corners.dropFirst().reduce(CGRect(origin: first, size: .zero)) {
-                    $0.union(CGRect(origin: $1, size: .zero))
-                }
-            }
-            return rect.contains(bounds)
+        // Out on the canvas, and anywhere there is no level to be inside: a
+        // group that has gone, an id that was never a group, or a copy of a
+        // component, which is one object whose insides belong to its original.
+        guard let context, let group = layer(id: context), group.isOpenableGroup,
+              let origin = parentOrigin(of: context) else {
+            return layers.filter { sweepCatches($0, in: rect) }.map(\.id)
+        }
+        // Children are stored against their group's corner, so the band moves
+        // into their space rather than every child being moved out of it.
+        let corner = CGPoint(x: origin.x + group.frame.origin.x,
+                             y: origin.y + group.frame.origin.y)
+        let local = rect.offsetBy(dx: -corner.x, dy: -corner.y)
+        // A container that cuts off what leaves it answers for what is inside
+        // it: what hangs off its edge is not on screen to be swept, the same
+        // way it is not there to be clicked.
+        let clip = group.clipsToBounds
+            ? group.localBounds.offsetBy(dx: -group.frame.origin.x, dy: -group.frame.origin.y)
+            : nil
+        return group.children.filter { child in
+            guard sweepCatches(child, in: local) else { return false }
+            guard let clip else { return true }
+            return clip.intersects(child.isGroup ? child.localBounds : child.frame)
         }.map(\.id)
+    }
+
+    /// Whether a band covering `rect` takes `layer` in, with both measured in
+    /// the SAME space — the canvas for a top-level layer, its group's corner
+    /// for a child.
+    private func sweepCatches(_ layer: Layer, in rect: CGRect) -> Bool {
+        guard layer.isVisible, !layer.isLocked else { return false }
+        // A group is grabbed whole or not at all: sweeping across half a
+        // button never pulls its label out of it.
+        // The box you can see: a band swept round a label's words catches
+        // it, rather than stopping four points short of an edge that is
+        // not drawn.
+        var bounds = layer.isGroup ? layer.localBounds : layer.withoutSlack(layer.frame)
+        if !layer.isGroup, !layer.transform.isIdentity {
+            let corners = layer.transformedCorners
+            guard let first = corners.first else { return false }
+            bounds = corners.dropFirst().reduce(CGRect(origin: first, size: .zero)) {
+                $0.union(CGRect(origin: $1, size: .zero))
+            }
+        }
+        return rect.contains(bounds)
     }
 
     // MARK: - Layer mutation

@@ -384,11 +384,15 @@ extension EditorState {
     /// sweeps instead of having to be right in one. Sweeping over something
     /// already picked leaves it picked, and a sweep that catches nothing new
     /// changes nothing.
-    func addSweptLayersToSelection(in region: SelectionRegion) {
+    func addSweptLayersToSelection(in region: SelectionRegion, inside context: UUID? = nil) {
         guard let document else { return }
         let was = actionableLayerIDs
+        // ⇧ adds at the level you are on, the way a ⇧-click does: inside a
+        // group it reaches that group's pieces, so a selection can never end
+        // up made of one child and one whole layer from the top.
+        let level = sweepContext(context)
         let picked = BareCanvasPress.spares
-            .selection(afterSweeping: document.layerIDs(fullyInside: region.bounds),
+            .selection(afterSweeping: document.layerIDs(fullyInside: region.bounds, inside: level),
                        startingFrom: was)
         // Whatever the sweep caught, the band that is on screen came from an
         // EARLIER gesture and no longer describes anything: it comes down
@@ -406,6 +410,7 @@ extension EditorState {
             // next ⇧-click in the list starts over from the row it lands on.
             rowSelection = ListSelection(selected: picked)
         }
+        groupContextID = level
     }
 
     /// Escape, one level: leaves the group you are in with that group selected.

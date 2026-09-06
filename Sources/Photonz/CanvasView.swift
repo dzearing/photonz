@@ -90,7 +90,7 @@ struct CanvasView: NSViewRepresentable {
     /// (region, captureLayers): capture is true for the arrow tool's marquee
     /// (which doubles as rubber-band layer selection), false for the region
     /// selection tools.
-    let onSelectionChange: (SelectionRegion?, Bool) -> Void
+    let onSelectionChange: (SelectionRegion?, Bool, UUID?) -> Void
     /// Magic-wand click: (document point, combine mode). Flood fill runs
     /// app-side (off-main) and lands via the `selection` prop.
     let onWandAt: (CGPoint, SelectionRegion.Mode) -> Void
@@ -111,7 +111,7 @@ struct CanvasView: NSViewRepresentable {
     /// the group it picked it inside.
     let onSelectLayerInGroup: (UUID?, UUID?) -> Void
     let onExtendSelection: (UUID) -> Void
-    let onAddSweptLayers: (SelectionRegion) -> Void
+    let onAddSweptLayers: (SelectionRegion, UUID?) -> Void
     /// A name typed on the canvas: the layer and what it is now called.
     let onRenameLayer: (UUID, String) -> Void
     /// A component's name typed on the canvas: the component and what it is now
@@ -307,7 +307,7 @@ struct CanvasView: NSViewRepresentable {
 final class CanvasNSView: NSView {
     var onViewSizeChange: ((CGSize) -> Void) = { _ in }
     var onViewportChange: ((Viewport) -> Void) = { _ in }
-    var onSelectionChange: ((SelectionRegion?, Bool) -> Void) = { _, _ in }
+    var onSelectionChange: ((SelectionRegion?, Bool, UUID?) -> Void) = { _, _, _ in }
     var onWandAt: ((CGPoint, SelectionRegion.Mode) -> Void) = { _, _ in }
     var onDeleteRegion: () -> Void = {}
     var onRegionMoveBegin: ((Bool) -> CGRect?) = { _ in nil }
@@ -318,7 +318,7 @@ final class CanvasNSView: NSView {
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
     var onSelectLayerInGroup: ((UUID?, UUID?) -> Void) = { _, _ in }
     var onExtendSelection: ((UUID) -> Void) = { _ in }
-    var onAddSweptLayers: ((SelectionRegion) -> Void) = { _ in }
+    var onAddSweptLayers: ((SelectionRegion, UUID?) -> Void) = { _, _ in }
     var onRenameLayer: ((UUID, String) -> Void) = { _, _ in }
     var onRenameComponent: ((UUID, String) -> Void) = { _, _ in }
     var onClickedNothing: (() -> Void) = {}
@@ -617,6 +617,12 @@ final class CanvasNSView: NSView {
     /// at gesture start: plain replaces it, ⇧ spares it (a ⇧-click that missed
     /// the layer it was aimed at).
     private var marqueePress: BareCanvasPress = .replaces
+    /// The group the press that started `marquee` was standing inside, latched
+    /// at gesture start. It has to be latched: a plain press on bare canvas
+    /// lets go of the selection, and letting go of the selection is what puts
+    /// you back at the top level, so by the time the band is released the
+    /// level it was swept at is already gone.
+    private var marqueeContext: UUID?
     /// In-progress region-select drag (rect/ellipse tools). The combine mode
     /// is latched from the modifiers at gesture start (⇧ add, ⌥ subtract,
     /// ⇧⌥ intersect); the ants preview the live boolean combination.
@@ -2181,6 +2187,7 @@ final class CanvasNSView: NSView {
             let press = BareCanvasPress(shift: tool == .select
                 && event.modifierFlags.contains(.shift))
             marqueePress = press
+            marqueeContext = Experiments.shared.layerGroupsEnabled ? groupContext : nil
             if press.clearsSelectionOnPress {
                 onClickedNothing()
                 if selectedLayerFrame != nil || isCanvasSelected {
@@ -2742,7 +2749,9 @@ final class CanvasNSView: NSView {
         } else if let drag = marquee {
             marquee = nil
             let press = marqueePress
+            let level = marqueeContext
             marqueePress = .replaces
+            marqueeContext = nil
             guard press.commitsOnRelease(isClick: drag.isClick(atZoom: viewport.zoom)) else {
                 // A ⇧-click that landed on nothing: the band comes down and
                 // the selection stays exactly as it was.
@@ -2751,6 +2760,13 @@ final class CanvasNSView: NSView {
             }
             if drag.isClick(atZoom: viewport.zoom) {
                 commitSelection(nil, capture: true) // a plain click deselects
+                // Bare canvas means "nothing", and nothing includes the level
+                // you were working at: the click steps back out of the group,
+                // the way a click on a layer outside it already does. Without
+                // this a click that let go of several pieces at once left you
+                // standing inside a group with nothing picked, and the next
+                // sweep would still be looking inside it.
+                if level != nil { onSelectLayer(nil) }
                 return
             }
             // A sweep decides the selection whatever started it, so the
@@ -2766,13 +2782,13 @@ final class CanvasNSView: NSView {
                 // belongs to the region tools, so that one stays put.
                 if let region {
                     if !selectionTargetsPixels { selection = nil }
-                    onAddSweptLayers(region)
+                    onAddSweptLayers(region, level)
                 } else {
                     refreshOverlays() // swept only empty space: nothing changes
                 }
                 return
             }
-            commitSelection(region, capture: true)
+            commitSelection(region, capture: true, inside: level)
         }
     }
 
@@ -3022,10 +3038,11 @@ final class CanvasNSView: NSView {
         super.keyDown(with: event)
     }
 
-    private func commitSelection(_ region: SelectionRegion?, capture: Bool) {
+    private func commitSelection(_ region: SelectionRegion?, capture: Bool,
+                                 inside context: UUID? = nil) {
         selection = region
         refreshOverlays()
-        onSelectionChange(region, capture)
+        onSelectionChange(region, capture, context)
     }
 
     // MARK: Gestures
@@ -3679,8 +3696,9 @@ final class CanvasNSView: NSView {
             // With ⇧ the band adds, so mid-sweep it outlines the layers it has
             // taken in AND the ones already picked: what you let go on is what
             // you saw.
-            captured = marqueePress.selection(afterSweeping: document.layerIDs(fullyInside: rect),
-                                              startingFrom: pickedLayerIDs)
+            captured = marqueePress.selection(
+                afterSweeping: document.layerIDs(fullyInside: rect, inside: marqueeContext),
+                startingFrom: pickedLayerIDs)
         } else if marquee != nil, marqueePress.clearsSelectionOnPress {
             captured = []
         } else {

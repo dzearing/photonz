@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/sweep-in-group",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 100], "to": [280, 160], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [150, 220], "to": [370, 280], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [100, 340], "to": [200, 400], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [520, 420], "to": [760, 600], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "click", "at": [200, 130] },
+    { "do": "click", "at": [260, 250], "modifiers": ["shift"] },
+    { "do": "click", "at": [150, 370], "modifiers": ["shift"] },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-grouped", "note": "three rectangles in one group, plus a fourth rectangle loose on the canvas at 520,420. The group is picked and we are out on the canvas: insideGroup should be nil" },
+
+    { "do": "click", "at": [200, 130], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-inside", "note": "double clicking steps into the group and picks the top rectangle: insideGroup should name the group" },
+
+    { "do": "drag", "from": [85, 85], "to": [400, 300], "steps": 12 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-swept-two", "note": "a band swept round the top two rectangles WHILE INSIDE the group: selection should be exactly those two rectangles, insideGroup should still name the group, and neither the group itself nor the loose fourth rectangle should be in it" },
+    { "do": "snapshot", "name": "sweep-in-group-1-two-picked" },
+
+    { "do": "drag", "from": [85, 320], "to": [250, 420], "steps": 10, "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-shift-added", "note": "a shift sweep round the third rectangle adds it at the same level: all three of the group's rectangles picked, still inside the group" },
+    { "do": "snapshot", "name": "sweep-in-group-2-shift-added" },
+
+    { "do": "click", "at": [850, 80] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-back-out", "note": "a click on bare canvas lets go and steps back out: nothing picked, insideGroup nil" },
+
+    { "do": "drag", "from": [60, 60], "to": [860, 660], "steps": 14 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-top-level", "note": "the same gesture at the TOP level is unchanged: a band round everything picks the group whole and the loose rectangle, never the pieces inside the group" },
+    { "do": "snapshot", "name": "sweep-in-group-3-top-level" }
+  ]
+}

@@ -1201,11 +1201,16 @@ final class EditorState {
     /// so the panel highlights them and group ops can target them). The
     /// region tools (rect/ellipse/wand) pass false: their selection is a
     /// pixel region, independent of layers.
-    func setSelection(_ region: SelectionRegion?, captureLayers: Bool = true) {
+    /// `context` is the group the sweep started inside, read at the press
+    /// because the press itself lets go of where you were: a band swept while
+    /// you are working inside a button picks that button's own pieces.
+    func setSelection(_ region: SelectionRegion?, captureLayers: Bool = true,
+                      inside context: UUID? = nil) {
         selection = region
         selectionTargetsPixels = region != nil && !captureLayers
         guard captureLayers else { return }
-        let captured = region.flatMap { document?.layerIDs(fullyInside: $0.bounds) } ?? []
+        let level = sweepContext(context)
+        let captured = region.flatMap { document?.layerIDs(fullyInside: $0.bounds, inside: level) } ?? []
         if captured.count == 1 {
             selectedLayerID = captured[0] // didSet clears any multi-selection
         } else {
@@ -1215,6 +1220,18 @@ final class EditorState {
             // starts over from the row it lands on.
             rowSelection = ListSelection(selected: multiSelectedLayerIDs)
         }
+        // A sweep that caught something leaves you standing where it caught
+        // it, so the next click, the next ⇧-sweep and Escape all still mean
+        // what they meant a moment ago.
+        if !captured.isEmpty { groupContextID = level }
+    }
+
+    /// The level a sweep picks at: the group you were inside, or the top level
+    /// when there is no such group (and always, while groups are switched off).
+    func sweepContext(_ context: UUID?) -> UUID? {
+        guard Experiments.shared.layerGroupsEnabled, let context,
+              document?.layer(id: context)?.isOpenableGroup == true else { return nil }
+        return context
     }
 
     /// Magic wand: flood-fill the composite from `point` (document coords)

@@ -1,0 +1,29 @@
+{
+  "feature": "A sweep picks at the level you are on",
+  "epic": "ui-building",
+  "summary": "Once you have stepped inside a group, dragging a band round two of the three things in it now picks those two. Before, the same gesture looked straight past them at the top of the document and picked the whole group, or nothing at all.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-layer-groups on (it is on by default). No file needed: a blank canvas.",
+  "try": [
+    { "do": "Start a blank canvas and press R, then drag out three rectangles stacked down the left." },
+    { "do": "Press V, click the first rectangle, shift click the other two, and press Command G." },
+    { "do": "Draw one more rectangle off to the right, well clear of the group." },
+    { "do": "Double click the top rectangle in the group to step inside it." },
+    { "do": "Starting on empty canvas above it, drag a band round the top two rectangles only.", "shot": "2026-09-05-sweep-in-group-1-two-picked.png" },
+    { "do": "Hold Shift and drag a second band round the third rectangle, and watch it join the other two." },
+    { "do": "Click once on empty canvas, then drag a band round the whole picture.", "shot": "2026-09-05-sweep-in-group-2-top-level.png" }
+  ],
+  "evaluate": [
+    "At step 5, did you expect the band to pick the two pieces, or were you expecting it to grab the group whole the way it used to?",
+    "The only thing on screen saying which level a band will pick at is the faint dotted box round the group you are inside. Is that enough, or did you have to guess?",
+    "A band swept inside a group that catches nothing leaves you standing inside the group. Is that right, or should a sweep that catches nothing put you back out on the canvas?",
+    "At step 7, one click on empty canvas both let go and stepped you back out. Did that feel like one action or two?",
+    "Does the Shift sweep at step 6 add what you expect, given a Shift click out on the canvas while you are inside a group still does nothing at all?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures here are real captures of the window, not offscreen renders.",
+    "The band you swept stays on screen after it commits, exactly as it does at the top level, and it looks identical either way. Nothing about the band itself says the sweep was scoped to the group.",
+    "The task notes said the app had no notion of which group you are in and suggested reading the parent of the selection instead. That was out of date: the group you stepped into is already tracked and already drawn, and it is what a click resolves against, so the sweep now reads the same thing rather than a second, different answer.",
+    "One thing had to change underneath to make the top level behave as before: a click on bare canvas that let go of SEVERAL pieces at once used to leave you standing inside the group with nothing picked, so the next wide sweep still looked inside it. It now steps back out, which is what a click already did when only one piece was picked.",
+    "A copy of a component has no level to sweep inside: a band while a copy's piece is picked falls back to the top level rather than picking pieces out of the copy. That matches a click, which picks the whole copy, but it is a silent fallback with nothing on screen explaining it."
+  ]
+}
