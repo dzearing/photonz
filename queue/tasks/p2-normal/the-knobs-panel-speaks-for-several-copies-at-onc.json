@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:32:33.864Z",
-  "updated": "2026-09-05T14:05:05.406Z",
+  "updated": "2026-09-06T00:40:58.421Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The model side is already done and tested: PhotonzDocument.componentColorSelection(instances:property:) returns a ColorStyleSelection over several copies, and setInstanceColor/setInstanceColorStyle/unlinkInstanceColorStyle all take an array. What is missing is the app: LayersPanel.swift:426 gates the Component section on selectedLayer (one layer), and ComponentInstanceProperties takes a single instance UUID. InstanceColorKnob in ComponentPanel.swift already takes an array and already draws Mixed, so the colour row needs no new work. The open UX question is what Mixed looks like for a switch and for a choice menu; that is worth a decision card rather than a guess. Split out of a-copy-can-be-given-its-own-color on 2026-09-04.\n\nThe several-picked-things rule is now written: docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a control DOES for several picked things\" (2026-09-05). It settles this task's open questions rather than leaving them to a decision card: the section vanishing on a second copy is a bug, not the rule; copies of two DIFFERENT components keep the section and one sentence saying so rather than going blank; the switch knob answer is in the switch sub-section. Build to it.",
@@ -18,7 +18,7 @@
     "A knob the copies agree on shows that value; one they do not agree on reads Mixed, the same word every other control in the app uses",
     "Setting a knob sets every picked copy in one step that one undo puts back",
     "Each of the four knob kinds has a decided answer for Mixed: a wording field, a show or hide switch, a choice menu, and a colour row",
-    "Selecting copies of two different components shows nothing rather than a mixture of two originals knobs"
+    "Selecting copies of two different components keeps the section and says why there are no knobs, rather than showing a mixture of two originals' knobs"
   ],
   "log": [
     {
@@ -36,6 +36,31 @@
     {
       "t": "2026-09-05T14:05:05.406Z",
       "note": "seq 60 -> 70"
+    },
+    {
+      "t": "2026-09-06T00:40:58.421Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T01:05:00.000Z",
+      "note": "reproduced first: Scripts/playtest/copies-share-knobs-walk.json. With one copy picked dockSections holds \"Component\"; shift-clicking a second copy leaves Layers, Arrange, Position & Size, Effects, Shadow, Library and no Component at all. Cause is selectLayers setting selectedLayerID = nil, and LayersPanel gating the section on selectedLayer."
+    },
+    {
+      "t": "2026-09-06T01:06:00.000Z",
+      "note": "adversarial review before building. (1) The rule settles the open questions, so no decision card. (2) Cut nothing from the knobs; the shortest version is the same version. (3) The panel's OTHER rows would have gone quietly wrong on a multi-selection: 'Its own size' and 'Its own look' read one copy, and Detach dimmed the moment a second copy was picked. A dead Detach fails rung 0 of 'a control that cannot act' (it could be made to work), so it now reaches every picked copy in one step. (4) The wording offer stays single-copy: it exists only after you double click into ONE copy, so its property really is absent for a multi-selection. (5) Found and left alone: the Layout (Placement) section vanishes on a multi-selection for the same reason the Component one did; filed separately."
+    },
+    {
+      "t": "2026-09-06T02:10:00.000Z",
+      "note": "built. PhotonzCore: ComponentKnobSelection (the reading over several copies: the one original, the copies it reaches, each knob's agreed value or Mixed, which knobs are answered, the reach line, the different-components sentence), plural setInstanceOverride/clearInstanceOverride, instanceOwnSizeLabel(instances:)/instanceOwnLookLabel(instances:), detachInstances. App: EditorState.componentKnobSelection over the picked layers in draw order; ComponentInstanceProperties and ComponentInstanceInspector now take the selection, so one copy and five go down ONE path; LayersPanel gates the section on the whole selection. Mixed per kind: wording draws the word in its box (placeholder swapped, accessibilityLabel keeps the field findable), the switch keeps its position empty at MixedLook.controlOpacity with the word beside it and the first press resolves to on for all, the choice menu carries Mixed as a row of its own so the closed title wears it, the colour row already drew a Mixed chip."
+    },
+    {
+      "t": "2026-09-06T02:12:00.000Z",
+      "note": "measured rather than eyeballed: the choice menu's Mixed title reads 172 against 236 for a real value in the same shot, so it IS one step quieter. A first attempt replaced the popup with a pull-down Menu to get that; the measurement showed the popup was already right, so the popup stayed."
+    },
+    {
+      "t": "2026-09-06T02:14:00.000Z",
+      "note": "verified live in the probe with Screen Recording granted. Scripts/playtest/copies-share-knobs-walk.json (11 stages: section stays, set together, ONE undo puts both back, Mixed on field and switch, first press resolves to on, typing into Mixed reaches both, two different components, speaking for two of three, Detach reaches both) and Scripts/playtest/copies-share-choice-walk.json (the other two knob kinds: a choice menu and a colour row, each reading Mixed and each setting both). Both walks end ok; Scripts/test.sh 3479 tests green."
     }
-  ]
+  ],
+  "started": "2026-09-06T00:40:58.420Z"
 }

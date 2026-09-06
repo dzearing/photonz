@@ -160,6 +160,19 @@ extension PhotonzDocument {
         layer(id: instance)?.instanceSize?.inWords
     }
 
+    /// What that row says for SEVERAL picked copies: the one copy's own words
+    /// when one is picked, else how many of them have a size of their own.
+    /// Nil when none of them does, which is what keeps the row off the section
+    /// until there is something to say.
+    public func instanceOwnSizeLabel(instances: [UUID]) -> String? {
+        let own = instances.filter { instanceOwnsSize(id: $0) }
+        guard !own.isEmpty else { return nil }
+        if instances.count == 1 { return instanceOwnSizeLabel(instance: instances[0]) }
+        return ComponentInstanceCount.phrase(own.count, of: instances.count,
+                                             singular: "has its own size",
+                                             plural: "have their own size")
+    }
+
     /// Puts copies back on their original's size, both sides at once. Returns
     /// how many had something to put back, so a caller can tell a no-op from an
     /// edit.
@@ -176,5 +189,20 @@ extension PhotonzDocument {
             count += 1
         }
         return count
+    }
+}
+
+
+/// How a row about several copies counts them, so the two rows that do it say
+/// it the same way rather than inventing a sentence each.
+public enum ComponentInstanceCount {
+
+    /// "All 3", "2 of the 3 copies", "1 of the 3 copies", with the verb that
+    /// goes with the count.
+    public static func phrase(_ some: Int, of all: Int,
+                              singular: String, plural: String) -> String {
+        let verb = some == 1 ? singular : plural
+        if some == all { return "All \(all) \(verb)" }
+        return "\(some) of the \(all) copies \(verb)"
     }
 }

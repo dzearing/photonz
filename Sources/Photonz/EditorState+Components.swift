@@ -340,6 +340,53 @@ extension EditorState {
         perform(announcing: false) { $0.clearInstanceOverride(instance: instance, property: property) }
     }
 
+    /// The picked layers in draw order. The same set every whole-selection
+    /// command acts on, ordered, so a row over several copies reads the same
+    /// way twice running and one undo step lands the same way every time.
+    var orderedSelectedLayerIDs: [UUID] {
+        let picked = actionableLayerIDs
+        guard !picked.isEmpty, let document else { return [] }
+        return document.allLayers.map(\.id).filter { picked.contains($0) }
+    }
+
+    /// What the Component section shows for what is picked: the copies it
+    /// speaks for, their original's knobs, and what each knob reads across
+    /// them. One copy or five, this is the same reading, which is what lets one
+    /// typed word rename five buttons.
+    var componentKnobSelection: ComponentKnobSelection {
+        guard componentsEnabled, let document else { return .none }
+        return document.componentKnobSelection(layerIDs: orderedSelectedLayerIDs)
+    }
+
+    /// The same reading for copies named outright rather than picked, which is
+    /// how a piece INSIDE a copy answers for the copy it belongs to.
+    func componentKnobSelection(instances: [UUID]) -> ComponentKnobSelection {
+        guard componentsEnabled, let document else { return .none }
+        return document.componentKnobSelection(layerIDs: instances)
+    }
+
+    /// Sets one knob on every picked copy, in ONE undo step however many it
+    /// reached.
+    ///
+    /// Like setting it on one copy, it lands without the "copies followed"
+    /// pill: that pill says how far an edit to an ORIGINAL reached, and this
+    /// edit reached exactly the copies whose panel is on screen.
+    func setInstanceOverride(instances: [UUID], property: UUID, value: ComponentPropertyValue) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        perform(announcing: false) {
+            _ = $0.setInstanceOverride(instances: instances, property: property, value: value)
+        }
+    }
+
+    /// Puts one knob back to following the original on every picked copy, in
+    /// one undo step.
+    func clearInstanceOverride(instances: [UUID], property: UUID) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        perform(announcing: false) {
+            _ = $0.clearInstanceOverride(instances: instances, property: property)
+        }
+    }
+
     // MARK: - A colour knob on a copy
 
     /// What one colour knob row shows: the same `ColorStyleSelection` a colour
@@ -536,6 +583,21 @@ extension EditorState {
         perform(announcing: false) { $0.clearInstanceStyleOverride(instance: instance, field: field) }
     }
 
+    /// What the "its own look" row says for the picked copies: one copy's own
+    /// parts, or how many of several have a look of their own.
+    func instanceOwnLookLabel(instances: [UUID]) -> String? {
+        guard componentsEnabled else { return nil }
+        return document?.instanceOwnLookLabel(instances: instances)
+    }
+
+    /// Puts every picked copy's look back to the original's, in one undo step.
+    func clearInstanceStyleOverrides(instances: [UUID]) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform(announcing: false) { _ = $0.clearInstanceStyleOverrides(instances: instances) }
+    }
+
     /// Puts a copy's whole look back to the original's.
     func clearInstanceStyleOverrides(instance: UUID) {
         guard componentsEnabled else { return }
@@ -550,6 +612,20 @@ extension EditorState {
     func instanceOwnSizeLabel(instance: UUID) -> String? {
         guard componentsEnabled else { return nil }
         return document?.instanceOwnSizeLabel(instance: instance)
+    }
+
+    /// The same row for the picked copies: one copy's own words, or how many of
+    /// several have a size of their own.
+    func instanceOwnSizeLabel(instances: [UUID]) -> String? {
+        guard componentsEnabled else { return nil }
+        return document?.instanceOwnSizeLabel(instances: instances)
+    }
+
+    /// Puts every picked copy back on its original's size, in one undo step.
+    func clearInstanceSize(instances: [UUID]) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        discardDragPreview()
+        perform(announcing: false) { _ = $0.clearInstanceSize(instances: instances) }
     }
 
     /// Puts a copy back on its original's size, both sides at once.
@@ -576,15 +652,26 @@ extension EditorState {
     /// picture the instant after is the picture the instant before, and a
     /// command that looks like it did nothing is a command people press twice.
     func detachInstance() {
-        guard canDetachInstance, let id = actionableLayerIDs.first else { return }
-        let name = document?.layer(id: id)?.instanceOf
-            .flatMap { document?.mainComponent(componentID: $0)?.name }
+        guard canDetachInstance, let document else { return }
+        let ids = orderedSelectedLayerIDs
+            .filter { document.detachableInstances(ids: [$0]).isEmpty == false }
+        guard let first = ids.first else { return }
+        // Every picked copy follows ONE original on this panel, so the word on
+        // screen can name it; a stray copy of something else is named by count
+        // alone rather than by picking a favourite.
+        let names = Set(ids.compactMap { id in
+            document.layer(id: id)?.instanceOf
+                .flatMap { document.mainComponent(componentID: $0)?.name }
+        })
         discardDragPreview()
-        var detached = false
-        perform(announcing: false) { detached = $0.detachInstance(id: id) }
-        guard detached else { return }
-        selectLayer(id, inGroup: document?.parentID(of: id))
-        raiseCanvasNotice(.componentDetached(component: name))
+        var detached = 0
+        perform(announcing: false) { detached = $0.detachInstances(ids: ids) }
+        guard detached > 0 else { return }
+        // One copy detached is still the copy whose panel you were looking at,
+        // so it stays the selection; several stay exactly as they were picked.
+        if ids.count == 1 { selectLayer(first, inGroup: self.document?.parentID(of: first)) }
+        raiseCanvasNotice(.componentDetached(component: names.count == 1 ? names.first ?? nil : nil,
+                                             count: detached))
     }
 
     /// Whether Layer ▸ Select Original would do anything: the selection is a
@@ -627,20 +714,26 @@ extension EditorState {
         setInstanceColorStyle(instances: [id], property: property.id, styleID: style.id)
     }
 
-    /// Moves the selected copy's first choice knob on to its next option, the
-    /// same edit picking the next row of that knob's menu makes. Scripted
-    /// playtests only: a walk cannot open a menu inside the dock.
+    /// Moves the picked copies' first choice knob on to its next option, the
+    /// same edit picking the next row of that knob's menu makes — and, like the
+    /// menu, it reaches every picked copy in one step. Scripted playtests only:
+    /// a walk cannot open a menu inside the dock.
     func cycleInstanceChoice() {
-        guard componentsEnabled, let id = actionableLayerIDs.first,
-              let componentID = document?.layer(id: id)?.instanceOf,
-              let property = componentProperties(of: componentID).first(where: { $0.kind == .variant })
+        let selection = componentKnobSelection
+        guard let componentID = selection.componentID, let id = selection.instances.first,
+              let property = selection.properties.first(where: { $0.kind == .variant })
         else { return }
         let options = componentVariantOptions(componentID: componentID, propertyID: property.id)
         guard !options.isEmpty else { return }
-        let current = instanceValue(instance: id, property: property.id)?.optionValue
+        // From what the picked copies READ, which is the value they share; a
+        // row saying Mixed steps from the first option, the way choosing from
+        // its menu would.
+        let current = selection.reading(property.id).optionValue
+            ?? instanceValue(instance: id, property: property.id)?.optionValue
         let index = options.firstIndex { $0.id == current } ?? 0
         let next = options[(index + 1) % options.count]
-        setInstanceOverride(instance: id, property: property.id, value: .variant(next.id))
+        setInstanceOverride(instances: selection.instances, property: property.id,
+                            value: .variant(next.id))
     }
 
     /// Whether Layer ▸ Make Alternatives would do anything: the selection can

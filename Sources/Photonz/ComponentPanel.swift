@@ -482,13 +482,30 @@ struct LibraryComponentTile: View {
 /// the next step.
 struct ComponentInstanceInspector: View {
     @Environment(EditorState.self) private var editorState
-    let layer: Layer
+    /// The copies this section speaks for. One or five, it is the same value
+    /// and the same rows: picking a second copy changes what a row ANSWERS FOR,
+    /// never whether the section is on screen.
+    let selection: ComponentKnobSelection
 
-    private var componentID: UUID? { editorState.document?.layer(id: layer.id)?.instanceOf }
-    private var main: Layer? { componentID.flatMap { editorState.document?.mainComponent(componentID: $0) } }
+    private var main: Layer? {
+        selection.componentID.flatMap { editorState.document?.mainComponent(componentID: $0) }
+    }
+    /// The one copy picked, when exactly one is. What only makes sense for a
+    /// single copy hangs off this.
+    private var only: UUID? { selection.count == 1 ? selection.instances.first : nil }
 
     var body: some View {
-        if let componentID, let main {
+        if selection.hasDifferentComponents {
+            // Every picked copy has knobs, so the section applies; they just
+            // have none in COMMON. A panel that silently went blank here would
+            // read as a fault, so it says which it is.
+            Text(ComponentKnobSelection.differentComponentsNote)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 4)
+        } else if let componentID = selection.componentID, let main {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     ComponentMark(size: 12, isInstance: true)
@@ -497,11 +514,20 @@ struct ComponentInstanceInspector: View {
                         .lineLimit(2)
                         .truncationMode(.middle)
                 }
-                Text("A copy. Editing the original changes this one too.")
+                Text(summary)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                ComponentInstanceProperties(instance: layer.id, componentID: componentID)
+                // How many of the picked layers these rows reach, when it is
+                // not all of them: a locked copy, or something picked
+                // alongside that is not a copy at all.
+                if let reach = selection.reachNote {
+                    Text(reach)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                ComponentInstanceProperties(selection: selection)
                 offer
                 ownSize
                 ownLook
@@ -518,12 +544,22 @@ struct ComponentInstanceInspector: View {
                     Button("Detach") { editorState.detachInstance() }
                         .controlSize(.small)
                         .disabled(!editorState.canDetachInstance)
-                        .help("Turns this copy into ordinary layers that no longer follow the original")
+                        .help(selection.count == 1
+                              ? "Turns this copy into ordinary layers that no longer follow the original"
+                              : "Turns all \(selection.count) copies into ordinary layers that no longer follow the original")
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 4)
         }
+    }
+
+    /// What the section says the selection IS, in the same place for one copy
+    /// and for five.
+    private var summary: String {
+        selection.count == 1
+            ? "A copy. Editing the original changes this one too."
+            : "\(selection.count) copies. Editing the original changes them all."
     }
 
     /// The way out of a refused edit, on the copy you were trying to edit.
@@ -534,7 +570,7 @@ struct ComponentInstanceInspector: View {
     /// only way in and it is two selections away. This is that press, here,
     /// while it is still what you were doing.
     @ViewBuilder private var offer: some View {
-        if let piece = editorState.wordingOffer(for: layer.id) {
+        if let only, let piece = editorState.wordingOffer(for: only) {
             let name = editorState.document?.componentPieceName(of: piece) ?? "that piece"
             Button("Make \(name) Adjustable") { editorState.takeWordingOffer(piece) }
                 .controlSize(.small)
@@ -557,7 +593,7 @@ struct ComponentInstanceInspector: View {
     /// because "make it the size the original is" is the whole errand, and the
     /// row above the button already says which sides are the copy's.
     @ViewBuilder private var ownSize: some View {
-        if let own = editorState.instanceOwnSizeLabel(instance: layer.id) {
+        if let own = editorState.instanceOwnSizeLabel(instances: selection.instances) {
             Divider().padding(.vertical, 2)
             HStack(spacing: 6) {
                 Text("Its own size")
@@ -570,7 +606,7 @@ struct ComponentInstanceInspector: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 Button {
-                    editorState.clearInstanceSize(instance: layer.id)
+                    editorState.clearInstanceSize(instances: selection.instances)
                 } label: {
                     Image(systemName: "arrow.uturn.backward")
                 }
@@ -591,21 +627,20 @@ struct ComponentInstanceInspector: View {
     /// section and may be collapsed or scrolled away: without it, a copy you
     /// faded weeks ago is a copy that mysteriously ignores the original.
     @ViewBuilder private var ownLook: some View {
-        let parts = editorState.instanceStyleOverrideLabels(instance: layer.id)
-        if !parts.isEmpty {
+        if let own = editorState.instanceOwnLookLabel(instances: selection.instances) {
             Divider().padding(.vertical, 2)
             HStack(spacing: 6) {
                 Text("Its own look")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(width: 74, alignment: .leading)
-                Text(parts.joined(separator: ", "))
+                Text(own)
                     .font(.caption)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 Button {
-                    editorState.clearInstanceStyleOverrides(instance: layer.id)
+                    editorState.clearInstanceStyleOverrides(instances: selection.instances)
                 } label: {
                     Image(systemName: "arrow.uturn.backward")
                 }
@@ -650,7 +685,8 @@ struct ComponentPieceInspector: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                ComponentInstanceProperties(instance: piece.instance, componentID: piece.componentID)
+                ComponentInstanceProperties(
+                    selection: editorState.componentKnobSelection(instances: [piece.instance]))
                 if canExposeWording {
                     Button("Make Its Wording Adjustable") {
                         editorState.exposePieceWording(of: piece.layer)
@@ -893,14 +929,11 @@ private struct ComponentPropertyRow: View {
 /// and a choice offers only the shapes the original holds.
 struct ComponentInstanceProperties: View {
     @Environment(EditorState.self) private var editorState
-    let instance: UUID
-    let componentID: UUID
+    /// The copies these rows speak for, and what each knob reads across them.
+    let selection: ComponentKnobSelection
 
-    private var properties: [ComponentProperty] {
-        editorState.componentProperties(of: componentID)
-    }
-
-    private var overridden: Set<UUID> { editorState.instanceOverrides(instance: instance) }
+    private var properties: [ComponentProperty] { selection.properties }
+    private var instances: [UUID] { selection.instances }
 
     var body: some View {
         if properties.isEmpty {
@@ -928,29 +961,48 @@ struct ComponentInstanceProperties: View {
     }
 
     @ViewBuilder private func control(for property: ComponentProperty) -> some View {
+        let reading = selection.reading(property.id)
+        let isMixed = reading == .mixed
         switch property.kind {
         case .text:
-            InstanceTextKnob(instance: instance, property: property)
+            InstanceTextKnob(instances: instances, property: property,
+                             live: reading.textValue ?? "", isMixed: isMixed)
         case .visible:
-            Toggle("", isOn: Binding(
-                get: { editorState.instanceValue(instance: instance, property: property.id)?.boolValue ?? true },
-                set: { editorState.setInstanceOverride(instance: instance, property: property.id,
-                                                       value: .visible($0)) }))
-                .labelsHidden()
-                .toggleStyle(.switch)
-                .controlSize(.mini)
+            InstanceShowKnob(name: property.name, isOn: reading.boolValue ?? true,
+                             isMixed: isMixed) { on in
+                editorState.setInstanceOverride(instances: instances, property: property.id,
+                                                value: .visible(on))
+            }
             Spacer(minLength: 0)
         case .variant:
             // Labels rather than raw names: two rectangles drawn in a row are
             // both called "Rectangle", and a menu of identical rows is a menu
             // nobody can choose from.
-            let options = editorState.componentVariantOptionLabels(componentID: componentID,
-                                                                   propertyID: property.id)
+            let options = editorState.componentVariantOptionLabels(
+                componentID: selection.componentID ?? UUID(), propertyID: property.id)
+            // The closed title is where a menu shows its value, so that is
+            // where Mixed goes: a row the copies disagree on offers the word
+            // rather than picking one copy's shape and printing it as if it
+            // were everybody's. The word is a row of the menu's own, drawn one
+            // step quieter, which is what the closed title then wears —
+            // measured against a real value in the same shot on 2026-09-05.
             Picker("", selection: Binding(
-                get: { editorState.instanceValue(instance: instance, property: property.id)?.optionValue
-                        ?? options.first?.id ?? UUID() },
-                set: { editorState.setInstanceOverride(instance: instance, property: property.id,
-                                                       value: .variant($0)) })) {
+                get: {
+                    isMixed ? Self.mixedOption
+                        : (reading.optionValue ?? options.first?.id ?? Self.mixedOption)
+                },
+                set: { chosen in
+                    // Mixed is a report about the selection, not a state
+                    // anybody can set, so landing back on it does nothing.
+                    guard chosen != Self.mixedOption else { return }
+                    editorState.setInstanceOverride(instances: instances, property: property.id,
+                                                    value: .variant(chosen))
+                })) {
+                if isMixed {
+                    Text(MixedValue.text)
+                        .foregroundStyle(MixedLook.style)
+                        .tag(Self.mixedOption)
+                }
                 ForEach(options, id: \.id) { option in
                     Text(option.label).tag(option.id)
                 }
@@ -959,23 +1011,70 @@ struct ComponentInstanceProperties: View {
             .controlSize(.small)
             .help("Only the shapes the original holds. A copy can never show something it does not define")
         case .color:
-            InstanceColorKnob(instances: [instance], property: property)
+            InstanceColorKnob(instances: instances, property: property)
         }
     }
 
+    /// The row the menu shows while the copies disagree. It is never an answer
+    /// anybody can land on: choosing it is ignored.
+    private static let mixedOption = UUID()
+
     /// The way back. Without it a copy that was set once can only be put right
     /// by undoing, and an override made ten edits ago is out of undo's reach.
+    /// It reaches every picked copy, in one step, like every other control here.
     @ViewBuilder private func revert(_ property: ComponentProperty) -> some View {
+        let own = selection.isOverridden(property.id)
         Button {
-            editorState.clearInstanceOverride(instance: instance, property: property.id)
+            editorState.clearInstanceOverride(instances: instances, property: property.id)
         } label: {
             Image(systemName: "arrow.uturn.backward")
         }
         .buttonStyle(.borderless)
         .controlSize(.small)
-        .opacity(overridden.contains(property.id) ? 1 : 0)
-        .disabled(!overridden.contains(property.id))
-        .help("Follow the original again for this one")
+        .opacity(own ? 1 : 0)
+        .disabled(!own)
+        .help(selection.count == 1
+              ? "Follow the original again for this one"
+              : "Every picked copy follows the original again for this one")
+    }
+}
+
+/// A show-or-hide knob over the picked copies.
+///
+/// A Mac switch has on and off and nothing else, so this is the one control the
+/// look rule cannot simply be dropped into. The answer, from
+/// `UX-PATTERNS.md` §4: it stays a switch, it wears the word beside it, it is
+/// drawn one step quieter while it has no position to show, and the first press
+/// resolves to ON for every picked copy. It never returns to Mixed, because
+/// Mixed is a report about the selection rather than a state anybody can set.
+private struct InstanceShowKnob: View {
+    /// The knob's own name, so the switch answers to it: a control with no
+    /// words in it is a control nothing can name otherwise.
+    let name: String
+    let isOn: Bool
+    let isMixed: Bool
+    let set: (Bool) -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Toggle("", isOn: Binding(get: { isMixed ? false : isOn },
+                                     set: { set(isMixed ? true : $0) }))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .accessibilityLabel(name)
+                // Named for the knob, said to be one: a document can hold a
+                // LAYER called Picture too, and two controls with one name is
+                // a walk that cannot say which it meant.
+                .playtestControl(name, detail: "a knob on the copies")
+                // Off is a true answer — none of them have it — so a
+                // disagreeing selection may not borrow it at full strength.
+                .opacity(isMixed ? MixedLook.controlOpacity : 1)
+            // The word goes beside the switch rather than inside it: there is
+            // no room in the control, and this row has no trailing column for
+            // it to collide with.
+            if isMixed { MixedWord() }
+        }
     }
 }
 
@@ -1188,23 +1287,33 @@ private struct InstanceColorKnob: View {
 /// is not one undo step per keystroke.
 private struct InstanceTextKnob: View {
     @Environment(EditorState.self) private var editorState
-    let instance: UUID
+    /// The copies this field answers for. Typing lands on every one of them, in
+    /// one undo step.
+    let instances: [UUID]
     let property: ComponentProperty
+    /// The words they share, empty while they differ.
+    let live: String
+    let isMixed: Bool
 
     @State private var draft = ""
     @FocusState private var focused: Bool
 
-    private var live: String {
-        editorState.instanceValue(instance: instance, property: property.id)?.textValue ?? ""
-    }
-
     var body: some View {
         // The knob's own name is the placeholder, so an emptied field still
         // says what it is, and a scripted playtest can reach the field by name.
-        TextField(property.name, text: $draft)
+        // While the copies differ the box holds the word instead: a field that
+        // went blank would say "they differ" and "nothing is set here" in
+        // exactly the same way, and those are different answers.
+        TextField(isMixed ? "" : property.name, text: $draft)
             .textFieldStyle(.roundedBorder)
             .font(.caption)
             .focused($focused)
+            // The knob's name, whatever is in the box. While the copies differ
+            // the placeholder is gone (the word is there instead), and a field
+            // that stopped answering to its own name would be a field neither
+            // a screen reader nor a scripted walk could find.
+            .accessibilityLabel(property.name)
+            .overlay(alignment: .leading) { mixedWord }
             .onSubmit(commit)
             // Naming a copy's wording is a moment, not a mode: Return lands it
             // and hands the keyboard back, so the next tool letter picks a tool
@@ -1213,12 +1322,25 @@ private struct InstanceTextKnob: View {
             .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
             .onAppear { draft = live }
             .onChange(of: live) { _, value in if !focused { draft = value } }
-            .onChange(of: instance) { _, _ in draft = live }
+            .onChange(of: instances) { _, _ in draft = live }
+    }
+
+    /// Mixed in the value's own place, one step quieter, and out of the way the
+    /// moment there is anything typed to read.
+    @ViewBuilder private var mixedWord: some View {
+        if isMixed, draft.isEmpty {
+            Text(MixedValue.text)
+                .font(.caption)
+                .foregroundStyle(MixedLook.style)
+                .padding(.leading, 5)
+                .allowsHitTesting(false)
+        }
     }
 
     private func commit() {
         guard draft != live else { return }
-        editorState.setInstanceOverride(instance: instance, property: property.id, value: .text(draft))
+        editorState.setInstanceOverride(instances: instances, property: property.id,
+                                        value: .text(draft))
     }
 }
 

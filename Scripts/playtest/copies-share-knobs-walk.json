@@ -1,0 +1,460 @@
+{
+  "out": "/tmp/photonz-playtest/copies-share-knobs",
+  "seed": "Picking a second copy used to take the whole Component section off the panel, so five buttons had to be set one at a time. The walk drops a Card three times (an original and two copies), picks both copies, sets them together, makes them disagree, and reads what each kind of knob says then.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1320,
+      "height": 920
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Card",
+      "to": [
+        340,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Card",
+      "to": [
+        340,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Card",
+      "to": [
+        700,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        340,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-copy",
+      "note": "one copy picked: the Component section holds Title, Body and Picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-1-one-copy"
+    },
+    {
+      "do": "panel",
+      "stage": "1-one-copy"
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        520
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-two-copies",
+      "note": "THE FIX: with a second copy picked the section stays, headed 2 copies, with the same three knobs"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-2-two-copies"
+    },
+    {
+      "do": "panel",
+      "stage": "2-two-copies"
+    },
+    {
+      "do": "focus",
+      "field": "Title"
+    },
+    {
+      "do": "type",
+      "text": "Both at once"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-set-together",
+      "note": "one typed word landed on BOTH copies; the original still says what it said"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-3-set-together"
+    },
+    {
+      "do": "render",
+      "name": "copies-share-knobs-3-set-together-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-one-undo",
+      "note": "ONE undo put both copies back, not one of them"
+    },
+    {
+      "do": "render",
+      "name": "copies-share-knobs-4-one-undo-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        340,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Title"
+    },
+    {
+      "do": "type",
+      "text": "Only this one"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Picture",
+      "in": "a knob on the copies"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-one-copy-changed",
+      "note": "one copy alone renamed and its picture switched off, so the two no longer agree"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-5-one-copy-changed"
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        520
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-mixed",
+      "note": "THE READING: Title says Mixed in its own box, Picture is a switch with no position and the word beside it, Body still shows what they share"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-6-mixed"
+    },
+    {
+      "do": "panel",
+      "stage": "6-mixed"
+    },
+    {
+      "do": "press",
+      "control": "Picture",
+      "in": "a knob on the copies"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-switch-resolves",
+      "note": "the first press on a Mixed switch turns it ON for both, the way a mixed checkbox has always behaved"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-7-switch-resolves"
+    },
+    {
+      "do": "render",
+      "name": "copies-share-knobs-7-switch-resolves-doc"
+    },
+    {
+      "do": "focus",
+      "field": "Title"
+    },
+    {
+      "do": "type",
+      "text": "Agreed again"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-mixed-is-still-a-control",
+      "note": "typing into a Mixed field reaches both copies, so Mixed is never a dead end"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-8-mixed-is-still-a-control"
+    },
+    {
+      "do": "render",
+      "name": "copies-share-knobs-8-mixed-is-still-a-control-doc"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        1000,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        1000,
+        800
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        340,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        1000,
+        800
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-two-originals",
+      "note": "copies of two DIFFERENT components: the section stays and says why there are no knobs, rather than going blank"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-9-two-originals"
+    },
+    {
+      "do": "panel",
+      "stage": "9-two-originals"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        800
+      ],
+      "to": [
+        320,
+        860
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        340,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        520
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        260,
+        830
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "10-speaking-for-some",
+      "note": "a rectangle picked alongside the two copies has no knobs at all, so it is not a copy that disagrees: the section stays, speaks for the two, and says so in one line"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-10-speaking-for-some"
+    },
+    {
+      "do": "click",
+      "at": [
+        340,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        520
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "detachInstance"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "11-detach-reaches-both",
+      "note": "Detach over two copies turns BOTH into ordinary layers in one step, and the word on screen counts them"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-knobs-11-detach-reaches-both"
+    }
+  ]
+}

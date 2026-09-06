@@ -461,7 +461,12 @@ struct ComponentPropertyTests {
         #expect(!c.doc.canDetachInstance(ids: [c.main]))
         #expect(!c.doc.canDetachInstance(ids: [c.boxID]))
         #expect(!c.doc.canDetachInstance(ids: []))
-        #expect(!c.doc.canDetachInstance(ids: [copy, c.main]))
+        // An original picked ALONGSIDE a copy is left alone rather than
+        // turning the command off: Detach reaches the copies among what is
+        // picked, the way every other whole-selection command leaves out what
+        // it cannot honestly touch (2026-09-05, several copies at once).
+        #expect(c.doc.canDetachInstance(ids: [copy, c.main]))
+        #expect(c.doc.detachableInstances(ids: [copy, c.main]) == [copy])
         c.doc.updateLayer(id: copy) { $0.isLocked = true }
         #expect(!c.doc.canDetachInstance(ids: [copy]))
     }

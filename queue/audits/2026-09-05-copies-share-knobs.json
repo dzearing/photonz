@@ -1,0 +1,31 @@
+{
+  "feature": "The knobs panel speaks for several copies at once",
+  "epic": "ui-components",
+  "summary": "Pick two or more copies of one component and the Component section stays on the panel and sets them together: one typed word renames five buttons, and one undo puts them all back. Picking a second copy used to take the whole section off the panel.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components, Library and Styles flags are on by default.",
+  "try": [
+    { "do": "Open View ▸ Show Library and drag the Card tile onto the canvas three times: the first is the original, the next two are copies." },
+    { "do": "Click one copy, then shift-click the other. The Component section stays, headed \"2 copies\", with Title, Body and Picture.", "shot": "2026-09-05-copies-share-knobs-2.png" },
+    { "do": "Type into Title and press Return. Both copies take the words." },
+    { "do": "Press Command Z once. Both copies go back, not one." },
+    { "do": "Click one copy on its own, retype its Title, and switch Picture off." },
+    { "do": "Shift-click the other copy again: Title reads Mixed in its box, and the Picture switch has no position with Mixed beside it.", "shot": "2026-09-05-copies-share-knobs-6.png" },
+    { "do": "Press the Picture switch once. It turns on for both, the way a mixed checkbox always has." },
+    { "do": "Shift-click any layer that is not a copy. The section stays and says it is speaking for two of the three.", "shot": "2026-09-05-copies-share-knobs-10.png" }
+  ],
+  "evaluate": [
+    "Reading \"2 copies. Editing the original changes them all.\", is it obvious the rows below now set both?",
+    "Does Mixed in the Title box read as \"they differ\" rather than as a word somebody typed there?",
+    "Is a switch with no position and the word beside it clear enough, or does it just look off?",
+    "When a rectangle is picked alongside two copies, is the line about reaching two of the three worth its space, or noise?",
+    "Detach now turns every picked copy loose in one step. Is that what you expect from it, or should it stay one at a time?"
+  ],
+  "rough": [
+    "The mock is silent on all of this; the source is the several-picked-things rule in UX-PATTERNS §4, and this is the first feature built to it end to end.",
+    "The word beside the switch sits after the switch rather than after the knob's name. The rule's example puts it after the caption, but this panel's captions are a fixed 74pt column and \"Picture Mixed\" would truncate or shove the control out of line with every row above it.",
+    "Copies of two different components keep the section and one sentence saying why there are no knobs. Photographed as 2026-09-05-copies-share-knobs-9.png.",
+    "Detach used to grey out the moment a second copy was picked. That was a control that could have been made to work rather than a real constraint, so it now reaches every picked copy and the notice counts them.",
+    "The Layout section still vanishes on a multi-selection for exactly the reason the Component one did. Filed as its own task rather than fixed here.",
+    "Every picture here is a real screen capture of the probe app, not an offscreen render."
+  ]
+}

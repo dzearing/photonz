@@ -395,10 +395,13 @@ Everything below is a consequence of that table.
   `colorRowSlots` in `EditorState+ColorStyles.swift` lists only the slots the
   picked layers actually have. A whole section leaving is that same answer when
   every control in it is absent.
-  **So the Component section vanishing on a second copy is a bug, not the rule.**
-  Both copies have knobs; the panel reaches both; it must stay and speak for
-  them. (`LayersPanel.swift` gates that section on `selectedLayer`, one layer.
-  Fixing it is `the-knobs-panel-speaks-for-several-copies-at-onc`.)
+  **So the Component section vanishing on a second copy was a bug, not the
+  rule.** Both copies have knobs; the panel reaches both; it stays and speaks
+  for them. *(Fixed 2026-09-05, `the-knobs-panel-speaks-for-several-copies-at-onc`,
+  audit `2026-09-05-copies-share-knobs`. `ComponentKnobSelection` is the reading,
+  and it is the same value for one copy as for five, so the panel has one path
+  rather than two that can drift. The walk that keeps it true is
+  `Scripts/playtest/copies-share-knobs-walk.json`.)*
 - **When the section applies but no control inside it is shared, the section
   stays and says so in one sentence.** Pick copies of two different components
   and every picked thing has knobs, so a panel that silently goes blank reads as
@@ -406,6 +409,8 @@ Everything below is a consequence of that table.
   halves the wording law asks for, who owns this and the one thing to do:
   "These copies come from different components. Pick copies of one component to
   set their knobs together."
+  *(Shipped 2026-09-05 as `ComponentKnobSelection.differentComponentsNote`, which
+  is where that sentence lives so two surfaces cannot write two of it.)*
   Two controls are the same control when they are the same property of the same
   thing, never when they merely share a name. A knob called Label on one
   component and a knob called Label on another are two knobs, and a row that
@@ -463,6 +468,12 @@ here rather than in the middle of whatever feature meets it next.
 *(`ShadowInspector` binds to `selection.hasShadowEverywhere`, which is why a
 part-shadowed selection currently reads plain off. Fixing it is
 `a-switch-says-mixed-the-way-every-other-control`.)*
+
+**Built, and the thing to copy:** `InstanceShowKnob` in `ComponentPanel.swift`
+(2026-09-05), the show-or-hide knob over several copies. It wears
+`MixedLook.controlOpacity`, which is the one step quieter for a control made of
+picture rather than words, and the word sits beside the switch. The Shadow
+switch adopts the same two when its own task lands.
 
 ### A control that cannot act
 

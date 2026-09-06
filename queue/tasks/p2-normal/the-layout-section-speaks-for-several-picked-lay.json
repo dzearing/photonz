@@ -1,0 +1,28 @@
+{
+  "id": "the-layout-section-speaks-for-several-picked-lay",
+  "title": "The Layout section speaks for several picked layers",
+  "goal": "Pick two or more layers that sit in the same stack and the Layout section disappears, so setting how they are placed means doing it one layer at a time. It should stay and speak for all of them, the way the Color, Effects and Component sections already do.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1310,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T01:17:54.621Z",
+  "updated": "2026-09-06T01:17:54.622Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-05 while fixing the-knobs-panel-speaks-for-several-copies-at-onc. Same cause: LayersPanel.availableSections gates .placement on selectedLayer, which selectLayers sets to nil for a multi-selection. The fix has an exemplar now: ComponentKnobSelection in PhotonzCore plus the whole-selection test in availableSections. Rule: docs/design/mocks/shared/UX-PATTERNS.md section 4, What a control DOES for several picked things.",
+  "acceptance": [
+    "Picking two layers in the same group keeps the Layout section on screen",
+    "A placement row the picked layers agree on shows that value; one they do not agree on reads Mixed",
+    "Setting a placement row sets every picked layer in one step that one undo puts back",
+    "Picking layers in two different containers shows one sentence rather than going blank"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T01:17:54.622Z",
+      "note": "created (manual)"
+    }
+  ]
+}

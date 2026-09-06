@@ -391,15 +391,14 @@ struct InspectorPanel: View {
             // A main component's own section (Next, `next-components`): its
             // name, which is the one name the layers list and the shelf both
             // print. Only a main has one.
-            // ...and a copy gets the same slot, saying which original it
-            // follows, so the two kinds of component layer answer in one place.
             // ...and so does a piece INSIDE a copy, which is where somebody
             // who clicked into one to change its words has just landed. The
             // section is the only thing on the panel that can tell them the
             // piece is not theirs to change and what is.
+            // (A copy gets the same slot, however many are picked; that is the
+            // whole-selection test below rather than this one-layer one.)
             if Experiments.shared.componentsEnabled,
-               layer.isMainComponent || layer.isComponentInstance
-                || editorState.selectedComponentPiece != nil {
+               layer.isMainComponent || editorState.selectedComponentPiece != nil {
                 set.insert(.component)
             }
             // A picked callout's own settings. Present whenever one is
@@ -408,6 +407,14 @@ struct InspectorPanel: View {
             if layer.zoomCallout != nil { set.insert(.callout) }
             if layer.measure != nil { set.insert(.measure) }
             if layer.collage != nil { set.insert(.collage) }
+        }
+        // The picked copies' own section, saying which original they follow and
+        // holding the knobs it exposes — for EVERYTHING picked, like the Color
+        // and Effects rows above. Picking a second copy used to take the whole
+        // section off the panel, so five buttons had to be set one at a time;
+        // the section leaves only when nothing picked is a copy at all.
+        if Experiments.shared.componentsEnabled, editorState.componentKnobSelection.isPresent {
+            set.insert(.component)
         }
         if editorState.isCanvasSelected { set.insert(.canvas) }
         // The Library shelf (step B3, `next-library`): an ordinary panel group,
@@ -550,8 +557,10 @@ struct InspectorPanel: View {
         case .component:
             if let layer = selectedLayer, layer.isMainComponent {
                 ComponentInspector(layer: layer)
-            } else if let layer = selectedLayer, layer.isComponentInstance {
-                ComponentInstanceInspector(layer: layer)
+            } else if case let selection = editorState.componentKnobSelection, selection.isPresent {
+                // One copy picked or five: the same section, the same rows,
+                // each one answering for all of them.
+                ComponentInstanceInspector(selection: selection)
             } else if let piece = editorState.selectedComponentPiece {
                 // Clicked into a copy: the section answers for the COPY, not
                 // for the piece, because the piece has nothing of its own.

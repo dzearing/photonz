@@ -35,6 +35,12 @@ enum MixedLook {
     static func style(_ isMixed: Bool, otherwise: some ShapeStyle) -> AnyShapeStyle {
         isMixed ? style : AnyShapeStyle(otherwise)
     }
+
+    /// The same one step quieter, for a control that is a PICTURE rather than
+    /// text: a switch has no words in it to restyle, and while it has no
+    /// position it must not read as an off somebody chose. Every switch
+    /// speaking for several picked things wears this while they disagree.
+    static let controlOpacity: Double = 0.55
 }
 
 /// The word Mixed for a control that cannot write it where its value lives.

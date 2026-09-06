@@ -842,8 +842,15 @@ extension PhotonzDocument {
     /// Whether Layer ▸ Detach Instance would do anything: exactly one unlocked
     /// copy is selected.
     public func canDetachInstance(ids: Set<UUID>) -> Bool {
-        guard ids.count == 1, let id = ids.first, let layer = layer(id: id) else { return false }
-        return layer.isComponentInstance && !layer.isLocked
+        !detachableInstances(ids: ids).isEmpty
+    }
+
+    /// The picked layers Detach would actually reach: the copies among them
+    /// that are not locked. Anything else picked alongside is left alone, the
+    /// same way every other whole-selection command leaves out what it cannot
+    /// honestly touch.
+    public func detachableInstances(ids: Set<UUID>) -> Set<UUID> {
+        ids.filter { layer(id: $0)?.isComponentInstance == true && layer(id: $0)?.isLocked == false }
     }
 
     /// Layer ▸ Detach Instance (⌥⌘B): turns a copy into ordinary layers.
@@ -851,6 +858,15 @@ extension PhotonzDocument {
     /// It keeps exactly the picture it was drawing, answers and all, and stops
     /// following the original. There is no way back other than undo, which is
     /// why the command says what it does in plain words before it runs.
+    /// The same over a whole selection, in one step: every picked copy stops
+    /// following. Returns how many did, so the word on screen can say it.
+    @discardableResult
+    public mutating func detachInstances(ids: [UUID]) -> Int {
+        var count = 0
+        for id in ids where detachInstance(id: id) { count += 1 }
+        return count
+    }
+
     @discardableResult
     public mutating func detachInstance(id: UUID) -> Bool {
         guard canDetachInstance(ids: [id]) else { return false }

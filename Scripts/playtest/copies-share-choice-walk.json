@@ -1,0 +1,439 @@
+{
+  "out": "/tmp/photonz-playtest/copies-share-choice",
+  "seed": "The two knob kinds a walk could not reach before, photographed over two copies: a choice menu and a colour row. Each reads what the copies share, says Mixed when they differ, and setting it reaches both.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1320,
+      "height": 920
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        240
+      ],
+      "to": [
+        420,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        330
+      ],
+      "to": [
+        560,
+        390
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        200
+      ],
+      "to": [
+        620,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        240,
+        460
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Quality"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        180
+      ],
+      "to": [
+        700,
+        540
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Row"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "exposeChoice"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        950,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        950,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        864,
+        750
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "cycleChoice"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-copy-swapped",
+      "note": "one copy shows the other shape now; the other still shows the first"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-choice-1-one-copy-swapped"
+    },
+    {
+      "do": "click",
+      "at": [
+        864,
+        410
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        864,
+        750
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-choice-mixed",
+      "note": "THE READING: the choice menu's closed title says Mixed rather than picking one copy's shape or going blank"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-choice-2-choice-mixed"
+    },
+    {
+      "do": "panel",
+      "stage": "2-choice-mixed"
+    },
+    {
+      "do": "action",
+      "action": "cycleChoice"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-picked-for-both",
+      "note": "choosing from a Mixed menu reaches both copies, so Mixed is never a dead end"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-choice-3-picked-for-both"
+    },
+    {
+      "do": "render",
+      "name": "copies-share-choice-3-picked-for-both-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        310,
+        490
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "exposeColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        864,
+        410
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Related",
+      "in": "Swatches"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Related 6"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Close",
+      "in": "the picker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-one-copy-repainted",
+      "note": "one copy alone was given its own fill, so the two no longer agree on it"
+    },
+    {
+      "do": "click",
+      "at": [
+        864,
+        750
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-colour-mixed",
+      "note": "THE READING: the Fill row shows a Mixed chip where the swatch would be, the same word in the same weight as the rows above it"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-choice-5-colour-mixed"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Related",
+      "in": "Swatches"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Related 5"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Close",
+      "in": "the picker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-colour-set-for-both",
+      "note": "one pick from a Mixed colour row painted both copies, in one step"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-choice-6-colour-set-for-both"
+    },
+    {
+      "do": "render",
+      "name": "copies-share-choice-6-colour-set-for-both-doc"
+    },
+    {
+      "do": "action",
+      "action": "cycleChoice"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-both-on-the-painted-shape",
+      "note": "the colour knob paints the alternative that was hidden, so switching both copies to it is what makes the new colour show: both copies draw the narrow shape, both in the colour set from the Mixed row"
+    },
+    {
+      "do": "snapshot",
+      "name": "copies-share-choice-7-both-on-the-painted-shape"
+    },
+    {
+      "do": "render",
+      "name": "copies-share-choice-7-both-on-the-painted-shape-doc"
+    }
+  ]
+}

@@ -37,7 +37,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// identical the instant after — so without a word on screen the
         /// command looks like it did nothing at all. `component` names the
         /// original it used to follow.
-        case componentDetached(component: String?)
+        case componentDetached(component: String?, count: Int)
         /// Layers became a set of alternatives with a knob that picks between
         /// them (`docs/design/ui-building.md`, the C6 follow-up). Settling the
         /// choice HIDES all but one of the shapes that were just selected, so
@@ -128,9 +128,14 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(copies) of \(component)"
         case .componentCycle:
             return "A component cannot hold a copy of itself"
-        case .componentDetached(let component):
-            guard let component, !component.isEmpty else { return "It no longer follows its original" }
-            return "It no longer follows \(component)"
+        case .componentDetached(let component, let count):
+            let one = count == 1
+            guard let component, !component.isEmpty else {
+                return one ? "It no longer follows its original"
+                           : "\(count) copies no longer follow their original"
+            }
+            return one ? "It no longer follows \(component)"
+                       : "\(count) copies no longer follow \(component)"
         case .componentChoiceMade(let options, let knob):
             return "1 of \(options) shapes shows. Copies pick it with \(knob)"
         case .componentPieceRefused(let refusal):

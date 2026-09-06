@@ -420,6 +420,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The same for a choice: expose the first group inside the selected
     /// original that holds alternatives.
     case exposeChoice
+    /// The same for a show-or-hide: expose the first piece of the selected
+    /// original that can be turned off.
+    case exposeShow
     /// The same for a colour: expose the first colour the selected original has
     /// to offer, which is the fill of the first shape inside it.
     case exposeColor

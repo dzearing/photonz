@@ -146,6 +146,33 @@ extension PhotonzDocument {
             .map(\.label)
     }
 
+    /// What the "its own look" row says for SEVERAL picked copies: the one
+    /// copy's own parts when one is picked, else how many of them have a look
+    /// of their own. Nil when none of them does.
+    public func instanceOwnLookLabel(instances: [UUID]) -> String? {
+        let own = instances.filter { !instanceStyleOverrides(instance: $0).isEmpty }
+        guard !own.isEmpty else { return nil }
+        if instances.count == 1 {
+            let parts = instanceStyleOverrideLabels(instance: instances[0])
+            return parts.isEmpty ? nil : parts.joined(separator: ", ")
+        }
+        return ComponentInstanceCount.phrase(own.count, of: instances.count,
+                                             singular: "has a look of its own",
+                                             plural: "have a look of their own")
+    }
+
+    /// Puts several copies' looks back to the original's, in one step. Returns
+    /// how many had something to put back.
+    @discardableResult
+    public mutating func clearInstanceStyleOverrides(instances: [UUID]) -> Int {
+        var count = 0
+        for id in instances where !instanceStyleOverrides(instance: id).isEmpty {
+            clearInstanceStyleOverrides(instance: id)
+            count += 1
+        }
+        return count
+    }
+
     /// Puts one part of a copy's look back to following the original.
     public mutating func clearInstanceStyleOverride(instance: UUID, field: LayerStyleField) {
         guard let copy = layer(id: instance), let componentID = copy.instanceOf,
