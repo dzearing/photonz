@@ -1077,6 +1077,15 @@ private final class Run {
                     .first(where: { editor.colorStyleSelection(slot: $0).wearsAnyStyle }) {
                     editor.unlinkColorStyle(slot: slot)
                 }
+            case .keepStylesForOutlinesOnly:
+                // The Styles shelf's tickboxes, over every saved colour at
+                // once: nothing is repainted, they simply stop being offered
+                // on a fill row. What is already wearing one keeps it, which is
+                // exactly how a tool ends up holding a name a fill can no
+                // longer take.
+                for style in editor.document?.colorStyles ?? [] {
+                    editor.setColorStyleRoles(styleID: style.id, roles: [.ink])
+                }
             case .paintSelectionColor:
                 // The first row on screen, which is the one a person reaches
                 // for: the well paints every picked layer that has that color.

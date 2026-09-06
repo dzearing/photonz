@@ -1,0 +1,28 @@
+{
+  "feature": "A saved color that is not for that part says so when the tool draws",
+  "epic": "ui-building",
+  "summary": "When a tool is holding a saved color that this picture keeps for other parts, the shape it draws now says which part came out plain instead of leaving you to spot it. Before, the box simply came out unlinked and nothing was said.",
+  "setup": "Photonz Dev, Experiments window, release Next, flags Library and next-styles on (both on by default).",
+  "try": [
+    { "do": "Draw a box with the Rectangle tool (R), then press V and click it in the Layers list." },
+    { "do": "In the Color section, pick a color in the Fill row's well, then choose Save as Style on that row and name it Brand." },
+    { "do": "In the Library's Styles shelf, click Brand and untick Fills and backgrounds, leaving Outlines and text ticked." },
+    { "do": "Press R and drag out a second box." },
+    { "do": "Read the pill at the bottom of the canvas.", "shot": "2026-09-06-saved-color-not-for-that-part.png" },
+    { "do": "Wait for the pill to fade, then draw a third box and watch that nothing is said a second time." },
+    { "do": "Tick Fills and backgrounds again on Brand, draw a fourth box, and check the box wears Brand with nothing said." }
+  ],
+  "evaluate": [
+    "Does the pill tell you enough to know what to do next, or does it leave you hunting for where fills and backgrounds is ticked?",
+    "Is naming the part (the Rectangle's inside) the right level of detail, or would just the color name be enough?",
+    "Is once per picture the right amount of saying it, given the box still comes out a reasonable color either way?",
+    "The words are 'Brand is not for fills'. Do they read as a rule about the color, or as the app refusing you?",
+    "Should the pill offer a button that puts Brand back on offer for fills, the way the picker offers Put it back?"
+  ],
+  "rough": [
+    "There is no one-click fix on the pill. The way back is the Library's tickboxes or picking another color, and the pill does not point at either. Adding a button would change what a saved color is offered for from a canvas pill, which felt like the user's call rather than mine.",
+    "Both boxes end up the same crimson, because the tool remembers the color beside the name. So nothing on the canvas looks wrong and the pill is the only signal that the second box stopped following Brand.",
+    "There is a fourth way a name can fail to come along: a tool holding a name for a part it draws nothing in, such as a box with no inside. That one stays silent on purpose, and no path through the app reaches it today, because every way of clearing a fill also lets go of the name.",
+    "The sibling sentence for a name this picture never heard of now names the part too: it used to say 'The Rectangle is the plain color the tool remembers' when it was only the inside that came out plain."
+  ]
+}

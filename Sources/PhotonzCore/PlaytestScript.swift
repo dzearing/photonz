@@ -461,6 +461,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Let go of the style painting the selected layer's first color, keeping
     /// the color it is wearing.
     case unlinkColorStyle
+    /// Keep every saved color in this document for outlines and text only,
+    /// which is what unticking Fills and backgrounds on the Library's Styles
+    /// shelf does. Those tickboxes are in the dock, which a walk cannot reach
+    /// with the pointer, so this is how a walk shows a colour that a fill row
+    /// no longer offers.
+    case keepStylesForOutlinesOnly
     /// Paint every picked layer's first color one crimson (#B0184A), which is
     /// what choosing a color in the whole-selection row's well does. The well
     /// opens a popover in the dock, which a walk cannot reach with the pointer,

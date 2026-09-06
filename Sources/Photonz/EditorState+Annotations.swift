@@ -34,7 +34,7 @@ extension EditorState {
         // ...and if the name could not come along, one line saying so, rather
         // than a shape that is quietly not the colour the swatch promised.
         // After the edit, so it wins the canvas slot the way a break does.
-        announceMissingArmedColorStyle(layer)
+        announceArmedColorStyleLeftBehind(layer)
         // An arrow that is about to offer its caption is not finished yet: the
         // Arrow tool stays in hand while the field is open (a drag draws the
         // next arrow), and the hand-back to Select happens when the field

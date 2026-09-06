@@ -100,7 +100,7 @@ struct ToolColorStyleNoticeTests {
                    slot: .stroke, forShape: .arrow)
 
         let shape = try #require(drawn(.arrow, with: styles))
-        let notice = try #require(doc.armedColorStyleMissingHere(shape, styles: styles))
+        let notice = try #require(doc.armedColorStyleLeftBehind(shape, styles: styles))
         #expect(notice.kind == .notInThisDocument)
         #expect(notice.styleID == accent)
         #expect(notice.title == "No Accent here")
@@ -115,14 +115,14 @@ struct ToolColorStyleNoticeTests {
                    slot: .stroke, forShape: .arrow)
 
         let shape = try #require(drawn(.arrow, with: styles))
-        #expect(doc.armedColorStyleMissingHere(shape, styles: styles) == nil)
+        #expect(doc.armedColorStyleLeftBehind(shape, styles: styles) == nil)
     }
 
     @Test func aToolHoldingNoNameSaysNothingWhereverItDraws() throws {
         let doc = document()
         let styles = AnnotationStyles()
         let shape = try #require(drawn(.rectangle, with: styles))
-        #expect(doc.armedColorStyleMissingHere(shape, styles: styles) == nil)
+        #expect(doc.armedColorStyleLeftBehind(shape, styles: styles) == nil)
     }
 
     @Test func theShapeAndTheNameAreBothInTheSentence() throws {
@@ -132,10 +132,12 @@ struct ToolColorStyleNoticeTests {
                    slot: .fill, forShape: .rectangle)
 
         let shape = try #require(drawn(.rectangle, with: styles))
-        let notice = try #require(doc.armedColorStyleMissingHere(shape, styles: styles))
+        let notice = try #require(doc.armedColorStyleLeftBehind(shape, styles: styles))
         #expect(notice.title == "No Surface here")
+        // Which PART came out plain, not just which shape: a box has two
+        // colours and only one of them lost a name.
         #expect(notice.detail
-                == "The Rectangle is the plain color the tool remembers, not a saved color")
+                == "The Rectangle\u{2019}s inside is the plain color the tool remembers, not a saved color")
     }
 
     /// A box whose inside and outline both hold names this document has never
@@ -149,7 +151,7 @@ struct ToolColorStyleNoticeTests {
                    slot: .stroke, forShape: .rectangle)
 
         let shape = try #require(drawn(.rectangle, with: styles))
-        let notice = try #require(doc.armedColorStyleMissingHere(shape, styles: styles))
+        let notice = try #require(doc.armedColorStyleLeftBehind(shape, styles: styles))
         #expect(notice.title == "No Surface here")
     }
 
@@ -202,7 +204,7 @@ struct ToolColorStyleNoticeTests {
         #expect(letGo.detail == "The Arrow tool no longer follows the saved color it was holding")
 
         let shape = try #require(drawn(.arrow, with: styles))
-        let missing = try #require(doc.armedColorStyleMissingHere(shape, styles: styles))
+        let missing = try #require(doc.armedColorStyleLeftBehind(shape, styles: styles))
         #expect(missing.title == "Saved color left behind")
     }
 
@@ -246,5 +248,116 @@ struct ToolColorStyleNoticeTests {
         let notice = try #require(styles.lettingGoOfColorStyle(slot: .fill, forShape: .rectangle))
         #expect(notice.slot == .fill)
         #expect(notice.shape == .rectangle)
+    }
+
+    // MARK: - A name this document keeps for other parts
+
+    /// Save a colour, then tick it back to outlines and text in the Library,
+    /// and a box tool armed with it for the inside is holding a name the fill
+    /// row no longer offers. The box comes out the flat colour the tool
+    /// remembers with no link, which is not what the swatch promised.
+    @Test func drawingWithANameNotOfferedForThatPartHasSomethingToSay() throws {
+        var doc = document()
+        var styles = AnnotationStyles()
+        let accent = doc.addColorStyle(name: "Accent", colorHex: "#B0184A", roles: [.ink])
+        styles.arm(Paint(hex: "#B0184A"), styleID: accent, name: "Accent",
+                   slot: .fill, forShape: .rectangle)
+
+        let shape = try #require(drawn(.rectangle, with: styles))
+        let notice = try #require(doc.armedColorStyleLeftBehind(shape, styles: styles))
+        #expect(notice.kind == .notForThisPart)
+        #expect(notice.styleID == accent)
+        #expect(notice.slot == .fill)
+        #expect(notice.title == "Accent is not for fills")
+        #expect(notice.detail
+                == "The Rectangle\u{2019}s inside is the plain color the tool remembers, not a saved color")
+    }
+
+    @Test func aNameStillOfferedForThatPartSaysNothing() throws {
+        var doc = document()
+        var styles = AnnotationStyles()
+        let surface = doc.addColorStyle(name: "Surface", colorHex: "#101820", roles: [.surface])
+        styles.arm(Paint(hex: "#101820"), styleID: surface, name: "Surface",
+                   slot: .fill, forShape: .rectangle)
+
+        let shape = try #require(drawn(.rectangle, with: styles))
+        #expect(doc.armedColorStyleLeftBehind(shape, styles: styles) == nil)
+    }
+
+    /// The other way round: a colour kept for fills, held by a box tool for the
+    /// outline. The sentence names the outline, because that is the part that
+    /// came out plain.
+    @Test func theOutlineIsNamedWhenTheOutlineIsTheOneLeftPlain() throws {
+        var doc = document()
+        var styles = AnnotationStyles()
+        let surface = doc.addColorStyle(name: "Surface", colorHex: "#101820", roles: [.surface])
+        styles.arm(Paint(hex: "#101820"), styleID: surface, name: "Surface",
+                   slot: .stroke, forShape: .rectangle)
+
+        let shape = try #require(drawn(.rectangle, with: styles))
+        let notice = try #require(doc.armedColorStyleLeftBehind(shape, styles: styles))
+        #expect(notice.slot == .stroke)
+        #expect(notice.title == "Surface is not for outlines")
+        #expect(notice.detail
+                == "The Rectangle\u{2019}s outline is the plain color the tool remembers, not a saved color")
+    }
+
+    /// An arrow IS its colour, so naming its outline would be naming the shape
+    /// twice.
+    @Test func aShapeThatIsAllOneColourIsNotToldAboutItsOutline() throws {
+        var doc = document()
+        var styles = AnnotationStyles()
+        let surface = doc.addColorStyle(name: "Surface", colorHex: "#101820", roles: [.surface])
+        styles.arm(Paint(hex: "#101820"), styleID: surface, name: "Surface",
+                   slot: .stroke, forShape: .arrow)
+
+        let shape = try #require(drawn(.arrow, with: styles))
+        let notice = try #require(doc.armedColorStyleLeftBehind(shape, styles: styles))
+        #expect(notice.kind == .notForThisPart)
+        #expect(notice.detail
+                == "The Arrow is the plain color the tool remembers, not a saved color")
+    }
+
+    /// A tool holding a name for a part it draws nothing in has nothing to
+    /// report: a box asked for without an inside is a box without an inside,
+    /// and a name must never switch one on. No path through the app reaches
+    /// this today — every way of clearing a fill also lets go of the name — so
+    /// it is a guard with a test sitting on it.
+    @Test func aPartTheToolDrawsNothingInSaysNothing() throws {
+        var doc = document()
+        var styles = AnnotationStyles()
+        let hairline = doc.addColorStyle(name: "Hairline", colorHex: "#101010", roles: [.ink])
+        styles.arm(nil, styleID: hairline, name: "Hairline", slot: .fill, forShape: .rectangle)
+
+        let shape = try #require(drawn(.rectangle, with: styles))
+        #expect(shape.paint(for: .fill) == nil)
+        #expect(doc.armedColorStyleLeftBehind(shape, styles: styles) == nil)
+        // ...and the same silence where the document has never heard of it.
+        #expect(document().armedColorStyleLeftBehind(shape, styles: styles) == nil)
+    }
+
+    /// A tool that picked its name up before names rode along still says which
+    /// part came out plain, because that is the half of the sentence it has.
+    @Test func aNameTheToolNeverLearnedStillSaysWhichPart() throws {
+        var doc = document()
+        var styles = AnnotationStyles()
+        let accent = doc.addColorStyle(name: "Accent", colorHex: "#B0184A", roles: [.ink])
+        styles.arm(Paint(hex: "#B0184A"), styleID: accent, slot: .fill, forShape: .rectangle)
+
+        let shape = try #require(drawn(.rectangle, with: styles))
+        let notice = try #require(doc.armedColorStyleLeftBehind(shape, styles: styles))
+        #expect(notice.title == "Saved color left behind")
+        #expect(notice.detail
+                == "The Rectangle\u{2019}s inside is the plain color the tool remembers, not a saved color")
+    }
+
+    @Test func thePillSaysWhenANameIsNotForThatPart() {
+        let notice = ToolColorStyleNotice(kind: .notForThisPart, styleID: UUID(),
+                                          name: "Accent", shape: .rectangle, slot: .fill)
+        let pill = CopyConfirmation(subject: .toolColorStyle(notice), shownAt: Date())
+        #expect(pill.title == "Accent is not for fills")
+        #expect(pill.detail
+                == "The Rectangle\u{2019}s inside is the plain color the tool remembers, not a saved color")
+        #expect(pill.lifetime == CopyConfirmation.breakLifetime)
     }
 }

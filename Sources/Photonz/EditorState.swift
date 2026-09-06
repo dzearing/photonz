@@ -692,12 +692,12 @@ final class EditorState {
     var copyConfirmation: CopyConfirmation?
     var copyConfirmationTimer: Task<Void, Never>?
 
-    /// The saved colours this window has already said are not in this document
-    /// (`announceMissingArmedColorStyle`). One line the first time you draw
-    /// with a name this picture has never heard of, and nothing on the nine
-    /// shapes after it. Cleared when another document takes the window, because
-    /// the sentence is about THIS one.
-    var announcedMissingColorStyleIDs: Set<UUID> = []
+    /// The saved colours this window has already said could not come along
+    /// (`announceArmedColorStyleLeftBehind`). One line the first time you draw
+    /// with a name this picture cannot give that part of the shape, and nothing
+    /// on the nine shapes after it. Cleared when another document takes the
+    /// window, because the sentence is about THIS one.
+    var announcedColorStyleNotices: Set<AnnouncedColorStyleNotice> = []
 
     /// The tool options' Show filter. Session chrome like a temporary eye-off:
     /// never persisted, never in the model, and exports render the document
@@ -951,7 +951,7 @@ final class EditorState {
         knobPaintPreview = nil
         // "There is no Accent here" is about the picture that was open, so the
         // next one gets to say it once of its own.
-        announcedMissingColorStyleIDs = []
+        announcedColorStyleNotices = []
         thumbnailCache = [:]
         shelfThumbnails = [:]
         dragPreviewGeneration += 1

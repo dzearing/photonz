@@ -9389,3 +9389,37 @@ Audit: `queue/audits/2026-09-06-out-of-view.json`.
 
 Next: the audit asks whether a one-click "Bring into view" is wanted, and
 whether the canvas should say anything at all when a layer vanishes.
+
+## 2026-09-06 — A saved color that is not for that part says so when the tool draws
+
+A tool can hold a saved color this picture still has but keeps for other parts:
+save a color from a fill, untick Fills and backgrounds on the Styles shelf, and
+the box tool is holding a name the fill row no longer offers. The next box came
+out the flat color the tool remembers with no link to the name, and nothing said
+so. It now says one line at the bottom of the canvas: "Brand is not for fills —
+The Rectangle's inside is the plain color the tool remembers, not a saved
+color", once per name per part per picture.
+
+`ToolColorStyleNotice.Kind` grew `notForThisPart` beside `notInThisDocument`,
+and the two now share a `part` phrase so both name WHICH part came out plain
+("The Rectangle's inside", "The Rectangle's outline", and just "The Arrow" for a
+shape that is all one color). `PhotonzDocument.armedColorStyleMissingHere` became
+`armedColorStyleLeftBehind` and answers for both reasons, in
+`Sources/PhotonzCore/ToolColorStyleNotices.swift`. The app side is
+`EditorState.announceArmedColorStyleLeftBehind`, whose once-per-picture key now
+carries the reason and the part as well as the name, so one sentence about a
+color cannot silence a different one.
+
+The fourth way a name can fail to come along — a tool holding one for a part it
+draws nothing in — stays silent on purpose: a box asked for without an inside is
+what was asked for, and a name must never switch one on. No path through the app
+reaches it, because every way of clearing a fill also lets go of the name.
+
+Verified on the probe with real captures:
+`Scripts/playtest/saved-colour-not-for-that-part-walk.json`, which needed one new
+playtest action, `keepStylesForOutlinesOnly` (the Styles shelf tickboxes are in
+the dock, out of a walk's pointer reach). Audit:
+`queue/audits/2026-09-06-saved-color-not-for-that-part.json`.
+
+Next: the audit asks whether the pill should offer a way to put the color back
+on offer for fills, rather than sending you to the Library.

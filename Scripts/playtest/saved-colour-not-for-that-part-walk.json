@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/saved-colour-not-for-that-part",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1500, "height": 950 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 180], "to": [520, 380], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "saveColorStyle" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Brand" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "useFirstColorStyle" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "1-armed", "note": "the box's inside points at Brand, so the box tool is holding it: toolFillStyle must say Brand, and copied must be none" },
+    { "do": "snapshot", "name": "not-for-that-part-1-armed" },
+
+    { "do": "action", "action": "keepStylesForOutlinesOnly" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-outlines-only", "note": "Brand is now kept for outlines and text, the way unticking Fills and backgrounds on the Styles shelf does it. Nothing is repainted and nothing is said: toolFillStyle must still say Brand, copied must be none" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [620, 180], "to": [960, 380], "steps": 8 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "3-left-behind", "note": "a second box drawn with a tool holding a name the fill row no longer offers. copied must read 'Brand is not for fills · The Rectangle’s inside is the plain color the tool remembers, not a saved color'" },
+    { "do": "snapshot", "name": "not-for-that-part-2-not-for-fills" },
+
+    { "do": "wait", "seconds": 3.4 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [620, 440], "to": [960, 620], "steps": 8 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-said-once", "note": "a third box after the pill had gone. copied must be none: it is said once per picture, not once per shape" },
+    { "do": "snapshot", "name": "not-for-that-part-3-said-once" }
+  ]
+}

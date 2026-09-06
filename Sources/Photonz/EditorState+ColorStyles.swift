@@ -676,21 +676,27 @@ extension EditorState {
     }
 
     /// Says, once, that the shape just drawn could not wear the name its tool
-    /// is holding, because this document has never heard of it.
+    /// is holding, and which part of it came out plain instead.
     ///
-    /// What a tool holds is a preference that outlives any one document and a
+    /// Two things do that. This document may never have heard of the name:
+    /// what a tool holds is a preference that outlives any one document and a
     /// saved colour lives INSIDE one, so drawing in another document quietly
-    /// gives you the flat colour the tool remembers beside the name. The tool
-    /// keeps the name: go back to the document that has it and the next shape
-    /// wears it again. Nothing is wrong, but it is not what the swatch promised
-    /// either, so it is worth one line.
+    /// gives you the flat colour the tool remembers beside the name. Or this
+    /// document has the name and keeps it for other parts, so a colour ticked
+    /// back to outlines and text leaves the inside of a box plain. The tool
+    /// keeps the name either way. Nothing is wrong, but it is not what the
+    /// swatch promised either, so each is worth one line.
     ///
-    /// Once per name per document, because the alternative is a pill on every
-    /// shape of a run, which is how a true sentence becomes noise.
-    func announceMissingArmedColorStyle(_ layer: Layer) {
+    /// Once per name per part per document, because the alternative is a pill
+    /// on every shape of a run, which is how a true sentence becomes noise. The
+    /// part is in the key rather than just the name, so a colour that cannot
+    /// come along for two different reasons is not silently down to one of
+    /// them.
+    func announceArmedColorStyleLeftBehind(_ layer: Layer) {
         guard colorStylesEnabled, let document,
-              let notice = document.armedColorStyleMissingHere(layer, styles: annotationStyles),
-              announcedMissingColorStyleIDs.insert(notice.styleID).inserted else { return }
+              let notice = document.armedColorStyleLeftBehind(layer, styles: annotationStyles),
+              announcedColorStyleNotices.insert(AnnouncedColorStyleNotice(notice)).inserted
+        else { return }
         raiseCanvasNotice(.toolColorStyle(notice))
     }
 
@@ -704,5 +710,25 @@ extension EditorState {
     func selectLayersUsingColorStyle(styleID: UUID) {
         guard let ids = document?.layersUsingColorStyle(id: styleID), !ids.isEmpty else { return }
         selectLayers(Set(ids))
+    }
+}
+
+/// One sentence this window has already said about a saved colour a tool could
+/// not bring with it: which colour, why, and which part of the shape.
+///
+/// The reason and the part are in the key beside the name because they are
+/// different sentences about the same colour, and having said one must not
+/// silence the other. The SHAPE is deliberately not: "Accent is not for fills"
+/// is a fact about Accent, and hearing it again on the next kind of shape adds
+/// nothing.
+struct AnnouncedColorStyleNotice: Hashable {
+    let styleID: UUID
+    let kind: ToolColorStyleNotice.Kind
+    let slot: ColorSlot
+
+    init(_ notice: ToolColorStyleNotice) {
+        styleID = notice.styleID
+        kind = notice.kind
+        slot = notice.slot
     }
 }
