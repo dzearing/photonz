@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/dock-picked-first",
-  "seed": "A screenshot open in a laptop window (1200 by 720), marked up until the layers list has grown to its full height, which is what a document looks like after ten minutes of work. Pick a rectangle, a piece of text, a measurement and a zoom callout in turn, and read the dock's own offsets back rather than trusting a picture. Two claims each time: the section named after the thing you picked is WHOLE on screen, and the Corner Radius slider is still reachable without scrolling, which is what moving Effects up bought on 2026-09-03.",
+  "seed": "A screenshot open in a laptop window (1200 by 720), marked up until the layers list has grown to its full height, which is what a document looks like after ten minutes of work. Pick a rectangle, a piece of text, a measurement and a zoom callout in turn, and read the dock's own offsets back rather than trusting a picture. The claim, one waitFor per selection so the walk FAILS rather than reports: the section named after the thing you picked is whole on screen without anyone scrolling. Two exceptions, both stated in the steps: a measurement's own section is far taller than the panel however it is ordered, so it claims only that its header is on screen (making it fit is `a-measurement-fits-in-the-panel`), and a plain rectangle no longer HAS a section of its own since the parts list took its one row, so what it claims is that the section its settings did move into is on screen.",
   "setup": { "forget": ["panel", "tools", "shapes", "text", "measure", "color"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1200, "height": 720 },
@@ -28,6 +28,10 @@
     { "do": "drag", "from": [620, 500], "to": [760, 620], "steps": 8 },
     { "do": "wait", "seconds": 0.6 },
 
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [200, 640], "to": [330, 690], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+
     { "do": "tool", "tool": "text" },
     { "do": "click", "at": [240, 700] },
     { "do": "wait", "seconds": 0.6 },
@@ -46,26 +50,37 @@
 
     { "do": "selectRow", "row": "Rectangle 4" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-rectangle", "note": "THE TEST: a rectangle picked. Rectangle has to be in dockInView (whole, not just its header), and the Corner Radius slider has to be on screen." },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Appearance", "timeout": 4 },
+    { "do": "describe", "stage": "1-rectangle", "note": "THE TEST for a rectangle. Since the parts list landed a plain rectangle has no section of its own at all: its one row, the outline width, became a part inside Appearance. So the claim is that Appearance is in dockInView whole, which is where everything a rectangle owns now is." },
     { "do": "panel", "stage": "1-rectangle" },
     { "do": "snapshot", "name": "dock-picked-first-1-rectangle" },
 
     { "do": "selectRow", "row": "Text" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "2-text", "note": "the same for a piece of text, whose own section is the tallest of the four." },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Text", "timeout": 4 },
+    { "do": "describe", "stage": "2-text", "note": "the same for a piece of text, whose own section is the tallest of the three that can fit." },
     { "do": "panel", "stage": "2-text" },
     { "do": "snapshot", "name": "dock-picked-first-2-text" },
 
     { "do": "selectRow", "row": "Measure" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "3-measure", "note": "the same for a measurement." },
+    { "do": "waitFor", "condition": "sectionHeaderInView", "value": "Measurement", "timeout": 4 },
+    { "do": "describe", "stage": "3-measure", "note": "a measurement: its section is 470pt tall against a 688pt panel with a 251pt layers list above it, so the whole-section claim is impossible by any order. The claim here is the honest one, that its header is on screen so you can see the settings exist and scroll to them." },
     { "do": "panel", "stage": "3-measure" },
     { "do": "snapshot", "name": "dock-picked-first-3-measure" },
 
     { "do": "selectRow", "row": "Zoom" },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Zoom Callout", "timeout": 4 },
     { "do": "describe", "stage": "4-callout", "note": "the same for a zoom callout: both its rows, Magnification and the shape picker." },
     { "do": "panel", "stage": "4-callout" },
-    { "do": "snapshot", "name": "dock-picked-first-4-callout" }
+    { "do": "snapshot", "name": "dock-picked-first-4-callout" },
+
+    { "do": "selectRow", "row": "Arrow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Arrow", "timeout": 4 },
+    { "do": "describe", "stage": "5-arrow", "note": "an arrow is the one shape that still has a section of its own, because it carries a caption and a head the parts list does not hold. Whole on screen too." },
+    { "do": "panel", "stage": "5-arrow" },
+    { "do": "snapshot", "name": "dock-picked-first-5-arrow" }
   ]
 }

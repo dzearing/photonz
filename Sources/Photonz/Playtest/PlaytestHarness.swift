@@ -2617,6 +2617,17 @@ private final class Run {
         case .captionField: window?.firstResponder is NSTextView
         case .tool(let tool): editor.activeTool == tool
         case .measureMode(let mode): editor.activeTool == .measure && editor.measureToolMode == mode
+        // Read off the dock's own live frames, so "without scrolling" means
+        // the section's whole box is inside the scrolling viewport rather than
+        // its header having appeared at the bottom edge.
+        case .sectionInView(let title):
+            InspectorLayoutProbe.shared.measured
+                .first { $0.title == title }
+                .map { InspectorLayoutProbe.shared.isFullyVisible($0) } ?? false
+        case .sectionHeaderInView(let title):
+            InspectorLayoutProbe.shared.measured
+                .first { $0.title == title }
+                .map { InspectorLayoutProbe.shared.isHeaderVisible($0) } ?? false
         }
     }
 

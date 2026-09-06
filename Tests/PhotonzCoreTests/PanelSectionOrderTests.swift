@@ -93,4 +93,44 @@ import Testing
         #expect(PanelSectionOrder.moving("color", before: "effects", in: saved) == saved)
         #expect(PanelSectionOrder.moving("color", before: "color", in: saved) == saved)
     }
+    // MARK: Moving a whole group of sections at once
+
+    @Test func movingAGroupLandsThemTogetherAboveTheAnchor() {
+        // The per-kind sections rise above Position & Size in one move, and
+        // they arrive in the order asked for rather than the order they were
+        // scattered in.
+        let saved = ["layers", "arrange", "geometry", "color", "effects", "text", "shadow", "library"]
+        let moved = PanelSectionOrder.moving(["text", "shadow"], before: "geometry", in: saved)
+        #expect(moved == ["layers", "arrange", "text", "shadow", "geometry", "color", "effects", "library"])
+    }
+
+    @Test func movingAGroupSkipsSectionsThatAreNotThere() {
+        let saved = ["layers", "geometry", "color", "text"]
+        let moved = PanelSectionOrder.moving(["text", "callout"], before: "geometry", in: saved)
+        #expect(moved == ["layers", "text", "geometry", "color"])
+    }
+
+    @Test func movingAGroupLeavesEverythingElseAlone() {
+        // Someone dragged Library to the top and Layers to the bottom. Only
+        // the group moves; their arrangement around it survives.
+        let saved = ["library", "arrange", "text", "geometry", "shadow", "color", "effects", "layers"]
+        let moved = PanelSectionOrder.moving(["text", "effects"], before: "color", in: saved)
+        #expect(moved == ["library", "arrange", "geometry", "shadow", "text", "effects", "color", "layers"])
+    }
+
+    @Test func movingAGroupIsANoOpWhenItIsAlreadyThere() {
+        let saved = ["layers", "text", "effects", "color", "shadow"]
+        #expect(PanelSectionOrder.moving(["text", "effects"], before: "color", in: saved) == saved)
+    }
+
+    @Test func movingAGroupDoesNothingWithoutItsAnchor() {
+        let saved = ["layers", "text", "color"]
+        #expect(PanelSectionOrder.moving(["text"], before: "geometry", in: saved) == saved)
+        #expect(PanelSectionOrder.moving([], before: "color", in: saved) == saved)
+    }
+
+    @Test func movingAGroupRefusesToSwallowItsOwnAnchor() {
+        let saved = ["layers", "text", "geometry", "color"]
+        #expect(PanelSectionOrder.moving(["text", "geometry"], before: "geometry", in: saved) == saved)
+    }
 }

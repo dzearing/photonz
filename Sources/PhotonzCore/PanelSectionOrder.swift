@@ -60,4 +60,27 @@ public enum PanelSectionOrder {
         result.insert(section, at: landing)
         return result
     }
+
+    /// A whole GROUP of sections moved to sit immediately before `anchor`, in
+    /// the order given, and nothing else touched.
+    ///
+    /// Chaining the single move above would work the group backwards (each one
+    /// lands on the anchor and pushes the last one down), and a fix that reads
+    /// "these four belong above that" should say exactly that once. Sections
+    /// the order does not hold are skipped, so a group can name a section that
+    /// only some documents have.
+    ///
+    /// Does nothing if the anchor is absent, if the group is empty, or if the
+    /// group names the anchor itself.
+    public static func moving(_ sections: [String], before anchor: String,
+                              in order: [String]) -> [String] {
+        let group = sections.filter { order.contains($0) && $0 != anchor }
+        guard !group.isEmpty, group.count == sections.filter({ order.contains($0) }).count,
+              order.contains(anchor) else { return order }
+        var result = order
+        result.removeAll { group.contains($0) }
+        guard let landing = result.firstIndex(of: anchor) else { return order }
+        result.insert(contentsOf: group, at: landing)
+        return result
+    }
 }

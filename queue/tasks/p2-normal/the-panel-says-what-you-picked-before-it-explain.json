@@ -59,6 +59,34 @@
     {
       "t": "2026-09-06T19:41:57.452Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T20:20:00.000Z",
+      "note": "Decision resolved as \"Put what you picked first\", so built it. The sections named after the thing you picked (Rectangle/Arrow, Zoom Callout, Text, Measurement, Collage, Canvas) now sit directly under the document lists and above Position & Size, Appearance and Effects, in the same slot Component already holds. InspectorSectionID reordered; anyone with a saved order gets one numbered migration (inspector.sectionOrder.version 3) that moves the group and leaves the rest of their arrangement alone."
+    },
+    {
+      "t": "2026-09-06T20:20:00.000Z",
+      "note": "New pure API for it: PanelSectionOrder.moving([String], before:in:), a group move, because chaining the single move works a group backwards. Six tests in PhotonzCoreTests. Whole suite green, 4027 tests."
+    },
+    {
+      "t": "2026-09-06T20:20:00.000Z",
+      "note": "Made the walk PROVE rather than report: new playtest conditions sectionInView and sectionHeaderInView read the dock's own live frames, so a claim about scrolling is a step the walk fails on. Scripts/playtest/dock-picked-first-walk.json now asserts one per selection and also covers an arrow."
+    },
+    {
+      "t": "2026-09-06T20:20:00.000Z",
+      "note": "Measured after, viewport 688, marked-up document: text -> Text 344-520 whole; arrow -> Arrow 344-515 whole; callout -> Zoom Callout 344-458 whole; measurement -> Measurement 344-814, header on screen (was 674-1144, header off screen). Rectangle -> no Rectangle section exists any more, its outline width became a part inside Appearance when the parts list landed hours earlier, and Appearance is whole at 479-614."
+    },
+    {
+      "t": "2026-09-06T20:20:00.000Z",
+      "note": "Acceptance item 3 is NOT met and cannot be: clean document with a label picked, Effects 623-781, so Corner Radius sits about 743 against a 688 fold. Before the reorder it was 417-575 and reachable. This is exactly the con the chosen option carried and the user accepted it. Filed the-look-controls-come-back-above-the-fold (p3-low) to recover it without undoing the order, and a-measurement-fits-in-the-panel already covers the 470pt section."
+    },
+    {
+      "t": "2026-09-06T20:20:00.000Z",
+      "note": "Checked for regressions with dock-component-first, one-corner-radius, selection-effects, selection-type-and-shape, mixed-one-look and outline-width walks: all ok. In a clean document with a plain rectangle picked, Effects is still whole at 527-685, unchanged."
+    },
+    {
+      "t": "2026-09-06T20:20:00.000Z",
+      "note": "Audit: queue/audits/2026-09-06-picked-section-first.json, with two real window captures (Screen Recording was granted)."
     }
   ],
   "started": "2026-09-06T19:41:57.452Z"

@@ -1184,4 +1184,24 @@ struct PlaytestScriptTests {
         #expect(PlaytestMemory.allCases.map(\.rawValue)
                 == ["text", "color", "shapes", "measure", "tools", "groups", "panel", "grid", "frames"])
     }
+
+    @Test func waitForReadsASectionByItsHeaderText() {
+        // The claim "you can see the Rectangle section without scrolling" is a
+        // step the walk fails on, not a number somebody reads back afterwards.
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "sectionInView", "value": "Rectangle", "timeout": 3 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, let timeout) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .sectionInView("Rectangle") && timeout == 3)
+    }
+
+    @Test func waitForRejectsASectionWithNoName() {
+        let json = """
+        { "out": "/tmp/x", "steps": [ { "do": "waitFor", "condition": "sectionInView" } ] }
+        """
+        #expect(throws: (any Error).self) { try PlaytestScript.decode(Data(json.utf8)) }
+    }
 }

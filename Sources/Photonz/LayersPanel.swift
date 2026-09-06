@@ -68,6 +68,13 @@ struct InspectorPanel: View {
     /// Component rose above Position & Size, so a copy says which version it is
     /// without being scrolled to.
     private static let orderVersionComponentAboveGeometry = 2
+    /// ...and then every section named after the thing you picked followed it
+    /// up there, so the panel opens on what you just clicked.
+    private static let orderVersionPickedAboveGeometry = 3
+    /// The sections named after the thing you have picked, in the order they
+    /// sit in. One list, so the migration and the rule stay the same sentence.
+    private static let pickedSections: [InspectorSectionID] =
+        [.annotation, .callout, .text, .measure, .collage, .canvas]
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
     /// The section currently in the reader's hand, and where it is being
     /// carried. See `sectionDragChanged`.
@@ -705,6 +712,12 @@ struct InspectorPanel: View {
                                               in: merged)
             orderVersion = Self.orderVersionComponentAboveGeometry
         }
+        if orderVersion < Self.orderVersionPickedAboveGeometry {
+            merged = PanelSectionOrder.moving(Self.pickedSections.map(\.rawValue),
+                                              before: InspectorSectionID.geometry.rawValue,
+                                              in: merged)
+            orderVersion = Self.orderVersionPickedAboveGeometry
+        }
         let ids = merged.compactMap { InspectorSectionID(rawValue: $0) }
         if ids != order { order = ids }
     }
@@ -966,6 +979,28 @@ enum InspectorSectionID: String, CaseIterable {
     // version you were looking at. Identity first, then where it is, then what
     // it looks like.
     case component
+    // The sections named after the thing you have picked: Rectangle, Text,
+    // Measurement, Zoom Callout, Collage, Canvas. They sit here, straight
+    // under what the document holds and above everything general, because the
+    // panel should answer "what did I just click" before it explains position,
+    // colour and effects — the same rule Component follows just above.
+    //
+    // They used to trail Colour and Effects, which on a laptop window put them
+    // below the bottom of the panel: on a marked-up screenshot even the header
+    // was off screen, so there was no hint the settings existed at all (chosen
+    // by the user on 2026-09-06, "Put what you picked first"). The cost is
+    // that Colour, Effects and the X Y W H boxes each shift down by the height
+    // of one section.
+    case annotation
+    // A picked zoom callout's own two settings, beside the shapes' own: how
+    // much it magnifies and whether it is a box or a circle. Its ring is the
+    // layer's border, so the ring's color stays in Color and its thickness
+    // stays in Effects, like every other layer's.
+    case callout
+    case text
+    case measure
+    case collage
+    case canvas
     case geometry
     case frame
     // The column layout a selected screen is designed to (Next, `next-frames`).
@@ -979,33 +1014,23 @@ enum InspectorSectionID: String, CaseIterable {
     // happens to what is in it when that box changes.
     case placement
     // Every color the picked layers wear, and one place to set them all at
-    // once. Above the per-kind sections, because the look of a thing is what
-    // you reach for first, and it sits in the SAME place whether one layer is
-    // picked or twenty: adding to the selection widens what a row answers for
-    // and never moves the row.
+    // once. Under the per-kind sections, because those say what the thing IS
+    // and this says what it looks like, and it sits in the SAME place whether
+    // one layer is picked or twenty: adding to the selection widens what a row
+    // answers for and never moves the row.
     case color
     // Fade, corners, blur and border: the look of the thing, right beside the
     // colors it is painted, because they are the same question. This is the
-    // section people reach for most and it used to sit under every per-kind
-    // section, which in a normal window put Corner Radius below the bottom of
-    // the panel (reported 2026-09-03). Anyone who already had an order saved
-    // gets Effects moved here once, keeping the rest of their arrangement:
-    // see `inspector.sectionOrder.version`.
+    // section people reach for most and it used to sit under Shadow and every
+    // per-kind section, which in a normal window put Corner Radius below the
+    // bottom of the panel (reported 2026-09-03). Anyone who already had an
+    // order saved gets Effects moved here once, keeping the rest of their
+    // arrangement: see `inspector.sectionOrder.version`.
     case effects
-    case annotation
-    // A picked zoom callout's own two settings, beside the shapes' own: how
-    // much it magnifies and whether it is a box or a circle. Its ring is the
-    // layer's border, so the ring's color stays in Color and its thickness
-    // stays in Effects, like every other layer's.
-    case callout
-    case text
-    case measure
-    case collage
-    case canvas
-    // Shadow stays under the per-kind sections. It is part of the same look
-    // family, but it is a switch you set once rather than a slider you pull,
-    // and it is the tallest section in the panel: putting it above the picked
-    // thing's own settings would push THOSE off the bottom instead.
+    // Shadow stays at the bottom. It is part of the same look family as Color
+    // and Effects, but it is a switch you set once rather than a slider you
+    // pull, and it is the tallest section in the panel: putting it above the
+    // picked thing's own settings would push THOSE off the bottom instead.
     case shadow
     // The shelf sits under the property sections, where the mock puts it: it is
     // where you go to fetch something, not what the thing you have selected is.

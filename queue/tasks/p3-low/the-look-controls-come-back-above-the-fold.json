@@ -1,0 +1,28 @@
+{
+  "id": "the-look-controls-come-back-above-the-fold",
+  "title": "The look controls come back above the fold",
+  "goal": "Now that the section named after what you picked sits at the top of the properties panel, the Corner Radius and Fade sliders have moved down far enough that a piece of text, an arrow or a measurement needs one scroll to reach them. Make room in the panel so the everyday look controls are visible again without giving up the picked-thing-first order.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1290,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T19:56:15.947Z",
+  "updated": "2026-09-06T19:56:15.948Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-09-06 after the picked-first reorder landed. Clean document, text picked: Layers 6-177, Text 177-353, Position & Size 353-488, Appearance 488-623, Effects 623-781, viewport 688 - the Effects header is on screen but Corner Radius sits about 120pt into it, so around 743. Before the reorder Effects sat 417-575 and Corner Radius was reachable. The user weighed this exact tradeoff on 2026-09-06 in the decision \"The properties panel holds more than fits on a laptop\" and chose picked-first anyway, so this task must NOT undo that order. The unchosen option c is the lead: the layers and measurements lists opening about a third shorter, and Shadow starting closed, gave back roughly 150pt. Harness: Scripts/playtest/dock-picked-first-walk.json, plus the sectionInView waitFor condition added the same day.",
+  "acceptance": [
+    "Picking a piece of text in a 1200 by 720 window shows both its Text section and the Corner Radius slider without scrolling",
+    "The same holds for an arrow and for a zoom callout",
+    "The section named after what you picked stays at the top of the panel",
+    "A playtest walk reads the dock offsets back and proves it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T19:56:15.948Z",
+      "note": "created (manual)"
+    }
+  ]
+}

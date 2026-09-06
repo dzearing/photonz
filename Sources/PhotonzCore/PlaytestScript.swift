@@ -320,6 +320,14 @@ public enum PlaytestCondition: Hashable, Sendable {
     case captionField
     case tool(Tool)
     case measureMode(MeasureToolMode)
+    /// A properties-panel section with this header is on screen WHOLE, without
+    /// anyone touching the scroll wheel. "You can see the Rectangle section the
+    /// moment you pick a rectangle" is then a step the walk fails on rather
+    /// than a number a person reads back off the log afterwards.
+    case sectionInView(String)
+    /// ...and the weaker claim, for a section too tall to ever fit whole: its
+    /// header is on screen, so you at least know the settings are there.
+    case sectionHeaderInView(String)
 }
 
 /// A direct call on the editor, for when a shortcut is not honoured by a
@@ -1118,7 +1126,9 @@ public enum PlaytestStep: Sendable, Equatable {
             case "captionField": .captionField
             case "tool": .tool(try f.enumValue("value", Tool.self))
             case "measureMode": .measureMode(try f.enumValue("value", MeasureToolMode.self))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool or measureMode")
+            case "sectionInView": .sectionInView(try f.string("value"))
+            case "sectionHeaderInView": .sectionHeaderInView(try f.string("value"))
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView or sectionHeaderInView")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "snapshot":

@@ -1,0 +1,29 @@
+{
+  "feature": "The panel says what you picked first",
+  "epic": "ui-components",
+  "summary": "Pick something and the section named after it (Text, Arrow, Measurement, Zoom Callout) is now at the top of the properties panel, right under the lists, instead of below Colour and Effects where you had to scroll to find it.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flag: this is the panel's order and it applies the first time you launch, keeping any sections you dragged around yourself.",
+  "try": [
+    { "do": "Open a screenshot and mark it up: a measurement, a few rectangles, a label and a zoom callout, so the layers list is at full height." },
+    { "do": "Click the label in the layers list. Text sits directly under Measurements, whole.", "shot": "2026-09-06-picked-first-text.png" },
+    { "do": "Click the arrow. Arrow takes the same slot, caption field and all." },
+    { "do": "Click the zoom callout. Zoom Callout takes the same slot, Magnification and shape both on screen." },
+    { "do": "Click the measurement. Measurement is at the top now, so Name, Role, Unit, Thickness, Label size and its three colours read without scrolling.", "shot": "2026-09-06-picked-first-measure.png" },
+    { "do": "Click a plain rectangle. There is no Rectangle section at all any more, its outline width is a part inside Appearance." },
+    { "do": "Drag the Text section somewhere else by its grip, quit, relaunch. Your arrangement is still there." }
+  ],
+  "evaluate": [
+    "When you click a label, does your eye land on the Font row without hunting?",
+    "Reading Layers, then Measurements, then the thing you picked, then Position & Size, then Appearance: does that order feel like the order you think in?",
+    "A measurement now starts at the top but still runs off the bottom. Is seeing most of it better than seeing none of it, or does a half section read as broken?",
+    "Corner Radius now takes one scroll when a label or an arrow is picked. Was that worth what the top of the panel gained?",
+    "Picking a plain rectangle shows nothing named Rectangle. Does that read as a missing section, or is Appearance obviously where its settings went?"
+  ],
+  "rough": [
+    "Corner Radius is the price and it is measured, not guessed. Clean document, label picked: Effects sits 623 to 781 in a 688 point panel, so the header shows and the slider does not. Before this it was 417 to 575 and reachable. You weighed this exact tradeoff when you chose Put what you picked first. Filed the-look-controls-come-back-above-the-fold to win it back without undoing the order.",
+    "A measurement's own section is 470 points tall and cannot fit whole under any order. Its header and most of its rows are on screen now, which is the honest best a reorder can do. Filed separately as a-measurement-fits-in-the-panel.",
+    "The task asked for a Rectangle section to be readable. There is no longer one: the parts list took its only row a few hours earlier, so a rectangle's settings live in Appearance now. The walk claims what is true today, that Appearance is whole on screen, and uses an arrow to cover the case of a shape that still has a section of its own.",
+    "Screen Recording was granted for this run, so both pictures here are real window captures, not offscreen renders.",
+    "Position & Size, Appearance and Effects each shift down by the height of one section. In a marked-up document Effects was already below the fold before this change, so nothing regressed there; in a clean document with a label it did."
+  ]
+}
