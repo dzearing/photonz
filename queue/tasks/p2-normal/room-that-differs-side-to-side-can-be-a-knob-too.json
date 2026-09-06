@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1440,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T17:41:35.407Z",
-  "updated": "2026-09-06T17:41:35.408Z",
+  "updated": "2026-09-06T21:12:04.673Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while shipping a-copy-can-have-its-own-room-inside on 2026-09-06. ComponentNumberSlot.padding reads through GroupLayout.number(for:) which returns usedPadding.uniform, nil when the four sides disagree; the same rule already applied to layers INSIDE an original. Every starter except .card is built with a non-uniform GroupPadding (StarterComponents.layout), so the whole starter set is excluded. Open question worth a decision card before building: one knob writing all four sides (loses the shape of the original inset), a knob that scales the inset, or four knobs. That is a UX call, not an engineering one.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-06T17:41:35.408Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T20:52:38.782Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T20:56:46.691Z",
+      "note": "Adversarial review before building. The task notes offered three shapes and I rejected all three. (1) One number levelling all four sides turns a 10/16 button into a 20/20 blob, which is exactly the \"leaves its family\" the goal forbids. (2) A knob that scales the inset puts a multiplier in a field where every other number in the app is points, so it cannot be compared with the 16 somebody typed on the canvas. (3) Four knobs is four rows on the Add menu and four rows on a 264pt panel for one idea. The fourth shape wins and is not an invention: the canvas Padding row ALREADY solves four-sided room with one control (one field reading 10/16/10/16, a chevron opening Top/Right/Bottom/Left, typing one number levels all four). The copy meets the knob in that same control, so the two can never drift apart. Recorded here rather than as a decision card because it is conformance to an existing idiom, and flagged in the audit for the user to react to."
+    },
+    {
+      "t": "2026-09-06T20:56:46.691Z",
+      "note": "Plan: PhotonzCore gets ComponentPropertyValue.room(GroupPadding) under kind .number, Layer/GroupLayout knobValue(for:)/setKnobValue replacing number(for:)/setNumber in the knob path, old .number answers on a padding knob upgraded to .room on read, and setInstanceRoom(instances:property:side:) so typing one side keeps each copy own other three. Tests first."
+    },
+    {
+      "t": "2026-09-06T21:12:04.673Z",
+      "note": "Built. PhotonzCore: ComponentPropertyValue.room(GroupPadding) under the .number kind, Layer/GroupLayout knobValue(for:)/setKnobValue in place of the one-number accessors, setInstanceRoom(instances:property:side:to:) and componentRoomSide(...) for per-side reads and writes, and an answer saved as one number opening as the same room all round. App: InstanceRoomKnob in ComponentPanel.swift, one field plus a chevron plus four side rows, chevron beside the FIELD rather than the word so every knob field starts in the same column. 17 new tests in ComponentRoomKnobTests, 4 existing assertions updated to the new read shape, whole suite green (4081)."
+    },
+    {
+      "t": "2026-09-06T21:12:04.673Z",
+      "note": "Verified in the probe app with Scripts/playtest/component-uneven-room-walk.json, Screen Recording granted so the pictures are real window captures. Card at 10/24/10/24, knob offered (it used to be missing entirely), copy shows 10/24/10/24 closed, sides open pre-filled from the original, Left typed to 56 changes only that side and the revert arrow appears, then the original levelled to 6 leaves the answered copy at 56/24. Audit: queue/audits/2026-09-06-uneven-room-knob.json. Doc: docs/design/ui-building.md, new Landed section, and the two Deliberately left notes that said this could not be done now point at it."
     }
-  ]
+  ],
+  "started": "2026-09-06T20:52:38.781Z"
 }

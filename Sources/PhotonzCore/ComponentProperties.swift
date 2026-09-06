@@ -161,6 +161,17 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
     case color(ComponentColorAnswer)
     /// What one of the copy's numbers is set to.
     case number(CGFloat)
+    /// The room one of the copy's groups keeps inside its edges, all four
+    /// sides of it.
+    ///
+    /// It is a `.number` answer like any other, because the knob a person
+    /// added is the Padding knob and there is one of it. Four sides rather
+    /// than one number because almost no real control keeps the same room all
+    /// round: a button keeps 10 above and below and 16 beside, and a knob that
+    /// could only write one number would turn every roomier copy of it into a
+    /// square. Typing one number over the closed field still levels all four,
+    /// exactly as it does on the canvas.
+    case room(GroupPadding)
 
     /// The kind of knob this answer fits, so an answer can never land on a
     /// knob it makes no sense for.
@@ -170,7 +181,7 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .visible: return .visible
         case .variant: return .variant
         case .color: return .color
-        case .number: return .number
+        case .number, .room: return .number
         }
     }
 
@@ -178,8 +189,17 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
     /// below nought, or one that is not a number at all, comes back as nought
     /// rather than being stored and drawn.
     var settled: ComponentPropertyValue {
-        guard case .number(let value) = self else { return self }
-        return .number(value.isFinite ? max(0, value) : 0)
+        switch self {
+        case .number(let value):
+            return .number(value.isFinite ? max(0, value) : 0)
+        case .room(let room):
+            // `used` is the same floor the canvas holds room to, so a side
+            // typed down past nought settles the same way whether it was typed
+            // on a copy or on the group itself.
+            return .room(room.used)
+        default:
+            return self
+        }
     }
 
     public var textValue: String? {
@@ -207,8 +227,25 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         return nil
     }
 
+    /// The four sides they keep. Nil for every answer that is not room.
+    public var roomValue: GroupPadding? {
+        if case .room(let room) = self { return room }
+        return nil
+    }
+
+    /// This answer as room, whatever shape it was stored in. An answer written
+    /// before room carried four sides is one number, and one number means the
+    /// same room all round, so it opens as that rather than as nothing.
+    var asRoom: GroupPadding? {
+        switch self {
+        case .room(let room): return room
+        case .number(let value): return GroupPadding(value)
+        default: return nil
+        }
+    }
+
     private enum CodingKeys: String, CodingKey {
-        case kind, text, visible, variant, color, number
+        case kind, text, visible, variant, color, number, room
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -220,6 +257,7 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .variant(let id): try c.encode(id, forKey: .variant)
         case .color(let answer): try c.encode(answer, forKey: .color)
         case .number(let value): try c.encode(value, forKey: .number)
+        case .room(let room): try c.encode(room, forKey: .room)
         }
     }
 
@@ -230,7 +268,16 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .visible: self = .visible(try c.decode(Bool.self, forKey: .visible))
         case .variant: self = .variant(try c.decode(UUID.self, forKey: .variant))
         case .color: self = .color(try c.decode(ComponentColorAnswer.self, forKey: .color))
-        case .number: self = .number(try c.decode(CGFloat.self, forKey: .number))
+        case .number:
+            // Room and a plain number are both `.number` knobs, told apart by
+            // which of the two payloads is on the file. A document written
+            // before room carried four sides holds the number and opens as it
+            // always did.
+            if let room = try c.decodeIfPresent(GroupPadding.self, forKey: .room) {
+                self = .room(room)
+            } else {
+                self = .number(try c.decode(CGFloat.self, forKey: .number))
+            }
         }
     }
 }
@@ -396,7 +443,7 @@ extension PhotonzDocument {
         var found: [ComponentPropertyCandidate] = []
 
         let ownNumbers = ComponentNumberSlot.onTheComponentItself.filter {
-            main.number(for: $0) != nil
+            main.knobValue(for: $0) != nil
                 && !taken.contains(PropertyKey(target: main.id, kind: .number, numberSlot: $0))
         }
         if !ownNumbers.isEmpty {
@@ -607,8 +654,8 @@ extension PhotonzDocument {
             // a group that arranges nothing — leaves the knob with nothing to
             // read, and the knob stays on the list for the same reason a
             // switched-off colour does.
-            guard let numberSlot, let value = layer.number(for: numberSlot) else { return nil }
-            return .number(value)
+            guard let numberSlot else { return nil }
+            return layer.knobValue(for: numberSlot)
         }
     }
 
@@ -711,6 +758,15 @@ extension PhotonzDocument {
     public func instanceValue(instance: UUID, property propertyID: UUID) -> ComponentPropertyValue? {
         guard let copy = layer(id: instance), let componentID = copy.instanceOf else { return nil }
         if let own = copy.componentOverrides.first(where: { $0.property == propertyID }) {
+            // An answer stored before room carried four sides is one number,
+            // and one number has always meant the same room all round, so it
+            // is read as that rather than as an answer of the wrong shape.
+            if let slot = componentProperty(componentID: componentID,
+                                            version: instanceVersion(of: instance),
+                                            propertyID: propertyID)?.numberSlot,
+               slot.isFourSided, let room = own.value.asRoom {
+                return .room(room)
+            }
             return own.value
         }
         return componentDefaultValue(componentID: componentID,
@@ -741,7 +797,12 @@ extension PhotonzDocument {
             guard let styleID = answer.styleID else { return true }
             return colorStyle(id: styleID) != nil
         }
-        if case .number = value {
+        if value.kind == .number {
+            // Four sides may only land on a knob that has four sides to put
+            // them in: a gap handed a room has nowhere to write three of the
+            // numbers, so the answer is refused rather than half stored.
+            guard property.numberSlot?.isFourSided == true || value.roomValue == nil
+            else { return false }
             // A number the original no longer has is nothing to override: the
             // knob's own slot reads nothing, so setting it here would give the
             // copy a gap its original does not define.
@@ -842,13 +903,14 @@ extension PhotonzDocument {
                 // follows every edit to it without storing the colour twice.
                 value = .color(resolvedColorAnswer(answer, slot: slot))
             }
-            if case .number = value {
+            if property.kind == .number {
                 // A number the original has stopped having — a stack turned
                 // back into a plain group — has nothing for the copy to
                 // override. The answer is kept, so turning the stack back on
                 // brings it straight back.
                 guard let numberSlot = property.numberSlot,
-                      layer(id: property.target)?.number(for: numberSlot) != nil else { continue }
+                      layer(id: property.target)?.knobValue(for: numberSlot) != nil
+                else { continue }
             }
             let derived = ComponentIdentity.derived(instance: instance, source: property.target)
             Self.mutate(id: derived, in: &children, contents: contents) { layer, holder in
@@ -882,9 +944,9 @@ extension PhotonzDocument {
             // into a plain group — has nothing for the copy to override. The
             // answer is kept, so turning the stack back on brings it straight
             // back.
-            guard let slot = property.numberSlot, main.number(for: slot) != nil,
-                  case .number(let value)? = answers[property.id] else { continue }
-            layout?.setNumber(value, for: slot)
+            guard let slot = property.numberSlot, main.knobValue(for: slot) != nil,
+                  let value = answers[property.id], value.kind == .number else { continue }
+            layout?.setKnobValue(value, for: slot)
         }
     }
 
@@ -948,9 +1010,9 @@ extension PhotonzDocument {
             } else {
                 layer.unbindColorStyle(for: slot)
             }
-        case .number(let number):
+        case .number, .room:
             guard let numberSlot else { return }
-            layer.setNumber(number, for: numberSlot)
+            layer.setKnobValue(value, for: numberSlot)
         }
     }
 

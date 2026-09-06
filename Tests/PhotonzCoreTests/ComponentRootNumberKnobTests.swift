@@ -146,7 +146,10 @@ struct ComponentRootNumberKnobTests {
     @Test func aFreshCopyShowsTheOriginalsRoom() {
         let s = withTwoCopies()
         #expect(room(s.history.current, of: s.first) == 16)
-        #expect(s.history.current.instanceValue(instance: s.first, property: s.knob)?.numberValue == 16)
+        // Room reads as its four sides, even where all four agree
+        // (`ComponentRoomKnobTests`).
+        #expect(s.history.current.instanceValue(instance: s.first,
+                                                property: s.knob)?.roomValue == GroupPadding(16))
         #expect(s.history.current.instanceOverrides(instance: s.first).isEmpty)
     }
 
@@ -281,7 +284,8 @@ struct ComponentRootNumberKnobTests {
         let data = try JSONEncoder().encode(history.current)
         let back = try JSONDecoder().decode(PhotonzDocument.self, from: data)
         #expect(back.componentProperty(componentID: c.componentID, propertyID: knob)?.target == c.main)
-        #expect(back.instanceValue(instance: id, property: knob)?.numberValue == 40)
+        // Stored as one number, read back as the same room on all four sides.
+        #expect(back.instanceValue(instance: id, property: knob)?.roomValue == GroupPadding(40))
         #expect(room(back, of: id) == 40)
     }
 

@@ -1,0 +1,28 @@
+{
+  "feature": "Room that differs side to side can be a knob",
+  "epic": "ui-components",
+  "summary": "A component whose room is uneven, which is nearly every real control, can now offer that room as one knob. A copy can be roomier on one side and still keep the shape the original gave it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components and layout flags are on by default. No new flag.",
+  "try": [
+    { "do": "Draw a rectangle and a line of text, select both, and press the Stack button in Layout." },
+    { "do": "Click the chevron beside Padding in Layout and type 10 into Top and Bottom, 24 into Left and Right." },
+    { "do": "With the stack selected, press Make Component, then add a Padding knob from the Adjustable list (the first row on the menu is the component itself)." },
+    { "do": "Drop a copy on the canvas from the Library shelf and look at the Padding row in the Component section.", "shot": "2026-09-06-uneven-room-knob-2-copy.png" },
+    { "do": "Click the chevron beside that Padding field to open Top, Right, Bottom and Left.", "shot": "2026-09-06-uneven-room-knob-3-sides.png" },
+    { "do": "Type 56 into Left and watch only that side of this copy change.", "shot": "2026-09-06-uneven-room-knob-4-roomier.png" },
+    { "do": "Select the original and type 6 over its closed Padding field, which levels all four of ITS sides. The copy keeps every one of its own." }
+  ],
+  "evaluate": [
+    "Does the closed field reading 10/24/10/24 tell you at a glance what the copy is following, or would you rather see a single number?",
+    "Is the chevron beside the field findable, or did you look for a way to set one side and not find one?",
+    "Typing one side makes the copy own all four from then on, so the original's later changes stop reaching any side of it. Is that the bargain you expect, or would you want the sides you did not touch to keep following?",
+    "The closed field says Mixed while the sides are open, the same as the canvas Padding row. On a copy's panel Mixed usually means the picked copies disagree. Does the word read wrong here?",
+    "Is one Padding knob the right shape, or would you rather the original could expose one side on its own?"
+  ],
+  "rough": [
+    "The task suggested a decision card between one knob writing all four sides, a knob that scales the inset, and four knobs. I built none of those: the canvas Padding row already solves four sided room with one control, so the knob is that same control rather than a new idea. If you would rather have had the choice, say so on this line and I will file it.",
+    "On the canvas the chevron sits beside the word Padding. On a copy's panel it sits beside the FIELD instead, because knob names are whatever the author typed and putting the chevron after them would push every room field to a different place down the column.",
+    "A copy cannot own one side and follow the other three. Answering any side answers the knob.",
+    "Screenshots are real window captures from Scripts/playtest/component-uneven-room-walk.json, not offscreen renders."
+  ]
+}

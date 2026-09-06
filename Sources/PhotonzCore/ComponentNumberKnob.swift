@@ -35,8 +35,18 @@ public enum ComponentNumberSlot: String, CaseIterable, Hashable, Codable, Sendab
     case thickness
     /// How far apart a stack or grid holds the things in it.
     case gap
-    /// The room a group keeps clear inside its edges, the same on all sides.
+    /// The room a group keeps clear inside its edges, all four sides of it.
     case padding
+
+    /// Whether this number is four numbers. Only room is: a gap, a rounding
+    /// and a thickness are one number each, and always were.
+    ///
+    /// Room used to be offered only while its four sides agreed, which read
+    /// well until you noticed that almost nothing real is built that way. A
+    /// button keeps less room above and below than beside; every starter
+    /// component but the card does the same. So room carries its four sides,
+    /// and a copy meets them in the control the canvas already uses for room.
+    public var isFourSided: Bool { self == .padding }
 
     /// What the knob is called where a person meets it, and what a new knob is
     /// named before anybody renames it.
@@ -56,7 +66,9 @@ public enum ComponentNumberSlot: String, CaseIterable, Hashable, Codable, Sendab
         case .cornerRadius: return "How round the corners are."
         case .thickness: return "How thick the line round it is."
         case .gap: return "The space between one thing and the next."
-        case .padding: return "The room kept clear inside the edges, on all four sides."
+        case .padding:
+            return "The room kept clear inside the edges. "
+                + "Type one number for all four sides, or open them to set each one."
         }
     }
 
@@ -77,30 +89,37 @@ public enum ComponentNumberSlot: String, CaseIterable, Hashable, Codable, Sendab
 
 extension GroupLayout {
 
-    /// What this layout reads for one number, or nil where it has no honest
-    /// single answer: nothing is being held apart in a group that arranges
-    /// nothing, and room that differs side to side is not one number.
-    func number(for slot: ComponentNumberSlot) -> CGFloat? {
+    /// What this layout reads for one number, or nil where it has none at all:
+    /// nothing is being held apart in a group that arranges nothing.
+    ///
+    /// Room answers with its four sides even when they agree, so one shape of
+    /// answer covers every group and nothing downstream has to ask which kind
+    /// of room it is looking at.
+    func knobValue(for slot: ComponentNumberSlot) -> ComponentPropertyValue? {
         switch slot {
-        case .gap: return kind == nil ? nil : usedGap
-        case .padding: return usedPadding.uniform
+        case .gap: return kind == nil ? nil : .number(usedGap)
+        case .padding: return .room(usedPadding)
         case .cornerRadius, .thickness: return nil
         }
     }
 
-    /// Writes one of them, each the way that number is written.
-    mutating func setNumber(_ value: CGFloat, for slot: ComponentNumberSlot) {
-        let value = max(0, value)
+    /// Writes one of them, each the way that number is written. An answer of
+    /// the wrong shape for the slot is left alone rather than guessed at.
+    mutating func setKnobValue(_ value: ComponentPropertyValue,
+                               for slot: ComponentNumberSlot) {
         switch slot {
         case .gap:
-            guard kind != nil else { return }
-            gap = value
+            guard kind != nil, let number = value.numberValue else { return }
+            gap = max(0, number)
             // Typing a gap is asking for that gap to be held, so a stack that
             // was sharing its leftover room stops, exactly as it does when the
             // number is typed into the inspector.
             spreadsGap = false
         case .padding:
-            padding = GroupPadding(value)
+            // One number over the closed field still means the same room all
+            // round, which is what `asRoom` reads it as.
+            guard let room = value.asRoom else { return }
+            padding = room.used
         case .cornerRadius, .thickness:
             return
         }
@@ -171,38 +190,50 @@ extension Layer {
     /// at all. Nil is what keeps a knob honest: a label has no gap, so it is
     /// never offered one, and a group whose four sides disagree has no ONE room
     /// to show, so it is not offered room either.
-    func number(for slot: ComponentNumberSlot) -> CGFloat? {
+    func knobValue(for slot: ComponentNumberSlot) -> ComponentPropertyValue? {
         switch slot {
         case .cornerRadius:
-            return hasRoundableCorners ? roundedCornerRadius : nil
+            return hasRoundableCorners ? .number(roundedCornerRadius) : nil
         case .thickness:
-            return drawsItsOwnOutline ? outlineWidth : nil
+            return drawsItsOwnOutline ? .number(outlineWidth) : nil
         case .gap, .padding:
             // Only something that arranges its contents holds them apart, and
             // only a group that has been given a layout keeps room at its
             // edges, so the layout answers for both.
-            return group?.layout?.number(for: slot)
+            return group?.layout?.knobValue(for: slot)
         }
     }
 
+    /// The one number this layer reads for a slot, where that slot IS one
+    /// number. Room is four, so it answers nil here and is read as room.
+    func number(for slot: ComponentNumberSlot) -> CGFloat? {
+        knobValue(for: slot)?.numberValue
+    }
+
+    /// The room this layer keeps inside its edges, all four sides.
+    func room(for slot: ComponentNumberSlot) -> GroupPadding? {
+        knobValue(for: slot)?.roomValue
+    }
+
     /// Writes one number onto this layer, each the way that number is written.
-    mutating func setNumber(_ value: CGFloat, for slot: ComponentNumberSlot) {
-        let value = max(0, value)
+    mutating func setKnobValue(_ value: ComponentPropertyValue,
+                               for slot: ComponentNumberSlot) {
         switch slot {
         case .cornerRadius:
-            setRoundedCorners(value)
+            guard let number = value.numberValue else { return }
+            setRoundedCorners(max(0, number))
         case .thickness:
-            setOutlineWidth(value)
+            guard let number = value.numberValue else { return }
+            setOutlineWidth(max(0, number))
         case .gap, .padding:
             guard var layout = group?.layout else { return }
-            layout.setNumber(value, for: slot)
+            layout.setKnobValue(value, for: slot)
             setGroupLayout(layout)
         }
     }
 
-    /// The numbers of this layer that could become knobs: the ones it has, and
-    /// has an honest single answer for.
+    /// The numbers of this layer that could become knobs: the ones it has.
     var knobNumberSlots: [ComponentNumberSlot] {
-        ComponentNumberSlot.allCases.filter { number(for: $0) != nil }
+        ComponentNumberSlot.allCases.filter { knobValue(for: $0) != nil }
     }
 }

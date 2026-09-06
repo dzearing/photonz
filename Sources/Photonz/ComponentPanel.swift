@@ -1301,6 +1301,12 @@ struct ComponentInstanceProperties: View {
     /// The copies these rows speak for, and what each knob reads across them.
     let selection: ComponentKnobSelection
 
+    /// The room knobs showing their four sides. Closed until somebody opens
+    /// one, exactly as the canvas Padding row is: the closed field already
+    /// reads the four numbers themselves, so four rows saying it again would
+    /// spend the panel's height on nothing.
+    @State private var openSides: Set<UUID> = []
+
     private var properties: [ComponentProperty] { selection.properties }
     private var instances: [UUID] { selection.instances }
 
@@ -1317,15 +1323,18 @@ struct ComponentInstanceProperties: View {
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 ForEach(properties) { property in
-                    HStack(spacing: 6) {
-                        Text(property.name)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .frame(width: 74, alignment: .leading)
-                        control(for: property)
-                        revert(property)
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 6) {
+                            Text(property.name)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .frame(width: Self.nameColumn, alignment: .leading)
+                            control(for: property)
+                            revert(property)
+                        }
+                        sides(of: property)
                     }
                 }
             }
@@ -1424,12 +1433,73 @@ struct ComponentInstanceProperties: View {
             .help("Only the shapes the original holds. A copy can never show something it does not define")
         case .color:
             InstanceColorKnob(instances: instances, property: property)
+        case .number where property.numberSlot?.isFourSided == true:
+            // Room is four numbers, so it is met in the control the canvas
+            // already uses for room: one field, four sides behind a chevron.
+            InstanceRoomKnob(instances: instances, property: property,
+                             room: isMixed ? nil : reading.roomValue,
+                             isOpen: Binding(get: { openSides.contains(property.id) },
+                                             set: { open in
+                                                 if open { openSides.insert(property.id) }
+                                                 else { openSides.remove(property.id) }
+                                             }))
         case .number:
             InstanceNumberKnob(instances: instances, property: property,
                                value: isMixed ? nil : reading.numberValue)
             Spacer(minLength: 0)
         }
     }
+
+    /// The four sides of a room knob, under the row that opens them.
+    ///
+    /// They read side by side rather than off the whole answer: two copies
+    /// that keep the same room beside and different room above still show
+    /// their beside numbers, because a row saying Mixed four times over one
+    /// disagreement would be hiding three numbers it knows.
+    ///
+    /// Typing one of them leaves each copy's other three sides where they
+    /// were, which is the whole reason room is one knob and not four: a copy
+    /// of a button gets roomier beside without turning into a square.
+    @ViewBuilder private func sides(of property: ComponentProperty) -> some View {
+        if property.kind == .number, property.numberSlot?.isFourSided == true,
+           openSides.contains(property.id) {
+            ForEach(GroupPadding.Side.allCases, id: \.self) { side in
+                HStack(spacing: 6) {
+                    Text(side.title)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .frame(width: Self.nameColumn - Self.sideIndent, alignment: .leading)
+                        .padding(.leading, Self.sideIndent)
+                    LayoutNumberField(
+                        title: side.title,
+                        value: editorState.componentRoomSide(instances: instances,
+                                                             property: property.id, side: side),
+                        placeholder: editorState.componentRoomSide(
+                            instances: instances, property: property.id,
+                            side: side) == nil ? MixedValue.text : "",
+                        help: "The room kept clear inside the \(side.title.lowercased()) edge."
+                    ) { value in
+                        editorState.setInstanceRoom(instances: instances, property: property.id,
+                                                    side: side, to: value)
+                    }
+                    .playtestField("\(property.name) \(side.title.lowercased())")
+                    Spacer(minLength: 0)
+                    // The way back belongs to the knob, not to one of its
+                    // sides, so this row only borrows its width to keep the
+                    // fields under the one above them.
+                    revert(property).hidden()
+                }
+            }
+        }
+    }
+
+    /// How wide the word beside a control is, so a side row lines its field up
+    /// with the row that opened it.
+    private static let nameColumn: CGFloat = 74
+    /// How far a side sits in from the knob it belongs to, the same step the
+    /// canvas indents its four sides by.
+    private static let sideIndent: CGFloat = 12
 
     /// The row the menu shows while the copies disagree. It is never an answer
     /// anybody can land on: choosing it is ignored.
@@ -1523,6 +1593,82 @@ private struct InstanceNumberKnob: View {
                                             value: .number(number))
         }
         .playtestField(property.name)
+    }
+}
+
+/// A room knob on a copy: one field for all four sides, and a chevron that
+/// opens them.
+///
+/// It is the canvas Padding row, moved onto a copy's panel: the same field
+/// reading `10/16/10/16` while the sides disagree, the same chevron, and the
+/// same rule that typing one number over the closed field levels all four. A
+/// room knob that could only ever write one number would turn every roomier
+/// copy of a button into a square, which is exactly what stopped uneven room
+/// being offered as a knob at all.
+private struct InstanceRoomKnob: View {
+    @Environment(EditorState.self) private var editorState
+    /// The copies this row answers for. Mixed is what it says when they differ.
+    let instances: [UUID]
+    let property: ComponentProperty
+    /// The room they all keep, or nil while they disagree.
+    let room: GroupPadding?
+    /// Whether the four sides are showing.
+    @Binding var isOpen: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            LayoutNumberField(
+                title: property.name,
+                value: room?.uniform,
+                placeholder: standIn,
+                help: help
+            ) { number in
+                editorState.setInstanceOverride(instances: instances, property: property.id,
+                                                value: .room(GroupPadding(number)))
+            }
+            .playtestField(property.name)
+            // The canvas puts this chevron beside the WORD, where the word is
+            // what varies in width. Here the word sits in a fixed column and
+            // the knob's name is whatever the author typed, so it goes beside
+            // the field instead: every knob's field then starts in the same
+            // place down the panel, and the chevron reads as belonging to the
+            // number it opens.
+            Button {
+                isOpen.toggle()
+            } label: {
+                Image(systemName: isOpen ? "chevron.down" : "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 12, height: 12)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .help(isOpen
+                  ? "Hide the four sides and keep the room they were given."
+                  : "Give this copy different room on each of its four sides.")
+            .playtestControl("\(property.name) sides", detail: "a knob on the copies")
+            Spacer(minLength: 0)
+        }
+    }
+
+    /// What stands in the field while it has no one number to show: the four
+    /// numbers themselves while the sides are closed, so room typed on one
+    /// side is readable without opening anything, and the house word once
+    /// they are open or once the copies disagree.
+    private var standIn: String {
+        guard let room else { return MixedValue.text }
+        if room.isUniform { return "" }
+        return isOpen ? MixedValue.text : room.shorthand
+    }
+
+    private var help: String {
+        guard let room else {
+            return "These copies keep different room inside their edges. "
+                + "Type one number to give every side of every one of them the same."
+        }
+        return room.isUniform
+            ? "The room kept clear inside the edges, on all four sides."
+            : "\(room.inWords). Type one number to give every side the same."
     }
 }
 

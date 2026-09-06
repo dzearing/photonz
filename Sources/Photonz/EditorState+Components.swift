@@ -616,6 +616,26 @@ extension EditorState {
         }
     }
 
+    /// What one side of a room knob reads over the picked copies: the number
+    /// they all keep there, or nil where they differ.
+    func componentRoomSide(instances: [UUID], property: UUID,
+                           side: GroupPadding.Side) -> CGFloat? {
+        guard componentsEnabled, let document else { return nil }
+        return document.componentRoomSide(instances: instances, property: property, side: side)
+    }
+
+    /// Sets ONE side of a room knob on every picked copy, in one undo step,
+    /// leaving each copy's other three sides where they were. That is what
+    /// makes a copy roomier beside without it leaving its family.
+    func setInstanceRoom(instances: [UUID], property: UUID,
+                         side: GroupPadding.Side, to value: CGFloat) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        perform(announcing: false) {
+            _ = $0.setInstanceRoom(instances: instances, property: property,
+                                   side: side, to: value)
+        }
+    }
+
     // MARK: - A colour knob on a copy
 
     /// What one colour knob row shows: the same `ColorStyleSelection` a colour

@@ -1711,10 +1711,11 @@ and a square one, or a roomy one and a tight one.
   would say nothing. It arrives named "Corner radius", and exposing one leaves
   the other on offer.
 - **A layer is only offered the numbers it HAS.** A label has no corners to
-  round and no line round it, so it offers none; a group that arranges nothing
-  has no gap; and a group whose four sides of room disagree has no ONE number to
-  show, so it is not offered room at all rather than offered a field that would
-  print a number the group does not have.
+  round and no line round it, so it offers none, and a group that arranges
+  nothing has no gap. Room used to be held to the same rule and refused
+  whenever the four sides disagreed; since 2026-09-06 the room knob carries all
+  four sides, so it is offered either way (see "room that differs side to side
+  is a knob too", below).
 - **Rounding writes whichever number actually rounds.** A rectangle curves the
   outline it draws and everything else has its corners masked off; the knob
   reads and writes the one that is really rounding that layer and puts the other
@@ -1727,8 +1728,9 @@ and a square one, or a roomy one and a tight one.
 
 Deliberately left: a knob still cannot reach the original's OWN root, so a card
 whose room inside sits on the component's outermost group cannot hand that room
-to its copies yet (its rounding it already can, through the look-following). Room
-that differs side to side cannot be a knob. And a copy's panel can show a knob
+to its copies yet (its rounding it already can, through the look-following).
+Room that differs side to side cannot be a knob. (Both were lifted later the
+same day: see the two sections below.) And a copy's panel can show a knob
 called "Corner radius" above the Effects section's own "Corner Radius" slider,
 which round different things; renaming the knob is one field away.
 
@@ -2875,11 +2877,12 @@ menu listed each piece of the card and not the card.
   number it turns, and this one simply names the outermost layer. A document
   written before it decodes exactly as it did.
 
-Deliberately left: **room that differs side to side is still not offered at
-all**, on the component itself or on any layer inside it, because "the room" of
-a group keeping 10 above and 16 beside is not one number. That rules out the
-common case of making a button roomier, since every starter control except the
-card is built with a taller-than-wide inset.
+Deliberately left at the time: **room that differs side to side was still not
+offered at all**, on the component itself or on any layer inside it, because
+"the room" of a group keeping 10 above and 16 beside is not one number. That
+ruled out the common case of making a button roomier, since every starter
+control except the card is built with a taller-than-wide inset. Lifted the same
+day by the section below.
 
 Where it lives: `ComponentNumberSlot.onTheComponentItself` and the `GroupLayout`
 number accessors in `ComponentNumberKnob.swift`, the root row in
@@ -2961,3 +2964,57 @@ a rule of its own. Seven rows is about 300 points at this panel's row metrics.
 Getting under 135 means taking controls away or making every row in the dock
 shorter, and the second of those is a change to the whole panel, not to this
 section.
+
+## Landed: room that differs side to side is a knob too (Next, `next-components`, 2026-09-06)
+
+A room knob was offered only while a group's four sides agreed. Almost nothing
+real is built that way: a button keeps less room above and below than it does
+beside, and every starter control except the card is the same shape, so the
+whole starter set had no room knob at all. Making a copy of a button roomier,
+the most ordinary thing anybody would want from a component, was the one thing
+the knob could not do.
+
+**Why not simply write one number to all four sides.** Because that is what
+"leaving the family" means. A button at 10 above and 16 beside, told 20, comes
+back a square. Two other shapes were considered and dropped: a knob that SCALES
+the inset puts a multiplier in a field where every other number in the app is
+points, so nothing on the panel can be compared with the 16 somebody typed on
+the canvas; and four separate knobs is four rows on the Add menu and four rows
+on a 264 point panel for one idea.
+
+**What it is instead: the control the canvas already has.** The Layout
+section's Padding row solved this on 2026-09-04 — one field, a chevron beside
+it, four sides underneath, and typing one number over the closed field levels
+all four. A copy's Padding knob is that row, on the copy's panel:
+
+- **Closed, it reads the four numbers themselves**, `10/24/10/24`, so a copy
+  following its original shows exactly what it is following without opening
+  anything.
+- **Open, each side holds what that copy keeps there**, the original's numbers
+  until the copy answers, so typing one side is a change from what is on screen
+  rather than from nought.
+- **Typing one side leaves the other three where they were**, which is the
+  whole point: a copy gets roomier on the left and still reads as one of the
+  family. It answers the knob as a whole from that moment, because a copy owns
+  its room or follows it, never half of each.
+- **Several copies read side by side.** Two copies that keep the same room
+  beside and different room above still show their beside numbers; only the
+  side they disagree on says Mixed. Typing that side keeps each copy's own
+  other three.
+
+**Where the chevron sits.** On the canvas it is beside the WORD, because there
+the word is what varies in width. On a copy's panel the knob's name sits in a
+fixed column and is whatever the author typed, so the chevron goes beside the
+FIELD: every knob's field then starts in the same place down the panel.
+
+**Where it lives.** `ComponentPropertyValue.room(GroupPadding)` carries four
+sides under the same `.number` kind, so a knob is still a knob and the Add menu
+is unchanged. `Layer.knobValue(for:)` / `setKnobValue(_:for:)` in
+`ComponentNumberKnob.swift` replaced the one-number accessors, so what a knob
+reads and what it writes are decided in one place. `setInstanceRoom(instances:
+property:side:to:)` and `componentRoomSide(...)` in `ComponentKnobSelection.swift`
+are the per-side write and read. The panel row is `InstanceRoomKnob` in
+`ComponentPanel.swift`. On disk an answer written before this is one number, and
+one number has always meant the same room all round, so it opens as that.
+Tested in `ComponentRoomKnobTests`, walked by
+`Scripts/playtest/component-uneven-room-walk.json`.

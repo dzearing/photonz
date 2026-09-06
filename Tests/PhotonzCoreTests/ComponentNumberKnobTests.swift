@@ -73,16 +73,18 @@ struct ComponentNumberKnobTests {
         #expect(kinds[c.labelID]?.contains(.number) == false)
     }
 
-    /// Room that is different on each side has no one number to show, so it is
-    /// not offered as a knob at all rather than offered as a field that would
-    /// print a number the group does not have.
-    @Test func roomThatDiffersSideToSideIsNotOffered() {
+    /// Room that is different on each side is offered like any other room: the
+    /// knob carries four sides rather than one number, which is what lets a
+    /// copy of a button be roomier without turning into a square
+    /// (`ComponentRoomKnobTests`).
+    @Test func roomThatDiffersSideToSideIsStillOffered() {
         var c = withCard()
         c.doc.updateGroupLayout(id: c.rowID) {
             $0.padding = GroupPadding(top: 8, right: 20, bottom: 8, left: 20)
         }
         let candidates = c.doc.componentPropertyCandidates(componentID: c.componentID)
-        #expect(candidates.first { $0.layerID == c.rowID }?.numberSlots == [.cornerRadius, .gap])
+        #expect(candidates.first { $0.layerID == c.rowID }?.numberSlots
+                == [.cornerRadius, .gap, .padding])
     }
 
     /// Exposing the rounding leaves the thickness still on offer: "already
@@ -345,7 +347,9 @@ struct ComponentNumberKnobTests {
         let property = reopened.componentProperty(componentID: c.componentID, propertyID: knob)
         #expect(property?.kind == .number)
         #expect(property?.numberSlot == .padding)
-        #expect(reopened.instanceValue(instance: copy, property: knob)?.numberValue == 4)
+        // Room stored as one number opens as the same room on all four sides.
+        #expect(reopened.instanceValue(instance: copy, property: knob)?.roomValue
+                == GroupPadding(4))
         #expect(piece(reopened, in: copy, named: "Row")?.group?.layout?.padding == GroupPadding(4))
     }
 

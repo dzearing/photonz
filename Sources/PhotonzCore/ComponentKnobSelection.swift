@@ -47,6 +47,10 @@ public enum ComponentKnobReading: Hashable, Sendable {
     /// word Mixed in the field rather than one copy's number standing in for
     /// everybody's.
     public var numberValue: CGFloat? { value?.numberValue }
+
+    /// The room they all keep, all four sides of it. Nil when they differ,
+    /// which is what puts the word Mixed in the field and in each side.
+    public var roomValue: GroupPadding? { value?.roomValue }
 }
 
 /// The copies one Component section speaks for, and what each knob reads
@@ -239,6 +243,51 @@ extension PhotonzDocument {
         for id in instances
         where setInstanceOverride(instance: id, property: propertyID, value: value) {
             count += 1
+        }
+        return count
+    }
+
+    /// What ONE side of a room knob reads over the copies: the number they all
+    /// keep there, or nil where they differ.
+    ///
+    /// Read side by side rather than off the whole answer, because two copies
+    /// that keep the same room beside and different room above agree about
+    /// beside: a row that said Mixed on all four would be hiding three true
+    /// numbers behind one disagreement.
+    public func componentRoomSide(instances: [UUID], property propertyID: UUID,
+                                  side: GroupPadding.Side) -> CGFloat? {
+        var shared: CGFloat?
+        for id in instances {
+            guard let room = instanceValue(instance: id, property: propertyID)?.asRoom
+            else { continue }
+            guard let seen = shared else { shared = room[side]; continue }
+            if seen != room[side] { return nil }
+        }
+        return shared
+    }
+
+    /// Sets ONE side of a room knob on every copy given, leaving each copy's
+    /// other three sides where they were.
+    ///
+    /// It reads each copy's own room first rather than writing one room over
+    /// all of them, so a row speaking for two copies that keep different room
+    /// can still say "40 on the left" without flattening the rest of them
+    /// together. A copy that has not answered at all reads the original's
+    /// four sides, so typing one side is what makes it a copy with room of
+    /// its own and the other three arrive from the original.
+    ///
+    /// Returns how many took it.
+    @discardableResult
+    public mutating func setInstanceRoom(instances: [UUID], property propertyID: UUID,
+                                         side: GroupPadding.Side, to value: CGFloat) -> Int {
+        var count = 0
+        for id in instances {
+            guard var room = instanceValue(instance: id, property: propertyID)?.asRoom
+            else { continue }
+            room[side] = value
+            if setInstanceOverride(instance: id, property: propertyID, value: .room(room)) {
+                count += 1
+            }
         }
         return count
     }
