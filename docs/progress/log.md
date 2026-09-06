@@ -9856,3 +9856,31 @@ Audit: `queue/audits/2026-09-06-grid-guides.json`.
 
 Next: `arrows-lines-and-measurements-catch-pinned-guide` — annotation ends go
 down `AnnotationSnapping.snap`, which has no guides parameter yet.
+
+## 2026-09-06 — Each picture in a row of pictures says its own name
+
+Three rows in the dock offer a choice as small pictures rather than words: the
+arrow's Ending row and the two text alignment rows. A segmented picker takes one
+tooltip for the whole control, so resting on the hollow dot described whichever
+ending was already picked. Each picture now names itself.
+
+- New `segmentToolTips(_:fallback:)` in `Sources/Photonz/HintTooltip.swift`: one
+  invisible tooltip anchor per segment, laid over the row. An overlay is measured
+  by what it covers and takes no clicks, so the row keeps its exact size, spacing
+  and behaviour. With `next-tool-tips` off (so always in Current) each row keeps
+  the `.help` it had, word for word.
+- Applied in `ArrowheadStylePicker.swift` and `LayersPanel.alignRow`. Both
+  alignment rows now build pictures and names from one `allCases`, so a name
+  cannot land under the wrong picture.
+- `PlaytestPanelPress` now reports, per segment, what resting at its own middle
+  would show, which is how the mapping is checked rather than assumed.
+- Verified: `Scripts/playtest/segment-tooltips-walk.json` (new), status ok, with
+  real screen captures. `Scripts/test.sh` green, 4064 tests.
+- Built and then cut: a tooltip on the word Mixed, which repeated a sentence the
+  section already prints permanently under the same row.
+
+Open, both filed as tasks: the Down row's three pictures still carry no
+accessibility name (the system symbols have no description), and
+`arrow-endings-walk.json` fails at step 34, which it did before this change too.
+
+Next: the queue picks the next task.
