@@ -1,0 +1,31 @@
+{
+  "feature": "A container says when it is hiding something you drew",
+  "epic": "ui-layout",
+  "summary": "A layer that the box around it has cut off now carries an orange scissors mark in the Layers list, and hovering it names the box and says how to get the layer back. A shut container wears the mark too, so you never have to open a group to find out that something inside it went missing.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-auto-layout on (it is on by default). No file needed: a blank canvas and the Library shelf.",
+  "try": [
+    { "do": "Open the Library shelf and drag the Card tile onto the canvas." },
+    { "do": "In the Layout section twist open Height, type 120 into Largest and press Return." },
+    { "do": "Tick Clip contents and watch the supporting text disappear off the bottom of the card." },
+    { "do": "Look at the Card row in the Layers list: it now carries an orange scissors.", "shot": "2026-09-06-out-of-view-2-shut-card.png" },
+    { "do": "Hover the scissors and read what it says." },
+    { "do": "Click the chevron on the Card row to open it. Only the Body row carries the mark now.", "shot": "2026-09-06-out-of-view-3-open-card.png" },
+    { "do": "With Body selected, type a smaller number into Y in the Position & Size section and press Return: the words come back and the mark goes." },
+    { "do": "Untick Clip contents: every mark goes, because nothing is being cut off any more." }
+  ],
+  "evaluate": [
+    "Do the scissors read as 'the box is cutting this off', or do they read as a button you are meant to press?",
+    "Is orange the right amount of loud for this, next to the grey lock and eye?",
+    "Is the mark beside the name the right place, or would your eye find it faster out at the right with the lock and the eye?",
+    "When a shut container wears the mark, is 'something inside this is out of view' the message you want, or would you rather the container stayed quiet and only the layer itself spoke?",
+    "After reading the hover tip, do you know what to do next, or do you still want a one-click way to bring the layer back?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real capture of the window, not an offscreen render.",
+    "Only a layer that is COMPLETELY outside the box is marked. One hanging half out is not, because half of it is still on screen and marking it would cry wolf on every card whose title runs a little wide.",
+    "There is no one-click way back. The hover tip tells you to move the layer or turn Clip contents off, and typing a new Y is the fastest route. A 'Bring into view' item on the row's menu would be kinder and is not built.",
+    "The mark lives in the Layers list only. If the Layers section is collapsed or scrolled away, the canvas still says nothing about the layer that vanished.",
+    "A shut container counts a whole group that has gone as one, not as one per layer inside it, so a card that lost a nav bar with ten pieces in it says '1 layer inside is out of view'.",
+    "The mark ships behind next-auto-layout even though screens have cut off their contents since screens landed, so with that flag off a screen still says nothing. That follows the task, but it means the older half of the gap is only fixed for people on the flag."
+  ]
+}

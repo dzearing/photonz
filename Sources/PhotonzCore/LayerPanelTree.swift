@@ -382,12 +382,18 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     public let versionName: String?
     /// Whether the row's menu offers "Rasterize Layer".
     public let isRasterizable: Bool
+    /// Why this row is out of view, when it is: the container cutting this
+    /// layer off, or how many layers a shut group is hiding out of view. Nil
+    /// on a row with nothing to say, which is nearly every row.
+    public let outOfView: RowOutOfView?
 
     public var id: UUID { row.id }
 
     public init(row: LayerPanelRow, name: String, isVisible: Bool, isLocked: Bool,
                 isSelected: Bool, isMainComponent: Bool, isComponentInstance: Bool,
-                versionName: String? = nil, isRasterizable: Bool) {
+                versionName: String? = nil, isRasterizable: Bool,
+                outOfView: RowOutOfView? = nil) {
+        self.outOfView = outOfView
         self.versionName = versionName
         self.row = row
         self.name = name
@@ -416,7 +422,11 @@ extension PhotonzDocument {
     /// rows alike. Only the rows in it come back marked, which is the point:
     /// a click that moves the selection changes exactly two of these values,
     /// so the panel redraws exactly two rows.
-    public func layerRows(expanded: Set<UUID>, selected: Set<UUID>) -> [LayerRowDisplay] {
+    /// `marksOutOfView` is the Next auto-layout flag: with it off no row is
+    /// marked and no clipping box is ever measured, so the list costs exactly
+    /// what it always did.
+    public func layerRows(expanded: Set<UUID>, selected: Set<UUID>,
+                          marksOutOfView: Bool = true) -> [LayerRowDisplay] {
         var rows: [LayerRowDisplay] = []
         // Which components hold more than one drawing of themselves. A version
         // name is only worth printing while there is another version to tell it
@@ -427,13 +437,39 @@ extension PhotonzDocument {
             guard let componentID = main.componentID else { continue }
             versionCounts[componentID, default: 0] += 1
         }
-        func walk(_ list: [Layer], depth: Int, parent: UUID?) {
+        // Which containers are cutting layers off at this level of the tree,
+        // outermost first. Empty for the whole walk of a document that clips
+        // nothing, which is nearly every document.
+        func walk(_ list: [Layer], depth: Int, parent: UUID?, clips: [ClipScope]) {
             for layer in list.reversed() {
                 // A copy of a component has no twist open: what is inside it
                 // belongs to its original, so a row you could open would show
                 // pieces nobody can keep an edit to.
                 let openable = layer.isOpenableGroup
                 let open = openable && expanded.contains(layer.id)
+                var inner: [ClipScope] = []
+                var outOfView: RowOutOfView?
+                // Working a box out is real arithmetic for a group that
+                // arranges itself, so it is only asked for where it could
+                // change what a row says: under a container that is already
+                // cutting, or on a container that cuts. A document that clips
+                // nothing costs exactly what this always cost.
+                if marksOutOfView, !clips.isEmpty || layer.clipsToBounds {
+                    let box = layer.localBounds
+                    let cutter = OutOfView.cutter(of: box, under: clips)
+                    if openable {
+                        inner = OutOfView.scopes(inside: layer, box: box, under: clips)
+                    }
+                    // A SHUT group speaks for what it is hiding: its rows are
+                    // not on screen to carry their own marks. One already cut
+                    // off says that instead, once, rather than also counting
+                    // everything that went with it.
+                    let hidden = openable && !open && cutter == nil
+                        ? OutOfView.hiddenCount(in: layer.children, under: inner) : 0
+                    if cutter != nil || hidden > 0 {
+                        outOfView = RowOutOfView(container: cutter, hiddenInside: hidden)
+                    }
+                }
                 rows.append(LayerRowDisplay(
                     row: LayerPanelRow(id: layer.id, depth: depth, isGroup: openable,
                                        childCount: openable ? layer.children.count : 0,
@@ -445,11 +481,12 @@ extension PhotonzDocument {
                     isMainComponent: layer.isMainComponent,
                     isComponentInstance: layer.isComponentInstance,
                     versionName: Self.versionName(of: layer, counts: versionCounts),
-                    isRasterizable: layer.isRasterizable))
-                if open { walk(layer.children, depth: depth + 1, parent: layer.id) }
+                    isRasterizable: layer.isRasterizable,
+                    outOfView: outOfView))
+                if open { walk(layer.children, depth: depth + 1, parent: layer.id, clips: inner) }
             }
         }
-        walk(layers, depth: 0, parent: nil)
+        walk(layers, depth: 0, parent: nil, clips: [])
         return rows
     }
 }

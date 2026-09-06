@@ -9365,3 +9365,27 @@ Verified in the probe app with `Scripts/playtest/layout-for-several-walk.json`
 Next: `the-layout-section-speaks-for-what-several-group` does the other half —
 the Contents rows, the Arrangement controls and the list of layers with rules of
 their own, over several picked groups.
+
+## 2026-09-06 — A container says when it is hiding something you drew
+
+A layer that the box around it has cut off now carries an orange scissors mark
+in the Layers list, and the hover tip names the box and says how to get the
+layer back. A shut container wears the mark too and says how many layers inside
+it have gone, so nobody has to open a group to learn that something went
+missing. Only a layer COMPLETELY outside the box is marked, and the container
+named is the nearest one, the box somebody would actually go and open.
+
+`RowOutOfView` and `OutOfView` live in `Sources/PhotonzCore/RowOutOfView.swift`;
+`PhotonzDocument.layerRows` works the marks out in the pass it already makes,
+carrying clip boxes down as `ClipScope` values already in the child's space. A
+box is only worked out under a container that is already cutting or on one that
+cuts, so a document that clips nothing costs what it always did. The mark itself
+is `OutOfViewMark` in `Sources/Photonz/LayersPanel.swift`, behind
+`next-auto-layout`.
+
+Verified on the probe with real captures: `Scripts/playtest/out-of-view-mark-walk.json`
+(a clipped card) and `Scripts/playtest/out-of-view-screen-walk.json` (a screen).
+Audit: `queue/audits/2026-09-06-out-of-view.json`.
+
+Next: the audit asks whether a one-click "Bring into view" is wanted, and
+whether the canvas should say anything at all when a layer vanishes.

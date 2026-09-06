@@ -89,7 +89,10 @@ extension EditorState {
         if let selectedLayerID { selected.insert(selectedLayerID) }
         return document?.layerRows(
             expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [],
-            selected: selected) ?? []
+            selected: selected,
+            // Cutting off what does not fit is auto layout's doing, so the mark
+            // that says a container has cut something off ships with it.
+            marksOutOfView: Experiments.shared.autoLayoutEnabled) ?? []
     }
 
     /// The twist-open control on a group row.

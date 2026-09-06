@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/out-of-view-mark",
+  "seed": "A card held to 120 tall and set to cut off what does not fit makes its supporting text vanish. Until now the layers list showed that text as an ordinary row, so the only clue it still existed was undo. The walk turns the switch on, opens the card in the list, and looks for the mark that says the box is cutting the text off.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "dragTile", "tile": "Card", "to": [420, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.9 },
+
+    { "do": "press", "control": "Limits", "in": "Height" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "focus", "field": "Largest height" },
+    { "do": "type", "text": "120" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-overflows", "note": "the card is held to 120 and its supporting text runs out of the bottom. Nothing is cut off yet, so no row is marked." },
+    { "do": "panel", "stage": "1-overflows" },
+    { "do": "snapshot", "name": "out-of-view-1-overflows" },
+
+    { "do": "press", "control": "Clip contents" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-shut-card", "note": "THE TEST: the words are gone from the canvas, and the shut Card row now says it is hiding something out of view." },
+    { "do": "panel", "stage": "2-shut-card" },
+    { "do": "snapshot", "name": "out-of-view-2-shut-card" },
+
+    { "do": "press", "control": "Twist", "in": "Card" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-open-card", "note": "THE TEST: opening the card shows which layer went. The row that is cut off carries the mark; the ones still on screen do not." },
+    { "do": "panel", "stage": "3-open-card" },
+    { "do": "snapshot", "name": "out-of-view-3-open-card" },
+
+    { "do": "press", "control": "Clip contents" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-back", "note": "unticking the switch puts the words back and every mark goes with it: nothing is marked while the container is not cutting anything off." },
+    { "do": "panel", "stage": "4-back" },
+    { "do": "snapshot", "name": "out-of-view-4-back" }
+  ]
+}

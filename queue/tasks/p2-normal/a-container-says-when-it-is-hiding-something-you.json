@@ -5,14 +5,14 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1320,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T01:38:39.372Z",
-  "updated": "2026-09-06T01:38:39.372Z",
+  "updated": "2026-09-06T11:24:01.372020Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Comes from the rough list of queue/audits/2026-09-05-clip-contents.json. Layer.clipsToBounds and Layer.localBounds are the two facts needed: a child is out of view when its own localBounds does not intersect the parent's. The Layers list rows are built in Sources/Photonz/LayersPanel.swift; the hidden and locked marks already there are the pattern to follow. Applies to frames too, which have had this gap since frames landed.",
+  "notes": "Comes from the rough list of queue/audits/2026-09-05-clip-contents.json. Layer.clipsToBounds and Layer.localBounds are the two facts needed: a child is out of view when its own localBounds does not intersect the parent's. The Layers list rows are built in Sources/Photonz/LayersPanel.swift; the hidden and locked marks already there are the pattern to follow. Applies to frames too, which have had this gap since frames landed. DONE: RowOutOfView.swift + LayerPanelTree.layerRows(marksOutOfView:) in PhotonzCore; OutOfViewMark in LayersPanel.swift; audit queue/audits/2026-09-06-out-of-view.json; walks out-of-view-mark-walk.json and out-of-view-screen-walk.json.",
   "acceptance": [
     "A layer that is fully outside its clipping container is marked as hidden in the Layers list, in a way you can see without hovering",
     "The mark says why in plain words when you hover it, naming the container that is cutting it off",
@@ -24,6 +24,31 @@
     {
       "t": "2026-09-06T01:38:39.372Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T11:10:40.452Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T11:24:01.372020Z",
+      "note": "Adversarial review BEFORE building. Walked it as a first-timer: they drag a label out of a clipping card, it vanishes, they look at the Layers list. The row is the right place, because it is the only surface that lists a layer you cannot see. Three things the task did not say: (1) the mark is useless while its group is SHUT, and a shut group is exactly the state somebody is in after collapsing a card, so the shut container has to speak too; (2) marking a layer that is HALF out would fire on every card whose title runs a little wide, so only a layer completely outside is marked; (3) naming the OUTERMOST container would send somebody to the wrong box, so the nearest one is named. Cut from the idea: no canvas chrome, no ghost outline where the layer went, no badge count on the container beyond a plain sentence in the tip. The shortest thing that delivers the value is one mark on the row plus a tip that names the box."
+    },
+    {
+      "t": "2026-09-06T11:24:01.372020Z",
+      "note": "Core, TDD: RowOutOfView + OutOfView in Sources/PhotonzCore/RowOutOfView.swift, carried on LayerRowDisplay.outOfView and worked out in one pass inside PhotonzDocument.layerRows (Sources/PhotonzCore/LayerPanelTree.swift). Clip boxes travel down the walk as ClipScope values already in the child's coordinate space, so nesting costs nothing extra. 'Outside' compares edges rather than using CGRect.intersects, because a flat arrow or a one-point divider is an EMPTY rect that intersects nothing and would otherwise be marked. A box is only worked out under a container that is already cutting or on a container that cuts, so a document that clips nothing costs exactly what it always did. 14 tests in Tests/PhotonzCoreTests/OutOfViewMarkTests.swift."
+    },
+    {
+      "t": "2026-09-06T11:24:01.372020Z",
+      "note": "App: OutOfViewMark in Sources/Photonz/LayersPanel.swift, an orange scissors beside the name (same slot as the component mark, because it is part of what the row IS). Gated through EditorState.layerRows on Experiments.shared.autoLayoutEnabled (next-auto-layout). The row's playtest detail now carries the mark so a walk can read it."
+    },
+    {
+      "t": "2026-09-06T11:24:01.372020Z",
+      "note": "Verified on the real app, Screen Recording granted so these are real captures. Scripts/playtest/out-of-view-mark-walk.json: card held to 120 and clipped, shut Card row marked, opening it moves the mark to Body alone (Title/Picture/Background clean), unticking clears every mark. Scripts/playtest/out-of-view-screen-walk.json: a rectangle typed to Y 900 inside a screen is marked, Y still reads 900 as a typeable field, typing it back clears the mark. Full suite 3751 tests green."
+    },
+    {
+      "t": "2026-09-06T11:24:01.372020Z",
+      "note": "Adversarial review AFTER building. What still feels clumsy, all in the audit's rough: there is no one-click way back (the tip tells you to move it or untick the switch), the mark lives in the Layers list only so a collapsed dock says nothing, and the flag gate means a screen still says nothing with next-auto-layout off even though screens have clipped since they landed."
     }
-  ]
+  ],
+  "started": "2026-09-06T11:10:40.451Z"
 }

@@ -1703,6 +1703,46 @@ struct LayersListView: View {
 ///
 /// Keep it that way. Reaching for `editorState.something` inside `body` here
 /// quietly puts every row back on the list of things a click has to redraw.
+/// The mark on a row whose layer the container around it has cut off, and on a
+/// shut group that is hiding one.
+///
+/// A container set to cut off what does not fit makes anything past its edge
+/// disappear completely: the canvas stops drawing it, clicks go through where
+/// it used to be, and until now the layers list showed a row that looked like
+/// every other row. Somebody who dragged a label a little too far had lost it,
+/// with undo as the only way back.
+///
+/// Scissors because that is the same word the switch uses ("Clip contents"),
+/// and warm because this is a state to notice rather than a control to press.
+/// The tip names the box, so the answer is one hover away rather than a hunt.
+private struct OutOfViewMark: View {
+    let outOfView: RowOutOfView
+    /// This row's layer, for the sentence about what it is hiding.
+    let name: String
+
+    var body: some View {
+        Image(systemName: "scissors")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.orange)
+            .help(explanation)
+    }
+
+    private var explanation: String {
+        var lines: [String] = []
+        if let container = outOfView.container {
+            lines.append("Out of view: this sits outside \(container), which is set to cut off "
+                         + "what does not fit. Move it back, or turn off Clip contents on \(container).")
+        }
+        if outOfView.hiddenInside > 0 {
+            lines.append(outOfView.hiddenInside == 1
+                         ? "1 layer inside \(name) is out of view. Open \(name) to find it."
+                         : "\(outOfView.hiddenInside) layers inside \(name) are out of view. "
+                           + "Open \(name) to find them.")
+        }
+        return lines.joined(separator: " ")
+    }
+}
+
 private struct LayersRow: View, Equatable {
     let display: LayerRowDisplay
     /// The picture beside the name. Compared by identity: the cache hands back
@@ -1750,6 +1790,19 @@ private struct LayersRow: View, Equatable {
 
     private var id: UUID { display.id }
     private var panelRow: LayerPanelRow { display.row }
+
+    /// What a scripted walk sees this row as. The out-of-view mark is part of
+    /// it, because a walk that cannot read the mark cannot prove it appeared.
+    private var rowDetail: String {
+        var parts = [panelRow.isGroup
+                     ? (panelRow.isExpanded ? "group, open" : "group, shut")
+                     : "layer"]
+        if let outOfView = display.outOfView {
+            parts.append(outOfView.container.map { "out of view, cut off by \($0)" }
+                         ?? "hiding \(outOfView.hiddenInside) out of view")
+        }
+        return parts.joined(separator: ", ")
+    }
     private var indent: CGFloat { CGFloat(display.row.depth) * 14 }
 
     /// One closure for picking this row up, so a scripted walk and a pointer
@@ -1774,9 +1827,7 @@ private struct LayersRow: View, Equatable {
                 row: panelRow, dragging: $draggingLayerID, target: $dropTarget,
                 rowHeight: rowHeight, editorState: editorState))
             .playtestTarget(display.name, kind: .row,
-                            detail: panelRow.isGroup
-                                ? (panelRow.isExpanded ? "group, open" : "group, shut")
-                                : "layer",
+                            detail: rowDetail,
                             payload: pickUp)
     }
 
@@ -1831,6 +1882,12 @@ private struct LayersRow: View, Equatable {
                     .padding(.vertical, 1)
                     .background(Capsule().fill(.quaternary))
                     .help("This is the \(version) version of \(display.name)")
+            }
+            // The mark that says the box this layer lives in has cut it off,
+            // so a layer dragged too far is never lost with nothing anywhere
+            // saying where it went.
+            if let outOfView = display.outOfView {
+                OutOfViewMark(outOfView: outOfView, name: display.name)
             }
             Spacer(minLength: 4)
             // A shut group says how much it is hiding, so the row is not a

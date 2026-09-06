@@ -814,6 +814,16 @@ Step A2. The first thing in this ladder a person can build a screen on.
   always let its contents hang out and no picture already drawn should change,
   while a screen has always cut them off and still does. A group that closes
   around its contents is not offered it, because nothing hangs out of it.
+- **A container says when it is hiding something you drew.** Cutting a layer off
+  hides it completely: it is not drawn, not clickable, and until now its row in
+  the Layers list looked like every other row, so a label dragged a little too
+  far was lost with undo as the only way back. A layer that ends up COMPLETELY
+  outside the box around it now carries an orange scissors on its row, and the
+  hover tip names the box and says how to get the layer back. A SHUT container
+  carries the same mark and says how many layers inside it have gone, because a
+  mark you have to open a group to find is a mark nobody sees. A layer half out
+  is not marked: half of it is still on screen, and marking it would cry wolf on
+  every card whose title runs a little wide.
 - **What you draw on a frame lands on it.** A shape, a text block or a callout
   whose CENTRE falls inside a frame becomes a child of that frame, with its
   position rewritten so it does not move. Without this a frame would be a

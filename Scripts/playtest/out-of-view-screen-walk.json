@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/out-of-view-screen",
+  "seed": "A screen has always cut off what leaves it, so this is the older half of the same gap: a shape typed past the bottom of a screen disappears and its row said nothing. The walk builds a screen around a rectangle, types the rectangle 900 points down, and looks for the mark.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 260], "to": [520, 380] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "frameSelection" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-framed", "note": "a screen around one rectangle. The rectangle is inside it, so no row is marked." },
+    { "do": "panel", "stage": "1-framed" },
+    { "do": "snapshot", "name": "out-of-view-screen-1-framed" },
+
+    { "do": "action", "action": "stepIntoSelection" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "focus", "field": "Y" },
+    { "do": "type", "text": "900" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-typed-away", "note": "THE TEST: the rectangle is typed 900 points down, right off the bottom of the screen. It is gone from the canvas, its row is marked, and Y still reads 900 so it can be typed back." },
+    { "do": "panel", "stage": "2-typed-away" },
+    { "do": "snapshot", "name": "out-of-view-screen-2-typed-away" },
+
+    { "do": "focus", "field": "Y" },
+    { "do": "type", "text": "20" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-typed-back", "note": "typing Y back brings it into view and the mark goes." },
+    { "do": "panel", "stage": "3-typed-back" },
+    { "do": "snapshot", "name": "out-of-view-screen-3-typed-back" }
+  ]
+}
