@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1230,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T16:43:37.351Z",
-  "updated": "2026-09-05T16:43:37.352Z",
+  "updated": "2026-09-06T05:34:30.910Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/CanvasView.swift is 4417 lines / 237 KB. Same recipe as the 2026-09-05 EditorState split: pick seams at MARK boundaries, move whole members verbatim into extension files, leave stored properties behind in the main type (an extension cannot hold them), then let the compiler name every private that two files now share and widen only those. Verify by checking every original non-blank line still appears exactly once across the new files. Sources/Photonz/LayersPanel.swift (3216 lines) is the next one after this.",
@@ -23,6 +23,52 @@
     {
       "t": "2026-09-05T16:43:37.352Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T05:21:05.552Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T05:34:11.973639Z",
+      "note": "Adversarial review before building: the risk in this task is not the idea, it is the method. A hand-edited split of 5104 lines can silently drop or duplicate a line and nothing would fail loudly, so the split was done by script from line ranges and then checked by counting: every non-blank line of the original must appear exactly once across the new files. Six lines did not, and all six are the two comment blocks I rewrote on purpose (the stale class header, one doc line). Nothing else changed shape."
+    },
+    {
+      "t": "2026-09-06T05:34:11.973639Z",
+      "note": "Second finding of that review: 'move whole members' is not enough on its own, because keeping the shortest version means not inventing new API. Where a private setter could no longer be reached (selectedLayerID, groupContext, multiSelectedLayerIDs, all three written only by apply), I widened the setter and said so in the comment rather than adding three wrapper methods that would have reordered the assignments inside apply."
+    },
+    {
+      "t": "2026-09-06T05:34:11.973639Z",
+      "note": "The file had grown to 5104 lines by the time the task ran, not the 4417 the notes recorded."
+    },
+    {
+      "t": "2026-09-06T05:34:11.973639Z",
+      "note": "Split into nine files, all in Sources/Photonz, all `extension CanvasNSView`: CanvasView.swift 1484 (all stored properties, init, the SwiftUI CanvasView struct, viewRect), CanvasDisplay.swift 954, CanvasPointerDrags.swift 1107, CanvasTextEditing.swift 530, CanvasAnnotationPreview.swift 370, CanvasKeys.swift 257, CanvasPointerCue.swift 215, CanvasDrop.swift 195, CanvasZoom.swift 94."
+    },
+    {
+      "t": "2026-09-06T05:34:11.973639Z",
+      "note": "112 declarations lost `private` because two files now share them; that list was produced by the compiler, not by hand. InlineTextView stayed private (only the text file uses it); CaptionPillView had to widen because the stored property that holds one stays in CanvasView.swift."
+    },
+    {
+      "t": "2026-09-06T05:34:11.973639Z",
+      "note": "Gotcha for the next split: `swift build` does not compile the PHOTONZ_PLAYTEST members. `playtestPointerCue` is a stored property inside an #if in the pointer-cue block and only the probe build caught it. Build the probe (Scripts/probe-app.sh or any playtest) before believing a split compiles."
+    },
+    {
+      "t": "2026-09-06T05:34:11.973639Z",
+      "note": "Verified: swift build clean, no new warnings in any Canvas file, no @preconcurrency added. Scripts/test.sh 3637 tests in 310 suites pass, no test edited. Eleven playtest walks that drive the canvas pass: redline, grid-origin, snap-hold, words-drag, arrow-tip-snap, handles-fit, caption-drop-lands, sweep-in-group, retype-label, clip-contents, grid-visible-snap. Read the redline walk's real screen capture: composite, measures, arrow caption pill, alignment guide, grid and toast all draw as before."
+    },
+    {
+      "t": "2026-09-06T05:34:11.973639Z",
+      "note": "No audit file: nothing a person sees changed, so there is nothing to playtest and judge. The canvas is shared code with no fork under Releases/Next, so Next has this by construction."
+    },
+    {
+      "t": "2026-09-06T05:34:11.973639Z",
+      "note": "Next in this series, per the original notes: Sources/Photonz/LayersPanel.swift, 3216 lines."
+    },
+    {
+      "t": "2026-09-06T05:34:30.910Z",
+      "note": "CanvasView.swift 5104 -> 1484 lines, split into nine Canvas*.swift files (drawing, pointer drags, pointer cue, keys, zoom, drop, annotation preview, text editing). Moves only, verified by counting every original non-blank line. swift build clean, 3637 tests pass unedited, eleven canvas playtest walks pass."
     }
-  ]
+  ],
+  "started": "2026-09-06T05:21:05.551Z",
+  "completed": "2026-09-06T05:34:30.910Z"
 }
