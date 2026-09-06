@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1370,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:40:40.427Z",
-  "updated": "2026-09-06T12:40:40.428Z",
+  "updated": "2026-09-06T17:23:55.138Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-06 in queue/audits/2026-09-06-drop-into-open-group.json: after a Badge and a Button joined the bar, the word Title was drawn under the Button and could not be seen. The bar packs its row from the left while the Title stretches the whole bar and centres in it, so the two eventually collide. queue/audits/2026-09-05-nav-bar-row.json already asked whether the title should centre on the whole bar or sit beside the back label - that judgment decides this.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-06T12:40:40.427Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T17:16:54.821Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T17:30:00.000Z",
+      "note": "Reproduced first, in the model, before theorising. Dropped a Badge and a Button into the starter Nav Bar through the real insert path (PhotonzDocument.insertStarterComponent(inside:)) and flowed it: bar 320 wide, Back at 14..50, Badge 58..81, Button 93..172, Title's box 0..320 with its words centred on 160. So the word Title lands at roughly 145..175, squarely under the Button, and it is drawn beneath the controls. The bug is real and is exactly what the audit said."
+    },
+    {
+      "t": "2026-09-06T17:30:00.000Z",
+      "note": "Adversarial review of the idea, not the code. The row packs every control from the left while the title is out of the flow spanning the whole bar, so the two are on a collision course by construction: control three always reaches the middle. Nothing about the drop is at fault, and no amount of drop polish fixes it. Cutting the title from the starter would be the shortest fix and is wrong: a bar with no title is not a nav bar."
+    },
+    {
+      "t": "2026-09-06T17:30:00.000Z",
+      "note": "Prototyped the cheap fix to check it is real before offering it: made the Title an ordinary row item that Fills the room left over (Layer.flowFill). It works with no new layout concept. Back holds the left, the title takes what is left and centres its words in it, and a Badge and a Button dropped after it park at the right end. Nothing is ever covered. The cost is that on a plain bar the title's words sit about 24 points right of the bar's exact middle instead of on it."
+    },
+    {
+      "t": "2026-09-06T17:30:00.000Z",
+      "note": "That cost IS the open question. The 2026-09-05 audit asked the user whether the title should centre on the whole bar or sit beside the back label, and that judgment decides this task: option A moves the title off the bar's middle, option B keeps the middle and gives the bar two ends instead. Both are visible look changes to the one starter shaped like a bar, so filing a decision rather than picking."
+    },
+    {
+      "t": "2026-09-06T17:23:55.137Z",
+      "note": "Reproduced the collision in the model (Button 93..172 sits on the title's words at ~145..175) and prototyped the cheap fix, but which way it is fixed is a look change to the starter bar: title takes the room left over, or the bar keeps its middle and controls park at its two ends. Decision + brief filed."
     }
-  ]
+  ],
+  "started": "2026-09-06T17:16:54.821Z"
 }

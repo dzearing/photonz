@@ -1,0 +1,59 @@
+{
+  "id": "a-control-added-to-a-bar-does-not-vanish-behind-add-two-controls-to-the-starter",
+  "taskId": "a-control-added-to-a-bar-does-not-vanish-behind",
+  "question": "Add two controls to the starter Nav Bar and its title disappears behind one of them. Where should a bar's title sit once the bar has controls on it?",
+  "context": "The Nav Bar on the Library shelf is a row: the back label holds the left, and the title lies across the whole bar and centres its words on it, drawn underneath so the back label still takes its own clicks. Controls you add pack in from the left, so the third one reaches the middle and covers the word Title. This is the same question the 2026-09-05 nav bar audit asked and it is a look question, not a bug to patch.",
+  "options": [
+    {
+      "id": "a",
+      "label": "The title takes the room that is left",
+      "summary": "The title joins the row instead of lying across the whole bar. It sits between the back label and whatever you add, and its words stay in the middle of whatever room is left over, so a control can never end up on top of it. On a bar with just a back label that puts the title a little to the right of the bar's exact middle.",
+      "pros": [
+        "The title can never be hidden, however many controls you add.",
+        "Where you let go decides which side of the title a control lands on, so a bar gets a left end and a right end with nothing to set up.",
+        "The bar stays a plain row of pieces, so it is still easy to take apart and rebuild."
+      ],
+      "cons": [
+        "On a plain bar the title no longer sits on the exact middle of the bar, which is where a real nav bar title sits.",
+        "The title slides as you add and remove controls, rather than holding one spot."
+      ],
+      "mitigation": "The title always keeps the same distance from whatever is beside it, so it slides smoothly rather than jumping, and a bar carrying nothing but a title is still dead centre.",
+      "declines": false
+    },
+    {
+      "id": "b",
+      "label": "The bar keeps its middle",
+      "summary": "The title holds the exact middle of the bar for good. Controls park at the two ends instead of marching across: let go on the left half and the control joins the left end, let go on the right half and it joins the right end. Nothing ever crosses the middle.",
+      "pros": [
+        "It looks like a real nav bar on every platform: title centred, controls at the ends.",
+        "The title never moves, so the bar looks the same after you add controls as before.",
+        "Both ends read as ends, which is how people already think about a bar."
+      ],
+      "cons": [
+        "More to build, so it lands later.",
+        "Inside the bar you would see a left group and a right group in the layers list rather than a flat row of pieces, so it is a slightly busier thing to pull apart.",
+        "A title too long for the room between the two ends still has to give way somehow."
+      ],
+      "mitigation": "The two groups are named so the layers list still reads as a bar, and the middle is measured between the two ends, so a long title narrows inside its own room instead of running under a control.",
+      "declines": false
+    },
+    {
+      "id": "c",
+      "label": "Leave the bar as it is",
+      "summary": "The title goes on lying across the whole bar underneath the controls. Add two controls and the title is behind one of them with no hint why, and you move or delete it yourself.",
+      "pros": [
+        "Nothing changes, and on a plain bar the title is exactly centred today.",
+        "No new behaviour to learn."
+      ],
+      "cons": [
+        "The bar you get from the shelf breaks as soon as you use it for what it is for.",
+        "There is nothing on screen saying where the title went."
+      ],
+      "mitigation": "The title is still there and still reachable from the layers list, so nothing is lost, only covered.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-06T17:22:10.902Z"
+}
