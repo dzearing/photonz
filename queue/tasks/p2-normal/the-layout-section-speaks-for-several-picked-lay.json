@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1310,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T01:17:54.621Z",
-  "updated": "2026-09-06T01:17:54.622Z",
+  "updated": "2026-09-06T10:48:09.371Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while fixing the-knobs-panel-speaks-for-several-copies-at-onc. Same cause: LayersPanel.availableSections gates .placement on selectedLayer, which selectLayers sets to nil for a multi-selection. The fix has an exemplar now: ComponentKnobSelection in PhotonzCore plus the whole-selection test in availableSections. Rule: docs/design/mocks/shared/UX-PATTERNS.md section 4, What a control DOES for several picked things.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-06T01:17:54.622Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T10:48:09.371Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T10:52:35.678892Z",
+      "note": "Adversarial review before building. (1) The Layout section is two things: the rows for where THIS layer sits in its container, and the rows for what a GROUP tells its contents. The task's goal is the first one, and it is the one that hurts: pick three buttons in a nav bar and you cannot say Stretch once. The Contents rows over several groups need a multi version of the Arrangement rows and of the 'layers with rules of their own' list, which is its own task; filing it rather than half-doing it here. (2) A container's stack owns one axis, and a layer stretched both ways steps OUT of that stack, so with several picked the same row could be live for one layer and dead for the others. A row that silently means one of the three layers you picked is worse than no row, so with several picked the rows follow the GROUP's flow: the surface's own axis is set by picking it on its own. (3) The rich seven-branch caption under the single-layer rows is about one layer's story (it is the surface, it still carries a dead rule, its words fill the box). None of that survives being said about four layers, so the several-picked caption is one short sentence. (4) Locked layers stay reachable: this app already lets the Layout section place a locked layer, so making this the one control that refuses would be the odd one out."
+    },
+    {
+      "t": "2026-09-06T11:09:29.260426Z",
+      "note": "Shipped. PlacementSelection in PhotonzCore is the reading (16 tests in PlacementSelectionTests): the picked layers it places, the one container holding them, and what Horizontal, Vertical and the fill row read across them, agreed or Mixed. PhotonzDocument gained setPlacement(ids:horizontal:), setPlacement(ids:vertical:) and setFillsTheFlow(ids:), each landing in ONE undo step through EditorState.perform. LayersPanel now gates .placement on placementSelection.isPresent, and PlacementInspector drives its rows off the selection so one layer and five go down one path; the parts that are genuinely about one layer (the Contents rows, the Clear-a-leftover-rule button, the seven-branch caption) hang off `only`, which is nil as soon as a second layer is picked."
+    },
+    {
+      "t": "2026-09-06T11:09:29.260541Z",
+      "note": "Adversarial review of the BUILT thing, on the probe app (Scripts/playtest/layout-for-several-walk.json, 80 steps, Screen Recording granted so every picture is a real capture). Two things came out of it. (1) The caption read \"All 2 are following the group\", which is not a sentence anybody says; it now counts nowhere, since the heading right above already says how many. (2) A group loose on the canvas is placed by nothing, so it is not in the selection at all, and keying the Contents rows on the selection took them off that group's panel entirely. `only` now reads off what is PICKED rather than off the selection, and the walk photographs that case first so it stays fixed. The walk also proves the set landed: the group pulled out to 700 leaves the two picked rows their own width, centred, and lets the third spread."
     }
-  ]
+  ],
+  "started": "2026-09-06T10:48:09.370Z"
 }

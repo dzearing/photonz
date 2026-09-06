@@ -1,0 +1,30 @@
+{
+  "feature": "The Layout section speaks for several picked layers",
+  "epic": "ui-layout",
+  "summary": "Pick two or more layers that sit in the same group or screen and the Layout section now stays, reading the placement they share or Mixed, and one pick sets every one of them in a step that one undo puts back. It used to disappear the moment you picked a second layer, so a row of buttons had to be placed one at a time.",
+  "setup": "Photonz Dev, Experiments window, release Next. Layout needs the Placement flag, which is on by default.",
+  "try": [
+    { "do": "Draw three rectangles stacked one above another, sweep over all three and press ⌘G." },
+    { "do": "Double click into the group, then click the first rectangle: Layout reads This layer in Group." },
+    { "do": "Shift-click the second rectangle. Layout stays, headed These 2 layers in Group.", "shot": "2026-09-06-layout-for-several-2-two-layers.png" },
+    { "do": "Pick Center from the Horizontal row. Both rows take it in one go." },
+    { "do": "Press ⌘Z once. Both go back to Scale together; if only one had, the row would say Mixed." },
+    { "do": "Set Center again, click the Group, and type 700 into W. The two you picked hold their width and centre; the third spreads with the box." },
+    { "do": "Give the two rows different rules one at a time, then pick both: Horizontal says Mixed.", "shot": "2026-09-06-layout-for-several-6-mixed.png" },
+    { "do": "Command-click a rectangle outside the group so the picked layers are in different places.", "shot": "2026-09-06-layout-for-several-8-different-containers.png" }
+  ],
+  "evaluate": [
+    "Does These 2 layers in Group tell you what the rows below are about without having to think?",
+    "Is Mixed in the Horizontal row obviously a control you can still use, rather than a state you are stuck in?",
+    "Does one line under the rows say enough, now that the single-layer explanations are gone?",
+    "When the picked layers are in different groups, does the sentence tell you what to do next?",
+    "Would you rather the rows also spoke for what several GROUPS tell their contents, or is placing the layers themselves the part that mattered?"
+  ],
+  "rough": [
+    "The Contents rows, the ones headed Contents of <group> that say what a group tells everything inside it, still only show for one group at a time. Picking two groups gives you their own placement rows but nothing about what they hold, because the Arrangement controls and the layers-with-rules-of-their-own list under them are both written for one group. Filed as its own task.",
+    "With several picked, the two rows follow the GROUP's flow rather than each layer's. A layer stretched both ways steps out of a stack and normally keeps both of its rows live; picked alongside others it takes the stack's answer like the rest, and you set its own by picking it on its own. The alternative was a row that silently meant one layer out of four.",
+    "The Clear button, which takes off a rule left over on an axis a stack has since taken over, only shows for a single layer. Four layers can carry four different leftovers and one button cannot name them all.",
+    "A locked layer is still reached, because the Layout section has always let you place one. Worth deciding whether locked should mean untouchable here the way it does for the align commands.",
+    "Screen Recording was granted, so every picture above is a real capture of the window, not an offscreen render."
+  ]
+}

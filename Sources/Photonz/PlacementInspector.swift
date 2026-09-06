@@ -18,36 +18,73 @@ import SwiftUI
 /// current answer is readable as a word instead of a highlighted icon.
 struct PlacementInspector: View {
     @Environment(EditorState.self) private var editorState
-    let layer: Layer
+    /// The one layer picked, or nil while several are. The rows below speak for
+    /// the whole selection either way; this is only what the parts that are
+    /// about ONE layer hang off — the group's own Contents rows, the rule left
+    /// over on an axis the flow took, and the caption that tells one layer's
+    /// story.
+    let layer: Layer?
 
     /// The row the pointer is over, so a name that can be clicked looks like it.
     @State private var hoveredContentID: UUID?
 
-    /// The live layer, so a menu pick redraws the row it came from.
-    private var current: Layer { editorState.document?.layer(id: layer.id) ?? layer }
+    /// The layers this section places and what each row reads across them. One
+    /// layer or five, it is the same reading, so the rows have one path.
+    private var selection: PlacementSelection { editorState.placementSelection }
 
-    private var container: Layer? { editorState.containerOfSelection }
+    /// The one layer the parts that are about ONE layer speak for, live from
+    /// the document so a menu pick redraws the row it came from. Nobody as soon
+    /// as a second layer is picked.
+    ///
+    /// Read off what is PICKED rather than off `selection`, because a group
+    /// loose on the canvas is placed by nothing and so is not in the selection
+    /// at all — and its Contents rows are the whole reason the section is on
+    /// screen for it.
+    private var only: Layer? {
+        let picked = editorState.actionableLayerIDs
+        guard picked.count == 1, let id = picked.first else { return nil }
+        return editorState.document?.layer(id: id) ?? layer
+    }
+
+    private var container: Layer? {
+        selection.containerID.flatMap { editorState.document?.layer(id: $0) }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let container {
-                childRows(in: container)
-            }
-            if current.isGroup {
-                if container != nil { Divider() }
-                contentRows
+            if selection.hasDifferentContainers {
+                // Every picked layer sits in something, so the section applies;
+                // they just do not sit in the same something. A panel that
+                // silently went blank here would read as a fault, so it says
+                // which it is.
+                Text(PlacementSelection.differentContainersNote)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                if let container {
+                    childRows(in: container)
+                }
+                if let only, only.isGroup {
+                    if container != nil { Divider() }
+                    contentRows(only)
+                }
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-        .id(layer.id)
+        .id(layer?.id)
     }
 
     // MARK: - What this layer does inside the thing holding it
 
     @ViewBuilder
     private func childRows(in container: Layer) -> some View {
-        let resolved = current.resolvedPlacement(in: container)
+        // What one picked layer does, or nothing while several are picked: with
+        // a selection the rows follow the CONTAINER's flow rather than any one
+        // layer's, because a row that was live for the surface and dead for the
+        // three buttons beside it would silently mean one layer out of four.
+        let resolved = only?.resolvedPlacement(in: container)
         // What "Follow" would actually give you, which is the CONTAINER's
         // answer. The resolved one is this layer's own rule wherever it has
         // set one, and a Follow row that reads back the override it is
@@ -64,80 +101,107 @@ struct PlacementInspector: View {
         let flow = PlacementEditing(arrangement: arrangement(of: container), placing: resolved,
                                     onAScreen: container.isFrame)
         // What this layer still says on the axis the flow took over, so the row
-        // that owns it can offer to take it off.
-        let stale = flow.inertRule(in: current.placement)
+        // that owns it can offer to take it off. One layer only: the leftover
+        // rule is a different word on each of four layers, and a Clear button
+        // that named one of them would be lying about the other three.
+        let stale = only.flatMap { flow.inertRule(in: $0.placement) }
+        let ids = selection.layers
         VStack(alignment: .leading, spacing: 6) {
-            Text(container.isFrame ? "This layer on \(container.name)"
-                                   : "This layer in \(container.name)")
+            Text(heading(container))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             if flow.canSetHorizontal {
                 row("Horizontal") {
                     Menu {
                         Button(followTitle(inherited.horizontal.title, isFrame: container.isFrame)) {
-                            editorState.setPlacement(id: current.id, horizontal: nil)
+                            editorState.setPlacement(ids: ids, horizontal: nil)
                         }
                         Divider()
                         ForEach(container.horizontalPlacementChoices, id: \.self) { choice in
                             Button(choice.title) {
-                                editorState.setPlacement(id: current.id, horizontal: choice)
+                                editorState.setPlacement(ids: ids, horizontal: choice)
                             }
                         }
                     } label: {
-                        menuLabel(resolved.horizontal.title, following: resolved.followsHorizontal)
+                        menuLabel(selection.horizontal.value?.title ?? PlacementSelection.mixedText,
+                                  following: selection.horizontal.follows,
+                                  isMixed: selection.horizontal.isMixed)
                     }
                     .menuStyle(.borderlessButton)
                     .fixedSize()
                 }
             } else {
-                ownedByTheFlow("Horizontal", flow, clearing: stale, filling: fillingRow) {
-                    editorState.setPlacement(id: current.id, horizontal: nil)
+                ownedByTheFlow("Horizontal", flow, clearing: stale, filling: fillingRow(flow)) {
+                    editorState.setPlacement(ids: ids, horizontal: nil)
                 }
             }
             if flow.canSetVertical {
                 row("Vertical") {
                     Menu {
                         Button(followTitle(inherited.vertical.title, isFrame: container.isFrame)) {
-                            editorState.setPlacement(id: current.id, vertical: nil)
+                            editorState.setPlacement(ids: ids, vertical: nil)
                         }
                         Divider()
                         ForEach(container.verticalPlacementChoices, id: \.self) { choice in
                             Button(choice.title) {
-                                editorState.setPlacement(id: current.id, vertical: choice)
+                                editorState.setPlacement(ids: ids, vertical: choice)
                             }
                         }
                     } label: {
-                        menuLabel(resolved.vertical.title, following: resolved.followsVertical)
+                        menuLabel(selection.vertical.value?.title ?? PlacementSelection.mixedText,
+                                  following: selection.vertical.follows,
+                                  isMixed: selection.vertical.isMixed)
                     }
                     .menuStyle(.borderlessButton)
                     .fixedSize()
                 }
             } else {
-                ownedByTheFlow("Vertical", flow, clearing: stale, filling: fillingRow) {
-                    editorState.setPlacement(id: current.id, vertical: nil)
+                ownedByTheFlow("Vertical", flow, clearing: stale, filling: fillingRow(flow)) {
+                    editorState.setPlacement(ids: ids, vertical: nil)
                 }
             }
-            Text(childCaption(resolved, flow, stale: stale, arranges: arranges,
-                              arrangement: arrangement(of: container)))
+            Text(resolved.map {
+                childCaption($0, flow, stale: stale, arranges: arranges,
+                             arrangement: arrangement(of: container))
+            } ?? manyCaption(flow))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    /// Whether this layer takes the room its stack has left over, and how to
-    /// say otherwise. Only a layer's own rows carry it: the Contents rows speak
-    /// for everything inside a group at once, and "all of you take what is
-    /// left" is a grid, not a stack.
-    private var fillingRow: (isOn: Bool, set: (Bool) -> Void)? {
-        guard container != nil else { return nil }
-        let id = current.id
-        return (current.fillsTheFlow, { editorState.setFillsTheFlow(id: id, $0) })
+    /// Who these rows are about, in the words of what is holding them.
+    private func heading(_ container: Layer) -> String {
+        guard selection.count > 1 else {
+            return container.isFrame ? "This layer on \(container.name)"
+                                     : "This layer in \(container.name)"
+        }
+        return container.isFrame ? "These \(selection.count) layers on \(container.name)"
+                                 : "These \(selection.count) layers in \(container.name)"
+    }
+
+    /// Whether the picked layers take the room their stack has left over, and
+    /// how to say otherwise. Only a layer's own rows carry it: the Contents
+    /// rows speak for everything inside a group at once, and "all of you take
+    /// what is left" is a grid, not a stack.
+    private func fillingRow(_ flow: PlacementEditing) -> FillingRow? {
+        guard container != nil, flow.canFill,
+              let fill = flow.fillTitle, let answer = flow.setByTheFlow else { return nil }
+        let ids = selection.layers
+        guard !ids.isEmpty else { return nil }
+        let reading = selection.fills
+        let fills = reading.value ?? false
+        return FillingRow(
+            title: reading.isMixed ? PlacementSelection.mixedText : (fills ? fill : answer),
+            isMixed: reading.isMixed,
+            follows: !fills && !reading.isMixed,
+            answer: answer, fill: fill,
+            set: { editorState.setFillsTheFlow(ids: ids, $0) })
     }
 
     /// The group's own default still written on the axis its flow decides, so
     /// the Contents rows can offer to clear it the same way a layer's do.
-    private func contentsInertRule(_ flow: PlacementEditing) -> String? {
+    private func contentsInertRule(_ current: Layer, _ flow: PlacementEditing) -> String? {
         flow.inertRule(in: current.group?.contentPlacement)
     }
 
@@ -185,7 +249,7 @@ struct PlacementInspector: View {
         // Taking the room the stack has left over is the loudest thing a piece
         // can be doing, and it is not on either menu the other branches talk
         // about, so it is said first.
-        if current.fillsTheFlow, flow.canFill, let owner = flow.flowNoun {
+        if only?.fillsTheFlow == true, flow.canFill, let owner = flow.flowNoun {
             return "This takes the room \(owner) has left once everything else, the gaps and "
                 + "the room at its edges have taken theirs. Set it back and it goes to the size "
                 + "it was before."
@@ -205,7 +269,7 @@ struct PlacementInspector: View {
         // nothing, so promising it would fill the box is a lie.
         let stretches = (flow.canSetHorizontal && resolved.horizontal == .stretch)
             || (flow.canSetVertical && resolved.vertical == .stretch)
-        if current.text != nil, stretches {
+        if only?.text != nil, stretches {
             return "Stretch fills the box with the words placed by Align, in Text."
         }
         // A stack with nothing to spare is the one place the row above went
@@ -229,9 +293,40 @@ struct PlacementInspector: View {
                            : "This layer's own rule, which wins over the group's."
     }
 
+    /// The line under the rows when they speak for SEVERAL layers.
+    ///
+    /// The single-layer caption tells one layer's story: it is the surface, it
+    /// still carries a rule the stack ignores, its words fill the box it was
+    /// told to stretch to. None of that survives being said about four layers
+    /// at once, so this says the two things that are still true of all of them
+    /// — who is deciding, and that one pick here reaches every one.
+    private func manyCaption(_ flow: PlacementEditing) -> String {
+        // No counting here: the heading right above already says how many, and
+        // "All 2 are following the group" is a sentence nobody says out loud.
+        if selection.fills.value == true, flow.canFill, let owner = flow.flowNoun {
+            return "These all take the room \(owner) has left, shared equally, once everything "
+                + "else, the gaps and the room at its edges have taken theirs."
+        }
+        if let missing = flow.noRoomToFill {
+            return missing
+        }
+        let following = (!flow.canSetHorizontal || selection.horizontal.follows)
+            && (!flow.canSetVertical || selection.vertical.follows)
+        if following {
+            return isOnAScreen
+                ? "These are all following the screen. Pick something here to give every one of "
+                    + "them the same rule."
+                : "These are all following the group. Pick something here to give every one of "
+                    + "them the same rule."
+        }
+        return isOnAScreen
+            ? "One pick here reaches every one of them, and wins over the screen's rule."
+            : "One pick here reaches every one of them, and wins over the group's rule."
+    }
+
     // MARK: - What everything inside this group does
 
-    private var contentRows: some View {
+    private func contentRows(_ current: Layer) -> some View {
         let effective = current.contentPlacementDefault
         let arrangement = arrangement(of: current)
         let flow = PlacementEditing(arrangement: arrangement, placing: effective)
@@ -265,7 +360,7 @@ struct PlacementInspector: View {
                             ? effective.vertical.title
                             : (flow.setByTheFlow ?? effective.vertical.title))
             } else if !flow.canSetHorizontal {
-                ownedByTheFlow("Horizontal", flow, clearing: contentsInertRule(flow),
+                ownedByTheFlow("Horizontal", flow, clearing: contentsInertRule(current, flow),
                                filling: nil) {
                     editorState.setContentPlacement(id: current.id, horizontal: nil)
                 }
@@ -287,7 +382,7 @@ struct PlacementInspector: View {
             if current.isComponentInstance {
                 EmptyView()
             } else if !flow.canSetVertical {
-                ownedByTheFlow("Vertical", flow, clearing: contentsInertRule(flow),
+                ownedByTheFlow("Vertical", flow, clearing: contentsInertRule(current, flow),
                                filling: nil) {
                     editorState.setContentPlacement(id: current.id, vertical: nil)
                 }
@@ -327,7 +422,7 @@ struct PlacementInspector: View {
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            exceptions
+            exceptions(current)
         }
     }
 
@@ -339,7 +434,7 @@ struct PlacementInspector: View {
     /// mystery until you do. A group where everybody follows says nothing:
     /// an empty list would be a permanent question about an answer of none.
     @ViewBuilder
-    private var exceptions: some View {
+    private func exceptions(_ current: Layer) -> some View {
         let overrides = current.contentsWithTheirOwnPlacement(arrangement: arrangement(of: current))
         if !overrides.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
@@ -349,7 +444,7 @@ struct PlacementInspector: View {
                     .foregroundStyle(.secondary)
                     .padding(.bottom, 2)
                 ForEach(overrides.prefix(exceptionsShown)) { exception in
-                    exceptionRow(exception)
+                    exceptionRow(exception, in: current)
                 }
                 // A group with a dozen exceptions would push the rest of the
                 // inspector off the panel, so the list stops and says so; the
@@ -368,7 +463,7 @@ struct PlacementInspector: View {
     private var exceptionsShown: Int { 6 }
 
     /// One name, what it does instead, and a click that goes there.
-    private func exceptionRow(_ exception: PlacementOverride) -> some View {
+    private func exceptionRow(_ exception: PlacementOverride, in current: Layer) -> some View {
         Button {
             editorState.selectLayer(exception.id, inGroup: current.id)
         } label: {
@@ -436,17 +531,18 @@ struct PlacementInspector: View {
     @ViewBuilder
     private func ownedByTheFlow(_ title: String, _ flow: PlacementEditing,
                                 clearing stale: String? = nil,
-                                filling: (isOn: Bool, set: (Bool) -> Void)? = nil,
+                                filling: FillingRow? = nil,
                                 clear: @escaping () -> Void = {}) -> some View {
         if let answer = flow.setByTheFlow {
             row(title) {
                 HStack(spacing: 8) {
-                    if let filling, flow.canFill, let fill = flow.fillTitle {
+                    if let filling {
                         Menu {
-                            Button(answer) { filling.set(false) }
-                            Button(fill) { filling.set(true) }
+                            Button(filling.answer) { filling.set(false) }
+                            Button(filling.fill) { filling.set(true) }
                         } label: {
-                            menuLabel(filling.isOn ? fill : answer, following: !filling.isOn)
+                            menuLabel(filling.title, following: filling.follows,
+                                      isMixed: filling.isMixed)
                         }
                         .menuStyle(.borderlessButton)
                         .fixedSize()
@@ -488,10 +584,29 @@ struct PlacementInspector: View {
 
     /// The current answer. A row that has not been set says the same word the
     /// group said, dimmed, so following and choosing never read as the same
-    /// thing at a glance.
-    private func menuLabel(_ title: String, following: Bool) -> some View {
+    /// thing at a glance — and a row whose picked layers do not agree says
+    /// Mixed in that same slot, at the one strength the whole dock says it
+    /// (`MixedLook`).
+    private func menuLabel(_ title: String, following: Bool, isMixed: Bool = false) -> some View {
         Text(title)
             .font(.callout)
-            .foregroundStyle(following ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+            .foregroundStyle(MixedLook.style(isMixed, otherwise:
+                following ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary)))
     }
+}
+
+/// The two-answer menu on the row a stack owns: keep your size, or take the
+/// room the stack has left. It carries what the picked layers READ as well as
+/// what setting it does, so one layer and five go through the same row.
+struct FillingRow {
+    /// What the menu shows now: one of the two answers, or Mixed.
+    let title: String
+    /// Whether the picked layers disagree.
+    let isMixed: Bool
+    /// Whether they are all doing the ordinary thing, which reads quieter.
+    let follows: Bool
+    /// The two answers, in the flow's own words.
+    let answer: String
+    let fill: String
+    let set: (Bool) -> Void
 }

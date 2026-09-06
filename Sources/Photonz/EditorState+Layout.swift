@@ -315,12 +315,21 @@ extension EditorState {
 
     // MARK: - Where the pieces sit when something is resized
 
-    /// The group the selected layer sits in, or nil when it sits loose on the
-    /// canvas. What the Layout section asks before it offers a row about "the
-    /// container", since without one there is nothing to line up against.
+    /// What the Layout section shows for what is picked: the layers it places,
+    /// the one thing holding them, and what each row reads across them. One
+    /// layer or five, this is the same reading, which is what lets one pick
+    /// stretch four buttons instead of stretching them one at a time.
+    var placementSelection: PlacementSelection {
+        guard let document else { return .none }
+        return document.placementSelection(layerIDs: orderedSelectedLayerIDs)
+    }
+
+    /// The group the picked layers sit in, or nil when they sit loose on the
+    /// canvas or in more than one thing. What the Layout section asks before it
+    /// offers a row about "the container", since without one there is nothing
+    /// to line up against.
     var containerOfSelection: Layer? {
-        guard multiSelectedLayerIDs.isEmpty, let id = selectedLayerID else { return nil }
-        return document?.containingGroup(of: id)
+        placementSelection.containerID.flatMap { document?.layer(id: $0) }
     }
 
     /// What a group tells everything inside it to do when it is resized.
@@ -352,6 +361,24 @@ extension EditorState {
     func setFillsTheFlow(id: UUID, _ fills: Bool) {
         guard document?.layer(id: id) != nil else { return }
         perform { $0.setFillsTheFlow(id: id, fills) }
+    }
+
+    /// The same three edits over EVERY picked layer, in ONE undo step however
+    /// many they reached. Three buttons in a bar are told to stretch once
+    /// rather than three times over, and one undo puts all three back.
+    func setPlacement(ids: [UUID], horizontal: HorizontalPlacement?) {
+        guard !ids.isEmpty else { return }
+        perform { _ = $0.setPlacement(ids: ids, horizontal: horizontal) }
+    }
+
+    func setPlacement(ids: [UUID], vertical: VerticalPlacement?) {
+        guard !ids.isEmpty else { return }
+        perform { _ = $0.setPlacement(ids: ids, vertical: vertical) }
+    }
+
+    func setFillsTheFlow(ids: [UUID], _ fills: Bool) {
+        guard !ids.isEmpty else { return }
+        perform { _ = $0.setFillsTheFlow(ids: ids, fills) }
     }
 
     /// A canvas click that resolved through the group walk: the layer it

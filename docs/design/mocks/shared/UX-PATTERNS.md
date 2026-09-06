@@ -406,6 +406,13 @@ Everything below is a consequence of that table.
   and it is the same value for one copy as for five, so the panel has one path
   rather than two that can drift. The walk that keeps it true is
   `Scripts/playtest/copies-share-knobs-walk.json`.)*
+  The Layout section was the same bug in a different room, found and fixed the
+  same way: every layer inside a container has a place in it, so picking a
+  second one must not take the rows away. *(Fixed 2026-09-06,
+  `the-layout-section-speaks-for-several-picked-lay`, audit
+  `2026-09-06-layout-for-several`. `PlacementSelection` is the reading, again
+  the same value for one layer as for five, and the walk is
+  `Scripts/playtest/layout-for-several-walk.json`.)*
 - **When the section applies but no control inside it is shared, the section
   stays and says so in one sentence.** Pick copies of two different components
   and every picked thing has knobs, so a panel that silently goes blank reads as
@@ -414,7 +421,11 @@ Everything below is a consequence of that table.
   "These copies come from different components. Pick copies of one component to
   set their knobs together."
   *(Shipped 2026-09-05 as `ComponentKnobSelection.differentComponentsNote`, which
-  is where that sentence lives so two surfaces cannot write two of it.)*
+  is where that sentence lives so two surfaces cannot write two of it. Layout
+  says its own version of it, `PlacementSelection.differentContainersNote`, when
+  the picked layers are not all in the same group: two layers in two groups are
+  placed by two different containers, so a row averaging them would be setting a
+  rule against a container neither of them answers to.)*
   Two controls are the same control when they are the same property of the same
   thing, never when they merely share a name. A knob called Label on one
   component and a knob called Label on another are two knobs, and a row that

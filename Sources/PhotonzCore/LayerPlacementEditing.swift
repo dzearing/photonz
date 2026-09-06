@@ -127,6 +127,40 @@ extension PhotonzDocument {
         }
     }
 
+    /// The same three edits over EVERY picked layer, in one step that one undo
+    /// puts back. Three buttons in a bar are told to stretch once rather than
+    /// three times over, and each returns how many it reached so a caller can
+    /// tell a no-op from an edit.
+    @discardableResult
+    public mutating func setPlacement(ids: [UUID], horizontal: HorizontalPlacement?) -> Int {
+        var count = 0
+        for id in ids where layer(id: id) != nil {
+            setPlacement(id: id, horizontal: horizontal)
+            count += 1
+        }
+        return count
+    }
+
+    @discardableResult
+    public mutating func setPlacement(ids: [UUID], vertical: VerticalPlacement?) -> Int {
+        var count = 0
+        for id in ids where layer(id: id) != nil {
+            setPlacement(id: id, vertical: vertical)
+            count += 1
+        }
+        return count
+    }
+
+    @discardableResult
+    public mutating func setFillsTheFlow(ids: [UUID], _ fills: Bool) -> Int {
+        var count = 0
+        for id in ids where layer(id: id)?.fillsTheFlow != fills {
+            setFillsTheFlow(id: id, fills)
+            count += 1
+        }
+        return count
+    }
+
     /// The group a layer sits in, or nil when it sits loose on the canvas —
     /// which is also the answer to "is there a container to line this up in".
     public func containingGroup(of id: UUID) -> Layer? {

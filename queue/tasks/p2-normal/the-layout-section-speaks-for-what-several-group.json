@@ -1,0 +1,28 @@
+{
+  "id": "the-layout-section-speaks-for-what-several-group",
+  "title": "The Layout section speaks for what several groups hold",
+  "goal": "Pick two or more groups and the part of Layout that says what a group tells everything inside it disappears, so arranging them means doing it one group at a time. It should stay and speak for all of them, the way the rows about where the groups themselves sit already do.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1440,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T11:09:17.011Z",
+  "updated": "2026-09-06T11:09:17.012Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left out of the-layout-section-speaks-for-several-picked-lay on 2026-09-06: that task made the CHILD rows (This layer in <container>) speak for the whole selection through PlacementSelection in PhotonzCore. The Contents rows in PlacementInspector.contentRows are still keyed on one group, and so are the two things inside them: ArrangementInspector(layer:) and Layer.contentsWithTheirOwnPlacement. Both need a whole-selection reading of their own, shaped like PlacementSelection. Do NOT reuse PlacementSelection for this: that one is about where the picked layers sit in what holds them, this is about what the picked groups tell their own contents.",
+  "acceptance": [
+    "Picking two groups keeps the Contents rows on screen, headed for both",
+    "An arrangement or placement the picked groups agree on shows that value; one they do not agree on reads Mixed",
+    "Setting one reaches every picked group in one step that one undo puts back",
+    "The list of layers with rules of their own says which group each one is in, or says how many groups it is counting"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T11:09:17.012Z",
+      "note": "created (manual)"
+    }
+  ]
+}

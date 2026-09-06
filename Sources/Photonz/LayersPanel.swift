@@ -384,14 +384,6 @@ struct InspectorPanel: View {
                 // The columns this screen is designed to, right under its size.
                 set.insert(.columns)
             }
-            // Where the pieces sit when something is resized (Next,
-            // `next-placement`). Only worth showing when there is something to
-            // place: a group has contents, and a layer inside a group has a
-            // container. A layer loose on the canvas has neither.
-            if Experiments.shared.placementEnabled,
-               layer.isGroup || editorState.containerOfSelection != nil {
-                set.insert(.placement)
-            }
             // A main component's own section (Next, `next-components`): its
             // name, which is the one name the layers list and the shelf both
             // print. Only a main has one.
@@ -411,6 +403,17 @@ struct InspectorPanel: View {
             if layer.zoomCallout != nil { set.insert(.callout) }
             if layer.measure != nil { set.insert(.measure) }
             if layer.collage != nil { set.insert(.collage) }
+        }
+        // Where the picked layers sit when the thing holding them is resized
+        // (Next, `next-placement`) — for EVERYTHING picked, like the Color and
+        // Effects rows above. Picking a second layer used to take the whole
+        // section off the panel, so three buttons in a bar had to be stretched
+        // one at a time; the section leaves only when nothing picked has a
+        // place in anything. A group also brings it for what it holds, which
+        // is the one part still about a single layer.
+        if Experiments.shared.placementEnabled,
+           editorState.placementSelection.isPresent || selectedLayer?.isGroup == true {
+            set.insert(.placement)
         }
         // The picked copies' own section, saying which original they follow and
         // holding the knobs it exposes — for EVERYTHING picked, like the Color
@@ -559,9 +562,9 @@ struct InspectorPanel: View {
                 FrameColumnsInspector(layer: layer)
             }
         case .placement:
-            if let layer = selectedLayer {
-                PlacementInspector(layer: layer)
-            }
+            // One layer picked or five: the same section, the same rows, each
+            // one answering for all of them.
+            PlacementInspector(layer: selectedLayer)
         case .component:
             if let layer = selectedLayer, layer.isMainComponent {
                 ComponentInspector(layer: layer)
