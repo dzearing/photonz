@@ -1560,8 +1560,9 @@ final class EditorState {
             let canvas = document.canvasSize
             for move in ordered {
                 document.updateLayer(id: move.id) {
-                    $0 = AnnotationBuilder.planningCaption($0.resized(to: move.frame),
-                                                           canvas: canvas)
+                    $0 = AnnotationBuilder.planningCaption(
+                        $0.resized(to: move.frame), canvas: canvas,
+                        captionPillSize: $0.measuredCaptionPillSize)
                 }
             }
         }

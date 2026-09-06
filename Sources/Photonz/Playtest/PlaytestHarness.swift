@@ -2749,8 +2749,12 @@ private final class Run {
             var line = "\(annotation.shape) caption=\(annotation.caption ?? "nil") frame \(layer.frame.integral)"
             if annotation.hasCaption {
                 // The pill's center in document space, and whether it was
-                // placed by hand, so a walk can prove a drag landed.
-                let anchor = annotation.captionAnchor()
+                // placed by hand, so a walk can prove a drag landed. At the
+                // MEASURED width, which is the label a person sees: the
+                // model's own estimate is a generous guess and sits up to
+                // 80pt further from the tail than the label does.
+                let pill = annotation.measuredCaptionPillSize ?? annotation.estimatedCaptionSize
+                let anchor = annotation.captionPillCenter(forPillSize: pill)
                 let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
                 // The attachment too: the point the bubble hangs from, which a
                 // walk can watch stay put while the caption gets longer.

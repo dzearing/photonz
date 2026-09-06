@@ -39,8 +39,13 @@ public enum CanvasPointer {
     /// chrome asks before drawing the knob, so the cue and the knob can never
     /// disagree about whether it is there. A locked layer answers nil
     /// everywhere: it offers no handles for a pointer to promise.
+    ///
+    /// `captionPillSize` is the arrow caption pill as MEASURED, so the hand
+    /// appears over the label itself rather than over the generous box the
+    /// frame reserves around it. See `CanvasGrab.captionPillRect`.
     public static func cue(at p: CGPoint, layer: Layer, frame: CGRect?, zoom: CGFloat,
-                           captionsEnabled: Bool, offersRotation: Bool) -> CanvasPointerCue? {
+                           captionsEnabled: Bool, offersRotation: Bool,
+                           captionPillSize: CGSize? = nil) -> CanvasPointerCue? {
         // A locked layer has no handles to cue: the chrome draws none and the
         // press starts nothing, so the pointer stays a plain arrow over all of
         // it. See `Layer.offersHandles`.
@@ -51,8 +56,8 @@ public enum CanvasPointer {
         if layer.annotation != nil,
            AnnotationEndpoints.hit(at: p, layer: layer, zoom: zoom) != nil { return .grab }
         // The caption pill, and a caliper's number, feet and head dot.
-        if CanvasGrab.hit(at: p, layer: layer, zoom: zoom,
-                          captionsEnabled: captionsEnabled) != nil { return .grab }
+        if CanvasGrab.hit(at: p, layer: layer, zoom: zoom, captionsEnabled: captionsEnabled,
+                          captionPillSize: captionPillSize) != nil { return .grab }
         // The rotate knob, which floats clear of the top edge and so is never
         // in a frame handle's way.
         if offersRotation, let knob = layer.rotateKnobPoint(zoom: zoom),

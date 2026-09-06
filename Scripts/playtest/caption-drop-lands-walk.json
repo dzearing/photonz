@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/caption-drop-lands",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [900, 400], "to": [600, 400], "steps": 12 },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "type", "text": "ok" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "0-short-committed", "note": "a two letter label hanging off the tail. The tip snapped to an edge at y 411, so the arrow sits there and the pill line should read 927, 411" },
+
+    { "do": "drag", "from": [927.5, 411], "to": [500, 700], "steps": 14 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-short-dropped", "note": "picked up by the middle of the label and let go at (500, 700): the pill line must read 500, 700" },
+    { "do": "snapshot", "name": "1-short-dropped" },
+    { "do": "render", "name": "1-short-dropped" },
+
+    { "do": "drag", "from": [500, 700], "to": [1420, 700], "steps": 14 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-short-at-edge", "note": "shoved past the right edge: the label tucks against it, centre 1413, right edge on 1440" },
+    { "do": "snapshot", "name": "2-short-at-edge" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [900, 760], "to": [600, 760], "steps": 12 },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "type", "text": "Save all the changes here" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "drag", "from": [1022.4, 760], "to": [1420, 760], "steps": 14 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-sentence-at-edge", "note": "a sentence shoved at the same edge: centre 1317.6, right edge on 1440. It used to stop 163pt short of the edge" },
+    { "do": "snapshot", "name": "3-sentence-at-edge" },
+    { "do": "render", "name": "3-sentence-at-edge" }
+  ]
+}

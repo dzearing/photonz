@@ -303,7 +303,14 @@ extension AnnotationBuilder {
     /// not re-picked: it keeps its offset from the tail and is only pulled
     /// back onto the picture. Endpoints never move. Pass nil for `canvas` to
     /// skip planning; captionless layers pass through.
-    public static func planningCaption(_ layer: Layer, canvas: CGSize?) -> Layer {
+    ///
+    /// `captionPillSize` is the pill as MEASURED (only PhotonzRender can
+    /// measure type). Without one the caption's own generous estimate stands
+    /// in, and every edge the pill is held off is that much too far away: a
+    /// sentence dropped against the right edge of the picture came to rest
+    /// 157pt short of it. Same rule as `Layer.drawnBounds(captionPillSize:)`.
+    public static func planningCaption(_ layer: Layer, canvas: CGSize?,
+                                       captionPillSize: CGSize? = nil) -> Layer {
         guard let canvas, let a = layer.annotation, a.hasCaption,
               let start = layer.annotationEndpoint(.start),
               let end = layer.annotationEndpoint(.end) else { return layer }
@@ -313,10 +320,12 @@ extension AnnotationBuilder {
         let placement: CaptionPlacement
         if a.captionPinned, let pinned = a.captionOffset {
             placement = CaptionPlacement(
-                attach: CaptionPlanner.keepingOnCanvas(pinned, for: probe, canvas: canvas),
+                attach: CaptionPlanner.keepingOnCanvas(pinned, for: probe, canvas: canvas,
+                                                       pillSize: captionPillSize),
                 growth: a.captionGrowth)
         } else {
-            placement = CaptionPlanner.plan(for: probe, canvas: canvas)
+            placement = CaptionPlanner.plan(for: probe, canvas: canvas,
+                                            reserving: captionPillSize)
         }
         guard placement.attach != a.captionOffset || placement.growth != a.captionGrowth else {
             return layer
@@ -333,7 +342,13 @@ extension AnnotationBuilder {
     /// spot is pinned relative to the tail so it rides along when the arrow
     /// moves, pulled back onto the picture if it would leave it, and the frame
     /// is rebuilt around it. Captionless layers pass through.
-    public static func placingCaption(_ layer: Layer, at center: CGPoint, canvas: CGSize?) -> Layer {
+    ///
+    /// `captionPillSize` is the pill as MEASURED: `center` names where the
+    /// label you can SEE should sit, so the conversion into an attachment has
+    /// to use the size it is really drawn at. Without one the estimate stands
+    /// in, and the label lands short of the hand by half the difference.
+    public static func placingCaption(_ layer: Layer, at center: CGPoint, canvas: CGSize?,
+                                      captionPillSize: CGSize? = nil) -> Layer {
         guard let a = layer.annotation, a.hasCaption,
               let tail = layer.annotationEndpoint(.start) else { return layer }
         var content = a
@@ -344,14 +359,15 @@ extension AnnotationBuilder {
         // The drop names where the PILL sits; the model stores where it hangs
         // from, so a caption typed later still grows away from the arrow.
         let attachment = CaptionPlanner.attachment(forPillCenter: center, of: a,
-                                                   size: a.estimatedCaptionSize)
+                                                   size: captionPillSize ?? a.estimatedCaptionSize)
         content.captionOffset = CGSize(width: attachment.x - tail.x, height: attachment.y - tail.y)
         var updated = layer
         updated.content = .annotation(content)
         // Rebuild the frame around the new spot even without a canvas to clamp
         // against, then clamp when there is one.
         guard let end = layer.annotationEndpoint(.end) else { return layer }
-        return planningCaption(updating(updated, start: tail, end: end), canvas: canvas)
+        return planningCaption(updating(updated, start: tail, end: end), canvas: canvas,
+                               captionPillSize: captionPillSize)
     }
 
     /// Writes a caption and the spot the caption FIELD used, without re-picking
@@ -377,7 +393,8 @@ extension AnnotationBuilder {
     }
 
     /// Hands a hand-placed pill back to the planner: the automatic spot again.
-    public static func releasingCaption(_ layer: Layer, canvas: CGSize?) -> Layer {
+    public static func releasingCaption(_ layer: Layer, canvas: CGSize?,
+                                        captionPillSize: CGSize? = nil) -> Layer {
         guard let a = layer.annotation, a.captionPinned,
               let start = layer.annotationEndpoint(.start),
               let end = layer.annotationEndpoint(.end) else { return layer }
@@ -387,7 +404,8 @@ extension AnnotationBuilder {
         content.captionGrowth = nil
         var updated = layer
         updated.content = .annotation(content)
-        return planningCaption(updating(updated, start: start, end: end), canvas: canvas)
+        return planningCaption(updating(updated, start: start, end: end), canvas: canvas,
+                               captionPillSize: captionPillSize)
     }
 }
 
@@ -508,13 +526,17 @@ public enum CaptionPlanner {
     /// A hand-placed pill's attachment, pulled back onto the picture if the
     /// pill it holds would leave it. The person chose the spot, so nothing else
     /// is second-guessed: it may sit on the shaft or the head.
+    ///
+    /// `pillSize` is the pill as MEASURED. Without one the caption's own
+    /// generous estimate stands in and the label is held that much further off
+    /// every edge than it has to be.
     public static func keepingOnCanvas(_ offset: CGSize, for content: AnnotationContent,
-                                       canvas: CGSize) -> CGSize {
+                                       canvas: CGSize, pillSize: CGSize? = nil) -> CGSize {
         let bounds = CGRect(origin: .zero, size: canvas)
         let tail = content.start
         var probe = content
         probe.captionOffset = offset
-        let wanted = rect(of: probe, size: content.estimatedCaptionSize)
+        let wanted = rect(of: probe, size: pillSize ?? content.estimatedCaptionSize)
         let anchor = slid(probe.captionAttachment(),
                           by: slidOntoCanvas(wanted, bounds: bounds), from: wanted)
         return CGSize(width: anchor.x - tail.x, height: anchor.y - tail.y)

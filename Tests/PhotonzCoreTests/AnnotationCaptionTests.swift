@@ -844,3 +844,117 @@ struct AnnotationCaptionGrowthTests {
         #expect(try JSONDecoder().decode(AnnotationContent.self, from: legacy).captionGrowth == nil)
     }
 }
+
+// MARK: - Dropping a pill where the hand let go of it
+
+/// The pill's centre in document space at a MEASURED size — where the label is
+/// actually drawn, as opposed to the generous box the frame reserves for it.
+private func drawnPillCentre(_ layer: Layer, size: CGSize) -> CGPoint {
+    var probe = layer.annotation!
+    probe.start = layer.annotationEndpoint(.start)!
+    probe.end = layer.annotationEndpoint(.end)!
+    return probe.captionPillCenter(forPillSize: size)
+}
+
+private func drawnPill(_ layer: Layer, size: CGSize) -> CGRect {
+    let centre = drawnPillCentre(layer, size: size)
+    return CGRect(x: centre.x - size.width / 2, y: centre.y - size.height / 2,
+                  width: size.width, height: size.height)
+}
+
+@Suite("Annotation caption drop")
+struct AnnotationCaptionDropTests {
+
+    private let canvas = CGSize(width: 1440, height: 960)
+    /// A two-letter label and a sentence, at the sizes the text measurer really
+    /// returns for them. Both are narrower than the model's own estimate.
+    private let short = CGSize(width: 54.93, height: 45.78)
+    private let long = CGSize(width: 244.78, height: 45.78)
+
+    private func arrowLayer(_ caption: String) -> Layer {
+        AnnotationBuilder.layer(content: arrowContent(caption: caption),
+                                from: CGPoint(x: 700, y: 500), to: CGPoint(x: 900, y: 500))
+    }
+
+    @Test func aPillCentresOnTheSpotItWasLetGoOf() {
+        for (caption, size) in [("ok", short), ("Save all the changes here", long)] {
+            let drop = CGPoint(x: 500, y: 700)
+            let placed = AnnotationBuilder.placingCaption(arrowLayer(caption), at: drop,
+                                                          canvas: canvas, captionPillSize: size)
+            let centre = drawnPillCentre(placed, size: size)
+            #expect(abs(centre.x - drop.x) < 1)
+            #expect(abs(centre.y - drop.y) < 1)
+        }
+    }
+
+    @Test func aPillLetGoOfByTheEdgeStaysThere() {
+        // The spot a redliner actually wants: the label tucked against the edge
+        // of the picture. It used to be pulled back by the difference between
+        // the measured pill and the estimate — 157pt for a sentence.
+        for (caption, size) in [("ok", short), ("Save all the changes here", long)] {
+            let drop = CGPoint(x: canvas.width - size.width / 2 - 6, y: 700)
+            let placed = AnnotationBuilder.placingCaption(arrowLayer(caption), at: drop,
+                                                          canvas: canvas, captionPillSize: size)
+            let centre = drawnPillCentre(placed, size: size)
+            #expect(abs(centre.x - drop.x) < 1)
+            #expect(abs(centre.y - drop.y) < 1)
+        }
+    }
+
+    @Test func aPillLetGoOfPastTheEdgeSlidesBackByItsOwnEdge() {
+        let drop = CGPoint(x: canvas.width + 40, y: 700)
+        let placed = AnnotationBuilder.placingCaption(arrowLayer("ok"), at: drop,
+                                                      canvas: canvas, captionPillSize: short)
+        let pill = drawnPill(placed, size: short)
+        #expect(abs(pill.maxX - canvas.width) < 1)
+        #expect(abs(pill.midY - drop.y) < 1)
+    }
+
+    @Test func aDroppedPillRidesAlongWhenTheArrowMoves() {
+        let drop = CGPoint(x: 500, y: 700)
+        let placed = AnnotationBuilder.placingCaption(arrowLayer("ok"), at: drop,
+                                                      canvas: canvas, captionPillSize: short)
+        // The tail moves 60 right and 30 down; the label goes with it.
+        let moved = AnnotationBuilder.planningCaption(
+            AnnotationBuilder.updating(placed, start: CGPoint(x: 760, y: 530),
+                                       end: CGPoint(x: 960, y: 530)),
+            canvas: canvas, captionPillSize: short)
+        let centre = drawnPillCentre(moved, size: short)
+        #expect(abs(centre.x - (drop.x + 60)) < 1)
+        #expect(abs(centre.y - (drop.y + 30)) < 1)
+    }
+
+    @Test func draggingTheHeadDoesNotDisturbADroppedPill() {
+        let drop = CGPoint(x: 500, y: 700)
+        let placed = AnnotationBuilder.placingCaption(arrowLayer("ok"), at: drop,
+                                                      canvas: canvas, captionPillSize: short)
+        let stretched = AnnotationBuilder.planningCaption(
+            AnnotationBuilder.updating(placed, start: CGPoint(x: 700, y: 500),
+                                       end: CGPoint(x: 1200, y: 300)),
+            canvas: canvas, captionPillSize: short)
+        let centre = drawnPillCentre(stretched, size: short)
+        #expect(abs(centre.x - drop.x) < 1)
+        #expect(abs(centre.y - drop.y) < 1)
+    }
+
+    @Test func theGrabBoxHugsTheLabelYouCanSee() {
+        // The box you can pick the label up by is the label, not the generous
+        // room the frame reserves around it: blank canvas past the far edge
+        // used to pick it up from as much as 163pt away.
+        let placed = AnnotationBuilder.placingCaption(arrowLayer("ok"),
+                                                      at: CGPoint(x: 500, y: 700),
+                                                      canvas: canvas, captionPillSize: short)
+        let grab = CanvasGrab.captionPillRect(of: placed, captionPillSize: short)
+        #expect(grab != nil)
+        let pill = drawnPill(placed, size: short)
+        #expect(abs((grab?.midX ?? 0) - pill.midX) < 0.001)
+        #expect(abs((grab?.width ?? 0) - pill.width) < 0.001)
+        // A press well past the far edge is canvas, not the label.
+        let far = CGPoint(x: pill.maxX + 40, y: pill.midY)
+        #expect(CanvasGrab.hit(at: far, layer: placed, zoom: 1, captionsEnabled: true,
+                               captionPillSize: short) == nil)
+        // The middle of the label still grabs it.
+        #expect(CanvasGrab.hit(at: CGPoint(x: pill.midX, y: pill.midY), layer: placed, zoom: 1,
+                               captionsEnabled: true, captionPillSize: short) == .captionPill)
+    }
+}

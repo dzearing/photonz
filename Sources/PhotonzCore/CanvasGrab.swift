@@ -34,28 +34,40 @@ public enum CanvasGrab: String, Hashable, Sendable, CaseIterable {
     /// Returns nil when the point is over something else — an arrow's endpoint
     /// handle, the bar between a caliper's grabs, or plain canvas.
     public static func hit(at p: CGPoint, layer: Layer, zoom: CGFloat,
-                           captionsEnabled: Bool) -> CanvasGrab? {
+                           captionsEnabled: Bool,
+                           captionPillSize: CGSize? = nil) -> CanvasGrab? {
         guard layer.offersHandles else { return nil }
         if layer.annotation != nil { return captionHit(at: p, layer: layer, zoom: zoom,
-                                                       captionsEnabled: captionsEnabled) }
+                                                       captionsEnabled: captionsEnabled,
+                                                       captionPillSize: captionPillSize) }
         if layer.measure != nil { return measureHit(at: p, layer: layer, zoom: zoom) }
         return nil
     }
 
-    /// The caption pill's footprint in document space (the same estimate the
-    /// model reserves and hit-tests with), or nil when the arrow has no caption.
-    public static func captionPillRect(of layer: Layer) -> CGRect? {
+    /// The caption pill's footprint in document space, or nil when the arrow
+    /// has no caption.
+    ///
+    /// `captionPillSize` is the pill as MEASURED (only PhotonzRender can
+    /// measure type), and it is what a person can see and reach for. Without
+    /// one the caption's own generous estimate stands in, which for a sentence
+    /// is 163pt wider than the label: blank canvas that far past the far edge
+    /// picked the label up.
+    public static func captionPillRect(of layer: Layer,
+                                       captionPillSize: CGSize? = nil) -> CGRect? {
         guard let a = layer.annotation, a.hasCaption else { return nil }
-        let anchor = a.captionAnchor()
-        let size = a.estimatedCaptionSize
-        return CGRect(x: layer.frame.minX + anchor.x - size.width / 2,
-                      y: layer.frame.minY + anchor.y - size.height / 2,
+        let size = captionPillSize ?? a.estimatedCaptionSize
+        let centre = a.captionPillCenter(forPillSize: size)
+        return CGRect(x: layer.frame.minX + centre.x - size.width / 2,
+                      y: layer.frame.minY + centre.y - size.height / 2,
                       width: size.width, height: size.height)
     }
 
     private static func captionHit(at p: CGPoint, layer: Layer, zoom: CGFloat,
-                                   captionsEnabled: Bool) -> CanvasGrab? {
-        guard captionsEnabled, let pill = captionPillRect(of: layer) else { return nil }
+                                   captionsEnabled: Bool,
+                                   captionPillSize: CGSize?) -> CanvasGrab? {
+        guard captionsEnabled,
+              let pill = captionPillRect(of: layer, captionPillSize: captionPillSize)
+        else { return nil }
         // The tail handle overlaps the pill on a short arrow, and the press
         // gives it priority; so does the cue.
         guard AnnotationEndpoints.hit(at: p, layer: layer, zoom: zoom) == nil else { return nil }

@@ -820,15 +820,11 @@ final class CanvasNSView: NSView {
         return snapHold
     }
 
-    /// A captioned arrow's pill footprint in document space (the same estimate
-    /// the model hits and reserves with). Dragging it moves the label.
+    /// A captioned arrow's pill footprint in document space, at the width the
+    /// label is really drawn at. Dragging it moves the label.
     private func captionPillRect(_ layer: Layer) -> CGRect? {
-        guard let a = layer.annotation, a.hasCaption else { return nil }
-        let anchor = a.captionAnchor()
-        let size = a.estimatedCaptionSize
-        return CGRect(x: layer.frame.minX + anchor.x - size.width / 2,
-                      y: layer.frame.minY + anchor.y - size.height / 2,
-                      width: size.width, height: size.height)
+        CanvasGrab.captionPillRect(of: layer,
+                                   captionPillSize: layer.measuredCaptionPillSize)
     }
 
     /// The composite that was on screen when an annotation was committed. The
@@ -1670,7 +1666,8 @@ final class CanvasNSView: NSView {
               let layer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) })
         else { return nil }
         return CanvasGrab.hit(at: p, layer: layer, zoom: viewport.zoom,
-                               captionsEnabled: Experiments.shared.arrowCaptionsEnabled)
+                              captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
+                              captionPillSize: layer.measuredCaptionPillSize)
     }
 
     /// What a press at `p` (document coords) would do, and the transform to
@@ -1704,7 +1701,8 @@ final class CanvasNSView: NSView {
         let cue = CanvasPointer.cue(at: p, layer: layer, frame: selectedLayerFrame,
                                     zoom: viewport.zoom,
                                     captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
-                                    offersRotation: offersRotation(layer))
+                                    offersRotation: offersRotation(layer),
+                                    captionPillSize: layer.measuredCaptionPillSize)
         return cue.map { ($0, layer.transform) }
     }
 
@@ -4429,14 +4427,15 @@ final class CanvasNSView: NSView {
         probe.start = docStart
         probe.end = docEnd
         let canvas = viewport.documentSize
+        let pill = CaptionMetrics.pillSize(for: probe.caption ?? "", in: probe)
         if probe.captionPinned, let pinned = probe.captionOffset {
-            probe.captionOffset = CaptionPlanner.keepingOnCanvas(pinned, for: probe, canvas: canvas)
+            probe.captionOffset = CaptionPlanner.keepingOnCanvas(pinned, for: probe,
+                                                                 canvas: canvas, pillSize: pill)
         } else {
-            let placement = CaptionPlanner.plan(for: probe, canvas: canvas)
+            let placement = CaptionPlanner.plan(for: probe, canvas: canvas, reserving: pill)
             probe.captionOffset = placement.attach
             probe.captionGrowth = placement.growth
         }
-        let pill = CaptionMetrics.pillSize(for: probe.caption ?? "", in: probe)
         let center = viewport.viewPoint(fromDocument: probe.captionPillCenter(forPillSize: pill))
         let size = CGSize(width: bitmap.width * viewport.zoom,
                           height: bitmap.height * viewport.zoom)

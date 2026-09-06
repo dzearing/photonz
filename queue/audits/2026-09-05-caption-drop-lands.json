@@ -1,0 +1,28 @@
+{
+  "feature": "A caption pill lands where you let go of it",
+  "epic": "measure-redline",
+  "summary": "An arrow's label now comes to rest exactly where your hand let go of it, right up against the edge of the picture, and it is picked up by the label itself rather than by a stretch of blank canvas beside it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Arrow captions are on by default.",
+  "try": [
+    { "do": "Open a screenshot and press A for the arrow tool." },
+    { "do": "Drag an arrow onto something, type ok, and press Return." },
+    { "do": "Drag the red label to the middle of the picture and let go. It should sit under your pointer, not behind it." },
+    { "do": "Drag the same label hard against the right edge of the picture and let go.", "shot": "2026-09-05-caption-drop-lands-open.png" },
+    { "do": "Draw a second arrow, caption it Save all the changes here, and shove that label at the right edge too.", "shot": "2026-09-05-caption-drop-lands-edge.png" },
+    { "do": "Hover a hand's width past the end of a label: the pointer should be a plain arrow, not a grabbing hand." },
+    { "do": "Drag the arrow itself somewhere else. The label rides along and keeps its spot." }
+  ],
+  "evaluate": [
+    "Does the label stop under your pointer, or does it still feel like it is trailing behind the drag?",
+    "Is a label allowed to touch the edge of the picture the right call, or should it stop a margin short so its shadow is not clipped?",
+    "A long label used to refuse to come within about a finger width of the edge. Is the new edge behaviour what you wanted when you dragged it there?",
+    "The label is now only grabbable where the label is. Does picking it up feel harder than before, or just more honest?"
+  ],
+  "rough": [
+    "The mock and the task both said a short label lands about a centimetre off in open canvas. That does not happen: the drag takes its grip against the same generous guess it drops with, so the two errors cancel and an open-canvas drop was already exact. The guess is very visible at the EDGES, which is what got fixed: a 25 character label let go against the right edge used to settle 157pt short of it.",
+    "A label dropped flush against the edge has its shadow and the outer half of its border clipped by the picture boundary. That is what dragging it there asks for, but it is worth deciding whether the clamp should hold a small margin instead.",
+    "Not fixed here: clicking blank picture past the end of a label still selects its arrow, from as far as 163pt away for a sentence. The click test lives in the pure model, which cannot measure type, so it needs the measurement threaded through the document hit test. Filed as its own task.",
+    "The playtest log now prints the pill centre at its measured width, so a walk can prove where a label landed. Walk: Scripts/playtest/caption-drop-lands-walk.json.",
+    "Screen Recording was granted, so both pictures here are real window captures, not offscreen renders."
+  ]
+}

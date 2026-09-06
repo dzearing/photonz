@@ -1,0 +1,27 @@
+{
+  "id": "clicking-blank-canvas-next-to-a-label-does-not-s",
+  "title": "Clicking blank canvas next to a label does not select its arrow",
+  "goal": "An arrow with a label on it can be selected by clicking empty space beside the label: for a sentence, anything within about a finger width past the end of the label counts as a click on the arrow, so you pick up an arrow when you meant to click the button underneath. Clicking should only select the arrow where the arrow or its label actually is.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1400,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T04:50:46.578Z",
+  "updated": "2026-09-06T04:50:46.579Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-05 while fixing the caption drop. Layer.contains(canvasPoint:zoom:) hit-tests the caption with AnnotationContent.estimatedCaptionSize, which for a 25 character caption is 408pt wide against a measured 245: 163pt of blank canvas past the far edge answers to the arrow. The drop, the edge clamp and the pill GRAB now take a measured size (CanvasGrab.captionPillRect(of:captionPillSize:)); this one was left because it needs a measurement threaded through Document.hitTest/hitTestPath and every caller, since PhotonzCore cannot lay out type. Options: a captionPillSize closure on hitTest, or caching the measured pill on the layer at commit time.",
+  "acceptance": [
+    "Clicking blank picture more than a few points past the end of an arrow label selects whatever is under the pointer, not the arrow",
+    "Clicking anywhere on the label itself still selects the arrow",
+    "A scripted walk clicks just past a long label and the log shows nothing selected"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T04:50:46.579Z",
+      "note": "created (manual)"
+    }
+  ]
+}

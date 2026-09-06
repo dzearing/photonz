@@ -88,9 +88,11 @@ extension EditorState {
                 restyled = AnnotationBuilder.captioning(current, caption: newCaption,
                                                         placement: placement)
             } else {
+                let recaptioned = AnnotationBuilder.restyled(current,
+                                                             caption: .some(newCaption))
                 restyled = AnnotationBuilder.planningCaption(
-                    AnnotationBuilder.restyled(current, caption: .some(newCaption)),
-                    canvas: document.canvasSize)
+                    recaptioned, canvas: document.canvasSize,
+                    captionPillSize: recaptioned.measuredCaptionPillSize)
             }
             document.updateLayer(id: layerID) {
                 $0.content = restyled.content
@@ -128,8 +130,10 @@ extension EditorState {
             let canvas = document.canvasSize
             for id in targets {
                 document.updateLayer(id: id) {
+                    let resized = AnnotationBuilder.restyled($0, captionFontSize: size)
                     $0 = AnnotationBuilder.planningCaption(
-                        AnnotationBuilder.restyled($0, captionFontSize: size), canvas: canvas)
+                        resized, canvas: canvas,
+                        captionPillSize: resized.measuredCaptionPillSize)
                 }
             }
         }
@@ -155,7 +159,10 @@ extension EditorState {
         guard var doc = document, doc.layer(id: id)?.annotation?.hasCaption == true else { return }
         discardDragPreview()
         let canvas = doc.canvasSize
-        doc.updateLayer(id: id) { $0 = AnnotationBuilder.placingCaption($0, at: center, canvas: canvas) }
+        doc.updateLayer(id: id) {
+            $0 = AnnotationBuilder.placingCaption($0, at: center, canvas: canvas,
+                                                  captionPillSize: $0.measuredCaptionPillSize)
+        }
         if let frame = doc.canvasLayer(id: id)?.frame { previewMoves = [id: frame] }
         submit(doc)
     }
@@ -172,7 +179,10 @@ extension EditorState {
         }
         perform { document in
             let canvas = document.canvasSize
-            document.updateLayer(id: id) { $0 = AnnotationBuilder.placingCaption($0, at: center, canvas: canvas) }
+            document.updateLayer(id: id) {
+                $0 = AnnotationBuilder.placingCaption($0, at: center, canvas: canvas,
+                                                      captionPillSize: $0.measuredCaptionPillSize)
+            }
         }
     }
 
@@ -197,7 +207,8 @@ extension EditorState {
             let canvas = document.canvasSize
             for id in targets {
                 document.updateLayer(id: id) {
-                    $0 = AnnotationBuilder.releasingCaption($0, canvas: canvas)
+                    $0 = AnnotationBuilder.releasingCaption(
+                        $0, canvas: canvas, captionPillSize: $0.measuredCaptionPillSize)
                 }
             }
         }

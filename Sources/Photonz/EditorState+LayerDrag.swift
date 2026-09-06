@@ -116,7 +116,9 @@ extension EditorState {
         perform { document in
             let canvas = document.canvasSize
             document.updateLayer(id: id) {
-                $0 = AnnotationBuilder.planningCaption($0.resized(to: frame), canvas: canvas)
+                $0 = AnnotationBuilder.planningCaption(
+                    $0.resized(to: frame), canvas: canvas,
+                    captionPillSize: $0.measuredCaptionPillSize)
             }
             // In the SAME mutation as the move, so one undo puts the layer back
             // where it was and back in what held it.
@@ -168,7 +170,8 @@ extension EditorState {
             let canvas = document.canvasSize
             document.updateLayer(id: id) {
                 $0 = AnnotationBuilder.planningCaption(
-                    AnnotationBuilder.updating($0, start: start, end: end), canvas: canvas)
+                    AnnotationBuilder.updating($0, start: start, end: end), canvas: canvas,
+                    captionPillSize: $0.measuredCaptionPillSize)
             }
         }
     }
