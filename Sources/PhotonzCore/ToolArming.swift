@@ -92,9 +92,11 @@ public extension AnnotationStyles {
     /// `styleID` is the saved colour the shapes were wearing. Passing one means
     /// the tool holds the NAME, so the next shape follows it when it is edited;
     /// passing none puts the tool back to holding a plain colour, which is what
-    /// picking one off a swatch row means.
-    mutating func arm(_ paint: Paint?, styleID: UUID? = nil, slot: ColorSlot,
-                      forShape shape: AnnotationShape) {
+    /// picking one off a swatch row means. `name` is what that colour is called,
+    /// remembered beside the id so the app can name it in a document that does
+    /// not have it.
+    mutating func arm(_ paint: Paint?, styleID: UUID? = nil, name: String? = nil,
+                      slot: ColorSlot, forShape shape: AnnotationShape) {
         switch slot {
         case .stroke:
             // A line always has a colour, so there is no "nothing" to arm with.
@@ -108,6 +110,6 @@ public extension AnnotationStyles {
         }
         // After the paint, never before: painting a slot is exactly how a tool
         // lets go of the name it was holding.
-        setColorStyleID(styleID, slot: slot, forShape: shape)
+        setColorStyleID(styleID, slot: slot, forShape: shape, name: name)
     }
 }

@@ -1,0 +1,29 @@
+{
+  "feature": "The tool says when a saved color cannot come with it",
+  "epic": "ui-building",
+  "summary": "A tool armed with a saved color used to go quiet in the two places it stopped being that color. Now picking a plain color says so in the row the name was in, with a one click way back, and drawing where the name does not exist says so once on the canvas.",
+  "setup": "Photonz Dev, Experiments window, release Next. Save a color as a style is on by default.",
+  "try": [
+    { "do": "Press A, drag an arrow, press V and click it." },
+    { "do": "On the Color row, open the styles menu, choose Save as Style, type Accent, press Return." },
+    { "do": "Press A, then press S to open the toolbar swatch. The top row reads Using Accent." },
+    { "do": "Drag the color square to any other color and read that same row.", "shot": "2026-09-05-saved-colour-cannot-come-1.png" },
+    { "do": "Click Put it back, then press Escape." },
+    { "do": "Press Command N for a new picture, press A, and drag one arrow.", "shot": "2026-09-05-saved-colour-cannot-come-2.png" },
+    { "do": "Drag a second arrow in that same picture and watch the canvas." }
+  ],
+  "evaluate": [
+    "The let go line replaces Using Accent in place. Did you notice it change, or did your eye stay on the color square?",
+    "Is Put it back the way out you would reach for, or would you expect Command Z to bring Accent back?",
+    "No Accent here appears on the canvas the moment you draw. Is that the right place for it, or should it be by the toolbar swatch that promised the color?",
+    "Saying it once per picture rather than once per shape: is once enough, or did you forget by the fifth arrow?",
+    "Does Let go of Accent read as something that went wrong, or as a plain statement of what you just did?"
+  ],
+  "rough": [
+    "The two messages are said in two different places on purpose. Letting go happens inside the open picker, which sits on top of the canvas and covered the pill: the first pass put it on the canvas and the sentence came out half hidden behind the popover. So letting go took the row and drawing kept the pill. Two places for one idea is a compromise worth arguing with.",
+    "Put it back is new and was not asked for. It went in because undo cannot do this: what a tool holds is a preference rather than part of the picture, so a pull of the picker you did not mean was never in the history to step back over.",
+    "A third silent case is still silent: a saved color the document HAS but no longer offers for that part (one reserved for outlines, armed on a box's inside) is quietly not worn. Filed as a follow up.",
+    "Screen Recording was granted, so the first picture is a real window capture. The second is an offscreen render: the walk opens a second window for it and the window capture of a mid walk second window came out blank white every time. Worth fixing in the harness, because a blank capture in an audit looks like evidence.",
+    "The mock had nothing to say here. This came out of the rough lines on the 2026-09-04 audit of the tool holding a saved color."
+  ]
+}

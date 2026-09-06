@@ -31,6 +31,10 @@ extension EditorState {
             layer = document.wearingArmedColorStyles(layer, styles: annotationStyles)
         }
         perform { [layer] in $0.addLayerDrawnOnFrame(layer) }
+        // ...and if the name could not come along, one line saying so, rather
+        // than a shape that is quietly not the colour the swatch promised.
+        // After the edit, so it wins the canvas slot the way a break does.
+        announceMissingArmedColorStyle(layer)
         // An arrow that is about to offer its caption is not finished yet: the
         // Arrow tool stays in hand while the field is open (a drag draws the
         // next arrow), and the hand-back to Select happens when the field
@@ -298,7 +302,9 @@ extension EditorState {
             perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, paint: paint) } }
             annotationStyles.setPaint(paint, forShape: shape)
         } else {
-            annotationStyles.setPaint(paint, for: activeTool)
+            // A plain colour is a plain colour: this is where a tool holding a
+            // saved one lets go of it, so it is where the app says so.
+            pickingPlainColor(slot: .stroke) { annotationStyles.setPaint(paint, for: activeTool) }
         }
         saveAnnotationStyles()
         // The recents row is a row of colors, so a gradient leaves its flat
@@ -328,7 +334,9 @@ extension EditorState {
             perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, fill: .some(paint)) } }
             annotationStyles.setFillPaint(paint, forShape: shape)
         } else {
-            annotationStyles.setFillPaint(paint, for: activeTool)
+            // Including "no fill": taking the inside away is a pick like any
+            // other, and the box stops being Accent just the same.
+            pickingPlainColor(slot: .fill) { annotationStyles.setFillPaint(paint, for: activeTool) }
         }
         saveAnnotationStyles()
         if let paint { recordRecentColor(hex: paint.hex) }

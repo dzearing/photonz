@@ -692,6 +692,13 @@ final class EditorState {
     var copyConfirmation: CopyConfirmation?
     var copyConfirmationTimer: Task<Void, Never>?
 
+    /// The saved colours this window has already said are not in this document
+    /// (`announceMissingArmedColorStyle`). One line the first time you draw
+    /// with a name this picture has never heard of, and nothing on the nine
+    /// shapes after it. Cleared when another document takes the window, because
+    /// the sentence is about THIS one.
+    var announcedMissingColorStyleIDs: Set<UUID> = []
+
     /// The tool options' Show filter. Session chrome like a temporary eye-off:
     /// never persisted, never in the model, and exports render the document
     /// itself so every visible layer stays in them regardless.
@@ -792,7 +799,21 @@ final class EditorState {
     /// One field rather than a flag inside each well, for two reasons: two
     /// pickers can never be open at once, and a walk can open one from outside
     /// the dock, which the pointer cannot reach.
-    var openColorWell: String?
+    var openColorWell: String? {
+        didSet {
+            // The let-go line belongs to the picker session that caused it:
+            // opening another well, or shutting this one, is where it ends.
+            if openColorWell != oldValue { toolColorStyleLetGo = nil }
+        }
+    }
+
+    /// The saved colour the tool let go of inside the picker that is open right
+    /// now, if it just let go of one (`ToolColorStyleNotice`).
+    ///
+    /// It stands in the row the name was in, so the answer arrives where the
+    /// eye already is. The canvas pill cannot do this one: the picker that
+    /// caused it is open on top of the canvas and covers the pill.
+    var toolColorStyleLetGo: ToolColorStyleNotice?
 
     /// The color row that is asking for a name right now, raised by its Save as
     /// Style button and lowered when the name lands, when Escape drops it, or
@@ -920,6 +941,9 @@ final class EditorState {
         stylePreview = nil
         paintPreview = nil
         knobPaintPreview = nil
+        // "There is no Accent here" is about the picture that was open, so the
+        // next one gets to say it once of its own.
+        announcedMissingColorStyleIDs = []
         thumbnailCache = [:]
         shelfThumbnails = [:]
         dragPreviewGeneration += 1
@@ -1760,7 +1784,12 @@ final class EditorState {
     /// stepping over that edit takes it off screen. Leaving it up would have
     /// the canvas saying a link is broken a second after undo put it back.
     private func dropStaleBreakNotice() {
-        guard case .linksBroken = copyConfirmation?.subject else { return }
+        switch copyConfirmation?.subject {
+        // A shape that has just been un-drawn cannot still be the plain colour
+        // its tool remembers, so that notice goes with it.
+        case .linksBroken, .toolColorStyle: break
+        default: return
+        }
         copyConfirmationTimer?.cancel()
         copyConfirmation = nil
     }

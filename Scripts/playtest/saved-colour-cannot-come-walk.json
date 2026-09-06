@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/saved-colour-cannot-come",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1500, "height": 950 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [200, 200], "to": [520, 380], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Arrow" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "saveColorStyle" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Accent" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-armed", "note": "the arrow tool is holding Accent. toolStyle must say Accent, and copied must be none: arming says nothing" },
+
+    { "do": "key", "key": "s" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-popover", "note": "the swatch's popover, reading Using Accent" },
+    { "do": "snapshot", "name": "cannot-come-1-using-accent" },
+
+    { "do": "action", "action": "paintToolColor" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-let-go", "note": "a plain blue picked under the Using Accent line. toolStyle must be none, and the row at the top of the open picker must now read 'Let go of Accent' with Put it back beside it. copied stays none: the picker covers the canvas pill, so this one is said in the row instead" },
+    { "do": "snapshot", "name": "cannot-come-2-let-go-of-accent" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "wait", "seconds": 3.4 },
+    { "do": "describe", "stage": "4-faded", "note": "nothing was ever dismissed and the canvas is quiet: copied must be none" },
+    { "do": "action", "action": "paintToolColor" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-second-pick-is-quiet", "note": "picking a second plain colour with no name to let go of: the row must still read the same one line, never a second" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Arrow" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "useFirstColorStyle" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "tool", "tool": "arrow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-armed-again", "note": "the arrow points at Accent again, so the tool is holding it again: toolStyle must say Accent" },
+
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 2.5 },
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [180, 200], "to": [500, 360], "steps": 8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 1.4 },
+    { "do": "describe", "stage": "7-name-left-behind", "note": "an arrow drawn in a picture that has never heard of Accent. copied must read 'No Accent here · The Arrow is the plain color the tool remembers, not a saved color'" },
+    { "do": "snapshot", "name": "cannot-come-3-no-accent-here" },
+
+    { "do": "wait", "seconds": 3.4 },
+    { "do": "drag", "from": [180, 420], "to": [500, 520], "steps": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-said-once", "note": "a second arrow in the same picture, drawn after the first pill had gone. copied must be none: it is said once per picture, not once per shape" },
+    { "do": "snapshot", "name": "cannot-come-4-said-once" }
+  ]
+}

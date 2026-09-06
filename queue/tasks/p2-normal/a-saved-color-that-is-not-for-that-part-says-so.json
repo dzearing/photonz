@@ -1,0 +1,29 @@
+{
+  "id": "a-saved-color-that-is-not-for-that-part-says-so",
+  "title": "A saved color that is not for that part says so when the tool draws",
+  "goal": "A tool can be holding a saved color that the picture does have, but that has since been reserved for outlines only. Drawing a box then quietly leaves its inside plain, with nothing on screen saying why, so the shape is not the color the swatch promised.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1340,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T02:50:17.797Z",
+  "updated": "2026-09-06T02:50:17.797Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The third fall-through in PhotonzDocument.wearingArmedColorStyles: colorStyles(for: slot) no longer contains the id, and the fourth, where the tool draws no inside at all so a name must not switch one on. PhotonzDocument.armedColorStyleMissingHere in Sources/PhotonzCore/ToolColorStyleNotices.swift only covers the case where the document has never heard of the id; extend it with a second kind, or add one beside it. The pill and the wording already exist (ToolColorStyleNotice, CopyConfirmation.Subject.toolColorStyle).",
+  "acceptance": [
+    "Drawing with a tool holding a saved color the document no longer offers for that part says once, on screen, that the color did not come along",
+    "The message says which part was left plain, not just that something happened",
+    "Nothing changes when the saved color is still offered for that part",
+    "Ships behind next-styles",
+    "Tests in PhotonzCore cover it before the app code is written"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T02:50:17.797Z",
+      "note": "created (manual)"
+    }
+  ]
+}

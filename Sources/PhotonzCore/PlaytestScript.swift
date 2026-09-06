@@ -479,6 +479,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case armToolGradient
     /// The same, sweeping around the middle instead.
     case armToolAngularGradient
+    /// Pick a plain blue in the toolbar swatch's picker, which is what dragging
+    /// that picker under the Using line does. It reaches the tool's interior
+    /// when it has one and its outline otherwise, like `armToolGradient`. This
+    /// is how a walk photographs a tool LETTING GO of the saved colour it was
+    /// holding: the picker is inside a popover a walk cannot reach.
+    case paintToolColor
     /// Open the toolbar swatch's picker on what the tool in your hand draws
     /// its outline (or a text block its ink) in, which is what clicking that
     /// swatch does.

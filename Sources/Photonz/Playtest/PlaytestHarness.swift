@@ -999,6 +999,8 @@ private final class Run {
                 armTool(editor, kind: .linear)
             case .armToolAngularGradient:
                 armTool(editor, kind: .angular)
+            case .paintToolColor:
+                paintToolPlain(editor)
             case .openToolColorPicker:
                 editor.openColorWell = "tool.color"
             case .openToolFillPicker:
@@ -2278,6 +2280,21 @@ private final class Run {
     /// has — exactly what pressing a tile in the toolbar swatch's type row
     /// does. A tool with an interior takes it on the fill, which is the swatch
     /// that swatch pair puts first; anything else takes it on its outline.
+    /// A plain colour picked in the toolbar swatch's picker, on whichever part
+    /// of the shape that swatch paints. The point of the action is what happens
+    /// to a NAME the tool was holding, so it goes through the same call the
+    /// picker's own commit does.
+    private func paintToolPlain(_ editor: EditorState) {
+        let plain = Paint(hex: "#2D7FF9")
+        if editor.activeToolFillPaint != nil {
+            editor.setAnnotationFillPaint(plain)
+            actionDetail = "tool fill picked plain #2D7FF9"
+        } else {
+            editor.setAnnotationPaint(plain)
+            actionDetail = "tool outline picked plain #2D7FF9"
+        }
+    }
+
     private func armTool(_ editor: EditorState, kind: Paint.Kind) {
         if var fill = editor.activeToolFillPaint {
             fill.becoming(kind)

@@ -10,6 +10,15 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// Per-shape defaults, keyed by `AnnotationShape.rawValue`.
     private var shapes: [String: ShapeDefaults]
 
+    /// What the saved colours these tools are holding were CALLED when they
+    /// were picked up, keyed by id.
+    ///
+    /// A layer needs no such thing: it lives in the document that owns the
+    /// name, so it can always ask. What a tool holds outlives the document,
+    /// which is exactly the case where the app has something to say — "there is
+    /// no Accent here" — and no document to ask. So the name rides along.
+    private var heldStyleNames: [String: String] = [:]
+
     public init() {
         var shapes: [String: ShapeDefaults] = [:]
         for shape in AnnotationShape.allCases {
@@ -20,12 +29,17 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case shapes
+        case heldColorStyleNames
         // Legacy single-bucket keys (pre per-shape); migrated on decode.
         case strokeColorHex, highlightColorHex, strokeWidth, arrowheadScale
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        // Prefs written before names rode along hold ids and nothing else. The
+        // sentences fall back to saying "the saved color it was holding".
+        heldStyleNames = try c.decodeIfPresent([String: String].self,
+                                               forKey: .heldColorStyleNames) ?? [:]
         if let decoded = try c.decodeIfPresent([String: ShapeDefaults].self, forKey: .shapes) {
             var shapes = decoded
             // Backfill any shape added after the prefs were written.
@@ -55,6 +69,11 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(shapes, forKey: .shapes)
+        // Nothing at all when no tool is holding a name, so prefs that have
+        // never met a saved colour write exactly what they always wrote.
+        if !heldStyleNames.isEmpty {
+            try c.encode(heldStyleNames, forKey: .heldColorStyleNames)
+        }
     }
 
     // MARK: - Per-shape accessors
@@ -147,9 +166,32 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     /// Points this shape's tool at a saved colour, or lets go of the one it was
     /// holding. Painting the slot any other way lets go by itself.
+    ///
+    /// `name` is what that colour is called right now, kept beside the id so
+    /// the app can still say it in a document that has never heard of it. It
+    /// is optional because letting go needs no name, and because the two
+    /// callers that only move an id around have nothing new to teach.
     public mutating func setColorStyleID(_ id: UUID?, slot: ColorSlot,
-                                         forShape shape: AnnotationShape) {
+                                         forShape shape: AnnotationShape,
+                                         name: String? = nil) {
         shapes[shape.rawValue, default: .standard(for: shape)].setColorStyleID(id, for: slot)
+        if let id, let name, !name.isEmpty { heldStyleNames[id.uuidString] = name }
+        forgetUnheldStyleNames()
+    }
+
+    /// What the saved colour with this id was called when a tool picked it up,
+    /// or nil when no tool ever learned its name.
+    public func heldColorStyleName(_ id: UUID) -> String? { heldStyleNames[id.uuidString] }
+
+    /// Drops the name of any saved colour no tool is holding any more, so the
+    /// preference does not grow a list of colours nobody is drawing in.
+    private mutating func forgetUnheldStyleNames() {
+        guard !heldStyleNames.isEmpty else { return }
+        var held: Set<String> = []
+        for defaults in shapes.values {
+            for binding in defaults.colorStyles ?? [] { held.insert(binding.styleID.uuidString) }
+        }
+        heldStyleNames = heldStyleNames.filter { held.contains($0.key) }
     }
 
     /// The saved colour the tool in your hand is holding for a slot; nil for a

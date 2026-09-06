@@ -9093,3 +9093,35 @@ Next: those three, in that order. Open question for the user, which the switch
 task's capture will put in front of them: the switch's Mixed look is derived
 from existing rules rather than chosen, so it is the one clause worth a second
 opinion once it is on screen.
+
+## 2026-09-05 — The tool says when a saved color cannot come with it
+
+A tool armed with a saved color (Accent) went quiet in the two places it stopped
+being that color. Both now speak, each where the eye already is.
+
+- **Picking a plain color under the Using Accent line** replaces that row with
+  "Let go of Accent" and a **Put it back** link. It is said in the row rather
+  than the canvas pill because the picker that causes it sits on top of the
+  canvas and covered the pill (the first pass proved it: the sentence came out
+  half hidden). Put it back exists because undo cannot: what a tool holds is a
+  preference, so it was never in the history.
+- **Drawing in a picture that has never heard of the name** raises the canvas
+  pill every broken link uses: "No Accent here / The Arrow is the plain color
+  the tool remembers, not a saved color". Once per name per picture, not once
+  per shape.
+- Model change: `AnnotationStyles` stored only a style id, so in a document
+  without that style the app could not say the name. It now remembers the name
+  beside the id (`heldColorStyleNames`, optional, pruned when no tool holds it;
+  older prefs decode untouched).
+- New: `Sources/PhotonzCore/ToolColorStyleNotices.swift`, 14 tests, a
+  `paintToolColor` playtest action, and
+  `Scripts/playtest/saved-colour-cannot-come-walk.json`.
+- All behind `next-styles`, so Current is untouched. `Scripts/test.sh` green
+  (3541 tests). Audit: `queue/audits/2026-09-05-saved-colour-cannot-come.json`.
+
+**Next / open:** a third silent case is filed
+(`a-saved-color-that-is-not-for-that-part-says-so`): a saved color the document
+HAS but no longer offers for that part is still dropped quietly. Also worth
+someone's attention: a playtest window capture of a SECOND window opened mid
+walk comes out blank white every time, so an audit that trusts it would be
+showing nothing as if it were the app.

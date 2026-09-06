@@ -1310,8 +1310,15 @@ struct EditorView: View {
     /// use, so the two places read as one idea.
     ///
     /// Picking a colour in the picker below lets go of the name, which is what
-    /// picking a plain colour has always meant. The tip says so rather than the
-    /// row growing a second sentence.
+    /// picking a plain colour has always meant — and the row SAYS so the moment
+    /// it happens, in the place the name was, because that is the one spot the
+    /// eye is already on. It cannot be the canvas pill the other broken links
+    /// use: the picker that caused it is open over the canvas and covers it.
+    ///
+    /// The way back is beside the sentence, because undo cannot do this one.
+    /// What a tool holds is a preference rather than part of the picture, so a
+    /// pull of the picker you did not mean was never in the history to step
+    /// back over.
     @ViewBuilder private func toolColorStyleRow(slot: ColorSlot) -> some View {
         if let style = editorState.toolColorStyle(slot: slot) {
             HStack(spacing: 6) {
@@ -1328,6 +1335,25 @@ struct EditorView: View {
             }
             .help("New shapes follow the saved color \(style.name). "
                   + "Picking a color below lets go of it.")
+        } else if let letGo = editorState.letGoNotice(slot: slot) {
+            HStack(spacing: 6) {
+                Image(systemName: "swatchpalette")
+                    .foregroundStyle(.secondary)
+                Text(letGo.line)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer(minLength: 8)
+                if editorState.canRearmToolColorStyle(letGo) {
+                    Button("Put it back") { editorState.rearmToolColorStyle(letGo) }
+                        .buttonStyle(.link)
+                        .font(.callout)
+                }
+            }
+            .help("New shapes are this colour on their own now. "
+                  + "Put it back to follow \(letGo.name) again.")
+            .transition(.opacity)
         }
     }
 

@@ -445,6 +445,13 @@ extension EditorState {
         if !arming.isEmpty {
             for entry in arming {
                 annotationStyles.arm(entry.paint, styleID: entry.styleID,
+                                     // The name rides along with the id: what
+                                     // the tool holds outlives this document,
+                                     // and the moment worth speaking about is
+                                     // the one where the document cannot
+                                     // supply the name any more.
+                                     name: entry.styleID
+                                         .flatMap { document.colorStyle(id: $0)?.name },
                                      slot: slot, forShape: entry.shape)
             }
             saveAnnotationStyles()
@@ -539,7 +546,7 @@ extension EditorState {
             for slot in [ColorSlot.stroke, .fill]
             where annotationStyles.colorStyleID(forShape: shape, slot: slot) == styleID {
                 annotationStyles.arm(style.paint(for: slot), styleID: styleID,
-                                     slot: slot, forShape: shape)
+                                     name: style.name, slot: slot, forShape: shape)
                 changed = true
             }
         }
@@ -603,6 +610,88 @@ extension EditorState {
         guard let shape = activeTool.annotationShape else { return }
         annotationStyles.setColorStyleID(nil, slot: slot, forShape: shape)
         saveAnnotationStyles()
+    }
+
+    // MARK: - When the saved colour cannot come with the tool
+
+    /// A plain colour pick that speaks up if it is standing on a name.
+    ///
+    /// Arming a tool with Accent and then dragging the picker underneath the
+    /// Using Accent line lets go of Accent. That has always been what picking
+    /// a plain colour means, and the row's tip said so, but nothing said it at
+    /// the moment it happened — so the next shape came out a colour of its own
+    /// while the person still thought they were drawing Accent.
+    ///
+    /// The answer takes the place of the Using line it just made untrue, which
+    /// is the one spot the eye is already on. The canvas pill every other
+    /// broken link uses cannot have this one: the picker that caused it is open
+    /// over the canvas and covers the pill.
+    ///
+    /// Only when nothing is selected. With a shape picked, the swatch and its
+    /// row are about THAT shape, and the colour it let go of is already
+    /// reported by the pill (`LinkBreakReport`); saying it twice for one pick
+    /// is noise.
+    ///
+    /// The name comes off inside `pick`, so a second pull of the same picker
+    /// has nothing left to say. That is what keeps this to one showing rather
+    /// than one per pick.
+    func pickingPlainColor(slot: ColorSlot, _ pick: () -> Void) {
+        let notice = lettingGoOfToolColorStyle(slot: slot)
+        pick()
+        if let notice { toolColorStyleLetGo = notice }
+    }
+
+    private func lettingGoOfToolColorStyle(slot: ColorSlot) -> ToolColorStyleNotice? {
+        guard colorStylesEnabled, selectedAnnotationLayer == nil,
+              let shape = activeTool.annotationShape else { return nil }
+        return annotationStyles.lettingGoOfColorStyle(slot: slot, forShape: shape)
+    }
+
+    /// The way back from a name the tool has just let go of: the same colour
+    /// picked up again, so a pull of the picker you did not mean costs one
+    /// click rather than a trip to the Library. Undo cannot do this — what a
+    /// tool holds is a preference, not part of the picture, so it was never in
+    /// the history.
+    func rearmToolColorStyle(_ notice: ToolColorStyleNotice) {
+        guard colorStylesEnabled, let style = document?.colorStyle(id: notice.styleID) else { return }
+        annotationStyles.arm(style.paint(for: notice.slot), styleID: style.id, name: style.name,
+                             slot: notice.slot, forShape: notice.shape)
+        saveAnnotationStyles()
+        toolColorStyleLetGo = nil
+    }
+
+    /// Whether there is a way back to offer: a style this document still has.
+    /// One deleted since is no way back, so the row says what happened and
+    /// stops there.
+    func canRearmToolColorStyle(_ notice: ToolColorStyleNotice) -> Bool {
+        colorStylesEnabled && document?.colorStyle(id: notice.styleID) != nil
+    }
+
+    /// The saved colour the tool let go of in the picker open right now, for
+    /// the part of the shape this row paints.
+    func letGoNotice(slot: ColorSlot) -> ToolColorStyleNotice? {
+        guard let notice = toolColorStyleLetGo, notice.slot == slot,
+              notice.shape == activeTool.annotationShape else { return nil }
+        return notice
+    }
+
+    /// Says, once, that the shape just drawn could not wear the name its tool
+    /// is holding, because this document has never heard of it.
+    ///
+    /// What a tool holds is a preference that outlives any one document and a
+    /// saved colour lives INSIDE one, so drawing in another document quietly
+    /// gives you the flat colour the tool remembers beside the name. The tool
+    /// keeps the name: go back to the document that has it and the next shape
+    /// wears it again. Nothing is wrong, but it is not what the swatch promised
+    /// either, so it is worth one line.
+    ///
+    /// Once per name per document, because the alternative is a pill on every
+    /// shape of a run, which is how a true sentence becomes noise.
+    func announceMissingArmedColorStyle(_ layer: Layer) {
+        guard colorStylesEnabled, let document,
+              let notice = document.armedColorStyleMissingHere(layer, styles: annotationStyles),
+              announcedMissingColorStyleIDs.insert(notice.styleID).inserted else { return }
+        raiseCanvasNotice(.toolColorStyle(notice))
     }
 
     /// How many of the document's colors this style paints.

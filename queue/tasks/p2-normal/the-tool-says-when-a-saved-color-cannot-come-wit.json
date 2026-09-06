@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:06.433Z",
-  "updated": "2026-09-05T14:05:05.535Z",
+  "updated": "2026-09-06T02:50:47.202Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Two rough lines from queue/audits/2026-09-04-tool-holds-saved-colour.json: picking any color under the Using Accent line silently lets go of Accent, and a tool armed with a name in one document draws the plain color it remembers in a document that has no such name, with no message. Code: Sources/PhotonzCore/ToolArming.swift and ToolColorStyles.swift; ColorStyles.swift holds the named colors, which live per document. Reuse the existing link-break pill from the components and styles work rather than inventing a second way of saying a link broke.",
@@ -43,6 +43,40 @@
     {
       "t": "2026-09-05T14:05:05.534Z",
       "note": "seq 90 -> 110"
+    },
+    {
+      "t": "2026-09-06T02:30:02.326Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T02:50:34.667836Z",
+      "note": "adversarial review before building: the mock says nothing here, so the question was where each sentence goes. Walking it as a first timer, the let go moment ALWAYS happens inside the open toolbar picker (the swatch row, the recents, the eyedropper are all in it), and the drawing moment always happens on the canvas with nothing open. Also found: undo cannot put a let go name back, because what a tool holds is a preference and was never in the history, so a message that implies Command Z would be a lie. Shortest version kept: one sentence each, no dialog, no new surface."
+    },
+    {
+      "t": "2026-09-06T02:50:34.667836Z",
+      "note": "core first (TDD): ToolColorStyleNotice + AnnotationStyles.lettingGoOfColorStyle + PhotonzDocument.armedColorStyleMissingHere, 14 tests in Tests/PhotonzCoreTests/ToolColorStyleNoticeTests.swift. Needed one model change: AnnotationStyles stored only a style id, so in a document that has never heard of the name the app could not SAY the name. It now remembers the name beside the id (heldColorStyleNames, optional, pruned when no tool holds it, prefs written before this decode untouched)."
+    },
+    {
+      "t": "2026-09-06T02:50:34.667836Z",
+      "note": "adversarial review of the built thing, on the probe app: the first pass put BOTH sentences in the canvas pill, and the walk capture showed the let go sentence half hidden behind the picker popover that caused it. Moved that one into the row the Using line was in, where the eye already is, and added Put it back beside it because undo cannot. Drawing kept the pill, which is right: nothing is open over the canvas then."
+    },
+    {
+      "t": "2026-09-06T02:50:34.667836Z",
+      "note": "verified on the real app, Screen Recording granted: Scripts/playtest/saved-colour-cannot-come-walk.json. armed toolStyle=Accent copied=none; after a plain pick toolStyle=none and the row reads Let go of Accent with Put it back (real window capture); pill fades on its own with nothing dismissed; a second plain pick says nothing; re-armed, a new picture, one arrow gives copied='No Accent here - The Arrow is the plain color the tool remembers, not a saved color'; a second arrow in the same picture says nothing. Scripts/test.sh green, 3541 tests."
+    },
+    {
+      "t": "2026-09-06T02:50:34.667836Z",
+      "note": "Current release untouched: everything is behind next-styles (Next only, FeatureCatalog.stylesFlag), so no port needed."
+    },
+    {
+      "t": "2026-09-06T02:50:34.667836Z",
+      "note": "left rough: the third silent case (a saved color the document has but no longer offers for that part) filed as a-saved-color-that-is-not-for-that-part-says-so. And the walk's window capture of a SECOND window opened mid walk comes out blank white every time, so audit picture 2 is the offscreen render; noted in the audit rather than filed, since the loop epic it belongs to is not staged now."
+    },
+    {
+      "t": "2026-09-06T02:50:47.202Z",
+      "note": "Both silent moments now speak: picking a plain colour turns the Using Accent row into 'Let go of Accent' with a Put it back link (said in the row, because the open picker covers the canvas pill), and drawing where the name does not exist raises the link-break pill once per picture. Core notice type + 14 tests in PhotonzCore, all behind next-styles. Verified on the probe app with a real window capture: Scripts/playtest/saved-colour-cannot-come-walk.json; Scripts/test.sh green (3541). Audit: queue/audits/2026-09-05-saved-colour-cannot-come.json"
     }
-  ]
+  ],
+  "started": "2026-09-06T02:30:02.325Z",
+  "completed": "2026-09-06T02:50:47.202Z"
 }

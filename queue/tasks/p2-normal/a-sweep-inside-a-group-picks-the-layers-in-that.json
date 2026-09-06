@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:07:56.839Z",
-  "updated": "2026-09-06T02:26:15.537Z",
+  "updated": "2026-09-06T02:29:50.287Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Shipped 2026-09-05. Core: PhotonzDocument.layerIDs(fullyInside:inside:) in Sources/PhotonzCore/Document.swift now takes the group you have stepped inside, moves the band into that group's children's space, takes a nested group whole, skips hidden/locked pieces, refuses a component copy (isOpenableGroup) and honours a group that clips what leaves it; nil or an id that is not an openable group falls back to today's top-level sweep. 12 tests in Tests/PhotonzCoreTests/SweepInsideAGroupTests.swift. App: CanvasNSView latches marqueeContext at the PRESS (the press itself lets go of the selection, which is what puts you back at the top level) and carries it through onSelectionChange/onAddSweptLayers into EditorState.setSelection(_:captureLayers:inside:) and addSweptLayersToSelection(in:inside:), both resolving it through sweepContext(). The original note here claimed the app had no notion of which group you are in and suggested reading the parent of the selection: that was out of date, EditorState.groupContextID already carries it and is what a click resolves against.",
@@ -78,7 +78,7 @@
     },
     {
       "t": "2026-09-06T02:25:44.871Z",
-      "note": "runner failed (exit 0, attempt 1): Waiting on the full walk suite. Meanwhile, here's where things stand. **What landed** - `Sources/PhotonzCore/Document.swift` \u2014 `layerIDs(fullyInside:inside:)` now takes the group you have stepped inside. It moves the band into that group's children's space, takes a nested group whole, skips hidden and locked pieces, refuses a component copy, and honours a screen that clips what leaves it. Nil, an "
+      "note": "runner failed (exit 0, attempt 1): Waiting on the full walk suite. Meanwhile, here's where things stand. **What landed** - `Sources/PhotonzCore/Document.swift` — `layerIDs(fullyInside:inside:)` now takes the group you have stepped inside. It moves the band into that group's children's space, takes a nested group whole, skips hidden and locked pieces, refuses a component copy, and honours a screen that clips what leaves it. Nil, an "
     },
     {
       "t": "2026-09-06T02:26:15.537Z",
@@ -87,13 +87,18 @@
     {
       "t": "2026-09-06T02:29:08.507841Z",
       "note": "Second run: the first one shipped the code but died before committing, and it had touched Sources/PhotonzCore/Document.swift AFTER its playtest, so that verification was stale. Re-ran Scripts/playtest/sweep-in-group-walk.json against the code as it stands. All six stages hold: inside the group a band round two of three picks exactly those two with insideGroup still Group, a shift sweep adds the third, a bare-canvas click lets go AND steps back out, and the same wide band at the top level picks Group + Rectangle 4 and never the pieces. Scripts/test.sh green, 3524 tests in 302 suites. Audit screenshots replaced with the fresh -sc.png captures (Screen Recording granted), so the pictures match the shipped code."
+    },
+    {
+      "t": "2026-09-06T02:29:35.516Z",
+      "note": "A band swept inside a group now picks that group's own pieces and nothing above them. Core: PhotonzDocument.layerIDs(fullyInside:inside:) with 12 tests written first; app: CanvasNSView latches the level at the press and carries it to the commit. Verified fresh in the probe (Scripts/playtest/sweep-in-group-walk.json, all six stages) and Scripts/test.sh green at 3524 tests. Audit at queue/audits/2026-09-05-sweep-in-group.json with two real window captures. Follow-up filed: the-rubber-band-shows-which-level-it-is-picking. Commit 323eb95, pushed."
     }
   ],
   "started": "2026-09-06T02:26:15.537Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-06T02:25:44.870Z",
     "exit": 0,
-    "message": "Waiting on the full walk suite. Meanwhile, here's where things stand. **What landed** - `Sources/PhotonzCore/Document.swift` \u2014 `layerIDs(fullyInside:inside:)` now takes the group you have stepped inside. It moves the band into that group's children's space, takes a nested group whole, skips hidden and locked pieces, refuses a component copy, and honours a screen that clips what leaves it. Nil, an "
-  }
+    "message": "Waiting on the full walk suite. Meanwhile, here's where things stand. **What landed** - `Sources/PhotonzCore/Document.swift` — `layerIDs(fullyInside:inside:)` now takes the group you have stepped inside. It moves the band into that group's children's space, takes a nested group whole, skips hidden and locked pieces, refuses a component copy, and honours a screen that clips what leaves it. Nil, an "
+  },
+  "completed": "2026-09-06T02:29:35.517Z"
 }

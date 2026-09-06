@@ -55,6 +55,12 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// (`LinkBreakReport`). All four say it in one frame, because to the
         /// person they are one thing that just happened.
         case linksBroken(LinkBreakReport)
+        /// The saved colour a TOOL was holding could not come with it
+        /// (`ToolColorStyleNotice`): a plain colour was picked underneath it,
+        /// or it drew in a document that has never heard of the name. Neither
+        /// changes anything you can see at the moment it happens, and both
+        /// change what the NEXT shape comes out.
+        case toolColorStyle(ToolColorStyleNotice)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -79,10 +85,10 @@ public struct CopyConfirmation: Hashable, Sendable {
     /// the person reading it.
     public var lifetime: TimeInterval {
         switch subject {
-        // Both of these are the only ones you might want to ACT on, and 1.6
-        // seconds is under the time it takes to read a sentence naming two
-        // things and decide what to do about it.
-        case .linksBroken, .componentPieceRefused: return Self.breakLifetime
+        // These are the ones you might want to ACT on, and 1.6 seconds is
+        // under the time it takes to read a sentence naming two things and
+        // decide what to do about it.
+        case .linksBroken, .componentPieceRefused, .toolColorStyle: return Self.breakLifetime
         default: return Self.lifetime
         }
     }
@@ -110,6 +116,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentChoiceMade: return "Choice added"
         case .componentPieceRefused(let refusal): return refusal.title
         case .linksBroken(let report): return report.title
+        case .toolColorStyle(let notice): return notice.title
         }
     }
 
@@ -142,6 +149,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return refusal.detail
         case .linksBroken(let report):
             return report.detail ?? ""
+        case .toolColorStyle(let notice):
+            return notice.detail
         }
     }
 
