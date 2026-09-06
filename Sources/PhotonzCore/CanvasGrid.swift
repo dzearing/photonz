@@ -482,7 +482,8 @@ public enum CanvasGridCopy {
 
     public static let snap = "Snap to grid"
     public static let snapCaption =
-        "Dragging pulls to the nearest line you can see. Hold Command to get away from it."
+        "Dragging pulls to the nearest line you can see, and the arrow keys step by those lines. "
+        + "Hold Command to get away from it."
 
     public static let lines = "Lines"
     public static let linesCaption = "Up and down only, or both ways like graph paper."

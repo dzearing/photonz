@@ -1,0 +1,392 @@
+{
+  "out": "/tmp/photonz-playtest/grid-nudge-walk",
+  "setup": {
+    "forget": [
+      "grid",
+      "shapes",
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        110,
+        100
+      ],
+      "to": [
+        310,
+        220
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        160
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-off-the-grid",
+      "note": "Drawn with no grid on, so the box sits at 110, 100: off every 32 point line."
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Show grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        160
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-grid-on",
+      "note": "A 4 pt grid at 100% draws 32 pt lines, so that is what a drag lands on and what a key must step by."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-nudge-1-before"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "3-first-press-rejoins",
+      "note": "THE TEST: one press right, expect x 128 (the next line), not 111."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-nudge-2-rejoined"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "4-second-press-one-cell",
+      "note": "Expect x 160: a whole cell on from the line it landed on."
+    },
+    {
+      "do": "key",
+      "key": "up"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "5-up-rejoins-too",
+      "note": "Expect y 96: the line above 100, so both axes rejoin."
+    },
+    {
+      "do": "key",
+      "key": "right",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "6-shift-is-two-cells",
+      "note": "Expect x 224: two cells, still on a line, not 170."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-nudge-3-shift"
+    },
+    {
+      "do": "key",
+      "key": "right",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "7-command-frees-it",
+      "note": "Expect x 225: Command drops the grid for one press, the same way it frees a drag."
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Snap to grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        280,
+        140
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "8-magnet-off-is-one-point",
+      "note": "With the magnet off, expect x 226: one point, exactly as the keys behaved before."
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Snap to grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "9-magnet-back-on",
+      "note": "The magnet is on again for the last test."
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        400
+      ],
+      "to": [
+        500,
+        470
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        140
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        450,
+        430
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "10-two-picked",
+      "note": "Two boxes picked. The block's left edge is the first box's, at 226, and the second box was drawn on a line at 400."
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "11-block-steps-together",
+      "note": "THE TEST: the block's left edge lands on 256, so both boxes travel the same 30 points and the second one keeps its place inside the block rather than drifting onto the grid on its own."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-nudge-5-multi"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        140
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "pinch",
+      "to": 4,
+      "steps": 24
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "12-zoomed-in-the-step-gets-finer",
+      "note": "THE TEST: at 400% the four point lines are drawn, so a press travels four points. Expect x 260."
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "13-four-points-at-400",
+      "note": "Expect x 260: the step follows the lines on screen, so it gets finer as you zoom in."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-nudge-6-zoomed"
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Grid settings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "14-the-switch-says-so",
+      "note": "The Snap to grid caption now says the arrow keys step by the same lines."
+    },
+    {
+      "do": "snapshot",
+      "name": "grid-nudge-4-caption"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
+  ]
+}

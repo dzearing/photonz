@@ -95,26 +95,35 @@ extension CanvasNSView {
             onDeleteLayer(id)
             return
         }
-        // Arrow keys nudge a whole multi-selection (1pt, ⇧ for 10pt): every
-        // picked layer travels the same distance, in ONE undo step, exactly as
-        // dragging the selection on the canvas does. Same plan, so a locked
-        // layer stays put and a piece inside a picked group is not moved twice.
+        // How far an arrow key travels. While the grid is pulling it is whole
+        // grid cells, so the keys put a layer exactly where a drag would, and
+        // ⌘ frees a nudge from the grid the same way it frees a drag.
+        let coarseNudge = event.modifierFlags.contains(.shift)
+        let nudgeGrid = event.modifierFlags.contains(.command) ? nil : canvasNudgeGrid
+        // Arrow keys nudge a whole multi-selection: every picked layer travels
+        // the same distance, in ONE undo step, exactly as dragging the
+        // selection on the canvas does. Same plan, so a locked layer stays put
+        // and a piece inside a picked group is not moved twice. The distance
+        // comes from the selection's own corner, so the block lands on the
+        // grid rather than each layer drifting onto it separately.
         // This comes first because a multi-selection has no primary layer at
         // all — `selectedLayerID` is nil — so the branch below can never fire.
-        if let delta = Nudge.delta(keyCode: event.keyCode,
-                                   large: event.modifierFlags.contains(.shift)),
+        if Nudge.isArrow(keyCode: event.keyCode),
            moveDrag == nil, resizeDrag == nil, transformDrag == nil,
            pickedLayerIDs.count > 1,
-           let plan = document?.multiLayerDrag(moving: pickedLayerIDs) {
+           let plan = document?.multiLayerDrag(moving: pickedLayerIDs),
+           let delta = Nudge.delta(keyCode: event.keyCode, large: coarseNudge,
+                                   grid: nudgeGrid, from: plan.bounds.origin) {
             onMoveSelectionCommit(plan.origins(offsetBy: delta), false)
             refreshOverlays()
             return
         }
-        // Arrow keys nudge the selected layer (1pt, ⇧ for 10pt).
-        if let delta = Nudge.delta(keyCode: event.keyCode,
-                                   large: event.modifierFlags.contains(.shift)),
+        // Arrow keys nudge the selected layer.
+        if Nudge.isArrow(keyCode: event.keyCode),
            moveDrag == nil, resizeDrag == nil, transformDrag == nil,
-           let id = selectedLayerID, let layer = document?.canvasLayer(id: id), !layer.isLocked {
+           let id = selectedLayerID, let layer = document?.canvasLayer(id: id), !layer.isLocked,
+           let delta = Nudge.delta(keyCode: event.keyCode, large: coarseNudge, grid: nudgeGrid,
+                                   from: layer.withoutSlack(layer.frame).origin) {
             // The box you see, because that is what every commit out of this
             // view carries (`EditorState.storedCanvasFrame` puts the slack of
             // a text box back).

@@ -1,0 +1,49 @@
+{
+  "feature": "Arrow keys step by the grid",
+  "epic": "ui-building",
+  "summary": "With the grid on and Snap to grid on, an arrow key now moves a layer to the next grid line instead of one point, so the keyboard and a drag put things in the same places. Hold Command for the old one point press.",
+  "setup": "Photonz Dev, release Next. Show grid is off until you switch it on in the Canvas section of the panel; Snap to grid is on by default.",
+  "try": [
+    {
+      "do": "Draw a rectangle anywhere, with the grid still off."
+    },
+    {
+      "do": "Click bare canvas, then tick Show grid in the Canvas section of the panel."
+    },
+    {
+      "do": "Click the rectangle and press the right arrow once.",
+      "shot": "2026-09-06-grid-nudge-1.png"
+    },
+    {
+      "do": "Press the right arrow twice more, and watch the box walk line to line."
+    },
+    {
+      "do": "Press Shift and the right arrow: it travels two cells, still landing on a line."
+    },
+    {
+      "do": "Hold Command and press the right arrow: one point, off the grid, the same way Command frees a drag."
+    },
+    {
+      "do": "Shift-click a second shape and press an arrow: the pair travels together and the block lands on a line.",
+      "shot": "2026-09-06-grid-nudge-2.png"
+    },
+    {
+      "do": "Zoom in to 400% and press an arrow again: the step gets finer with the lines, four points instead of thirty two.",
+      "shot": "2026-09-06-grid-nudge-3.png"
+    }
+  ],
+  "evaluate": [
+    "The first press on an off-grid box moves it a part cell to rejoin the grid. Does that read as helpful or as the box jumping?",
+    "At 100% a four point grid draws 32 point lines, so one press travels 32 points. Is that the distance you expected from an arrow key?",
+    "Shift travels two cells at that spacing. Too little for a big nudge, about right, or too much?",
+    "Is Command the escape hatch you would reach for when you want one point?",
+    "Does the line under Snap to grid tell you the keys changed before you find out by pressing one?"
+  ],
+  "rough": [
+    "The step follows the ZOOM, because it follows the lines actually drawn: 32 points at 100% on a four point grid, four points at 400%. That is deliberate, so the keys and a drag agree, but it does mean the same key covers different ground at different zooms.",
+    "Shift is the same ten points it always covered, rounded up to whole cells, never fewer than two. On a one point grid it is still exactly ten. Nothing in the app says that number out loud yet.",
+    "The X and Y fields in the panel still step by one point per press. They have no zoom of their own and a typed number is not a drag, so they were left alone. Say the word if they should follow the grid too.",
+    "A grid set to Columns only pulls sideways, so up and down stay at one point. Correct, but there is no hint on screen that the two axes now behave differently.",
+    "Verified in the probe app with a scripted walk, Screen Recording granted, so the pictures here are real captures rather than offscreen renders."
+  ]
+}

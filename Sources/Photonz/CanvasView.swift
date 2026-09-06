@@ -1124,6 +1124,14 @@ final class CanvasNSView: NSView {
         return canvasGrid?.snapSpacing(atZoom: viewport.zoom)
     }
 
+    /// The grid an arrow key steps by: the same lines, counted from the same
+    /// place, as the ones a drag lands on. Nil when nothing is pulling, and
+    /// then the keys are the one and ten points they have always been.
+    var canvasNudgeGrid: NudgeGrid? {
+        guard let spacing = canvasSnapSpacing else { return nil }
+        return NudgeGrid(spacing: spacing, origin: canvasSnapOrigin, axes: canvasSnapAxes)
+    }
+
     /// The columns a drag can catch, gathered at grab time.
     ///
     /// Only a screen showing its columns offers any, so a screenshot, a plain

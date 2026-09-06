@@ -61,6 +61,14 @@ struct CanvasGridControls: View {
                     .help(CanvasGridCopy.snapCaption)
                     .playtestControl(CanvasGridCopy.snap,
                                      detail: "Grid settings, \(grid.snapsToGrid ? "on" : "off")")
+                // The one checkbox here that carries its explanation on the
+                // surface rather than in a tooltip: the magnet holds the arrow
+                // keys as well as a drag now, and nobody discovers that by
+                // pressing one and watching a layer travel a whole cell.
+                Text(CanvasGridCopy.snapCaption)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
                 // The picker is as wide as the popover, so its word sits ABOVE
                 // it rather than beside it. Unlabelled it was two phrases
                 // floating between two checkboxes, and a first timer had no

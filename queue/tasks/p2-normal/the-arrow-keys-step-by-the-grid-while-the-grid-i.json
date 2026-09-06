@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:38:05.176Z",
-  "updated": "2026-09-06T06:27:08.168Z",
+  "updated": "2026-09-06T06:40:14.073Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. Nudge.swift in PhotonzCore holds the step; CanvasGridSettings.snapSpacing is the grid step to use. TDD in core.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-09-06T06:27:08.168Z",
       "note": "Adversarial review before building. (1) The step must be the LIVE cell (CanvasGridSettings.snapSpacing(atZoom:)), not the typed spacing: at 100% a 4 pt grid draws 32 pt lines and a drag lands on those, so an arrow key stepping 4 would disagree with the drag all over again. (2) Shift by ten CELLS would be absurd when a cell is already 32 pt. Rule chosen: shift travels the same ten points it always did, rounded UP to whole cells, and never fewer than two, so shift is always bigger than a plain press and always lands on a line. Cell 1 -> 10 pt (unchanged), 4 -> 12, 8 -> 16, 32 -> 64. (3) An off-grid layer must land ON the next line rather than travelling a whole cell, or a nudged layer never rejoins the grid. (4) A grid set to columns only has no lines across, so up and down stay at one point, exactly as a drag does. (5) Escape hatch: the grid steals fine positioning, so Command plus an arrow nudges by one point, the same way Command frees a drag. Cut from scope: the X and Y number fields keep stepping by one, they have no zoom of their own and a typed number is not a drag."
+    },
+    {
+      "t": "2026-09-06T06:40:14.072Z",
+      "note": "Built and verified in the probe app (Scripts/playtest/grid-nudge-walk.json, 80 steps, ok, Screen Recording granted). Nudge in PhotonzCore now takes a NudgeGrid (live cell, origin, axes) and returns the travel to the next line; CanvasKeys passes CanvasView.canvasNudgeGrid, which reads snapSpacing(atZoom:) so the keys and a drag agree. Walk numbers, 4 pt grid at 100% so the live cell is 32: box drawn off grid at 110 -> 128 on the first press (rejoins), -> 160, up 100 -> 96, shift -> 224 (two cells), command -> 225 (one point), snap off -> 226 (one point), two picked -> both travel 30 and the block lands on 256, at 400% -> 260 (four points, the step follows the lines). Snap to grid now shows its caption on the surface instead of only in a tooltip, and the caption says the arrow keys step by those lines. Audit: queue/audits/2026-09-06-grid-nudge.json."
     }
   ],
   "started": "2026-09-06T06:24:29.362Z"

@@ -28,6 +28,12 @@ struct CanvasGridTests {
                 || caption.localizedCaseInsensitiveContains("smallest"))
     }
 
+    @Test func theSnapCaptionSaysTheKeysUseTheGridToo() {
+        // Nobody discovers that the arrow keys changed by pressing one and
+        // watching a layer travel thirty two points, so the switch says so.
+        #expect(CanvasGridCopy.snapCaption.localizedCaseInsensitiveContains("arrow keys"))
+    }
+
     @Test func theSpacingReadsAsANumberWithItsUnit() {
         #expect(CanvasGridSettings(spacing: 4).spacingText == "4 pt")
         #expect(CanvasGridSettings(spacing: 12).spacingText == "12 pt")

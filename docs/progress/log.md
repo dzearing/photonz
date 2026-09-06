@@ -9217,3 +9217,28 @@ captures at 100%, 400% and 25%; audit in
 `queue/audits/2026-09-06-grid-live-spacing.json`. Next: whatever the queue hands
 out; the open question for the user is whether the arrow reads the right way
 round.
+
+## 2026-09-06 — The arrow keys step by the grid
+
+With the grid pulling, dragging a layer landed it on a line while an arrow key
+still moved it one point, so the two ways of moving something disagreed and a
+nudged layer walked straight back off the grid. `Nudge` now takes a `NudgeGrid`
+(the live cell, the grid's zero point, which ways its lines run) and hands back
+the travel to the next LINE rather than a fixed step, so a box already off the
+grid rejoins it on the first press. The cell is the live one,
+`CanvasGridSettings.snapSpacing(atZoom:)` through `CanvasView.canvasNudgeGrid`,
+which is what a drag lands on, so the step follows the zoom: 32 points at 100%
+on a 4 pt grid, 4 points at 400%. Shift travels the same ten points it always
+did, rounded up to whole cells and never fewer than two, and ⌘ frees one press
+from the grid the way it frees a drag. A grid of columns only steps sideways.
+Multi-selections step off the block's own corner, so everything travels the same
+distance and keeps its place inside the block.
+
+"Snap to grid" now shows its caption on the surface instead of only in a
+tooltip, and the caption says the arrow keys use the same lines: nobody was
+going to discover that by pressing one.
+
+Verified in the probe app with `Scripts/playtest/grid-nudge-walk.json` (80
+steps, real window captures); audit in `queue/audits/2026-09-06-grid-nudge.json`.
+Open question for the user: whether two cells is the right size for a Shift
+nudge, and whether the X and Y fields should follow the grid too.
