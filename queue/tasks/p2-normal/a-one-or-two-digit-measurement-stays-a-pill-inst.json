@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1290,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T23:23:11.533Z",
-  "updated": "2026-09-06T10:27:15.867266Z",
+  "updated": "2026-09-06T10:27:36.089Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Same defect the arrow caption had, on the other side of the shared PillRasterizer. Confirmed by measuring: PillRasterizer.footprint for \"4\" at MeasureContent.labelFontSize/labelPadding is 32x42, and \"12\" is 39x42 — both narrower than tall. The caption fix put the floor on AnnotationContent.captionMinPillWidth (Sources/PhotonzCore/Layer.swift) and applied it in captionPillSize + estimatedCaptionSize; the measure side would want the same floor in PillRasterizer.footprint or in MeasureContent's own chip size. Deliberately NOT done with the caption fix because widening a measure chip moves geometry that MeasureChipJoinTests, MeasureCalloutClearanceTests and the callout fixture tests all assert against, so it needs its own pass over those. No point can form (the radius is already clamped to half the short side), so this is purely about the shape reading right.",
@@ -52,6 +52,10 @@
     {
       "t": "2026-09-06T10:27:15.867143Z",
       "note": "Second run: the previous one built everything but died before finalizing, so this pass re-verified rather than trusting it. Full suite green, 3712 tests, and the four new/extended suites confirmed present and passing by name (Measure chip shape, Measure chip is a badge, Caliper chip join with its 12 spans). Measured the footprints directly instead of taking the earlier note's word: at 8/18/90 px label sizes \"4 px\" goes 1.38/1.31/1.29 to 1.75/1.72/1.73 and \"12 px\" 1.52/1.48/1.48 to the same, while \"120 px\" (1.76/1.74/1.77) and \"4321 px\" (2.04/2.00/2.05) are byte-identical to before, which is acceptance 1 and 2. Caught that Measure.swift and PillRasterizer.swift were saved a minute AFTER the audit screenshots were taken, so the captures could have predated the final constant: re-ran Scripts/playtest/caliper-chip-join-walk.json on a fresh probe build (Screen Recording granted, real window captures) and the new 4-row-gap-sc.png is identical to the stored audit shot, so the shots do show the shipped code. 4-zoomed-sc.png at 156% shows the caliper meeting the chip outline on both sides with no gap or overshoot (acceptance 3). Fixed one real defect in the audit: its rough section said the fix was 1.75 in one bullet and 1.7 in the next. Acceptance item 1 reworded from \"as wide as a three digit one (1.75x)\" to the honest 1.7, because 1.75 would have widened a three digit chip and broken item 2; the two items conflicted and item 2 wins, at a cost of under half a point."
+    },
+    {
+      "t": "2026-09-06T10:27:36.088Z",
+      "note": "Readout pills now floor at 1.7x their height, the badge proportion a three digit readout already has, so a 2 px reading and a 124 px reading are the same shape. MeasureContent.labelBadgeAspect + labelMinPillWidth, applied through a new minWidth on PillRasterizer.footprint. Verified: full suite 3712 green including new MeasureChipShapeTests and MeasureChipBadgeTests and MeasureChipJoinTests extended to 4px/12px spans; footprints measured directly at 8/18/90px label sizes (short chips 1.31 to 1.72, long chips byte-identical); playtest walk re-run on a fresh probe build under a live Screen Recording grant, real captures in queue/audits/2026-09-06-measure-chip-badge-{1,2}.png. Commit b3f079c, pushed."
     }
   ],
   "started": "2026-09-06T10:23:51.700Z",
@@ -60,5 +64,6 @@
     "at": "2026-09-06T10:23:20.925Z",
     "exit": 0,
     "message": "Waiting on the walk set. Meanwhile, here's where things stand. **Reproduced first, and the task's diagnosis was wrong.** The task said a short measurement's chip is \"narrower than it is tall.\" It never was: a caliper always prints its unit, so the shortest text it ever draws is `4 px` — 55 × 42 at the default size. But the complaint is real. Rendered side by side, `4 px` (1.31) and `12 px` (1.48) "
-  }
+  },
+  "completed": "2026-09-06T10:27:36.089Z"
 }
