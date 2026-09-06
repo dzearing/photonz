@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1490,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T20:46:26.904Z",
-  "updated": "2026-09-06T20:46:26.905Z",
+  "updated": "2026-09-06T23:23:12.635Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Fails at step 34: press Slider in Thickness reports \"the ones that are: none\", so the panel had no controls at all, meaning nothing was selected at that point. Confirmed pre-existing on 2026-09-06 by stashing that day's changes and re-running: identical failure at the same step. Likely the arrow drag from [30,250] to [190,250] misses or the preceding escape drops the selection.",
+  "notes": "Fails at step 34: press Slider in Thickness reports \"the ones that are: none\", so the panel had no controls at all, meaning nothing was selected at that point. Confirmed pre-existing on 2026-09-06 by stashing that day's changes and re-running: identical failure at the same step. Likely the arrow drag from [30,250] to [190,250] misses or the preceding escape drops the selection.\n\nRoot cause found 2026-09-06: the parts redesign (c72ed55, `next-shape-parts`) took the Thickness row out of the Arrow section entirely. AnnotationInspector.visibleRows now drops `.thickness` when shapePartsEnabled, and the width lives in the parts list as \"Width\", folded under the chevron of the arrow's stroke row, which for an arrow is titled \"Color\" (LayerParts.layerPartRows gives a non-switchable outline the title \"Color\"). So the panel genuinely had no Thickness row and the walk was asking for a control that no longer exists. Nothing was wrong with the drag or the escape.\n\nFix is in the walk, not the app: press \"Settings\" in \"Color\" once to unfold the part, then \"Slider\" in \"Width\". Only once, because PartsInspector.openPart is @AppStorage and stays open across selections; `forget: [\"panel\"]` resets that key, so every run starts folded and the walk is deterministic.",
   "acceptance": [
     "Scripts/playtest.sh Scripts/playtest/arrow-endings-walk.json finishes with status ok",
     "The walk still produces the thin row, thick row and caption corner pictures it produced before"
@@ -21,6 +21,27 @@
     {
       "t": "2026-09-06T20:46:26.905Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T23:23:12.635Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T23:40:00.000Z",
+      "note": "Reproduced first: identical failure at step 34, panel had no row matching \"Thickness\". Dumped the panel with a one-arrow probe walk: the arrow's controls are Ending, Head Size, Position & Size, a Color row with a Settings chevron, and Effects. No Thickness anywhere."
+    },
+    {
+      "t": "2026-09-06T23:45:00.000Z",
+      "note": "Traced it to the shape-parts redesign: the width moved into the parts list and was renamed Width, folded behind the Color row's chevron. The walk, not the app, is what needs to change; the title's \"gets a Thickness slider back\" would mean undoing a deliberate design."
+    },
+    {
+      "t": "2026-09-06T23:55:00.000Z",
+      "note": "Walk updated and run twice from a clean output folder: status ok, 98 steps both times. Thin row 4pt, thick row 13pt (plain line grows 4->14 tall, open head 36->46), and the pill/badge/square caption shot is back. Scripts/test.sh green, 4139 tests."
+    },
+    {
+      "t": "2026-09-06T23:57:00.000Z",
+      "note": "Adversarial pass on the built thing: making an arrow thicker is now two clicks behind a row named Color, which says nothing about line width. Filed as its own task rather than changed here."
     }
-  ]
+  ],
+  "started": "2026-09-06T23:23:12.634Z"
 }

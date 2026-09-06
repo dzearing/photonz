@@ -198,8 +198,13 @@
     },
     {
       "do": "press",
+      "control": "Settings",
+      "in": "Color"
+    },
+    {
+      "do": "press",
       "control": "Slider",
-      "in": "Thickness",
+      "in": "Width",
       "across": 0.32
     },
     {
@@ -359,7 +364,7 @@
     {
       "do": "press",
       "control": "Slider",
-      "in": "Thickness",
+      "in": "Width",
       "across": 0.06
     },
     {

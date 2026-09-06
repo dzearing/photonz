@@ -1,0 +1,28 @@
+{
+  "id": "making-an-arrow-thicker-takes-one-click-not-thre",
+  "title": "Making an arrow thicker takes one click, not three",
+  "goal": "To change how thick an arrow is, you now have to find a row called Color, click a chevron to unfold it, and move a slider called Width. The word Color says nothing about line thickness, so the most common adjustment on a redline arrow is hidden. Put the thickness within reach the moment an arrow is selected.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1530,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T23:28:29.119Z",
+  "updated": "2026-09-06T23:28:29.120Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while fixing the arrow-endings walk on 2026-09-06. LayerParts.layerPartRows titles a non-switchable outline (arrow, line, highlight) \"Color\", and PartsInspector folds its PartWidthRow behind the chevron, so an arrow's width is two clicks deep. Options worth weighing: keep the width visible on the row for parts that have no switch, or bring a thickness row back into the Arrow section for arrows only. AnnotationInspector.visibleRows currently drops .thickness whenever shapePartsEnabled is on.",
+  "acceptance": [
+    "Selecting an arrow shows a thickness control without unfolding anything",
+    "The control says what it changes in a word a person would use for an arrow",
+    "A rectangle keeps its Outline part working exactly as it does today",
+    "The arrow endings walk still finishes with status ok"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T23:28:29.120Z",
+      "note": "created (manual)"
+    }
+  ]
+}
