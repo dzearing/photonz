@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T04:50:46.578Z",
-  "updated": "2026-09-06T16:16:55.736Z",
+  "updated": "2026-09-06T16:30:38.821Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while fixing the caption drop. Layer.contains(canvasPoint:zoom:) hit-tests the caption with AnnotationContent.estimatedCaptionSize, which for a 25 character caption is 408pt wide against a measured 245: 163pt of blank canvas past the far edge answers to the arrow. The drop, the edge clamp and the pill GRAB now take a measured size (CanvasGrab.captionPillRect(of:captionPillSize:)); this one was left because it needs a measurement threaded through Document.hitTest/hitTestPath and every caller, since PhotonzCore cannot lay out type. Options: a captionPillSize closure on hitTest, or caching the measured pill on the layer at commit time.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-06T16:29:15.798622Z",
       "note": "Audit: queue/audits/2026-09-06-label-hit-box.json with two real window captures."
+    },
+    {
+      "t": "2026-09-06T16:30:38.821Z",
+      "note": "Hit-testing now takes a measured caption pill (CaptionPillSizing through Layer.contains, PhotonzDocument.hitTest and the three group targets; the app fills it in via CaptionMetrics). Verified by reproducing first with the measurement withheld, then Scripts/playtest/label-hit-box-walk.json reading no selection 40pt past a sentence label and the Arrow on the label and shaft. Suite green at 3945. Audit: queue/audits/2026-09-06-label-hit-box.json"
     }
   ],
-  "started": "2026-09-06T16:16:55.736Z"
+  "started": "2026-09-06T16:16:55.736Z",
+  "completed": "2026-09-06T16:30:38.821Z"
 }
