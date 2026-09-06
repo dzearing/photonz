@@ -129,6 +129,12 @@ extension EditorState {
         perform { $0.setClipsContents(id: id, clips) }
     }
 
+    /// The same switch over every picked group, in one undo step.
+    func setClipsContents(ids: [UUID], _ clips: Bool) {
+        guard !ids.isEmpty else { return }
+        perform { $0.setClipsContents(ids: ids, clips) }
+    }
+
     /// The surface a frame paints behind its contents; nil is a frame you see
     /// the canvas through.
     func setFrameBackground(id: UUID, hex: String?) {

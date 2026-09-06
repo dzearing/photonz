@@ -109,6 +109,35 @@ extension PhotonzDocument {
         updateLayer(id: id) { $0.setGroupLayout(next) }
     }
 
+    /// The same two edits over EVERY picked group, in one step that one undo
+    /// puts back. Two cards become stacks once rather than twice over.
+    @discardableResult
+    public mutating func setGroupLayout(ids: [UUID], kind: GroupLayoutKind?) -> Int {
+        var count = 0
+        for id in ids where ownsContentRules(id: id) {
+            setGroupLayout(id: id, kind: kind)
+            count += 1
+        }
+        return count
+    }
+
+    /// One typed number over every picked group. The change is handed each
+    /// group's own layer as well as its own layout, because the answer is not
+    /// always the same number: Hug turned into Fixed holds the size each group
+    /// is at that moment, and borrowing the first group's size for the rest
+    /// would move everything else on screen.
+    @discardableResult
+    public mutating func updateGroupLayout(ids: [UUID],
+                                           _ change: (inout GroupLayout, Layer) -> Void) -> Int {
+        var count = 0
+        for id in ids {
+            guard let layer = layer(id: id), ownsContentRules(id: id) else { continue }
+            updateGroupLayout(id: id) { change(&$0, layer) }
+            count += 1
+        }
+        return count
+    }
+
     /// Layer ▸ Stack Selection / Grid Selection. Several layers picked become
     /// one group that arranges them; one group picked simply starts arranging
     /// itself. Returns the group that ended up doing the arranging.

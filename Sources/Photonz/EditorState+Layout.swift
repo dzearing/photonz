@@ -332,6 +332,16 @@ extension EditorState {
         placementSelection.containerID.flatMap { document?.layer(id: $0) }
     }
 
+    /// What the Contents rows show for what is picked: the groups they speak
+    /// for and what each row reads across them. One group or three, this is the
+    /// same reading, which is what lets one typed gap reach three cards instead
+    /// of being typed into each in turn.
+    var contentsSelection: ContentsSelection {
+        guard let document else { return .none }
+        return document.contentsSelection(layerIDs: orderedSelectedLayerIDs,
+                                          arranging: Experiments.shared.autoLayoutEnabled)
+    }
+
     /// What a group tells everything inside it to do when it is resized.
     func setContentPlacement(id: UUID, horizontal: HorizontalPlacement?) {
         guard document?.layer(id: id)?.isGroup == true else { return }
@@ -379,6 +389,40 @@ extension EditorState {
     func setFillsTheFlow(ids: [UUID], _ fills: Bool) {
         guard !ids.isEmpty else { return }
         perform { _ = $0.setFillsTheFlow(ids: ids, fills) }
+    }
+
+    /// The same three edits over EVERY picked group, in ONE undo step however
+    /// many they reached. Two cards are told to stack their contents once
+    /// rather than twice over, and one undo puts both back.
+    func setContentPlacement(ids: [UUID], horizontal: HorizontalPlacement?) {
+        guard !ids.isEmpty else { return }
+        perform { $0.setContentPlacement(ids: ids, horizontal: horizontal) }
+    }
+
+    func setContentPlacement(ids: [UUID], vertical: VerticalPlacement?) {
+        guard !ids.isEmpty else { return }
+        perform { $0.setContentPlacement(ids: ids, vertical: vertical) }
+    }
+
+    func setArrangement(ids: [UUID], kind: GroupLayoutKind?) {
+        guard !ids.isEmpty else { return }
+        discardDragPreview()
+        perform { $0.setGroupLayout(ids: ids, kind: kind) }
+    }
+
+    /// One typed number over every picked group. The change is handed each
+    /// group's own layer as well, so Hug turned into Fixed holds the size each
+    /// one is at rather than the first one's borrowed by the rest.
+    func updateArrangement(ids: [UUID],
+                           _ change: @escaping (inout GroupLayout, Layer) -> Void) {
+        guard !ids.isEmpty else { return }
+        perform { $0.updateGroupLayout(ids: ids, change) }
+    }
+
+    /// The same, for the numbers that are the same number on every picked
+    /// group: a gap of 12 is 12 on all of them.
+    func updateArrangement(ids: [UUID], _ change: @escaping (inout GroupLayout) -> Void) {
+        updateArrangement(ids: ids) { layout, _ in change(&layout) }
     }
 
     /// A canvas click that resolved through the group walk: the layer it

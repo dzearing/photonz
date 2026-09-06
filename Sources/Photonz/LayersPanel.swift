@@ -415,10 +415,10 @@ struct InspectorPanel: View {
         // Effects rows above. Picking a second layer used to take the whole
         // section off the panel, so three buttons in a bar had to be stretched
         // one at a time; the section leaves only when nothing picked has a
-        // place in anything. A group also brings it for what it holds, which
-        // is the one part still about a single layer.
+        // place in anything. A picked GROUP also brings it for what it holds,
+        // one group or three, which is the Contents half of the same section.
         if Experiments.shared.placementEnabled,
-           editorState.placementSelection.isPresent || selectedLayer?.isGroup == true {
+           editorState.placementSelection.isPresent || editorState.contentsSelection.isPresent {
             set.insert(.placement)
         }
         // The picked copies' own section, saying which original they follow and

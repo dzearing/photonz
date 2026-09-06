@@ -1,0 +1,521 @@
+{
+  "out": "/tmp/photonz-playtest/contents-for-several",
+  "seed": "Picking a second GROUP used to take the whole Contents half of the Layout section off the panel: the arrangement, the gap, the padding, the size and where the contents sit all vanished, so making two cards stack their contents 12 apart meant doing it twice with a click in between. The walk draws two cards, picks both, and reads the block: it must stay, be headed for both, set both in one step that one undo puts back, and say Mixed where they disagree.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        100
+      ],
+      "to": [
+        200,
+        140
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        170
+      ],
+      "to": [
+        200,
+        210
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        80,
+        60
+      ],
+      "to": [
+        260,
+        250
+      ],
+      "steps": 10
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        100
+      ],
+      "to": [
+        500,
+        140
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        170
+      ],
+      "to": [
+        500,
+        210
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        60
+      ],
+      "to": [
+        560,
+        250
+      ],
+      "steps": 10
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-group",
+      "note": "one card picked: Layout is headed Contents of Group, with the Arrangement row and everything under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-1-one-group"
+    },
+    {
+      "do": "panel",
+      "stage": "1-one-group"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group 2",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-two-groups",
+      "note": "THE FIX: with a second card picked the block STAYS, headed Contents of these 2 groups, with the same rows"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-2-two-groups"
+    },
+    {
+      "do": "panel",
+      "stage": "2-two-groups"
+    },
+    {
+      "do": "press",
+      "control": "Stack",
+      "in": "Arrangement"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "3-both-stacked",
+      "note": "one press reached BOTH cards: they are both stacks now, and the Gap and Direction rows are here for both"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-3-both-stacked"
+    },
+    {
+      "do": "panel",
+      "stage": "3-both-stacked"
+    },
+    {
+      "do": "focus",
+      "field": "Gap"
+    },
+    {
+      "do": "type",
+      "text": "24"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "4-one-gap",
+      "note": "one typed number reached both cards: both stacks are 24 apart"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-4-one-gap"
+    },
+    {
+      "do": "panel",
+      "stage": "4-one-gap"
+    },
+    {
+      "do": "render",
+      "name": "contents-several-4-one-gap-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-one-undo",
+      "note": "THE TEST: ONE undo put BOTH gaps back. Had it reached only one, the Gap field would read Mixed"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-5-one-undo"
+    },
+    {
+      "do": "panel",
+      "stage": "5-one-undo"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Grid",
+      "in": "Arrangement"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Group",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "6-mixed-arrangement",
+      "note": "THE READING: one card is a stack and the other a grid, so Arrangement says Mixed beside its own word and no segment is lit"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-6-mixed-arrangement"
+    },
+    {
+      "do": "panel",
+      "stage": "6-mixed-arrangement"
+    },
+    {
+      "do": "press",
+      "control": "Stack",
+      "in": "Arrangement"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "7-mixed-is-still-a-control",
+      "note": "pressing a segment on a Mixed row reaches both cards, so Mixed is never a dead end"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-7-mixed-is-still-a-control"
+    },
+    {
+      "do": "panel",
+      "stage": "7-mixed-is-still-a-control"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Horizontal",
+      "choose": "Center"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Group 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Horizontal",
+      "choose": "Right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Group",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "8-mixed-placement",
+      "note": "the two cards tell their contents different things across, so Horizontal reads Mixed in its own slot while Vertical still shows what they share"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-8-mixed-placement"
+    },
+    {
+      "do": "panel",
+      "stage": "8-mixed-placement"
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "16"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "9-padding-both",
+      "note": "one typed padding reaches both cards"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-9-padding-both"
+    },
+    {
+      "do": "panel",
+      "stage": "9-padding-both"
+    },
+    {
+      "do": "render",
+      "name": "contents-several-9-padding-both-doc"
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Horizontal",
+      "choose": "Right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Group 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle 3"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Horizontal",
+      "choose": "Right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "scrollPanel",
+      "by": -500
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "10-one-group-exceptions",
+      "note": "one card picked: the list of layers with a rule of its own is headed the way it always was"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-10-one-group-exceptions"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "scrollPanel",
+      "by": -500
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "11-exceptions-across-groups",
+      "note": "THE LIST: both cards picked, so the list counts across them and each name says which card it is in"
+    },
+    {
+      "do": "snapshot",
+      "name": "contents-several-11-exceptions-across-groups"
+    },
+    {
+      "do": "panel",
+      "stage": "11-exceptions-across-groups"
+    }
+  ]
+}

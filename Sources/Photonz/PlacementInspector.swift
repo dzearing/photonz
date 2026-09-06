@@ -50,6 +50,11 @@ struct PlacementInspector: View {
         selection.containerID.flatMap { editorState.document?.layer(id: $0) }
     }
 
+    /// The picked groups whose OWN contents this section also speaks for, and
+    /// what each of those rows reads across them. One group or three: picking a
+    /// second card no longer takes the whole Contents block off the panel.
+    private var contents: ContentsSelection { editorState.contentsSelection }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if selection.hasDifferentContainers {
@@ -61,14 +66,16 @@ struct PlacementInspector: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-            } else {
-                if let container {
-                    childRows(in: container)
-                }
-                if let only, only.isGroup {
-                    if container != nil { Divider() }
-                    contentRows(only)
-                }
+            } else if let container {
+                childRows(in: container)
+            }
+            // What the picked groups tell their OWN contents is a separate
+            // question from where they themselves sit, and it has an answer
+            // even when the first one does not: two cards on two different
+            // screens still each place what is inside them.
+            if contents.isPresent {
+                if container != nil || selection.hasDifferentContainers { Divider() }
+                contentRows()
             }
         }
         .padding(.horizontal, 14)
@@ -201,8 +208,13 @@ struct PlacementInspector: View {
 
     /// The group's own default still written on the axis its flow decides, so
     /// the Contents rows can offer to clear it the same way a layer's do.
-    private func contentsInertRule(_ current: Layer, _ flow: PlacementEditing) -> String? {
-        flow.inertRule(in: current.group?.contentPlacement)
+    ///
+    /// One group only: the leftover rule is a different word on each of three
+    /// groups, and a Clear button that named one of them would be lying about
+    /// the other two. The same rule the child rows' own Clear already follows.
+    private func contentsInertRule(_ flow: PlacementEditing) -> String? {
+        guard contents.count == 1, let one = contents.groups.first else { return nil }
+        return flow.inertRule(in: one.rule)
     }
 
     /// The word beside a listed piece, which for the surface is a plainer
@@ -324,26 +336,38 @@ struct PlacementInspector: View {
             : "One pick here reaches every one of them, and wins over the group's rule."
     }
 
-    // MARK: - What everything inside this group does
+    // MARK: - What everything inside these groups does
 
-    private func contentRows(_ current: Layer) -> some View {
-        let effective = current.contentPlacementDefault
-        let arrangement = arrangement(of: current)
-        let flow = PlacementEditing(arrangement: arrangement, placing: effective)
+    /// What the picked groups tell their own contents, for one group or for
+    /// three. Every row here reads the whole pick and reaches the whole pick,
+    /// so making two cards stack their contents 12 apart is one visit to this
+    /// block rather than one visit per card.
+    private func contentRows() -> some View {
+        // Which of the two directions the groups' own flows have taken over.
+        // Where they do not agree, both rows stay live and one line underneath
+        // says so: a row that went dead would be answering for the groups it
+        // is not about.
+        let flow = contents.flow
+        let stale = contentsInertRule(flow)
+        let ids = contents.ids
+        // Whether the block ends on the line about following. It is the last
+        // thing in the block when it is there, so it is also where the promise
+        // about reaching every picked group goes.
+        let showsFollowCaption = contents.nothingArranged && !contents.isFollowed
         return VStack(alignment: .leading, spacing: 6) {
-            Text("Contents of \(current.name)")
+            Text(contents.heading)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            // How this group arranges its contents, above where each one sits,
-            // because the arrangement decides which of the two rows below is
-            // still a question (Next, `next-auto-layout`).
+            // How these groups arrange their contents, above where each one
+            // sits, because the arrangement decides which of the two rows below
+            // is still a question (Next, `next-auto-layout`).
             if Experiments.shared.autoLayoutEnabled {
-                ArrangementInspector(layer: current)
+                ArrangementInspector(contents: contents)
             }
             // The axis a stack runs along is the stack's answer, not a menu:
             // a live control that changes nothing is worse than a row that
             // says who owns it.
-            if current.isComponentInstance {
+            if contents.isFollowed {
                 // A copy's contents are its original's, down to where they
                 // sit: these are refilled from the original after every edit,
                 // so a menu here would take an answer and lose it by the next
@@ -354,57 +378,61 @@ struct PlacementInspector: View {
                 // underneath that the flow is overriding: the two sections
                 // describe one fact, so they had better agree.
                 followedRow("Horizontal", flow.canSetHorizontal
-                            ? effective.horizontal.title
-                            : (flow.setByTheFlow ?? effective.horizontal.title))
+                            ? answer(contents.horizontal.value?.title)
+                            : (flow.setByTheFlow
+                               ?? answer(contents.horizontal.value?.title)))
                 followedRow("Vertical", flow.canSetVertical
-                            ? effective.vertical.title
-                            : (flow.setByTheFlow ?? effective.vertical.title))
-            } else if !flow.canSetHorizontal {
-                ownedByTheFlow("Horizontal", flow, clearing: contentsInertRule(current, flow),
-                               filling: nil) {
-                    editorState.setContentPlacement(id: current.id, horizontal: nil)
-                }
+                            ? answer(contents.vertical.value?.title)
+                            : (flow.setByTheFlow
+                               ?? answer(contents.vertical.value?.title)))
             } else {
-                row("Horizontal") {
-                    Menu {
-                        ForEach(current.horizontalPlacementChoices, id: \.self) { choice in
-                            Button(choice.title) {
-                                editorState.setContentPlacement(id: current.id, horizontal: choice)
+                if flow.canSetHorizontal {
+                    row("Horizontal") {
+                        Menu {
+                            ForEach(contents.horizontalChoices, id: \.self) { choice in
+                                Button(choice.title) {
+                                    editorState.setContentPlacement(ids: ids, horizontal: choice)
+                                }
                             }
+                        } label: {
+                            menuLabel(answer(contents.horizontal.value?.title),
+                                      following: false,
+                                      isMixed: contents.horizontal.isMixed)
                         }
-                    } label: {
-                        menuLabel(effective.horizontal.title, following: false)
+                        .menuStyle(.borderlessButton)
+                        .fixedSize()
                     }
-                    .menuStyle(.borderlessButton)
-                    .fixedSize()
+                } else {
+                    ownedByTheFlow("Horizontal", flow, clearing: stale, filling: nil) {
+                        editorState.setContentPlacement(ids: ids, horizontal: nil)
+                    }
                 }
-            }
-            if current.isComponentInstance {
-                EmptyView()
-            } else if !flow.canSetVertical {
-                ownedByTheFlow("Vertical", flow, clearing: contentsInertRule(current, flow),
-                               filling: nil) {
-                    editorState.setContentPlacement(id: current.id, vertical: nil)
-                }
-            } else {
-                row("Vertical") {
-                    Menu {
-                        ForEach(current.verticalPlacementChoices, id: \.self) { choice in
-                            Button(choice.title) {
-                                editorState.setContentPlacement(id: current.id, vertical: choice)
+                if flow.canSetVertical {
+                    row("Vertical") {
+                        Menu {
+                            ForEach(contents.verticalChoices, id: \.self) { choice in
+                                Button(choice.title) {
+                                    editorState.setContentPlacement(ids: ids, vertical: choice)
+                                }
                             }
+                        } label: {
+                            menuLabel(answer(contents.vertical.value?.title),
+                                      following: false,
+                                      isMixed: contents.vertical.isMixed)
                         }
-                    } label: {
-                        menuLabel(effective.vertical.title, following: false)
+                        .menuStyle(.borderlessButton)
+                        .fixedSize()
                     }
-                    .menuStyle(.borderlessButton)
-                    .fixedSize()
+                } else {
+                    ownedByTheFlow("Vertical", flow, clearing: stale, filling: nil) {
+                        editorState.setContentPlacement(ids: ids, vertical: nil)
+                    }
                 }
             }
             // A copy says who owns all of this ONCE, here at the foot, so the
             // one sentence covers the arrangement above it and the two rows
             // right above it rather than stopping halfway down the section.
-            if current.isComponentInstance {
+            if contents.isFollowed {
                 Text(PhotonzDocument.instanceArrangementReason)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
@@ -412,39 +440,77 @@ struct PlacementInspector: View {
             }
             // With an arrangement on, the Arrangement rows say what happens in
             // words already, so this would be the second caption in a row.
-            if arrangement == nil, !current.isComponentInstance {
-                Text(current.isFrame
-                     ? "Everything on this screen follows this when the screen is resized, "
-                       + "unless a layer says otherwise for itself."
-                     : "Everything inside follows this when the group is resized, "
-                       + "unless a layer says otherwise for itself.")
+            if showsFollowCaption {
+                Text(contentsCaption)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            exceptions(current)
+            // What one pick here does, said ONCE at the foot of the whole
+            // block rather than at the end of every caption in it: the rows
+            // above it are three sentences already, and reading the same
+            // promise three times is how a panel starts sounding anxious.
+            if contents.flowsDiffer {
+                // The one case where these rows reach some of the picked groups
+                // differently from the rest, said out loud rather than left for
+                // somebody to discover by setting one and watching two move. It
+                // carries the reach itself, so it replaces the line below.
+                Text(ContentsSelection.flowsDifferNote)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if contents.count > 1, !showsFollowCaption {
+                // The line above already carries this where it is there. This
+                // is the same promise for the arranged case, where it is not.
+                Text("One pick or one number here reaches every one of them, in one step "
+                     + "that one undo puts back.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            exceptions()
         }
+    }
+
+    /// What a Contents row shows: the answer the picked groups agree on, or the
+    /// one word for an answer they do not. A reading with no value is a reading
+    /// they disagreed on, since a group always tells its contents something.
+    private func answer(_ title: String?) -> String { title ?? MixedValue.text }
+
+    /// The line under the Contents rows for a group that arranges nothing.
+    private var contentsCaption: String {
+        guard contents.count == 1, let one = contents.groups.first else {
+            // This is the last line of the block, so it carries the reach as
+            // well and the section does not need a paragraph of its own for it.
+            return "Everything inside these \(contents.plural) follows this when they are "
+                + "resized, unless a layer says otherwise for itself. One pick here reaches "
+                + "every one of them."
+        }
+        return one.isFrame
+            ? "Everything on this screen follows this when the screen is resized, "
+                + "unless a layer says otherwise for itself."
+            : "Everything inside follows this when the group is resized, "
+                + "unless a layer says otherwise for itself."
     }
 
     // MARK: - The pieces that are not following
 
-    /// Who inside this group placed itself, named right under the setting they
-    /// are ignoring. Without this the only way to find an override is to click
-    /// every piece in turn, and a group whose contents will not move is a
+    /// Who inside these groups placed itself, named right under the setting
+    /// they are ignoring. Without this the only way to find an override is to
+    /// click every piece in turn, and a group whose contents will not move is a
     /// mystery until you do. A group where everybody follows says nothing:
     /// an empty list would be a permanent question about an answer of none.
     @ViewBuilder
-    private func exceptions(_ current: Layer) -> some View {
-        let overrides = current.contentsWithTheirOwnPlacement(arrangement: arrangement(of: current))
+    private func exceptions() -> some View {
+        let overrides = contents.overrides
         if !overrides.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
-                Text(overrides.count == 1 ? "One layer has a rule of its own"
-                                          : "\(overrides.count) layers have rules of their own")
+                Text(contents.overridesHeading)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.bottom, 2)
                 ForEach(overrides.prefix(exceptionsShown)) { exception in
-                    exceptionRow(exception, in: current)
+                    exceptionRow(exception)
                 }
                 // A group with a dozen exceptions would push the rest of the
                 // inspector off the panel, so the list stops and says so; the
@@ -462,20 +528,33 @@ struct PlacementInspector: View {
 
     private var exceptionsShown: Int { 6 }
 
-    /// One name, what it does instead, and a click that goes there.
-    private func exceptionRow(_ exception: PlacementOverride, in current: Layer) -> some View {
+    /// One name, which group it is in while this block speaks for more than
+    /// one, what it does instead, and a click that goes there.
+    ///
+    /// The group's name is only there when it is telling you something: with
+    /// one group picked every row would carry the same word, and two cards can
+    /// each hold a layer called Title, which is exactly the pair of rows
+    /// nobody could tell apart without it.
+    private func exceptionRow(_ exception: ContentsOverride) -> some View {
         Button {
-            editorState.selectLayer(exception.id, inGroup: current.id)
+            editorState.selectLayer(exception.id, inGroup: exception.groupID)
         } label: {
             HStack(spacing: 8) {
                 Text(exception.name)
                     .font(.callout)
                     .lineLimit(1)
                     .truncationMode(.middle)
+                if contents.count > 1 {
+                    Text("in \(exception.groupName)")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
                 Spacer(minLength: 8)
                 Text(exception.summary)
                     .font(.caption)
-                    .foregroundStyle(exceptionStyle(exception))
+                    .foregroundStyle(exceptionStyle(exception.override))
                     .lineLimit(1)
                 Image(systemName: "chevron.right")
                     .font(.caption2)

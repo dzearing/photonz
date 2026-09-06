@@ -161,6 +161,31 @@ extension PhotonzDocument {
         return count
     }
 
+    /// What EVERY picked group tells its contents, in one step that one undo
+    /// puts back. Two cards are told to centre what is in them once rather than
+    /// twice over, and each returns how many it reached so a caller can tell a
+    /// no-op from an edit.
+    @discardableResult
+    public mutating func setContentPlacement(ids: [UUID],
+                                             horizontal: HorizontalPlacement?) -> Int {
+        var count = 0
+        for id in ids where ownsContentRules(id: id) {
+            setContentPlacement(id: id, horizontal: horizontal)
+            count += 1
+        }
+        return count
+    }
+
+    @discardableResult
+    public mutating func setContentPlacement(ids: [UUID], vertical: VerticalPlacement?) -> Int {
+        var count = 0
+        for id in ids where ownsContentRules(id: id) {
+            setContentPlacement(id: id, vertical: vertical)
+            count += 1
+        }
+        return count
+    }
+
     /// The group a layer sits in, or nil when it sits loose on the canvas —
     /// which is also the answer to "is there a container to line this up in".
     public func containingGroup(of id: UUID) -> Layer? {

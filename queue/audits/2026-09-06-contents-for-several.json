@@ -1,0 +1,30 @@
+{
+  "feature": "The Layout section speaks for several picked groups",
+  "epic": "ui-layout",
+  "summary": "Pick two or more groups and the whole Contents half of Layout stays: one press stacks both, one typed gap or padding reaches both, and anything they disagree on reads Mixed. Before this, picking a second group took the arrangement, the gap, the padding, the size and the placement rows off the panel entirely, so two cards had to be set one at a time.",
+  "setup": "Photonz Dev, Experiments window, release Next. Layout and auto layout flags are on by default.",
+  "try": [
+    { "do": "Draw two rectangles, sweep them, and press Layer > Group. Do it again beside the first, so you have two groups." },
+    { "do": "Click Group in the Layers list, then shift-click Group 2." },
+    { "do": "Read the Layout section: it is headed Contents of these 2 groups.", "shot": "2026-09-06-contents-for-several-1-two-groups.png" },
+    { "do": "Press Stack on the Arrangement row. Both groups stack at once." },
+    { "do": "Type 24 into Gap and press Return, then press Command Z once. Both gaps go back together." },
+    { "do": "Click Group 2 on its own, press Grid, then Command-click Group so both are picked again.", "shot": "2026-09-06-contents-for-several-2-mixed.png" },
+    { "do": "Twist open both groups, give one rectangle in each its own Horizontal of Right, then pick both groups and scroll to the foot of Layout.", "shot": "2026-09-06-contents-for-several-3-exceptions.png" }
+  ],
+  "evaluate": [
+    "When the two groups are arranged differently, does the word Mixed on its own line above the segmented control read as clearly as Mixed inside a menu does?",
+    "The Arrangement, Direction and Width/Height rows drop their control to a second line only while they say Mixed. Does that shift bother you, or is it invisible next to everything else that changes when you pick a second group?",
+    "Does 'Contents of these 2 groups' tell you enough about which two, or do you want their names?",
+    "In the list at the foot, is 'Rectangle  in Group' the right amount of qualification, or would you rather the list were grouped under headings?",
+    "Picking a group and a plain rectangle together leaves the rectangle out of these rows silently, and only the heading's count says so. Is that quiet enough, or does it need a line?"
+  ],
+  "rough": [
+    "The word Mixed will not fit on the line with a segmented control: the panel is about 244 points wide, the control cannot shrink below its own words, and putting the word on the line pushed the Grid segment and the Padding box off the dock's edge. So those rows put the label and the word on one line and the control on the next, which is what the dock's other wide controls already do. Menus and fields are unaffected: they say Mixed in place, as always.",
+    "The rows that belong to one arrangement (Direction for a stack, Columns and Row gap for a grid) are only there while every picked group is on that arrangement. Pick a stack and a grid and you get Arrangement, the size rows and Padding, and the caption says they are not all arranged the same way.",
+    "Where the picked groups disagree about which direction their own flow decides, both placement rows stay live and one line says so. Setting a direction there is stored on every picked group but does nothing today for the ones whose flow owns that direction. That is the same behaviour a single group already has, said out loud.",
+    "A copy of a component is left out of the editable set, the way pieces inside a copy already are. Pick two copies and the rows are shown and not asked, as before.",
+    "Clear <rule> on a direction the flow decides is offered for one picked group only. Over three groups the leftover rule is a different word on each, and a button naming one would be lying about the others.",
+    "Screen Recording was granted, so every picture here is a real window capture, not an offscreen render."
+  ]
+}

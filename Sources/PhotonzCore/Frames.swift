@@ -305,6 +305,18 @@ extension PhotonzDocument {
         }
     }
 
+    /// The same switch over every picked group, in one step that one undo puts
+    /// back.
+    @discardableResult
+    public mutating func setClipsContents(ids: [UUID], _ clips: Bool) -> Int {
+        var count = 0
+        for id in ids where layer(id: id)?.hasBoxOfItsOwn == true {
+            setClipsContents(id: id, clips)
+            count += 1
+        }
+        return count
+    }
+
     /// Whether a container hides what sticks out past its box: a screen, or a
     /// group somebody gave a size of its own. A group that closes around its
     /// contents is not asked, because there is nothing hanging out of it.

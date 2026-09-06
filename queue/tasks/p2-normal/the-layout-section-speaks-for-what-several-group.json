@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T11:09:17.011Z",
-  "updated": "2026-09-06T12:16:42.243Z",
+  "updated": "2026-09-06T15:39:18.712113Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left out of the-layout-section-speaks-for-several-picked-lay on 2026-09-06: that task made the CHILD rows (This layer in <container>) speak for the whole selection through PlacementSelection in PhotonzCore. The Contents rows in PlacementInspector.contentRows are still keyed on one group, and so are the two things inside them: ArrangementInspector(layer:) and Layer.contentsWithTheirOwnPlacement. Both need a whole-selection reading of their own, shaped like PlacementSelection. Do NOT reuse PlacementSelection for this: that one is about where the picked layers sit in what holds them, this is about what the picked groups tell their own contents.",
@@ -31,6 +31,55 @@
     {
       "t": "2026-09-06T12:16:42.243Z",
       "note": "seq 80 -> 80"
+    },
+    {
+      "t": "2026-09-06T15:04:46.643Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T15:07:40.247340Z",
+      "note": "adversarial review, before building. Walked it as a first-time user. Pick two cards in a screen and the whole Contents half of Layout vanishes: no Arrangement picker, no Gap, no Padding, no Width/Height, no Horizontal/Vertical for what is inside them. So making two cards both stack their contents at 12 means clicking each card in turn. That is the real complaint, and it is bigger than the two rows the task names: the Arrangement rows sit INSIDE the Contents block, so a Contents block that speaks for two groups has to bring every number with it."
+    },
+    {
+      "t": "2026-09-06T15:07:40.247340Z",
+      "note": "adversarial review: what the shortest useful version is. Not 'Arrangement kind only'. Picking two stacks and getting one live Arrangement row above eight rows that vanished would read as broken. Every row in the block gets a whole-selection reading, and every number field in it ALREADY knows how to say Mixed (LayoutNumberField takes value nil + placeholder MixedValue.text, built for four padding sides that disagree), so the cost is in the readings, not in new controls."
+    },
+    {
+      "t": "2026-09-06T15:07:40.247340Z",
+      "note": "adversarial review: what to cut. No new control, no new idiom, no 'apply to all' button. One pick or one typed number reaches every picked group, exactly as the child rows already do since the-layout-section-speaks-for-several-picked-lay. The captions under the rows are the one thing that cannot survive being said about several groups ('It is 320 wide, and everything in it fills that'), so the many case gets one short line instead of the four-clause single-group paragraph."
+    },
+    {
+      "t": "2026-09-06T15:07:40.247340Z",
+      "note": "adversarial review: two judgement calls, both decided rather than blocked, because neither changes what the product IS. (1) Pick a group and a rectangle together: the Contents rows speak for the group only, and the heading names how many groups it reaches, so the count on screen tells you a picked thing was left out. Same rule placementSelection already uses for pieces inside a copy. (2) Pick a copy of a component and a real group together: a copy's contents are refilled from its original, so an answer typed at it never lands. Copies are left out of the editable set the same way; all copies picked still reads as the shown-not-asked rows it does today."
+    },
+    {
+      "t": "2026-09-06T15:07:40.247340Z",
+      "note": "adversarial review: the exceptions list is the one place the mock has nothing to say. 'Title' under two cards is two different layers with the same name, so the list has to say which group each is in. Heading counts across groups, and each row carries its group name when the block speaks for more than one."
+    },
+    {
+      "t": "2026-09-06T15:39:18.712113Z",
+      "note": "built. PhotonzCore gets ContentsSelection (+ContentsOverride, PlacementReading.across), the whole-selection reading of what the picked GROUPS tell their own contents: the arrangement and every number on it, where the contents sit, which direction each group's flow has taken over, and every layer with a rule of its own tagged with the group it is in. Kept separate from PlacementSelection on purpose, per the task note. 19 tests in ContentsSelectionTests."
+    },
+    {
+      "t": "2026-09-06T15:39:18.712113Z",
+      "note": "built. Multi-target mutators, each one undo step: PhotonzDocument.setContentPlacement(ids:horizontal:/vertical:), setGroupLayout(ids:kind:), updateGroupLayout(ids:) (which hands the change each group's own LAYER as well, so Hug turned into Fixed holds each group's own size rather than the first one's), setClipsContents(ids:). EditorState mirrors all four plus contentsSelection."
+    },
+    {
+      "t": "2026-09-06T15:39:18.712113Z",
+      "note": "built. ArrangementInspector now takes a ContentsSelection instead of a Layer; PlacementInspector.contentRows and its exceptions list do too. The Contents block also survives a selection whose layers are in DIFFERENT containers now: two cards on two screens have no shared place, but they still each place what is inside them, so the child rows say why they cannot speak and the Contents rows carry on. LayersPanel gates the Layout section on contentsSelection.isPresent rather than selectedLayer?.isGroup."
+    },
+    {
+      "t": "2026-09-06T15:39:18.712113Z",
+      "note": "adversarial review of the BUILT thing, on the probe app, three passes with real window captures. (1) The word Mixed beside the Arrangement label was silently squeezed to nothing, then, once held at its own size, pushed the section past the dock's edge and clipped the Grid segment and the Padding box. A segmented control cannot shrink below its own words, so on this section's rows the label and the word take a line and the control drops under it, which is LayersPanel.labelled's existing shape. (2) Three grey paragraphs in a row, two of them ending on the same promise: the reach is now said once, folded into the last line of the block when there is one. (3) The many-groups stack caption had dropped the useful half of the single-group one, so it says which of the two rows below the stack has taken over again."
+    },
+    {
+      "t": "2026-09-06T15:39:18.712113Z",
+      "note": "verified on the probe app with Scripts/playtest/contents-for-several-walk.json, 11 stages, Screen Recording granted so every picture is a real capture. Two groups keep the block headed for both; one press stacks both; 24 typed into Gap reaches both and ONE undo puts both back (checked in the document render, not just the panel); a stack and a grid read Mixed with no segment lit; a pick from a Mixed row still reaches both; two different content placements read Mixed in the menu's own slot; 16 typed into Padding reaches both; the exceptions list reads '2 layers across 2 groups have rules of their own' with 'Rectangle in Group' and 'Rectangle 3 in Group 2'. One group reads exactly as it did before."
+    },
+    {
+      "t": "2026-09-06T15:39:18.712113Z",
+      "note": "audit written: queue/audits/2026-09-06-contents-for-several.json with three real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-06T15:04:46.643Z"
 }
