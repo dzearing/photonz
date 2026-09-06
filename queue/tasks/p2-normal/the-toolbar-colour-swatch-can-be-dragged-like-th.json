@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1400,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:18:21.418Z",
-  "updated": "2026-09-06T18:21:19.386253Z",
+  "updated": "2026-09-06T18:21:41.407Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed on 2026-09-06 alongside the panel colour drag. The toolbar swatch is its own view in EditorView.swift (around line 1298) rather than a ColorWellButton, so it did not get the behaviour for free. Wearing the .colorSwatchDrag modifier (Sources/Photonz/ColorSwatchDrag.swift) should be most of it; the tool arming path is annotationStyles.arm.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-06T18:21:19.386253Z",
       "note": "Scripts/test.sh green (3985 tests). Audit: queue/audits/2026-09-06-toolbar-colour-swatch.json. Follow up filed: a-saved-colour-can-be-dragged-off-the-library-sh, which is the missing drag SOURCE that makes the bar a worthwhile drop target."
+    },
+    {
+      "t": "2026-09-06T18:21:41.406Z",
+      "note": "Every swatch on the tool bar can now be picked up and dropped on: the tool's colour, a box's inside and border, and the bucket's pair. Carry the armed colour to the Library to keep it under a name, or pass a box's border colour to its inside; a plain click still opens the picker. Core sentence work is TDD'd in ColorDropTests. Verified by Scripts/playtest/toolbar-colour-walk.json in the probe with real captures, Scripts/test.sh green. Audit: queue/audits/2026-09-06-toolbar-colour-swatch.json. Known gap in the audit: panel rows and the bar's swatch are never on screen together, so a follow up was filed to make Library colours draggable."
     }
   ],
-  "started": "2026-09-06T18:01:37.219Z"
+  "started": "2026-09-06T18:01:37.219Z",
+  "completed": "2026-09-06T18:21:41.407Z"
 }

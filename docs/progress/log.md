@@ -9647,3 +9647,31 @@ pins a 200µs ceiling. Suite green at 3945 tests.
 Next: the audit (`queue/audits/2026-09-06-label-hit-box.json`) asks whether the
 six points of give around a label is right, or whether the label should be
 exactly its own edge.
+
+## 2026-09-06 — The toolbar colour swatch can be dragged like the panel ones
+
+Every swatch on the tool bar is now a handle and a drop target, wearing the
+same `.colorSwatchDrag` the panel's wells wear: the tool's own colour, a box's
+inside and border, and the bucket's foreground/background pair. Carrying the
+armed colour onto the Library keeps it under a name; carrying a box's border
+colour onto its inside means the next box comes out filled with it. A drop on a
+border that is switched off turns the border on with that colour in one undo
+step (`EditorState.paintBorderTurningItOn`). A plain click still opens the
+picker. Behind `next-color-drag`, so Current is untouched.
+
+`ColorDrop` gained one core rule, test first: the part is capitalised where it
+starts the sentence, so a swatch with no row to be named after can name itself
+in words ("Paints the next shape with this colour"). The panel's own labels read
+exactly as before.
+
+Verified with a new `Scripts/playtest/toolbar-colour-walk.json` in the probe
+(real window captures, Screen Recording granted) and a green `Scripts/test.sh`.
+
+Open question written into the audit: the bar's swatch and the panel's colour
+rows are never on screen at the same time, because a panel row needs a selected
+layer and selecting one means the select tool, which swaps the bar over to the
+bucket pair. So a colour can only reach the bar from the other bar swatch, from
+another window, or from another app. Follow-up filed: "A saved colour can be
+dragged off the Library shelf", which is the missing source.
+
+Next: the queue picks up whatever is top of `p2-normal`.
