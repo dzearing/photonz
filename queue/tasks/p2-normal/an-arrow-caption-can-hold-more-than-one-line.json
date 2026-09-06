@@ -1,0 +1,36 @@
+{
+  "id": "an-arrow-caption-can-hold-more-than-one-line",
+  "title": "An arrow caption can hold more than one line",
+  "goal": "An arrow caption is one line and Return commits it, so a label that wants two lines has to be squeezed into one long strip. Return should start a new line instead, and the caption is committed with Command and Return or by clicking away. The pill grows taller to hold what you typed and stays where it belongs beside the arrow.",
+  "epic": "epic-uehjr1",
+  "priority": "p2-normal",
+  "seq": 13,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T22:11:31.645Z",
+  "updated": "2026-09-06T22:11:31.686Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-06. The keys are already in the right shape to change: CanvasTextEditing.swift line 498 has one editor used for both jobs, switched by commitsOnPlainReturn, which is set true only for the caption at line 101; the ordinary text editor already commits on Command and Return at line 515 and types a newline on plain Return, which is exactly the behaviour wanted here. So the change is largely to stop treating the caption as a single line case and to let ArrowCaptionEntry (Sources/PhotonzCore/ArrowCaptionEntry.swift) map Return to type rather than commit, keeping its rule that letters always type even when they are tool shortcuts. The sizing is the real work: AnnotationContent.estimatedCaptionSize (Layer.swift line 325) assumes one line, computing height as the font size times 1.3 plus padding and width from a character count, and the rasterizer measures the real text separately; both need to understand lines, and the estimate must still reserve at least what the drawing uses or the pill will clip at the frame edge. Watch the interaction with two open tasks: the one giving the pill a minimum width and a clamped corner radius, and the one making the tail meet the pill's near edge; a taller pill changes where its near edge is, so whichever lands last must keep the other's rule.",
+  "acceptance": [
+    "Pressing Return inside a caption starts a new line rather than finishing, and the pill grows to hold it as you type",
+    "Command and Return commits the caption, and clicking anywhere outside commits it too, both landing exactly what is on screen",
+    "Escape still abandons the edit and leaves the arrow as it was, whatever number of lines had been typed",
+    "A committed caption of several lines draws with its lines centred and evenly spaced, the pill sized to the longest line and tall enough for all of them",
+    "The pill keeps meeting the arrow tail correctly with two or more lines, at every angle, and still gets pulled back onto the picture when it would fall off",
+    "A caption typed before this change opens and draws exactly as it did",
+    "Pixel tests in PhotonzRender cover a two line and a four line caption, written before the change",
+    "Audit written under queue/audits/ with a two line caption being typed and committed, and one at a diagonal, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T22:11:31.645Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-06T22:11:31.685Z",
+      "note": "seq 1510 -> 13"
+    }
+  ]
+}
