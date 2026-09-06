@@ -36,8 +36,8 @@ import SwiftUI
 struct GeometryInspector: View {
     @Environment(EditorState.self) private var editorState
 
-    /// What a click on a number that takes nothing just said, standing in for
-    /// the caption until it has been read.
+    /// Which number a click just asked about, standing in for the caption until
+    /// the answer has been read.
     ///
     /// A click on one of these used to do nothing at all: the reason was in a
     /// hover tip, which arrives a second later and only if you keep still, so
@@ -45,7 +45,12 @@ struct GeometryInspector: View {
     /// answer goes in the line under the fields because that is where the eye
     /// already is, and because it is the line that already explains the
     /// section.
-    @State private var explanation: String?
+    ///
+    /// The FIELD is kept rather than the sentence, so the answer is worked out
+    /// afresh every time the panel draws. Setting a piece's Stretch back hands
+    /// it its width again, and a sentence held in a box would go on explaining
+    /// a rule that had just been taken off, for the rest of its six seconds.
+    @State private var explaining: LayerGeometryField?
 
     /// How long the answer holds before the caption comes back. Long enough to
     /// read a sentence twice, short enough that the panel goes back to saying
@@ -56,6 +61,9 @@ struct GeometryInspector: View {
 
     var body: some View {
         let selection = selection
+        // Nil as soon as the number takes typing again, so the panel never
+        // holds a sentence about a rule that is no longer there.
+        let answer = explaining.flatMap { selection.explanation(for: $0) }
         return VStack(alignment: .leading, spacing: 6) {
             // Two pairs, position over size, each field taking half the panel:
             // the numbers are the point of the section, so they get the room
@@ -68,26 +76,26 @@ struct GeometryInspector: View {
                 field(.width, selection)
                 field(.height, selection)
             }
-            Text(explanation ?? selection.caption)
+            Text(answer ?? selection.caption)
                 .font(.caption2)
-                .foregroundStyle(explanation == nil ? AnyShapeStyle(.tertiary)
-                                                    : AnyShapeStyle(.secondary))
+                .foregroundStyle(answer == nil ? AnyShapeStyle(.tertiary)
+                                               : AnyShapeStyle(.secondary))
                 .fixedSize(horizontal: false, vertical: true)
-                .animation(.easeOut(duration: 0.12), value: explanation)
+                .animation(.easeOut(duration: 0.12), value: answer)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         // A new set of layers is a new set of numbers, so the sentence about
         // the old one goes rather than sitting over the new caption.
-        .onChange(of: selection.members.map(\.id)) { explanation = nil }
-        .task(id: explanation) { await fadeExplanation() }
+        .onChange(of: selection.members.map(\.id)) { explaining = nil }
+        .task(id: explaining) { await fadeExplanation() }
     }
 
     private func fadeExplanation() async {
-        guard explanation != nil else { return }
+        guard explaining != nil else { return }
         try? await Task.sleep(for: .seconds(Self.explanationSeconds))
         guard !Task.isCancelled else { return }
-        explanation = nil
+        explaining = nil
     }
 
     /// One of the four. A number you can type is a field; a number worked out
@@ -101,7 +109,7 @@ struct GeometryInspector: View {
                 field: field,
                 reading: selection.reading(field),
                 help: help(field, selection),
-                explain: { explanation = selection.explanation(for: field) })
+                explain: { explaining = field })
         } else {
             GeometryNumberField(
                 field: field,

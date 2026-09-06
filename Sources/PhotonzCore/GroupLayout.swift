@@ -290,6 +290,15 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// for that choice to fill.
     public var decidesHeight: Bool { kind != .stack || direction.isHorizontal }
 
+    /// The same question across. A grid hands out cells, a column hands every
+    /// row the width inside its edges, and a group that only closes around its
+    /// contents paints a stretched piece to its own box, so a Stretch across
+    /// means something in all three. A row runs left to right, where each
+    /// item's width is its own and a Stretch is not a width at all: it is the
+    /// piece stepping out of the line to span the whole group
+    /// (`ResolvedPlacement.stepsOutOfTheFlow`).
+    public var decidesWidth: Bool { kind != .stack || !direction.isHorizontal }
+
     private enum CodingKeys: String, CodingKey {
         case kind, direction, columns, gap, spreadsGap, rowGap, padding, width, height
         case minWidth, maxWidth, minHeight, maxHeight

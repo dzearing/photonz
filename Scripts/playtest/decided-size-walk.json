@@ -1,0 +1,69 @@
+{
+  "out": "/tmp/photonz-playtest/decided-size",
+  "seed": "Every number the app works out for you looks like one it worked out. The walk draws three pieces, stacks them into a column, gives the column a width, and stretches the middle piece across it. Its W becomes plain text while its H stays a box you can type into, so a decided number and a typed one sit side by side in one panel.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 100], "to": [260, 140], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 160], "to": [260, 200], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 220], "to": [260, 260], "steps": 8 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [100, 60], "to": [320, 300], "steps": 10 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "500" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "action", "action": "stepIntoSelection" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "selectRow", "row": "Rectangle 2" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "describe", "stage": "1-its-own-size",
+      "note": "the middle piece, still its own size. All four numbers are boxes you can type into: W reads 120 and H reads 40." },
+    { "do": "snapshot", "name": "decided-1-its-own-size" },
+    { "do": "panel", "stage": "1-its-own-size" },
+
+    { "do": "panelMenu", "menu": "Horizontal", "shot": "decided-2-menu", "choose": "Stretch" },
+    { "do": "wait", "seconds": 0.9 },
+
+    { "do": "describe", "stage": "3-width-is-decided",
+      "note": "THE TEST: the piece now spans the column, so W is PLAIN TEXT reading 500 with no box round it, while H beside it is still a box reading 40. Same letter, same column, same row height, one wearing a bezel and one not." },
+    { "do": "snapshot", "name": "decided-3-width-is-decided" },
+    { "do": "render", "name": "decided-3-width-is-decided-doc" },
+    { "do": "panel", "stage": "3-width-is-decided" },
+
+    { "do": "press", "control": "W", "in": "Position & Size" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-clicking-answers",
+      "note": "THE TEST: clicking the decided number answers straight away in the line under the fields, naming what decides it and the control that does change it." },
+    { "do": "snapshot", "name": "decided-4-clicking-answers" },
+    { "do": "panel", "stage": "4-clicking-answers" },
+
+    { "do": "focus", "field": "H" },
+    { "do": "type", "text": "70" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-the-typed-one-still-types",
+      "note": "THE TEST: the number that is still the piece's own takes 70 and keeps it. Only the decided one stopped offering a box." },
+    { "do": "snapshot", "name": "decided-5-the-typed-one-still-types" },
+    { "do": "render", "name": "decided-5-the-typed-one-still-types-doc" },
+    { "do": "panel", "stage": "5-the-typed-one-still-types" },
+
+    { "do": "panelMenu", "menu": "Horizontal", "choose": "Follow group (Left)" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "6-set-back",
+      "note": "THE TEST: setting Stretch back hands the width to the piece again, so W wears its box once more and reads the 120 it was drawn at." },
+    { "do": "snapshot", "name": "decided-6-set-back" },
+    { "do": "panel", "stage": "6-set-back" }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:26.302Z",
-  "updated": "2026-09-06T13:03:48.833Z",
+  "updated": "2026-09-06T13:04:13.710Z",
   "deps": [
     "a-copy-can-be-given-its-own-color"
   ],
@@ -76,7 +76,12 @@
     {
       "t": "2026-09-06T13:03:48.833Z",
       "note": "Adversarial review of the built thing. Rough, and recorded in the audit: a knob still cannot reach the original's own outermost group, so a card whose room inside sits there cannot hand it to copies (filed a-copy-have-its-own-room-inside); room that differs side to side is not offered at all (filed room-on-one-side-can-be-a-knob); and a copy's panel can show a knob called Corner radius above the Effects section's own Corner Radius slider, which round different things, though renaming the knob is one field away. Every group and picture offers a corner radius even at nought, which is honest (the mask really does cut its corners) but is the one place the menu grew; put it to the user in the audit's evaluate list."
+    },
+    {
+      "t": "2026-09-06T13:04:13.709Z",
+      "note": "The fifth knob kind shipped in Next behind next-components: a component can offer one of four numbers on a layer inside it (corner radius, thickness, gap, room inside) and a copy sets it in a number field that behaves like every other one. Core in Sources/PhotonzCore/ComponentNumberKnob.swift and ComponentProperties.swift, panel in Sources/Photonz/ComponentPanel.swift reusing LayoutNumberField. 17 new tests, full suite green (3808). Verified on the probe app with Scripts/playtest/copy-own-number-walk.json and real window captures; audit at queue/audits/2026-09-06-a-knob-can-be-a-number.json. Two follow-ups filed: a-copy-can-have-its-own-room-inside and room-on-one-side-can-be-a-knob."
     }
   ],
-  "started": "2026-09-06T12:42:11.169Z"
+  "started": "2026-09-06T12:42:11.169Z",
+  "completed": "2026-09-06T13:04:13.710Z"
 }

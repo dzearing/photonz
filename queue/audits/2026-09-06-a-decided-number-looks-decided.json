@@ -1,0 +1,30 @@
+{
+  "feature": "A number the app works out for you looks like one",
+  "epic": "ui-layout",
+  "summary": "Every size the app decides for a piece now shows as plain text instead of a box you can type into. Before this, stretching a piece across a stack left a typeable W that the app quietly overwrote a moment later, so the panel offered a number and then took it away.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Position & Size section is on by default there.",
+  "try": [
+    { "do": "Draw three rectangles one above the other, select all three, and press the Stack button in the Layout section." },
+    { "do": "With the group picked, type 500 into W so the column has room across." },
+    { "do": "Double-click into the group and pick the middle rectangle. W and H are both boxes." },
+    { "do": "In the Layout section, set Horizontal to Stretch.", "shot": "2026-09-06-decided-size-1.png" },
+    { "do": "Look at W and H side by side: W is plain text reading 500, H is still a box reading 40." },
+    { "do": "Click the W number.", "shot": "2026-09-06-decided-size-2.png" },
+    { "do": "Type 70 into H and press Return. It takes it and keeps it." },
+    { "do": "Set Horizontal back to Follow group. W wears its box again." }
+  ],
+  "evaluate": [
+    "Reading down the panel, is it obvious at a glance which two numbers you can change and which two the app is telling you?",
+    "Does the plain number read as an answer, or does it read as a field that failed to draw?",
+    "Is the sentence a click puts under the fields the one you wanted, or did you want the Layout section to highlight instead?",
+    "Setting Stretch back leaves the piece at 500 rather than the 120 it was drawn at. Is that what you expected, or should Stretch hand back the old width the way Fill does?",
+    "Was there a size somewhere in the app you expected to go plain and it did not?"
+  ],
+  "rough": [
+    "Screen Recording was granted for the probe, so both pictures here are real window captures, not offscreen renders.",
+    "The task asked for a third case: a label the app wrapped inside its container. I built the flow and tried it before building, and the premise turned out to be wrong. Typing a width into a wrapped label mostly WORKS: anything at or below the words' natural width sticks and turns the label into a paragraph of that width, exactly as dragging its edge does. Only a width wider than the words snaps back. So making it plain text would have taken away the only way to set a paragraph width from the keyboard. Left alone, and filed as its own task for the real complaint, which is that the number it SHOWS is the container's room rather than the width of its own words.",
+    "Setting Stretch back leaves the piece at whatever width the stretch made it, not the width it was drawn at. Fill remembers and hands the old size back; Stretch does not. That gap is older than this change and I did not close it.",
+    "The line under the fields still says \"Up or down arrow steps by 1, Shift by 10\" while three of the four numbers are plain text and only one steps. It is not untrue, but it describes a panel with more live numbers than this one has.",
+    "The stale-sentence bug this change surfaced IS fixed: clicking a plain number and then taking the rule off used to leave the explanation sitting there for six more seconds explaining a rule that was gone."
+  ]
+}

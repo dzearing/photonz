@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T00:33:57.098Z",
-  "updated": "2026-09-06T12:16:42.207Z",
+  "updated": "2026-09-06T13:19:58.956846Z",
   "deps": [],
   "blockedBy": [],
   "notes": "LayerGeometryEditing.init already does this for the filling case (Self.fillingReason, added 2026-09-05 with FlowFill). The stretch case is the same shape: resolvedPlacement(in: container) is .stretch on the axis the container decides. Watch heightIsFilled(in:), which already covers half of it for text and now also answers for a column filler. Broadened on 2026-09-06 from the stretch case alone: three audits in one cycle reported the same wart (2026-09-05-fill-the-flow rough2, 2026-09-05-nav-bar-row rough3, 2026-09-05-words-that-wrap rough3). The rule already exists in docs/design/mocks/shared/UX-PATTERNS.md section 4, What a number you cannot type looks like; it was only ever applied to the text height case. LayerGeometryEditing.init already does the filling case (Self.fillingReason).",
@@ -41,6 +41,35 @@
     {
       "t": "2026-09-06T12:16:42.207Z",
       "note": "seq 20 -> 20"
+    },
+    {
+      "t": "2026-09-06T13:04:45.515Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T13:19:58.956846Z",
+      "note": "Adversarial review before building: reproduced all four cases in a throwaway test rather than trusting the report. A piece stretched across a column stack, one stretched down a row stack, a piece spanning the way a row runs, the surface stretched both ways, and a piece stretched in a grid ALL took a typed size and had the flow put its own answer straight back. The filling case was already right. A stretched piece in a group with NO arrangement is right too and must stay typeable: nothing re-runs there, so a typed number stays where it was typed and Stretch is only a rule about the next resize."
+    },
+    {
+      "t": "2026-09-06T13:19:58.956846Z",
+      "note": "Adversarial review found acceptance item 2 (the wrapped label) rests on a false premise. Typing a width into a container-wrapped label mostly WORKS: Layer.resized clears wrappedByItsContainer, so anything at or below the words' own width sticks and makes it a paragraph, exactly as dragging its edge does; only a width wider than the words snaps back. Making it a readout would have removed the only keyboard way to set a paragraph width while the canvas drag kept it, and would have broken the app's own rule that a field is typeable exactly where the canvas lets you drag the same thing. Not built. The real complaint (the number it SHOWS is the container's room, not the words' width) is filed as a-wrapped-label-says-which-width-you-are-looking, and it is a visual-direction call for the user rather than one to guess."
+    },
+    {
+      "t": "2026-09-06T13:19:58.956846Z",
+      "note": "Built: Layer.sizeIsDecidedByItsContainer(across:in:) in LayerPlacement.swift is the single question, with GroupLayout.decidesWidth as the mirror of decidesHeight. heightIsFilled is now one line on top of it, so the three cases cannot drift apart again. LayerGeometryEditing.init asks it once per axis and names the right control: fillingReason where Fill is holding the number, filledWidthReason / filledHeightReason where Stretch is. 13 new tests in DecidedSizeTests check both halves of every case: the field refuses the number AND the flow really would have put it back."
+    },
+    {
+      "t": "2026-09-06T13:19:58.956846Z",
+      "note": "Adversarial review of the built thing, on the probe app (Scripts/playtest/decided-size-walk.json, Screen Recording granted so the shots are real window captures): found the click-to-explain sentence outliving the rule it explains. Setting Stretch back handed the width to the piece and the panel went on saying 'This is stretched to fill the width' for the rest of its six seconds. Fixed: GeometryInspector now keeps the FIELD that was clicked and works the sentence out afresh every draw, so it goes the moment the number takes typing again."
+    },
+    {
+      "t": "2026-09-06T13:19:58.956846Z",
+      "note": "Left alone and recorded in the audit: setting Stretch back leaves the piece at whatever width the stretch made it rather than the width it was drawn at (Fill remembers via FlowFill.sizeBefore, Stretch does not), and the caption still describes arrow steps while three of the four numbers are plain text."
+    },
+    {
+      "t": "2026-09-06T13:19:58.956846Z",
+      "note": "Done: 3821 tests green, walk complete, audit at queue/audits/2026-09-06-a-decided-number-looks-decided.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-06T13:04:45.514Z"
 }

@@ -232,28 +232,49 @@ extension Layer {
                           : VerticalPlacement.allCases
     }
 
-    /// Whether the container decides this layer's height by stretching it to
-    /// fill its box, rather than the layer deciding it for itself.
+    /// Whether the container works this piece's size out on one axis, rather
+    /// than the piece having a size of its own there.
     ///
-    /// Only a container that HAS a height to share can: a column stack hands
-    /// every row the height it already had, so a Stretch there fills nothing
-    /// and the layer is still the size of what is in it.
+    /// The one question behind every number the Position & Size panel shows as
+    /// plain text instead of a box: a number the flow decides would be put
+    /// straight back on its next pass, so offering a box for it is the panel
+    /// promising something it will take away again. `across` asks about the
+    /// width; false asks about the height.
+    ///
+    /// Three ways for a container to decide a size, and they are one sentence
+    /// said three ways:
+    ///
+    /// - **Painted to the container's own edges.** The surface behind
+    ///   everything, and the hairline spanning a bar, are the size of the box
+    ///   on whichever axis they stretch, whichever way the flow runs.
+    /// - **Taking the room the flow has left over.** A search field told to
+    ///   Fill is whatever the row has spare, along the way the row runs.
+    /// - **Stretched across an axis the flow hands out.** A column hands every
+    ///   row its width, a row hands every item its height, a grid hands out
+    ///   both, and a group that closes around its contents paints a stretched
+    ///   piece to its box.
+    ///
+    /// A container with no layout at all decides nothing: nothing re-runs, so a
+    /// Stretch there is a rule about what happens the NEXT time that group is
+    /// resized and a typed number stays exactly where it was typed.
+    public func sizeIsDecidedByItsContainer(across: Bool, in container: Layer?) -> Bool {
+        guard let container, let layout = container.group?.layout else { return false }
+        let resolved = resolvedPlacement(in: container)
+        let stretches = across ? resolved.horizontal == .stretch
+                               : resolved.vertical == .stretch
+        if resolved.stepsOutOfTheFlow(of: layout) { return stretches }
+        if fillsTheFlow, canFillTheFlow(in: container),
+           layout.flowsHorizontally == across { return true }
+        return stretches && (across ? layout.decidesWidth : layout.decidesHeight)
+    }
+
+    /// Whether the container decides this layer's height rather than the layer
+    /// deciding it for itself. The down half of `sizeIsDecidedByItsContainer`,
+    /// kept as a name of its own because a text box asks it for a second
+    /// reason: a height handed to it by a container is the one height it does
+    /// not work out from its own words.
     public func heightIsFilled(in container: Layer?) -> Bool {
-        guard let container else { return false }
-        // A piece that spans its container is painted to that container's own
-        // edges, so a Stretch down it is a height the container decided
-        // whichever way the flow happens to run.
-        let layout = container.group?.layout
-        if resolvedPlacement(in: container).stepsOutOfTheFlow(of: layout) {
-            return resolvedPlacement(in: container).vertical == .stretch
-        }
-        if let layout, !layout.decidesHeight {
-            // A column stack decides no heights at all, with one exception:
-            // a piece told to take the room the column has left over is at a
-            // height the column worked out, and its own field cannot change it.
-            return fillsTheFlow && (container.isFrame || layout.hasRoomAlongTheFlow)
-        }
-        return resolvedPlacement(in: container).vertical == .stretch
+        sizeIsDecidedByItsContainer(across: false, in: container)
     }
 
     /// Whether this piece takes the room its stack has left over along the way

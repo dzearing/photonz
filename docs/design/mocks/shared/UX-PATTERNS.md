@@ -544,6 +544,25 @@ Built as `GeometryReadout` in `Sources/Photonz/GeometryInspector.swift`, with th
 words and the spelling in `LayerGeometrySelection` (`readoutText`, `blankText`)
 so the panel cannot drift from what is tested.
 
+**Which numbers these are is one question, asked once.** The look above was
+settled for a paragraph's height and then applied a case at a time, so three
+audits in one cycle reported the same wart in three rooms: a piece stretched
+across a column stack, a title spanning a nav bar and the surface behind a
+button all went on offering a box, took the number, and had the flow put its
+own answer back a moment later. Fixed 2026-09-06
+(`a-stretched-piece-stops-offering-a-size-you-cann`, audit
+`2026-09-06-a-decided-number-looks-decided`). The question now lives in one
+place, `Layer.sizeIsDecidedByItsContainer`, and it has three answers that are
+one sentence said three ways: the piece is painted to the container's own
+edges, it is taking the room the flow has left over, or it is stretched across
+an axis the flow hands out. A container with no arrangement at all decides
+nothing, so a Stretch there is a rule about the next resize and its number
+stays typeable.
+
+The sentence a click puts under the fields is worked out afresh every draw
+rather than held. Take a rule off and the answer that explained it goes at
+once, instead of outliving it for the rest of its six seconds.
+
 **A corollary, for things that are not controls.** A count or a list that
 reports state ("1 layer has a rule of its own") reports only what has an effect.
 A rule that changes nothing is not an exception and is not counted. The place a

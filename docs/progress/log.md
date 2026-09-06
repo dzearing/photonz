@@ -9449,3 +9449,48 @@ set for itself while the rest of it keeps following the original.
 Next: two follow-ups are queued — a knob cannot reach the original's own
 outermost group (so a card's own room inside is still not adjustable per copy),
 and room that differs side to side cannot be a knob at all.
+
+## 2026-09-06 — Every number the app works out for you looks like one
+
+Queue task `a-stretched-piece-stops-offering-a-size-you-cann` (epic `ui-layout`,
+Next). The readout look was settled on 2026-09-05 for a paragraph's height and
+then applied one case at a time, so three audits in one cycle reported the same
+wart in three rooms: a stretched piece went on offering a W you could type into
+and the flow put its own answer straight back.
+
+Reproduced first, in a throwaway test, rather than trusting the reports. Five
+cases really did take a number and lose it: stretched across a column stack,
+stretched down a row stack, spanning the way a row runs, the surface stretched
+both ways, and stretched in a grid. A stretched piece in a group with no
+arrangement is right as it stands and must stay typeable, because nothing
+re-runs there.
+
+- `Layer.sizeIsDecidedByItsContainer(across:in:)` (`LayerPlacement.swift`) is
+  now the one question, with `GroupLayout.decidesWidth` as the mirror of
+  `decidesHeight`. `heightIsFilled` is one line on top of it, so the cases
+  cannot drift apart again.
+- `LayerGeometryEditing.init` asks it once per axis and names the control that
+  does own the number: `fillingReason` where Fill holds it, and the new
+  `filledWidthReason` / existing `filledHeightReason` where Stretch does.
+- `GeometryInspector` keeps the field that was clicked rather than the sentence
+  it produced, so taking a rule off clears the explanation at once instead of
+  leaving it up for the rest of its six seconds.
+- 13 tests in `DecidedSizeTests.swift`, each checking both halves: the field
+  refuses the number AND the flow really would have put it back.
+- Verified on the probe app with `Scripts/playtest/decided-size-walk.json`
+  (Screen Recording granted, so the audit shots are real window captures).
+  Audit: `queue/audits/2026-09-06-a-decided-number-looks-decided.json`.
+
+The task also asked for a wrapped label's width to go plain. Building the flow
+first showed the premise was wrong: typing a width into a container-wrapped
+label mostly works, because `Layer.resized` clears `wrappedByItsContainer` and
+anything at or below the words' own width sticks as a paragraph, exactly as
+dragging its edge does. Making it a readout would have taken away the only
+keyboard route to a paragraph width. Not built; filed as
+`a-wrapped-label-says-which-width-you-are-looking` for the real complaint, which
+is that the number it shows is the container's room rather than the words' own
+width, and which is a visual-direction call for the user.
+
+Next: that follow-up, plus two things left alone here — Stretch does not hand
+back the width a piece was drawn at the way Fill does, and the line under the
+fields still describes arrow steps while three of the four numbers are plain.

@@ -1,0 +1,28 @@
+{
+  "id": "a-wrapped-label-says-which-width-you-are-looking",
+  "title": "A wrapped label says which width you are looking at",
+  "goal": "When a label is too wide for the box holding it, the app breaks it onto more lines and narrows it to fit. Its width then reads as the room the box had, not as how wide its own words are, and the two numbers look like they disagree with each other. A person building to a spec cannot tell which one they are reading.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 1250,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T13:19:41.071Z",
+  "updated": "2026-09-06T13:19:41.071Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Comes out of a-stretched-piece-stops-offering-a-size-you-cann (2026-09-06), which was asked to make this a readout and found the premise false. Evidence, verified with a test: a label with natural width 166 inside a 100-wide free group flows to 104 with wrappedByItsContainer = true. Typing 60 or 140 CLEARS the flag in Layer.resized and sticks; only 400 (wider than the words) snaps back to 104, because textHugsItsWords is then true again and GroupFlow.wrapping re-wraps it. So the W field is a live control, not a decided number, and it must NOT become a GeometryReadout: that would remove the keyboard way to set a paragraph width while the canvas drag keeps it. The real complaint is the audit line 2026-09-05-words-that-wrap rough3: two numbers that look like they disagree. Likely answers are a word in the Layout section rather than a change to the W field. Ask the user before building: this is a visual-direction call.",
+  "acceptance": [
+    "The width shown for a label the container wrapped is unambiguous: it is clear whether it is the room the container gave it or how wide the words themselves are",
+    "Typing a width into a wrapped label still works exactly as it does today, because it does work: anything at or below the words own width sticks and makes it a paragraph, the same as dragging its edge",
+    "A label nothing has wrapped is unchanged",
+    "A screenshot in the audit shows a wrapped label beside its number"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T13:19:41.071Z",
+      "note": "created (manual)"
+    }
+  ]
+}
