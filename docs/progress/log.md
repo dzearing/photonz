@@ -9341,3 +9341,27 @@ Audit in `queue/audits/2026-09-06-pill-text-centring.json`.
 Next: the typed draft and the committed label still disagree by about half a
 screen point at 134% zoom, because screen text and the baked bitmap rasterize at
 different sizes. Recorded in the audit rather than chased.
+
+## 2026-09-06 — The Layout section speaks for several picked layers
+
+Picking a second layer in the same group used to take the whole Layout section
+off the panel, so placing three rows in a card meant placing them one at a time.
+The section now stays and speaks for all of them, the same rule the Component
+section was fixed to on 2026-09-05.
+
+- `PlacementSelection` (PhotonzCore) is the reading: the layers it places, the
+  one container holding them, and what each row reads across them, agreed or
+  Mixed. One layer and five go down one path.
+- `setPlacement(ids:)` and `setFillsTheFlow(ids:)` reach every picked layer in
+  one undo step.
+- Layers in different containers keep the section and get one sentence.
+- The parts about one layer stay single: the Contents rows, the Clear button for
+  a leftover rule, and the seven-branch caption.
+
+Verified in the probe app with `Scripts/playtest/layout-for-several-walk.json`
+(80 steps, real screen captures). Audit
+`queue/audits/2026-09-06-layout-for-several.json`.
+
+Next: `the-layout-section-speaks-for-what-several-group` does the other half —
+the Contents rows, the Arrangement controls and the list of layers with rules of
+their own, over several picked groups.

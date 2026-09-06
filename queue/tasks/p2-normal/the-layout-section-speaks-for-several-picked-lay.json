@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1310,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T01:17:54.621Z",
-  "updated": "2026-09-06T10:48:09.371Z",
+  "updated": "2026-09-06T11:10:03.211Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while fixing the-knobs-panel-speaks-for-several-copies-at-onc. Same cause: LayersPanel.availableSections gates .placement on selectedLayer, which selectLayers sets to nil for a multi-selection. The fix has an exemplar now: ComponentKnobSelection in PhotonzCore plus the whole-selection test in availableSections. Rule: docs/design/mocks/shared/UX-PATTERNS.md section 4, What a control DOES for several picked things.",
@@ -39,7 +39,12 @@
     {
       "t": "2026-09-06T11:09:29.260541Z",
       "note": "Adversarial review of the BUILT thing, on the probe app (Scripts/playtest/layout-for-several-walk.json, 80 steps, Screen Recording granted so every picture is a real capture). Two things came out of it. (1) The caption read \"All 2 are following the group\", which is not a sentence anybody says; it now counts nowhere, since the heading right above already says how many. (2) A group loose on the canvas is placed by nothing, so it is not in the selection at all, and keying the Contents rows on the selection took them off that group's panel entirely. `only` now reads off what is PICKED rather than off the selection, and the walk photographs that case first so it stays fixed. The walk also proves the set landed: the group pulled out to 700 leaves the two picked rows their own width, centred, and lets the third spread."
+    },
+    {
+      "t": "2026-09-06T11:10:03.211Z",
+      "note": "Layout stays and speaks for a multi-selection: PlacementSelection in PhotonzCore is the reading (16 new tests), setPlacement(ids:)/setFillsTheFlow(ids:) land in one undo step, LayersPanel gates the section on the whole selection, PlacementInspector drives its rows off it. Layers in different containers get one sentence instead of a blank panel. Verified on the probe app with Scripts/playtest/layout-for-several-walk.json (80 steps, real captures); 3737 tests green. Audit queue/audits/2026-09-06-layout-for-several.json. Contents-of-a-group rows over several groups filed as the-layout-section-speaks-for-what-several-group."
     }
   ],
-  "started": "2026-09-06T10:48:09.370Z"
+  "started": "2026-09-06T10:48:09.370Z",
+  "completed": "2026-09-06T11:10:03.211Z"
 }
