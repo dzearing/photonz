@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 11,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:55:21.667Z",
-  "updated": "2026-09-06T13:55:21.703Z",
+  "updated": "2026-09-06T13:57:49.075Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-06. Nothing drags today: no onDrag or drop target exists in ColorPickerEntry.swift or ColorStylePanel.swift. The good news is there is one place to add it. ColorWellButton (Sources/Photonz/ColorPickerEntry.swift line 95) is the shared well used by every colour row, and the style aware rows go through ColorStyleRow and ColorStyleControl in ColorStylePanel.swift, so making the well both a drag source and a drop target covers the panel in one change rather than several. Carry the colour as a standard colour type on the pasteboard as well as the app's own, so a colour can also be dragged in from another Mac app and out to one; say in the audit whether that worked. Mind the click: the well opens the picker on click, so the drag must only begin after a real distance of travel, the same lesson as the Library tile drag task. This is related to two open tasks, the one that makes a styled row look different from an editable one, and the one that builds the designed picker; whichever lands last should make sure a dragged colour and a picked colour behave the same.",
@@ -31,6 +31,11 @@
     {
       "t": "2026-09-06T13:55:21.702Z",
       "note": "seq 1390 -> 11"
+    },
+    {
+      "t": "2026-09-06T13:57:49.075Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-06T13:57:49.075Z"
 }

@@ -1,0 +1,38 @@
+{
+  "id": "one-way-to-add-colour-and-remove-any-part-of-a-s",
+  "title": "One way to add, colour and remove any part of a shape",
+  "goal": "The settings for a rectangle are scattered and the words do not agree. There is a Thickness in a section named Rectangle and a Border in another section named Effects, and they are two different things that both draw an edge. Their colours are somewhere else again, in a section named Color, one called Outline and one called Border, with no way to switch either off although Fill has a checkbox. Corner radius sits away from the thickness it belongs with. Settle one model instead: a shape is made of parts, and every part works the same way. A part is switched on or off in one place, and switching it on reveals its colour and its own settings right there. That model then covers fill, outline, border, shadow and anything added later such as an inner glow, so a person who learns to add a border already knows how to add a glow.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T14:04:07.017Z",
+  "updated": "2026-09-06T14:04:07.054Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Raised by the user on 2026-09-06 after failing to find a way to turn off a rectangle's border. They are describing a real structural problem, not a preference. What the code actually has, from a read: a rectangle carries TWO independent edges from two systems. The shape's own stroke is AnnotationContent.strokeWidth, shown as Thickness in the section titled Rectangle, with its colour shown in the Color section as Outline; the comment at Tools.swift says rectangles and ellipses inset their stroke, which is why the user reads it as being inside the shape. Separately LayerStyle.borderWidth is a layer style applied at render time around the layer's frame, shown as Border in the Effects section (LayersPanel.swift line 2557), with its colour also in the Color section, called Border. So Outline and Border are genuinely different things that both draw an edge, in different sections, one insettable and one not, and nothing on screen says so. Colours are deliberately pulled into one Color section: the comment at line 349 explains it, so a colour does not move to a different section when a second layer is selected. That reason is sound for a multi selection and is what breaks proximity for a single one, so the model has to answer both rather than simply undoing it. Fill has a checkbox (LayersPanel.swift around line 1636, setAnnotationFill with nil meaning no fill) because a nil colour means absent; the stroke has no such state, which is why it cannot be switched off. This is the same family as the-shape-settings-say-what-they-are-and-what-ea, which fixes the section title and the unlabelled swatches; that task is smaller and can land first, but this one supersedes it in scope, so whoever takes this should read it and fold it in rather than leaving two half models.",
+  "acceptance": [
+    "Write the model down first, in the design docs, before any code: what a part is, which parts a shape has, and where a part's switch, colour and settings sit",
+    "Open a decision card showing the panel drawn two or three ways under that model, since it changes the shape of every inspector, and wait for the answer",
+    "Every part of a selected shape can be switched off and back on from one obvious control, including the outline, which cannot be switched off at all today",
+    "A part's colour and its settings sit together with its switch, not in a different section: the border's colour, thickness and corner radius are in one place",
+    "A part's settings are unavailable, and visibly so, when that part is switched off",
+    "The two edge concepts are resolved: either they are given names that say how they differ, or they become one thing, and the audit explains the choice in plain words a user would accept",
+    "No setting keeps a name that describes something else: nothing that sets a border width is called Thickness",
+    "The same model visibly applies to at least one other kind of layer, so it is a rule rather than a special case for rectangles",
+    "Nothing about how any existing document draws changes, only where its settings live",
+    "Audit written under queue/audits/ with the panel for a rectangle before and after, and one other layer kind, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T14:04:07.017Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-06T14:04:07.053Z",
+      "note": "seq 180 -> 12"
+    }
+  ]
+}
