@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:42:32.241Z",
-  "updated": "2026-09-06T00:34:52.022557Z",
+  "updated": "2026-09-06T00:35:20.547Z",
   "deps": [],
   "blockedBy": [],
   "notes": "GroupFlow.stacked() takes `along` straight from item.box on the flow axis and never reads that axis' placement rule, so today there is nothing to fill with. The cross axis already does this through span(size:start:extent:rule:) with .stretch, so the naming to reuse is there. The row that has to grow the choice is the 'owned by the flow' row in PlacementInspector.swift, which currently only says the stack decides it; childCaption is where the one line about a hugging stack goes. The pending task a-row-can-push-its-contents-to-its-two-ends edits the same function for the space between case: whichever lands first, the second reads it rather than re-deciding how leftover room is worked out. Watch the surface piece (stretch both ways), which is not one of the things being arranged and must not join the sharing.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-06T00:34:52.022557Z",
       "note": "Adversarial review on the real app, driven by Scripts/playtest/fill-the-flow-walk.json against the probe (Screen Recording granted, so the pictures are real captures). Two things were clumsy and both are fixed: (1) the answer read plain 'Fill' while the Colour section three rows down also says Fill, in the same panel at the same time, so it now names the flow: 'Fill the row' / 'Fill the stack'. (2) The W field stayed typeable while the stack owned the number, so a typed width was silently put back on the next pass; it is now a number to read with a tip naming the two controls that do change it. Two rough edges filed rather than fixed: the old cross-axis Stretch has the same dead-field wart, and there is no menu item or key for filling."
+    },
+    {
+      "t": "2026-09-06T00:35:20.547Z",
+      "note": "One piece in a stack can take the room the stack has left along the way it runs. Model: FlowFill on Layer plus GroupFlow.alongTheFlow; offer: PlacementEditing.canFill over GroupLayout.hasRoomAlongTheFlow, which couldSpread now reads too; edit: PhotonzDocument.setFillsTheFlow, which remembers the size and hands it back. The flow-owned row in PlacementInspector became a two-answer menu reading 'Fill the row' / 'Fill the stack'. Verified by 27 new tests in GroupFillTests (whole suite 3461 green) and by driving the probe app with Scripts/playtest/fill-the-flow-walk.json, with real screen captures. Audit at queue/audits/2026-09-05-fill-the-flow.json."
     }
   ],
-  "started": "2026-09-06T00:06:50.074Z"
+  "started": "2026-09-06T00:06:50.074Z",
+  "completed": "2026-09-06T00:35:20.547Z"
 }
