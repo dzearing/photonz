@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:48:41.859Z",
-  "updated": "2026-09-06T14:56:09.759Z",
+  "updated": "2026-09-06T14:56:22.727Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the audit queue/audits/2026-09-05-screen-columns.json. The menu row reads EditorState.columnsTargetFrameID, which is selectedFrameID and so walks up to the containing screen; the panel section is gated on selectedLayer.isFrame in LayersPanel.availableSections. Two options worth putting to the user: show the section for the containing screen with a header that names it (like the Layout section already does with This layer on Frame), or narrow the menu row to the selected screen only. The first is more useful, the second is more honest about what a properties panel is.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-06T14:56:09.759Z",
       "note": "Second review, on the built thing. It reads well directly above Layout, which says 'This layer on Frame' for the same screen. Two things left rough and written into the audit: the default screen name is literally Frame so the first one reads 'on Frame', and a multi-selection spanning two screens speaks for the last-picked layer's screen, which the header at least now names. Audit: queue/audits/2026-09-06-columns-follow-the-screen.json."
+    },
+    {
+      "t": "2026-09-06T14:56:22.726Z",
+      "note": "The Columns section now shows for the same screen the Layer menu row acts on: the screen you picked, or the screen what you picked is on, with the screen named in the header when it is not the selected thing. LayersPanel + EditorState+Frames in Next. Verified on the probe with columns-follow-the-screen-walk (real captures): switched columns on and typed 6 with a box picked, never touching the screen; bare canvas still brings no section. Scripts/test.sh green. Audit: queue/audits/2026-09-06-columns-follow-the-screen.json"
     }
   ],
-  "started": "2026-09-06T14:48:53.615Z"
+  "started": "2026-09-06T14:48:53.615Z",
+  "completed": "2026-09-06T14:56:22.726Z"
 }
