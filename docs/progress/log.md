@@ -9054,3 +9054,42 @@ below the floor, which short content is already under.
 Next: the queue. Open question in the audit — whether three rows is the right
 floor for the layers area, and whether pulling all the way open should mean
 "let it grow" as it now does.
+
+## 2026-09-05 — One rule for a control that speaks for several picked things
+
+Wrote the behaviour half of the Mixed rule into
+`docs/design/mocks/shared/UX-PATTERNS.md` section 4, as
+**What a control DOES for several picked things**, sibling to the look half that
+shipped on 2026-09-04. One table decides everything: a control reaches all of
+the picked things, some of them, or none, and that count says what it shows,
+what setting it does, and whether it is on screen at all.
+
+Settled, so the three waiting tasks stop each inventing an answer:
+
+- **Disappearing is only ever the "none" answer.** A control leaves when nothing
+  picked has its property, never because the picked things disagree. The unit
+  that leaves is the one whose property is absent and nothing larger, which is
+  what `colorRowSlots` already does when the Fill row goes and Outline stays.
+  So the Component section vanishing on a second copy is a bug.
+- **When the section applies but no control in it is shared** (copies of two
+  different components) the section stays with one sentence rather than going
+  blank. A knob is the same knob only when it is the same property of the same
+  thing, never when it merely shares a name.
+- **A field reads back what the layers took, after the commit**, never a landing
+  computed before it. Same value everywhere shows that number, different values
+  show Mixed, nothing moved snaps back with a reason, and no toast either way.
+- **A switch stays a switch**, says Mixed beside its own caption the way a
+  segmented row does, wears `MixedLook.style` while it has no position, and its
+  first press resolves to on for every picked layer in one undo step.
+
+Most of the rule describes practice the app already gets right, so the fixes
+have a shipped exemplar to copy. No app code changed, per the task's acceptance;
+`Scripts/test.sh` green. Each of `the-knobs-panel-speaks-for-several-copies-at-onc`,
+`a-switch-says-mixed-the-way-every-other-control` and
+`a-width-the-layers-refused-stops-claiming-the-nu` now carries a pointer to the
+section in its notes.
+
+Next: those three, in that order. Open question for the user, which the switch
+task's capture will put in front of them: the switch's Mixed look is derived
+from existing rules rather than chosen, so it is the one clause worth a second
+opinion once it is on screen.
