@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:43:02.752Z",
-  "updated": "2026-09-06T02:51:30.381Z",
+  "updated": "2026-09-06T03:25:04.151Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked on its decision card: the shape of versions is a product judgment, not an engineering one. What exists today: ComponentPropertyKind has text, visible, variant and color (ComponentProperties.swift:34), where `variant` is Make Alternatives, one layer swapped for another sibling inside the same original (ComponentChoice.swift). That is a shape swap, not a version of the whole component. docs/design/ui-building.md, 'What the first version deliberately does not do', defers states outright, while queue/objectives.json describes the ui-components epic as 'create, reuse, variants, overrides', so the plan and the objective disagree and the user settles it. If the answer is the full version set, this task is the model and the knob only, and the Library tile, the canvas marks and any bulk editing across versions get filed as follow-ups after it. Sync lives in ComponentInstances.swift; the per copy override machinery that landed with the colour knob on 2026-09-04 is the pattern to follow.\n\nDecision answered on 2026-09-05: option a, versions under one name. Each version is its own complete drawing, so a version can differ in any way at all, and the cost the user accepted is that a change meant for every version has to be made in each one. The mitigation they chose with it: a new version is made by duplicating an existing one, so versions start out identical. Make Alternatives (ComponentChoice.swift) stays what it is, a shape swap inside one drawing, and is not the same thing as a version.",
@@ -71,7 +71,12 @@
     {
       "t": "2026-09-06T03:24:53.903651Z",
       "note": "Adversarial review of the built thing, on the real app (Scripts/playtest/component-versions-walk.json, real screen captures). Three things were clumsy and were fixed: the version chip in the layers list was squeezed to \"D...d\" (it keeps its width now and the name gives way); the chip stayed on after the second version was deleted, reading as a state you cannot leave (it only prints while a component holds several); and Edit Original on a copy showing Disabled selected the DEFAULT drawing, so you would have edited the wrong version. Left rough and filed: the canvas label does not say which version a drawing is, there is no edit-every-version-at-once, the shelf always places the first version, and the Component section sits four sections down the dock on a copy."
+    },
+    {
+      "t": "2026-09-06T03:25:04.150Z",
+      "note": "Versions shipped behind next-components: ComponentVersions.swift holds the model (versionID/versionName on a main, instanceVersion on a copy, all optional so old documents decode unchanged), a new version is a duplicate that keeps its knob ids, sync falls back with a notice when a version is deleted, and the panel grew a Versions block on the original and a Version row on a copy. 21 new tests, 3562 green. Verified on the real app with a scripted walk and real screen captures; audit at queue/audits/2026-09-05-component-versions.json. Four follow-ups filed."
     }
   ],
-  "started": "2026-09-06T02:51:30.380Z"
+  "started": "2026-09-06T02:51:30.380Z",
+  "completed": "2026-09-06T03:25:04.151Z"
 }
