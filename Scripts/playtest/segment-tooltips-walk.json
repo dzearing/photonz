@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/segment-tooltips",
-  "seed": "Three rows in the dock offer a choice as small pictures rather than words: the arrow's Ending row and the two text alignment rows. Each of them used to share ONE tooltip for the whole row, so resting on the hollow dot read out whichever ending was already picked. This walk types a label and draws an arrow, then reads every picture in all three rows back at its own middle (the panel listing now says what resting on each segment would show) and rests on three of them for a picture of the label itself. It ends with two labels that differ, because a mixed row lights no segment at all and the names have to hold up with nothing picked.",
+  "seed": "Three rows in the dock offer a choice as small pictures rather than words: the arrow's Ending row and the two text alignment rows. Each of them used to share ONE tooltip for the whole row, so resting on the hollow dot read out whichever ending was already picked. This walk types a label and draws an arrow, then reads every picture in all three rows back at its own middle (the panel listing now says what resting on each segment would show), rests on three of them for a picture of the label itself, and presses one of the Down pictures by name, which used to be impossible because those three answered to no name at all. It ends with two labels that differ, because a mixed row lights no segment at all and the names have to hold up with nothing picked.",
   "setup": {
     "forget": [
       "text",
@@ -28,6 +28,12 @@
     { "do": "snapshot", "name": "1-across-center" },
     { "do": "hover", "label": "Bottom" },
     { "do": "snapshot", "name": "2-down-bottom" },
+
+    { "do": "press", "control": "Bottom", "in": "Down" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panel", "stage": "down-pressed" },
+    { "do": "describe", "stage": "1b-down-pressed", "note": "the Down row answers to Top, Middle and Bottom now: pressing Bottom by name must land, and the listing must come back saying that segment is the one already on" },
+
 
     { "do": "tool", "tool": "arrow" },
     { "do": "drag", "from": [200, 420], "to": [520, 420], "steps": 8 },
@@ -60,7 +66,7 @@
     { "do": "wait", "seconds": 0.8 },
 
     { "do": "panel", "stage": "two-picked" },
-    { "do": "describe", "stage": "4-mixed", "note": "two labels sitting their words differently: with no segment lit, every picture must still report its own name" },
+    { "do": "describe", "stage": "4-mixed", "note": "two labels sitting their words differently, ACROSS and DOWN both: with no segment lit in either row, every picture must still report its own name" },
     { "do": "snapshot", "name": "5-mixed" }
   ]
 }

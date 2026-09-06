@@ -257,11 +257,18 @@ Four steps close it, and one more makes them writable:
   segmented picker — Free / Stack / Grid, Row / Column, Hug / Fixed, which is
   most of the Layout section — is a real AppKit control underneath, so its
   segments name themselves and need no marker. A segment that is a PICTURE
-  rather than words is named by what the system calls that picture: the text
-  alignment rows come out as `align left`, `align center`, `align right`, and
-  the vertical ones as `align vertical top` and so on. (A SwiftUI
-  `.accessibilityLabel` on the Image does not reach the segment; the symbol's
-  own name does.) A style slider takes a press too — it is called `Slider` and
+  rather than words is named by its picture's accessibility description, which
+  is also what a screen reader reads out. Where the symbol carries one of its
+  own the row takes it — the Across alignment row comes out as `align left`,
+  `align center`, `align right` — and where it does not, the app supplies one,
+  so the Down row is `Top`, `Middle`, `Bottom` and the arrow's Ending row is
+  `Triangle`, `Open`, `Dot` and so on. The two alignment rows therefore answer
+  to different-looking names; run a `panel` step and read the listing rather
+  than guessing. A symbol with no description at all has no name and is
+  SKIPPED, which is what the Down row did before it was given one. (A SwiftUI
+  `.accessibilityLabel` on the Image does not reach the segment; build the
+  picture through `NSImage(systemSymbolName:accessibilityDescription:)`
+  instead.) A style slider takes a press too — it is called `Slider` and
   named by its row, so `{"control": "Slider", "in": "Corner Radius"}` puts the
   knob in the middle of that track, which is how a walk makes two layers differ
   in something only a slider can set. `across` presses a fraction of the way

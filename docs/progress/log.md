@@ -10117,3 +10117,40 @@ pill/badge/square caption picture is back. `Scripts/test.sh` green.
 
 Next: filed "Making an arrow thicker takes one click, not three" — the most
 common redline adjustment is now two clicks deep behind a row named Color.
+
+## 2026-09-06 — The pictures for where words sit down a box answer to a name
+
+The Text section's Down row (top / middle / bottom) was three anonymous
+buttons: `align.vertical.top`, `.center` and `.bottom` carry no accessibility
+description, so a screen reader announced nothing for them and a playtest walk
+skipped straight past them. Reproduced first — `NSImage(systemSymbolName:)`
+hands those three back with a nil description, while `text.align*` comes back
+described as "align left" and so on, which is why only the Across row worked.
+
+Fixed with `TextVerticalAlign.glyph` in `LayersPanel.swift`, the same recipe
+`ArrowheadStyle.glyph` already uses: build the picture through
+`NSImage(systemSymbolName:accessibilityDescription:)` and set the description,
+because a SwiftUI `.accessibilityLabel` never reaches the segment. The row now
+answers to Top, Middle and Bottom.
+
+The pictures had to not move. Guarded that before writing app code with an
+ImageRenderer harness that draws the same small segmented picker both ways at
+4x: 0 differing pixels of 73728, light and dark. A control run at 16pt bold
+differs by 8640 px, so the harness is sensitive and 11pt medium is the size
+`Image(systemName:)` was already drawing at.
+
+Left the Across row on the system's own descriptions on purpose. It works, and
+renaming it would churn two existing walks for no user gain. The cost is that
+the two rows read differently in a panel listing ("align left" beside "Top"),
+so `docs/design/playtest-harness.md` now says how segment names are actually
+derived and tells a walk author to read a listing rather than guess. That doc
+had been claiming the vertical segments came out as "align vertical top", which
+was never true.
+
+`Scripts/playtest/segment-tooltips-walk.json` now presses "Bottom" in "Down" by
+name. Verified on the probe app with real screen captures: the listing goes
+from Top already on to Bottom already on, the state reads "down bottom", and a
+crop of both rows shows the Down glyphs at the same weight, size and track as
+the Across ones. All 4139 tests pass.
+
+Next: back to the queue.

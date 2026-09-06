@@ -3331,6 +3331,31 @@ private extension TextVerticalAlign {
         case .bottom: "align.vertical.bottom"
         }
     }
+
+    /// That picture, carrying the PLACE's name.
+    ///
+    /// A segment named itself out of the picture on it, and the three
+    /// `align.vertical.*` symbols carry no description at all, so this row
+    /// read out as nothing: a screen reader announced three anonymous buttons
+    /// and a scripted walk skipped straight past them. (The Across row is fine
+    /// by luck — the system happens to describe `text.align*` as "align left"
+    /// and so on.) Built through `NSImage` the description is ours, so Top,
+    /// Middle and Bottom each answer to their own word. The same way
+    /// `ArrowheadStyle.glyph` names the endings; a SwiftUI
+    /// `.accessibilityLabel` on the Image does not reach the segment.
+    ///
+    /// 11pt medium is the size `Image(systemName:)` already draws at inside a
+    /// small segmented picker, so the pictures do not move: rendered both
+    /// ways, light and dark, the row comes out pixel for pixel the same.
+    var glyph: Image {
+        guard let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title) else {
+            return Image(systemName: symbolName)
+        }
+        let sized = image.withSymbolConfiguration(
+            NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)) ?? image
+        sized.accessibilityDescription = title
+        return Image(nsImage: sized)
+    }
 }
 
 struct TextInspector: View {
@@ -3412,7 +3437,7 @@ struct TextInspector: View {
                     get: { down.isMixed ? nil : down.value },
                     set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
                     ForEach(TextVerticalAlign.allCases, id: \.self) { align in
-                        Image(systemName: align.symbolName).tag(TextVerticalAlign?.some(align))
+                        align.glyph.tag(TextVerticalAlign?.some(align))
                     }
                 }
                 .pickerStyle(.segmented).labelsHidden().controlSize(.small)

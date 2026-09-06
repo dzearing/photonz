@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1500,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T20:46:35.045Z",
-  "updated": "2026-09-06T20:46:35.045Z",
+  "updated": "2026-09-06T23:29:21.309Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "A plain Image(systemName:) hands the segment whatever the system calls the symbol, and align.vertical.top/center/bottom carry no description at all, so PlaytestPanelPress.name(ofSegment:) returns nil and the segment is skipped. ArrowheadStyle.glyph shows the fix: build the Image through NSImage(systemSymbolName:accessibilityDescription:) and set accessibilityDescription. Doing the same to the Across row would rename its press targets from \"align center\" to \"Center\", which mixed-one-look-walk.json and any other walk pressing them would have to be updated for. Found on 2026-09-06 while giving each picture its own tooltip.",
+  "notes": "A plain Image(systemName:) hands the segment whatever the system calls the symbol, and align.vertical.top/center/bottom carry no description at all, so PlaytestPanelPress.name(ofSegment:) returns nil and the segment is skipped. ArrowheadStyle.glyph shows the fix: build the Image through NSImage(systemSymbolName:accessibilityDescription:) and set accessibilityDescription. Doing the same to the Across row would rename its press targets from \"align center\" to \"Center\", which mixed-one-look-walk.json and any other walk pressing them would have to be updated for. Found on 2026-09-06 while giving each picture its own tooltip.\n\nDone 2026-09-06. Fix is TextVerticalAlign.glyph in LayersPanel.swift (NSImage(systemSymbolName:accessibilityDescription:) at pointSize 11, weight .medium, description also assigned explicitly). 11/medium is what Image(systemName:) already draws at inside .pickerStyle(.segmented) + .controlSize(.small), proven by a 4x offscreen pixel diff in both appearances. The Across row was left on the system's own descriptions on purpose, so the two rows read differently in a panel listing.",
   "acceptance": [
     "A panel listing names all three pictures in the Down row, the way it already names the three in Across",
     "A scripted walk can press one of them by name",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-06T20:46:35.045Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T23:29:21.309Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T23:40:00.000Z",
+      "note": "Reproduced before changing anything: NSImage(systemSymbolName:) for align.vertical.top/center/bottom returns an image whose accessibilityDescription is nil, while text.alignleft/center/right come back as \"align left\"/\"align center\"/\"align right\". So the Down row genuinely had no name and was skipped, exactly as the notes said."
+    },
+    {
+      "t": "2026-09-06T23:41:00.000Z",
+      "note": "Adversarial pass on the idea. Shortest version that delivers the value is one glyph accessor on TextVerticalAlign, same recipe as ArrowheadStyle.glyph; nothing else needs to move. Deliberately did NOT rename the Across row: it already works, and renaming it would churn segment-tooltips-walk.json and mixed-one-look-walk.json for no user gain. Cost of that call is that the two rows answer to different-looking names (\"align left\" vs \"Top\"); documented in the harness doc with an instruction to read a panel listing rather than guess."
+    },
+    {
+      "t": "2026-09-06T23:42:00.000Z",
+      "note": "Guarded acceptance item 3 (\"the pictures do not change\") before writing app code: an ImageRenderer harness rendered the same small segmented picker with Image(systemName:) and with the NSImage glyph at 4x, light and dark. Both come out 0 differing pixels of 73728. Control run at pointSize 16 bold differs by 8640 px, so the harness is sensitive and 11pt/medium is the right match."
+    },
+    {
+      "t": "2026-09-06T23:43:00.000Z",
+      "note": "Shipped: TextVerticalAlign.glyph in Sources/Photonz/LayersPanel.swift, used by the Down picker. Walk step added to Scripts/playtest/segment-tooltips-walk.json pressing \"Bottom\" in \"Down\" by name. docs/design/playtest-harness.md corrected: it claimed the vertical segments came out as \"align vertical top\", which was never true."
+    },
+    {
+      "t": "2026-09-06T23:44:00.000Z",
+      "note": "Verified on the probe app (Screen Recording granted, real -sc.png captures). Panel listing before the press: Top (already on), Middle, Bottom, each with its own tooltip; after the press: Bottom (already on), and the walk state reads \"down bottom x1\". Cropped the real capture of both rows: the Down glyphs sit at the same weight, size and track as the Across ones. All 4139 tests pass."
+    },
+    {
+      "t": "2026-09-06T23:45:00.000Z",
+      "note": "No audit written. This names three buttons for a screen reader and unblocks a walk; there is nothing a person can sit down and judge, so a try/evaluate report would be noise. The change is covered by the segment-tooltips walk instead."
     }
-  ]
+  ],
+  "started": "2026-09-06T23:29:21.308Z"
 }
