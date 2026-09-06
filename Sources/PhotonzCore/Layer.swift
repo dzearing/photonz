@@ -411,9 +411,21 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// Whether this group is a frame: a fixed box with a size of its own,
     /// rather than a box that follows whatever is inside it.
     public var isFrame: Bool
-    /// Whether a frame hides what sticks out past its box. Meaningless for an
-    /// ordinary group, which has no box of its own to clip to.
-    public var clipsContents: Bool
+    /// What somebody has SAID about hiding whatever sticks out past this
+    /// container's box, or nil while nobody has said anything. Kept apart from
+    /// the answer below because the two kinds of container start from opposite
+    /// places: a screen has always cut off what leaves it, and a group has
+    /// always let it hang out, so a document saved before a group could be
+    /// asked opens drawing exactly what it drew.
+    var clipsContentsSetting: Bool?
+
+    /// Whether this container hides what sticks out past its box. Meaningless
+    /// for a container with no box of its own (`Layer.hasBoxOfItsOwn`), which
+    /// has nothing hanging out of it in the first place.
+    public var clipsContents: Bool {
+        get { clipsContentsSetting ?? isFrame }
+        set { clipsContentsSetting = newValue }
+    }
     /// The surface a frame paints behind its contents ("#FFFFFF" for a white
     /// screen), or nil for a frame you can see straight through. Ordinary
     /// groups never paint one. Flat by default; it holds a gradient once one
@@ -473,13 +485,15 @@ public struct GroupContent: Hashable, Codable, Sendable {
     public var layout: GroupLayout?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
-                clipsContents: Bool = true, backgroundHex: String? = nil,
+                clipsContents: Bool? = nil, backgroundHex: String? = nil,
                 componentID: UUID? = nil, instanceOf: UUID? = nil,
                 properties: [ComponentProperty] = [], overrides: [ComponentOverride] = [],
                 followedStyle: LayerStyle? = nil, contentPlacement: LayerPlacement? = nil) {
         self.children = children
         self.isFrame = isFrame
-        self.clipsContents = clipsContents
+        // A screen is born with the answer it has always given, so it saves and
+        // opens byte for byte as it did. A group is born with none.
+        self.clipsContentsSetting = clipsContents ?? (isFrame ? true : nil)
         self.background = backgroundHex.map { Paint(hex: $0) }
         self.componentID = componentID
         self.instanceOf = instanceOf
@@ -521,6 +535,10 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // document saved before stacks and grids existed is byte for byte what
         // it was.
         try c.encodeIfPresent(layout, forKey: .layout)
+        // A group nobody has asked about cutting off its overflow writes no
+        // key, so a document saved before it could be asked is byte for byte
+        // what it was.
+        if !isFrame { try c.encodeIfPresent(clipsContentsSetting, forKey: .clipsContents) }
         guard isFrame else { return }
         try c.encode(true, forKey: .isFrame)
         try c.encode(clipsContents, forKey: .clipsContents)
@@ -531,7 +549,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         children = try c.decode([Layer].self, forKey: .children)
         isFrame = try c.decodeIfPresent(Bool.self, forKey: .isFrame) ?? false
-        clipsContents = try c.decodeIfPresent(Bool.self, forKey: .clipsContents) ?? true
+        clipsContentsSetting = try c.decodeIfPresent(Bool.self, forKey: .clipsContents)
         // A bare hex string is what this key has always held; a gradient
         // writes an object under the same key.
         background = try c.decodeIfPresent(Paint.self, forKey: .backgroundHex)
@@ -813,9 +831,18 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// what a screen gets built on.
     public var isFrame: Bool { group?.isFrame == true }
 
-    /// Whether a frame hides what sticks out past its box. False for
-    /// everything that is not a frame.
-    public var clipsToFrame: Bool { group?.isFrame == true && group?.clipsContents == true }
+    /// Whether this layer has a box of its own that its contents can hang out
+    /// of: a screen, or a group somebody gave a width, a height or a largest
+    /// size. A group that closes around its contents has nothing sticking out
+    /// of it, so there is nothing there to cut off and no switch to offer.
+    public var hasBoxOfItsOwn: Bool {
+        guard let group else { return false }
+        return group.isFrame || group.layout?.hasSizeOfItsOwn == true
+    }
+
+    /// Whether this layer hides what sticks out past its box. False for
+    /// everything with no box of its own, however it is set.
+    public var clipsToBounds: Bool { hasBoxOfItsOwn && group?.clipsContents == true }
 
     /// The canvas region this layer magnifies, for a zoom callout; nil for
     /// everything else.
@@ -888,9 +915,9 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     public var renderBounds: CGRect {
         let box = localBounds
         guard let group else { return box.insetBy(dx: -style.previewPadding, dy: -style.previewPadding) }
-        // Nothing inside a clipping frame can draw past its edge, so its reach
-        // is its box plus whatever its own shadow adds.
-        if group.isFrame, group.clipsContents {
+        // Nothing inside a clipping container can draw past its edge, so its
+        // reach is its box plus whatever its own shadow adds.
+        if clipsToBounds {
             return box.insetBy(dx: -style.previewPadding, dy: -style.previewPadding)
         }
         var reach = box
@@ -973,6 +1000,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                 // hangs outside a clipping frame is not on screen to be hit.
                 if localBounds.contains(p) { return true }
                 guard !group.clipsContents else { return false }
+            } else if clipsToBounds, !localBounds.contains(p) {
+                // A group that cuts off what leaves it is not a surface: it
+                // takes no click of its own, but what it cut away is not on
+                // screen to be hit either.
+                return false
             }
             return group.children.contains { $0.contains(canvasPoint: local, zoom: zoom) }
         }

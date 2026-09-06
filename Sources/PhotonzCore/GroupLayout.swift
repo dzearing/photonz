@@ -218,6 +218,18 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     public var limitsHeight: Bool { usedMinHeight != nil || usedMaxHeight != nil }
     public var limitsSize: Bool { limitsWidth || limitsHeight }
 
+    /// Whether this group's box is a size somebody decided rather than the size
+    /// of what is inside it, on either axis. A given width or height is one; so
+    /// is a ceiling, because a group held at its widest is as wide as the
+    /// ceiling and its contents carry on past it. A floor is not: it only ever
+    /// makes the box bigger than its contents, so nothing hangs out.
+    ///
+    /// The one question behind offering to cut off what does not fit
+    /// (`Layer.hasBoxOfItsOwn`).
+    public var hasSizeOfItsOwn: Bool {
+        usedWidth != nil || usedHeight != nil || usedMaxWidth != nil || usedMaxHeight != nil
+    }
+
     /// A width held to what this group is allowed to be.
     public func heldWidth(_ width: CGFloat) -> CGFloat {
         Self.held(width, least: usedMinWidth, most: usedMaxWidth)

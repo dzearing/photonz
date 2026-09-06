@@ -87,7 +87,7 @@ struct FrameRenderingTests {
         #expect(pixel(clipped, x: 140, y: 75).r > 200)
         #expect(pixel(clipped, x: 160, y: 75).r == 100)
 
-        doc.setFrameClips(id: doc.frames[0].id, false)
+        doc.setClipsContents(id: doc.frames[0].id, false)
         let open = DocumentRenderer().render(doc, store: store)!
         #expect(pixel(open, x: 160, y: 75).r > 200)
         #expect(pixel(open, x: 160, y: 75).g < 60)

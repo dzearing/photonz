@@ -170,7 +170,7 @@ extension PhotonzDocument {
             for layer in list.reversed() {
                 guard layer.isVisible, !layer.isLocked else { continue }
                 if layer.isGroup {
-                    if layer.clipsToFrame, !layer.localBounds.contains(point) { continue }
+                    if layer.clipsToBounds, !layer.localBounds.contains(point) { continue }
                     let local = CGPoint(x: point.x - layer.frame.origin.x,
                                         y: point.y - layer.frame.origin.y)
                     if let found = search(layer.children, local,

@@ -1,0 +1,29 @@
+{
+  "id": "a-container-says-when-it-is-hiding-something-you",
+  "title": "A container says when it is hiding something you drew",
+  "goal": "When a card or a screen is set to cut off what does not fit, anything that ends up outside its edge simply vanishes, with nothing anywhere saying it is still there. Somebody who drags a label a little too far loses it and has no way back but undo. The layer should say, where you can see it, that it is being hidden by the box it lives in.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1320,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T01:38:39.372Z",
+  "updated": "2026-09-06T01:38:39.372Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Comes from the rough list of queue/audits/2026-09-05-clip-contents.json. Layer.clipsToBounds and Layer.localBounds are the two facts needed: a child is out of view when its own localBounds does not intersect the parent's. The Layers list rows are built in Sources/Photonz/LayersPanel.swift; the hidden and locked marks already there are the pattern to follow. Applies to frames too, which have had this gap since frames landed.",
+  "acceptance": [
+    "A layer that is fully outside its clipping container is marked as hidden in the Layers list, in a way you can see without hovering",
+    "The mark says why in plain words when you hover it, naming the container that is cutting it off",
+    "Selecting that layer still shows its position, so you can type it back into view",
+    "Nothing is marked while its container is not cutting anything off",
+    "Ships behind next-auto-layout, and covers a screen as well as a group"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T01:38:39.372Z",
+      "note": "created (manual)"
+    }
+  ]
+}

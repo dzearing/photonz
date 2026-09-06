@@ -410,8 +410,10 @@ public final class DocumentRenderer: @unchecked Sendable {
             // multiplies with the canvas below it. Only a group that carries
             // styling composites into its own buffer first (`groupImage`).
             // A FRAME is never a pass-through: it has a surface to paint and an
-            // edge to cut at, so it always draws as one object.
-            if let group = layer.group, !group.isFrame, layer.style.isPlain {
+            // edge to cut at, so it always draws as one object. Neither is a
+            // group told to cut off what leaves it: there is no edge to cut at
+            // until its children draw into a buffer of its own.
+            if let group = layer.group, !group.isFrame, !layer.clipsToBounds, layer.style.isPlain {
                 output = compositeLayers(group.children, origin: frame.origin, onto: output,
                                          underlay: underlay, in: document, store: store, clip: clip,
                                          onDesignedSurface: holdsInside,
@@ -483,10 +485,11 @@ public final class DocumentRenderer: @unchecked Sendable {
                             contentScale: CGFloat, magnifyNearest: Bool) -> CIImage? {
         let height = document.canvasSize.height
         let box = flipped(layer.localBounds.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
-        // A clipping frame's buffer IS its box: everything drawn into it that
-        // reaches past the edge is simply not in the picture, which is the
-        // whole of what clipping means here.
-        let reach = layer.clipsToFrame ? layer.localBounds : layer.renderBounds
+        // A clipping container's buffer IS its box: everything drawn into it
+        // that reaches past the edge is simply not in the picture, which is the
+        // whole of what clipping means here. `rounded` then cuts the buffer
+        // with the corner, so a rounded card cuts round rather than square.
+        let reach = layer.clipsToBounds ? layer.localBounds : layer.renderBounds
         let buffer = flipped(reach.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
         guard buffer.width >= 1, buffer.height >= 1 else { return nil }
 

@@ -774,7 +774,12 @@ Step A2. The first thing in this ladder a person can build a screen on.
   where every layer's numbers already are.
 - **It clips.** Anything past the edge is not drawn, not hit, and not exported.
   A frame that does not clip is one switch away, for the group you can see out
-  of.
+  of. The same switch is on ANY container with a box of its own: a group given
+  a width, a height or a largest size gets a **Clip contents** checkbox under
+  those numbers in the Layout section. It starts OFF there, because a group has
+  always let its contents hang out and no picture already drawn should change,
+  while a screen has always cut them off and still does. A group that closes
+  around its contents is not offered it, because nothing hangs out of it.
 - **What you draw on a frame lands on it.** A shape, a text block or a callout
   whose CENTRE falls inside a frame becomes a child of that frame, with its
   position rewritten so it does not move. Without this a frame would be a
@@ -875,7 +880,9 @@ None of them blocks the step before it.
 
 - ~~Does a frame clip its contents by default, or only when asked?~~ Answered by
   the task that built frames: it clips, and a **Clip contents** switch in the
-  Frame section turns that off for the group you can see out of.
+  Frame section turns that off for the group you can see out of. A group with a
+  size of its own carries the same switch in the Layout section, off by
+  default (2026-09-05).
 - Does dropping an instance default to the main's own configuration, or to the
   last variant that person used? (`components` raises this and leaves it open.)
 - Do the built-in components look like macOS controls, or like a neutral kit that

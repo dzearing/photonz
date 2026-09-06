@@ -228,6 +228,9 @@ extension PhotonzDocument {
         updateLayer(id: id) { layer in
             var group = group
             group.isFrame = isFrame
+            // A group becoming a screen takes the answer every screen has
+            // always given, so it starts cutting off what leaves it.
+            if isFrame, group.clipsContentsSetting == nil { group.clipsContentsSetting = true }
             group.children = layer.children
             layer.content = .group(group)
             layer.frame = isFrame
@@ -246,9 +249,12 @@ extension PhotonzDocument {
         }
     }
 
-    /// Whether a frame hides what sticks out past its box.
-    public mutating func setFrameClips(id: UUID, _ clips: Bool) {
-        guard let group = layer(id: id)?.group, group.isFrame else { return }
+    /// Whether a container hides what sticks out past its box: a screen, or a
+    /// group somebody gave a size of its own. A group that closes around its
+    /// contents is not asked, because there is nothing hanging out of it.
+    public mutating func setClipsContents(id: UUID, _ clips: Bool) {
+        guard let existing = layer(id: id), let group = existing.group,
+              existing.hasBoxOfItsOwn else { return }
         updateLayer(id: id) { layer in
             var group = group
             group.children = layer.children

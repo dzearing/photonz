@@ -69,7 +69,7 @@ struct FrameTests {
         let clipped = document.layer(id: id)!.renderBounds
         #expect(clipped == CGRect(x: 100, y: 60, width: 390, height: 844))
 
-        document.setFrameClips(id: id, false)
+        document.setClipsContents(id: id, false)
         let open = document.layer(id: id)!.renderBounds
         #expect(open.maxX > 490)
         #expect(open.maxY > 904)
@@ -182,7 +182,7 @@ struct FrameTests {
         #expect(document.hitTest(CGPoint(x: 450, y: 1010)) == nil)
         // With clipping off it is on screen again, so the click reaches it —
         // and a plain click still resolves to the frame it belongs to.
-        document.setFrameClips(id: id, false)
+        document.setClipsContents(id: id, false)
         #expect(document.hitTest(CGPoint(x: 450, y: 1010))?.name == "Overhang")
         let reached = document.selectionTarget(at: CGPoint(x: 450, y: 1010), inside: nil)
         #expect(document.layer(id: reached!.id)?.name == "Overhang")
@@ -451,7 +451,9 @@ struct FrameTests {
         // …and a payload with only `children` in it comes back as a plain group.
         let legacy = try JSONDecoder().decode(GroupContent.self, from: Data(json.utf8))
         #expect(legacy.isFrame == false)
-        #expect(legacy.clipsContents == true)
+        // …that cuts off nothing, because nobody has ever asked it to. Only a
+        // screen starts cutting off what leaves it.
+        #expect(legacy.clipsContents == false)
     }
 
     @Test("A document with no frames says so")

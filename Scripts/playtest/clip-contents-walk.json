@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/clip-contents",
+  "seed": "A screen has always cut off what hangs over its edge; a card given a size of its own did not, so a long title ran straight out the side and was still there in the export. The walk drops a starter Card, holds it to 120 tall, watches the words run out of the bottom, and turns the same Clip contents switch on.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "dragTile", "tile": "Card", "to": [420, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-arrives", "note": "the starter Card, as tall as what is inside it. The Layout section has Width and Height and NO Clip contents switch: a group that closes around its contents has nothing hanging out of it to cut off." },
+    { "do": "snapshot", "name": "clip-1-arrives" },
+    { "do": "render", "name": "clip-1-arrives-doc" },
+    { "do": "panel", "stage": "1-arrives" },
+
+    { "do": "press", "control": "Limits", "in": "Height" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "focus", "field": "Largest height" },
+    { "do": "type", "text": "120" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-overflows", "note": "THE TEST, half of it: the card is held to 120 and its title and supporting text run straight out of the bottom. Clip contents has appeared under Height, unticked, because the card now has a box of its own." },
+    { "do": "snapshot", "name": "clip-2-overflows" },
+    { "do": "render", "name": "clip-2-overflows-doc" },
+    { "do": "panel", "stage": "2-overflows" },
+
+    { "do": "press", "control": "Clip contents" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-cut", "note": "THE TEST: the words stop at the card's bottom edge. Nothing past it is drawn, and the export is the same picture." },
+    { "do": "snapshot", "name": "clip-3-cut" },
+    { "do": "render", "name": "clip-3-cut-doc" },
+    { "do": "panel", "stage": "3-cut" },
+
+    { "do": "click", "at": [470, 400] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-not-clicked", "note": "THE TEST: clicking where the cut-off supporting text used to be picks nothing. What is not drawn is not there to click." },
+    { "do": "snapshot", "name": "clip-4-not-clicked" },
+    { "do": "panel", "stage": "4-not-clicked" },
+
+    { "do": "click", "at": [470, 320] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Clip contents" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-back", "note": "unticking it puts the overhang back, unchanged: the switch hides the words, it never deletes them." },
+    { "do": "snapshot", "name": "clip-5-back" },
+    { "do": "render", "name": "clip-5-back-doc" },
+    { "do": "panel", "stage": "5-back" }
+  ]
+}

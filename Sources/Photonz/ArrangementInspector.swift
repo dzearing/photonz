@@ -143,6 +143,11 @@ struct ArrangementInspector: View {
             parts.append("It is \(fixed.joined(separator: " and ")).")
         }
         if !current.isFrame, let limits = layout.limitsSentence { parts.append(limits) }
+        // A copy is shown this and never asked it, like everything else about
+        // the way its original arranges its contents.
+        if !current.isFrame, current.clipsToBounds {
+            parts.append("It cuts off whatever does not fit inside it.")
+        }
         return parts.joined(separator: " ")
     }
 
@@ -174,6 +179,10 @@ struct ArrangementInspector: View {
         if !current.isFrame {
             sizeRows(.width, layout)
             sizeRows(.height, layout)
+            // Right under the number that caused the overflow, and in the same
+            // two words a screen uses. A screen's own switch is in the Frame
+            // section, so it is never offered twice.
+            clipRow()
         }
         // A gap is the space the flow leaves BETWEEN things, so it belongs to
         // the two arrangements that put things one after another.
@@ -195,6 +204,31 @@ struct ArrangementInspector: View {
         // given a size or takes the one its contents make, so it can keep room
         // clear inside them the same way a screen does.
         padding(layout)
+    }
+
+    /// Whether this group cuts off what does not fit inside it.
+    ///
+    /// Only where it could DO something: a group that closes around its
+    /// contents has nothing hanging out of it, so the switch is not there at
+    /// all rather than sitting on the panel changing nothing. It appears the
+    /// moment a width, a height or a largest size gives the group a box of its
+    /// own, and it starts off, so no picture anybody has already drawn changes
+    /// until they ask for it.
+    @ViewBuilder
+    private func clipRow() -> some View {
+        if current.hasBoxOfItsOwn {
+            let clips = current.clipsToBounds
+            Toggle(isOn: Binding(get: { clips },
+                                 set: { editorState.setClipsContents(id: layer.id, $0) })) {
+                Text("Clip contents")
+                    .font(.callout)
+            }
+            .toggleStyle(.checkbox)
+            .help(clips
+                ? "What sticks out past this group's edge is not drawn, not clicked and not exported."
+                : "Cut off whatever sticks out past this group's edge, the way a screen does.")
+            .playtestControl("Clip contents", detail: clips ? "Group, on" : "Group, off")
+        }
     }
 
     /// The space between one thing and the next, and on a stack that has room

@@ -48,9 +48,46 @@ extension Layer {
         }
         if case .group(var group) = content {
             group.children = group.children.map { $0.magnified(by: scale) }
+            // A group that arranges itself measures its own box out of these
+            // numbers, so they have to grow with the contents they hold. Left
+            // behind, the box would be stated in document points while its
+            // contents were stated in output pixels, and every edge that reads
+            // off the box — its rounded corner, its border, the edge it cuts
+            // at — would land inside the picture.
+            group.layout = group.layout?.magnified(by: scale)
             layer.content = .group(group)
         }
         return layer
+    }
+}
+
+extension GroupLayout {
+    /// This layout with every length multiplied by `scale`: the size it holds,
+    /// the limits it keeps, the gaps between its contents and the room at its
+    /// edges. A count (how many cells a row holds) and a switch have no size,
+    /// so they stay put.
+    public func magnified(by scale: CGFloat) -> GroupLayout {
+        guard scale > 0, scale != 1, scale.isFinite else { return self }
+        var out = self
+        out.gap = gap * scale
+        out.rowGap = rowGap * scale
+        out.padding = padding.magnified(by: scale)
+        out.width = width.map { $0 * scale }
+        out.height = height.map { $0 * scale }
+        out.minWidth = minWidth.map { $0 * scale }
+        out.maxWidth = maxWidth.map { $0 * scale }
+        out.minHeight = minHeight.map { $0 * scale }
+        out.maxHeight = maxHeight.map { $0 * scale }
+        return out
+    }
+}
+
+extension GroupPadding {
+    /// The same room measured in a unit `scale` times smaller.
+    public func magnified(by scale: CGFloat) -> GroupPadding {
+        guard scale > 0, scale != 1, scale.isFinite else { return self }
+        return GroupPadding(top: top * scale, right: right * scale,
+                            bottom: bottom * scale, left: left * scale)
     }
 }
 

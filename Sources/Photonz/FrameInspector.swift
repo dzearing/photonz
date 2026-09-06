@@ -47,7 +47,7 @@ struct FrameInspector: View {
             .playtestField("Size")
 
             Toggle(isOn: Binding(get: { clips },
-                                 set: { editorState.setFrameClips(id: layer.id, $0) })) {
+                                 set: { editorState.setClipsContents(id: layer.id, $0) })) {
                 Text("Clip contents")
                     .font(.callout)
             }

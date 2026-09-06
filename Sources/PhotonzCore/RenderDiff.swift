@@ -56,7 +56,12 @@ public enum RenderDiff {
         guard old.style.isPlain, new.style.isPlain,
               old.isVisible, new.isVisible,
               old.frame.origin == new.frame.origin,
-              old.isFrame == new.isFrame else { return false }
+              old.isFrame == new.isFrame,
+              old.clipsToBounds == new.clipsToBounds else { return false }
+        // A container that cuts off what leaves it shows less of the same
+        // picture when its box shrinks, so its box is part of how it draws
+        // even when nothing inside it moved.
+        if old.clipsToBounds, old.localBounds != new.localBounds { return false }
         guard old.isFrame else { return true }
         return old.frame.standardized.size == new.frame.standardized.size
             && old.group?.background == new.group?.background

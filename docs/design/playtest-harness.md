@@ -283,8 +283,8 @@ The names, as of September 2026:
 | Position & Size | `X`, `Y`, `W`, `H` | there is one of each |
 | A copy's own look | `Revert Blur`, `Revert Shadow`, … | the name says which |
 | Shadow | `Enable Shadow` | there is one |
-| Frame | `Clip contents` | there is one |
-| Layout | `Clear Stretch`, `Each side`, the pickers | `in: "Width"`, `in: "Height"` |
+| Frame | `Clip contents` | there is one (a screen's own switch) |
+| Layout | `Clear Stretch`, `Each side`, `Clip contents`, the pickers | `in: "Width"`, `in: "Height"` |
 | The colour picker | see below | `in: "Paint type"`, `in: "Swatches"`, … |
 
 `Twist` is the triangle that opens a group. It matters more than it looks: the

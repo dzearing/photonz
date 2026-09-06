@@ -92,4 +92,33 @@ struct DocumentMagnificationTests {
         let twice = doc.magnified(by: 2).magnified(by: 2)
         #expect(once == twice)
     }
+    @Test func aGroupThatArrangesItselfMagnifiesItsLayoutToo() {
+        var content = GroupContent(children: [
+            Layer(name: "A", content: .annotation(AnnotationContent(shape: .rectangle)),
+                  frame: CGRect(x: 0, y: 0, width: 40, height: 40))
+        ])
+        content.layout = GroupLayout(kind: .stack, gap: 12, rowGap: 8,
+                                     padding: GroupPadding(10),
+                                     width: 200, height: 100,
+                                     minWidth: 60, maxWidth: 300,
+                                     minHeight: 30, maxHeight: 150)
+        let group = Layer(name: "Card", content: .group(content),
+                          frame: CGRect(x: 10, y: 10, width: 0, height: 0))
+        let big = group.magnified(by: 2)
+        let layout = big.group?.layout
+        #expect(layout?.width == 400)
+        #expect(layout?.height == 200)
+        #expect(layout?.minWidth == 120)
+        #expect(layout?.maxWidth == 600)
+        #expect(layout?.minHeight == 60)
+        #expect(layout?.maxHeight == 300)
+        #expect(layout?.gap == 24)
+        #expect(layout?.rowGap == 16)
+        #expect(layout?.padding == GroupPadding(20))
+        // How many cells a row holds is a count, not a length.
+        #expect(layout?.columns == group.group?.layout?.columns)
+        // …so the box the group draws into is stated in the same unit as the
+        // contents it holds, which is what a clipping edge is measured against.
+        #expect(big.localBounds.size == CGSize(width: 400, height: 200))
+    }
 }

@@ -1,0 +1,29 @@
+{
+  "feature": "Clip contents on a container with a size of its own",
+  "epic": "ui-layout",
+  "summary": "A card, a menu or any other group you have given a width, a height or a largest size can now cut off whatever does not fit inside it, with the same Clip contents switch a screen has always had. It starts off, so nothing you have already drawn changes until you ask for it.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-auto-layout on (it is on by default). No file needed: a blank canvas and the Library shelf.",
+  "try": [
+    { "do": "Open the Library shelf and drag the Card tile onto the canvas." },
+    { "do": "Look at the Layout section: Width and Height are there, and there is no Clip contents switch." },
+    { "do": "Twist open Height, type 120 into Largest and press Return.", "shot": "2026-09-05-clip-contents-2-overflows.png" },
+    { "do": "Notice the title and the supporting text now run out of the bottom of the card, and that a Clip contents checkbox has appeared under Largest, unticked." },
+    { "do": "Tick Clip contents.", "shot": "2026-09-05-clip-contents-3-cut.png" },
+    { "do": "Click on the canvas where the supporting text used to be.", "shot": "2026-09-05-clip-contents-4-not-clicked.png" },
+    { "do": "Untick Clip contents and watch the words come back exactly as they were." }
+  ],
+  "evaluate": [
+    "Is the switch where you would look for it, right under the number that caused the overflow, or would you go hunting in the Frame or Style section first?",
+    "Are two words enough? Reading only 'Clip contents', do you know it means 'cut off what does not fit'?",
+    "Is it right that it starts off? A card you size expecting it to behave like a screen would surprise you the other way.",
+    "Is it right that a group which closes around its contents is offered nothing at all, rather than a greyed-out switch that says why?",
+    "When the words vanish, is anything missing that would tell you they are still there and merely hidden?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real capture of the window, not an offscreen render.",
+    "The task said to give the card a height of 120. There are two ways to do that and only one of them overflows: Height Fixed holds whatever height the card already has, so the walk types 120 into Largest instead, which caps the box at 120 while the contents carry on past it. Same visible result, one field.",
+    "Building it turned up a real bug underneath, now fixed: while the canvas is zoomed, a group that arranges itself was measuring its own box in document points while its contents were measured in screen pixels. Clipping made it obvious (the card was cut at roughly half size on the live canvas while the export was right), but it also meant a laid-out group's rounded corner and border have been drawing at the wrong box on a zoomed canvas all along.",
+    "Cutting happens at the group's own box, which is square unless the GROUP carries a corner radius. On the starter Card the rounding lives on the background layer inside it, which stretches to fill, so it looks right there; put a rounded shape in a plain sized group and the cut is square. That is honest, but somebody may expect otherwise.",
+    "A child that has been cut away still sits in the Layers list looking like any other layer, with nothing saying it is off screen. A screen has always had that same gap, so this does not make it worse, but it is the first thing a new person would be confused by."
+  ]
+}

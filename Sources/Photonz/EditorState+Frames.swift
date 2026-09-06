@@ -122,10 +122,11 @@ extension EditorState {
         lastFrameSize = size
     }
 
-    /// Whether a frame hides what hangs off its edge.
-    func setFrameClips(id: UUID, _ clips: Bool) {
-        guard document?.layer(id: id)?.isFrame == true else { return }
-        perform { $0.setFrameClips(id: id, clips) }
+    /// Whether a container hides what hangs off its edge: a screen, or a group
+    /// somebody gave a size of its own.
+    func setClipsContents(id: UUID, _ clips: Bool) {
+        guard document?.layer(id: id)?.hasBoxOfItsOwn == true else { return }
+        perform { $0.setClipsContents(id: id, clips) }
     }
 
     /// The surface a frame paints behind its contents; nil is a frame you see

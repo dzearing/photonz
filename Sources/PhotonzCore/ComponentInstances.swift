@@ -288,7 +288,7 @@ extension PhotonzDocument {
         let anchor = CGPoint(x: point.x - box.midX + main.frame.origin.x,
                              y: point.y - box.midY + main.frame.origin.y)
         var content = GroupContent(children: [], isFrame: main.isFrame,
-                                   clipsContents: main.group?.clipsContents ?? true,
+                                   clipsContents: main.group?.clipsContentsSetting,
                                    backgroundHex: main.group?.backgroundHex,
                                    instanceOf: componentID,
                                    followedStyle: main.style)
@@ -435,7 +435,7 @@ extension PhotonzDocument {
                     }
                     var group = copy.group ?? GroupContent()
                     group.isFrame = main.isFrame
-                    group.clipsContents = main.group?.clipsContents ?? true
+                    group.clipsContentsSetting = main.group?.clipsContentsSetting
                     group.backgroundHex = main.group?.backgroundHex
                     // How the original arranges its contents follows too, so a
                     // copy of a stack closes up around a row that changed size

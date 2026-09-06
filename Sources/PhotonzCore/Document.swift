@@ -246,9 +246,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                 let layer = list[index]
                 guard layer.isVisible, !layer.isLocked else { continue }
                 if layer.isGroup {
-                    // A clipping frame answers for everything inside it: what
-                    // hangs off its edge is not on screen, so it cannot be hit.
-                    if layer.clipsToFrame, !layer.localBounds.contains(point) { continue }
+                    // A container that cuts off what leaves it answers for everything
+                    // inside it: what hangs off its edge is not on screen to be hit.
+                    if layer.clipsToBounds, !layer.localBounds.contains(point) { continue }
                     let local = CGPoint(x: point.x - layer.frame.origin.x,
                                         y: point.y - layer.frame.origin.y)
                     if let found = search(layer.children, local, prefix + [index]) {
