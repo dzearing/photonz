@@ -9775,3 +9775,38 @@ one line and overhung sideways. Filed as
 task.
 
 Next: the queue picks up whatever is top of `p2-normal`.
+
+## 2026-09-06 — The panel says what you picked first
+
+Built the resolved decision "Put what you picked first". The sections named
+after the thing you have picked (annotation/shape, zoom callout, text,
+measurement, collage, canvas) moved above Position & Size, Appearance and
+Effects, into the slot Component already holds. Existing saved orders get one
+numbered migration (`inspector.sectionOrder.version` 3) that moves the group
+and leaves any hand arrangement around it alone.
+
+New pure API for it: `PanelSectionOrder.moving([String], before:in:)`, a group
+move, because chaining the single move works a group backwards. Six tests.
+
+The playtest harness learned to assert a layout claim rather than report it:
+`sectionInView` and `sectionHeaderInView` read the dock's own live frames, so
+"you can see it without scrolling" is a step a walk fails on.
+`Scripts/playtest/dock-picked-first-walk.json` asserts one per selection.
+
+Measured, viewport 688 on a marked-up screenshot at 1200x720: Text 344-520,
+Arrow 344-515, Zoom Callout 344-458, all whole. A measurement's section is
+470pt and cannot fit under any order, but its header is now at 344 where it
+was off screen at 674. A plain rectangle no longer has a section of its own at
+all, since the parts list took its one row earlier the same day.
+
+The cost is the one the decision named: in a clean document with a label
+picked, Effects sits 623-781, so Corner Radius takes one scroll where it did
+not before. Filed `the-look-controls-come-back-above-the-fold` (p3-low) to
+recover it without undoing the order; `a-measurement-fits-in-the-panel`
+already covers the 470pt section.
+
+Next: those two follow-ups, and the rest of the ui-components queue.
+
+Open question for the user: a measurement's section now starts at the top but
+still runs off the bottom. Is most of it better than none of it, or does a half
+section read as broken?
