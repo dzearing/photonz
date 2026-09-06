@@ -17,6 +17,12 @@ import Foundation
 /// are the copy's own already; a fade, a blur and a shadow are the copy's own
 /// already too, part by part (`ComponentStyle.swift`). These four sit on a layer
 /// INSIDE the original, where a copy has no other way to reach them at all.
+///
+/// Two of them, the gap and the room, are also offered on the original's OWN
+/// outermost layer: a card built as one stack keeps its room there and nowhere
+/// else, so without that a card is stuck with one roominess for every copy it
+/// will ever have. `onTheComponentItself` is that shorter list, and the reason
+/// it is shorter is written on it.
 
 // MARK: - Which number
 
@@ -51,6 +57,52 @@ public enum ComponentNumberSlot: String, CaseIterable, Hashable, Codable, Sendab
         case .thickness: return "How thick the line round it is."
         case .gap: return "The space between one thing and the next."
         case .padding: return "The room kept clear inside the edges, on all four sides."
+        }
+    }
+
+    /// The numbers a component can offer on its OWN outermost edges, as opposed
+    /// to on a layer inside it.
+    ///
+    /// Only the two that hold contents apart. A card's rounding and the line
+    /// round it are deliberately absent, because a copy already owns those part
+    /// by part the moment it is given one (`LayerStyle.following`), and two
+    /// mechanisms writing one field is the two-sliders bug
+    /// `CornerRadiusSelection.swift` exists to end. How much room a card keeps
+    /// inside its edges has no such second way in, which is why it needs this
+    /// one.
+    public static let onTheComponentItself: [ComponentNumberSlot] = [.gap, .padding]
+}
+
+// MARK: - The two a layout holds
+
+extension GroupLayout {
+
+    /// What this layout reads for one number, or nil where it has no honest
+    /// single answer: nothing is being held apart in a group that arranges
+    /// nothing, and room that differs side to side is not one number.
+    func number(for slot: ComponentNumberSlot) -> CGFloat? {
+        switch slot {
+        case .gap: return kind == nil ? nil : usedGap
+        case .padding: return usedPadding.uniform
+        case .cornerRadius, .thickness: return nil
+        }
+    }
+
+    /// Writes one of them, each the way that number is written.
+    mutating func setNumber(_ value: CGFloat, for slot: ComponentNumberSlot) {
+        let value = max(0, value)
+        switch slot {
+        case .gap:
+            guard kind != nil else { return }
+            gap = value
+            // Typing a gap is asking for that gap to be held, so a stack that
+            // was sharing its leftover room stops, exactly as it does when the
+            // number is typed into the inspector.
+            spreadsGap = false
+        case .padding:
+            padding = GroupPadding(value)
+        case .cornerRadius, .thickness:
+            return
         }
     }
 }
@@ -125,14 +177,11 @@ extension Layer {
             return hasRoundableCorners ? roundedCornerRadius : nil
         case .thickness:
             return drawsItsOwnOutline ? outlineWidth : nil
-        case .gap:
-            // Only something that arranges its contents holds them apart. A
-            // group that simply closes around what is inside it has no gap.
-            guard let layout = group?.layout, layout.kind != nil else { return nil }
-            return layout.usedGap
-        case .padding:
-            guard let layout = group?.layout else { return nil }
-            return layout.usedPadding.uniform
+        case .gap, .padding:
+            // Only something that arranges its contents holds them apart, and
+            // only a group that has been given a layout keeps room at its
+            // edges, so the layout answers for both.
+            return group?.layout?.number(for: slot)
         }
     }
 
@@ -144,17 +193,9 @@ extension Layer {
             setRoundedCorners(value)
         case .thickness:
             setOutlineWidth(value)
-        case .gap:
-            guard var layout = group?.layout, layout.kind != nil else { return }
-            layout.gap = value
-            // Typing a gap is asking for that gap to be held, so a stack that
-            // was sharing its leftover room stops, exactly as it does when the
-            // number is typed into the inspector.
-            layout.spreadsGap = false
-            setGroupLayout(layout)
-        case .padding:
+        case .gap, .padding:
             guard var layout = group?.layout else { return }
-            layout.padding = GroupPadding(value)
+            layout.setNumber(value, for: slot)
             setGroupLayout(layout)
         }
     }

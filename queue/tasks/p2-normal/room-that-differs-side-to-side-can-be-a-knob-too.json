@@ -1,0 +1,28 @@
+{
+  "id": "room-that-differs-side-to-side-can-be-a-knob-too",
+  "title": "Room that differs side to side can be a knob too",
+  "goal": "A component can offer the room it keeps inside its edges as a knob only when that room is the same on all four sides. Almost no real control is built that way: a button keeps less room above and below than it does beside. This would let a component offer that room anyway, so a copy of a button can be roomier without leaving its family.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1440,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T17:41:35.407Z",
+  "updated": "2026-09-06T17:41:35.408Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while shipping a-copy-can-have-its-own-room-inside on 2026-09-06. ComponentNumberSlot.padding reads through GroupLayout.number(for:) which returns usedPadding.uniform, nil when the four sides disagree; the same rule already applied to layers INSIDE an original. Every starter except .card is built with a non-uniform GroupPadding (StarterComponents.layout), so the whole starter set is excluded. Open question worth a decision card before building: one knob writing all four sides (loses the shape of the original inset), a knob that scales the inset, or four knobs. That is a UX call, not an engineering one.",
+  "acceptance": [
+    "A component whose room differs side to side is offered a room knob rather than nothing",
+    "A copy given its own room sets all four sides in a way a person can understand from one control",
+    "A copy that has not answered still follows the original when its room changes",
+    "Tests in PhotonzCore cover it before the app code is written"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T17:41:35.408Z",
+      "note": "created (manual)"
+    }
+  ]
+}

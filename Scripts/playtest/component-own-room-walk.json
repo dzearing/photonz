@@ -1,0 +1,319 @@
+{
+  "out": "/tmp/photonz-playtest/component-own-room-walk",
+  "seed": "The room a card keeps inside its OWN edges, offered as a knob. A card built as one stack keeps its room on the outermost group and nowhere else, so until now every copy of it was stuck with the same roominess. The author exposes that room, drops two copies, and gives one of them 40 while the other stays on the original's 16. Then the original is tightened to 4: the copy that answered keeps its 40, the one that answered nothing follows.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1360,
+      "height": 1080
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        260,
+        220
+      ],
+      "to": [
+        560,
+        300
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        268,
+        330
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Roomy or tight"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        170
+      ],
+      "to": [
+        640,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Gap"
+    },
+    {
+      "do": "type",
+      "text": "12"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "360"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "stretchContentsAcross"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "16"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Card"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "0-card",
+      "note": "one card: a stack 360 wide keeping 16 clear inside its edges, with a bar and a line of words stretched across the room inside it"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-own-room-0-card"
+    },
+    {
+      "do": "render",
+      "name": "component-own-room-0-card-doc"
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "action",
+      "action": "exposeRoom"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-exposed",
+      "note": "the Adjustable list grew a knob named Padding, and it names the CARD itself rather than any piece inside it. The Add menu offers this row first, because the card is the outermost thing"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-own-room-1-exposed"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "insertPickedComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-first-copy",
+      "note": "a copy, showing the original's 16 with nothing answered: the Padding row holds the original's number and wears no revert arrow"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-own-room-2-first-copy"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        1000,
+        720
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "40"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-roomy",
+      "note": "this copy alone is roomy: its bar is narrower and everything sits further in, in the same edit rather than on the next one. The revert arrow appeared on the row, and the Layout section under it now reads 40 clear inside its edges"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-own-room-3-roomy"
+    },
+    {
+      "do": "render",
+      "name": "component-own-room-3-roomy-doc"
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "4"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-original-tightened",
+      "note": "the original is tightened to 4. The copy that answered nothing follows it; the roomy one keeps its 40, which is the whole bargain"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-own-room-4-original-tightened"
+    },
+    {
+      "do": "render",
+      "name": "component-own-room-4-original-tightened-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "render",
+      "name": "component-own-room-5-undone-doc"
+    }
+  ]
+}

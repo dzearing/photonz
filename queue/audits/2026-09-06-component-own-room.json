@@ -1,0 +1,30 @@
+{
+  "feature": "A copy can have its own room inside",
+  "epic": "ui-components",
+  "summary": "A component built as one group can now offer the room it keeps inside its own outermost edges, and the gap it holds its contents at, as knobs. One copy of a card can be roomy and the next one tight, the same way they already differ in colour or wording.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs the Library and Components flags, which are on by default.",
+  "try": [
+    { "do": "Draw a rectangle, then a line of text under it." },
+    { "do": "Select both and press Layer ▸ Stack Selection." },
+    { "do": "In the Layout section type 360 into W, then type 16 into Padding." },
+    { "do": "Press Layer ▸ Make Component, then open Add in the Adjustable list and choose the row named after the card itself, Padding." },
+    { "do": "Drop two copies onto the canvas from the Library shelf." },
+    { "do": "Select one copy and type 40 into its Padding row in the Component section.", "shot": "2026-09-06-component-own-room-3-roomy-sc.png" },
+    { "do": "Select the original and type 4 into its Padding in the Layout section.", "shot": "2026-09-06-component-own-room-4-original-tightened-sc.png" },
+    { "do": "Press the revert arrow beside the roomy copy's Padding row." }
+  ],
+  "evaluate": [
+    "Is the whole component's own row easy to find in the Add menu, or does it read as just another piece?",
+    "The row says the component's name and the number, like Card ▸ Padding. Does that tell you it means the card itself and not something inside it?",
+    "When you set a copy's room, does the canvas move in the way you expected, or does it look like the copy grew rather than breathed?",
+    "Tightening the original moves the copy that answered nothing and leaves the roomy one alone. Reading only the canvas, is that obvious or surprising?",
+    "Gap is offered on the component itself as well as Padding. Is that a knob you would use, or noise on the menu?"
+  ],
+  "rough": [
+    "Room that differs side to side is still not offered at all. That rules out the common case: every starter control except the card keeps less room above and below than beside, so you cannot make a starter button roomier this way. Filed as its own task.",
+    "The card's rounding, the line round it, its fade and its shadow are deliberately NOT offered on the component itself, because a copy already owns each of those part by part. If you go looking for a Corner radius row on the card and find only its pieces, that is the reason.",
+    "The Add row reads Card ▸ Padding. A group inside the card that is also called Card would read the same, which is the ambiguity two same-named pieces already have. Not invented around.",
+    "The component itself only appears on the menu once it has been given a layout at all. A plain group that has never been stacked or given room offers nothing, and nothing on screen says why.",
+    "The screenshots are real window captures from a scripted walk, not offscreen renders. The card has no background fill of its own, so the room shows as the space inside the selection box and as the stretched bar narrowing; on a card with a surface it would read at a glance."
+  ]
+}

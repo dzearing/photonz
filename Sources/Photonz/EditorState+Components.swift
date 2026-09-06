@@ -920,17 +920,33 @@ extension EditorState {
     /// Exposes the first piece of the selected original that can take this
     /// kind of knob. The Add menu lives in the dock, which a scripted playtest
     /// cannot reach with the pointer, so a walk asks for it here.
+    ///
+    /// The original ITSELF is skipped: it heads the same list, and a walk that
+    /// asked for "the first number" and got the whole card's room would be
+    /// photographing a different feature than the one it named. `exposeRoom` is
+    /// how a walk asks for that one.
     func exposeFirstProperty(kind: ComponentPropertyKind) {
         guard componentsEnabled, let id = actionableLayerIDs.first,
               let componentID = document?.layer(id: id)?.componentID,
               let candidate = componentPropertyCandidates(componentID: componentID)
-                  .first(where: { $0.kinds.contains(kind) }) else { return }
+                  .first(where: { $0.layerID != id && $0.kinds.contains(kind) }) else { return }
         // A colour knob names WHICH colour and a number knob WHICH number, so a
         // walk asking for one takes the first the candidate offers: a shape's
         // fill, a shape's rounding.
         addComponentProperty(componentID: componentID, target: candidate.layerID, kind: kind,
                              slot: kind == .color ? candidate.colorSlots.first : nil,
                              numberSlot: kind == .number ? candidate.numberSlots.first : nil)
+    }
+
+    /// Exposes the room the selected original keeps inside its own outermost
+    /// edges, the one knob that names the component itself. Same reason as
+    /// `exposeFirstProperty`: the Add menu is in the dock, out of a walk's
+    /// reach.
+    func exposeComponentsOwnRoom() {
+        guard componentsEnabled, let id = actionableLayerIDs.first,
+              let componentID = document?.layer(id: id)?.componentID else { return }
+        addComponentProperty(componentID: componentID, target: id, kind: .number,
+                             numberSlot: .padding)
     }
 
     /// Answers the selected copy's first colour knob with the first saved

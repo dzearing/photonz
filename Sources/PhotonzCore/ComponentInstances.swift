@@ -562,6 +562,7 @@ extension PhotonzDocument {
               ga.versionID == gb.versionID, ga.versionName == gb.versionName,
               ga.properties == gb.properties,
               ga.overrides == gb.overrides, ga.instanceSize == gb.instanceSize,
+              ga.layout == gb.layout,
               ga.contentPlacement == gb.contentPlacement else { return false }
         return !differsBeyondIdentity(ga.children, gb.children)
     }
@@ -586,6 +587,12 @@ extension PhotonzDocument {
                 copy.style = LayerStyle.following(inner.style, own: layer.style,
                                                   lastSeen: group.followedStyle)
                 group.followedStyle = inner.style
+                // The room this nested copy was given for itself travels out
+                // here too, rather than waiting for the pass that rewrites the
+                // original it sits in: which of the two runs first must not
+                // decide what a copy of the outer component shows.
+                applyRootOverrides(layer.componentOverrides, of: nested, version: version,
+                                   to: &group.layout)
                 group.children = copy.children
                 copy.content = .group(group)
             }
@@ -657,6 +664,11 @@ extension PhotonzDocument {
                     // over the top, which is the one thing about the box that
                     // is the copy's (`InstanceSizing`).
                     group.layout = InstanceSizing.layout(main: main, own: group.instanceSize)
+                    // ...and then the room this copy was given for itself, if
+                    // its original offers that as a knob. Last, so the copy's
+                    // own answer stands over the original's.
+                    snapshot.applyRootOverrides(group.overrides, of: componentID, version: version,
+                                                to: &group.layout)
                     group.contentPlacement = main.group?.contentPlacement
                     // A copy left holding a version that is gone is put back on
                     // one that exists, in writing, so it stops asking.
@@ -683,8 +695,13 @@ extension PhotonzDocument {
                     if group.instanceSize?.isFollowing == false {
                         copy = InstanceSizing.fitted(copy, filling: main.localBounds.size)
                     }
+                    // The layout counts as well as the contents: a copy given
+                    // its own room has moved nothing yet, and the flow pass
+                    // that moves its contents only runs again when the copy is
+                    // reported as changed.
                     if Self.differsBeyondIdentity(copy.children, layer.children)
-                        || copy.style != layer.style {
+                        || copy.style != layer.style
+                        || copy.group?.layout != layer.group?.layout {
                         report.updatedInstances += 1
                         report.componentIDs.insert(componentID)
                     }

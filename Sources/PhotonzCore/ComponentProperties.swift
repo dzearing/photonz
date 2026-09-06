@@ -384,11 +384,26 @@ extension PhotonzDocument {
     /// A copy nested inside the original is skipped whole: its contents are not
     /// the original's to expose, so a knob reaching into one would be rewritten
     /// away by the next sync.
+    ///
+    /// The original ITSELF comes first, offering the two numbers it holds its
+    /// contents with and nothing else (`ComponentNumberSlot.onTheComponentItself`).
+    /// It is first because it is the outermost thing, and a menu that listed
+    /// the pieces of a card and then the card would read inside out.
     public func componentPropertyCandidates(componentID: UUID,
                                             version: UUID? = nil) -> [ComponentPropertyCandidate] {
         guard let main = mainComponent(componentID: componentID, version: version) else { return [] }
         let taken = Set(main.componentProperties.map { PropertyKey($0) })
         var found: [ComponentPropertyCandidate] = []
+
+        let ownNumbers = ComponentNumberSlot.onTheComponentItself.filter {
+            main.number(for: $0) != nil
+                && !taken.contains(PropertyKey(target: main.id, kind: .number, numberSlot: $0))
+        }
+        if !ownNumbers.isEmpty {
+            found.append(ComponentPropertyCandidate(layerID: main.id, name: main.name,
+                                                    path: [main.name], kinds: [.number],
+                                                    numberSlots: ownNumbers))
+        }
 
         func walk(_ layers: [Layer], path: [String]) {
             guard path.count <= Self.componentPropertyDepthLimit else { return }
@@ -807,7 +822,12 @@ extension PhotonzDocument {
                         version: UUID? = nil,
                         to children: inout [Layer], instance: UUID,
                         contents: LayerPlacement? = nil) {
+        // A knob naming the original's own outermost layer has nothing to write
+        // on any of these: what it turns lives in the copy's own layout, put on
+        // by `applyRootOverrides` where that layout is built.
+        let root = mainComponent(componentID: componentID, version: version)?.id
         let properties = componentProperties(of: componentID, version: version)
+            .filter { $0.target != root }
         guard !properties.isEmpty, !overrides.isEmpty else { return }
         let answers = Dictionary(overrides.map { ($0.property, $0.value) },
                                  uniquingKeysWith: { _, last in last })
@@ -835,6 +855,36 @@ extension PhotonzDocument {
                 Self.apply(value, to: &layer, instance: instance, slot: property.slot,
                            numberSlot: property.numberSlot, contents: holder)
             }
+        }
+    }
+
+    /// Puts one copy's answers to the knobs that name the original ITSELF onto
+    /// the layout that copy works to.
+    ///
+    /// The room a card keeps inside its own edges, and how far apart it holds
+    /// what it holds, are facts about the card and not about any one piece in
+    /// it, so they live in the copy's own layout rather than in its contents.
+    /// It runs where that layout is built, and AFTER the size the copy owns is
+    /// written into it, for the same reason `applyOverrides` runs after the
+    /// refill: the original's answer first, the copy's own over the top. The
+    /// two never fight, because they are different fields of one layout.
+    func applyRootOverrides(_ overrides: [ComponentOverride], of componentID: UUID,
+                            version: UUID? = nil, to layout: inout GroupLayout?) {
+        guard !overrides.isEmpty, layout != nil,
+              let main = mainComponent(componentID: componentID, version: version) else { return }
+        let properties = componentProperties(of: componentID, version: version)
+            .filter { $0.target == main.id && $0.kind == .number }
+        guard !properties.isEmpty else { return }
+        let answers = Dictionary(overrides.map { ($0.property, $0.value) },
+                                 uniquingKeysWith: { _, last in last })
+        for property in properties {
+            // A number the original has stopped having — a stack turned back
+            // into a plain group — has nothing for the copy to override. The
+            // answer is kept, so turning the stack back on brings it straight
+            // back.
+            guard let slot = property.numberSlot, main.number(for: slot) != nil,
+                  case .number(let value)? = answers[property.id] else { continue }
+            layout?.setNumber(value, for: slot)
         }
     }
 

@@ -2825,3 +2825,51 @@ and `componentDropLanding(…version:)`, the shelf's own choice in
 in `LibraryComponentInspector.versionRow`. Tested in
 `ComponentVersionPlacementTests`, walked by
 `Scripts/playtest/place-a-version-walk.json`.
+
+## Landed: a copy can have its own room inside (Next, `next-components`, 2026-09-06)
+
+Number knobs (C6) reached every layer INSIDE an original and stopped there. So a
+card built the way cards are actually built, as one stack with room kept clear
+inside its own edges, had that room on the outermost group and nowhere else, and
+every copy of it was stuck with the same roominess. Nothing said why: the Add
+menu listed each piece of the card and not the card.
+
+- **The original itself is on the Add menu**, first, offering the two numbers it
+  holds its contents with: **Gap** and **Padding**. First because it is the
+  outermost thing, and a menu that listed the pieces of a card and then the card
+  would read inside out. The row reads "Card ▸ Padding", the component's own
+  name and the number it turns.
+- **Only those two.** The card's rounding, the line round it, its fade and its
+  shadow are deliberately not offered: a copy already owns every one of those
+  part by part the moment it is given one (`LayerStyle.following`), and two
+  mechanisms writing one field is the two-sliders bug `CornerRadiusSelection`
+  exists to end. The room and the gap have no such second way in, which is the
+  whole reason they need this one.
+- **The answer lives in the copy's own layout**, not in its contents, because
+  that is where the room is. It is written on where that layout is built, after
+  the size the copy owns, so a copy that owns its width and its room keeps both:
+  they are different fields of one layout and neither writes over the other.
+- **Nothing new appears on screen.** The Add row, the number field on the copy,
+  the revert arrow and the Layout section's sentence ("It keeps 40 clear inside
+  its edges") were all already there and all already generic.
+- **The copy's contents move in the same edit.** The flow pass runs before the
+  copies are refilled, so a copy whose own layout was the only thing to change
+  would have stayed where the old room put it until the next edit. The sync now
+  counts a changed layout as a changed copy, which is what runs the second flow
+  pass.
+- On disk nothing is new: a knob already carries the layer it names and the
+  number it turns, and this one simply names the outermost layer. A document
+  written before it decodes exactly as it did.
+
+Deliberately left: **room that differs side to side is still not offered at
+all**, on the component itself or on any layer inside it, because "the room" of
+a group keeping 10 above and 16 beside is not one number. That rules out the
+common case of making a button roomier, since every starter control except the
+card is built with a taller-than-wide inset.
+
+Where it lives: `ComponentNumberSlot.onTheComponentItself` and the `GroupLayout`
+number accessors in `ComponentNumberKnob.swift`, the root row in
+`PhotonzDocument.componentPropertyCandidates`, `applyRootOverrides` in
+`ComponentProperties.swift`, called from `syncComponentInstances` and `rebound`
+in `ComponentInstances.swift`. Tested in `ComponentRootNumberKnobTests`, walked
+by `Scripts/playtest/component-own-room-walk.json`.
