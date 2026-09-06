@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1250,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:38:05.136Z",
-  "updated": "2026-09-06T06:08:26.348Z",
+  "updated": "2026-09-06T06:23:23.190Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. CanvasGridLevels.minimumOnScreenSpacing is 8 view points and strength() is zero at the floor, so at zoom 1 a 4pt grid draws its first rung at 32. CanvasGridSettings.snapSpacing deliberately returns the configured spacing rather than the finest drawn rung, because a pull that changed with the zoom would be its own kind of jumping. Options worth weighing: show the drawn spacing beside the Spacing field; draw the set spacing faintly below the floor; or offer a Snap to setting separate from the drawn spacing. RESOLVED 2026-09-06: the chip reads liveSpacing, which is the same rung snapSpacing pulls to, and the Spacing row carries the explanation. The third original acceptance item ('zooming never changes where a drag lands') was superseded by the p1 task snapping-pulls-to-the-grid-you-can-see-not-one-y and was replaced rather than restored.",
@@ -37,12 +37,17 @@
     },
     {
       "t": "2026-09-06T06:22:53.905797Z",
-      "note": "Shipped. CanvasGridSettings.liveSpacing(atZoom:) is the one answer to 'what are these lines worth', shared by the chip and by snapSpacing, so the readout and the pull cannot drift. spacingChipText(atZoom:) reads '4 pt' when the two agree and '4 \u2192 32 pt' when the zoom has coarsened the grid; liveSpacingNote(atZoom:) is the second line under the Spacing field (both places the controls are drawn) and the chip's tooltip. Chip text frame 38 -> 56pt, centred; EditorChromeLayout's threshold arithmetic doc updated (bar 587 against a 588 budget at the 620pt threshold, so the chip keeps the zoom slider's threshold). Tests: Tests/PhotonzCoreTests/GridLiveSpacingTests.swift, 3665 tests green. Walk: Scripts/playtest/grid-live-spacing-walk.json, verified on real captures at 100%, 400% and 25% with Screen Recording granted."
+      "note": "Shipped. CanvasGridSettings.liveSpacing(atZoom:) is the one answer to 'what are these lines worth', shared by the chip and by snapSpacing, so the readout and the pull cannot drift. spacingChipText(atZoom:) reads '4 pt' when the two agree and '4 → 32 pt' when the zoom has coarsened the grid; liveSpacingNote(atZoom:) is the second line under the Spacing field (both places the controls are drawn) and the chip's tooltip. Chip text frame 38 -> 56pt, centred; EditorChromeLayout's threshold arithmetic doc updated (bar 587 against a 588 budget at the 620pt threshold, so the chip keeps the zoom slider's threshold). Tests: Tests/PhotonzCoreTests/GridLiveSpacingTests.swift, 3665 tests green. Walk: Scripts/playtest/grid-live-spacing-walk.json, verified on real captures at 100%, 400% and 25% with Screen Recording granted."
     },
     {
       "t": "2026-09-06T06:22:53.905797Z",
       "note": "Review of the built thing: the note under Spacing ran to three lines and was the darkest text in the popover, so it was tightened to two ('Showing 32 pt lines at this zoom, and a drag lands on those. Zoom in for 4 pt.'). With the magnet off it drops the drag clause. The chip was trailing aligned and left a gap after its glyph at short values, so it is centred like the zoom readout beside it."
+    },
+    {
+      "t": "2026-09-06T06:23:23.190Z",
+      "note": "The tool bar chip now reads what the lines on screen are worth (4 → 32 pt at 100%), off the same liveSpacing the pull uses, with the explanation under the Spacing field. Tested (3665 green, new GridLiveSpacingTests) and verified on real captures via Scripts/playtest/grid-live-spacing-walk.json. Audit: queue/audits/2026-09-06-grid-live-spacing.json"
     }
   ],
-  "started": "2026-09-06T06:08:26.347Z"
+  "started": "2026-09-06T06:08:26.347Z",
+  "completed": "2026-09-06T06:23:23.190Z"
 }
