@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1220,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T15:52:00.555Z",
-  "updated": "2026-09-06T05:19:55.305Z",
+  "updated": "2026-09-06T05:20:18.105Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-05-group-size-limits.json. Limits landed 2026-09-05 (GroupLayout.minWidth/maxWidth/minHeight/maxHeight, GroupFlow.holding). The ceiling case deliberately leaves the words starting at the near edge and overhanging the far one, because clipping loses them and centring pushes them off the near edge too. Text measurement and re-wrap already exist for a stretched label in a stack (see the reflowPasses comment in GroupLayoutEditing); the missing piece is handing a capped width to a label that is NOT set to stretch.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-06T05:19:55.305Z",
       "note": "Verified: wrap-at-a-ceiling-walk renders for step 1 (no ceiling) and step 3 (ceiling cleared) are byte identical, so clearing the ceiling really does give the words their line back rather than leaving them stuck on two. Audit at queue/audits/2026-09-05-words-that-wrap.json with two real window captures."
+    },
+    {
+      "t": "2026-09-06T05:20:18.104Z",
+      "note": "A label in a group with a capped or typed width now wraps inside that width and the group grows downward, instead of running out past the far edge. Never past its widest single word, so a word that cannot break hangs out as before rather than coming apart in the middle. The flow records that it chose the width, so clearing the ceiling gives the words their one line back. PhotonzCore only (GroupFlow, TextMeasurement, Layer.wrappedByItsContainer); 13 new tests, 3637 green; verified on the probe app with real window captures and a byte-identical before/after render. Audit: queue/audits/2026-09-05-words-that-wrap.json"
     }
   ],
-  "started": "2026-09-06T04:52:49.491Z"
+  "started": "2026-09-06T04:52:49.491Z",
+  "completed": "2026-09-06T05:20:18.105Z"
 }
