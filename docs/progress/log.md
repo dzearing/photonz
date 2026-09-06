@@ -9494,3 +9494,52 @@ width, and which is a visual-direction call for the user.
 Next: that follow-up, plus two things left alone here — Stretch does not hand
 back the width a piece was drawn at the way Fill does, and the line under the
 fields still describes arrow steps while three of the four numbers are plain.
+
+## 2026-09-06 — A colour can be carried from one swatch to another
+
+Every colour swatch in the right hand panel is now a handle: pick a colour up
+off one, drop it on another, and that one takes it. Behind the experiment
+`next-color-drag`, on by default in Next and off in the release that ships
+today.
+
+- `PhotonzCore/ColorDrop.swift` is the whole answer a swatch gives a paint held
+  over it, worked out away from any view so the ring, the pointer's cursor and
+  the drop itself can never disagree. It refuses three things by name: the
+  swatch the colour came from, a swatch already wearing it, and a swatch with
+  nothing behind it. A gradient dropped somewhere flat lands as its flat colour
+  and says so. 12 tests in `ColorDropTests.swift`.
+- `Photonz/ColorDrag.swift` is the pasteboard vocabulary: the app's own
+  `com.photonz.paint` (the only one that can carry a ramp and the only one that
+  knows which swatch the colour came from), the standard colour type so colours
+  travel in and out of other Mac apps, and plain text as the safety net for a
+  bare `swift build` binary with no Info.plist behind it. The new identifier is
+  declared in `Scripts/build-app.sh` with a build-time check beside the one that
+  already guards the component drag type.
+- `Photonz/ColorSwatchDrag.swift` is one modifier both wells wear
+  (`ColorWellButton`, `SelectionColorWell`), so Outline, Fill, Text, a shadow's
+  colour and a collage backdrop all behave the same without any of them knowing
+  about drag and drop. The answer is read off the DRAG pasteboard rather than
+  out of the carrier a drop hands over: a carrier gives up its bytes
+  asynchronously, and a ring that appears two frames late flickers on an 18pt
+  square.
+- The drop goes down the very path a colour picked in the picker takes, so a
+  swatch wearing a saved colour is painted and let go of in ONE undo step, and
+  the canvas raises the "1 color no longer follows Brand" pill it already
+  raises everywhere else. The task asked for a question first; building it that
+  way would have made dragging the only way of setting a colour that stops to
+  ask. What it does instead is wear the palette mark on the ring before you let
+  go. Argued out in the audit's `rough` for the user to disagree with.
+- New playtest step `dragColor` (`from`, `onto`, optional `hold` and `expect`),
+  driven by `Scripts/playtest/colour-onto-a-swatch-walk.json`: the drop, the two
+  refusals, one undo, the saved-colour case, and a plain click still opening the
+  picker. Screen Recording was granted, so the audit shots are real window
+  captures.
+
+Not built, and filed: dropping a colour on the Library to keep it under a name
+(it is not the cheap half it looks like, because saving deliberately asks for
+the name first), and the toolbar swatch, which is its own view rather than one
+of the panel wells.
+
+Next: those two follow-ups. The one thing a scripted walk cannot do is START a
+real drag session, so the picking-up half is what the audit asks the user to
+watch first.

@@ -505,7 +505,31 @@ struct SelectionColorWell: View {
                                 ?? "\(part) color of \(selection.count) selected layers")
             // The same word every color well in the panel answers to, its row
             // saying which color it paints. Pressing it opens the picker.
-            .playtestControl("Color", detail: part)
+            .playtestControl("Color", detail: part, payload: {
+                // The very item the swatch's own drag hands over, so a walk
+                // can never carry a colour the pointer could not.
+                guard let paint = editorState.selectionPaint(slot: slot) else {
+                    return NSItemProvider()
+                }
+                return ColorDrag.itemProvider(paint: paint, source: wellKey)
+            })
+            // Picked up and dropped on like any colour well on a Mac. Letting
+            // go here goes down the very path a colour picked in the picker
+            // takes — one undo step over every layer the row speaks for, and
+            // the same "stopped following Accent" pill when it lets go of a
+            // saved colour — so a dragged colour and a picked one are the
+            // same move made two ways.
+            .colorSwatchDrag(key: wellKey, part: part,
+                             // Nil while the row says Mixed: there is no one
+                             // colour to pick up, and a swatch handed nothing
+                             // is refused everywhere rather than guessing.
+                             paint: { editorState.selectionPaint(slot: slot) },
+                             styleName: { boundStyle?.name },
+                             reaches: { selection.count },
+                             acceptsGradient: slot.acceptsGradient,
+                             onDrop: { landing in
+                editorState.commitSelectionPaint(slot: slot, paint: landing.paint)
+            })
             .popover(isPresented: editorState.colorWellBinding(wellKey), arrowEdge: .top) {
                 // Always two children, whether or not there is a banner to
                 // draw: the picker keeps its place in the stack, so letting go

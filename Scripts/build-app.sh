@@ -133,6 +133,16 @@ DRAG_TYPE=$(cat <<'TYPES'
             <key>UTTypeTagSpecification</key>
             <dict/>
         </dict>
+        <dict>
+            <key>UTTypeIdentifier</key><string>com.photonz.paint</string>
+            <key>UTTypeDescription</key><string>Photonz Color</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.item</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict/>
+        </dict>
 TYPES
 )
 
@@ -265,6 +275,13 @@ if ! /usr/libexec/PlistBuddy -c "Print :UTExportedTypeDeclarations" "$APP/Conten
      | grep -q "com.photonz.component-id"; then
   echo "==> FAILED: Info.plist does not declare com.photonz.component-id;" >&2
   echo "    dragging a component out of the Library would land nothing." >&2
+  exit 1
+fi
+
+if ! /usr/libexec/PlistBuddy -c "Print :UTExportedTypeDeclarations" "$APP/Contents/Info.plist" 2>/dev/null \
+     | grep -q "com.photonz.paint"; then
+  echo "==> FAILED: Info.plist does not declare com.photonz.paint;" >&2
+  echo "    a colour dragged from one swatch to another would carry no gradient." >&2
   exit 1
 fi
 

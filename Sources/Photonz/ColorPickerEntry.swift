@@ -123,7 +123,18 @@ struct ColorWellButton: View {
                 // the row it sits on, so a walk says `press "Color" in
                 // "Shadow"`. The system picker below is not marked, because
                 // its panel belongs to macOS and a walk cannot drive it.
-                .playtestControl("Color", detail: name)
+                .playtestControl("Color", detail: name,
+                                 payload: { ColorDrag.itemProvider(paint: Paint(hex: hex),
+                                                                   source: key) })
+                // A colour well on a Mac has always been something you can
+                // pull a colour off and drop a colour onto, so every row that
+                // goes through here gets it at once: a shadow's colour, a
+                // collage backdrop, the measure chip. None of them can hold a
+                // ramp, so a gradient dropped here lands as its flat colour
+                // and the swatch says so before it does.
+                .colorSwatchDrag(key: key, part: name,
+                                 paint: { Paint(hex: hex) },
+                                 onDrop: { landing in onCommit(landing.paint.hex) })
                 .popover(isPresented: editorState.colorWellBinding(key), arrowEdge: .top) {
                     ColorPickerContent(editorState: editorState,
                                        hex: hex,

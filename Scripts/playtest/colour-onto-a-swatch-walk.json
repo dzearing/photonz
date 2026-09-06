@@ -1,0 +1,182 @@
+{
+  "out": "/tmp/photonz-playtest/colour-onto-a-swatch",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1100,
+      "canvasHeight": 700,
+      "width": 1500,
+      "height": 950
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        180
+      ],
+      "to": [
+        520,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "paintSelectionColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-two-colours",
+      "note": "the box has two different colours: selectedColors must read fill #B0184A and stroke #FF3B30"
+    },
+    {
+      "do": "snapshot",
+      "name": "colour-1-two-colours"
+    },
+    {
+      "do": "dragColor",
+      "from": "Fill",
+      "onto": "Outline",
+      "hold": "colour-2-in-flight",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-landed",
+      "note": "the fill colour was carried onto the outline: selectedColors must read stroke #B0184A"
+    },
+    {
+      "do": "snapshot",
+      "name": "colour-2-landed"
+    },
+    {
+      "do": "dragColor",
+      "from": "Fill",
+      "onto": "Outline",
+      "expect": "refuses"
+    },
+    {
+      "do": "dragColor",
+      "from": "Fill",
+      "onto": "Fill",
+      "expect": "refuses"
+    },
+    {
+      "do": "describe",
+      "stage": "3-refusals",
+      "note": "a swatch already wearing the colour, and the swatch the colour came from, both stay dark and nothing changed"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-one-undo",
+      "note": "ONE undo put the outline back: selectedColors must read stroke #FF3B30 again"
+    },
+    {
+      "do": "snapshot",
+      "name": "colour-4-one-undo"
+    },
+    {
+      "do": "action",
+      "action": "saveColorStyle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Brand"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "5-saved",
+      "note": "the fill wears the saved colour Brand"
+    },
+    {
+      "do": "dragColor",
+      "from": "Outline",
+      "onto": "Fill",
+      "hold": "colour-5-lets-go-of-brand",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-let-go",
+      "note": "the drop painted the fill and let go of Brand in one step: fill must be #FF3B30 with no style, and copied must say the colour stopped following Brand"
+    },
+    {
+      "do": "snapshot",
+      "name": "colour-5-let-go-of-brand"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-click-still-opens",
+      "note": "a plain click on the swatch still opens the picker, so the drag never stole the click"
+    },
+    {
+      "do": "snapshot",
+      "name": "colour-6-picker-open"
+    }
+  ]
+}

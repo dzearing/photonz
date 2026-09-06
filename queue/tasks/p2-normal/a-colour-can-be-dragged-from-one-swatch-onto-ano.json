@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 11,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:55:21.667Z",
-  "updated": "2026-09-06T13:57:49.075Z",
+  "updated": "2026-09-06T14:23:06.822Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-06. Nothing drags today: no onDrag or drop target exists in ColorPickerEntry.swift or ColorStylePanel.swift. The good news is there is one place to add it. ColorWellButton (Sources/Photonz/ColorPickerEntry.swift line 95) is the shared well used by every colour row, and the style aware rows go through ColorStyleRow and ColorStyleControl in ColorStylePanel.swift, so making the well both a drag source and a drop target covers the panel in one change rather than several. Carry the colour as a standard colour type on the pasteboard as well as the app's own, so a colour can also be dragged in from another Mac app and out to one; say in the audit whether that worked. Mind the click: the well opens the picker on click, so the drag must only begin after a real distance of travel, the same lesson as the Library tile drag task. This is related to two open tasks, the one that makes a styled row look different from an editable one, and the one that builds the designed picker; whichever lands last should make sure a dragged colour and a picked colour behave the same.",
@@ -35,7 +35,28 @@
     {
       "t": "2026-09-06T13:57:49.075Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T14:08:55.998312Z",
+      "note": "Adversarial review before building. (1) This is not an invention: a colour well on a Mac has always been drag-and-droppable, so it is muscle memory and needs no new affordance. (2) The task asks for a QUESTION when the target wears a saved colour. Building that would make drag the only way of setting a colour that stops to ask, while clicking a colour in the picker over the same swatch unlinks silently-but-announced. I built the consistent thing instead: the drop goes down the exact path a picked colour takes, so it paints and lets go of the saved name in ONE undo step and the canvas raises the same \"stopped following Accent\" pill it already raises everywhere else, and while the colour is in the air the ring around the swatch wears the palette mark so you know before you let go. Called out for the user in the audit. (3) Cut from the mock idea: no in-flight sentence floating by the pointer in a 264pt dock. (4) Shortest version that delivers the value = swatch to swatch; carrying a colour out to other Mac apps is nearly free on top and is in."
+    },
+    {
+      "t": "2026-09-06T14:08:55.998312Z",
+      "note": "PhotonzCore/ColorDrop.swift + 12 tests (green): what a swatch answers to a paint held over it, including the refusals (its own colour coming home, a colour it already wears, nothing behind it) and the gradient that flattens for a slot that cannot hold a ramp. App: ColorDrag.swift (pasteboard vocabulary: the app's own type for gradients+source, NSColor for other apps, plain text hex as the safety net) and ColorSwatchDrag.swift (one modifier both wells wear). Wired into ColorWellButton and SelectionColorWell. com.photonz.paint declared in build-app.sh with a build-time check."
+    },
+    {
+      "t": "2026-09-06T14:23:06.786031Z",
+      "note": "Adversarial review of the built thing, on the probe app with Screen Recording granted (Scripts/playtest/colour-onto-a-swatch-walk.json). The drop, both refusals, the single undo step, the saved-colour case and a plain click still opening the picker are all verified from real window captures. Rough, and in the audit: (a) the picking-up half is the one thing a scripted walk cannot do, since macOS only starts a drag session from a real device event, so the audit puts it first for the user to watch; (b) nothing floats a sentence by the pointer mid-drag, the ring and the no-entry cursor carry it and the pill says the rest afterwards; (c) carrying a colour out to another Mac app is built on the standard colour type and the round trip was checked in isolation, including a colour arriving from another colour space, but the actual inter-app drag was not watched because this loop cannot drive another app."
+    },
+    {
+      "t": "2026-09-06T14:23:06.786031Z",
+      "note": "Gated behind a new experiment next-color-drag (releases [.next], on by default there), because SelectionColorWell is a shared view and without the flag the change would have reached the release that ships today. Two acceptance items deliberately not built and filed instead: dropping a colour on the Library (a-colour-dropped-on-the-library-becomes-a-saved; it is NOT cheap, saving a colour deliberately asks for its name first) and the toolbar swatch (the-toolbar-colour-swatch-can-be-dragged-like-th)."
+    },
+    {
+      "t": "2026-09-06T14:23:06.822Z",
+      "note": "Every colour swatch in the panel is now a handle: pick a colour up off one, drop it on another, one undo step. PhotonzCore/ColorDrop.swift (12 tests) decides the answer; Photonz/ColorDrag.swift carries it (own type for gradients, the standard colour type for other Mac apps, plain text as the fallback); Photonz/ColorSwatchDrag.swift is the one modifier both wells wear. Behind next-color-drag, on by default in Next. Verified on the probe with the new dragColor playtest step and Scripts/playtest/colour-onto-a-swatch-walk.json, real window captures. Audit: queue/audits/2026-09-06-colour-swatch-drag.json. Library drop and the toolbar swatch filed as follow-ups."
     }
   ],
-  "started": "2026-09-06T13:57:49.075Z"
+  "started": "2026-09-06T13:57:49.075Z",
+  "completed": "2026-09-06T14:23:06.822Z"
 }

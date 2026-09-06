@@ -768,6 +768,8 @@ private final class Run {
 
         case .dragRow(let row, let onto, let zone, let hold):
             try await dragRow(row, onto: onto, zone: zone, hold: hold, number: number)
+        case .dragColor(let from, let onto, let hold, let expect):
+            try await dragColor(from, onto: onto, hold: hold, expect: expect, number: number)
 
         case .selectRow(let row, let modifiers):
             let editor = try requireEditor()
@@ -2024,6 +2026,76 @@ private final class Run {
              "\"\(name)\" let go \(zone.rawValue) \"\(onto)\": the list \(answered)"
                 + ", drop \(landed ? "landed" : "did not land")\(held)",
              state: describe())
+    }
+
+    /// Picks the colour up off one swatch in the panel and lets go of it on
+    /// another. The ring that says the second swatch will take it is drawn by
+    /// the same drop delegate a pointer drives, so `hold` photographs the real
+    /// thing.
+    ///
+    /// A walk cannot start a real drag session — AppKit only begins one from an
+    /// event that came off a real device — so the board the colour rides on is
+    /// stood in the drag pasteboard's place for the length of the step, which
+    /// is exactly the board a destination under a real pointer would read.
+    private func dragColor(_ from: String, onto: String, hold: String?,
+                           expect: PlaytestColorDropExpectation, number: Int) async throws {
+        let window = try requireWindow()
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let source = try colorWell(from)
+        let destination = try colorWell(onto)
+        guard let payload = source.payload else {
+            throw Failure(description: "the \"\(from)\" colour cannot be picked up")
+        }
+        let board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "color")
+        ColorDrag.playtestPasteboard = board
+        defer { ColorDrag.playtestPasteboard = nil }
+        let frame = destination.convert(destination.bounds, to: nil)
+        let windowPoint = CGPoint(x: frame.midX, y: frame.midY)
+        guard let dropView = PlaytestPanelDrag.destination(at: windowPoint, in: content) else {
+            throw Failure(description: "nothing at the \"\(onto)\" colour takes drops")
+        }
+        let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
+        _ = dropView.draggingEntered(info)
+        var operation: NSDragOperation = []
+        for _ in 0..<3 {
+            operation = dropView.draggingUpdated(info)
+            await sleep(0.06)
+        }
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        let lightsUp = operation != []
+        if lightsUp != (expect == .takes) {
+            throw Failure(description: "\"\(onto)\" \(lightsUp ? "lit up" : "stayed dark")"
+                + " for the colour off \"\(from)\", and the walk expected it to \(expect.rawValue)")
+        }
+        let landed = lightsUp ? dropView.performDragOperation(info) : false
+        await sleep(0.4)
+        note(number, "dragColor",
+             "the colour off \"\(from)\" let go on \"\(onto)\": the swatch "
+                + (lightsUp ? "lit up" : "stayed dark")
+                + ", drop \(landed ? "landed" : "did not land")\(held)",
+             state: describe())
+    }
+
+    /// A colour swatch in the panel, named by the row it sits on. Every swatch
+    /// answers to the word Color, so the row's own word is what tells Fill's
+    /// from Shadow's.
+    private func colorWell(_ part: String) throws -> PanelTargetView {
+        let wells = try panelTargets().filter { $0.kind == .control && $0.name == "Color" }
+        guard let match = wells.first(where: { $0.detail == part })
+                ?? wells.first(where: { $0.detail.caseInsensitiveCompare(part) == .orderedSame })
+        else {
+            let seen = wells.map(\.detail).filter { !$0.isEmpty }.joined(separator: ", ")
+            throw Failure(description: "no colour swatch for \"\(part)\" is in the panel; "
+                + "the ones that are: " + (seen.isEmpty ? "none" : seen))
+        }
+        return match
     }
 
     // MARK: - Opening

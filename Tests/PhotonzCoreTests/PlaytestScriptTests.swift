@@ -868,6 +868,43 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test func aWalkCanCarryAColourFromOneSwatchToAnother() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragColor", "from": "Fill", "onto": "Outline",
+                       "hold": "in-flight", "expect": "refuses" } ] }
+        """)
+        guard case .dragColor(let from, let onto, let hold, let expect) = script.steps[0] else {
+            Issue.record("dragColor"); return
+        }
+        #expect(from == "Fill")
+        #expect(onto == "Outline")
+        #expect(hold == "in-flight")
+        #expect(expect == .refuses)
+        #expect(script.steps[0].name == "dragColor")
+    }
+
+    /// The usual thing a walk is checking is that the second swatch TOOK the
+    /// colour, so that is what it gets without saying so.
+    @Test func aColourDragExpectsTheSwatchToTakeItByDefault() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragColor", "from": "Fill", "onto": "Outline" } ] }
+        """)
+        guard case .dragColor(_, _, let hold, let expect) = script.steps[0] else {
+            Issue.record("dragColor"); return
+        }
+        #expect(hold == nil)
+        #expect(expect == .takes)
+    }
+
+    @Test func aColourDragRefusesAnAnswerThatIsNotOne() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dragColor", "from": "Fill", "onto": "Outline",
+                           "expect": "maybe" } ] }
+            """)
+        }
+    }
+
     @Test func aRowDragRefusesAZoneThatIsNotOne() {
         #expect(throws: PlaytestScriptError.self) {
             _ = try decode("""

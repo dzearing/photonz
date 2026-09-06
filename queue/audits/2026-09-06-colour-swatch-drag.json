@@ -1,0 +1,51 @@
+{
+  "feature": "Drag a colour from one swatch onto another",
+  "epic": "ui-components",
+  "summary": "Every colour swatch in the right hand panel is now something you can pick a colour up off and drop a colour onto. Putting the same colour on two things is one drag instead of opening the picker twice and matching by eye.",
+  "setup": "Photonz Dev, release Next. The new experiment is \"Carry a colour from one swatch to another\" and it is on by default in Next; it is off in the release that ships today. Draw a rectangle and pick it so the Color section shows a Fill row and an Outline row.",
+  "try": [
+    {
+      "do": "Drag the Fill swatch onto the Outline swatch. The colour follows the pointer and the Outline swatch draws a ring around itself before you let go.",
+      "shot": "2026-09-06-colour-drag-in-flight.png"
+    },
+    {
+      "do": "Let go. The outline takes the colour.",
+      "shot": "2026-09-06-colour-drag-landed.png"
+    },
+    {
+      "do": "Press Command Z once. The outline goes back, in one step."
+    },
+    {
+      "do": "Drag the Fill swatch onto the Outline swatch a second time, now that they match. The Outline swatch stays dark and the pointer shows the no-entry sign; letting go changes nothing."
+    },
+    {
+      "do": "Drag the Fill swatch a little way and drop it back on itself. Same: it stays dark."
+    },
+    {
+      "do": "Click the Fill swatch and save its colour as a style called Brand, then drag the Outline colour onto the Fill swatch. The ring wears the palette mark, and letting go paints the fill and says \"1 color no longer follows Brand\" on the picture.",
+      "shot": "2026-09-06-colour-drag-lets-go.png"
+    },
+    {
+      "do": "Drag a colour out of a Photonz swatch and drop it on a colour well in another Mac app, then drag one back the other way."
+    },
+    {
+      "do": "Click a swatch as you normally would. The picker opens exactly as before."
+    }
+  ],
+  "evaluate": [
+    "Is the ring around the swatch about to take the colour enough to aim by, at 18 points across in a 264 point dock?",
+    "When you drop a colour on a swatch wearing a saved colour, is being told AFTER the fact (the pill on the picture, one undo away) the right amount of ceremony, or should the drop have stopped and asked first?",
+    "Does the palette mark on the ring read as \"this will let go of the saved colour\", or does it read as decoration?",
+    "Does a swatch that refuses staying completely dark feel like an answer, or does it feel like the app missed the drop?",
+    "Is a swatch the thing your hand reaches for when you want to copy a colour, or would you sooner have copied a hex?"
+  ],
+  "rough": [
+    "The task asked for the drop onto a saved colour to ASK before replacing it. I did not build the question, and this is the one thing worth arguing with. Clicking a colour in the picker over that same swatch already lets go of the saved name without asking, so a drag that stopped to ask would make the two ways of setting a colour behave differently for no reason a person could predict. What it does instead: the ring wears the palette mark before you let go, the change is one undo step, and the picture says \"1 color no longer follows Brand\" for three seconds afterwards, which is the app's own way of saying it everywhere else. If that is too quiet, say so on this line and it becomes a task.",
+    "Nothing floats a sentence next to the pointer while the colour is in the air. In a 264 point dock a caption under a moving pointer is more in the way than it is worth, so the ring and the no-entry cursor carry it. The tooltip does say what the drop would do, but macOS hides tooltips during a drag, so in practice it is only read by a screen reader.",
+    "A scripted walk drives the DROP for real (the ring in these pictures is the real one, drawn by the same code a pointer drives) but it cannot start a real drag session: macOS only begins one from an event that came off a real device. So the picking-up half is the one part nobody has watched happen, which is why it is the first thing to try.",
+    "Dragging a colour out to another Mac app and back is built on the standard colour type, and the round trip was checked in isolation (a colour written and read back, including one that arrives from a different colour space). The actual drag between two apps has not been watched: this loop cannot drive another app.",
+    "Dropping a colour on the Library to KEEP it is not in. It is not the cheap half it looks like: saving a colour deliberately asks for its name first, so a shelf drop that quietly made one called \"Color 1\" would contradict that. Filed as \"A colour dropped on the Library becomes a saved colour\".",
+    "The swatch in the toolbar, the colour the next shape comes out, still cannot be dragged: it is its own view rather than one of the panel wells. Filed as \"The toolbar colour swatch can be dragged like the panel ones\".",
+    "A gradient dropped on a swatch that cannot hold one (Text, a border, a shadow, a backdrop) lands as its flat colour and the swatch says so. That path is covered by tests but was not walked."
+  ]
+}

@@ -317,6 +317,12 @@ extension Experiments {
     /// turns naming off still wants one picker rather than three.
     var designedColorPickerEnabled: Bool { isEnabled(FeatureCatalog.colorPickerFlag) }
 
+    /// `next-color-drag`: whether a colour swatch can be picked up and dropped
+    /// on another one. It stands on its own rather than on the picker flag,
+    /// because the swatch a colour is carried between is the row's own swatch
+    /// in both releases: what changes here is whether it is a handle.
+    var colorDragEnabled: Bool { isEnabled(FeatureCatalog.colorDragFlag) }
+
     /// Whether the canvas redraws what you can see at the zoom you are looking
     /// at it through, so placed words stay as sharp as the ones being typed.
     var crispZoomEnabled: Bool { isEnabled(FeatureCatalog.crispZoomFlag) }

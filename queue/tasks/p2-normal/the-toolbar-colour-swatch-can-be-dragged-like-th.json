@@ -1,0 +1,28 @@
+{
+  "id": "the-toolbar-colour-swatch-can-be-dragged-like-th",
+  "title": "The toolbar colour swatch can be dragged like the panel ones",
+  "goal": "Every colour swatch in the right hand panel can now be picked up and dropped on another one. The swatch in the toolbar, which is the colour the next shape will be drawn in, still cannot, so the one colour you look at most is the one you cannot carry.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1400,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T14:18:21.418Z",
+  "updated": "2026-09-06T14:18:21.419Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed on 2026-09-06 alongside the panel colour drag. The toolbar swatch is its own view in EditorView.swift (around line 1298) rather than a ColorWellButton, so it did not get the behaviour for free. Wearing the .colorSwatchDrag modifier (Sources/Photonz/ColorSwatchDrag.swift) should be most of it; the tool arming path is annotationStyles.arm.",
+  "acceptance": [
+    "The toolbar swatch can be dragged, with the colour visible under the pointer",
+    "Dropping a colour from a panel swatch onto the toolbar swatch arms the tool with that colour",
+    "Dropping the toolbar colour onto a panel swatch paints it, in one undo step",
+    "A plain click on the toolbar swatch still opens the picker exactly as it does now"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T14:18:21.419Z",
+      "note": "created (manual)"
+    }
+  ]
+}

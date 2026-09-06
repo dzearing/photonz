@@ -1,0 +1,28 @@
+{
+  "id": "a-colour-dropped-on-the-library-becomes-a-saved",
+  "title": "A colour dropped on the Library becomes a saved colour",
+  "goal": "You can drag a colour from one swatch to another now, but there is nowhere to drop one to KEEP it. Dropping a colour onto the Library should save it as a named colour, asking for the name the same way the Save button on a colour row already does, so a colour you like becomes a name you can reuse without going back to the row it came from.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1390,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T14:18:14.244Z",
+  "updated": "2026-09-06T14:18:14.244Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of the colour drag task on 2026-09-06 rather than built with it. It is NOT the cheap half of that task: the app deliberately asks for a name BEFORE a saved colour exists (see the naming field in ColorStyleRow and the comment above it), so a shelf drop that quietly made one called \"Color 1\" would contradict a decision already made. Doing it right means opening that same field from the shelf. EditorState.saveColorStyle(paint:name:slot:) is the call underneath; the shelf is LibraryPanel.swift and the Styles tiles are LibraryStyleTile in ColorStylePanel.swift. The drop vocabulary already exists: ColorDrag.acceptedTypes and ColorDrag.payloadInFlight().",
+  "acceptance": [
+    "Dragging a colour over the Library shelf lights the shelf up, and dropping it there opens the same name field saving from a colour row opens",
+    "Naming it puts the colour on the shelf and the row the colour came from is left exactly as it was",
+    "Escaping the name field leaves no colour on the shelf",
+    "Dropping a colour on the Library while the shelf is showing something other than saved colours either switches to them or does not light up, and the audit says which"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T14:18:14.244Z",
+      "note": "created (manual)"
+    }
+  ]
+}

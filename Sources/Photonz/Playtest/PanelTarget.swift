@@ -98,8 +98,13 @@ extension View {
     /// at that position, so a control that is dimmed or covered fails a walk
     /// the same way it fails a person, which calling its action straight would
     /// hide.
-    func playtestControl(_ name: String, detail: String = "") -> some View {
-        playtestTarget(name, kind: .control, detail: detail)
+    ///
+    /// `payload` is for the few controls that can also be PICKED UP — a colour
+    /// swatch is one — and it is the very closure that control's own `onDrag`
+    /// uses, so a walk can never drag something the pointer would not.
+    func playtestControl(_ name: String, detail: String = "",
+                         payload: (@MainActor () -> NSItemProvider)? = nil) -> some View {
+        playtestTarget(name, kind: .control, detail: detail, payload: payload)
     }
 
     /// Names one labelled row of the panel, so a `press` step can say which
@@ -120,7 +125,8 @@ extension View {
     func playtestTarget(_ name: String, kind: PanelTargetKind, detail: String = "",
                         payload: (@MainActor () -> NSItemProvider)? = nil) -> some View { self }
 
-    func playtestControl(_ name: String, detail: String = "") -> some View { self }
+    func playtestControl(_ name: String, detail: String = "",
+                         payload: (@MainActor () -> NSItemProvider)? = nil) -> some View { self }
 
     func playtestField(_ title: String) -> some View { self }
 }

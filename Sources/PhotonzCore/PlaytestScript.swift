@@ -701,6 +701,15 @@ public enum PlaytestDropZone: String, CaseIterable, Hashable, Codable, Sendable 
     case above, inside, below
 }
 
+/// What a walk expects a colour swatch to answer to a colour held over it.
+public enum PlaytestColorDropExpectation: String, CaseIterable, Hashable, Codable, Sendable {
+    /// It lights up, and letting go paints it.
+    case takes
+    /// It stays dark, and letting go changes nothing: the swatch the colour
+    /// came from, a swatch already wearing it, a swatch with nothing behind it.
+    case refuses
+}
+
 /// What a walk expects of the grab bar under a resizable panel area.
 public enum PlaytestHandleExpectation: String, CaseIterable, Hashable, Codable, Sendable {
     /// There is a bar, and dragging it moves the area point for point.
@@ -868,6 +877,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `hold` names a picture taken before letting go, which is the only
     /// moment the line that says what will happen is on screen.
     case dragRow(row: String, onto: String, zone: PlaytestDropZone, hold: String?)
+    /// Pick the colour up off one swatch in the right hand panel and let go of
+    /// it on another, naming each by the row it sits on: "Fill", "Outline",
+    /// "Shadow". `hold` names a picture taken with the colour still over the
+    /// second swatch, which is the only moment the ring that says it will take
+    /// it is on screen. `expect` says what the second swatch should answer —
+    /// `takes` (the default) or `refuses` — so the step is a test and not only
+    /// a picture.
+    case dragColor(from: String, onto: String, hold: String?, expect: PlaytestColorDropExpectation)
     /// Pick a section of the right hand panel up by its title and carry it
     /// until the pointer has passed the middle of the section named by `past`,
     /// which is the moment that one moves aside. `hold` names a picture taken
@@ -960,7 +977,8 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag", "dragComponent",
+        "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
+        "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelMenu", "pinch", "press",
@@ -997,6 +1015,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .menuShot: "menuShot"
         case .dragTile: "dragTile"
         case .dragRow: "dragRow"
+        case .dragColor: "dragColor"
         case .dragSection: "dragSection"
         case .dragHandle: "dragHandle"
         case .selectRow: "selectRow"
@@ -1132,6 +1151,14 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .dragRow(row: try f.string("row"), onto: try f.string("onto"),
                             zone: zone, hold: try f.optionalString("hold"))
+        case "dragColor":
+            let expect: PlaytestColorDropExpectation = if fields["expect"] == nil {
+                .takes
+            } else {
+                try f.enumValue("expect", PlaytestColorDropExpectation.self)
+            }
+            self = .dragColor(from: try f.string("from"), onto: try f.string("onto"),
+                              hold: try f.optionalString("hold"), expect: expect)
         case "dragHandle":
             let expect: PlaytestHandleExpectation = if fields["expect"] == nil {
                 .moves

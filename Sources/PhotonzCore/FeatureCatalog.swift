@@ -87,6 +87,8 @@ public enum FeatureCatalog {
 
     public static let colorPickerFlag = "next-color-picker"
 
+    public static let colorDragFlag = "next-color-drag"
+
     public static let crispZoomFlag = "next-crisp-zoom"
 
     public static let calloutShapeFlag = "next-callout-shape"
@@ -426,6 +428,15 @@ public enum FeatureCatalog {
                     name: canvasGridFlag,
                     title: "A grid to build against",
                     description: "Switch on a grid over the whole canvas and build to it: View \u{25B8} Show Grid, or the Grid row in the Canvas section of the panel. Everything that shapes it is one row below the switch, on View \u{25B8} Grid Settings, and on the chip the grid puts in the tool bar beside the zoom while it is showing: press either and every number opens on the canvas, each saying in one line what it does. It starts four points apart, with every eighth line stronger so you can count without measuring, and both numbers are typable; choose columns on their own or columns and rows. It thins and thickens as you zoom, so the lines are never closer together than you can read and never disappear: zoom out and the fine ones fade away leaving the coarse ones, zoom in and they fade back. You can also say where it starts and how fine it may get: Starts at (or View \u{25B8} Set Grid Origin) puts two lines on the canvas that you drag, or nudge with the arrow keys, catching layer edges and canvas edges on the way, with Cancel, Done and a smallest cell slider in place of the tool bar; Smallest cell stops the grid drawing anything finer than the number you give it, however far you zoom in. The grid is drawn on the canvas, not into the picture, so it never lands in an export, a copied picture or a redline sheet, and it is remembered between launches rather than saved in any document. Off means the canvas has no grid and the View row and the Grid controls are gone.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: colorDragFlag,
+                    title: "Carry a colour from one swatch to another",
+                    description: "Colour swatches are something you can pick a colour up off and drop a colour onto, the way a colour well on a Mac always has been. Drag the Fill swatch onto the Outline swatch and the outline takes that colour, in one step one undo puts back. The swatch about to take it draws a ring around itself before you let go; a swatch that would not change, the one the colour came from or one already wearing it, stays dark and the pointer shows the no entry sign. A swatch wearing a saved colour still takes the drop, and the ring wears the palette mark first to say that letting go stops it following that name. Colours travel in and out of other Mac apps too, so a colour dragged from a swatch lands in another app’s colour well and one dragged in from the system Colours panel lands here. Off means the swatches are click only, exactly as before.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
