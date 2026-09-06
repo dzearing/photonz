@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 9,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T19:05:01.877Z",
-  "updated": "2026-09-05T23:48:14.648Z",
+  "updated": "2026-09-06T00:06:13.481Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-05 with a screenshot showing two rows and a grip that does nothing. Cause found by reading LayersPanel.swift: the grip writes to maxHeight (PanelAreaResizeHandle around line 1013, bound at line 1222), but the list is drawn at viewport equals min(natural, maxHeight) where natural is the height the rows actually need (line 1094). With a short list natural is well under maxHeight, so dragging moves maxHeight between its bounds and min(natural, maxHeight) never changes: nothing happens. It cannot even shrink, because minHeight is 120 (line 1073) and a two row list needs less than that, so the floor is already above the content. The code comments say the quiet part out loud: only meaningful once the list is tall enough to scroll, but always shown so the affordance is discoverable. That trade is the bug, since a visible grip with a resize cursor promises something it cannot do. Decide between the two options in the goal and say which in the audit; hiding it when it cannot act is the smaller change, letting the area grow past its content is the more useful one if an oversized empty area is acceptable.",
@@ -41,7 +41,20 @@
     {
       "t": "2026-09-05T23:58:31.112Z",
       "note": "Reproduced live in the probe app (walk /tmp/photonz-repro/grip-repro.json, driven by a new dragHandle playtest step). A picture opened with one layer: the layers area is 80pt tall, its content is 80pt, its floor is 120pt. The grab bar is drawn anyway. Dragging it 120pt DOWN: area 80pt -> 80pt, remembered ceiling moved 200. Dragging 60pt UP: area 80pt -> 80pt, remembered ceiling moved to 120, the floor. So both directions are dead, for the two reasons in the notes: the area is min(content, ceiling) so a ceiling above the content changes nothing, and the ceiling cannot go under 120 while the content is 80. Only the drag being a no-op is new information; the bar being drawn at all is the fault to fix."
+    },
+    {
+      "t": "2026-09-06T00:06:13.445Z",
+      "note": "Fixed and verified live. PanelAreaResize (PhotonzCore, 17 tests) holds the two rules; PanelAreaResizeHandle now takes the content height, draws nothing when min(content, hard ceiling) is not above the floor, and clamps the drag to the content so both directions move the area one for one. Pulled fully open it remembers the highest ceiling rather than todays content, so the next layer still gets room. Walk Scripts/playtest/panel-grip-walk.json, run three times: short list offers no bar (80pt content, 120pt floor); long list 200 -> 290 (down 90) -> 150 (up 140) -> 360, the whole list (down 400); Library 220 -> 180 -> 560. Remembering across launches proved by two runs: left at 140pt, second launch started at 140pt. Screen Recording was granted, so the audit carries real captures. Scripts/test.sh green (3434 tests)."
+    },
+    {
+      "t": "2026-09-06T00:06:13.445Z",
+      "note": "Adversarial review of the built thing: (1) the bar can now vanish under the pointer when the rows that justified it are deleted, so it pops the resize cursor on disappear; (2) it keeps its 12pt of room while invisible, so sections under a short list do not jump by 12pt as a layer is added; (3) at either end of its travel the bar stops rather than drifting, which reads like a window edge meeting the screen; (4) the one thing I could not stage live is a Library shelf with a single row of tiles, since this machines screenshot folder always fills two rows, so that case is covered by tests and said so in the audit rough."
+    },
+    {
+      "t": "2026-09-06T00:06:13.481Z",
+      "note": "The grab bar is drawn only while there is something to resize, and dragging it moves the area point for point in both directions. One rule in PhotonzCore (PanelAreaResize, 17 tests) behind both the layers list and the Library shelf. Reproduced live first, then verified with the new dragHandle playtest step: Scripts/playtest/panel-grip-walk.json passes three runs, and a second launch came back at the height the first left. Audit queue/audits/2026-09-05-panel-grip.json. Commit 3521f53, pushed."
     }
   ],
-  "started": "2026-09-05T23:48:14.648Z"
+  "started": "2026-09-05T23:48:14.648Z",
+  "completed": "2026-09-06T00:06:13.481Z"
 }
