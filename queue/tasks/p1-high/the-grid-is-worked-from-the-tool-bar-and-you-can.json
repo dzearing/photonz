@@ -1,0 +1,38 @@
+{
+  "id": "the-grid-is-worked-from-the-tool-bar-and-you-can",
+  "title": "The grid is worked from the tool bar, and you can lock guides onto it",
+  "goal": "The grid's settings panel is confusing and mostly unnecessary, and the way into adjusting the grid is buried in a menu. Move the work to the tool bar. It shows the smallest cell and the current one, with a slider to make the current one finer or coarser, and an Adjust Grid button that takes the canvas over. In that mode you place the grid's zero point as you can today, and you can also lock guides. A guide is added by hovering the grid: whichever line your pointer is nearest lights up yellow, vertical or horizontal, and clicking pins it there. A pinned guide stays put forever, including when the grid is switched off, and things snap to it like any other line. In the mode, clicking a guide picks it up to move, backspace deletes it, and a Clear Guides button removes them all. This is how you mark a sixteen point margin on each side of a space the grid does not line up with.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T19:50:37.081Z",
+  "updated": "2026-09-06T19:50:37.117Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-06, reworking what shipped as you-can-say-where-the-grid-starts-and-how-fine-i (audit queue/audits/2026-09-05-grid-origin.json, commit fa64398). What exists to build on: the mode itself, entered only from EditorCommands.swift line 601 Set Grid Origin, which replaces the tool bar with a Cancel and Done bar carrying the smallest cell control, moves two accent lines by press or arrow keys, and returns on Return or Escape. What is new here: the tool bar readout and slider outside the mode, a tool bar way in, and locked guides, which do not exist at all today (nothing in CanvasGrid.swift mentions a guide). Guides are a new persisted thing and the first grid state that belongs to the DOCUMENT rather than the app: the grid settings live in CanvasGridStore app wide, but a guide marking a margin in one picture is meaningless in another, so put guides in the document model, Codable, and say so in the audit. They also need to join the one snapping path rather than adding a second: see snapping-pulls-to-the-grid-you-can-see-not-one-y and a-snap-that-is-showing-is-a-snap-you-get-with-no, and make the guide highlight the same one those tasks use. Yellow is already the colour of the edge snapping guide on the canvas (systemYellow in CanvasView), so a pinned guide in the same yellow reads consistently but must be told apart from a transient snap guide; say how in the audit.",
+  "acceptance": [
+    "The tool bar shows the smallest cell and the current cell, and a slider changes the current one live with the grid redrawing as it moves",
+    "An Adjust Grid button on the tool bar enters the mode; the menu item may stay but is no longer the only way in",
+    "In the mode, hovering the canvas lights the nearest grid line yellow, choosing vertical or horizontal by whichever the pointer is nearer, and clicking pins a guide there",
+    "A pinned guide is drawn above everything, stays when the grid is switched off, survives closing and reopening the document, and is never in an export",
+    "Dragging and resizing catch pinned guides the same way they catch grid lines, with the same highlight, and Command frees them",
+    "In the mode, clicking a guide selects it, dragging moves it, backspace deletes it, and a Clear Guides button removes them all with one undo step",
+    "Return leaves the mode keeping every change, Escape leaves it putting back the origin, the cell size and the guides as they were",
+    "The settings that stay in the panel are only the ones the tool bar does not cover, and the audit lists what was removed and why",
+    "Core logic covered by tests in PhotonzCore written before the change, including guides surviving a save and reopen",
+    "Audit written under queue/audits/ with the tool bar in the mode, a guide being placed, and a guide still there with the grid off, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T19:50:37.082Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-06T19:50:37.116Z",
+      "note": "seq 180 -> 4"
+    }
+  ]
+}
