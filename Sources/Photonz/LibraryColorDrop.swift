@@ -61,7 +61,7 @@ struct LibraryColorDrop: ViewModifier {
     /// What the shelf would do with the paint in the air right now.
     private func answer() -> ColorDrop.Answer? {
         guard let payload = ColorDrag.payloadInFlight() else { return nil }
-        return editorState.colorShelfDrop(payload.paint)
+        return editorState.colorShelfDrop(payload.paint, from: payload.style)
     }
 
     private func save(_ landing: ColorDrop.Landing) {

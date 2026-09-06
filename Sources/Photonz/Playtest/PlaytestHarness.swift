@@ -1611,7 +1611,11 @@ private final class Run {
         // SwiftUI's `disabled` leaves no mark on the view tree — so a press on
         // one is judged by what it changes, not by asking first. A picker
         // segment is a real AppKit control and does know.
-        let marked = everything.filter { $0.kind == .control }.map { target -> PlaytestPressTarget in
+        // Tiles press too. A tile on the Library shelf is clicked to pick it,
+        // exactly like a button, and a walk that can drag one off the shelf but
+        // cannot click it could never prove the click still works.
+        let pressable: Set<PanelTargetKind> = [.control, .tile]
+        let marked = everything.filter { pressable.contains($0.kind) }.map { target -> PlaytestPressTarget in
             let frame = target.convert(target.bounds, to: nil)
             // The row leads and whatever the control is saying right now
             // follows, the way a picker segment reads "Width, already on
@@ -2053,7 +2057,7 @@ private final class Run {
         guard let content = window.contentView else {
             throw Failure(description: "the window has no content view")
         }
-        let source = try colorWell(from)
+        let source = try colorDragSource(from)
         let destination = try colorDropTarget(onto)
         guard let payload = source.payload else {
             throw Failure(description: "the \"\(from)\" colour cannot be picked up")
@@ -2091,6 +2095,24 @@ private final class Run {
                 + (lightsUp ? "lit up" : "stayed dark")
                 + ", drop \(landed ? "landed" : "did not land")\(held)",
              state: describe())
+    }
+
+    /// Where a colour can be picked up: a swatch, named by the row it sits on,
+    /// or a saved colour's tile on the Library shelf, named by the name it was
+    /// saved under. The swatch wins a tie, because every swatch answers to the
+    /// word Color and a tile answers to a name somebody typed.
+    private func colorDragSource(_ name: String) throws -> PanelTargetView {
+        if let well = try? colorWell(name) { return well }
+        let tiles = try panelTargets().filter { $0.kind == .tile && $0.detail == "Styles" }
+        guard let tile = tiles.first(where: { $0.name == name })
+                ?? tiles.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })
+        else {
+            let seen = tiles.map(\.name).joined(separator: ", ")
+            throw Failure(description: "no colour swatch or saved colour called \"\(name)\" is "
+                + "in the panel; the saved colours on the shelf: "
+                + (seen.isEmpty ? "none" : seen))
+        }
+        return tile
     }
 
     /// Where a colour can be let go of: a swatch, named by the row it sits on,

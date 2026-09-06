@@ -1,0 +1,314 @@
+{
+  "out": "/tmp/photonz-playtest/colour-off-the-shelf",
+  "setup": {
+    "forget": [
+      "panel",
+      "color",
+      "shapes",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1100,
+      "canvasHeight": 700,
+      "width": 1500,
+      "height": 950
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        180
+      ],
+      "to": [
+        520,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "paintSelectionColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "showMediaShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dragColor",
+      "from": "Fill",
+      "onto": "Library",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Brand"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-saved",
+      "note": "Brand is on the Styles shelf at #B0184A, and the Fill row is its own colour wearing no style"
+    },
+    {
+      "do": "panel",
+      "stage": "1-saved"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Shades 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-repainted",
+      "note": "the box has been painted a different colour by hand, so a colour off the shelf has something to change"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-1-before"
+    },
+    {
+      "do": "dragColor",
+      "from": "Brand",
+      "onto": "Fill",
+      "hold": "shelf-2-in-flight",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-wearing-brand",
+      "note": "the tile was carried onto the Fill row: the box is #B0184A again AND the row is wearing Brand, the same as picking Brand out of the row's own menu"
+    },
+    {
+      "do": "panel",
+      "stage": "3-wearing-brand"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-3-wearing-brand"
+    },
+    {
+      "do": "render",
+      "name": "shelf-3-wearing-brand"
+    },
+    {
+      "do": "dragColor",
+      "from": "Brand",
+      "onto": "Fill",
+      "expect": "refuses"
+    },
+    {
+      "do": "describe",
+      "stage": "4-already-brand",
+      "note": "the row already wears Brand, so the swatch stays dark rather than writing an undo step that changes nothing"
+    },
+    {
+      "do": "dragColor",
+      "from": "Brand",
+      "onto": "Library",
+      "expect": "refuses"
+    },
+    {
+      "do": "describe",
+      "stage": "5-back-on-the-shelf",
+      "note": "the shelf is the whole Library panel, so a tile let go of an inch from where it started refuses instead of offering to save a second copy of itself"
+    },
+    {
+      "do": "dragColor",
+      "from": "Brand",
+      "onto": "Outline",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-kept-for-other-parts",
+      "note": "Brand was saved off a Fill, so the Outline takes its COLOUR and not the name, and the swatch says so before you let go"
+    },
+    {
+      "do": "panel",
+      "stage": "6-kept-for-other-parts"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone",
+      "note": "one undo per drop: the outline is back, and the second takes the Fill off Brand and back to the colour it was painted by hand"
+    },
+    {
+      "do": "panel",
+      "stage": "7-undone"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dragColor",
+      "from": "Brand",
+      "onto": "Toolbar fill",
+      "hold": "shelf-4-onto-the-bar",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-armed-with-brand",
+      "note": "the bar's inside swatch is holding the NAME: toolFillStyle is Brand, so the next ellipse follows Brand the day it is recoloured"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-4-armed"
+    },
+    {
+      "do": "drag",
+      "from": [
+        620,
+        180
+      ],
+      "to": [
+        900,
+        360
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-drawn-in-brand",
+      "note": "the ellipse drawn after the drop came out filled with Brand and wearing the name"
+    },
+    {
+      "do": "render",
+      "name": "shelf-5-drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-5-drawn"
+    },
+    {
+      "do": "press",
+      "control": "Brand",
+      "in": "Styles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "10-click-still-picks",
+      "note": "a plain click on the tile still picks it and opens the Style section, so the drag never stole the click"
+    },
+    {
+      "do": "panel",
+      "stage": "10-click-still-picks"
+    },
+    {
+      "do": "snapshot",
+      "name": "shelf-6-tile-picked"
+    }
+  ]
+}

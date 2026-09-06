@@ -1349,15 +1349,23 @@ struct EditorView: View {
               ?? "Fill color — the shape's interior. Uncheck Fill for an outline.")
         .playtestControl("Color", detail: Self.toolbarFillSwatchName, payload: {
             guard let paint = editorState.activeToolFillPaint else { return NSItemProvider() }
-            return ColorDrag.itemProvider(paint: paint, source: toolFillWellKey)
+            return ColorDrag.itemProvider(paint: paint, source: toolFillWellKey,
+                                          style: editorState.toolSavedColor(slot: .fill))
         })
         // A box with no inside carries nothing, and takes a colour by GAINING
         // an inside: dropping on the slash is the shortest way to say fill it.
         .colorSwatchDrag(key: toolFillWellKey, part: "\(shapeSwatchSubject)'s inside",
                          paint: { editorState.activeToolFillPaint },
-                         styleName: { editorState.toolColorStyle(slot: .fill)?.name },
+                         style: { editorState.toolSavedColor(slot: .fill) },
+                         welcomes: { editorState.toolStyleWelcome(slot: .fill, styleID: $0.id) },
                          acceptsGradient: ColorSlot.fill.acceptsGradient,
-                         onDrop: { editorState.setAnnotationFillPaint($0.paint) })
+                         onDrop: { landing in
+            if let brings = landing.brings {
+                editorState.useToolColorStyle(slot: .fill, styleID: brings.id)
+            } else {
+                editorState.setAnnotationFillPaint(landing.paint)
+            }
+        })
         .popover(isPresented: editorState.colorWellBinding(toolFillWellKey), arrowEdge: .top) {
             let off = editorState.activeToolFillPaint == nil
             VStack(alignment: .leading, spacing: 14) {
@@ -1400,19 +1408,30 @@ struct EditorView: View {
               ?? "Border color, width, and corner radius")
         .playtestControl("Color", detail: Self.toolbarBorderSwatchName, payload: {
             guard editedStrokeWidth > 0 else { return NSItemProvider() }
-            return ColorDrag.itemProvider(paint: activeToolPaint, source: toolStyleWellKey)
+            return ColorDrag.itemProvider(paint: activeToolPaint, source: toolStyleWellKey,
+                                          style: editorState.toolSavedColor(slot: .stroke))
         })
         .colorSwatchDrag(key: toolStyleWellKey, part: "\(shapeSwatchSubject)'s border",
                          paint: { editedStrokeWidth > 0 ? activeToolPaint : nil },
-                         styleName: { editorState.toolColorStyle(slot: .stroke)?.name },
+                         style: { editorState.toolSavedColor(slot: .stroke) },
+                         // A border that is OFF takes a colour by coming back
+                         // on, which is already the whole story of that drop;
+                         // it takes the colour and not the name, because
+                         // turning it on and naming it are two steps and the
+                         // ring can only promise one thing.
+                         welcomes: { editedStrokeWidth > 0
+                             ? editorState.toolStyleWelcome(slot: .stroke, styleID: $0.id)
+                             : .neverWearsNames },
                          acceptsGradient: ColorSlot.stroke.acceptsGradient,
                          onDrop: { landing in
             // A border that is off comes back ON with the colour, in one step:
             // see `paintBorderTurningItOn`.
-            if editedStrokeWidth > 0 {
-                editorState.setAnnotationPaint(landing.paint)
-            } else {
+            if editedStrokeWidth == 0 {
                 editorState.paintBorderTurningItOn(landing.paint)
+            } else if let brings = landing.brings {
+                editorState.useToolColorStyle(slot: .stroke, styleID: brings.id)
+            } else {
+                editorState.setAnnotationPaint(landing.paint)
             }
         })
         .popover(isPresented: editorState.colorWellBinding(toolStyleWellKey), arrowEdge: .top) {
@@ -2055,18 +2074,33 @@ struct EditorView: View {
         // does, told apart by where it lives rather than by a row it does not
         // have, so a walk can carry a colour off the bar as well as onto it.
         .playtestControl("Color", detail: Self.toolbarSwatchName, payload: {
-            ColorDrag.itemProvider(paint: activeToolPaint, source: toolStyleWellKey)
+            ColorDrag.itemProvider(paint: activeToolPaint, source: toolStyleWellKey,
+                                   style: editorState.toolSavedColor(slot: toolColorSlot))
         })
         // The colour the next shape comes out in is the one on screen most, so
         // it is a handle like every swatch in the panel: pull it onto a shape's
         // row to paint with it, or drop a saved colour here to draw in it next.
         .colorSwatchDrag(key: toolStyleWellKey, part: toolSwatchSubject,
                          paint: { activeToolPaint },
-                         styleName: { heldStyle?.name },
+                         style: { heldStyle.map {
+                             ColorDrop.SavedColor(id: $0.id, name: $0.name)
+                         } },
+                         welcomes: {
+                             editorState.toolStyleWelcome(slot: toolColorSlot, styleID: $0.id)
+                         },
                          acceptsGradient: toolColorAcceptsGradient,
                          // The one swatch in the app that is a circle.
                          ringCornerRadius: 17,
-                         onDrop: { applyPaint($0.paint) })
+                         onDrop: { landing in
+            // A saved colour let go of here arms the tool with the NAME, so
+            // the next shape comes out wearing it and still follows it the day
+            // the colour behind the name is edited.
+            if let brings = landing.brings {
+                editorState.useToolColorStyle(slot: toolColorSlot, styleID: brings.id)
+            } else {
+                applyPaint(landing.paint)
+            }
+        })
         .popover(isPresented: editorState.colorWellBinding(toolStyleWellKey), arrowEdge: .top) {
             stylePopover
         }

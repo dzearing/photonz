@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1450,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T18:20:59.768Z",
-  "updated": "2026-09-06T18:20:59.768Z",
+  "updated": "2026-09-06T21:13:23.332Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed 2026-09-06 by the toolbar-swatch task. LibraryStyleTile (Sources/Photonz/ColorStylePanel.swift, around line 844) has no onDrag and no playtest payload; the drag side of .colorSwatchDrag or a plain .onDrag with ColorDrag.itemProvider(paint:source:) is most of it. It is the missing SOURCE that makes the toolbar swatch worth being a drop target: the panel colour rows and the toolbar swatch are never on screen at the same time (panel rows need a selected layer, which means the select tool, which swaps the bar to the bucket pair), so today a colour can only be dropped on the bar from the other bar swatch, another window or another app. A drop that carries the STYLE (so the swatch follows the saved name) is a bigger question than a drop that carries its colour: carrying the colour is the shortest version and matches what every other swatch drop does today.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-06T18:20:59.768Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T21:13:23.332Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T21:17:25.181264Z",
+      "note": "Adversarial review, before building. (1) The task note says carry the COLOUR only. Walking it as a first-time user, that is a trap: clicking a saved colour in a row's menu LINKS it (useColorStyle), so a drag of the same tile that only copies the hex is a lossy second way to do the same move, and dropping it on a row already wearing a name would even raise the 'stopped following Accent' pill. Dragging a named tile will mean the name, exactly like clicking it; where the name cannot be worn (a shadow well, the bucket pair, a colour kept for other parts, another app) the plain colour still lands and the swatch says so before you let go. (2) The whole Library panel is already a drop target that offers to SAVE a colour, so a tile dragged and let go a few pixels off would offer to save a duplicate of itself. The shelf will refuse a colour that came off its own shelf. (3) The travelling preview is the same 22pt chip every other swatch drag uses, not the wide tile, so a colour in the air always looks the same. (4) Cut: dropping a colour ONTO a tile to recolour that saved colour, and reordering tiles by drag. Neither is needed to use a saved colour, and the shelf drop already means something else."
+    },
+    {
+      "t": "2026-09-06T21:17:25.181264Z",
+      "note": "Plan: Payload gains the saved colour it came from; ColorDrop answers with what the swatch would wear (wears it / not this one / never wears names); the panel row goes down useColorStyle and the toolbar swatch arms the tool with the name; LibraryStyleTile gets onDrag plus a playtest payload so a walk can carry a tile."
+    },
+    {
+      "t": "2026-09-06T21:30:37.006919Z",
+      "note": "Built and verified on the probe with Scripts/playtest/colour-off-the-shelf-walk.json (64 steps, all green, Screen Recording granted so the shots are real captures). Every acceptance item checked: the tile is picked up and travels as the same 22pt colour chip every other swatch drag uses; dropped on the Fill row the row reads Brand afterwards and ONE undo takes it back off; dropped on the bar's inside swatch toolFillStyle becomes Brand and the next ellipse comes out wearing it; a plain click on the tile still picks it and opens the Style section. Two refusals were proved too: the same name on the row already wearing it stays dark, and the shelf refuses a tile that came off it instead of offering to save a duplicate. Brand is kept for fills, so the Outline row takes its colour without the name and says so first."
+    },
+    {
+      "t": "2026-09-06T21:30:37.006919Z",
+      "note": "Review of the built thing. The palette mark on the ring now says both 'a saved colour is arriving' and 'a saved colour is being let go of'; the sentence tells them apart but a tip does not show mid-drag, so it is one mark for two meanings. Left as is and written into the audit's rough for the user to react to. Border swatch with the border OFF takes the colour and not the name, because turning it on and naming it are two moves and the ring can only promise one. A text tool holding nothing has nowhere to keep a name, so a drop there is a plain colour."
+    },
+    {
+      "t": "2026-09-06T21:30:37.006919Z",
+      "note": "Also landed on the way: PlaytestHarness dragColor can now name a Library tile as its source, and shelf tiles are pressable from a walk (pressTargets takes .tile as well as .control), which is how the click-still-picks step is proved."
     }
-  ]
+  ],
+  "started": "2026-09-06T21:13:23.331Z"
 }

@@ -15,6 +15,40 @@ import Foundation
 /// in the air is exactly what letting go does.
 public enum ColorDrop {
 
+    /// A colour that arrived under a name: a tile pulled off the Library
+    /// shelf carries the saved colour it IS, not a copy of what it looks like.
+    ///
+    /// The name is the whole point of having saved it. Clicking a saved colour
+    /// in a row's menu has always pointed that row at the name, so a drag of
+    /// the same tile that handed over a bare hex would be a quieter, lossier
+    /// second way to do one thing — and the row would even announce that it
+    /// had STOPPED following a saved colour, in the moment somebody dropped
+    /// one on it.
+    public struct SavedColor: Hashable, Codable, Sendable {
+        public var id: UUID
+        public var name: String
+
+        public init(id: UUID, name: String) {
+            self.id = id
+            self.name = name
+        }
+    }
+
+    /// How a swatch gets on with a saved colour arriving on it.
+    public enum StyleWelcome: Hashable, Sendable {
+        /// It takes the name: afterwards the swatch says the name and follows
+        /// it the day the colour behind it is edited.
+        case wearsIt
+        /// It wears names, but not this one — the colour is kept for other
+        /// parts of a layer — so only the colour lands, and the swatch says so
+        /// before you let go.
+        case notThisOne
+        /// It never wears names at all: a shadow's colour, a backdrop, the
+        /// pair the bucket fills with. Only the colour lands, and there is
+        /// nothing worth saying about a name it was never going to keep.
+        case neverWearsNames
+    }
+
     /// The swatch a paint is being held over, in the only terms the answer
     /// depends on.
     public struct Target: Hashable, Sendable {
@@ -26,6 +60,15 @@ public enum ColorDrop {
         /// The saved colour it is wearing, by name, when it wears one. A drop
         /// takes the swatch off it, and says so before it does.
         public var styleName: String?
+        /// The saved colour it is wearing, by id. A tile dragged straight back
+        /// onto the swatch already wearing it has nothing to do, and the same
+        /// name arriving twice is exactly as much of a no-op as the same
+        /// colour arriving twice.
+        public var styleID: UUID?
+        /// What this swatch would do with the saved colour in the air right
+        /// now. Worked out by whoever knows the document, because whether a
+        /// name fits a row depends on what that name is kept for.
+        public var welcome: StyleWelcome
         /// How many layers letting go here would paint. Zero means the swatch
         /// has nothing behind it and cannot take a colour at all.
         public var reaches: Int
@@ -38,14 +81,17 @@ public enum ColorDrop {
         public var acceptsGradient: Bool
 
         public init(part: String, wearing: Paint, styleName: String? = nil,
-                    reaches: Int = 1, isSource: Bool = false,
-                    acceptsGradient: Bool = false) {
+                    styleID: UUID? = nil, reaches: Int = 1, isSource: Bool = false,
+                    acceptsGradient: Bool = false,
+                    welcome: StyleWelcome = .neverWearsNames) {
             self.part = part
             self.wearing = wearing
             self.styleName = styleName
+            self.styleID = styleID
             self.reaches = reaches
             self.isSource = isSource
             self.acceptsGradient = acceptsGradient
+            self.welcome = welcome
         }
     }
 
@@ -58,6 +104,10 @@ public enum ColorDrop {
         public var flattened: Bool
         /// The saved colour this drop takes the swatch off, by name.
         public var letsGoOf: String?
+        /// The saved colour this drop ARRIVES wearing, when the swatch is one
+        /// that can wear a name. Nil is a plain colour landing, which is every
+        /// drop that does not come off the Library shelf.
+        public var brings: SavedColor?
     }
 
     /// A swatch's reply to a paint held over it: whether it lights up, what
@@ -75,7 +125,13 @@ public enum ColorDrop {
     }
 
     /// What this swatch would do with the paint being held over it.
-    public static func answer(dropping paint: Paint, on target: Target) -> Answer {
+    ///
+    /// `brought` is the saved colour the paint arrived under, for a drag that
+    /// started on the Library shelf. Where the swatch can wear the name it
+    /// takes the name; everywhere else the colour lands on its own, exactly as
+    /// it always has.
+    public static func answer(dropping paint: Paint, bringing brought: SavedColor? = nil,
+                              on target: Target) -> Answer {
         guard !target.isSource else {
             return Answer(landing: nil, note: "This is where the colour came from.")
         }
@@ -84,6 +140,18 @@ public enum ColorDrop {
         }
         let flattens = paint.isGradient && !target.acceptsGradient
         let landing = flattens ? Paint(hex: paint.hex) : paint
+        if let brought, target.welcome == .wearsIt {
+            // The same name arriving on the swatch already wearing it is as
+            // much of a no-op as the same colour arriving twice, and it stays
+            // one even after somebody recolours the style.
+            guard target.styleID != brought.id else {
+                return Answer(landing: nil,
+                              note: "\(opening(target.part)) is already \(brought.name).")
+            }
+            let result = Landing(paint: landing, flattened: flattens,
+                                 letsGoOf: nil, brings: brought)
+            return Answer(landing: result, note: note(for: result, on: target))
+        }
         // A swatch already wearing this colour has nothing to do, and a no-op
         // that lights up and writes an undo step is worse than one that says
         // so. Wearing a SAVED colour is different: letting go there still
@@ -91,21 +159,31 @@ public enum ColorDrop {
         if target.styleName == nil, landing.draws(sameAs: target.wearing) {
             return Answer(landing: nil, note: "\(opening(target.part)) is already this colour.")
         }
-        let result = Landing(paint: landing, flattened: flattens, letsGoOf: target.styleName)
-        return Answer(landing: result, note: note(for: result, on: target))
+        let result = Landing(paint: landing, flattened: flattens,
+                             letsGoOf: target.styleName, brings: nil)
+        // A row that wears names but not THIS one is the one case worth
+        // explaining before the drop rather than after it: the colour lands
+        // and the name does not, which looks like the drag half worked.
+        let turnedAway = target.welcome == .notThisOne ? brought : nil
+        return Answer(landing: result, note: note(for: result, on: target, turnedAway: turnedAway))
     }
 
     /// The sentence a swatch says while a colour is over it. One clause about
     /// what gets painted, and one about what that costs — a ramp given up, a
     /// saved colour let go of — because both are things somebody would rather
     /// know before letting go than after.
-    private static func note(for landing: Landing, on target: Target) -> String {
+    private static func note(for landing: Landing, on target: Target,
+                             turnedAway: SavedColor? = nil) -> String {
         if landing.flattened {
             return "\(opening(target.part)) cannot hold a gradient, so it takes its flat colour."
         }
+        if let away = turnedAway {
+            return "\(away.name) is kept for other parts, so \(target.part) takes its colour."
+        }
+        let colour = landing.brings.map { $0.name } ?? "this colour"
         var sentence = target.reaches > 1
-            ? "Paints \(target.part) on all \(target.reaches) of them with this colour"
-            : "Paints \(target.part) with this colour"
+            ? "Paints \(target.part) on all \(target.reaches) of them with \(colour)"
+            : "Paints \(target.part) with \(colour)"
         if let name = landing.letsGoOf { sentence += " and lets go of \(name)" }
         return sentence + "."
     }
@@ -145,10 +223,16 @@ extension ColorDrop {
         /// there is one. The drop is still taken — one blue really is both
         /// Brand and Link — but it is said out loud first.
         public var alreadySaved: String?
+        /// The saved colour this very drag came OFF, by name. The shelf is the
+        /// whole Library panel, tiles included, so a tile picked up and let go
+        /// an inch away would otherwise offer to save a second copy of itself.
+        public var cameFrom: String?
 
-        public init(canSave: Bool = true, alreadySaved: String? = nil) {
+        public init(canSave: Bool = true, alreadySaved: String? = nil,
+                    cameFrom: String? = nil) {
             self.canSave = canSave
             self.alreadySaved = alreadySaved
+            self.cameFrom = cameFrom
         }
     }
 
@@ -157,9 +241,12 @@ extension ColorDrop {
         guard shelf.canSave else {
             return Answer(landing: nil, note: "Saved colors are turned off.")
         }
+        if let name = shelf.cameFrom {
+            return Answer(landing: nil, note: "\(name) is already on the shelf.")
+        }
         // Nothing is flattened and nothing is let go of: the shelf keeps the
         // paint exactly as it arrived.
-        let landing = Landing(paint: paint, flattened: false, letsGoOf: nil)
+        let landing = Landing(paint: paint, flattened: false, letsGoOf: nil, brings: nil)
         if let name = shelf.alreadySaved {
             return Answer(landing: landing,
                           note: "\(name) is already this color. Saving keeps a second one.")

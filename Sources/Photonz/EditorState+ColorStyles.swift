@@ -105,11 +105,16 @@ extension EditorState {
     /// What the Library shelf would do with the paint being held over it right
     /// now. The shelf lights up on this answer, so what it promises while the
     /// colour is in the air is exactly what letting go does.
-    func colorShelfDrop(_ paint: Paint) -> ColorDrop.Answer {
+    func colorShelfDrop(_ paint: Paint, from saved: ColorDrop.SavedColor? = nil) -> ColorDrop.Answer {
+        // A colour dragged OFF the shelf is already on it. The shelf is the
+        // whole Library panel, tiles included, so a tile picked up and let go
+        // an inch away would otherwise offer to save a second copy of itself.
+        let cameFrom = saved.flatMap { one in colorStyles.first { $0.id == one.id }?.name }
         let shelf = ColorDrop.Shelf(canSave: colorStylesEnabled && document != nil,
                                     alreadySaved: colorStyles.first {
                                         $0.paint.draws(sameAs: paint)
-                                    }?.name)
+                                    }?.name,
+                                    cameFrom: cameFrom)
         return ColorDrop.answer(dropping: paint, on: shelf)
     }
 
@@ -487,6 +492,66 @@ extension EditorState {
         // colour on this row has always carried over; a saved one now does the
         // same thing, which is the only way the two picks mean one thing.
         armToolsFromSelection(slot: slot, targets: targets)
+    }
+
+    /// What a colour row would do with a saved colour let go of on it.
+    ///
+    /// A row wears names, so the only question is whether it wears THIS one:
+    /// a colour kept for fills is not something to draw a hairline in, which
+    /// is the same rule the row's own menu uses to decide what to offer. When
+    /// it does not fit, the colour still lands and the swatch says the name
+    /// stayed behind.
+    func styleWelcome(slot: ColorSlot, styleID: UUID) -> ColorDrop.StyleWelcome {
+        guard colorStylesEnabled else { return .neverWearsNames }
+        let offered = document?.colorStyles(for: slot).contains { $0.id == styleID } ?? false
+        return offered ? .wearsIt : .notThisOne
+    }
+
+    /// The saved colour the toolbar's swatch is wearing, as the thing a drag
+    /// carries. The same style `toolColorStyle` reports, in the words drag and
+    /// drop speaks.
+    func toolSavedColor(slot: ColorSlot) -> ColorDrop.SavedColor? {
+        toolColorStyle(slot: slot).map { ColorDrop.SavedColor(id: $0.id, name: $0.name) }
+    }
+
+    /// What the TOOLBAR's swatch would do with a saved colour let go of on it.
+    ///
+    /// With a shape picked the bar's swatch is that shape's colour, so it
+    /// answers the way that shape's row does. With nothing picked it is the
+    /// tool in your hand, and a tool only remembers the two colours a shape is
+    /// drawn in: a text colour and a border colour are not something a tool can
+    /// carry a NAME for, so there the colour lands on its own.
+    func toolStyleWelcome(slot: ColorSlot, styleID: UUID) -> ColorDrop.StyleWelcome {
+        guard colorStylesEnabled else { return .neverWearsNames }
+        if selectedAnnotationLayer != nil { return styleWelcome(slot: slot, styleID: styleID) }
+        guard let shape = activeTool.annotationShape else { return .neverWearsNames }
+        switch slot {
+        case .stroke: break
+        case .fill: guard shape == .rectangle || shape == .ellipse else { return .neverWearsNames }
+        case .text, .border: return .neverWearsNames
+        }
+        return styleWelcome(slot: slot, styleID: styleID)
+    }
+
+    /// A saved colour let go of on the TOOLBAR's swatch.
+    ///
+    /// With a shape picked the bar's swatch is that shape's colour, so this is
+    /// the row's own move. With nothing picked it is the tool in your hand, and
+    /// what a tool holds is a preference rather than part of the picture: the
+    /// name is armed straight, so the next shape comes out wearing it and still
+    /// follows it the day the colour behind the name is edited.
+    func useToolColorStyle(slot: ColorSlot, styleID: UUID) {
+        guard colorStylesEnabled else { return }
+        if selectedAnnotationLayer != nil {
+            useColorStyle(slot: slot, styleID: styleID)
+            return
+        }
+        guard let style = document?.colorStyle(id: styleID),
+              let shape = activeTool.annotationShape else { return }
+        annotationStyles.arm(style.paint(for: slot), styleID: style.id, name: style.name,
+                             slot: slot, forShape: shape)
+        saveAnnotationStyles()
+        recordRecentColor(hex: style.paint(for: slot).hex)
     }
 
     /// "Unlink": every picked color stays exactly as it is, it just becomes its

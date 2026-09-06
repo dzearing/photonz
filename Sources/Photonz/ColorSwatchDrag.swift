@@ -33,8 +33,14 @@ struct ColorSwatchDrag: ViewModifier {
     /// swatch with no one colour to give — a row that says Mixed — which can
     /// be picked up and carries nothing, so every other swatch refuses it.
     let paint: () -> Paint?
-    /// The saved colour it wears, by name, when it wears one.
-    let styleName: () -> String?
+    /// The saved colour it wears, when it wears one. The name goes in the
+    /// sentence a drop says; the id is what tells the same name arriving twice
+    /// from a name being swapped for another.
+    let style: () -> ColorDrop.SavedColor?
+    /// What this swatch would do with a saved colour arriving on it. Asked
+    /// about the very colour in the air, because whether a name fits a row
+    /// depends on what that name is kept for.
+    let welcomes: (ColorDrop.SavedColor) -> ColorDrop.StyleWelcome
     /// How many layers letting go here would paint.
     let reaches: () -> Int
     /// Whether this swatch can hold a ramp.
@@ -84,28 +90,30 @@ struct ColorSwatchDrag: ViewModifier {
     /// nothing is more honest than a swatch that ignores the pull.
     private func item() -> NSItemProvider {
         guard let paint = paint() else { return NSItemProvider() }
-        return ColorDrag.itemProvider(paint: paint, source: key)
+        // A swatch wearing a saved colour hands the NAME on, the way the tile
+        // on the shelf does: carrying Brand from one row to another and
+        // arriving with a copy of its colour would be the quiet, lossy version
+        // of a move the row's own menu does properly.
+        return ColorDrag.itemProvider(paint: paint, source: key, style: style())
     }
 
     /// The colour under the pointer while it travels.
     private var travelling: some View {
-        PaintFill(paint: paint() ?? Paint(hex: "#FFFFFF"))
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-            .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
-            .frame(width: 22, height: 22)
-            .overlay(RoundedRectangle(cornerRadius: 4)
-                .strokeBorder(.primary.opacity(0.35), lineWidth: 1))
+        DraggedColorChip(paint: paint() ?? Paint(hex: "#FFFFFF"))
     }
 
     /// This swatch as the thing being dropped on, worked out fresh every time
     /// so a selection that changed under an open drag is the one answered for.
-    private func target(source: String) -> ColorDrop.Target {
-        ColorDrop.Target(part: part,
-                         wearing: paint() ?? Paint(hex: "#FFFFFF"),
-                         styleName: styleName(),
-                         reaches: paint() == nil ? 1 : reaches(),
-                         isSource: !source.isEmpty && source == key,
-                         acceptsGradient: acceptsGradient)
+    private func target(for payload: ColorDrag.Payload) -> ColorDrop.Target {
+        let worn = style()
+        return ColorDrop.Target(part: part,
+                                wearing: paint() ?? Paint(hex: "#FFFFFF"),
+                                styleName: worn?.name,
+                                styleID: worn?.id,
+                                reaches: paint() == nil ? 1 : reaches(),
+                                isSource: !payload.source.isEmpty && payload.source == key,
+                                acceptsGradient: acceptsGradient,
+                                welcome: payload.style.map(welcomes) ?? .neverWearsNames)
     }
 
     /// What the swatch about to take a colour looks like: a ring around it,
@@ -117,7 +125,10 @@ struct ColorSwatchDrag: ViewModifier {
                 .strokeBorder(Color.accentColor, lineWidth: 2)
                 .padding(-3)
                 .overlay(alignment: .topTrailing) {
-                    if landing.letsGoOf != nil {
+                    // Either way a saved colour is in play: one is arriving,
+                    // or one is being let go of. Which of the two it is is
+                    // what the sentence says.
+                    if landing.letsGoOf != nil || landing.brings != nil {
                         Image(systemName: "swatchpalette")
                             .font(.system(size: 7, weight: .semibold))
                             .foregroundStyle(.white)
@@ -140,8 +151,9 @@ struct ColorSwatchDrag: ViewModifier {
 /// bytes asynchronously, and a ring that appears two frames after the pointer
 /// arrives is a ring that flickers on an 18pt square.
 private struct ColorSwatchDropDelegate: DropDelegate {
-    /// This swatch, told which swatch the colour in the air came from.
-    let target: (String) -> ColorDrop.Target
+    /// This swatch, told what is in the air: which swatch the colour came
+    /// from, and the saved colour it is, if it is one.
+    let target: (ColorDrag.Payload) -> ColorDrop.Target
     @Binding var incoming: ColorDrop.Answer?
     let apply: (ColorDrop.Landing) -> Void
 
@@ -174,7 +186,8 @@ private struct ColorSwatchDropDelegate: DropDelegate {
     /// What this swatch would do with whatever is in the air right now.
     private func answer() -> ColorDrop.Answer? {
         guard let payload = ColorDrag.payloadInFlight() else { return nil }
-        return ColorDrop.answer(dropping: payload.paint, on: target(payload.source))
+        return ColorDrop.answer(dropping: payload.paint, bringing: payload.style,
+                                on: target(payload))
     }
 }
 
@@ -182,12 +195,15 @@ extension View {
     /// Makes this swatch something a colour can be pulled off and dropped onto.
     func colorSwatchDrag(key: String, part: String,
                          paint: @escaping () -> Paint?,
-                         styleName: @escaping () -> String? = { nil },
+                         style: @escaping () -> ColorDrop.SavedColor? = { nil },
+                         welcomes: @escaping (ColorDrop.SavedColor) -> ColorDrop.StyleWelcome
+                             = { _ in .neverWearsNames },
                          reaches: @escaping () -> Int = { 1 },
                          acceptsGradient: Bool = false,
                          ringCornerRadius: CGFloat = 6,
                          onDrop: @escaping (ColorDrop.Landing) -> Void) -> some View {
-        modifier(ColorSwatchDrag(key: key, part: part, paint: paint, styleName: styleName,
+        modifier(ColorSwatchDrag(key: key, part: part, paint: paint, style: style,
+                                 welcomes: welcomes,
                                  reaches: reaches, acceptsGradient: acceptsGradient,
                                  ringCornerRadius: ringCornerRadius, onDrop: onDrop))
     }

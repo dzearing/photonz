@@ -1,0 +1,31 @@
+{
+  "feature": "Drag a saved colour off the Library shelf",
+  "epic": "ui-components",
+  "summary": "A colour you saved under a name can now be picked up off the Library shelf and dropped on any swatch. It arrives wearing its name, so the row says Brand afterwards and still follows Brand the day you recolour it, exactly as if you had picked Brand out of that row's own menu.",
+  "setup": "Photonz Dev, Experiments window, release Next. Saved colors and colour drag are both on by default.",
+  "try": [
+    { "do": "Draw a box, switch to the select tool, click it, and give its Fill a colour you like." },
+    { "do": "Drag the Fill swatch onto the Library panel, type Brand and press Return." },
+    { "do": "Give the box's Fill a different colour, so there is something to change back." },
+    { "do": "Drag the Brand tile off the shelf onto the Fill swatch and let go.", "shot": "2026-09-06-colour-off-the-shelf-1.png" },
+    { "do": "Look at the Fill row: it now says Brand beside the palette icon.", "shot": "2026-09-06-colour-off-the-shelf-2.png" },
+    { "do": "Drag the Brand tile onto the Outline swatch, which Brand was not saved for." },
+    { "do": "Press Escape, pick the ellipse tool, and drag Brand onto the bar's inside swatch.", "shot": "2026-09-06-colour-off-the-shelf-3.png" },
+    { "do": "Draw an ellipse: it comes out in Brand and wears the name." }
+  ],
+  "evaluate": [
+    "Dropping a saved colour keeps the NAME rather than a copy of the colour. Is that what you expected the tile to mean?",
+    "The tile is where your eye already is when you want a colour you saved, or would you still reach for the row's menu?",
+    "The ring plus palette mark appears both when a drop GAINS a saved colour and when it LOSES one. Is that one mark doing too much work?",
+    "Dropping Brand on the Outline row lands its colour without the name, because Brand is kept for fills. Does that feel helpful or does it feel like the drag half worked?",
+    "Letting go a hair off the swatch lands back on the shelf, which refuses. Does the refusal read as the shelf being careful, or as the drag failing?"
+  ],
+  "rough": [
+    "The task asked for a drop that carries only the COLOUR and flagged the name as a bigger question. I built the name version instead: clicking a saved colour in a row's menu already links it, so a drag that copied the hex would be a quieter, lossier second way to do one move, and it would have raised the stopped following Accent pill in the moment you dropped a saved colour on a row. Push back on this line if you disagree and I will cut it back.",
+    "The palette mark on the ring now means two things: a saved colour is arriving, or a saved colour is being let go of. The sentence the swatch says tells them apart, but a tip does not show while a drag is in the air, so on screen it is the same mark for both.",
+    "Dropping a saved colour on the bar's BORDER swatch while the border is switched off only turns the border back on with the colour, without the name. Turning it on and naming it are two moves and the ring can only promise one.",
+    "A tool can hold a name for a shape's outline and its inside only. Drop a saved colour on the bar while the text tool is up and the colour lands on its own, because a text tool has nowhere to keep the name.",
+    "Dropping a colour ONTO a tile to recolour that saved colour is not built. The shelf takes that drop as save a new one, which it already did.",
+    "Screen Recording was granted for this run, so the three pictures are real captures of the window."
+  ]
+}

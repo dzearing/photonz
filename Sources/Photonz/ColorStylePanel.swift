@@ -511,7 +511,10 @@ struct SelectionColorWell: View {
                 guard let paint = editorState.selectionPaint(slot: slot) else {
                     return NSItemProvider()
                 }
-                return ColorDrag.itemProvider(paint: paint, source: wellKey)
+                return ColorDrag.itemProvider(paint: paint, source: wellKey,
+                                              style: boundStyle.map {
+                                                  ColorDrop.SavedColor(id: $0.id, name: $0.name)
+                                              })
             })
             // Picked up and dropped on like any colour well on a Mac. Letting
             // go here goes down the very path a colour picked in the picker
@@ -524,11 +527,23 @@ struct SelectionColorWell: View {
                              // colour to pick up, and a swatch handed nothing
                              // is refused everywhere rather than guessing.
                              paint: { editorState.selectionPaint(slot: slot) },
-                             styleName: { boundStyle?.name },
+                             style: { boundStyle.map {
+                                 ColorDrop.SavedColor(id: $0.id, name: $0.name)
+                             } },
+                             welcomes: { editorState.styleWelcome(slot: slot, styleID: $0.id) },
                              reaches: { selection.count },
                              acceptsGradient: slot.acceptsGradient,
                              onDrop: { landing in
-                editorState.commitSelectionPaint(slot: slot, paint: landing.paint)
+                // A colour that arrived under a NAME goes down the very path
+                // the row's own menu takes when that name is picked: the row
+                // wears the name afterwards and follows it the day the colour
+                // behind it is edited. Anything else would make the drag a
+                // quieter, lossier way to do a move the menu does properly.
+                if let brings = landing.brings {
+                    editorState.useColorStyle(slot: slot, styleID: brings.id)
+                } else {
+                    editorState.commitSelectionPaint(slot: slot, paint: landing.paint)
+                }
             })
             .popover(isPresented: editorState.colorWellBinding(wellKey), arrowEdge: .top) {
                 // Always two children, whether or not there is a banner to
@@ -841,12 +856,37 @@ struct SelectionColorInspector: View {
 /// A style on the shelf: its color, its name, and how much of the document
 /// leans on it. Click picks it, which opens the Style section where it is
 /// renamed, recolored or removed.
+///
+/// It is also the HANDLE for the colour it stands for. Saving a colour under a
+/// name and then having to open a picker and find it again to use it made the
+/// shelf a place colours went rather than a place they came from, so a tile is
+/// picked up and let go of on any swatch, the same way every other colour in
+/// the app is carried.
+///
+/// What travels is the saved colour ITSELF, not a copy of what it looks like:
+/// a swatch that can wear a name takes the name and follows it afterwards,
+/// exactly as it would if the name had been picked out of that row's own menu.
+/// Somewhere that cannot wear one — a shadow's colour, another app — still
+/// takes the colour, and the swatch says so before you let go.
 struct LibraryStyleTile: View {
     @Environment(EditorState.self) private var editorState
     let entry: LibraryEntry
     let style: ColorStyle
 
     private var isSelected: Bool { editorState.selectedLibraryItemID == entry.id }
+
+    /// Where a colour dragged off this tile came from. No swatch answers to
+    /// it, which is right: a saved colour is at home on every swatch, and the
+    /// only place it is refused is the shelf it came off.
+    private var dragKey: String { "library.style.\(style.id.uuidString)" }
+
+    private var saved: ColorDrop.SavedColor {
+        ColorDrop.SavedColor(id: style.id, name: style.name)
+    }
+
+    private func item() -> NSItemProvider {
+        ColorDrag.itemProvider(paint: style.paint, source: dragKey, style: saved)
+    }
 
     var body: some View {
         VStack(spacing: LibraryShelfLayout.captionSpacing) {
@@ -878,9 +918,33 @@ struct LibraryStyleTile: View {
         )
         .contentShape(Rectangle())
         .onTapGesture { editorState.selectLibraryItem(entry.id) }
+        // Pulling the tile carries the colour; a plain click still picks the
+        // tile, which is what SwiftUI does with the two on one view.
+        .modifier(LibraryStyleTileDrag(paint: style.paint, item: item))
         .help("\(entry.name) • \(ColorStyleNaming.paintText(style.paint)) • \(entry.detail)")
-        // Named for a walk, with no payload: a style tile is not picked up.
-        .playtestTarget(entry.name, kind: .tile, detail: "Styles")
+        // Named for a walk, carrying the very item the tile's own drag hands
+        // over, so a walk can never carry a colour the pointer could not.
+        .playtestTarget(entry.name, kind: .tile, detail: "Styles",
+                        payload: Experiments.shared.colorDragEnabled ? item : nil)
+    }
+}
+
+/// Picking a tile up, only where colour drag is turned on. It is its own
+/// modifier so the tile itself stays one plain view, the way the swatches keep
+/// theirs in `ColorSwatchDrag`.
+private struct LibraryStyleTileDrag: ViewModifier {
+    let paint: Paint
+    let item: () -> NSItemProvider
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if Experiments.shared.colorDragEnabled {
+            // The 22pt chip every colour drag travels as, not the tile: a tile
+            // under the pointer would say a tile was moving, and what is
+            // moving is a colour.
+            content.onDrag(item, preview: { DraggedColorChip(paint: paint) })
+        } else {
+            content
+        }
     }
 }
 

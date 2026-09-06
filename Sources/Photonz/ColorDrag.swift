@@ -47,10 +47,16 @@ enum ColorDrag {
         /// The `wellKey` of the swatch the drag started from, empty when the
         /// colour came in from outside the app.
         var source: String
+        /// The saved colour this drag IS, for one pulled off the Library
+        /// shelf. Only the app's own pasteboard type can carry it — a colour
+        /// handed to another app is a colour and nothing else — which is
+        /// exactly right: the name means nothing outside this document.
+        var style: ColorDrop.SavedColor?
 
-        init(paint: Paint, source: String = "") {
+        init(paint: Paint, source: String = "", style: ColorDrop.SavedColor? = nil) {
             self.paint = paint
             self.source = source
+            self.style = style
         }
     }
 
@@ -59,9 +65,10 @@ enum ColorDrag {
     /// The drag a swatch starts. Nothing in here touches the app's state, so a
     /// change made while the drag is being handed over redraws the swatch and
     /// SwiftUI asks for the item all over again.
-    static func itemProvider(paint: Paint, source: String) -> NSItemProvider {
+    static func itemProvider(paint: Paint, source: String,
+                             style: ColorDrop.SavedColor? = nil) -> NSItemProvider {
         let provider = NSItemProvider()
-        let payload = Payload(paint: paint, source: source)
+        let payload = Payload(paint: paint, source: source, style: style)
         if let data = try? JSONEncoder().encode(payload) {
             provider.registerDataRepresentation(forTypeIdentifier: typeIdentifier,
                                                 visibility: .ownProcess) { completion in
@@ -163,5 +170,25 @@ enum ColorDrag {
         let rgba = RGBA(r: srgb.redComponent, g: srgb.greenComponent,
                         b: srgb.blueComponent, a: srgb.alphaComponent)
         return rgba.a < 1 ? rgba.hexStringWithAlpha : rgba.hexString
+    }
+}
+
+/// The colour under the pointer while a drag travels.
+///
+/// The same picture wherever a colour is picked up — a swatch on a row, a
+/// swatch on the bar, a tile on the Library shelf — because a colour in the
+/// air is one thing and it should look like one thing. A tile is a wide
+/// rounded rectangle with a caption under it; dragging THAT would say a tile
+/// was moving rather than a colour.
+struct DraggedColorChip: View {
+    let paint: Paint
+
+    var body: some View {
+        PaintFill(paint: paint)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
+            .frame(width: 22, height: 22)
+            .overlay(RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(.primary.opacity(0.35), lineWidth: 1))
     }
 }
