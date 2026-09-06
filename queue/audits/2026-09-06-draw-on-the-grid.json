@@ -1,0 +1,29 @@
+{
+  "feature": "A shape you draw lands on the grid",
+  "epic": "ui-building",
+  "summary": "With the grid on, drawing a new shape now pulls to the same lines a move does: both corners land on lines you can see, and the line the corner is standing on lights up while you drag. Before this, only shapes you moved or resized knew about the grid.",
+  "setup": "Photonz Dev, release Next. New blank document, then Show grid in the canvas settings. Nothing else to switch on.",
+  "try": [
+    { "do": "Make a new blank document, click empty canvas, and turn on Show grid." },
+    { "do": "Pick the rectangle tool (R) and drag out a box.", "shot": "2026-09-06-draw-on-the-grid-1.png" },
+    { "do": "Watch the bright line that runs across the view while you drag: that is the line the corner is on." },
+    { "do": "Draw an ellipse, then a frame (F), then an arrow (A) drawn very slightly out of level." },
+    { "do": "Draw a rectangle with a drag of only a few points." },
+    { "do": "Hold Command and draw another rectangle.", "shot": "2026-09-06-draw-on-the-grid-2.png" },
+    { "do": "Turn off Snap to grid and draw one more." }
+  ],
+  "evaluate": [
+    "When you let go, does the corner sit where you expected, or does it feel like it stopped a line short?",
+    "Is the bright line that lights up while you draw the right amount of feedback, or is it too loud?",
+    "A drag of only a few points now makes one whole square rather than nothing at all. Is one square the right smallest thing to draw on graph paper?",
+    "An arrow drawn nearly level now comes out exactly level, because both ends took a row. Is that a relief or a fight?",
+    "Does Command mean the same thing here as it does when you move something?"
+  ],
+  "rough": [
+    "A lit line keeps a drag a little past halfway before handing on, which is the dead band that stops a shaking hand flipping the box a cell back and forth. Drawing shows it more than moving does: let go about 20 points past a line at 100% and the corner stays on that line rather than the next one, so the box can come out a cell narrower than the distance you dragged.",
+    "Shift still refuses every magnet while you draw, so a Shift square or a 45 degree line ignores the grid. That is how Shift already worked, and quantizing after the constraint would unsquare the square, but it does mean there is no way to draw a grid aligned square with Shift.",
+    "The text tool drops its box exactly where you click and does not touch the grid. It is a click rather than a drag so it did not come down this path; filed as its own task.",
+    "A selection marquee still ignores the grid on purpose: a selection is not a thing you are building, and the pixel it starts on is usually the point.",
+    "Screen Recording was granted for this run, so both pictures are real captures of the window, not offscreen renders."
+  ]
+}

@@ -803,18 +803,50 @@ final class CanvasNSView: NSView {
     /// live constraint a hand presses and lets go of mid-drag.
     func snappedAnnotationPoint(_ p: CGPoint, shape: AnnotationShape?,
                                         opposite: CGPoint?, event: NSEvent) -> CGPoint {
-        guard let viewport, let shape else {
+        guard let viewport else {
             snapGuide = nil
+            annotationGridSnap = (nil, nil)
             return p
         }
         let held = snapHold(freeing: event.modifierFlags.contains(.command))
         let refused = held.isFree || event.modifierFlags.contains(.shift)
+        if held.isFree { drawGridHold.free() }
         let snap = AnnotationSnapping.snap(p, shape: shape, opposite: opposite,
                                            edges: edgeMap, zoom: viewport.zoom,
-                                           free: refused, holding: held)
+                                           free: refused, holding: held,
+                                           gridHolding: drawGridHold,
+                                           gridSpacing: canvasSnapSpacing,
+                                           gridOrigin: canvasSnapOrigin,
+                                           gridAxes: canvasSnapAxes)
         snapGuide = (snap.guideX, snap.guideY)
+        annotationGridSnap = (snap.gridX, snap.gridY)
         snapHold.caught(x: snap.guideX, y: snap.guideY)
+        drawGridHold.caught(x: snap.gridX, y: snap.gridY)
         return snap.point
+    }
+
+    /// The grid lines the shape being DRAWN is standing on, lit while the drag
+    /// runs. The move and resize drags carry theirs on their own snap result;
+    /// a draw has two loose ends rather than a frame, so the answer lives here
+    /// and `refreshGridSnapLines` reads it alongside the others.
+    var annotationGridSnap: (x: CGFloat?, y: CGFloat?) = (nil, nil)
+
+    /// A draw's memory of the GRID lines it is standing on, kept apart from
+    /// `snapHold`, which remembers the picture's own borders.
+    ///
+    /// They cannot share one, because a held line is handed straight back as
+    /// the guide: a grid line put into the edge memory comes back out claiming
+    /// to be a border found in the picture, so the yellow guide lights for a
+    /// line of graph paper and the grid's own quantize never gets a turn. Ask
+    /// them separately and each keeps its own meaning.
+    var drawGridHold = SnapHold.none
+
+    /// A fresh draw starts with nothing caught. The press that begins one does
+    /// not go through `resetDragMotion`, so without this the next shape would
+    /// open standing on the last shape's lines.
+    func resetDrawSnapMemory() {
+        snapHold = .none
+        drawGridHold = .none
     }
 
     /// Feeds the direction gate; call once per mouseDragged before snapping.

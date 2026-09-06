@@ -1,0 +1,64 @@
+{
+  "out": "/tmp/photonz-playtest/draw-on-the-grid-walk",
+  "setup": {
+    "forget": ["grid", "shapes", "tools", "panel", "frames"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Show grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "grid-on-default", "note": "default grid at 100%: the canvas draws 32s, so drawing should pull to 32" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [400, 300], "to": [500, 360], "steps": 12, "hold": "draw-grid-1-drawing" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "rectangle-drawn", "note": "the exact drag from the report, which used to make 400,300 100x60: expect Rectangle at 416,288 64x64, every number a multiple of 32, and a lit grid line in the held picture. The right edge stops on 480 rather than 512 because the pointer let go 20pt past it and a lit line keeps a drag a little past halfway, the same dead band a move has" },
+    { "do": "snapshot", "name": "draw-grid-2-rectangle" },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [200, 200], "to": [290, 268], "steps": 12, "wobble": 3 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "ellipse-drawn-with-a-shaking-hand", "note": "expect Ellipse at 192,192 96x64: a wobble must not cost it a line" },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [100, 420], "to": [260, 540], "steps": 12 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "frame-drawn", "note": "a frame is a screen and had NO snapping at all before: expect 96,416 160x128" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [600, 100], "to": [700, 106], "steps": 12 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "near-level-arrow-comes-out-level", "note": "drawn 6pt out of level: expect both ends on the row at 96, so the arrow box is only its own stroke overhang tall" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [640, 320], "to": [650, 330], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "a-tiny-drag-is-still-one-whole-cell", "note": "dragged 10pt on a 32 grid: expect one whole square at 640,320 32x32, not nothing at all" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "click", "at": [500, 620] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "a-click-still-draws-nothing", "note": "a click with a drawing tool: expect NO new rectangle, the floor must not turn a click into a square" },
+
+    { "do": "drag", "from": [300, 500], "to": [371, 553], "steps": 8, "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "command-draws-free", "note": "Command held: expect Rectangle at exactly 300,500 71x53, off every line" },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Snap to grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 600], "to": [237, 611], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "snapping-off-draws-as-it-always-did", "note": "Snap to grid off with the lines still drawn: expect Rectangle at exactly 200,600 37x11" },
+    { "do": "snapshot", "name": "draw-grid-3-everything" }
+  ]
+}

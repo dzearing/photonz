@@ -901,10 +901,7 @@ extension CanvasNSView {
     /// that axis and the yellow guide takes over, which is exactly the handover
     /// a person expects: the grid holds you until something better does.
     private func refreshGridSnapLines(in viewport: Viewport) {
-        let move = moveDrag?.snapped ?? multiMove.flatMap { $0.moved ? $0.snapped : nil }
-        let resize = resizeDrag?.snapped
-        let x = move?.gridX ?? resize?.gridX
-        let y = move?.gridY ?? resize?.gridY
+        let (x, y) = liveGridSnapLines
         guard canvasGridEnabled, x != nil || y != nil,
               bounds.width > 0.5, bounds.height > 0.5 else {
             gridSnapLayer.path = nil
@@ -934,7 +931,12 @@ extension CanvasNSView {
     var liveGridSnapLines: (x: CGFloat?, y: CGFloat?) {
         let move = moveDrag?.snapped ?? multiMove.flatMap { $0.moved ? $0.snapped : nil }
         let resize = resizeDrag?.snapped
-        return (move?.gridX ?? resize?.gridX, move?.gridY ?? resize?.gridY)
+        // A shape being drawn lights the same lines as one being moved: the
+        // end under the pointer is standing on them.
+        let drawing = annotationDrag != nil || endpointDrag != nil
+        let draw = drawing ? annotationGridSnap : (CGFloat?.none, CGFloat?.none)
+        return (move?.gridX ?? resize?.gridX ?? draw.0,
+                move?.gridY ?? resize?.gridY ?? draw.1)
     }
 
     /// A guide's reach, from canvas points into view points, with a few points

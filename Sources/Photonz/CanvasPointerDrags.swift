@@ -167,6 +167,7 @@ extension CanvasNSView {
             // to say which way the mark points, so the first point takes
             // whichever lines are near it — the same thing a caliper's first
             // foot does.
+            resetDrawSnapMemory()
             let anchor = snappedAnnotationPoint(p, shape: tool.annotationShape,
                                                 opposite: nil, event: event)
             annotationDrag = AnnotationDrag(anchor: anchor)

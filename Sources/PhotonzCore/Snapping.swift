@@ -375,10 +375,10 @@ public enum Snapping {
     /// tremor is the same few points whatever the zoom — and only a clear move
     /// hands it on. Same promise as a guide's hold: a line that is showing is a
     /// line you get.
-    private static func quantized(_ value: CGFloat, to spacing: CGFloat?,
-                                  from origin: CGFloat = 0,
-                                  held: CGFloat? = nil,
-                                  tolerance: CGFloat = 0) -> CGFloat {
+    static func quantized(_ value: CGFloat, to spacing: CGFloat?,
+                          from origin: CGFloat = 0,
+                          held: CGFloat? = nil,
+                          tolerance: CGFloat = 0) -> CGFloat {
         guard let spacing, spacing.isFinite, spacing > 0, value.isFinite,
               origin.isFinite else { return value }
         let landed = origin + ((value - origin) / spacing).rounded() * spacing

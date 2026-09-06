@@ -9267,3 +9267,43 @@ are unchanged after 376 walk runs.
 
 Next: the full run takes about four hours, which is why nobody runs it before a
 change lands. Filed as `a-full-walk-run-finishes-in-an-hour-not-four`.
+
+## 2026-09-06 — A shape you draw lands on the grid
+
+Moving and resizing a layer have pulled to the canvas grid for a while, but
+drawing a new one did not: with the grid on at 100%, the drag from the bug
+report made a rectangle at exactly 400,300 100x60, so nothing had pulled. The
+grid now sits underneath the edge magnets inside `AnnotationSnapping.snap`,
+which both ends of a draw already go through, on both axes and for every shape
+the tool bar draws. The frame tool and the zoom callout run down the same drag
+but carry no annotation shape, so they used to get no snapping at all, not even
+the edge magnets; a nil shape is now read as a plain box that takes the grid and
+nothing else. A frame is a screen, so a frame off the grid was the worst case
+this epic had.
+
+Two things the fix needed that the report did not mention. The grid quantizes
+with no tolerance, so a drag shorter than half a cell put both ends on the same
+line, and a zero sized drag reads as a click: you dragged and nothing appeared.
+Each axis the shape may catch on now gets at least one whole cell once the
+pointer has clearly moved, so the smallest thing you can draw on graph paper is
+one square. And a grid line may not go into `snapHold`: `EdgeSnapping` hands a
+held line straight back AS the guide, so a grid line put there came back out
+claiming to be a border found in the picture — the yellow guide lit for graph
+paper and the grid's own quantize never ran. Grid lines have their own memory
+now, freed by Command alongside the other one.
+
+Current is untouched: the grid flag is Next only, so `canvasSnapSpacing` is nil
+there and every draw takes the path it always took.
+
+Verified in the probe app with `Scripts/playtest/draw-on-the-grid-walk.json`
+(real window captures, Screen Recording granted): an arrow drawn six points out
+of level came out exactly level, a ten point drag made one square rather than
+nothing, a click still draws nothing, Command still draws any size, and with
+Snap to grid off every number is exactly what the pointer said. Audit in
+`queue/audits/2026-09-06-draw-on-the-grid.json`.
+
+Next: the text tool still drops its box at the raw click point. Filed as
+`clicking-with-the-text-tool-lands-on-the-grid-to`. Open question for the user
+in the audit: a lit line keeps a drag a little past halfway, which shows up more
+when drawing than when moving, because it makes the box a cell narrower rather
+than moving it a cell.

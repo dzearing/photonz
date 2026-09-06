@@ -25,11 +25,23 @@ public enum EdgeSnapping {
         public var guideX: CGFloat?
         /// The y of the horizontal edge that captured, or nil.
         public var guideY: CGFloat?
+        /// The vertical CANVAS GRID line the point came to rest on, when the
+        /// grid is what placed it. Nil when a real edge won instead, or when
+        /// the grid is not pulling. Kept apart from `guideX` for the same
+        /// reason `Snapping.Result` keeps them apart: a guide says "you lined
+        /// up with that thing" and is news, a grid line says "you are on this
+        /// line", and the canvas lights the two differently.
+        public var gridX: CGFloat?
+        /// The same for the horizontal grid line.
+        public var gridY: CGFloat?
 
-        public init(point: CGPoint, guideX: CGFloat? = nil, guideY: CGFloat? = nil) {
+        public init(point: CGPoint, guideX: CGFloat? = nil, guideY: CGFloat? = nil,
+                    gridX: CGFloat? = nil, gridY: CGFloat? = nil) {
             self.point = point
             self.guideX = guideX
             self.guideY = guideY
+            self.gridX = gridX
+            self.gridY = gridY
         }
     }
 

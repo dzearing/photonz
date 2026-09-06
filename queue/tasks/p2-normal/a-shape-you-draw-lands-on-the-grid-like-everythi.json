@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1280,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T20:41:24.189Z",
-  "updated": "2026-09-05T20:41:24.189Z",
+  "updated": "2026-09-06T09:37:06.655Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-05 while building snapping-pulls-to-the-grid-you-can-see-not-one-y, and measured: with the grid on at 100% (pull 32) a drag from 400,300 to 500,360 produced a rectangle at exactly (400,300,100,60), so nothing pulled. The move and resize paths in CanvasView call Snapping with canvasSnapSpacing/canvasSnapOrigin/canvasSnapAxes; the shape-creation drag does not go through them at all. Use the same three, and Snapping.snapFrameOrigin on the two corners, so a drawn box gets the lit grid line too.",
@@ -23,6 +23,19 @@
     {
       "t": "2026-09-05T20:41:24.189Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T09:37:06.655Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T09:45:00.000Z",
+      "note": "Adversarial review before building. Confirmed the report: the create drag goes through CanvasView.snappedAnnotationPoint -> AnnotationSnapping.snap, which only knows about detected picture edges and the pixel grid. It never sees canvasSnapSpacing, so the grid has no say. Three things the note did not mention. (1) The frame tool and the zoom callout run down the SAME create path but have a nil annotationShape, so snappedAnnotationPoint returns the raw pointer and they get no snapping at all, not even edge snapping. Frames are screens, so a frame off the grid is the worst case for this epic; they are in scope. (2) The grid is a quantize with no tolerance, so a drag shorter than half a cell would collapse both corners onto one line, isClick would then read the drag as a click and NOTHING would be drawn. Dragging and getting no shape is the failure a first-time user would blame the tool for, so a drawn box needs a floor of one whole cell on each axis the shape may catch, once the pointer has travelled far enough to count as a drag. (3) snapFrameOrigin, which the note suggested, is the wrong shape for this: it wants an origin plus a size and it drags in the peer and canvas candidates a second time. The two ends of a draw are points, so the grid belongs inside AnnotationSnapping where the edge magnets already live, underneath them exactly as it sits underneath the move path. Decided against: making Shift keep the grid. Shift already refuses every magnet because a constrained square or 45 degree line owns its own point, and quantizing after the constraint would unsquare the square."
+    },
+    {
+      "t": "2026-09-06T10:25:00.000Z",
+      "note": "Built and verified. The grid now sits underneath the edge magnets inside AnnotationSnapping.snap, on both axes and for both ends of the draw, plus a one cell floor so a drag shorter than half a cell comes out one square rather than nothing. The frame tool and the zoom callout pass a nil shape and get the grid without the edge magnets they never had. Two bugs found while verifying, both mine. FIRST: putting the grid line into snapHold poisoned the edge snapper, because EdgeSnapping hands a held line straight back AS the guide, so a grid line came back claiming to be a border found in the picture (the yellow guide lit for graph paper) and the grid's own quantize never ran. The two memories are now separate: snapHold for edges, drawGridHold for grid lines, freed together by Command. SECOND: the annotation press never reset the snap memory, so a new shape opened standing on the last shape's lines; resetDrawSnapMemory now runs on the press. New walk Scripts/playtest/draw-on-the-grid-walk.json, run in the probe with Screen Recording granted: rectangle 416,288 64x64; ellipse with a shaking hand 192,192 96x64; frame 96,416 160x128; an arrow drawn 6pt out of level came out exactly level from 608,96 to 704,96; a 10pt drag made one square at 640,320 32x32; a click still draws nothing; Command drew 300,500 71x53 exactly; Snap to grid off drew 200,600 37x11 exactly. The lit line tally shows the draw lighting a real grid line all the way through and lighting nothing under Command or with snapping off. 3703 tests green. Audit at queue/audits/2026-09-06-draw-on-the-grid.json with two real captures. Follow up filed: the text tool still places at the raw click point."
     }
-  ]
+  ],
+  "started": "2026-09-06T09:37:06.655Z"
 }
