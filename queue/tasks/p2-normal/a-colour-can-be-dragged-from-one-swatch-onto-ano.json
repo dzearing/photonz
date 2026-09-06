@@ -1,0 +1,36 @@
+{
+  "id": "a-colour-can-be-dragged-from-one-swatch-onto-ano",
+  "title": "A colour can be dragged from one swatch onto another",
+  "goal": "To put the same colour on two things you have to open the picker twice and match it by eye or by copying a code. A colour swatch should be something you can pick up and drop on another swatch, which then takes that colour. Dropping onto a swatch that is wearing a saved colour asks whether to replace what it wears, rather than silently unlinking it.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-06T13:55:21.667Z",
+  "updated": "2026-09-06T13:55:21.703Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-06. Nothing drags today: no onDrag or drop target exists in ColorPickerEntry.swift or ColorStylePanel.swift. The good news is there is one place to add it. ColorWellButton (Sources/Photonz/ColorPickerEntry.swift line 95) is the shared well used by every colour row, and the style aware rows go through ColorStyleRow and ColorStyleControl in ColorStylePanel.swift, so making the well both a drag source and a drop target covers the panel in one change rather than several. Carry the colour as a standard colour type on the pasteboard as well as the app's own, so a colour can also be dragged in from another Mac app and out to one; say in the audit whether that worked. Mind the click: the well opens the picker on click, so the drag must only begin after a real distance of travel, the same lesson as the Library tile drag task. This is related to two open tasks, the one that makes a styled row look different from an editable one, and the one that builds the designed picker; whichever lands last should make sure a dragged colour and a picked colour behave the same.",
+  "acceptance": [
+    "Any colour swatch in the panel can be picked up and dragged, with the colour visible under the pointer while it travels",
+    "Dropping it on another swatch gives that swatch the colour, in one undo step, and the drop target lights up while the pointer is over it",
+    "A swatch that cannot take the colour does not light up, and dropping there changes nothing",
+    "Dropping onto a swatch that is wearing a saved colour is handled deliberately rather than by accident: the audit says what happens and why",
+    "The colour can also be dropped onto the Library to save it as a named colour, if that costs little; if it does not, say so and file it as a follow-up",
+    "A plain click still opens the picker exactly as it does now, and a small accidental movement during a click never starts a drag",
+    "The same behaviour applies to every swatch in the panel, including the outline, inside, shadow and backdrop wells",
+    "Audit written under queue/audits/ with a drag in flight and the result, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-06T13:55:21.667Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-06T13:55:21.702Z",
+      "note": "seq 1390 -> 11"
+    }
+  ]
+}

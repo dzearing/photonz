@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T03:24:19.169Z",
-  "updated": "2026-09-06T12:16:42.220Z",
+  "updated": "2026-09-06T13:43:32.964Z",
   "deps": [],
   "blockedBy": [],
   "notes": "insertComponentInstance already takes the version through main.componentVersionID; what is missing is the choice at the shelf. Tile is LibraryComponentTile, drag payload is ComponentDrag.",
@@ -30,6 +30,11 @@
     {
       "t": "2026-09-06T12:16:42.220Z",
       "note": "seq 40 -> 40"
+    },
+    {
+      "t": "2026-09-06T13:43:32.964Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-06T13:43:32.963Z"
 }
