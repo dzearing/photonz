@@ -712,6 +712,56 @@ enum GroupFlow {
 
     // MARK: - The order things flow in
 
+    /// The pieces a group actually ARRANGES, in the order they read on screen:
+    /// where each one sits in the group's own contents, and the box it takes in
+    /// the group's own space.
+    ///
+    /// Empty for a group that arranges nothing, and for one whose contents are
+    /// all surface — a bar's background and its hairline span the bar rather
+    /// than taking a place along it, so they are not things in the row and a
+    /// piece dropped on the bar cannot land before or after them.
+    static func arrangedItems(of layer: Layer) -> [(index: Int, box: CGRect)] {
+        guard let group = layer.group, let layout = group.layout, layout.arranges else { return [] }
+        let children = group.children
+        let rules = resolving(children, group.contentPlacement, onAScreen: group.isFrame)
+        let taking = children.indices.filter {
+            children[$0].isVisible && !rules[$0].stepsOutOfTheFlow(of: layout)
+        }
+        guard !taking.isEmpty else { return [] }
+        let boxes = taking.map { children[$0].contentBounds }
+        return flowOrder(boxes, layout: layout).map { (taking[$0], boxes[$0]) }
+    }
+
+    /// Which slot a point falls into among a group's arranged pieces: 0 before
+    /// the first, `items.count` past the last.
+    ///
+    /// Read from the POINT, never from the box the arriving piece would fill.
+    /// A control centred on the pointer has its leading edge half its own width
+    /// back, so ordering by that edge puts a wide piece earlier in the row than
+    /// a narrow one let go in exactly the same place — which is how a button
+    /// let go in a bar's second gap used to land first in the bar.
+    static func slot(at local: CGPoint, among items: [(index: Int, box: CGRect)],
+                     layout: GroupLayout) -> Int {
+        guard !items.isEmpty else { return 0 }
+        guard layout.kind == .grid else {
+            let horizontal = layout.direction.isHorizontal
+            let along = horizontal ? local.x : local.y
+            return items.filter { (horizontal ? $0.box.midX : $0.box.midY) < along }.count
+        }
+        // A grid reads row by row, so the point picks its row first and its
+        // place along that row second.
+        var passed = 0
+        let boxes = items.map(\.box)
+        for row in rows(of: boxes) {
+            let bottom = row.map { boxes[$0].maxY }.max() ?? 0
+            if local.y < bottom {
+                return passed + row.filter { boxes[$0].midX < local.x }.count
+            }
+            passed += row.count
+        }
+        return passed
+    }
+
     /// The order these boxes read in on screen: along the flow for a stack,
     /// row by row for a grid. Ties keep the order they were handed in, so
     /// nothing shuffles for no reason.

@@ -349,7 +349,7 @@ extension CanvasNSView {
     /// the frame: something the same size as the screen it is joining would
     /// otherwise hide the very cue that says so.
     private func outlineHostFrame(_ host: UUID?, in viewport: Viewport) {
-        guard let host, let bounds = document?.canvasBounds(of: host) else {
+        guard let host, let bounds = dropHostBox ?? document?.canvasBounds(of: host) else {
             dropHostFrameLayer.isHidden = true
             return
         }

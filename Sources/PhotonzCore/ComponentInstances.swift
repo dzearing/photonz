@@ -238,6 +238,33 @@ extension PhotonzDocument {
                                        measure: measure).localBounds.size
     }
 
+}
+
+/// Where a piece let go over the canvas would end up.
+public struct ComponentDropLanding: Equatable, Sendable {
+    /// The box the piece would fill, where it would actually come to rest.
+    public var rect: CGRect
+    /// The group it would join, nil out on the bare canvas.
+    public var host: UUID?
+    /// Where among that group's own contents it would sit, for a container
+    /// that decides the order of what it holds. Nil where the order is not the
+    /// container's to decide, and the piece stays where it was let go.
+    public var index: Int?
+    /// The box that group would have with the room held open: bigger than the
+    /// one it has now whenever a row has to grow to take the piece. Nil where
+    /// nothing about the group changes.
+    public var hostBox: CGRect?
+
+    public init(rect: CGRect, host: UUID? = nil, index: Int? = nil, hostBox: CGRect? = nil) {
+        self.rect = rect
+        self.host = host
+        self.index = index
+        self.hostBox = hostBox
+    }
+}
+
+extension PhotonzDocument {
+
     /// Where a dropped piece would actually END UP, and what it would join.
     ///
     /// For a container that arranges nothing that is the box under the pointer,
@@ -248,36 +275,103 @@ extension PhotonzDocument {
     /// flow the same question the drop is about to ask it, so the outline in
     /// the air is where the piece lands.
     ///
+    /// `index` says WHERE among the host's contents it would go, for a
+    /// container that decides the order of what it holds. Nil out on the canvas
+    /// and inside a group that arranges nothing: order is not theirs to decide
+    /// there, so a piece simply stays where it was let go.
+    ///
     /// Nil where the drop would be refused, and where the id is not a component
     /// at all.
     public func componentDropLanding(
         of componentID: UUID, at point: CGPoint, inside context: UUID? = nil,
         version: UUID? = nil,
         measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize
-    ) -> (rect: CGRect, host: UUID?)? {
+    ) -> ComponentDropLanding? {
         let target = componentDropTarget(of: componentID, at: point, inside: context)
         guard target != .refused,
               let size = componentDropSize(of: componentID, version: version, measure: measure)
         else { return nil }
         let loose = CGRect(x: point.x - size.width / 2, y: point.y - size.height / 2,
                            width: size.width, height: size.height)
-        guard case .inside(let host) = target else { return (loose, nil) }
-        guard let group = layer(id: host), group.group?.layout?.arranges == true,
-              let corner = childOrigin(of: host) else { return (loose, host) }
-        // A stand-in the size of the piece, in the group's own space, put
-        // through the very flow the drop will run. A plain box rather than an
-        // empty group: the flow measures what a piece SHOWS, and an empty group
-        // shows nothing, so the row would pack a piece of no size at all.
-        let local = loose.offsetBy(dx: -corner.x, dy: -corner.y)
+        guard case .inside(let host) = target else { return ComponentDropLanding(rect: loose) }
+        guard let group = layer(id: host), let slot = dropSlot(inGroup: host, at: point),
+              let corner = childOrigin(of: host) else {
+            return ComponentDropLanding(rect: loose, host: host)
+        }
+        // The stand-in put through the very flow the drop will run, in the very
+        // slot the drop will use, so the box drawn in the air is the gap the
+        // piece is going to take, and the group is the size it will be once it
+        // has taken it.
         var probe = group
-        probe.children.append(
-            Layer(name: "",
-                  content: .annotation(AnnotationContent(shape: .rectangle, start: .zero,
-                                                         end: CGPoint(x: local.width,
-                                                                      y: local.height))),
-                  frame: local))
-        guard let placed = GroupFlow.flowing(probe).children.last else { return (loose, host) }
-        return (placed.frame.offsetBy(dx: corner.x, dy: corner.y), host)
+        probe.children.insert(standIn(size: size, at: slot.origin), at: slot.index)
+        let opened = GroupFlow.flowing(probe)
+        return ComponentDropLanding(
+            rect: opened.children[slot.index].frame.offsetBy(dx: corner.x, dy: corner.y),
+            host: host, index: slot.index,
+            hostBox: opened.localBounds.offsetBy(dx: corner.x - group.frame.origin.x,
+                                                 dy: corner.y - group.frame.origin.y))
+    }
+
+    /// This document with the room a drop would take HELD OPEN: everything
+    /// where it is, plus an empty space the size of the piece in the air, in
+    /// the slot the pointer is asking for. The pieces either side move along to
+    /// make it, so the box drawn in the air sits in a gap that is really there
+    /// rather than on top of the neighbour it is about to displace.
+    ///
+    /// Nothing is added to the picture: the room draws nothing and is thrown
+    /// away the moment the drag ends. Nil where nothing has to move — out on
+    /// the canvas, and inside a group that arranges nothing, a piece lands
+    /// where you let go and its neighbours never knew.
+    public func holdingRoomForComponentDrop(
+        of componentID: UUID, at point: CGPoint, inside context: UUID? = nil,
+        version: UUID? = nil,
+        measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize
+    ) -> PhotonzDocument? {
+        guard case .inside(let host) = componentDropTarget(of: componentID, at: point,
+                                                           inside: context),
+              let size = componentDropSize(of: componentID, version: version, measure: measure),
+              let slot = dropSlot(inGroup: host, at: point) else { return nil }
+        var room = standIn(size: size, at: slot.origin)
+        room.style.opacity = 0
+        var out = self
+        guard out.addLayer(room, toGroup: host, at: slot.index) else { return nil }
+        out.reflowLayouts()
+        return out
+    }
+
+    /// Where a piece let go at `point` would sit among an arranging group's own
+    /// contents, and the corner it has to take to be READ into that slot.
+    ///
+    /// A stack orders what it holds by where things ARE rather than by the
+    /// order they are stored in, so an index on its own would not stick. The
+    /// piece arrives at the very corner of the piece it is to follow, and the
+    /// flow's tie-break — first in the contents wins — puts it in the gap after
+    /// it. At the head of the row it takes the first piece's corner and is
+    /// stored just before it, which reads the same way round.
+    ///
+    /// Nil for a group that arranges nothing.
+    func dropSlot(inGroup host: UUID, at point: CGPoint) -> (index: Int, origin: CGPoint)? {
+        guard let group = layer(id: host), let layout = group.group?.layout, layout.arranges,
+              let corner = childOrigin(of: host) else { return nil }
+        let items = GroupFlow.arrangedItems(of: group)
+        guard let first = items.first else { return (group.children.count, .zero) }
+        let local = CGPoint(x: point.x - corner.x, y: point.y - corner.y)
+        let slot = GroupFlow.slot(at: local, among: items, layout: layout)
+        guard slot > 0 else { return (first.index, first.box.origin) }
+        let after = items[slot - 1]
+        return (after.index + 1, after.box.origin)
+    }
+
+    /// A piece of nothing the size of what is being dropped, at a corner in the
+    /// group's own space. A plain box rather than an empty group: the flow
+    /// measures what a piece SHOWS, and an empty group shows nothing, so the
+    /// row would pack a piece of no size at all.
+    private func standIn(size: CGSize, at origin: CGPoint) -> Layer {
+        Layer(name: "",
+              content: .annotation(AnnotationContent(shape: .rectangle, start: .zero,
+                                                     end: CGPoint(x: size.width,
+                                                                  y: size.height))),
+              frame: CGRect(origin: origin, size: size))
     }
 
     /// Whether the drop target sits inside the component being placed, walking
@@ -413,7 +507,16 @@ extension PhotonzDocument {
         }
         let corner = childOrigin(of: host) ?? .zero
         copy.frame = copy.frame.offsetBy(dx: -corner.x, dy: -corner.y)
-        guard addLayer(copy, toGroup: host) else { return nil }
+        // A row decides the ORDER of what it holds, so letting go halfway along
+        // one says halfway along, not "on the end however far left you let go".
+        var index: Int?
+        if let slot = dropSlot(inGroup: host, at: point) {
+            let box = copy.contentBounds
+            copy.frame = copy.frame.offsetBy(dx: slot.origin.x - box.minX,
+                                             dy: slot.origin.y - box.minY)
+            index = slot.index
+        }
+        guard addLayer(copy, toGroup: host, at: index) else { return nil }
         return copy.id
     }
 

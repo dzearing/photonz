@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1360,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:40:40.393Z",
-  "updated": "2026-09-06T12:40:40.393Z",
+  "updated": "2026-09-06T17:16:01.792767Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Landed 2026-09-06 with the drop-into-open-group task. The drop now resolves through PhotonzDocument.componentDropLanding / componentDropTarget(of:at:inside:), and the flow probe there already computes where the row parks a stand-in - extending it to an INDEX means appending the stand-in at a candidate index rather than at the end, and picking the index from the pointer against the flowed gaps. insertComponentInstance / insertStarterComponent both take an inside: context and call addLayer(_:toGroup:) which already accepts an index.",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-06T12:40:40.393Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T16:44:13.176Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T17:16:01.792767Z",
+      "note": "Adversarial review before building. Reproduced first, and the premise in the goal is only half right: the slot was not always the end, it was wherever the LEFT EDGE of the piece happened to fall once it was centred on the pointer. A button let go in a bar's second gap landed FIRST in the bar, because 79 points of width put its left edge back past everything. That is worse than always-last: a badge and a button let go in exactly the same place go to different slots, so there is nothing to learn."
+    },
+    {
+      "t": "2026-09-06T17:16:01.792767Z",
+      "note": "Adversarial review, second finding: without the pieces moving aside the outline cannot be read at all. A 12 point gap and a 79 point control means the box drawn in the air must overlap a neighbour, which says 'it lands on top of that'. So opening the room is not decoration here, it is the only thing that makes the slot legible. Shortest version that keeps the value: pick the slot from the POINTER against the middles of the pieces already flowed, place the piece so the flow keeps that slot, and hold the room open only while the drag is in the air."
+    },
+    {
+      "t": "2026-09-06T17:16:01.792767Z",
+      "note": "Core (TDD, Tests/PhotonzCoreTests/RowDropSlotTests.swift, 11 tests). GroupFlow.arrangedItems(of:) gives the pieces a group actually arranges in reading order; GroupFlow.slot(at:among:layout:) picks the slot from the point, row by row for a grid. PhotonzDocument.dropSlot(inGroup:at:) turns that into an index in the group's contents plus the corner the piece has to take: the flow orders by where things ARE, so an index alone would not stick, and arriving at the corner of the piece it follows lets the flow's tie-break do the rest. componentDropLanding now returns a ComponentDropLanding struct (rect, host, index, hostBox) and probes the flow with the stand-in in the real slot, so the box in the air is the gap the piece takes and the dashed outline is the size the group will be."
+    },
+    {
+      "t": "2026-09-06T17:16:01.792767Z",
+      "note": "App. PhotonzDocument.holdingRoomForComponentDrop returns the document with an invisible spacer in the slot, reflowed. EditorState.holdRoomForComponentDrag submits that picture while the drag is in the air and only when the slot CHANGES, so crossing a bar costs one render per gap; releaseRoomForComponentDrag puts the real picture back on exit or on drop. Wired through CanvasNSView.trackComponentDrag with onComponentDragMoved/onComponentDragEnded."
+    },
+    {
+      "t": "2026-09-06T17:16:01.792767Z",
+      "note": "Bug found while verifying in the probe: the room WAS being held open in the model and the composite, but nothing changed on screen. refreshCrispTile always redrew the sharp copy from history.current and painted it over whatever preview had just been submitted. Fixed: submit hands the crisp tile the picture it just submitted. That affected every preview submit while zoomed, not only this one."
+    },
+    {
+      "t": "2026-09-06T17:16:01.792767Z",
+      "note": "Verified live in Photonz Probe (Screen Recording granted) with Scripts/playtest/row-drop-slot-walk.json: the row opens a badge-sized gap between Back and Button while the drag is in the air, the badge lands in it (Back, Badge, Button, Badge), and a drop past the last piece still goes on the end. Audit: queue/audits/2026-09-06-row-drop-slot.json. Scripts/test.sh green, 3959 tests."
+    },
+    {
+      "t": "2026-09-06T17:16:01.792767Z",
+      "note": "Perf note (composite path): the drag preview submits one extra composite per slot change, not per mouse move. The crisp tile change renders the same amount of work against a different document. Render performance suite unchanged: 12MP/10-layer interactive edit median 5.6ms, crisp tile at 400% median 9.6ms."
     }
-  ]
+  ],
+  "started": "2026-09-06T16:44:13.175Z"
 }

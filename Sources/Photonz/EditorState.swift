@@ -447,6 +447,13 @@ final class EditorState {
     /// the canvas puts every layer it carries in here at once, so the numbers
     /// in the inspector track all of them rather than just one.
     var previewMoves: [UUID: CGRect] = [:]
+    /// The gap a component drag in the air is holding open: the group whose
+    /// contents have moved aside, and the slot they made room for. A row that
+    /// takes a piece has to SHOW the space it is about to give it, or the box
+    /// drawn in the air is drawn on top of the neighbour it is displacing.
+    /// Kept so the picture is worked out again only when the slot CHANGES:
+    /// crossing a bar costs one render per gap, not one per mouse move.
+    var componentDropRoom: (host: UUID, index: Int)?
     /// Cheap drag preview: underlay + sprite the canvas composites in Core
     /// Animation, so mouse moves cost zero Core Image work. Nil until the
     /// session's two renders finish (the full-submit path covers the gap).
@@ -1834,6 +1841,7 @@ final class EditorState {
             selectedLayerID = nil
             groupContextID = nil
             previewMoves = [:]
+            componentDropRoom = nil
             dragPreview = nil
             editingTextLayerID = nil
             editingCaptionLayerID = nil
@@ -1935,7 +1943,12 @@ final class EditorState {
     /// every pixel and a second copy of it would buy nothing. Skipped mid-drag
     /// too, where the canvas is floating a sprite over a held-back composite
     /// and a sharp copy of the settled document would contradict it.
-    private func refreshCrispTile() {
+    ///
+    /// `showing` is the picture the canvas was just handed, which is not always
+    /// the committed one: a preview submits a document nothing has been done to
+    /// yet, and a sharp copy of the SETTLED document would be drawn straight
+    /// over the top of it and quietly undo what the preview was showing.
+    private func refreshCrispTile(showing preview: PhotonzDocument? = nil) {
         crispTileTask?.cancel()
         crispTileTask = nil
         // Anything on screen was drawn for a different moment than this one.
@@ -1945,7 +1958,8 @@ final class EditorState {
         guard Experiments.shared.crispZoomEnabled,
               dragPreview == nil,
               let viewport,
-              let document = history?.current else { return }
+              let settled = history?.current else { return }
+        let document = preview ?? settled
         let scale = viewport.zoom * (hostWindow?.backingScaleFactor ?? 2)
         guard scale > 1.01, let region = visibleDocumentRect(viewport) else { return }
 
@@ -1968,7 +1982,7 @@ final class EditorState {
             }.value
             guard !Task.isCancelled, let self else { return }
             // The camera or the document may have moved on while this drew.
-            guard self.viewport == viewport, self.history?.current == document else { return }
+            guard self.viewport == viewport, self.history?.current == settled else { return }
             self.crispTile = tile
             self.crispTileViewport = viewport
         }
@@ -1989,8 +2003,9 @@ final class EditorState {
 
     /// Hands a document (committed or move-preview) to the render scheduler.
     func submit(_ document: PhotonzDocument) {
+        let submitted = document
         let document = displayDocument(document)
-        defer { refreshCrispTile() }
+        defer { refreshCrispTile(showing: submitted) }
         if scheduler == nil {
             scheduler = RenderScheduler(store: store) { [weak self] image in
                 await MainActor.run {

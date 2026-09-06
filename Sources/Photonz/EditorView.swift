@@ -364,6 +364,11 @@ struct EditorView: View {
                            editorState.placeComponent(componentID: componentID, at: point,
                                                       version: version)
                        },
+                       onComponentDragMoved: { componentID, version, point in
+                           editorState.holdRoomForComponentDrag(componentID: componentID,
+                                                                version: version, at: point)
+                       },
+                       onComponentDragEnded: { editorState.releaseRoomForComponentDrag() },
                        onDropImageURLIntoCollage: { url, collageID, slot in
                            editorState.dropImage(at: url, intoCollage: collageID, slot: slot)
                        },

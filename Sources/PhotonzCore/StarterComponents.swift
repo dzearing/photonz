@@ -636,7 +636,16 @@ extension PhotonzDocument {
            canDropNewLayer(intoGroup: host) {
             let corner = childOrigin(of: host) ?? .zero
             main.frame = main.frame.offsetBy(dx: -corner.x, dy: -corner.y)
-            guard addLayer(main, toGroup: host) else { return nil }
+            // A row decides the order of what it holds, so where along it you
+            // let go is where the starter goes (`dropSlot`).
+            var index: Int?
+            if let slot = dropSlot(inGroup: host, at: point) {
+                let box = main.contentBounds
+                main.frame = main.frame.offsetBy(dx: slot.origin.x - box.minX,
+                                                 dy: slot.origin.y - box.minY)
+                index = slot.index
+            }
+            guard addLayer(main, toGroup: host, at: index) else { return nil }
         } else {
             addLayerDrawnOnFrame(main)
         }

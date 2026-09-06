@@ -184,6 +184,11 @@ struct CanvasView: NSViewRepresentable {
     let onDeleteLayers: ([UUID]) -> Void
     let onDropImageURL: (URL, CGPoint) -> Void
     let onDropComponent: (UUID, UUID?, CGPoint) -> Void
+    /// A component drag moving across the canvas, so the row it is over can
+    /// hold the room it would take open while the button is still down.
+    let onComponentDragMoved: (UUID, UUID?, CGPoint) -> Void
+    /// That drag left or landed: the room closes back up.
+    let onComponentDragEnded: () -> Void
     let onDropImageURLIntoCollage: (URL, UUID, Int) -> Void
     let onAbsorbLayerIntoCollage: (UUID, UUID, Int) -> Void
     let onSwapCollageSlots: (UUID, Int, Int) -> Void
@@ -286,6 +291,8 @@ struct CanvasView: NSViewRepresentable {
         view.onDropImageURL = onDropImageURL
         view.onDropImageURLIntoCollage = onDropImageURLIntoCollage
         view.onDropComponent = onDropComponent
+        view.onComponentDragMoved = onComponentDragMoved
+        view.onComponentDragEnded = onComponentDragEnded
         view.onAbsorbLayerIntoCollage = onAbsorbLayerIntoCollage
         view.onSwapCollageSlots = onSwapCollageSlots
         view.onCanvasResize = onCanvasResize
@@ -386,6 +393,8 @@ final class CanvasNSView: NSView {
     /// A component dragged off the Library shelf, dropped at a document point
     /// (Next, `next-components`).
     var onDropComponent: ((UUID, UUID?, CGPoint) -> Void) = { _, _, _ in }
+    var onComponentDragMoved: ((UUID, UUID?, CGPoint) -> Void) = { _, _, _ in }
+    var onComponentDragEnded: (() -> Void) = { }
     /// A photo layer dropped onto a collage slot: (photo layer, collage, slot).
     var onAbsorbLayerIntoCollage: ((UUID, UUID, Int) -> Void) = { _, _, _ in }
     /// Two slots of one collage swapped by dragging: (collage, from, to).
@@ -532,6 +541,11 @@ final class CanvasNSView: NSView {
     /// write here, because a person letting go wants the same answer either
     /// way: where does this land, and how big is it.
     var dropLanding: (rect: CGRect, host: UUID?)?
+    /// The box the host group will have once it has taken the piece, for the
+    /// dashed outline round it. A row grows to take a control, so outlining
+    /// the size it is RIGHT NOW leaves the dashes short of the picture the
+    /// canvas is already drawing. Nil where the host does not change size.
+    var dropHostBox: CGRect?
     /// The file the drag in flight is carrying and what the canvas can make of
     /// it, kept for the life of that one drag session. See `draggedFile`.
     var draggedImage: (sequence: Int, url: URL, drop: CanvasFileDrop)?

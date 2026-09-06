@@ -1,0 +1,28 @@
+{
+  "feature": "Where you let go in a row decides where the piece goes",
+  "epic": "ui-layout",
+  "summary": "Dropping a control onto a bar, a card or any container that arranges its own contents now puts it where you let go along the line, and the pieces either side move apart while the drag is still in the air to show the gap it will take.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Group what you selected, Library, Components and Starter components on, which is the default in Next.",
+  "try": [
+    { "do": "Open the Library and drag the Nav Bar tile onto empty canvas." },
+    { "do": "Double click the blue Back label to step inside the bar." },
+    { "do": "Drag the Button tile onto the right-hand half of the bar, then the Badge tile onto the right-hand half too. You now have Back, Button, Badge." },
+    { "do": "Drag a Badge tile again and HOLD it over the small gap between Back and Button without letting go. The row should open a badge-sized gap there.", "shot": "2026-09-06-row-drop-slot-gap-open.png" },
+    { "do": "Let go. The badge lands in that gap: the row reads Back, Badge, Button, Badge.", "shot": "2026-09-06-row-drop-slot-landed.png" },
+    { "do": "Drag one more Badge and let go past the last piece. It goes on the end, and the gap opens there instead." },
+    { "do": "Drag a tile into a plain group that arranges nothing. It still lands exactly under the pointer, with nothing moving aside." }
+  ],
+  "evaluate": [
+    "When the gap opens, is it obvious which two pieces the new one is going between?",
+    "Does the gap open at the moment your eye expects it to, or does it feel like it lags the pointer?",
+    "Aiming at a 12 point gap between two controls: is that easy, or do you find yourself missing and getting the wrong slot?",
+    "The pieces snap aside rather than sliding. Does that read as crisp, or as a flicker?",
+    "Was the box drawn in the air where the piece actually landed every time?"
+  ],
+  "rough": [
+    "The pieces snap into their new places rather than animating aside. Animating would mean re-rendering the composite every mouse move instead of only when the slot changes, so it was left as a snap.",
+    "Drop something much wider than the bar can hold, a Card into a Nav Bar say, and the pieces it displaces get pushed out past the bar's right edge. That is what a fixed-width row already does when its contents overflow, but the drag now shows it happening.",
+    "Found and fixed on the way: any preview picture the canvas was shown while zoomed could be quietly overpainted a moment later by the sharp copy, which was always redrawn from the SETTLED document. That is why the gap looked like it never opened at first. The sharp copy now redraws whatever the canvas was actually handed.",
+    "Verified live: the probe had Screen Recording, so both pictures here are real screen captures of the window, not offscreen renders."
+  ]
+}

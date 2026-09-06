@@ -27,14 +27,21 @@ extension CanvasNSView {
     override func draggingExited(_ sender: NSDraggingInfo?) {
         hoverSlot = nil
         dropLanding = nil
+        dropHostBox = nil
         draggedImage = nil
+        onComponentDragEnded()
         refreshOverlays()
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         hoverSlot = nil
         dropLanding = nil
+        dropHostBox = nil
         draggedImage = nil
+        // The room closes before the piece lands in it: the drop draws the real
+        // picture straight after, and one that is refused still gets its own
+        // picture back rather than a gap left open for nothing.
+        onComponentDragEnded()
         refreshOverlays()
         if let dragged = droppedComponent(sender) {
             return dropComponent(dragged.componentID, version: dragged.version,
@@ -85,6 +92,8 @@ extension CanvasNSView {
     private func trackComponentDrag(_ sender: NSDraggingInfo) -> NSDragOperation {
         guard let dragged = droppedComponent(sender) else {
             dropLanding = nil
+            dropHostBox = nil
+            onComponentDragEnded()
             refreshOverlays()
             return []
         }
@@ -100,6 +109,8 @@ extension CanvasNSView {
                             atViewPoint viewPoint: CGPoint) -> NSDragOperation {
         guard let viewport, let document else {
             dropLanding = nil
+            dropHostBox = nil
+            onComponentDragEnded()
             refreshOverlays()
             return []
         }
@@ -112,10 +123,17 @@ extension CanvasNSView {
             of: componentID, at: point, inside: dropGroupContext, version: version,
             measure: { TextRasterizer.naturalSize($0) }) else {
             dropLanding = nil
+            dropHostBox = nil
+            onComponentDragEnded()
             refreshOverlays()
             return []
         }
-        dropLanding = landing
+        // A row decides the order of what it holds, so it opens the gap the
+        // piece is going to take before the button comes up: the pieces either
+        // side move along, and the box below is drawn in the space they left.
+        onComponentDragMoved(componentID, version, point)
+        dropLanding = (landing.rect, landing.host)
+        dropHostBox = landing.hostBox
         refreshOverlays()
         return .copy
     }

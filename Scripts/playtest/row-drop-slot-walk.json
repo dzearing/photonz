@@ -1,0 +1,127 @@
+{
+  "out": "/tmp/photonz-playtest/row-drop-slot",
+  "seed": "Where you let go along a row decides where the piece goes in the row: while the drag is still in the air the pieces move aside to open the gap it would take, and letting go puts the piece in that gap.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Nav Bar",
+      "to": [
+        640,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        500,
+        300
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-inside",
+      "note": "a bar 320x48 centred on 640,300, stepped inside it. The back label sits at 494..526"
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        760,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Badge",
+      "to": [
+        760,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-three",
+      "note": "three controls in the row, each let go past the end of it: Back, then Button, then Badge"
+    },
+    {
+      "do": "snapshot",
+      "name": "slot-1-three-in-a-row"
+    },
+    {
+      "do": "dragTile",
+      "tile": "Badge",
+      "to": [
+        532,
+        300
+      ],
+      "hold": "slot-2-gap-open"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-between",
+      "note": "THE TEST: a second badge let go in the gap between the back label and the button. The held picture should show the row already opened up for it, and the row should now read Back, Badge, Button, Badge"
+    },
+    {
+      "do": "snapshot",
+      "name": "slot-3-landed-between"
+    },
+    {
+      "do": "dragTile",
+      "tile": "Badge",
+      "to": [
+        770,
+        300
+      ],
+      "hold": "slot-4-end-in-the-air"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-end",
+      "note": "let go past the last piece it still goes on the end, and the room opens there instead"
+    },
+    {
+      "do": "snapshot",
+      "name": "slot-5-landed-at-the-end"
+    }
+  ]
+}

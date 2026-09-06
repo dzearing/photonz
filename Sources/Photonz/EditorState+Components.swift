@@ -162,6 +162,42 @@ extension EditorState {
         return placed
     }
 
+    // MARK: - The room a drag in the air is asking for
+
+    /// Holds open the room a component drag would take, while the button is
+    /// still down: the pieces either side of the gap move along to make it, so
+    /// the box the canvas draws in the air lands in a gap that is really there
+    /// rather than over the neighbour it is about to push aside.
+    ///
+    /// Nothing is committed. The room draws nothing and is thrown away the
+    /// moment the drag ends, and out on the canvas — or in a group that
+    /// arranges nothing — there is no room to hold and nothing moves.
+    func holdRoomForComponentDrag(componentID: UUID, version: UUID?, at point: CGPoint) {
+        guard componentsEnabled, let document else { return releaseRoomForComponentDrag() }
+        let measure: StarterTextMeasure = { TextRasterizer.naturalSize($0) }
+        guard let landing = document.componentDropLanding(of: componentID, at: point,
+                                                          inside: dropContext, version: version,
+                                                          measure: measure),
+              let host = landing.host, let index = landing.index
+        else { return releaseRoomForComponentDrag() }
+        guard componentDropRoom?.host != host || componentDropRoom?.index != index else { return }
+        guard let held = document.holdingRoomForComponentDrop(of: componentID, at: point,
+                                                              inside: dropContext, version: version,
+                                                              measure: measure)
+        else { return releaseRoomForComponentDrag() }
+        componentDropRoom = (host, index)
+        submit(held)
+    }
+
+    /// The drag left or landed: the row closes back up. A drop that lands draws
+    /// the real thing straight after, and one that never landed — or was
+    /// refused — gets the picture it started with back.
+    func releaseRoomForComponentDrag() {
+        guard componentDropRoom != nil else { return }
+        componentDropRoom = nil
+        rerender()
+    }
+
     /// The main behind the picked Components tile, or nil when the pick is not
     /// a component.
     var selectedComponentLayer: Layer? {
