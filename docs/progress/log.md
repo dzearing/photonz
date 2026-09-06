@@ -9928,3 +9928,38 @@ answers the knob. Whether that is the bargain the user wants is a question on
 the audit.
 
 Next: the queue picks the next task.
+
+## 2026-09-06 — A saved colour can be dragged off the Library shelf
+
+A tile on the Library's Styles shelf is now a drag source. Pull it onto any
+colour swatch and that swatch paints with it.
+
+The task asked for a drop that carried only the colour and flagged the name as
+"a bigger question". The adversarial pass before building rejected that:
+clicking a saved colour in a row's menu already links it, so a drag that copied
+the hex would be a lossier second way to do one move, and dropping a saved
+colour on a row would even have announced that the row had stopped following a
+saved colour. So the drag carries the saved colour itself. `ColorDrag.Payload`
+gained the style, `ColorDrop` gained `SavedColor`, `StyleWelcome` and
+`Landing.brings`, and each drop site prefers the style path: panel rows go down
+`useColorStyle`, the toolbar swatches down the new
+`EditorState.useToolColorStyle`. Swatches already wearing a name now hand it on
+too, so carrying Brand from one row to another keeps Brand.
+
+Where a name cannot be worn (a colour kept for other parts, a shadow's colour,
+the bucket pair, a text tool, another app) the colour lands on its own and the
+swatch says so before you let go. The shelf refuses a tile that came off it,
+which matters because the shelf drop target is the whole Library panel.
+
+Also landed: `dragColor` can name a Library tile as its source, and shelf tiles
+are pressable from a walk, which is how "a click still picks the tile" is
+proved.
+
+Verified with `Scripts/playtest/colour-off-the-shelf-walk.json` (64 steps green,
+real window captures) and 4090 unit tests. Next release only
+(`next-color-drag`).
+
+Next: the audit at `queue/audits/2026-09-06-colour-off-the-shelf.json` asks
+whether carrying the NAME is what the tile should mean, and whether the palette
+mark on the ring is doing too much work now that it says both "a saved colour is
+arriving" and "a saved colour is being let go of".

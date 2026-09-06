@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1450,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T18:20:59.768Z",
-  "updated": "2026-09-06T21:13:23.332Z",
+  "updated": "2026-09-06T21:30:53.222Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed 2026-09-06 by the toolbar-swatch task. LibraryStyleTile (Sources/Photonz/ColorStylePanel.swift, around line 844) has no onDrag and no playtest payload; the drag side of .colorSwatchDrag or a plain .onDrag with ColorDrag.itemProvider(paint:source:) is most of it. It is the missing SOURCE that makes the toolbar swatch worth being a drop target: the panel colour rows and the toolbar swatch are never on screen at the same time (panel rows need a selected layer, which means the select tool, which swaps the bar to the bucket pair), so today a colour can only be dropped on the bar from the other bar swatch, another window or another app. A drop that carries the STYLE (so the swatch follows the saved name) is a bigger question than a drop that carries its colour: carrying the colour is the shortest version and matches what every other swatch drop does today.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-06T21:30:37.006919Z",
       "note": "Also landed on the way: PlaytestHarness dragColor can now name a Library tile as its source, and shelf tiles are pressable from a walk (pressTargets takes .tile as well as .control), which is how the click-still-picks step is proved."
+    },
+    {
+      "t": "2026-09-06T21:30:53.221Z",
+      "note": "A saved colour's tile is now a drag source: dropped on a colour row or the toolbar swatch it paints AND keeps its name (the row reads Brand, the tool draws in Brand), in one undo step. Where a name cannot be worn the colour lands alone and the swatch says so first; the shelf refuses a tile that came off it. Verified on the probe with Scripts/playtest/colour-off-the-shelf-walk.json, 64 steps green with real captures. Audit: queue/audits/2026-09-06-colour-off-the-shelf.json"
     }
   ],
-  "started": "2026-09-06T21:13:23.331Z"
+  "started": "2026-09-06T21:13:23.331Z",
+  "completed": "2026-09-06T21:30:53.222Z"
 }
