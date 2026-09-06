@@ -305,18 +305,22 @@ extension EditorState {
     var documentPixelScale: CGFloat { document?.pixelScale ?? 1 }
 
     /// Detected UI edges for snapping, but ONLY while a tool that snaps to
-    /// them is active (measure, rect/ellipse region select) or a measure is
-    /// selected — so the edge sweep never runs for documents that aren't
-    /// being redlined. Analysis takes ~seconds on a Retina screenshot, so it
-    /// runs OFF the main thread: the first access kicks it off and returns
-    /// `.empty` (snapping is a no-op until it lands), then the observable
-    /// `readyEdgeMaps` update re-feeds the canvas the real map.
+    /// them is active (measure, rect/ellipse region select, any drawing tool)
+    /// or a layer whose handles snap is selected — so the edge sweep never
+    /// runs for documents that aren't being redlined. Analysis takes ~seconds
+    /// on a Retina screenshot, so it runs OFF the main thread: the first
+    /// access kicks it off and returns `.empty` (snapping is a no-op until it
+    /// lands), then the observable `readyEdgeMaps` update re-feeds the canvas
+    /// the real map. Picking the arrow tool is therefore what starts the sweep
+    /// for an arrow, well before the first drag.
     var snappingEdgeMap: EdgeMap {
-        let selectedIsMeasure = selectedLayerID
-            .flatMap { document?.layer(id: $0)?.measure } != nil
+        let selected = selectedLayerID.flatMap { document?.layer(id: $0) }
+        // A caliper handle and an arrow endpoint both magnetize to the picture.
+        let selectionSnaps = selected?.measure != nil || selected?.hasEndpointHandles == true
         let toolSnaps = activeTool == .measure
             || activeTool == .rectSelect || activeTool == .ellipseSelect
-        guard toolSnaps || selectedIsMeasure,
+            || activeTool.createsAnnotationByDrag
+        guard toolSnaps || selectionSnaps,
               let ref = document?.layers.compactMap(\.imageRef).first else { return .empty }
         if let ready = readyEdgeMaps[ref.id] { return ready.edges }
         analyzeEdgeMap(for: ref)

@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/arrow-tip-snap",
+  "setup": { "forget": ["shapes", "tools"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280, "height": 840 },
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 30 },
+
+    { "do": "drag", "from": [700, 786], "to": [484, 786], "wobble": 3,
+      "hold": "flat-arrow-guide" },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "key", "key": "escape" },
+    { "do": "describe", "stage": "flat-arrow",
+      "note": "tip aimed 3px past the Save Changes button's right edge (x=481); it should land on 481 and keep y=786" },
+
+    { "do": "drag", "from": [484, 786], "to": [484, 764] },
+    { "do": "describe", "stage": "flat-arrow-tip-redragged",
+      "note": "the same arrow's tip handle dragged 22px up: still x=481, now y=764" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [350, 930], "to": [350, 752] },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "key", "key": "escape" },
+    { "do": "describe", "stage": "upright-arrow",
+      "note": "tip aimed 3px over the button's top edge (y=755); it should land on 755 and keep x=350" },
+
+    { "do": "drag", "from": [350, 930], "to": [350, 819] },
+    { "do": "describe", "stage": "upright-arrow-tail-redragged",
+      "note": "the same arrow's TAIL dragged up to 3px under the button's bottom edge (y=816); it should land on 816" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [180, 940], "to": [230, 819], "hold": "corner-guide" },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "key", "key": "escape" },
+    { "do": "describe", "stage": "corner-arrow",
+      "note": "diagonal tip aimed inside the button's bottom-left corner; it should land on (233, 816)" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [700, 700], "to": [484, 700], "modifiers": ["command"] },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "key", "key": "escape" },
+    { "do": "describe", "stage": "freed-arrow",
+      "note": "same aim held with Command: the tip must stay on 484, refusing the magnet" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [700, 660], "to": [484, 660], "modifiers": ["shift"] },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "key", "key": "escape" },
+    { "do": "describe", "stage": "constrained-arrow",
+      "note": "same aim held with Shift: the 45 degree constraint owns the point, so the tip stays on 484" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [230, 819], "to": [484, 752], "hold": "box-guide" },
+    { "do": "describe", "stage": "box",
+      "note": "a box dragged from just outside the button's bottom-left corner to just outside its top-right: both corners should land on the button" },
+
+    { "do": "render", "name": "arrows-1x", "scale": 1 },
+    { "do": "render", "name": "arrows-4x", "scale": 4 },
+    { "do": "snapshot", "name": "arrows" }
+  ]
+}

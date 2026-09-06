@@ -773,6 +773,34 @@ final class CanvasNSView: NSView {
         return snap
     }
 
+    /// The document point an annotation end should take this event: magnetized
+    /// onto the picture's own edges, or left exactly under the pointer when the
+    /// magnet is refused. Sets the yellow guide as a side effect, so drawing an
+    /// arrow says what it caught the same way a caliper does.
+    ///
+    /// Two keys refuse the magnet and they refuse it differently. ⌘ is the
+    /// deliberate one and it LATCHES, the same as everywhere else on the
+    /// canvas: a magnet that came back when the key came up would move the
+    /// thing you had just placed by hand. ⇧ refuses it only while it is held —
+    /// a constrained drag pins the mark to 45 degrees around its other end, so
+    /// the angle owns the point and a magnet could only fight it, but ⇧ is a
+    /// live constraint a hand presses and lets go of mid-drag.
+    private func snappedAnnotationPoint(_ p: CGPoint, shape: AnnotationShape?,
+                                        opposite: CGPoint?, event: NSEvent) -> CGPoint {
+        guard let viewport, let shape else {
+            snapGuide = nil
+            return p
+        }
+        let held = snapHold(freeing: event.modifierFlags.contains(.command))
+        let refused = held.isFree || event.modifierFlags.contains(.shift)
+        let snap = AnnotationSnapping.snap(p, shape: shape, opposite: opposite,
+                                           edges: edgeMap, zoom: viewport.zoom,
+                                           free: refused, holding: held)
+        snapGuide = (snap.guideX, snap.guideY)
+        snapHold.caught(x: snap.guideX, y: snap.guideY)
+        return snap.point
+    }
+
     /// Feeds the direction gate; call once per mouseDragged before snapping.
     func trackDragMotion(_ p: CGPoint) {
         dragGate.track(p)
@@ -1928,8 +1956,15 @@ final class CanvasNSView: NSView {
         // Drawing tools own the pointer: every drag creates a new annotation
         // (or, for the zoom tool, defines the callout's source box).
         if tool.createsAnnotationByDrag || tool == .zoomCallout || tool == .frame {
-            annotationDrag = AnnotationDrag(anchor: p)
+            // The end you START from lands on an edge too. There is no shaft yet
+            // to say which way the mark points, so the first point takes
+            // whichever lines are near it — the same thing a caliper's first
+            // foot does.
+            let anchor = snappedAnnotationPoint(p, shape: tool.annotationShape,
+                                                opposite: nil, event: event)
+            annotationDrag = AnnotationDrag(anchor: anchor)
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+            refreshOverlays()
             return
         }
         // The measure tool: the measuring line is drawn EITHER by click/click OR
@@ -2285,9 +2320,11 @@ final class CanvasNSView: NSView {
             cropDrag = drag
             refreshOverlays()
         } else if var drag = annotationDrag {
-            drag.update(to: p)
+            drag.update(to: snappedAnnotationPoint(p, shape: tool.annotationShape,
+                                                   opposite: drag.anchor, event: event))
             annotationDrag = drag
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+            refreshOverlays()
         } else if var drag = alignmentDrag {
             drag.current = p
             alignmentDrag = drag
@@ -2339,7 +2376,9 @@ final class CanvasNSView: NSView {
             onCaptionPlacePreview(drag.layerID, drag.center)
             refreshOverlays()
         } else if var session = endpointDrag {
-            session.drag.update(to: p)
+            session.drag.update(to: snappedAnnotationPoint(p, shape: session.content.shape,
+                                                           opposite: session.drag.fixed,
+                                                           event: event))
             endpointDrag = session
             refreshEndpointPreview(constrained: event.modifierFlags.contains(.shift))
             refreshOverlays()
@@ -2601,6 +2640,7 @@ final class CanvasNSView: NSView {
             refreshOverlays()
         } else if let drag = annotationDrag {
             annotationDrag = nil
+            snapGuide = nil
             let closedField = pressClosedCaptionField
             pressClosedCaptionField = false
             // The frame tool answers a click as well as a drag: a click drops a
@@ -2663,6 +2703,7 @@ final class CanvasNSView: NSView {
             refreshOverlays()
         } else if let session = endpointDrag {
             endpointDrag = nil
+            snapGuide = nil
             let (start, end) = session.drag.endpoints(constrained: event.modifierFlags.contains(.shift))
             // Same no-flash hold as drag-to-create: the vector preview (over
             // the underlay) stands in until the re-rendered composite lands.
@@ -2987,6 +3028,7 @@ final class CanvasNSView: NSView {
             }
             if let session = endpointDrag {
                 endpointDrag = nil
+                snapGuide = nil
                 clearAnnotationPreview()
                 // Committing the original endpoints is a History no-op but
                 // resets the preview render, like the resize-drag cancel.
@@ -3855,12 +3897,19 @@ final class CanvasNSView: NSView {
         }
         // A selected layer carries into the region/fill tools (it's the
         // target of region ops), but its outline/handles are SELECT-mode
-        // chrome — grabbing them does nothing elsewhere, so hide them.
+        // chrome — grabbing them does nothing elsewhere, so hide them. The
+        // yellow guide is not selection chrome: an arrow being drawn catches
+        // the picture's edges and has to say which one, exactly as a caliper
+        // does, so it survives the tool check.
         guard tool == .select else {
             layerOutlineLayer.isHidden = true
-            snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
             rotateKnobLayer.isHidden = true
+            if annotationDrag != nil, let viewport {
+                refreshSnapGuides(in: viewport)
+            } else {
+                snapGuideLayer.isHidden = true
+            }
             return
         }
         // A multi-selection has no primary layer, so no outline, handles or

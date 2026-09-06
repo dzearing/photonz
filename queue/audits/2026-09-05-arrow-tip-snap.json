@@ -1,0 +1,30 @@
+{
+  "feature": "An arrow tip lands on the edge it is pointing at",
+  "epic": "measure-redline",
+  "summary": "Arrows, lines and boxes now magnetize to the borders the app has already found in the picture, the same way a measuring caliper does. Aim near an edge and the tip lands on it instead of a couple of pixels short, with the same yellow guide saying which edge it caught.",
+  "setup": "Photonz Dev, Experiments window, release Next. Open any screenshot. Nothing to turn on.",
+  "try": [
+    { "do": "Open a screenshot with buttons or cards in it." },
+    { "do": "Press A for the Arrow tool and wait a second for the picture to be read." },
+    { "do": "Drag an arrow from empty space towards the left edge of a button, stopping a few pixels short of it.", "shot": "2026-09-05-arrow-tip-snap-guide-sc.png" },
+    { "do": "Watch for the yellow line while the button is still down: it says which edge the tip has taken." },
+    { "do": "Let go, then press Escape to skip the caption. Zoom to 400% and look at the tip.", "shot": "2026-09-05-arrow-tip-snap-top-edge.png" },
+    { "do": "Aim a second arrow diagonally into a button's corner: both guides light and the tip lands on the corner.", "shot": "2026-09-05-arrow-tip-snap-corner.png" },
+    { "do": "Draw a third arrow at the same spot with Command held: the tip stays exactly under the pointer." },
+    { "do": "Press V, click the first arrow, and drag its tip handle: it magnetizes the same way." }
+  ],
+  "evaluate": [
+    "When you aim at a border, does the tip land where you meant it to on the first try?",
+    "Does the yellow line, drawn right across the picture, help or is it too loud for a mark that is only pointing at something?",
+    "An arrow drawn flat takes only the border ahead of it and keeps the height you chose. Is that what you expect, or should it also settle onto a nearby horizontal line?",
+    "Is Command the key you reach for to refuse the magnet, or do you expect that to be free by default with a key to turn it on?",
+    "Boxes snap too: drag a rectangle loosely round a button and it comes out hugging it. Useful, or in the way?"
+  ],
+  "rough": [
+    "The magnet reads the box the app detected, not the painted shape. On a button with a rounded corner, a tip that lands on the bounding edge next to the corner sits a hair off the paint. That reads correctly at the middle of an edge, which is where an arrow usually points.",
+    "Shift refuses the magnet as well as Command. It is not a second escape hatch by design: a Shift drag pins the arrow to 45 degrees around its other end, so the angle owns where the point lands and a magnet could only fight it.",
+    "Snapping does not offer element centres, unlike the Measure tool, which has a Snap picker for it. The picker is not reachable from the Arrow tool, so an arrow's behaviour would have changed under a control you could not see. Edges only for now.",
+    "The task asked to reuse the caliper's call as it stands. Two parts of it are deliberately not reused: the caliper's axis gate reads the direction the hand is travelling, and an arrow reads the direction the ARROW points instead, which is steadier; and the lines other measurements put down do not pull an arrow, only the picture's own edges do.",
+    "The first run showed the magnet defeating itself. A line caught mid-sweep used to ride along for the rest of the drag and park the tip a dozen points short of the aim. Fixed, and every drag in the walk still reports zero guides going back on themselves, so no flicker was traded for it."
+  ]
+}
