@@ -37,8 +37,9 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
   `captionPadding`) lives on `AnnotationContent`; the builder reserves frame room
   (chip + shadow slack) exactly like `MeasureBuilder`'s chip reservation, and the
   chip footprint is hittable. Entry: with the flag on, **drawing an arrow
-  immediately opens a single-line inline editor** centered where the pill lands
-  (Return commits, Esc or an empty commit leaves the arrow plain);
+  immediately opens an inline editor** centered where the pill lands
+  (⌘Return or a click away commits, Esc or an empty commit leaves the arrow
+  plain);
   **double-click an arrow** adds/edits its caption; the `AnnotationInspector`
   has a Caption field. While a caption edit is open the composite suppresses
   just the pill (`EditorState.editingCaptionLayerID`), the arrow stays. Caption
@@ -56,6 +57,19 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
   the drop is one undo step (`EditorState.commitCaptionPlacement`); a press
   that never moved commits nothing. The inspector shows **Reset label
   position** while a pill is pinned (`AnnotationBuilder.releasingCaption`).
+  **More than one line (2026-09-06):** plain Return types a newline, ⌘Return
+  commits, and `ArrowCaptionEntry.caption` keeps the lines (each trimmed, empty
+  first/last lines dropped). The pill is as wide as its longest line and as tall
+  as all of them; several lines are CENTRED (`PillRasterizer.content` sets the
+  alignment, `TextRasterizer.inkOffset` reports the frame inset so the rows land
+  in the middle of the pill), one line keeps its ink-centring untouched.
+  `captionPillHeight(forLines:)` reserves per line while `captionMinPillWidth`
+  stays a one-line proportion, and `captionCornerRadius` takes a tall pill's
+  curve from one line's share so four short words are not an egg on end. A pill
+  that would grow off the picture is pulled back on by the same
+  `CaptionPlanner.keepingOnCanvas` in the open field and in
+  `AnnotationBuilder.captioning`, so what you watch is what lands. The
+  inspector's Caption field is multi-line with the same keys.
 - Rendered by a CoreGraphics rasterizer in `PhotonzRender` (pixel-tested), then composited like any image layer.
 - **Styling & per-object editing:** `AnnotationStyles` holds the per-shape defaults new annotations get — color, stroke width, `arrowheadScale`, `cornerRadius`, and `fillColorHex` — and persists to UserDefaults. EVERY inspector commit writes back to the shape's defaults, so "the next rectangle reuses the last-touched rectangle's settings" holds for all of them (corner radius was missing from `ShapeDefaults` entirely until 2026-07-03 — a user-reported bug). Two surfaces edit annotations: the toolbar **style popover** (color swatches + Width/Arrowhead sliders) sets defaults / restyles the selected one, and the Layers-panel **AnnotationInspector** gives per-object Color / Thickness / Head Size. Both preview live via `EditorState.previewAnnotationRestyle` (no history) and commit one undo step on release via `setAnnotationStrokeWidth` / `setAnnotationArrowheadScale`. (`AppState` was split into per-window `EditorState` + resident `AppCoordinator` in Phase 11.1 — see `capture.md`.) Endpoint-drag/resize remap goes through `AnnotationBuilder.restyled`/`updating`/`resized`.
 

@@ -3221,28 +3221,41 @@ private struct ArrowCaptionField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("Caption").font(.caption).foregroundStyle(.secondary)
-            TextField("Add a caption", text: $captionDraft)
+            // As many lines as the caption has: a single line field showed a
+            // two line label as its first line alone and landed that back on
+            // the arrow the moment the field lost focus, quietly throwing the
+            // second line away.
+            TextField("Add a caption", text: $captionDraft, axis: .vertical)
+                .lineLimit(1...5)
                 .textFieldStyle(.roundedBorder)
                 .controlSize(.small)
                 .focused($captionFocused)
-                .onSubmit {
-                    editorState.setAnnotationCaption(layerID: layerID, captionDraft)
-                }
-                // Return lands the caption, Esc drops the draft and shows the
-                // arrow's caption again, and both hand the keyboard to the
-                // picture. Clearing `captionEditing` first is what stops the
-                // focus loss that follows from landing the same words a second
-                // time. (The field the canvas opens on a new arrow has its own
-                // rule, in `ArrowCaptionEntry`.)
-                .nameFieldKeys(
-                    commit: {
+                // The canvas field's keys, so the two fields for one label
+                // agree: Return drops a line, Command and Return lands the
+                // caption, Esc drops the draft and shows the arrow's caption
+                // again. Both closing keys hand the keyboard to the picture.
+                // Clearing `captionEditing` first is what stops the focus loss
+                // that follows from landing the same words a second time.
+                .onKeyPress(phases: .down) { press in
+                    let key: ArrowCaptionEntry.Key
+                    switch press.key {
+                    case .return, KeyEquivalent("\u{3}"):
+                        key = .return(command: press.modifiers.contains(.command))
+                    case .escape: key = .escape
+                    default: return .ignored
+                    }
+                    switch ArrowCaptionEntry.action(for: key) {
+                    case .type: return .ignored
+                    case .commit:
                         captionEditing = false
                         editorState.setAnnotationCaption(layerID: layerID, captionDraft)
-                    },
-                    revert: {
+                    case .cancel:
                         captionDraft = annotation?.caption ?? ""
                         captionEditing = false
-                    })
+                    }
+                    KeyboardHandback.toCanvas()
+                    return .handled
+                }
                 // Like every Mac text field, clicking away commits what you
                 // typed (one undo step; none if unchanged). Not when the canvas
                 // has just opened its own editor on this arrow: that editor

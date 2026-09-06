@@ -384,8 +384,17 @@ extension AnnotationBuilder {
     /// Writes a caption and the spot the caption FIELD used, without re-picking
     /// it: what you saw on the last keystroke is what lands, so the pill does
     /// not jump on Return. An empty caption clears the spot with the text.
+    ///
+    /// `canvas` and `captionPillSize` are the one exception. A caption grows
+    /// TALLER as lines are typed into it, both ways from the spot it hangs
+    /// from, so a label that started as one line beside the tail can end up
+    /// hanging off the top or bottom of the picture. Given the picture and the
+    /// measured pill, a label that would fall off is pulled back on — and a
+    /// label that fits is left exactly where it was, which is every ordinary
+    /// caption.
     public static func captioning(_ layer: Layer, caption: String?,
-                                  placement: CaptionPlacement) -> Layer {
+                                  placement: CaptionPlacement, canvas: CGSize? = nil,
+                                  captionPillSize: CGSize? = nil) -> Layer {
         guard var content = layer.annotation,
               let start = layer.annotationEndpoint(.start),
               let end = layer.annotationEndpoint(.end) else { return layer }
@@ -393,6 +402,15 @@ extension AnnotationBuilder {
         if content.hasCaption {
             content.captionOffset = placement.attach
             content.captionGrowth = placement.growth
+            if let canvas {
+                var probe = content
+                probe.start = start
+                probe.end = end
+                let wanted = placement.attach ?? .zero
+                let onCanvas = CaptionPlanner.keepingOnCanvas(wanted, for: probe, canvas: canvas,
+                                                              pillSize: captionPillSize)
+                if onCanvas != wanted { content.captionOffset = onCanvas }
+            }
         } else {
             content.captionOffset = nil
             content.captionGrowth = nil

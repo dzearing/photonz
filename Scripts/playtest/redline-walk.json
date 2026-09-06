@@ -56,7 +56,7 @@
     { "do": "snapshot", "name": "7-arrow-field" },
     { "do": "type", "text": "Primary action" },
     { "do": "snapshot", "name": "7-arrow-typing" },
-    { "do": "key", "key": "return" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "7-arrow", "note": "captioned arrow" },
     { "do": "snapshot", "name": "7-arrow-captioned" },

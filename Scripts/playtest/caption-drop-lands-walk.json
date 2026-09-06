@@ -13,7 +13,7 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "type", "text": "ok" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "return" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "0-short-committed", "note": "a two letter label hanging off the tail. The tip snapped to an edge at y 411, so the arrow sits there and the pill line should read 927, 411" },
 
@@ -35,7 +35,7 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "type", "text": "Save all the changes here" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "return" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
 
     { "do": "drag", "from": [1022.4, 760], "to": [1420, 760], "steps": 14 },

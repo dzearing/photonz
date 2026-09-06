@@ -1,0 +1,29 @@
+{
+  "feature": "An arrow caption can hold more than one line",
+  "epic": "epic-uehjr1",
+  "summary": "An arrow's caption is no longer stuck on one line. Return drops a line inside the field, Command and Return lands the label, and the pill grows taller to hold what you typed while staying attached to the arrow.",
+  "setup": "Photonz Dev, release Next, arrow captions on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press A to pick up the Arrow tool, then drag an arrow that points at something." },
+    { "do": "Type \"Focus ring\", press Return, then type \"is two pixels off\".", "shot": "2026-09-06-caption-lines-typing.png" },
+    { "do": "Press Command and Return to land it.", "shot": "2026-09-06-caption-lines-committed.png" },
+    { "do": "Draw a second arrow on a diagonal, type two lines into it, then click somewhere else on the picture to land it." },
+    { "do": "Draw a third arrow, press Return four times over with a word between each, then press Esc.", "shot": "2026-09-06-caption-lines-four.png" },
+    { "do": "Click the first arrow and read the Caption field in the panel: both of its lines are there." }
+  ],
+  "evaluate": [
+    "Return dropping a line instead of finishing: is that what your hand expected, or did you press it meaning done?",
+    "Nothing on screen names Command and Return. Did you find your way out of the field anyway?",
+    "Do the lines sit where you want them, centred over each other and evenly spaced?",
+    "Does a two line label still read as the same kind of object as a one line one?",
+    "At the angles you tried, does the pill still look attached to the arrow rather than floating beside it?"
+  ],
+  "rough": [
+    "Nothing on screen says how to finish. The empty field's hint still only names Esc, and it disappears at the first keystroke, which is exactly when the finishing key becomes the question. Clicking anywhere else lands the caption, which is what most people do.",
+    "A four line pill first drew as an egg standing on end, because the corner was half the pill's own height. It now takes its curve from one line's share of the pill, so a tall label is a rounded card rather than a lozenge. Very short lines stacked four deep still read as a box more than a badge.",
+    "The panel's Caption field was a single line field and showed a two line label as its first line alone, then landed that back on the arrow when it lost focus, quietly throwing the second line away. It is now as tall as the caption, up to five lines, with the same keys as the field on the picture.",
+    "A caption that grows past the edge of the picture is slid back on as you type the line that would push it off, so it moves under your hand at that moment. It stays put in every other case.",
+    "A stray Return before or after the words is dropped; a blank line between two lines is kept, because that one was typed on purpose.",
+    "Screen Recording was granted for this run, so the three pictures here are real captures of the window, not offscreen renders."
+  ]
+}

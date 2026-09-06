@@ -209,6 +209,22 @@ struct ArrowheadStyleTests {
                 == content.captionCornerRadius(pillHeight: 80) / 80)
     }
 
+    /// A caption of several lines keeps the corner a ONE LINE pill wears.
+    /// Half of a tall pill's own height turns four short words into an egg
+    /// standing on end — the very shape the badge floor exists to stop — so the
+    /// curve is taken from one line's share of the pill and the label reads as
+    /// the same kind of object, only taller.
+    @Test func aTallCaptionKeepsTheCornerOfASingleLinePill() {
+        let one = AnnotationContent(shape: .arrow, caption: "one")
+        var four = one
+        four.caption = "one\ntwo\nthree\nfour"
+        let tall = one.captionPillHeight(forLines: 4)
+        let short = one.captionCornerRadius(pillHeight: one.captionPillHeight)
+        let corner = four.captionCornerRadius(pillHeight: tall)
+        #expect(abs(corner - short) < 4, "four lines rounded by \(corner), one by \(short)")
+        #expect(corner < tall / 2 - 1)
+    }
+
     @Test func aWildRoundnessIsClampedRatherThanDrawn() {
         var content = AnnotationContent(shape: .arrow, caption: "Gap")
         content.captionRoundness = 4

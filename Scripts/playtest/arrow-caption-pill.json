@@ -30,7 +30,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "2-typing", "note": "mid-draft, field holds text" },
     { "do": "snapshot", "name": "2-typing" },
-    { "do": "key", "key": "return" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "3-committed", "note": "committed pill in the same spot" },
     { "do": "snapshot", "name": "3-committed" },

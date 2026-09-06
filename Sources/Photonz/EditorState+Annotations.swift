@@ -57,8 +57,8 @@ extension EditorState {
     }
 
     /// Caption entry finished. Whitespace-only text clears the caption (or
-    /// leaves a fresh arrow plain); anything else lands as one undo step.
-    /// Newlines collapse to spaces — the pill is a single line. Closing the
+    /// leaves a fresh arrow plain); anything else lands as one undo step, with
+    /// the lines it was typed in. Closing the
     /// field finishes the arrow, so the Arrow tool that stayed live hands back
     /// to Select; `keepTool` is the canvas drag that starts the NEXT arrow with
     /// this same press and wants the tool to stay put.
@@ -85,8 +85,17 @@ extension EditorState {
             // planner picks one against the picture.
             let restyled: Layer
             if let placement {
-                restyled = AnnotationBuilder.captioning(current, caption: newCaption,
-                                                        placement: placement)
+                // ...with one correction: a caption grows taller as lines are
+                // typed into it, so a label that started beside the tail can end
+                // up hanging off the top or bottom of the picture. It is pulled
+                // back on by the same rule the open field slides its bubble
+                // with, so nothing moves that was not already off the picture.
+                var measured = annotation
+                measured.caption = newCaption
+                restyled = AnnotationBuilder.captioning(
+                    current, caption: newCaption, placement: placement,
+                    canvas: document.canvasSize,
+                    captionPillSize: measured.measuredCaptionPillSize)
             } else {
                 let recaptioned = AnnotationBuilder.restyled(current,
                                                              caption: .some(newCaption))

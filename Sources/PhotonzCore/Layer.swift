@@ -246,13 +246,28 @@ extension AnnotationContent {
     /// out short of its proportion on the canvas
     /// (`CaptionPillShapeTests.theAssumedPillHeightIsNeverShorterThanTheDrawnOne`).
     public var captionPillHeight: CGFloat {
-        captionFontSize * 1.2 + 5 + 2 * captionPadding
+        captionPillHeight(forLines: 1)
+    }
+
+    /// The same assumption for a caption of several lines: one line's box per
+    /// line, evenly, on top of the single line pill. The extra per line is a
+    /// hair more than a line box (1.3 em against the 1.19 SF Pro lays out), so
+    /// a four line pill is reserved a little roomier than it draws rather than
+    /// a little tighter, which is the direction that cannot clip.
+    public func captionPillHeight(forLines lines: Int) -> CGFloat {
+        let extra = CGFloat(max(lines, 1) - 1) * captionFontSize * 1.3
+        return captionFontSize * 1.2 + 5 + 2 * captionPadding + extra
     }
 
     /// The narrowest a caption pill is ever drawn: `labelBadgeAspect` wider
-    /// than the pill is tall, so a one character caption (or an empty field)
-    /// still reads as a badge lying on its side rather than a lozenge standing
-    /// on end.
+    /// than a ONE LINE pill is tall, so a one character caption (or an empty
+    /// field) still reads as a badge lying on its side rather than a lozenge
+    /// standing on end.
+    ///
+    /// One line, whatever the caption really has: it is a floor on how narrow a
+    /// SHORT label may be, not a proportion the pill has to keep. Scaled with
+    /// the line count, four short words stacked up would be blown out into a
+    /// banner three times wider than the words in it.
     ///
     /// It is the measure readout's proportion, not a number of its own. A
     /// caption and a measurement are the same pill, and a "1" beside a "4 px"
@@ -312,8 +327,18 @@ extension AnnotationContent {
     }
 
     /// A capsule, whatever the pill's height — the measure chip's corner.
+    ///
+    /// A pill of SEVERAL lines takes its curve from one line's share of itself,
+    /// not from half its own height: half of a four line pill's height is a
+    /// radius wider than the words in it, and four short words come out as an
+    /// egg standing on end. One line's share keeps a tall label the same kind
+    /// of object as a short one, only taller. One line is untouched.
     public func captionCornerRadius(pillHeight: CGFloat) -> CGFloat {
-        pillHeight / 2 * min(max(captionRoundness, 0), 1)
+        let lines = CGFloat(ArrowCaptionEntry.lineCount(of: caption ?? ""))
+        let oneLine = lines > 1
+            ? (pillHeight - 2 * captionPadding) / lines + 2 * captionPadding
+            : pillHeight
+        return max(min(pillHeight, oneLine), 0) / 2 * min(max(captionRoundness, 0), 1)
     }
 
     /// A generous estimate of the caption pill's footprint, used for frame
@@ -322,10 +347,13 @@ extension AnnotationContent {
     /// inside the box this estimate reserved — which is why the same width
     /// floor the rasterizer draws with is applied here too: without it a one
     /// character caption reserves less room than it draws.
+    /// A caption of several lines is as wide as its LONGEST line and as tall as
+    /// all of them, the same way the drawn pill is.
     public var estimatedCaptionSize: CGSize {
-        let chars = CGFloat(max(caption?.count ?? 0, 1) + 1)
+        let text = caption ?? ""
+        let chars = CGFloat(max(ArrowCaptionEntry.longestLine(of: text).count, 1) + 1)
         let w = max(chars * captionFontSize * 0.75 + 2 * captionPadding, captionMinPillWidth)
-        let h = captionFontSize * 1.3 + 2 * captionPadding
+        let h = captionPillHeight(forLines: ArrowCaptionEntry.lineCount(of: text))
         return CGSize(width: w.rounded(.up), height: h.rounded(.up))
     }
 

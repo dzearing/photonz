@@ -42,7 +42,8 @@
     },
     {
       "do": "key",
-      "key": "return"
+      "key": "return",
+      "modifiers": ["command"]
     },
     {
       "do": "wait",

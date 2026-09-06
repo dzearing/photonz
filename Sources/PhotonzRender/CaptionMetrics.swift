@@ -17,18 +17,19 @@ public enum CaptionMetrics {
     public static let fontName = "SF Pro"
 
     /// The text a draft actually commits as — the commit rule itself
-    /// (`ArrowCaptionEntry.caption`): newlines collapsed, edges trimmed. The
+    /// (`ArrowCaptionEntry.caption`): the lines kept, the edges trimmed. The
     /// field measures the string it will become, not the one on screen, so a
-    /// stray space or a pasted line break cannot shrink the bubble on Return.
+    /// stray space or a trailing Return cannot shrink the bubble on commit.
     public static func committedText(_ draft: String) -> String {
         ArrowCaptionEntry.caption(from: draft) ?? ""
     }
 
     /// The laid-out text block inside the pill, in document points. A caption
-    /// is always one line: it is measured unconstrained and never wraps.
+    /// never wraps: it is measured unconstrained, so it is as wide as its
+    /// longest line and as tall as the lines the person typed.
     public static func textSize(for draft: String, fontSize: CGFloat) -> CGSize {
-        TextRasterizer.naturalSize(TextContent(string: committedText(draft),
-                                               fontName: fontName, fontSize: fontSize))
+        TextRasterizer.naturalSize(PillRasterizer.content(committedText(draft),
+                                                          fontSize: fontSize))
     }
 
     /// The pill `draft` renders in, in document points: the measured text plus
@@ -51,8 +52,7 @@ public enum CaptionMetrics {
         let words = committedText(draft)
         let text = textSize(for: words, fontSize: annotation.captionFontSize)
         let pill = annotation.captionPillSize(forTextSize: text)
-        let content = TextContent(string: words, fontName: fontName,
-                                  fontSize: annotation.captionFontSize)
+        let content = PillRasterizer.content(words, fontSize: annotation.captionFontSize)
         return (pill.width - text.width) / 2 - TextRasterizer.inkOffset(content)
     }
 }

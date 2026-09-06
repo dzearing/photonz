@@ -159,10 +159,16 @@ public enum TextRasterizer {
     /// everybody can see in a badge, so a pill slides its glyphs back by this
     /// and centres what a person actually looks at.
     public static func inkOffset(_ text: TextContent) -> CGFloat {
-        // One line only: a CTLine is one line by definition, and a wrapped
-        // block's lines each sit differently, so a caller with more than one
-        // line is centring boxes and this has nothing to tell it.
-        guard !text.string.isEmpty, !text.string.contains(where: \.isNewline) else { return 0 }
+        guard !text.string.isEmpty else { return 0 }
+        // More than one line: each line sits differently, so there is no single
+        // ink to centre — but the LINES are laid out in the measured width
+        // (`alignedWidth` takes the frame inset back off), so centred rows come
+        // out one inset left of the middle of the box. Say so, and a pill that
+        // centres this box puts the rows in its middle. Rows that are not
+        // centred are drawn from the left edge and have nothing to correct.
+        if text.string.contains(where: \.isNewline) {
+            return text.usedAlignment == .center ? -frameInset : 0
+        }
         let line = CTLineCreateWithAttributedString(measuringString(text))
         let ink = CTLineGetImageBounds(line, nil)
         guard ink.width > 0, ink.width.isFinite, ink.midX.isFinite else { return 0 }

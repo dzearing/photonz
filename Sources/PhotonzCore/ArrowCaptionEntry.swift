@@ -8,8 +8,15 @@ import Foundation
 /// The idea in one line: **an arrow is not finished until its caption is
 /// decided.** While the field it opened is up, the Arrow tool stays live, so a
 /// canvas drag leaves this arrow plain and draws the next one. Anything that
-/// closes the field (Return, Esc, a click) finishes the arrow and hands back to
-/// Select, the way every drawing tool does the moment its object exists.
+/// closes the field (Command and Return, Esc, a click) finishes the arrow and
+/// hands back to Select, the way every drawing tool does the moment its object
+/// exists.
+///
+/// A caption holds as many lines as you type. Plain Return drops a line, the
+/// way it does in the text tool's field on the same canvas, and Command and
+/// Return finishes the label (user request 2026-09-06). Before that, Return
+/// committed and a label that wanted two lines had to be squeezed into one
+/// long strip.
 public enum ArrowCaptionEntry {
 
     /// What the empty field shows. Short enough to fit a one-word pill at the
@@ -19,7 +26,8 @@ public enum ArrowCaptionEntry {
     // MARK: Keys
 
     public enum Key: Equatable, Sendable {
-        case `return`
+        /// Return, with or without the Command key held.
+        case `return`(command: Bool)
         case escape
         /// Any typed text, including the tool shortcut letters.
         case text(String)
@@ -35,7 +43,7 @@ public enum ArrowCaptionEntry {
 
     public static func action(for key: Key) -> Action {
         switch key {
-        case .return: .commit
+        case .return(let command): command ? .commit : .type
         case .escape: .cancel
         case .text: .type
         }
@@ -81,11 +89,35 @@ public enum ArrowCaptionEntry {
     // MARK: The draft that lands
 
     /// Whitespace-only text is no caption (a fresh arrow stays plain, an edited
-    /// one loses its label); newlines collapse to spaces because the pill is a
-    /// single line.
+    /// one loses its label).
+    ///
+    /// The lines you typed are kept. Each one is trimmed, and an empty line at
+    /// either END is dropped rather than drawn as a band of nothing inside the
+    /// pill — a stray Return before or after the words is a slip, while a blank
+    /// line BETWEEN two of them was typed on purpose.
     public static func caption(from draft: String) -> String? {
-        let text = draft.replacingOccurrences(of: "\n", with: " ")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        var lines = draft.split(separator: "\n", omittingEmptySubsequences: false)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+        while lines.first?.isEmpty == true { lines.removeFirst() }
+        while lines.last?.isEmpty == true { lines.removeLast() }
+        let text = lines.joined(separator: "\n")
         return text.isEmpty ? nil : text
+    }
+
+    /// The lines a caption draws in. Everything that has to reserve room for a
+    /// pill without laying out a glyph counts them through here.
+    public static func lines(of caption: String) -> [String] {
+        caption.isEmpty ? [""] : caption.components(separatedBy: "\n")
+    }
+
+    /// How many rows of type a caption draws — never fewer than one, so an
+    /// empty field still reserves a line's worth of pill.
+    public static func lineCount(of caption: String) -> Int {
+        max(lines(of: caption).count, 1)
+    }
+
+    /// The line the pill has to be wide enough for.
+    public static func longestLine(of caption: String) -> String {
+        lines(of: caption).max(by: { $0.count < $1.count }) ?? ""
     }
 }

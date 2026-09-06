@@ -98,13 +98,19 @@ struct CaptionMetricsTests {
                 == CaptionMetrics.pillSize(for: "Baseline off by 1", in: content))
     }
 
-    /// Pasting two lines into the single-line field commits as one line, so the
-    /// bubble must already be one line's worth wide.
-    @Test func aPastedLineBreakMeasuresAsTheOneLineItCommitsAs() {
+    /// A line break — typed with Return or pasted in — commits as a line, so
+    /// the bubble is measured as the two lines it will become: narrower than
+    /// the same words in a row, and taller.
+    @Test func aLineBreakMeasuresAsTheTwoLinesItCommitsAs() {
         var content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
-        content.caption = "Focus ring off"
-        #expect(CaptionMetrics.pillSize(for: "Focus ring\noff", in: content)
-                == CaptionMetrics.pillSize(for: "Focus ring off", in: content))
+        content.caption = "Focus ring\noff"
+        let broken = CaptionMetrics.pillSize(for: "Focus ring\noff", in: content)
+        let flat = CaptionMetrics.pillSize(for: "Focus ring off", in: content)
+        #expect(broken.width < flat.width)
+        #expect(broken.height > flat.height)
+        // As wide as its longest line, plus the padding on both sides.
+        let longest = CaptionMetrics.pillSize(for: "Focus ring", in: content)
+        #expect(abs(broken.width - longest.width) < 1)
     }
 
     /// The field types its words exactly where the committed pill draws them:

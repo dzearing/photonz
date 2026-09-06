@@ -10,8 +10,12 @@ struct ArrowCaptionEntryTests {
 
     // MARK: Keys
 
-    @Test func returnCommitsAndEscapeCancels() {
-        #expect(ArrowCaptionEntry.action(for: .return) == .commit)
+    /// A caption holds as many lines as you type: plain Return drops a line
+    /// like every other text field on the canvas, Command and Return finishes
+    /// the label, and Esc abandons it (user request 2026-09-06).
+    @Test func returnTypesALineAndCommandReturnCommits() {
+        #expect(ArrowCaptionEntry.action(for: .return(command: false)) == .type)
+        #expect(ArrowCaptionEntry.action(for: .return(command: true)) == .commit)
         #expect(ArrowCaptionEntry.action(for: .escape) == .cancel)
     }
 
@@ -73,12 +77,38 @@ struct ArrowCaptionEntryTests {
 
     // MARK: The draft that lands
 
-    @Test func committedDraftIsSingleLineTrimmedOrNil() {
+    @Test func committedDraftKeepsItsLinesAndTrimsTheEdges() {
         #expect(ArrowCaptionEntry.caption(from: "Primary action") == "Primary action")
         #expect(ArrowCaptionEntry.caption(from: "  Save \n") == "Save")
-        #expect(ArrowCaptionEntry.caption(from: "two\nlines") == "two lines")
+        #expect(ArrowCaptionEntry.caption(from: "two\nlines") == "two\nlines")
         #expect(ArrowCaptionEntry.caption(from: "") == nil)
         #expect(ArrowCaptionEntry.caption(from: "   \n ") == nil)
+    }
+
+    /// A stray Return at either end is not a line: an empty first or last line
+    /// would sit as a band of nothing inside the pill. Blank lines BETWEEN
+    /// words were typed on purpose and stay.
+    @Test func blankLinesAtTheEdgesAreNotLines() {
+        #expect(ArrowCaptionEntry.caption(from: "\n\nSave\n\n") == "Save")
+        #expect(ArrowCaptionEntry.caption(from: "\n\n\n") == nil)
+        #expect(ArrowCaptionEntry.caption(from: "Save  \n  now") == "Save\nnow")
+        #expect(ArrowCaptionEntry.caption(from: "one\n\ntwo") == "one\n\ntwo")
+    }
+
+    /// How many lines a caption draws in — what the frame reservation counts
+    /// rows with, and what a single line label must still report as one.
+    @Test func lineCountIsOneUntilYouPressReturn() {
+        #expect(ArrowCaptionEntry.lineCount(of: "Save") == 1)
+        #expect(ArrowCaptionEntry.lineCount(of: "") == 1)
+        #expect(ArrowCaptionEntry.lineCount(of: "two\nlines") == 2)
+        #expect(ArrowCaptionEntry.lineCount(of: "a\nb\nc\nd") == 4)
+    }
+
+    /// The longest line is what the pill has to be wide enough for.
+    @Test func longestLineIsTheOneThePillIsSizedFor() {
+        #expect(ArrowCaptionEntry.longestLine(of: "Save") == "Save")
+        #expect(ArrowCaptionEntry.longestLine(of: "Save\nthe changes") == "the changes")
+        #expect(ArrowCaptionEntry.longestLine(of: "") == "")
     }
 
     /// The empty field says how to skip it; no em dashes, plain words.

@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 13,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T22:11:31.645Z",
-  "updated": "2026-09-06T22:11:31.686Z",
+  "updated": "2026-09-06T22:38:07.670Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-06. The keys are already in the right shape to change: CanvasTextEditing.swift line 498 has one editor used for both jobs, switched by commitsOnPlainReturn, which is set true only for the caption at line 101; the ordinary text editor already commits on Command and Return at line 515 and types a newline on plain Return, which is exactly the behaviour wanted here. So the change is largely to stop treating the caption as a single line case and to let ArrowCaptionEntry (Sources/PhotonzCore/ArrowCaptionEntry.swift) map Return to type rather than commit, keeping its rule that letters always type even when they are tool shortcuts. The sizing is the real work: AnnotationContent.estimatedCaptionSize (Layer.swift line 325) assumes one line, computing height as the font size times 1.3 plus padding and width from a character count, and the rasterizer measures the real text separately; both need to understand lines, and the estimate must still reserve at least what the drawing uses or the pill will clip at the frame edge. Watch the interaction with two open tasks: the one giving the pill a minimum width and a clamped corner radius, and the one making the tail meet the pill's near edge; a taller pill changes where its near edge is, so whichever lands last must keep the other's rule.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-09-06T22:11:31.685Z",
       "note": "seq 1510 -> 13"
+    },
+    {
+      "t": "2026-09-06T22:12:24.950Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T22:16:47.796Z",
+      "note": "Epic epic-uehjr1 is staged later, but this task came straight from the user on 2026-09-06 (source user) and sits alongside other open arrow-caption tasks, so it runs rather than being dropped."
+    },
+    {
+      "t": "2026-09-06T22:16:47.820Z",
+      "note": "Adversarial review before building. (1) The real risk is that Return stops finishing the caption: a first-time user types Save, hits Return, and the caret drops a line instead. What saves it is that the ways out already exist and are the ones people reach for anyway: clicking anywhere outside commits (and with the Arrow tool still live that click starts the next arrow), Esc still abandons, and the text tool's on-canvas field has always worked exactly this way, so the two canvas fields now agree instead of disagreeing. (2) Return on an empty field must not leave a blank two line pill, so the commit rule drops leading and trailing empty lines and a caption of nothing but Returns is still no caption. (3) A pill that grows taller grows both ways from its attachment, and the field freezes its spot when it opens with only one line of room reserved, so a tall caption near an edge can walk off the picture. Fix: the live bubble and the commit run the same pull-back-onto-the-picture rule, so it slides at the edge and what you watch is what lands. (4) Cut from scope: no line limit, no wrap at a width, no second commit key. Return is the newline, Command Return finishes. (5) A single line caption must not move by a pixel, so the existing one line ink centring is left exactly as it is and only the multi line case gets centred lines."
+    },
+    {
+      "t": "2026-09-06T22:23:27.247Z",
+      "note": "Built: ArrowCaptionEntry maps plain Return to type and Command Return to commit, and its commit rule keeps the lines while trimming each one and dropping empty first or last lines. AnnotationContent reserves per line (captionPillHeight(forLines:), estimate width from the longest line) while the badge floor stays a one line proportion. PillRasterizer centres a label that has a line break in it, and TextRasterizer.inkOffset reports the frame inset for that case so the rows land in the middle of the pill. The caption field types newlines, centres several lines in the width the rasterizer lays them out in, and slides its bubble back onto the picture as it grows; the commit runs the same clamp. Full suite green: 4110 tests."
+    },
+    {
+      "t": "2026-09-06T22:38:07.646Z",
+      "note": "Adversarial review of the built thing, on the probe. (1) A four line pill drew as an egg standing on end: the corner was half the pill's own height, which is exactly the lozenge the badge floor exists to stop. Fixed, with a test: a tall pill takes its curve from one line's share of itself, one line untouched. (2) The panel's Caption field was single line: it showed a two line label as its first line alone and landed THAT back on the arrow the moment it lost focus, throwing the second line away. Fixed: the field is as tall as the caption and carries the same keys, verified on the probe (2b-inspector-caption-sc.png, and the caption survives a commit from the panel). (3) Not fixed and recorded in the audit: nothing on screen says Command and Return finishes, and the hint that could say it disappears at the first keystroke. Clicking away lands the caption, which is what most people reach for."
+    },
+    {
+      "t": "2026-09-06T22:38:07.670Z",
+      "note": "Verified on the probe with a new walk (Scripts/playtest/caption-two-lines-walk.json, 78 steps, ok): Return dropped a line, Command and Return landed 'Focus ring\\nis two pixels off' unchanged from the bubble that was on screen, a diagonal arrow took two lines, Escape after four typed lines left the arrow with no caption at all, and a click away landed two lines. Eleven other caption walks and the redline walk still pass; arrow-endings-walk fails at step 34 for a reason already queued and confirmed pre-existing. Fourteen walks that used Return to finish a caption were updated to Command and Return. Audit: queue/audits/2026-09-06-arrow-caption-lines.json with three real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-06T22:12:24.950Z"
 }

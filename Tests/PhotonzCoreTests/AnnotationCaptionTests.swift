@@ -95,6 +95,41 @@ struct AnnotationCaptionGeometryTests {
         big.captionFontSize = 40
         #expect(big.estimatedCaptionSize.height > short.height)
     }
+
+    /// A caption of several lines reserves a taller box, one line's worth per
+    /// line, and stays as wide as its LONGEST line rather than as wide as all
+    /// of them laid end to end.
+    @Test func estimatedSizeCountsTheLinesItWasGiven() {
+        let one = arrowContent(caption: "Save the changes").estimatedCaptionSize
+        let two = arrowContent(caption: "Save\nthe changes").estimatedCaptionSize
+        #expect(two.height > one.height)
+        #expect(two.width < one.width)
+        let four = arrowContent(caption: "a\nb\nc\nd").estimatedCaptionSize
+        let single = arrowContent(caption: "a").estimatedCaptionSize
+        #expect(four.width == single.width)
+        #expect(four.height > two.height)
+        // Evenly spaced: each extra line adds the same amount of box.
+        let three = arrowContent(caption: "a\nb\nc").estimatedCaptionSize
+        let step = three.height - arrowContent(caption: "a\nb").estimatedCaptionSize.height
+        #expect(abs((four.height - three.height) - step) < 1.5)
+    }
+
+    /// One line reserves the height the whole app assumes a caption pill draws
+    /// at — the same number the badge floor is derived from — so the estimate
+    /// and the drawn pill cannot disagree about a plain label.
+    @Test func aOneLineCaptionReservesTheAssumedPillHeight() {
+        let content = arrowContent(caption: "Save the changes")
+        #expect(content.estimatedCaptionSize.height == content.captionPillHeight.rounded(.up))
+    }
+
+    /// The badge floor is a ONE line proportion. A tall caption is allowed to
+    /// be narrow: widening a four line pill to 1.7 times its height would draw
+    /// a banner around four short words.
+    @Test func theBadgeFloorDoesNotGrowWithTheLines() {
+        let one = arrowContent(caption: "a")
+        let four = arrowContent(caption: "a\nb\nc\nd")
+        #expect(four.captionMinPillWidth == one.captionMinPillWidth)
+    }
 }
 
 @Suite("Annotation caption frames and hit-testing")
@@ -848,6 +883,42 @@ struct AnnotationCaptionGrowthTests {
         let cleared = AnnotationBuilder.captioning(captioned, caption: nil, placement: placement)
         #expect(cleared.annotation?.captionOffset == nil)
         #expect(cleared.annotation?.captionGrowth == nil)
+    }
+
+    /// A caption that outgrows the picture while it is being typed — four
+    /// lines where the field froze room for one — is pulled back on when it
+    /// lands, rather than hanging off the top edge (user request 2026-09-06).
+    @Test func aTallCaptionCommittedAtTheEdgeIsPulledBackOntoThePicture() {
+        let layer = AnnotationBuilder.layer(content: arrowContent(),
+                                            from: CGPoint(x: 700, y: 20),
+                                            to: CGPoint(x: 900, y: 20))
+        let tall = CGSize(width: 120, height: 160)
+        let captioned = AnnotationBuilder.captioning(layer, caption: "one\ntwo\nthree\nfour",
+                                                     placement: CaptionPlacement(),
+                                                     canvas: canvas, captionPillSize: tall)
+        guard let content = captioned.annotation else {
+            Issue.record("expected annotation content")
+            return
+        }
+        let rect = pill(content, size: tall)
+            .offsetBy(dx: captioned.frame.minX, dy: captioned.frame.minY)
+        #expect(rect.minY >= -0.5, "the pill hung off the top at \(rect)")
+        #expect(rect.maxY <= canvas.height + 0.5)
+    }
+
+    /// ...and a caption that fits keeps the exact spot the field froze, so the
+    /// ordinary case still does not jump on commit.
+    @Test func aCaptionThatFitsKeepsTheSpotTheFieldFroze() {
+        let layer = AnnotationBuilder.layer(content: arrowContent(),
+                                            from: CGPoint(x: 700, y: 500),
+                                            to: CGPoint(x: 900, y: 500))
+        let placement = CaptionPlacement(attach: CGSize(width: 0, height: -20),
+                                         growth: CGSize(width: 0, height: -1))
+        let captioned = AnnotationBuilder.captioning(layer, caption: "two\nlines",
+                                                     placement: placement, canvas: canvas,
+                                                     captionPillSize: CGSize(width: 120, height: 80))
+        #expect(captioned.annotation?.captionOffset == placement.attach)
+        #expect(captioned.annotation?.captionGrowth == placement.growth)
     }
 
     @Test func growthRoundTripsThroughCodable() throws {

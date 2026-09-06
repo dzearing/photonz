@@ -13,7 +13,7 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "type", "text": "Save all the changes here" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "return" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "key", "key": "v" },
     { "do": "waitFor", "condition": "tool", "value": "select" },

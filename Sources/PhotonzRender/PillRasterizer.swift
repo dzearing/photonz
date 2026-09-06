@@ -31,10 +31,22 @@ enum PillRasterizer {
     /// this argument defaults to none.
     static func footprint(for text: String, fontSize: CGFloat, padding: CGFloat,
                           minWidth: CGFloat = 0) -> CGSize {
-        let size = TextRasterizer.naturalSize(
-            TextContent(string: text, fontName: "SF Pro", fontSize: fontSize))
+        let size = TextRasterizer.naturalSize(content(text, fontSize: fontSize))
         return CGSize(width: max(size.width + 2 * padding, minWidth),
                       height: size.height + 2 * padding)
+    }
+
+    /// The face a pill sets its label in, and the ONE place a label with more
+    /// than one line in it is decided to be centred: rows sitting ragged left
+    /// inside a capsule read as a paragraph that lost its box. A single line is
+    /// left alone — it is centred by its ink instead (see `draw`), which is a
+    /// finer measurement than any alignment.
+    static func content(_ string: String, fontSize: CGFloat,
+                        colorHex: String = "#FFFFFF") -> TextContent {
+        var text = TextContent(string: string, fontName: "SF Pro", fontSize: fontSize,
+                               colorHex: colorHex)
+        if string.contains(where: \.isNewline) { text.alignment = .center }
+        return text
     }
 
     /// The pill's corner radius: half its short side, so a readout (always
@@ -104,8 +116,7 @@ enum PillRasterizer {
         context.addPath(pill)
         context.strokePath()
 
-        let text = TextContent(string: string, fontName: "SF Pro",
-                               fontSize: fontSize, colorHex: textColorHex)
+        let text = content(string, fontSize: fontSize, colorHex: textColorHex)
         let textSize = TextRasterizer.naturalSize(text)
         // Made with the pixels it is about to be drawn with: a document-sized
         // bitmap stretched over a zoomed-in pill is exactly the soft readout

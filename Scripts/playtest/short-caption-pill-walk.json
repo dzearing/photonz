@@ -15,7 +15,7 @@
     { "do": "snapshot", "name": "0-field-empty" },
     { "do": "type", "text": "1" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "return" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
 
     { "do": "key", "key": "a" },
@@ -25,7 +25,7 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "type", "text": "Hi" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "return" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
 
     { "do": "key", "key": "a" },
@@ -35,7 +35,7 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "type", "text": "Primary action" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "return" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
     { "do": "wait", "seconds": 1 },
 
     { "do": "key", "key": "escape" },

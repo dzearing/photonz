@@ -98,7 +98,7 @@ extension CanvasNSView {
                                       captionLayer: layer, captionPlacement: placement)
 
         let editor = makeInlineEditor()
-        editor.commitsOnPlainReturn = true
+        editor.isCaptionField = true
         // A fresh (or never captioned) arrow says how to skip. A re-edit of an
         // existing label starts with that label selected instead.
         if a.caption == nil { editor.placeholder = ArrowCaptionEntry.placeholder }
@@ -309,10 +309,24 @@ extension CanvasNSView {
             let hint = (placeholder as NSString).size(withAttributes: [.font: font]).width / zoom
             pill.width = max(pill.width, hint + 2 * caption.captionPadding + 4)
         }
-        // A caption is one line at any length, exactly like the committed pill,
-        // so the container is given the whole bubble and never wraps.
-        editor.textContainer?.containerSize = NSSize(width: max(1, pill.width * zoom),
-                                                     height: .greatestFiniteMagnitude)
+        // A caption never wraps: it breaks where YOU pressed Return and nowhere
+        // else, so the container is given room for the longest line as it was
+        // measured. One line keeps the whole bubble and sits at the pill's ink
+        // inset; several lines are centred on each other the way the committed
+        // pill centres them, in the width the rasterizer lays them out in.
+        let lines = CaptionMetrics.committedText(editor.string).contains(where: \.isNewline)
+        if lines {
+            let text = CaptionMetrics.textSize(for: editor.string,
+                                               fontSize: caption.captionFontSize)
+            editor.alignment = .center
+            editor.textContainer?.containerSize = NSSize(
+                width: max(1, (text.width - 2 * TextRasterizer.frameInset) * zoom),
+                height: .greatestFiniteMagnitude)
+        } else {
+            editor.alignment = .left
+            editor.textContainer?.containerSize = NSSize(width: max(1, pill.width * zoom),
+                                                         height: .greatestFiniteMagnitude)
+        }
         var center = session.origin
         if var probe = session.captionLayer?.annotation,
            let tail = session.captionLayer?.annotationEndpoint(.start),
@@ -321,6 +335,12 @@ extension CanvasNSView {
             probe.end = head
             probe.captionOffset = session.captionPlacement.attach
             probe.captionGrowth = session.captionPlacement.growth
+            // A pill that grew taller than the spot had room for is pulled back
+            // onto the picture as it grows, by exactly the rule the commit uses,
+            // so the bubble you are watching is the label that lands.
+            probe.captionOffset = CaptionPlanner.keepingOnCanvas(
+                session.captionPlacement.attach ?? .zero, for: probe,
+                canvas: viewport.documentSize, pillSize: pill)
             center = probe.captionPillCenter(forPillSize: pill)
         }
         let pillCenter = viewport.viewPoint(fromDocument: center)
@@ -340,7 +360,11 @@ extension CanvasNSView {
         // committed one does.
         let straddle = caption.captionBorderWidth * zoom / 2
         captionPill?.frame = frame.insetBy(dx: -straddle, dy: -straddle)
-        captionPill?.style(for: caption, zoom: zoom)
+        // Styled with the caption BEING TYPED, not the one the layer still
+        // holds: the corner a pill wears depends on how many lines are in it.
+        var shown = caption
+        shown.caption = CaptionMetrics.committedText(editor.string)
+        captionPill?.style(for: shown, zoom: zoom)
     }
 
     /// Keeps the editor glued to the document while panning/zooming, and
@@ -470,7 +494,12 @@ final class CaptionPillView: NSView {
         let ink = RGBA(hex: annotation.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
         layer.borderColor = CGColor(srgbRed: ink.r, green: ink.g, blue: ink.b, alpha: ink.a)
         layer.borderWidth = max(1, annotation.captionBorderWidth * zoom)
-        layer.cornerRadius = annotation.captionCornerRadius(pillHeight: bounds.height)
+        // Asked in DOCUMENT points and scaled back, because the corner rule
+        // reads the caption's padding and line count, which are document
+        // numbers: handing it a zoomed height would round a zoomed-in bubble
+        // by a different rule than the pill it stands in for.
+        let documentHeight = bounds.height / max(zoom, 0.0001)
+        layer.cornerRadius = annotation.captionCornerRadius(pillHeight: documentHeight) * zoom
         // The rasterizer's shadow: a 4px blur two pixels down, black at 35%.
         // A CALayer's blur radius is half a CGContext's.
         layer.shadowColor = CGColor(gray: 0, alpha: 1)
@@ -486,9 +515,11 @@ final class CaptionPillView: NSView {
 private final class InlineTextView: NSTextView {
     var onCommit: () -> Void = {}
     var onCancel: () -> Void = {}
-    /// Caption entry is single-line: plain Return commits instead of inserting
-    /// a newline. Text blocks keep Return-as-newline and commit on ⌘Return.
-    var commitsOnPlainReturn = false
+    /// A caption field routes its keys through `ArrowCaptionEntry`: Return
+    /// drops a line, ⌘Return commits, Esc abandons, and a letter always types
+    /// even when it is a tool shortcut. A text block handles its own keys
+    /// below, with the same Return and ⌘Return rule.
+    var isCaptionField = false
     /// Drawn in the text color at reduced opacity while the field is empty
     /// (NSTextView has no placeholder of its own).
     var placeholder: String? {
@@ -496,12 +527,12 @@ private final class InlineTextView: NSTextView {
     }
 
     override func keyDown(with event: NSEvent) {
-        if commitsOnPlainReturn {
+        if isCaptionField {
             // The caption field's keys are decided in PhotonzCore so the rule
             // (letters always type, even tool shortcuts) is tested there.
             let key: ArrowCaptionEntry.Key
             if event.keyCode == 36 || event.keyCode == 76 {
-                key = .return
+                key = .return(command: event.modifierFlags.contains(.command))
             } else if event.keyCode == 53 {
                 key = .escape
             } else {
