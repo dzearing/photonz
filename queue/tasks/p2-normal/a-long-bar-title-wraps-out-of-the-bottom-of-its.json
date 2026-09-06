@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1470,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T19:18:35.998Z",
-  "updated": "2026-09-06T23:06:03.118131Z",
+  "updated": "2026-09-06T23:06:23.715Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-06 while landing a-control-added-to-a-bar-does-not-vanish-behind. The title is now an in-flow Fill item, so GroupFlow.wrapRooms treats it like any other row label and wraps it to the room left over (Title box goes 248x36 in a 48-tall bar). Before that change it was Stretch and overhung sideways instead. Probably wants a per-layer no-wrap answer, or a rule that a row whose height is a typed number never wraps a label past that height. See docs/design/ui-building.md, \"A field and a bar keep their width on purpose\".",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-06T23:06:03.118131Z",
       "note": "Left undone and filed: a-label-sits-two-points-low-in-the-middle-of-a-b (cross-axis centring loses half the measuring slack, predates this) and a-label-that-fills-a-row-is-placed-before-it-kno (the general wrap-after-placement bug this title now dodges rather than fixes)."
+    },
+    {
+      "t": "2026-09-06T23:06:23.715Z",
+      "note": "A Nav Bar title now stays on one line and ends in an ellipsis where the bar runs out of room, instead of wrapping out of the bottom through the hairline. New TextContent.staysOnOneLine honoured by the flow, the resize, the inline field and the renderer; set on the starter bar's title. Verified in the real app with Scripts/playtest/bar-title-one-line-walk.json (real captures, Screen Recording granted); full suite 4127 green. Audit: queue/audits/2026-09-06-bar-title-one-line.json."
     }
   ],
-  "started": "2026-09-06T22:43:44.412Z"
+  "started": "2026-09-06T22:43:44.412Z",
+  "completed": "2026-09-06T23:06:23.715Z"
 }
