@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1480,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T20:31:37.555Z",
-  "updated": "2026-09-06T23:06:57.663Z",
+  "updated": "2026-09-06T23:22:20.121Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Guides landed on 2026-09-06 (audit queue/audits/2026-09-06-grid-guides.json). Snapping.snapFrameOrigin and snapResizedFrame both take a guides: [CanvasGuide] parameter and turn each guide into a full span candidate; AnnotationSnapping.snap is the other path and has no guides parameter yet. CanvasView.snappedAnnotationPoint and snappedTextOrigin are the two call sites, and both already pass gridSpacing/gridOrigin/gridAxes, so the shape of the change is the same one Snapping.swift already has. Text placement deliberately takes no guide today: a click has no opposite end and nothing is being dragged, which is the same reason it takes no edge magnet, so decide whether a guide is different before adding one there.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-06T23:22:00.630991Z",
       "note": "audit: queue/audits/2026-09-06-guides-catch-marks.json with two real window captures."
+    },
+    {
+      "t": "2026-09-06T23:22:20.121Z",
+      "note": "Arrows, lines, boxes, clicked captions and caliper feet now catch pinned guides, with the same yellow line and the same Command to get free. AnnotationSnapping.snap takes the document's guides (fed to EdgeSnapping so a guide outranks a found border at equal distance) and the axis gate spares a pinned line; measure feet reach them through measureGuideLines. New core suite AnnotationGuideSnappingTests (12 cases, written first), Scripts/test.sh green, and verified in the probe with Scripts/playtest/guides-catch-marks-walk.json: with the grid OFF and guides at x416/y288, every mark drawn 5 points short landed on the guide and the Command drag did not. Audit: queue/audits/2026-09-06-guides-catch-marks.json"
     }
   ],
-  "started": "2026-09-06T23:06:57.662Z"
+  "started": "2026-09-06T23:06:57.662Z",
+  "completed": "2026-09-06T23:22:20.121Z"
 }

@@ -10053,3 +10053,48 @@ controls and all four pass. 4095 unit tests green.
 Next: the audit at `queue/audits/2026-09-06-grid-tool-bar.json` asks whether the
 size button reads as a button, whether `Auto` belongs at the bottom, and whether
 the mode is still guessable with its sentence gone.
+
+## 2026-09-06 — A pinned guide catches what you draw
+
+Guides landed this morning and caught a dragged or resized box. They did not
+catch an arrow's tip, a line's end or a caliper's foot, because drawing goes
+down a different path from dragging: `AnnotationSnapping` had never heard of a
+guide. So a guide meant one thing while you dragged and nothing while you drew,
+which is the one thing a line you pinned on purpose must never do.
+
+`AnnotationSnapping.snap` now takes the document's guides and hands them to
+`EdgeSnapping` as guide lines. That gets three things at once: a guide outranks
+a border found in the picture at equal distance without overwhelming a strong
+one right under the pointer, a catch fills `guideX`/`guideY`, which is what
+lights the same yellow line a layer drag gets, and the drag's memory holds it
+through a wobble like any other caught line.
+
+The axis gate spares a pinned line. An arrow's edge magnets are gated by the
+way the arrow points, so a level arrow only takes borders down the picture; the
+gate is asking which BORDERS the mark is aimed at, and it has nothing to say
+about a line somebody placed by hand. The canvas grid was already ungated for
+the same reason. The gain is that an arrow drawn along a guide comes out lying
+exactly on it; the price, in the audit, is that a sloping arrow whose tip
+passes near a guide takes it and slopes a few points more. ⌘ is the way out.
+
+A caliper's feet reach the same lines through `measureGuideLines`, which now
+always offers the pinned guides, first, with the measurement-derived lines
+behind their own flag after them. A caption clicked down takes a guide too: it
+still takes no edge magnet, because a click carries no direction and would jump
+onto a baseline it never meant, but a pinned guide is not guessed from the
+picture and a caption on a margin you pinned is exactly what people do.
+
+Left alone on purpose: the caliper's number, which is a label rather than a
+measured point and lines up with the other numbers, and the selection rubber
+band, which never caught the grid either.
+
+Verified in the probe with the new `guides-catch-marks-walk`: guides pinned at
+x416 and y288, the grid switched OFF so nothing else can quantize, every mark
+drawn five points short. Arrow tip 416, line end 416, an arrow drawn downward
+288, caption origin x416, caliper feet 200 to 416, and the same arrow with ⌘
+held stopping at 411. 4139 unit tests green, twelve of them new and written
+first; the grid-guides, text-on-the-grid and snap-hold-foot walks re-run clean.
+
+Next: the audit at `queue/audits/2026-09-06-guides-catch-marks.json` asks
+whether the brighter yellow reads as a catch at all when it lands on top of the
+guide you pinned, and whether a caption clicked near a guide should move.
