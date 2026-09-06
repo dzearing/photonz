@@ -9125,3 +9125,31 @@ HAS but no longer offers for that part is still dropped quietly. Also worth
 someone's attention: a playtest window capture of a SECOND window opened mid
 walk comes out blank white every time, so an audit that trusts it would be
 showing nothing as if it were the app.
+
+## 2026-09-06 — The canvas splits its drawing and its gestures into their own files
+
+`Sources/Photonz/CanvasView.swift` had grown to 5104 lines and is where every
+canvas change lands. It is now nine files, one job each, with every stored
+property left behind in `CanvasView.swift` (1484 lines) because a Swift
+extension cannot declare one: `CanvasPointerDrags` (press/drag/release),
+`CanvasDisplay` (composite, selection, handles, crop, marquee, drag sprite,
+snap guides), `CanvasTextEditing`, `CanvasAnnotationPreview`, `CanvasKeys`,
+`CanvasPointerCue`, `CanvasDrop`, `CanvasZoom`.
+
+Moves only, nothing a person sees changes. The split was scripted from line
+ranges and checked by counting: every non-blank line of the original appears
+exactly once across the nine files, apart from two comment blocks rewritten on
+purpose. 112 declarations lost `private` because two files now share them, and
+the compiler named every one; `selectedLayerID`, `groupContext` and
+`multiSelectedLayerIDs` lost `private(set)` because their only writer, `apply`,
+moved to `CanvasDisplay.swift`.
+
+Gotcha for the next one: `swift build` does not compile the `PHOTONZ_PLAYTEST`
+members, so a stored property inside an `#if` will look fine until the probe
+build. Build the probe before believing a split compiles.
+
+Verified: build clean with no new warnings and no `@preconcurrency`,
+`Scripts/test.sh` 3637 tests in 310 suites pass with no test edited, eleven
+playtest walks that drive the canvas pass.
+
+Next: `Sources/Photonz/LayersPanel.swift`, 3216 lines, is the same recipe.
