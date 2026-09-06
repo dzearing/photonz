@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1260,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T17:38:05.176Z",
-  "updated": "2026-09-05T20:41:32.604Z",
+  "updated": "2026-09-06T06:27:08.168Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the-grid-is-always-behind-the-canvas-and-things on 2026-09-05. Nudge.swift in PhotonzCore holds the step; CanvasGridSettings.snapSpacing is the grid step to use. TDD in core.",
@@ -27,6 +27,15 @@
     {
       "t": "2026-09-05T20:41:32.604Z",
       "note": "Note from 2026-09-05: CanvasGridSettings.snapSpacing is now a function, snapSpacing(atZoom:), because the pull follows the lines being drawn at the current zoom. A nudge has no zoom of its own, so this task has a question to answer that it did not have before: an arrow key should almost certainly step by the same thing a drag lands on, which means reading the canvas's zoom (CanvasView.canvasSnapSpacing already does exactly that) rather than the typed spacing."
+    },
+    {
+      "t": "2026-09-06T06:24:29.363Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T06:27:08.168Z",
+      "note": "Adversarial review before building. (1) The step must be the LIVE cell (CanvasGridSettings.snapSpacing(atZoom:)), not the typed spacing: at 100% a 4 pt grid draws 32 pt lines and a drag lands on those, so an arrow key stepping 4 would disagree with the drag all over again. (2) Shift by ten CELLS would be absurd when a cell is already 32 pt. Rule chosen: shift travels the same ten points it always did, rounded UP to whole cells, and never fewer than two, so shift is always bigger than a plain press and always lands on a line. Cell 1 -> 10 pt (unchanged), 4 -> 12, 8 -> 16, 32 -> 64. (3) An off-grid layer must land ON the next line rather than travelling a whole cell, or a nudged layer never rejoins the grid. (4) A grid set to columns only has no lines across, so up and down stay at one point, exactly as a drag does. (5) Escape hatch: the grid steals fine positioning, so Command plus an arrow nudges by one point, the same way Command frees a drag. Cut from scope: the X and Y number fields keep stepping by one, they have no zoom of their own and a typed number is not a drag."
     }
-  ]
+  ],
+  "started": "2026-09-06T06:24:29.362Z"
 }
