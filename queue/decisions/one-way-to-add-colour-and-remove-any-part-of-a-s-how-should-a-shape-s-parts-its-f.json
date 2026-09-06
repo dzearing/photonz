@@ -1,0 +1,74 @@
+{
+  "id": "one-way-to-add-colour-and-remove-any-part-of-a-s-how-should-a-shape-s-parts-its-f",
+  "taskId": "one-way-to-add-colour-and-remove-any-part-of-a-s",
+  "question": "How should a shape's parts, its fill, its outline and its shadow, be laid out in the settings panel?",
+  "context": "Pick a rectangle today and its settings are scattered: the fill's tick is in one section, the outline's colour beside it with no tick at all, the outline's width two sections further down, and the shadow in a section of its own. There is no way to take a rectangle's outline off. The fix is one model, a shape is made of parts and every part works the same way, and the only thing left to settle is how that list looks. The brief draws the same rectangle four ways at the same size.",
+  "options": [
+    {
+      "id": "a",
+      "label": "One list, settings unfold",
+      "summary": "Fill, Outline and Shadow are three rows in one list. Each row has a tick to switch that part on or off and the colour it paints. Click a row and its own settings slide open underneath it; click another and the first folds away.",
+      "pros": [
+        "The panel stays short whatever is switched on, so nothing is ever pushed below the fold",
+        "One row per part reads as a list of what the shape is made of",
+        "Turning a part on or off is always the same tick in the same column"
+      ],
+      "cons": [
+        "The outline's width is one click further away than it is today, and it is the number people drag most",
+        "Two of the three parts have nothing to unfold, so the chevron beside them opens an empty drawer",
+        "Only one part's settings can be seen at a time, so matching a shadow to an outline means flipping back and forth"
+      ],
+      "mitigation": "A row with no settings of its own shows no chevron at all, and the part you last opened stays open as you pick other shapes."
+    },
+    {
+      "id": "b",
+      "label": "One list, settings always showing",
+      "summary": "Fill, Outline and Shadow are three rows in one list, each with a tick and its colour, and each part's own settings sit indented right under it whenever that part is on. Switch a part off and its colour and settings disappear, leaving the tick and the name.",
+      "pros": [
+        "Nothing is hidden: the outline's width is right under the outline's colour, always",
+        "No extra clicks and nothing to learn: what you can change is what you can see",
+        "Switching a part off visibly takes its settings away, so off looks off"
+      ],
+      "cons": [
+        "With a shadow switched on the list gets long, and the sections below it get pushed down",
+        "A shape with everything on shows about eight rows where today it shows four"
+      ],
+      "mitigation": "The whole list is one panel section, so it collapses with one click on its heading like every other section, and it can be dragged lower in the panel if you rarely use it."
+    },
+    {
+      "id": "c",
+      "label": "A section for each part",
+      "summary": "Fill, Outline and Shadow each become their own panel section with a switch in its heading, the way Shadow already is today. Each section holds that part's colour and its settings, and collapses on its own.",
+      "pros": [
+        "The strongest version of the idea: every part is a peer of every other, at the same size",
+        "It reuses the panel section people already know, which collapses and can be dragged into a different order",
+        "Shadow needs no change at all: it is already drawn this way"
+      ],
+      "cons": [
+        "A rectangle's panel grows from four headings to six, so more of the panel is heading than setting",
+        "The set of headings changes every time you pick a different kind of layer, so the panel you learned keeps rearranging itself",
+        "The order you drag your sections into stops holding still, because half the sections come and go with the selection"
+      ],
+      "mitigation": "Sections a shape does not have simply stay away, and each remembers whether you left it open, so the ones you never use stay shut."
+    },
+    {
+      "id": "d",
+      "label": "Leave the panel as it is",
+      "summary": "Nothing moves. Fill keeps its tick in the Color section, the outline keeps its colour there and its Thickness in the section named after the shape, and there is still no way to take a rectangle's outline off.",
+      "pros": [
+        "No relearning: every setting stays exactly where anyone has already found it",
+        "No risk of a rearrangement making some other flow worse"
+      ],
+      "cons": [
+        "A rectangle's outline still cannot be removed at all, which is the thing that started this",
+        "Three different ways of switching a part on stay on screen at once",
+        "Every future part, such as a glow, has to invent its own home again"
+      ],
+      "declines": true,
+      "mitigation": "The outline could be given a tick on its own row without moving anything else, which fixes the blocker and leaves the rest alone."
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-09-06T14:30:56.338Z"
+}

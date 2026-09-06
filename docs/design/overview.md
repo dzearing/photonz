@@ -41,6 +41,7 @@ It runs as a **resident menu-bar agent** (CleanShot-style): always available to 
 - `release.md` — versioning, CI, release pipeline, website.
 - `experiments.md` — the two-release binary (Public / Next), feature flags, and the one-way porting rule.
 - `ui-building.md` — the `ui-building` focus: the IA decisions (one tree, frames as groups, the Library as a panel group, components as subtrees with instances) and the ordered slices from nesting to a component authored and reused.
+- `shape-parts.md` — the one model for everything a layer paints: a part has a switch, a colour and its own settings; fill, outline, shadow and whatever comes next all work the same way.
 - `next-measure.md` — the Next release's measure/redline suite (hover size readout, roles, Measurements panel, spec-list export), specced from the redline + capture-wt mocks.
 
 ## Repo workflow

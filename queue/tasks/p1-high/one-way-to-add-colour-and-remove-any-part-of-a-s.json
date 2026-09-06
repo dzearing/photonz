@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 12,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:04:07.017Z",
-  "updated": "2026-09-06T14:04:07.054Z",
+  "updated": "2026-09-06T14:33:02.819Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised by the user on 2026-09-06 after failing to find a way to turn off a rectangle's border. They are describing a real structural problem, not a preference. What the code actually has, from a read: a rectangle carries TWO independent edges from two systems. The shape's own stroke is AnnotationContent.strokeWidth, shown as Thickness in the section titled Rectangle, with its colour shown in the Color section as Outline; the comment at Tools.swift says rectangles and ellipses inset their stroke, which is why the user reads it as being inside the shape. Separately LayerStyle.borderWidth is a layer style applied at render time around the layer's frame, shown as Border in the Effects section (LayersPanel.swift line 2557), with its colour also in the Color section, called Border. So Outline and Border are genuinely different things that both draw an edge, in different sections, one insettable and one not, and nothing on screen says so. Colours are deliberately pulled into one Color section: the comment at line 349 explains it, so a colour does not move to a different section when a second layer is selected. That reason is sound for a multi selection and is what breaks proximity for a single one, so the model has to answer both rather than simply undoing it. Fill has a checkbox (LayersPanel.swift around line 1636, setAnnotationFill with nil meaning no fill) because a nil colour means absent; the stroke has no such state, which is why it cannot be switched off. This is the same family as the-shape-settings-say-what-they-are-and-what-ea, which fixes the section title and the unlabelled swatches; that task is smaller and can land first, but this one supersedes it in scope, so whoever takes this should read it and fold it in rather than leaving two half models.",
@@ -33,6 +33,35 @@
     {
       "t": "2026-09-06T14:04:07.053Z",
       "note": "seq 180 -> 12"
+    },
+    {
+      "t": "2026-09-06T14:23:54.837Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T14:33:02.819Z",
+      "note": "reproduced first, on the probe with a rectangle picked (Scripts/playtest/shape-parts-walk.json, Screen Recording granted, real captures). The task description is partly STALE: there is no longer a Border row under Effects for a shape. \"One width for the line round a shape\" (4179447, 2026-09-03, PhotonzCore/OutlineWidth.swift) already took the Border row away from any layer that draws its own outline, so the two-edges confusion is resolved for shapes and Border now only reaches a picture, a frame, a label, a group or a callout. What IS still true, and verified: the panel reads Color (Fill with a tick, Outline with NO tick), Effects (Opacity, Blur, Corner Radius), Rectangle (Thickness), Shadow (Enable Shadow)."
+    },
+    {
+      "t": "2026-09-06T14:33:02.819Z",
+      "note": "the blocker is real and reproducible: a rectangle outline cannot be removed. There is no switch on the Outline row and AnnotationStyles.strokeWidthRange is 1...40, so the thinnest a box can be is a 1pt ring. Fill can be absent because a nil colour is a real document state (setAnnotationFill(nil)); the stroke has no such state, which is exactly why there is no tick to offer."
+    },
+    {
+      "t": "2026-09-06T14:33:02.819Z",
+      "note": "adversarial review, before building. (1) First-time walk: draw a red box, want no edge — under the parts model they untick Outline in a list of three and are done, no knowledge needed; today there is no move at all. (2) What the app cannot deliver yet: \"off\" for the outline needs a real absent state in PhotonzCore that saves, reopens, undoes and copies. Shadow already has one (style.shadow == nil) and Fill already has one, so only the outline is missing it; that is the one piece of core work and it is TDD-able. (3) Decorative: a disclosure chevron on every part row when only Outline has any settings at all — dead weight on two rows out of three, which is the strongest argument against the folding layout. (4) Shortest version: just adding a tick to the Outline row fixes the blocker in an afternoon, but leaves three idioms and the scattering, which is the half-model the user asked us not to leave. The shortest version that delivers the MODEL is one list with the settings inline: it reuses the label/switch/colour/menu grid ColorPartRow already has and moves two sliders. (5) Collision found: dock sections are user-reorderable and collapsible, so making every part a section means the set of headings changes with the selection and a saved order stops holding still — a real cost the mock-style layout hides."
+    },
+    {
+      "t": "2026-09-06T14:33:02.819Z",
+      "note": "disagreed with the task on one point and said so in the brief: it asks for the outline colour, thickness AND corner radius in one place. Radius rounds the fill too — a box with no outline still has rounded corners — so it is a property of the shape, not a setting of the outline. It moves out of Effects and into the section named after the shape instead, which still gets it away from the heading that means \"laid over the top\"."
+    },
+    {
+      "t": "2026-09-06T14:33:02.819Z",
+      "note": "model written down first, before any code: docs/design/shape-parts.md (a part is something a layer paints that can be absent: one switch, one colour, its own settings; a property is something it always has and has no switch). Pointer added to docs/design/overview.md. Nothing built yet."
+    },
+    {
+      "t": "2026-09-06T14:33:02.819Z",
+      "note": "decision opened with the panel drawn four ways at the real panel width, rendered by Scripts/make-parts-mock.swift: today, A settings unfold, B settings always showing (recommended), C a section per part, D declines. Brief at queue/decisions/one-way-to-add-colour-and-remove-any-part-of-a-s-how-should-a-shape-s-parts-its-f.md carries a real probe capture of the panel today plus the four strips. Blocking on the answer as the acceptance asks; suite green at 3862 tests."
     }
-  ]
+  ],
+  "started": "2026-09-06T14:23:54.836Z"
 }
