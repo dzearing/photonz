@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:42:46.219Z",
-  "updated": "2026-09-06T01:19:33.764Z",
+  "updated": "2026-09-06T01:39:59.445Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Most of this exists. GroupContent already stores clipsContents on EVERY group; only Layer.clipsToFrame (Layer.swift:769) narrows it to group?.isFrame == true, and Document.swift:251 plus ComponentPieceEditing.swift:173 gate hit testing on the same property. The renderer path is DocumentRenderer.swift:489, `layer.clipsToFrame ? layer.localBounds : layer.renderBounds`. The switch itself is in FrameInspector.swift; putting it on a sized group means the Layout section carries it, not the Frame section. Comes from queue/audits/2026-09-04-starter-sizing.json: 'A text field with a long placeholder wraps and gets taller instead of truncating with an ellipsis, because a text layer has nothing that clips it.' Truncating words with an ellipsis is a separate, later question: this task is only about the box cutting off what leaves it. Also the honest partner to the pending task a-container-can-be-told-the-smallest-and-largest, whose acceptance says a stack pinned at its largest size must not overflow quietly.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-06T02:07:00.000Z",
       "note": "Adversarial review of the built thing, on the real app (Scripts/playtest/clip-contents-walk.json, Screen Recording granted so the shots are real captures). What works: the switch appears exactly where the number that caused the overflow was typed, the cut is clean, the click through the cut-away words picks nothing, and unticking brings everything back untouched. What I could not fix here: a cut-away child still looks like any other row in the Layers list with nothing saying it is off screen - filed as a-container-says-when-it-is-hiding-something-you, which covers screens too since they have always had the same gap."
+    },
+    {
+      "t": "2026-09-06T01:39:59.445Z",
+      "note": "Clip contents now sits on any container with a box of its own (a width, a height or a ceiling), in the Layout section under those numbers, off by default so nothing already drawn changes. What leaves the box is not drawn, not clicked, not exported, and a corner radius cuts round. Also fixed a real bug it exposed: a laid-out group's box was not magnified with its contents, so it cut (and rounded, and bordered) at the wrong size on a zoomed canvas. 3496 tests green, verified in the probe with Scripts/playtest/clip-contents-walk.json and real captures. Audit: queue/audits/2026-09-05-clip-contents.json. Follow-up filed: a-container-says-when-it-is-hiding-something-you."
     }
   ],
-  "started": "2026-09-06T01:19:33.764Z"
+  "started": "2026-09-06T01:19:33.764Z",
+  "completed": "2026-09-06T01:39:59.445Z"
 }
