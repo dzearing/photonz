@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1390,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T14:18:14.244Z",
-  "updated": "2026-09-06T18:00:40.463Z",
+  "updated": "2026-09-06T18:01:00.888Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the colour drag task on 2026-09-06 rather than built with it. It is NOT the cheap half of that task: the app deliberately asks for a name BEFORE a saved colour exists (see the naming field in ColorStyleRow and the comment above it), so a shelf drop that quietly made one called \"Color 1\" would contradict a decision already made. Doing it right means opening that same field from the shelf. EditorState.saveColorStyle(paint:name:slot:) is the call underneath; the shelf is LibraryPanel.swift and the Styles tiles are LibraryStyleTile in ColorStylePanel.swift. The drop vocabulary already exists: ColorDrag.acceptedTypes and ColorDrag.payloadInFlight().",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-06T18:00:40.463Z",
       "note": "Verified by Scripts/playtest/colour-onto-the-library-walk.json on the probe (Screen Recording granted, so the pictures are real captures). Acceptance 1: the shelf lit up on the MEDIA scope and the drop opened the name field. Acceptance 2: styles reads \"Brand #B0184A · 0 used\" and selectedColors still reads \"fill #B0184A\" with no style, so the source row is untouched. Acceptance 3: after Escape, styles is empty and the shelf is back on Media. Acceptance 4: it lights up in every scope and turns to Styles on the drop; the audit says so. Scripts/test.sh green (3981 tests), and the existing colour-onto-a-swatch walk still passes."
+    },
+    {
+      "t": "2026-09-06T18:01:00.887Z",
+      "note": "The Library now takes a colour drop and keeps it: the whole panel lights up with a Save this color pill, letting go turns the shelf to Styles and opens the same name field a colour row opens (with the colour beside it), Return saves it as a tile and Escape leaves nothing behind and puts the shelf back. Shipped in LibraryColorDrop.swift plus ColorDrop.Shelf in PhotonzCore (6 tests, written first), behind next-color-drag and next-styles so Current is untouched. Verified on the probe with Scripts/playtest/colour-onto-the-library-walk.json (real screen captures) and Scripts/test.sh green at 3981 tests. Audit: queue/audits/2026-09-06-shelf-color-drop.json"
     }
   ],
-  "started": "2026-09-06T17:43:35.166Z"
+  "started": "2026-09-06T17:43:35.166Z",
+  "completed": "2026-09-06T18:01:00.888Z"
 }
