@@ -86,9 +86,11 @@ extension CanvasNSView {
             performWindowTitleBarAction()
             return
         }
-        // The text tool places a new block wherever you click.
+        // The text tool places a new block wherever you click - on the grid,
+        // like everything else drawn on it, and exactly under the pointer
+        // with Command held.
         if tool == .text {
-            beginTextSession(layerID: nil, at: p)
+            beginTextSession(layerID: nil, at: snappedTextOrigin(p, event: event))
             return
         }
         // Crop mode owns the pointer: handles resize, inside moves, outside

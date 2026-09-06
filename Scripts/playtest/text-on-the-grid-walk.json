@@ -1,0 +1,44 @@
+{
+  "out": "/tmp/photonz-playtest/text-on-the-grid-walk",
+  "setup": {
+    "forget": ["grid", "text", "tools", "panel"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Show grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "grid-on-default", "note": "default grid at 100%: the canvas draws 32s, so a text click should pull to 32" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [407, 293] },
+    { "do": "type", "text": "Caption" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "text-clicked-on-the-grid", "note": "clicked at 407,293 on a 32 grid: expect the Text box top left at 416,288, both multiples of 32. Before this it sat at exactly 407,293" },
+    { "do": "snapshot", "name": "text-grid-1-caption" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [300, 505], "modifiers": ["command"] },
+    { "do": "type", "text": "Between the lines" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "command-places-it-exactly", "note": "Command held: expect the second Text box at exactly 300,505, off every line" },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Snap to grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [201, 611] },
+    { "do": "type", "text": "Snapping off" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "snapping-off-places-as-it-always-did", "note": "Snap to grid off with the lines still drawn: expect the third Text box at exactly 201,611" },
+    { "do": "snapshot", "name": "text-grid-2-everything" }
+  ]
+}

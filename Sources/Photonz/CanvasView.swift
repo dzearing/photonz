@@ -825,6 +825,35 @@ final class CanvasNSView: NSView {
         return snap.point
     }
 
+    /// The document point a click with the Text tool should drop its block at.
+    ///
+    /// With the grid on, a shape you draw starts and ends on lines you can
+    /// see; a caption placed on the same graph paper landed wherever the
+    /// pointer happened to be, which is the one thing on the canvas that did
+    /// not sit on the paper. So the click is quantized the same way, and ⌘
+    /// hands the point straight back the way it does everywhere else.
+    ///
+    /// It asks for a shapeless point with no other end, which is a narrower
+    /// question than a drawn shape asks:
+    ///
+    /// - No edge magnets. Text has never had them, and a click carries no
+    ///   direction to say which border it meant, so a caption dropped near a
+    ///   line of the screenshot would jump onto that line's baseline.
+    /// - No one cell floor, and no guide. A click has no opposite end to be
+    ///   floored away from, and nothing is being dragged for a line to light
+    ///   under.
+    /// - No snap memory, in either direction. One click stands on nothing and
+    ///   leaves nothing behind for the next gesture to stand on.
+    func snappedTextOrigin(_ p: CGPoint, event: NSEvent) -> CGPoint {
+        guard let viewport else { return p }
+        return AnnotationSnapping.snap(p, shape: nil, opposite: nil, edges: edgeMap,
+                                       zoom: viewport.zoom,
+                                       free: event.modifierFlags.contains(.command),
+                                       gridSpacing: canvasSnapSpacing,
+                                       gridOrigin: canvasSnapOrigin,
+                                       gridAxes: canvasSnapAxes).point
+    }
+
     /// The grid lines the shape being DRAWN is standing on, lit while the drag
     /// runs. The move and resize drags carry theirs on their own snap result;
     /// a draw has two loose ends rather than a frame, so the answer lives here

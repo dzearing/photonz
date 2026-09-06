@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T09:56:32.137Z",
-  "updated": "2026-09-06T12:16:42.238Z",
+  "updated": "2026-09-06T15:10:00.000Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found on 2026-09-06 while doing a-shape-you-draw-lands-on-the-grid-like-everythi. CanvasPointerDrags mouseDown line 90: `if tool == .text { beginTextSession(layerID: nil, at: p) }` uses the raw document point and never goes near snappedAnnotationPoint, so no edge magnet and no grid. Text is placed by a CLICK, not a drag, so there is no opposite end and no one cell floor to worry about: it just wants the point quantized. AnnotationSnapping.snap with shape nil and opposite nil already does exactly that (it is what the frame tool uses on its press), so this should be a one line change plus a test.",
+  "notes": "Found on 2026-09-06 while doing a-shape-you-draw-lands-on-the-grid-like-everythi. CanvasPointerDrags mouseDown line 90: `if tool == .text { beginTextSession(layerID: nil, at: p) }` uses the raw document point and never goes near snappedAnnotationPoint, so no edge magnet and no grid. Text is placed by a CLICK, not a drag, so there is no opposite end and no one cell floor to worry about: it just wants the point quantized. AnnotationSnapping.snap with shape nil and opposite nil already does exactly that (it is what the frame tool uses on its press), so this should be a one line change plus a test. | DONE: CanvasView.snappedTextOrigin(_:event:) asks AnnotationSnapping.snap for a shapeless point with no opposite (grid quantize only, no edge magnet, no floor, no guide, no snap memory in either direction, Command frees). CanvasPointerDrags.swift mouseDown line ~93 passes it to beginTextSession. Re-edit paths (lines 244/252, CanvasKeys 59) still use the layer's own origin, so existing text never moves. Gated by next-canvas-grid through canvasSnapSpacing, so Current is untouched and there is nothing to port.",
   "acceptance": [
     "With the grid on, a text box placed by clicking has its top left corner on a grid line",
     "Holding Command while clicking places it exactly where the pointer is",
@@ -30,6 +30,27 @@
     {
       "t": "2026-09-06T12:16:42.238Z",
       "note": "seq 70 -> 70"
+    },
+    {
+      "t": "2026-09-06T14:56:56.035Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T15:10:00.000Z",
+      "note": "review before building: the mock-free version of this is one quantize. Walked it as a first-time user: with the grid on the caret jumps up to half a cell from the click, same as a shape's first corner, so the tool reads as helping rather than missing. Deliberately took NO edge magnets: text never had them, and a click carries no direction to say which border it meant, so a caption dropped beside a line in the screenshot would jump onto that line's baseline. No one cell floor either: a click has no opposite end. Shortest version wins, nothing else to cut."
+    },
+    {
+      "t": "2026-09-06T15:10:00.000Z",
+      "note": "TDD: three tests in AnnotationGridSnappingTests (Placing a text block) pin the click contract - shape nil, opposite nil quantizes; free hands the pointer back; nothing pulling leaves it untouched. Then CanvasView.snappedTextOrigin(_:event:) and one line in CanvasPointerDrags mouseDown."
+    },
+    {
+      "t": "2026-09-06T15:10:00.000Z",
+      "note": "verified in the real app, not assumed. Scripts/playtest/text-on-the-grid-walk.json on the probe: clicked 407,293 -> Text at 416,288; Command-clicked 300,505 -> exactly 300,505; Snap to grid off, clicked 201,611 -> exactly 201,611. Screen Recording was granted so both pictures are real captures. Scripts/test.sh green, 3870 tests."
+    },
+    {
+      "t": "2026-09-06T15:10:00.000Z",
+      "note": "review after building: the box corner is on the line but the glyphs sit a few points inside it, because a line of type is taller than its letters. Left as is (every design tool snaps the box, and X/Y in the panel agree with the line), raised in the audit for the user to judge."
     }
-  ]
+  ],
+  "started": "2026-09-06T14:56:56.034Z"
 }

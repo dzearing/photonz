@@ -166,6 +166,36 @@ struct AnnotationGridSnappingTests {
         #expect(snap.point == CGPoint(x: 407.4, y: 293.2))
     }
 
+    // MARK: Placing a text block
+
+    /// A text block is placed by a CLICK, so it arrives with no shape and no
+    /// other end: nothing to gate an axis, nothing to floor to a whole cell.
+    /// All it wants is the point quantized, so a caption dropped on graph
+    /// paper starts on a line like everything else drawn there.
+    @Test func aTextBlockPlacedByClickingLandsOnTheGrid() {
+        let snap = AnnotationSnapping.snap(CGPoint(x: 407, y: 293), shape: nil,
+                                           opposite: nil, edges: blank, zoom: 1,
+                                           gridSpacing: 32)
+        #expect(snap.point == CGPoint(x: 416, y: 288))
+    }
+
+    /// ⌘ hands the pointer back here exactly as it does for a drawn shape, so
+    /// a caption can still be dropped between the lines.
+    @Test func commandPlacesTheTextBlockExactlyUnderThePointer() {
+        let snap = AnnotationSnapping.snap(CGPoint(x: 407.4, y: 293.2), shape: nil,
+                                           opposite: nil, edges: blank, zoom: 1,
+                                           free: true, gridSpacing: 32)
+        #expect(snap.point == CGPoint(x: 407.4, y: 293.2))
+    }
+
+    /// Grid off, or Snap to grid off: nothing is pulling, and the click lands
+    /// where it always has, down to the fraction of a point.
+    @Test func withNothingPullingTextIsPlacedWhereItAlwaysWas() {
+        let snap = AnnotationSnapping.snap(CGPoint(x: 407.4, y: 293.2), shape: nil,
+                                           opposite: nil, edges: blank, zoom: 1)
+        #expect(snap.point == CGPoint(x: 407.4, y: 293.2))
+    }
+
     // MARK: Holding a line
 
     /// A lit grid line keeps the drag through a wobble, exactly as it does for

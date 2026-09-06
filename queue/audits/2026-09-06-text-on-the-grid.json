@@ -1,0 +1,27 @@
+{
+  "feature": "Text lands on the grid too",
+  "epic": "ui-building",
+  "summary": "With the grid showing, clicking with the Text tool now drops the text box on the nearest grid crossing instead of exactly where the pointer was, so a caption sits on the graph paper like every shape you draw. Holding Command still places it anywhere you like.",
+  "setup": "Photonz Next, any document. Flag: A grid to build against, on by default. Nothing changes with the grid off or with Snap to grid unticked.",
+  "try": [
+    { "do": "Open a blank canvas and switch the grid on: View, Show Grid." },
+    { "do": "Press T for the Text tool." },
+    { "do": "Click somewhere clearly between two grid lines and type a word.", "shot": "2026-09-06-text-grid-1-caption-sc.png" },
+    { "do": "Press V, then click the words and read X and Y in Position and Size: both are multiples of the grid spacing." },
+    { "do": "Press T again and Command-click between two lines, then type: this one stays exactly where you clicked." },
+    { "do": "Untick Snap to grid in the Canvas section, place one more, and watch it land on the raw pointer again.", "shot": "2026-09-06-text-grid-2-everything-sc.png" },
+    { "do": "Double-click any of the three to re-word it: none of them move." }
+  ],
+  "evaluate": [
+    "When the caret jumps up to half a cell from where you clicked, does that read as the grid helping, or as the app missing your click?",
+    "The box lands on the line, and the letters sit a few points inside it because a line of type is taller than its glyphs. Is that close enough, or do you want the first letter itself on the line?",
+    "Text takes no magnet from edges found in the picture, only the grid. Placing a caption next to a border in a screenshot, do you ever want it to jump onto that border?",
+    "Is Command the key you reach for to place a caption off the grid, or would you rather the tool never pulled at all?"
+  ],
+  "rough": [
+    "Only the top left corner is on a line. The box then hugs the words, so its right and bottom edges land wherever the type ends, exactly as they do for a box you resize by hand.",
+    "Re-editing existing words never moves them: only a fresh click places anything, and the layer keeps its own origin.",
+    "A caption typed on an arrow is placed by the arrow, not by a click, so it is untouched by this.",
+    "Verified live: Screen Recording was granted, so both pictures are real captures of the probe app, not offscreen renders. Walk: Scripts/playtest/text-on-the-grid-walk.json, which proves the three landings in numbers (416,288 snapped, 300,505 with Command, 201,611 with snapping off)."
+  ]
+}
