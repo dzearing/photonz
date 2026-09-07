@@ -1,0 +1,35 @@
+{
+  "id": "a-marquee-selection-follows-the-pointer-and-neve",
+  "title": "A marquee selection follows the pointer and never snaps",
+  "goal": "Dragging a marquee selection pulls to edges found in the picture, whether or not snapping is switched on anywhere. A selection is a region you are choosing by hand, so it should follow the pointer exactly and never be tugged anywhere. Selecting a rectangle should be possible without fighting a magnet.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T15:35:45.719Z",
+  "updated": "2026-09-07T15:35:45.758Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-07: even with grid snapping off the marquee snaps to something, and it should never snap. Confirmed by reading CanvasPointerDrags.swift: the marquee's first corner is magnetised at line 162, where the anchor is passed through EdgeSnapping.snap against the edge map unless Command is held, and the drag then updates through the same edge snapping at line 882 with a comment saying it is the same corner magnetising as a measure drag. So this is edge snapping against detected picture edges, which is why it happens regardless of the grid or the snapping switch: neither is consulted on this path. The user wants it gone entirely rather than made conditional. Before removing it, note why it was put there, to make selecting an element's exact bounds easy, and say in the audit what serves that now: the wand already selects a region by content, and a shape's own bounds are reachable by picking the layer, so the magnet may simply be unnecessary. If some way to snap a selection is still wanted it belongs behind a deliberate switch or a held key, never as the default, and that would be a follow-up rather than this task.",
+  "acceptance": [
+    "Dragging a marquee follows the pointer exactly, with no pulling, at every zoom, with the grid on and off and with snapping on and off",
+    "No guide line appears while a marquee is being drawn",
+    "The corner where the drag started is exactly where the pointer went down, with no magnetising of the first corner either",
+    "Selecting a shape's exact bounds is still easy, and the audit says how that is served now that the magnet is gone, so the ability is not simply lost",
+    "Dragging a layer, resizing one, and dragging a caliper foot all still snap exactly as they do today",
+    "A test covers a marquee drag over a strong edge landing on the pointer's own position, written before the change",
+    "Audit written under queue/audits/ with a marquee drawn across a hard edge, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T15:35:45.720Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T15:35:45.757Z",
+      "note": "seq 190 -> 11"
+    }
+  ]
+}
