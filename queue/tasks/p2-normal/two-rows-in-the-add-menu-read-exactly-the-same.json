@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1640,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T13:59:43.096Z",
-  "updated": "2026-09-07T13:59:43.097Z",
+  "updated": "2026-09-07T20:16:52.168Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-09-07 whole-path sitting (queue/audits/2026-09-07-component-whole-path.json, shot 2026-09-07-path-3-add-menu.png). The menu is built in ComponentPanel.swift and groups rows under Wording / Show or hide / Color / Number. A text layer appears under both Wording and Show or hide with the identical title Text “Save”. Simplest fix is to have the Show or hide section name the thing rather than quote its words, or to suffix the row with what it makes adjustable.",
@@ -22,6 +22,19 @@
     {
       "t": "2026-09-07T13:59:43.097Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T20:16:52.168Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T20:40:00.000Z",
+      "note": "Reproduced on the probe app, not read off the code. Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json, step 49, the Add menu opened with these rows: Wording | Text “Save” | Show or hide | Rectangle | Text “Save” | Color | Rectangle · Fill | Rectangle · Outline | Text · Text | Number | Save button · Padding | Rectangle · Corner radius | Rectangle · Thickness. Two rows read Text “Save”."
+    },
+    {
+      "t": "2026-09-07T20:41:00.000Z",
+      "note": "Adversarial review of the fix before building it. Rejected: grouping the menu by layer instead of by kind (that is the mock's 24-row menu the current design already rejected, and it would put a row reading Show or hide under every layer, which is the same collision moved). Rejected: naming the Show or hide row after the layer only (Text), because two unnamed text layers then collide with each other. Rejected: dropping the section headings, because the last audit asks the user whether grouping by kind reads well and they have not answered yet. Chosen: every row reads part · what copies may change, the grammar the Color and Number rows already use (Rectangle · Fill), so a row says what it gives you even read on its own."
     }
-  ]
+  ],
+  "started": "2026-09-07T20:16:52.167Z"
 }

@@ -55,7 +55,7 @@
     { "do": "expect", "control": "Add Version", "present": true },
     { "do": "expect", "tile": "Save button", "present": true },
 
-    { "do": "panelMenu", "menu": "Add", "shot": "path-3-add-menu", "choose": "Text “Save”" },
+    { "do": "panelMenu", "menu": "Add", "shot": "path-3-add-menu", "choose": "Text “Save” · Wording" },
     { "do": "wait", "seconds": 0.9 },
     { "do": "snapshot", "name": "path-3-knob-arrives" },
     { "do": "describe", "stage": "3-first-knob", "note": "the Add menu offered every part of the drawing that could be adjustable. Picking the words made the first knob, and it landed with its name selected, so the name it came with is on screen here" },

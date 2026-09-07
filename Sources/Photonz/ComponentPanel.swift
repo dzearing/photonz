@@ -1160,62 +1160,24 @@ struct ComponentPropertyList: View {
         }
     }
 
-    /// The Add menu, grouped by KIND rather than by layer.
-    ///
-    /// The mock lists every layer with every knob it could make; on a component
-    /// of eight layers that is a menu of twenty-four rows, most of them
-    /// meaningless. Here the three kinds are the headings, and under each one
-    /// sit only the layers that knob makes sense for: wording under a text
-    /// layer, a choice under a group with alternatives in it. A layer already
-    /// exposed one way does not appear that way twice.
-    ///
-    /// A row for a text layer nobody has named shows what it says, because
-    /// otherwise two of them are two rows both reading "Text". That is the only
-    /// place the words belong: read once while choosing, never kept as a name.
+    /// The Add menu. What goes in it and what every row reads is decided by
+    /// `ComponentAddMenu` in the core, where "no two rows read the same" can be
+    /// held to, so all this does is lay the rows out and press the button.
     @ViewBuilder private var addMenu: some View {
         Menu {
             if candidates.isEmpty {
                 Text("Nothing left to expose")
             }
-            ForEach(ComponentPropertyKind.allCases, id: \.self) { kind in
-                let rows = candidates.filter { $0.kinds.contains(kind) }
-                if !rows.isEmpty {
-                    Section(kind.label) {
-                        ForEach(rows, id: \.layerID) { candidate in
-                            if kind == .color {
-                                // A colour row names the PART, because one box
-                                // has both a fill and an outline and a row
-                                // reading "Box" would not say which you were
-                                // about to hand to every copy.
-                                ForEach(candidate.colorSlots, id: \.self) { slot in
-                                    Button("\(candidate.pathLabel) \u{00B7} \(slot.selectionTitle)") {
-                                        editorState.addComponentProperty(componentID: componentID,
-                                                                         version: version,
-                                                                         target: candidate.layerID,
-                                                                         kind: kind, slot: slot)
-                                    }
-                                }
-                            } else if kind == .number {
-                                // And a number row names WHICH number, for the
-                                // same reason: one box has a rounding and a
-                                // thickness.
-                                ForEach(candidate.numberSlots, id: \.self) { slot in
-                                    Button("\(candidate.pathLabel) \u{00B7} \(slot.title)") {
-                                        editorState.addComponentProperty(componentID: componentID,
-                                                                         version: version,
-                                                                         target: candidate.layerID,
-                                                                         kind: kind,
-                                                                         numberSlot: slot)
-                                    }
-                                }
-                            } else {
-                                Button(candidate.menuLabel) {
-                                    editorState.addComponentProperty(componentID: componentID,
-                                                                     version: version,
-                                                                     target: candidate.layerID,
-                                                                     kind: kind)
-                                }
-                            }
+            ForEach(ComponentAddMenu.sections(for: candidates)) { section in
+                Section(section.title) {
+                    ForEach(section.rows) { row in
+                        Button(row.label) {
+                            editorState.addComponentProperty(componentID: componentID,
+                                                             version: version,
+                                                             target: row.layerID,
+                                                             kind: row.kind,
+                                                             slot: row.slot,
+                                                             numberSlot: row.numberSlot)
                         }
                     }
                 }

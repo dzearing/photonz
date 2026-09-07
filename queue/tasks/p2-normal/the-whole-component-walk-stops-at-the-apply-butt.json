@@ -1,0 +1,27 @@
+{
+  "id": "the-whole-component-walk-stops-at-the-apply-butt",
+  "title": "The whole-component walk stops at the apply button",
+  "goal": "The scripted run that walks the whole component path stops before its last three steps, so nobody can prove by machine that carrying an edit to every version still works. It stops because the button that carries the edit now answers with the name of the Shadow row in front of it, not with its own words.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1820,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T20:29:32.071Z",
+  "updated": "2026-09-07T20:29:32.072Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced twice on the probe today, before and after an unrelated Add menu change, so it is not caused by that work.\n\nCommand: Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json\nOutput: {\"error\": \"step 173 (expect): the control called \\\"Apply to Other Versions\\\" reads \\\"Shadow, there is something to carry\\\", not \\\"there is something to carry\\\"\", \"status\": \"failed\", \"steps\": 172}\n\nWhat is going on, as far as it was chased: PlaytestHarness.pressTargets(in:) builds a control detail as \"<the field it sits inside>, <its own detail>\", using PlaytestPanelPress.field(at:among:), which picks the SMALLEST playtestField whose frame CONTAINS the control. Sources/Photonz/ComponentPanel.swift:1067 sets the button detail to \"there is something to carry\". Something named Shadow is being found to contain it: EffectsListInspector.swift:127 puts .playtestField(row.title) on each effect row, and the step before is addShadow, so the reading only goes wrong once the Shadow row is on and expanded. Whether the Shadow row really does enclose the Component section geometrically, or whether one of those frames is stale or unbounded, was not established. Steps 167 and 172 of Scripts/playtest/component-whole-path-walk.json are where it shows.\n\nIt is a walk-only symptom as far as anyone has seen: a person reads the button, not its detail. Fix the reading rather than the expectation, unless the enclosure turns out to be real, in which case the walk should say the row it means.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json finishes with status passed",
+    "The Apply to Other Versions button answers with its own words alone, whichever effect row is open above it",
+    "No step of the walk was weakened to make it pass"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T20:29:32.072Z",
+      "note": "created (manual)"
+    }
+  ]
+}

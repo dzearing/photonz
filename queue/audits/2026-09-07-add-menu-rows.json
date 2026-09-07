@@ -1,0 +1,28 @@
+{
+  "feature": "Choosing what a copy of a component may change",
+  "epic": "ui-components",
+  "summary": "The Add menu on an original no longer offers the same words twice. Every row now names the part and then what a copy would get to change about it, so a row says what it gives you even read on its own.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components are on by default. Start from a blank canvas, 1440 by 1024.",
+  "try": [
+    { "do": "Press R and drag a box about 360 by 120. Press T, click inside it and type Save." },
+    { "do": "Press V, drag a marquee round both, press Command G, and rename the group Save button." },
+    { "do": "Press Option Command K to make it a component." },
+    { "do": "In the Component section press Add and read the whole menu without picking anything.", "shot": "2026-09-07-add-menu-rows.png" },
+    { "do": "Pick Text “Save” · Wording. A knob called Wording arrives." },
+    { "do": "Press Add again and pick Text “Save” · Show or hide. A second knob arrives, and it is a switch, not a text box." }
+  ],
+  "evaluate": [
+    "Reading only the row, can you tell which one gives a copy a text box and which gives it a switch?",
+    "Every row now reads part, then what changes: Text “Save” · Wording, Rectangle · Fill. Is that one shape for every row worth the repetition under the Wording heading?",
+    "The heading says Wording and the only row under it ends in Wording. Does that read as careful or as clumsy?",
+    "Rectangle · Show or hide is longer than Rectangle was. At eight or ten layers, is the menu still quick to scan?",
+    "The colour of a text layer reads Text “Save” · Text. Does the second Text tell you anything, or should that row say something else?"
+  ],
+  "rough": [
+    "The screenshot is a real screen capture of the probe app, with Screen Recording granted, not an offscreen render.",
+    "The Wording heading and the suffix on its one row say the same word. Repeating it was chosen on purpose, so a row is unambiguous read on its own, in a log or under a pointer, and not only while the heading is in view. It is the thing most likely to be worth arguing with.",
+    "Text “Save” · Text is still an odd row. The colour of a text layer is called Text everywhere in the app, so changing it here alone would make this menu disagree with the rest. Left as it is.",
+    "The menu grew from naming layers to naming layers and parts, so it is taller. On this three layer button it runs off the bottom of the window, as it did before the change.",
+    "The scripted walk for the whole component path still stops three steps from its end, at the button that carries an edit to every version. That failure is older than this change and was reproduced before it as well. Filed as The whole-component walk stops at the apply button."
+  ]
+}

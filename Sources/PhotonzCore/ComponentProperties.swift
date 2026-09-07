@@ -339,12 +339,110 @@ public struct ComponentPropertyCandidate: Hashable, Sendable {
     /// The whole path in one line, for a menu row.
     public var pathLabel: String { path.joined(separator: " ▸ ") }
 
-    /// What the Add menu row reads. An unnamed text layer carries its words
-    /// here so two of them can be told apart, which is the one job the words
-    /// do well: read once while choosing, never kept as the knob's name.
+    /// What an Add menu row calls the PART it reaches. An unnamed text layer
+    /// carries its words here so two of them can be told apart, which is the
+    /// one job the words do well: read once while choosing, never kept as the
+    /// knob's name.
+    ///
+    /// This names the part only. What a copy would get to change about it is
+    /// the other half of the row, and `ComponentAddMenu` puts the two together.
     public var menuLabel: String {
         guard let words else { return pathLabel }
         return "\(pathLabel) \u{201C}\(words)\u{201D}"
+    }
+}
+
+// MARK: - The Add menu
+
+/// One row of the Add menu: the words on it, and the knob picking it makes.
+public struct ComponentAddMenuRow: Hashable, Sendable, Identifiable {
+    /// What the part is, and what a copy would get to change about it:
+    /// "Text “Save” · Wording", "Rectangle · Fill".
+    public var label: String
+    public var kind: ComponentPropertyKind
+    /// The layer inside the original the knob would reach.
+    public var layerID: UUID
+    /// WHICH colour, on a colour row. Nil on every other kind.
+    public var slot: ColorSlot?
+    /// WHICH number, on a number row. Nil on every other kind.
+    public var numberSlot: ComponentNumberSlot?
+
+    public var id: String { label }
+
+    public init(label: String, kind: ComponentPropertyKind, layerID: UUID,
+                slot: ColorSlot? = nil, numberSlot: ComponentNumberSlot? = nil) {
+        self.label = label
+        self.kind = kind
+        self.layerID = layerID
+        self.slot = slot
+        self.numberSlot = numberSlot
+    }
+}
+
+/// One heading of the Add menu and the rows under it.
+public struct ComponentAddMenuSection: Hashable, Sendable, Identifiable {
+    public var kind: ComponentPropertyKind
+    public var rows: [ComponentAddMenuRow]
+
+    public var id: String { kind.rawValue }
+    /// The heading, in the plain words the kind is called everywhere else.
+    public var title: String { kind.label }
+}
+
+/// The list an author reads once, while deciding what a copy of their component
+/// may change.
+///
+/// It is grouped by KIND rather than by layer. The mock lists every layer with
+/// every knob it could make; on a component of eight layers that is a menu of
+/// twenty-four rows, most of them meaningless. Here the kinds are the headings,
+/// and under each one sit only the layers that knob makes sense for.
+///
+/// EVERY row reads the same way: the part, then what a copy would get to change
+/// about it. Colour and number rows always had to, because one box has both a
+/// fill and an outline and both a rounding and a thickness. The others now do
+/// as well, because a text layer is offered twice, once for its words and once
+/// to let a copy hide it, and two rows both reading "Text “Save”" are two rows
+/// you cannot choose between: you would find out which you picked by what
+/// turned up on the copy's panel afterwards.
+///
+/// The whole menu is built here, and not in the panel, because "no two rows
+/// read the same" is a property of the LIST and can only be held to where the
+/// list exists.
+public enum ComponentAddMenu {
+
+    /// The menu for these candidates, headings in the order the kinds are
+    /// declared, and never a heading with nothing under it.
+    public static func sections(for candidates: [ComponentPropertyCandidate]) -> [ComponentAddMenuSection] {
+        ComponentPropertyKind.allCases.compactMap { kind in
+            let under = candidates.filter { $0.kinds.contains(kind) }.flatMap { rows(of: $0, kind: kind) }
+            guard !under.isEmpty else { return nil }
+            return ComponentAddMenuSection(kind: kind, rows: under)
+        }
+    }
+
+    /// Every row one candidate contributes to one section. A colour or a number
+    /// gives one row per part it can still offer; everything else gives one.
+    private static func rows(of candidate: ComponentPropertyCandidate,
+                             kind: ComponentPropertyKind) -> [ComponentAddMenuRow] {
+        switch kind {
+        case .color:
+            return candidate.colorSlots.map { slot in
+                ComponentAddMenuRow(label: label(candidate, slot.selectionTitle),
+                                    kind: kind, layerID: candidate.layerID, slot: slot)
+            }
+        case .number:
+            return candidate.numberSlots.map { slot in
+                ComponentAddMenuRow(label: label(candidate, slot.title),
+                                    kind: kind, layerID: candidate.layerID, numberSlot: slot)
+            }
+        case .text, .visible, .variant:
+            return [ComponentAddMenuRow(label: label(candidate, kind.label),
+                                        kind: kind, layerID: candidate.layerID)]
+        }
+    }
+
+    private static func label(_ candidate: ComponentPropertyCandidate, _ what: String) -> String {
+        "\(candidate.menuLabel) \u{00B7} \(what)"
     }
 }
 
