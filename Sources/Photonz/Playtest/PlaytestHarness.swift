@@ -827,6 +827,11 @@ private final class Run {
             write(json: inventory, to: "panel-\(stage).json")
             note(number, step.name, Self.outlinePanel(inventory), state: inventory)
 
+        case .expect(let thing, let named, let reads, let present):
+            note(number, step.name,
+                 try checkPanel(thing, named: named, reads: reads, present: present),
+                 state: describe())
+
         case .scrollPanel(let row, let by):
             let rows = try panelTargets().filter { $0.kind == .row }
             let target: PanelTargetView
@@ -1707,6 +1712,97 @@ private final class Run {
     }
 
     /// What the panel is showing, in the names a walk has to use.
+    /// What one named thing in the panel is showing right now, in the words a
+    /// walk would claim: nil when there is no such thing on screen.
+    ///
+    /// A field says the text in its box, or nothing when the box is empty and
+    /// only its own name is showing. A menu says the value it wears, and a
+    /// control says what it is saying right now ("Outline, off"). A row and a
+    /// tile say their own names, which is why `expect` will not let a walk ask
+    /// those two what they read.
+    private func panelReading(_ thing: PlaytestPanelThing,
+                              named: String) throws -> (found: Bool, reads: String, others: [String]) {
+        func matches(_ candidate: String) -> Bool {
+            candidate.caseInsensitiveCompare(named) == .orderedSame
+        }
+        switch thing {
+        case .field:
+            // Not only the editable ones: a readout a person can see but not
+            // type into is exactly the kind of thing a walk wants to claim.
+            let boxes = try panelWindows().flatMap { window in
+                window.contentView.map { Self.findAll(NSTextField.self, in: $0) } ?? []
+            }
+            .filter { !$0.isHiddenOrHasHiddenAncestor }
+            func labels(_ box: NSTextField) -> [String] {
+                [box.placeholderString, box.accessibilityLabel()].compactMap { $0 }
+            }
+            guard let match = boxes.first(where: { labels($0).contains(where: matches) }) else {
+                return (false, "", boxes.compactMap { labels($0).first }.filter { !$0.isEmpty })
+            }
+            return (true, match.stringValue, [])
+        case .menu:
+            let menus = try panelWindows().compactMap(\.contentView).flatMap { surface -> [(String, String)] in
+                let fields = Self.findAll(PanelTargetView.self, in: surface)
+                    .filter { $0.kind == .field && $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
+                return PlaytestPanelMenu.buttons(in: surface).map {
+                    let naming = PlaytestPanelMenu.naming(of: $0, among: fields)
+                    return (naming.name, naming.detail)
+                }
+            }
+            guard let match = menus.first(where: { matches($0.0) }) else {
+                return (false, "", menus.map(\.0))
+            }
+            return (true, match.1, [])
+        case .control:
+            let controls = try pressTargets()
+            guard let match = controls.first(where: { matches($0.name) }) else {
+                return (false, "", controls.map(\.name))
+            }
+            return (true, match.detail, [])
+        case .row, .tile:
+            let kind: PanelTargetKind = thing == .row ? .row : .tile
+            let targets = try panelTargets().filter { $0.kind == kind }
+            return (targets.contains { matches($0.name) }, named, targets.map(\.name))
+        }
+    }
+
+    /// Hold the panel to what the walk says it is showing.
+    private func checkPanel(_ thing: PlaytestPanelThing, named: String,
+                            reads: String?, present: Bool?) throws -> String {
+        let reading = try panelReading(thing, named: named)
+        func list(_ names: [String]) -> String {
+            names.isEmpty ? "none" : names.joined(separator: ", ")
+        }
+        if let present {
+            if present, !reading.found {
+                throw Failure(description: "no \(thing.rawValue) called \"\(named)\" is in the panel; "
+                    + "the ones that are: \(list(reading.others))")
+            }
+            if !present, reading.found {
+                throw Failure(description: "the \(thing.rawValue) called \"\(named)\" is in the panel, "
+                    + "and this step says it should not be")
+            }
+        }
+        if let reads {
+            guard reading.found else {
+                throw Failure(description: "no \(thing.rawValue) called \"\(named)\" is in the panel to read; "
+                    + "the ones that are: \(list(reading.others))")
+            }
+            let showing = reading.reads.trimmingCharacters(in: .whitespaces)
+            guard showing.caseInsensitiveCompare(reads.trimmingCharacters(in: .whitespaces))
+                    == .orderedSame else {
+                throw Failure(description: "the \(thing.rawValue) called \"\(named)\" reads "
+                    + "\"\(showing)\", not \"\(reads)\"")
+            }
+        }
+        if let reads {
+            return "the \(thing.rawValue) \"\(named)\" reads \"\(reads)\", as claimed"
+        }
+        return present == true
+            ? "the \(thing.rawValue) \"\(named)\" is in the panel, as claimed"
+            : "no \(thing.rawValue) \"\(named)\" in the panel, as claimed"
+    }
+
     private func readPanel() throws -> [String: Any] {
         func describe(_ target: PanelTargetView) -> [String: Any] {
             let frame = target.convert(target.bounds, to: nil)

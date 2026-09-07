@@ -1,0 +1,27 @@
+{
+  "id": "more-room-on-a-copy-moves-it-instead-of-making-i",
+  "title": "More room on a copy moves it instead of making it roomier",
+  "goal": "Room is offered as one of the things a copy of a component can change, but on a control you drew by hand it does not do what it says: setting one copy to 48 of room leaves the button exactly the same size and slides it across and down instead. Room should make a copy roomier, or it should not be offered where it cannot.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1670,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T14:00:02.655Z",
+  "updated": "2026-09-07T14:00:02.655Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the 2026-09-07 whole-path sitting; compare path-7-one-copy-changed-doc.png with path-7c-more-room-doc.png in /tmp/photonz-playtest/component-whole-path. The group is Free arrangement with Width and Height on Hug, so padding inflates the group box and offsets its contents while nothing stretches to the new edges. Either the Free case should keep the contents where they are and grow outward, or the Add menu should only offer Padding where the arrangement can spend it.",
+  "acceptance": [
+    "Changing a copy's room knob visibly changes how much clear space that copy keeps inside its edges",
+    "A copy given more room does not move away from where it was placed",
+    "If a drawing cannot answer to room at all, the room row is not offered for it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T14:00:02.655Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1457,14 +1457,13 @@ layout yet.
 Step E9, the acceptance bar for the epic. No feature in this one: two scripted
 walks, an audit, and four follow-up tasks for what the sitting turned up.
 
-- **`Scripts/playtest/component-end-to-end-walk.json`** drives the scenario the
+- **`Scripts/playtest/component-end-to-end-walk.json`** drove the scenario the
   user named: draw a box, type a word in it, group, ⌥⌘K, name it, expose the
   wording, drop three copies off the shelf, override the middle one, then
-  descend into the original and type a new width. It passes in about 19
-  seconds and photographs every stage with the real screen capture, not the
-  offscreen render. The log carries the proof the pictures cannot: the pill
-  after the width edit reads "Updated · 3 copies of Save button", and one undo
-  takes the width back off all four.
+  descend into the original and type a new width. **Retired on 2026-09-07** and
+  replaced by `component-whole-path-walk.json` below, which covers all of it
+  and everything versions and knobs added after it: there is one current answer
+  for this path, not two.
 - **`Scripts/playtest/redline-with-components-walk.json`** is the other half:
   open a capture, measure a size and a gap, drag a component onto that same
   picture, measure again, copy the spec list and copy the image. The numbers
@@ -3132,3 +3131,45 @@ are the per-side write and read. The panel row is `InstanceRoomKnob` in
 one number has always meant the same room all round, so it opens as that.
 Tested in `ComponentRoomKnobTests`, walked by
 `Scripts/playtest/component-uneven-room-walk.json`.
+
+## Landed: the whole component path, played again (Next, 2026-09-07)
+
+Four days after the first end to end sitting the path had grown five new
+pieces, each landed with a walk and an audit of its own and none of them joined
+up: eight one-feature audits and nothing anyone could hand a first-time user.
+So the whole thing was played again from a blank canvas, in one sitting.
+
+- **`Scripts/playtest/component-whole-path-walk.json`** is that sitting, and it
+  retires `component-end-to-end-walk.json`. Draw a rounded box, type Save on it,
+  group it, give it 16 of room, ⌥⌘K, then hand it three knobs off the real Add
+  menu (the words, the box's rounding, the group's own room), add a second
+  drawing called Disabled and fade it, place three copies, retype one copy's
+  label and open up its room, put both back with the way-back arrow, set the
+  shelf to Disabled and place a copy that arrives faded, press Edit Original,
+  drop a shadow on the box and carry it to every version. 187 steps, about
+  30 seconds, green twice in a row.
+
+- **A walk can now claim what the panel is showing.** Every step before this
+  proved a press happened; none proved the app answered, so a walk could place
+  a copy and type into a knob that never arrived and still pass. The `expect`
+  step names one thing in the dock — a field, a menu, a control, a layer row, a
+  shelf tile — and either the words it must be showing (`reads`) or that it must
+  be there at all (`present`). `present: false` earns its keep as much as
+  `true`: the walk claims there is no way-back arrow beside a knob nobody has
+  answered yet, then that there is one the moment a copy answers.
+
+- **Four things in the Component section say their own names now**, so a walk
+  can reach them: the copy's Version menu and the shelf's Place menu are named
+  by their rows rather than by the version they happen to be showing, the
+  way-back arrow is named `Revert <knob>` and only exists while there is
+  something to revert, and Edit Original and Detach take presses. Apply to Other
+  Versions keeps one name and says its state in its detail
+  ("there is something to carry" / "every version already matches"), the same
+  promise every other control in the panel makes.
+
+- **What the sitting found**, each filed as its own task rather than fixed
+  here: two rows in the Add menu read exactly the same word, the layers list
+  cannot tell five identical rows apart once a version badge squeezes the name
+  out, a second version arrives on the canvas with no warning and no say in
+  where, and more room on a hand-drawn button moves it instead of making it
+  roomier. The audit is `queue/audits/2026-09-07-component-whole-path.json`.

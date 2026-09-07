@@ -729,6 +729,24 @@ public enum PlaytestDropZone: String, CaseIterable, Hashable, Codable, Sendable 
     case above, inside, below
 }
 
+/// What in the right hand panel an `expect` step is talking about, by the word
+/// the walk uses for it.
+public enum PlaytestPanelThing: String, Sendable, Equatable, CaseIterable {
+    /// A labelled row of the panel that holds a box of text: Padding, W, Label.
+    /// The only kind of thing whose words change under the walk, along with a
+    /// menu, which is why these two are the ones that can be asked what they
+    /// read.
+    case field
+    /// A menu in the panel, by the row it sits on or the words on its button.
+    case menu
+    /// Something a press can land on, by the words on it.
+    case control
+    /// A row in the layers list.
+    case row
+    /// A tile on the Library shelf.
+    case tile
+}
+
 /// What a walk expects a colour swatch to answer to a colour held over it.
 public enum PlaytestColorDropExpectation: String, CaseIterable, Hashable, Codable, Sendable {
     /// It lights up, and letting go paints it.
@@ -980,6 +998,20 @@ public enum PlaytestStep: Sendable, Equatable {
     /// open, since a popover is a window of its own and used to be invisible
     /// to a walk: the colour picker could be photographed and never used.
     case panel(stage: String)
+    /// Claim something about the right hand panel and FAIL the run when it is
+    /// not so.
+    ///
+    /// Every other step proves it happened; none of them proves the app
+    /// answered. A walk could press Add, place a copy and type a number into a
+    /// knob without a single one of those steps noticing that the knob never
+    /// arrived. `expect` is the half that notices: it names one thing in the
+    /// panel and either the words it must be showing (`reads`) or that it must
+    /// be there at all (`present`), and says what it found instead.
+    ///
+    /// `present: false` is as much of the point as `present: true`: a revert
+    /// arrow that appears before anything has been answered is a bug no
+    /// screenshot in a passing walk would have caught.
+    case expect(thing: PlaytestPanelThing, named: String, reads: String?, present: Bool?)
     /// Turn the wheel over a panel that scrolls, by `by` points (negative goes
     /// down the list). A list that builds only the rows you can see has to be
     /// scrolled to prove the rest arrive, and that is not something a click can
@@ -1021,7 +1053,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelMenu", "pinch", "press",
         "readClipboard", "render", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
@@ -1063,6 +1095,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .selectRow: "selectRow"
         case .press: "press"
         case .panel: "panel"
+        case .expect: "expect"
         case .scrollPanel: "scrollPanel"
         case .describe: "describe"
         case .clearClipboard: "clearClipboard"
@@ -1245,6 +1278,26 @@ public enum PlaytestStep: Sendable, Equatable {
                           count: max(1, count), modifiers: try f.modifiers(), across: across)
         case "panel":
             self = .panel(stage: try f.string("stage"))
+        case "expect":
+            let named = PlaytestPanelThing.allCases.filter { fields[$0.rawValue] != nil }
+            guard named.count == 1, let thing = named.first else {
+                throw f.invalid("field", "expect names exactly one thing to look at: "
+                    + PlaytestPanelThing.allCases.map(\.rawValue).joined(separator: ", ")
+                    + (named.isEmpty ? "; this one names none" : "; this one names \(named.count)"))
+            }
+            let reads = try f.optionalString("reads")
+            let present = try f.optionalFlag("present")
+            guard reads != nil || present != nil else {
+                throw f.invalid("reads", "expect has to claim something: \"reads\" for the words it is showing, or \"present\" for whether it is there at all")
+            }
+            // Only a field and a menu wear words that change under a walk. A
+            // row or a tile shows its own name, so asking one what it reads is
+            // a claim the step could never test.
+            if reads != nil, thing == .row || thing == .tile {
+                throw f.invalid("reads", "only a field, a menu or a control can be asked what it reads; a \(thing.rawValue) shows its own name, so claim \"present\" instead")
+            }
+            self = .expect(thing: thing, named: try f.string(thing.rawValue),
+                           reads: reads, present: present)
         case "scrollPanel":
             self = .scrollPanel(row: fields["row"] as? String, by: try f.number("by"))
         case "describe":

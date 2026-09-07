@@ -4,14 +4,36 @@
   "summary": "You can now draw a control, turn it into a component, drop three copies of it, decide that its label is the one thing a copy may change, change one copy, then edit the original and watch all three follow in a single undo step. Taking a screenshot, measuring it and copying a spec list is untouched, including on a picture that has a component sitting on it.",
   "setup": "Photonz Dev, Experiments window, release Next. Layer groups, the Library, components, the built in components and color styles are all on by default.",
   "try": [
-    { "do": "Start a blank canvas from the welcome card." },
-    { "do": "Press R and drag out a box about 320 by 100, then press T, click inside the box and type Save." },
-    { "do": "Press V, drag a marquee round both, press Command G, then press Option Command K and type Save button.", "shot": "2026-09-03-component-e2e-1-component.png" },
-    { "do": "In the Component section press Add and pick Save under Wording.", "shot": "2026-09-03-component-e2e-2-adjustable.png" },
-    { "do": "Drag the Save button tile off the Library shelf onto the canvas three times.", "shot": "2026-09-03-component-e2e-3-three-copies.png" },
-    { "do": "Click the middle copy and type Cancel into its Save field.", "shot": "2026-09-03-component-e2e-4-overridden.png" },
-    { "do": "Double click the original's box, type 440 into W and press Return.", "shot": "2026-09-03-component-e2e-5-original-edited.png" },
-    { "do": "Open one of your screenshots, drag the Button tile onto it, press I, measure something, then press Control Command C.", "shot": "2026-09-03-component-e2e-6-redline-unchanged.png" }
+    {
+      "do": "Start a blank canvas from the welcome card."
+    },
+    {
+      "do": "Press R and drag out a box about 320 by 100, then press T, click inside the box and type Save."
+    },
+    {
+      "do": "Press V, drag a marquee round both, press Command G, then press Option Command K and type Save button.",
+      "shot": "2026-09-03-component-e2e-1-component.png"
+    },
+    {
+      "do": "In the Component section press Add and pick Save under Wording.",
+      "shot": "2026-09-03-component-e2e-2-adjustable.png"
+    },
+    {
+      "do": "Drag the Save button tile off the Library shelf onto the canvas three times.",
+      "shot": "2026-09-03-component-e2e-3-three-copies.png"
+    },
+    {
+      "do": "Click the middle copy and type Cancel into its Save field.",
+      "shot": "2026-09-03-component-e2e-4-overridden.png"
+    },
+    {
+      "do": "Double click the original's box, type 440 into W and press Return.",
+      "shot": "2026-09-03-component-e2e-5-original-edited.png"
+    },
+    {
+      "do": "Open one of your screenshots, drag the Button tile onto it, press I, measure something, then press Control Command C.",
+      "shot": "2026-09-03-component-e2e-6-redline-unchanged.png"
+    }
   ],
   "evaluate": [
     "Is this the sitting you asked for, or is there a step in it you would never do in that order?",
@@ -28,5 +50,6 @@
     "A word you type yourself keeps the soft halo that keeps captions readable over a screenshot, and on a button label it reads as smudged. Filed as Text you type inside a component does not wear the screenshot halo.",
     "The whole screen capture flow cannot be driven by a script at all: the Shift Command 4 overlay covers every display and owns the pointer, so no scripted walk can reach it. The redline proof therefore opens a screenshot that is already on disk. The separate one shot check that does exercise the overlay was run and came back invalid, because it reports that the screen was locked at the time; that check is unrelated to this work and nothing here touched the capture path.",
     "The redline proof is two walks. The one that existed before any of this work, Scripts/playtest/redline-walk.json, still passes step for step with the same numbers and the same spec list. A new one, redline-with-components-walk.json, measures a screenshot, drops a component on it, measures again and copies the list, and the numbers are identical: the component is not in the spec list and does not disturb what is."
-  ]
+  ],
+  "supersededBy": "2026-09-07-component-whole-path.json"
 }

@@ -1,0 +1,27 @@
+{
+  "id": "adding-a-version-says-where-the-second-drawing-i",
+  "title": "Adding a version says where the second drawing is going",
+  "goal": "Adding a second look to a component quietly puts a whole second drawing on your canvas, next to the first one, wherever there happens to be room. Nothing warns you, and on a canvas you are already working on it can land on top of what you were doing. Make it clear what just appeared and where.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1660,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T14:00:02.619Z",
+  "updated": "2026-09-07T14:00:02.619Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the 2026-09-07 whole-path sitting. On the first pass the copies dropped afterwards landed straight on the new Disabled drawing. addComponentVersion in EditorState places the copied drawing beside the original; it needs a placement that avoids occupied space, and the canvas needs to say the drawing arrived (the toast idiom used elsewhere).",
+  "acceptance": [
+    "Adding a version brings the new drawing into view and selects it, so you can see what arrived",
+    "The new drawing never lands on top of an existing layer",
+    "One undo removes the drawing and the version together"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T14:00:02.619Z",
+      "note": "created (manual)"
+    }
+  ]
+}

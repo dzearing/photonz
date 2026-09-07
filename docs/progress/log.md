@@ -11036,3 +11036,56 @@ brief rather than guessed at.
 **Open question for the user.** With the panel that tight, Appearance is squeezed
 to about a third of its natural height and Layers to about three rows. Is Layers
 the right thing to squeeze, or should something else give first?
+
+## 2026-09-07 — The whole component path, played again as one sitting
+
+Four days of component work had shipped as eight features with eight audits and
+no answer anyone could hand a person: versions, a number knob, room as a knob,
+placing a named version off the shelf, carrying one change to every version.
+So the whole path was played again from a blank canvas.
+
+**What was blocking it.** A walk could not check anything. Every step proved a
+press happened; none proved the app answered, so a walk could place a copy and
+type into a knob that never arrived and still come back green. Added an
+`expect` step: it names one thing in the right hand panel — a labelled field, a
+menu, something a `press` can land on, a layer row, a shelf tile — and claims
+either the words it must be showing or whether it must be there at all. Model
+and parser are in `PhotonzCore` (test-first, seven new tests), the driver in
+`PlaytestHarness`. `present: false` is half the value: the walk claims there is
+no way-back arrow beside a knob nobody has answered, then that there is one the
+moment a copy answers.
+
+Four things in the Component section had no name a walk could use, and were
+given one: the copy's Version menu and the shelf's Place menu, named by their
+rows rather than by the version they happen to be showing; the way-back arrow,
+named `Revert <knob>` and only naming itself while it exists; and Edit Original
+and Detach. Apply to Other Versions keeps one name and says its state in its
+detail, the way every other control in the panel does.
+
+**The sitting.** `Scripts/playtest/component-whole-path-walk.json`, 187 steps,
+about 30 seconds, green twice in a row and again after every other component
+walk was re-run. Draw a rounded box, type Save on it, group, 16 of room, ⌥⌘K,
+three knobs off the real Add menu, a second drawing called Disabled and faded,
+three copies, retype one copy's label and open its room to 48, put both back
+with the way-back arrow, set the shelf to Disabled and place a copy that
+arrives faded, Edit Original, a shadow on the box, Apply to Disabled. Undo and
+redo are checked at three of the single-step claims.
+
+**What it found**, four tasks: two rows in the Add menu read exactly the same
+word; a version badge squeezes a layer's name out of its row until it is one
+ellipsis; adding a version drops a whole second drawing on the canvas with no
+warning and no say in where; and more room on a hand-drawn button moves it 32
+across instead of making it roomier, because nothing in a Free group stretches
+to the new edges.
+
+Three rough spots from the 2026-09-03 sitting are fixed and were checked here:
+the wording knob arrives called Wording, a number field hands the keyboard
+back, and text inside a component wears no halo. The panel fits, too, so
+nothing in the Component section needs scrolling.
+
+**One current answer, not two.** `component-end-to-end-walk.json` is deleted,
+the 2026-09-03 audit carries `supersededBy`, and `docs/design/ui-building.md`
+says so. Audit: `queue/audits/2026-09-07-component-whole-path.json`, eight real
+screen captures.
+
+**Next.** The four filed tasks, in the order the sitting hit them.

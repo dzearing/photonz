@@ -1,0 +1,27 @@
+{
+  "id": "a-version-badge-squeezes-a-layer-s-name-out-of-i",
+  "title": "A version badge squeezes a layer's name out of its row",
+  "goal": "Once a component has a second look, the two drawings in the layers list show a badge saying which look they are, plus a count of what is inside them. Between them there is no room left for the name, so the row reads as a single ellipsis and you cannot tell one from another. Give the name its room back.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1650,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T14:00:02.585Z",
+  "updated": "2026-09-07T14:00:02.585Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the 2026-09-07 whole-path sitting; see 2026-09-07-path-9-shelf-set.png in queue/audits, rows four and five, which read \"…  Disabled  2\" and \"S…  Default  2\". Row is LayersPanel.swift around the display name plus badges. Widening the dock is not the answer; the badge and count should give way before the name does, or the badge should move under the name.",
+  "acceptance": [
+    "A layer row carrying a version badge still shows enough of its name to recognise it",
+    "No row ever collapses to just an ellipsis at the default dock width",
+    "The row still says which version it is and how many layers are inside"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T14:00:02.585Z",
+      "note": "created (manual)"
+    }
+  ]
+}

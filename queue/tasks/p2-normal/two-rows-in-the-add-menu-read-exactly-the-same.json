@@ -1,0 +1,27 @@
+{
+  "id": "two-rows-in-the-add-menu-read-exactly-the-same",
+  "title": "Two rows in the Add menu read exactly the same",
+  "goal": "When you are choosing what a copy of a component may change, the menu offers the same words twice: once to make the label editable and once to make the whole line of words something you can hide. There is no way to tell them apart, so people will pick the wrong one and get a switch where they wanted a text box. Make each row say what it gives you.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1640,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T13:59:43.096Z",
+  "updated": "2026-09-07T13:59:43.097Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the 2026-09-07 whole-path sitting (queue/audits/2026-09-07-component-whole-path.json, shot 2026-09-07-path-3-add-menu.png). The menu is built in ComponentPanel.swift and groups rows under Wording / Show or hide / Color / Number. A text layer appears under both Wording and Show or hide with the identical title Text “Save”. Simplest fix is to have the Show or hide section name the thing rather than quote its words, or to suffix the row with what it makes adjustable.",
+  "acceptance": [
+    "No two rows anywhere in the Add menu carry identical text",
+    "A row under Show or hide reads differently from the row for the same layer under Wording",
+    "The scripted walk Scripts/playtest/component-whole-path-walk.json still passes, choosing the Wording row by name"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T13:59:43.097Z",
+      "note": "created (manual)"
+    }
+  ]
+}

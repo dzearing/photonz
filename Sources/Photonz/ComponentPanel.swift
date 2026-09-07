@@ -337,6 +337,7 @@ struct LibraryComponentInspector: View {
                 .controlSize(.small)
                 .help("Which drawing of this component a copy off this tile arrives showing. A copy can still be switched afterwards")
             }
+            .playtestField("Place")
         }
     }
 
@@ -674,12 +675,14 @@ struct ComponentInstanceInspector: View {
                     }
                     .controlSize(.small)
                     .help("Selects the drawing this copy shows, which is where a change to every copy of it is made")
+                    .playtestControl("Edit Original")
                     // Detach is here as well as in the Layer menu, because a
                     // command that lives only in a menu is a command nobody
                     // finds. It is not destructive styling: nothing is deleted,
                     // the copy simply stops following, and undo is the way back.
                     Button("Detach") { editorState.detachInstance() }
                         .controlSize(.small)
+                        .playtestControl("Detach")
                         .disabled(!editorState.canDetachInstance)
                         .help(selection.count == 1
                               ? "Turns this copy into ordinary layers that no longer follow the original"
@@ -842,6 +845,7 @@ struct ComponentPieceInspector: View {
                     }
                     .controlSize(.small)
                     .help("Selects the original, which is where a change to every copy is made")
+                    .playtestControl("Edit Original")
                     Button("Detach") { editorState.detachEnclosingCopy(of: piece) }
                         .controlSize(.small)
                         .help("Turns this copy into ordinary layers, so every piece of it can be edited directly")
@@ -1056,7 +1060,13 @@ struct ComponentVersionApplyRow: View {
                     .controlSize(.small)
                     .disabled(!plan.wouldChangeAnything)
                     .help(plan.help)
-                    .playtestControl("Apply to Other Versions")
+                    // One name whatever it is saying, and what it is saying in
+                    // the detail, the way every other control in the panel
+                    // reads: a walk that named it by its title would be naming
+                    // the very thing pressing it changes.
+                    .playtestControl("Apply to Other Versions",
+                                     detail: plan.wouldChangeAnything ? "there is something to carry"
+                                                                      : "every version already matches")
                 Text(plan.help)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -1377,6 +1387,10 @@ struct ComponentInstanceProperties: View {
                 .controlSize(.small)
                 .help("Which drawing of this component the copy shows. Everything you have set on the copy comes with it")
             }
+            // Named by its row, not by the version it happens to be showing: a
+            // walk that called this menu "Default" would be naming the very
+            // thing its next step changes.
+            .playtestField("Version")
         }
     }
 
@@ -1488,7 +1502,7 @@ struct ComponentInstanceProperties: View {
                     // The way back belongs to the knob, not to one of its
                     // sides, so this row only borrows its width to keep the
                     // fields under the one above them.
-                    revert(property).hidden()
+                    revert(property, named: false).hidden()
                 }
             }
         }
@@ -1508,9 +1522,14 @@ struct ComponentInstanceProperties: View {
     /// The way back. Without it a copy that was set once can only be put right
     /// by undoing, and an override made ten edits ago is out of undo's reach.
     /// It reaches every picked copy, in one step, like every other control here.
-    @ViewBuilder private func revert(_ property: ComponentProperty) -> some View {
+    ///
+    /// `named` is false for the copy a side row borrows to keep its fields
+    /// lined up: there is only one way back per knob, so only one of them
+    /// answers to a walk.
+    @ViewBuilder private func revert(_ property: ComponentProperty,
+                                     named: Bool = true) -> some View {
         let own = selection.isOverridden(property.id)
-        Button {
+        let arrow = Button {
             editorState.clearInstanceOverride(instances: instances, property: property.id)
         } label: {
             Image(systemName: "arrow.uturn.backward")
@@ -1522,6 +1541,15 @@ struct ComponentInstanceProperties: View {
         .help(selection.count == 1
               ? "Follow the original again for this one"
               : "Every picked copy follows the original again for this one")
+        // The arrow only exists for a copy that has answered something, so it
+        // only NAMES itself then. That way a walk claiming it is not there yet
+        // is claiming what a person sees, rather than finding an invisible
+        // button that is always in the tree.
+        if named, own {
+            arrow.playtestControl("Revert \(property.name)")
+        } else {
+            arrow
+        }
     }
 }
 

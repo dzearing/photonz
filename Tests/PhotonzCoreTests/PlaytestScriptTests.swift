@@ -1124,6 +1124,110 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names == PlaytestStep.names.sorted())
     }
 
+    // MARK: - Claiming what the panel is showing
+
+    // A walk that only presses things proves the presses happened, not that
+    // the app answered. `expect` is the other half: it names a thing in the
+    // right hand panel and the words it must be showing, and fails the run
+    // when it says anything else.
+    @Test("An expect step names a field and the words it must be showing")
+    func expectStepReadsAField() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expect", "field": "Padding", "reads": "40" } ] }
+        """)
+        guard case .expect(let thing, let named, let reads, let present) = script.steps[0] else {
+            Issue.record("expect"); return
+        }
+        #expect(thing == .field)
+        #expect(named == "Padding")
+        #expect(reads == "40")
+        #expect(present == nil)
+        #expect(script.steps[0].name == "expect")
+    }
+
+    @Test("An expect step can read a menu in the panel instead")
+    func expectStepReadsAMenu() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expect", "menu": "Version", "reads": "Disabled" } ] }
+        """)
+        guard case .expect(let thing, let named, let reads, _) = script.steps[0] else {
+            Issue.record("expect"); return
+        }
+        #expect(thing == .menu)
+        #expect(named == "Version")
+        #expect(reads == "Disabled")
+    }
+
+    // The other half of a claim: that something is there at all, or, just as
+    // often, that it is NOT — a revert arrow before anything has been answered.
+    @Test("An expect step can claim a control, a row or a tile is there, or is not")
+    func expectStepClaimsSomethingIsThere() throws {
+        let script = try decode("""
+        { "steps": [
+            { "do": "expect", "control": "Revert Padding", "present": true },
+            { "do": "expect", "row": "Card", "present": false },
+            { "do": "expect", "tile": "Card", "present": true }
+        ] }
+        """)
+        guard case .expect(let first, let firstName, _, let firstPresent) = script.steps[0],
+              case .expect(let second, _, _, let secondPresent) = script.steps[1],
+              case .expect(let third, _, _, _) = script.steps[2] else {
+            Issue.record("expect"); return
+        }
+        #expect(first == .control)
+        #expect(firstName == "Revert Padding")
+        #expect(firstPresent == true)
+        #expect(second == .row)
+        #expect(secondPresent == false)
+        #expect(third == .tile)
+    }
+
+    @Test("An expect step has to name exactly one thing")
+    func expectStepNamesOneThing() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expect", "reads": "40" } ] }
+            """)
+        }
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expect", "field": "Padding", "row": "Card", "reads": "40" } ] }
+            """)
+        }
+    }
+
+    // A step that claims nothing would pass forever.
+    @Test("An expect step has to claim something")
+    func expectStepClaimsSomething() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expect", "field": "Padding" } ] }
+            """)
+        }
+    }
+
+    // A field, a menu and a control all SHOW words that change. A row and a
+    // tile show their own names, so "reads" on one of those is a walk author
+    // expecting something the step cannot check.
+    @Test("Only a field, a menu or a control can be asked what it reads")
+    func expectStepReadsOnlyWhereThereAreWords() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expect", "control": "Outline", "reads": "off" } ] }
+        """)
+        guard case .expect(let thing, _, let reads, _) = script.steps[0] else {
+            Issue.record("expect"); return
+        }
+        #expect(thing == .control)
+        #expect(reads == "off")
+        for named in ["row", "tile"] {
+            #expect(throws: PlaytestScriptError.self) {
+                _ = try decode("""
+                { "steps": [ { "do": "expect", "\(named)": "Card", "reads": "Card" } ] }
+                """)
+            }
+        }
+    }
+
     // MARK: - Setup a walk can ask for
 
     // Two walks only ever passed on their first run on a machine: one changed

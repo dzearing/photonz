@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T12:57:30.593Z",
-  "updated": "2026-09-07T12:58:20.289Z",
+  "updated": "2026-09-07T14:00:32.347535Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-on from author-a-component-and-reuse-it-start-to-finish (done 2026-09-03, walk Scripts/playtest/component-end-to-end-walk.json, audit queue/audits/2026-09-03-component-end-to-end.json). Shipped since then and not covered by that walk: a-component-can-hold-more-than-one-version-of-it, a-knob-can-be-a-number (audit 2026-09-06-a-knob-can-be-a-number), room-that-differs-side-to-side-can-be-a-knob (2026-09-06-uneven-room-knob), a-copy-can-have-its-own-room-inside (2026-09-06-component-own-room), place-a-copy-of-a-particular-version-straight-fr (2026-09-06-place-a-version), a-change-can-be-made-to-every-version-of-a-compo (2026-09-06-apply-to-versions), the-dock-opens-on-the-section-that-answers-the-la (2026-09-06-dock-component-first). Filed by the 2026-09-07 digest design review: eight pieces shipped, eight one-feature audits, and no audit anyone could hand a first-time user. Known rough spots to watch for on the way through, from those audits: a knob cannot reach the original's own outermost group; a copy's Version row and knobs sit above Position and Size now, so check the panel still reads in a sensible order; the properties panel may not fit (the-properties-panel-fits-on-the-screen-it-has).",
@@ -30,6 +30,31 @@
     {
       "t": "2026-09-07T12:58:20.288Z",
       "note": "seq 1380 -> 20"
+    },
+    {
+      "t": "2026-09-07T13:28:24.869Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T14:00:32.347535Z",
+      "note": "Adversarial pass BEFORE building the walk: the eight audits since 2026-09-03 each proved one feature in its own document, so the risk was writing a ninth. Decided the sitting has to start from a blank canvas and a hand-drawn control, not from a starter tile, because everything a first-time user gets wrong happens before the shelf exists. Also decided against replaying the 2026-09-03 walk with extra steps bolted on: it made its button as a Free group and its room knob would have been decorative."
+    },
+    {
+      "t": "2026-09-07T14:00:32.347535Z",
+      "note": "Foundation the acceptance needed: a walk had no way to CHECK anything. Every step proved a press happened, none proved the app answered. Added an `expect` step to the harness (PhotonzCore model + parser, test-first; driver in PlaytestHarness) that names one thing in the dock and claims either the words it is showing or whether it is there at all. Four things in the Component section had no name a walk could use, so they were given one: the copy's Version menu and the shelf's Place menu (named by their rows, not by the version they show), the way-back arrow (Revert <knob>, and it only names itself while it exists, so present:false means what it looks like), and Edit Original / Detach."
+    },
+    {
+      "t": "2026-09-07T14:00:32.347535Z",
+      "note": "Scripts/playtest/component-whole-path-walk.json: 187 steps, ~30s, green twice in a row and again after every other component walk was re-run. Draw, round, label, group, 16 of room, make component, three knobs off the real Add menu, second version faded, three copies, retype one copy's label, open its room to 48, put both back with the way-back arrow, shelf set to Disabled, a copy that arrives faded, Edit Original, shadow, Apply to Disabled. Undo and redo checked at three of the single-step claims."
+    },
+    {
+      "t": "2026-09-07T14:00:32.347535Z",
+      "note": "Adversarial pass on the BUILT thing, from the real captures: four things a first-time user gets wrong, each filed. two-rows-in-the-add-menu-read-exactly-the-same; a-version-badge-squeezes-a-layer-s-name-out-of-i; adding-a-version-says-where-the-second-drawing-i; more-room-on-a-copy-moves-it-instead-of-making-i. Three rough spots the last sitting flagged are fixed and were checked here: the wording knob arrives called Wording, the number field hands the keyboard back, and there is no halo on text inside a component. The panel also fits, so nothing in the Component section needs scrolling."
+    },
+    {
+      "t": "2026-09-07T14:00:32.347535Z",
+      "note": "Retired the old answer: Scripts/playtest/component-end-to-end-walk.json deleted, queue/audits/2026-09-03-component-end-to-end.json marked supersededBy the new audit, and docs/design/ui-building.md says so. Audit: queue/audits/2026-09-07-component-whole-path.json with eight real screen captures (Screen Recording granted)."
     }
-  ]
+  ],
+  "started": "2026-09-07T13:28:24.869Z"
 }
