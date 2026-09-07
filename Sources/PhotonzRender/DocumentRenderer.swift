@@ -551,6 +551,27 @@ public final class DocumentRenderer: @unchecked Sendable {
         return render(doc, store: store)
     }
 
+    /// One layer rendered alone but IN PLACE: a canvas-sized picture holding
+    /// that layer where the canvas shows it, and nothing else — clear
+    /// everywhere the layer is not. The mirror of `hiding:`.
+    ///
+    /// This is what "copy the layer you picked" crops: cropping the composite
+    /// hands back every layer flattened together, which is not what a person
+    /// who just picked a layer meant (`CopyRoute`).
+    public func render(_ document: PhotonzDocument, store: ImageStore, only id: UUID) -> CGImage? {
+        // Canvas coordinates, so a layer inside a group or a screen keeps the
+        // spot it looks like it is in.
+        guard var layer = document.detachedLayer(id: id) else { return nil }
+        layer.isVisible = true
+        // Drawn alone, the layer has lost the component or the screen that was
+        // above it, so the rule it draws under comes from the document it came
+        // out of — the same reasoning as a drag sprite.
+        if document.isOnDesignedSurface(id) {
+            layer.style.shadows = layer.drawnShadows(onDesignedSurface: true)
+        }
+        return render(PhotonzDocument(canvasSize: document.canvasSize, layers: [layer]), store: store)
+    }
+
     /// One layer rendered alone, with `padding` document points of clear canvas
     /// on every side so shadows/blur survive. The result is positioned by the
     /// canvas view as a Core Animation sublayer during drags.

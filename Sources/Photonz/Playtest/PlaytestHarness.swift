@@ -936,6 +936,9 @@ private final class Run {
             switch action {
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
+            case .copy: editor.copySelectedLayer()
+            case .copyMerged: editor.copyMerged()
+            case .cut: editor.cutSelectedLayer()
             case .hideAllMeasurements: editor.setAllMeasurementsVisible(false)
             case .showAllMeasurements: editor.setAllMeasurementsVisible(true)
             case .forgetThumbnails: editor.forgetLayerThumbnails()

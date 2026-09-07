@@ -11272,3 +11272,36 @@ all, so View ▸ Grid Settings has nothing to open on.
 - Audit: `queue/audits/2026-09-07-panel-mark.json`.
 - Next: the follow-up `a-layer-row-let-go-where-it-cannot-land-is-still` — a row
   picked up and abandoned is still in the list's hand.
+
+## 2026-09-07 — copy takes the layer you picked
+
+- Reported by the user: pick a layer, drag a marquee, press ⌘C, and you get
+  every layer flattened together instead of the layer you picked. Confirmed in
+  the code and in the probe: `copySelectedLayer` gave a pixel region priority
+  over the layer and rasterized the COMPOSITE.
+- New rule, one line: **copy takes what you picked, and a marquee crops it.**
+  Routing lives in `CopyRoute`/`CopyPlan` (PhotonzCore, 9 tests); the picture
+  of one layer alone in place is `DocumentRenderer.render(_:store:only:)`
+  (PhotonzRender, 4 tests, the mirror of the existing `hiding:`); the app layer
+  only carries the result to the pasteboard.
+- The copy is clipped to the marquee's path and then TRIMMED to the pixels that
+  are really there, the way `deleteRegion` already tightens a sliced layer, so
+  a marquee flung round a small drawing hands back the drawing. A marquee that
+  misses the layer copies nothing and beeps rather than putting an invisible
+  rectangle on the clipboard.
+- ⇧⌘C is now Edit ▸ **Copy Merged**, directly under Copy (Photoshop's key and
+  Photoshop's place). With no marquee it is exactly the old File ▸ Copy Image,
+  spec list and all; with one it takes the flattened marquee. Region copies now
+  also carry TIFF, so more apps can paste them.
+- ⌘X follows copy: with a marquee up it slices the piece out of the picked
+  layer and leaves the rest standing. Only a layer that can be sliced (an
+  untransformed image layer) takes that path; a shape is still cut whole, and
+  that hole is filed as its own task.
+- Rides `next-copy-picks-your-layer`, on by default in Next, because
+  `EditorState` is shared with Current.
+- Walk: `Scripts/playtest/copy-takes-your-layer-walk.json`, plus new `copy`,
+  `copyMerged` and `cut` playtest actions. Audit:
+  `queue/audits/2026-09-07-copy-picks-your-layer.json`.
+- Next: the audit asks whether a copy should say what it took; ⌘J still
+  promotes the composite (filed), cutting part of a shape still takes the lot
+  (filed), and the marquee still has no keyboard shortcut (filed).

@@ -341,6 +341,11 @@ public enum PlaytestAppearance: String, CaseIterable, Hashable, Codable, Sendabl
 
 public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case copySpecList, copyImage, hideAllMeasurements, showAllMeasurements
+    /// The two copies, called directly: ⌘C takes the layer you picked and
+    /// ⇧⌘C takes every layer flattened together. A walk asks for them here
+    /// because both are menu chords, and because what they leave on the
+    /// clipboard is only visible after a paste.
+    case copy, copyMerged, cut
     case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
     /// Take the window in and out of full screen. Full screen is where a Mac
     /// takes the title bar away, so anything that lives in the title bar has

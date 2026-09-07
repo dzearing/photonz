@@ -1,0 +1,28 @@
+{
+  "id": "cutting-part-of-a-shape-says-what-it-cannot-do",
+  "title": "Cutting part of a shape says what it cannot do",
+  "goal": "Draw a marquee over part of a shape or a piece of text, press command X, and the whole thing disappears rather than the piece you marked. Only a picture can have a piece taken out of it today, so the app should either offer to turn the shape into pixels first or say plainly that it cannot cut a piece out of this, instead of quietly taking the lot.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1720,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T17:19:09.579Z",
+  "updated": "2026-09-07T17:19:09.580Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while fixing plain copy on 2026-09-07. cutSelectedLayer (Sources/Photonz/EditorState+Clipboard.swift) only takes the region path when canSliceRegion(from:) is true, which needs an untransformed uncropped image layer, because deleteRegion bakes into a bitmap. Everything else falls back to the whole-layer cut. The same hole exists for the delete key, which erases from the locked Background when the picked layer cannot be sliced.",
+  "acceptance": [
+    "With a marquee over part of a shape, command X no longer silently removes the whole shape",
+    "The person is told what happened, in one short line, wherever the app already speaks",
+    "Cutting a piece out of a picture layer still works exactly as it does now",
+    "Cutting with no marquee still takes the whole layer"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T17:19:09.580Z",
+      "note": "created (manual)"
+    }
+  ]
+}

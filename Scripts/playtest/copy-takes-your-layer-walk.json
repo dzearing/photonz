@@ -1,0 +1,288 @@
+{
+  "out": "/tmp/photonz-playtest/copy-takes-your-layer",
+  "seed": "Copy used to hand back every layer flattened together the moment a marquee was up, even with a layer picked. The walk builds a two layer picture, picks the top layer, drags a marquee across its edge, and pastes what each of the two copies gives back: plain copy should hand back that layer's pixels alone, and Copy Merged should hand back the same rectangle of the picture with the photo underneath still in it.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Hero banner.png",
+      "at": [
+        600,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        250
+      ],
+      "to": [
+        700,
+        550
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "panel",
+      "stage": "0-two-layers"
+    },
+    {
+      "do": "describe",
+      "stage": "0-two-layers",
+      "note": "a photo across the whole canvas with a rectangle drawn on top of it, and the rectangle is picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "copy-0-two-layers"
+    },
+    {
+      "do": "menus",
+      "stage": "edit",
+      "menu": "Edit"
+    },
+    {
+      "do": "menuShot",
+      "menu": "Edit",
+      "name": "copy-edit-menu"
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        400
+      ],
+      "to": [
+        900,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-marquee",
+      "note": "THE SETUP: the marquee crosses the rectangle's bottom right corner and carries on over bare photo, and the rectangle is still the picked layer"
+    },
+    {
+      "do": "snapshot",
+      "name": "copy-1-marquee"
+    },
+    {
+      "do": "clearClipboard"
+    },
+    {
+      "do": "action",
+      "action": "copy"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "2-plain-copy"
+    },
+    {
+      "do": "action",
+      "action": "pasteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "panel",
+      "stage": "2-plain-copy"
+    },
+    {
+      "do": "describe",
+      "stage": "2-plain-copy",
+      "note": "THE TEST: plain copy pasted back the corner of the RECTANGLE and nothing else, trimmed to the rectangle's own pixels"
+    },
+    {
+      "do": "snapshot",
+      "name": "copy-2-plain-pasted"
+    },
+    {
+      "do": "render",
+      "name": "copy-2-plain-render"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        400
+      ],
+      "to": [
+        900,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "clearClipboard"
+    },
+    {
+      "do": "action",
+      "action": "copyMerged"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "3-copy-merged"
+    },
+    {
+      "do": "action",
+      "action": "pasteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "panel",
+      "stage": "3-copy-merged"
+    },
+    {
+      "do": "describe",
+      "stage": "3-copy-merged",
+      "note": "THE TEST: Copy Merged pasted back the whole marquee, photo and all, at the size the marquee was drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "copy-3-merged-pasted"
+    },
+    {
+      "do": "render",
+      "name": "copy-3-merged-render"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "clearClipboard"
+    },
+    {
+      "do": "action",
+      "action": "copy"
+    },
+    {
+      "do": "readClipboard",
+      "stage": "4-no-marquee"
+    },
+    {
+      "do": "action",
+      "action": "pasteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-no-marquee",
+      "note": "THE TEST: with no marquee up, plain copy still takes the picked layer whole, exactly as it did before"
+    },
+    {
+      "do": "render",
+      "name": "copy-4-no-marquee-render"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "clearClipboard"
+    },
+    {
+      "do": "action",
+      "action": "copyMerged"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "5-merged-no-marquee"
+    },
+    {
+      "do": "describe",
+      "stage": "5-merged-no-marquee",
+      "note": "THE TEST: with no marquee up, Copy Merged is the whole picture hand-off copy: a picture for other apps, and no layer payload"
+    }
+  ]
+}

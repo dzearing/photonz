@@ -127,9 +127,14 @@ struct EditorCommands: Commands {
             Button("Export…") { editor?.isExportDialogPresented = true }
                 .keyboardShortcut("e", modifiers: [.command, .shift])
                 .disabled(editor?.document == nil)
-            Button("Copy Image") { editor?.copyCompositeToClipboard() }
-                .keyboardShortcut("c", modifiers: [.command, .shift])
-                .disabled(editor?.document == nil)
+            // Copy Merged took this key and moved next to Copy in Edit, where
+            // the difference between the two copies is readable. Off, the
+            // picture-of-everything copy stays here as Copy Image.
+            if !Experiments.shared.copyPicksYourLayerEnabled {
+                Button("Copy Image") { editor?.copyCompositeToClipboard() }
+                    .keyboardShortcut("c", modifiers: [.command, .shift])
+                    .disabled(editor?.document == nil)
+            }
         }
 
         CommandMenu("Capture") {
@@ -248,6 +253,14 @@ struct EditorCommands: Commands {
             }
             .keyboardShortcut("c", modifiers: .command)
             .disabled(editor == nil && fieldEditor == nil)
+            // Photoshop ⇧⌘C, and Photoshop's place for it: directly under
+            // Copy, so the one that takes the layer you picked and the one
+            // that takes everything read as a pair.
+            if Experiments.shared.copyPicksYourLayerEnabled {
+                Button("Copy Merged") { editor?.copyMerged() }
+                    .keyboardShortcut("c", modifiers: [.command, .shift])
+                    .disabled(editor?.document == nil)
+            }
             Button("Paste") {
                 if let fieldEditor { fieldEditor.paste(nil) } else { editor?.paste() }
             }
@@ -525,9 +538,9 @@ struct EditorCommands: Commands {
                 Button("Hide All Measurements") { editor?.setAllMeasurementsVisible(false) }
                     .disabled(visibleCount == 0)
                 Divider()
-                // ⌃⌘C: the copy family's free chord. ⇧⌘C is Copy Image (PS
-                // Copy Merged), ⌥⌘C is Canvas Size and ⌥⇧⌘C is Content-Aware
-                // Scale, both Photoshop keys.
+                // ⌃⌘C: the copy family's free chord. ⇧⌘C is Copy Merged,
+                // ⌥⌘C is Canvas Size and ⌥⇧⌘C is Content-Aware Scale, all
+                // Photoshop keys.
                 // Only visible rows are listed, so with every row hidden the
                 // item is off rather than copying a bare header.
                 Button("Copy as Spec List") { editor?.copyMeasureSpecList() }

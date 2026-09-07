@@ -101,6 +101,8 @@ public enum FeatureCatalog {
 
     public static let canvasGridFlag = "next-canvas-grid"
 
+    public static let copyPicksYourLayerFlag = "next-copy-picks-your-layer"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -468,6 +470,15 @@ public enum FeatureCatalog {
                     name: blankCanvasFlag,
                     title: "Start from a blank canvas",
                     description: "You can start a picture from nothing instead of only opening, pasting or capturing one. Choose File \u{25B8} New Blank Canvas from any window, or click Blank canvas on an empty window\u{2019}s card: pick a size (Desktop, Phone, Tablet, Square, or type your own) and you land on a white canvas every tool draws on right away. Asking from a window that already holds a picture leaves that picture alone and opens the canvas in a new window. Off means the File menu row is gone and a new window offers open, capture and paste only.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: copyPicksYourLayerFlag,
+                    title: "Copy takes the layer you picked",
+                    description: "Copy takes the layer you picked, and a marquee crops it. Pick a layer, drag a marquee over part of it and press Command C: what lands on the clipboard is that layer’s pixels inside the marquee and nothing from the layers around it, trimmed to what is actually drawn there, so pasting it back gives you the piece rather than a big transparent box. A marquee that misses the layer copies nothing and beeps instead of handing back an invisible rectangle. Everything flattened together is still one keystroke away as Edit ▸ Copy Merged on Command Shift C, of the marquee when there is one and of the whole picture when there is not, which is where Photoshop keeps it. Command X follows copy: with a marquee up it takes that layer’s pixels out of the marquee instead of deleting the whole layer. With no layer picked, both keys copy everything inside the marquee, since there is nothing to prefer. Off means a marquee beats the layer you picked, Command C hands back every layer flattened together, and Command Shift C is File ▸ Copy Image.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

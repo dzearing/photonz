@@ -87,6 +87,15 @@ extension EditorState {
         })?.id
     }
 
+    /// Whether a region op could bake into THIS layer: only an untransformed,
+    /// uncropped image layer can be sliced, since the op writes into its
+    /// bitmap. A shape or a piece of text would have to be turned into pixels
+    /// first, which is a different decision and never a side effect of ⌘X.
+    func canSliceRegion(from id: UUID) -> Bool {
+        guard let layer = document?.layer(id: id) else { return false }
+        return layer.imageRef != nil && layer.crop == nil && layer.transform.isIdentity
+    }
+
     /// Bakes a region op into an image layer's bitmap as ONE undo step. The
     /// region path maps from document space into bitmap pixels through the
     /// layer's frame (bitmaps stretch to their frame at render time).

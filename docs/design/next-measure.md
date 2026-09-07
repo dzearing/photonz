@@ -458,6 +458,15 @@ field. The "Copied" notice gains an `image(measurements:)` subject: "Image",
 or "Image and spec list with N measurements". A document without
 measurements copies exactly what it did before, and Current is untouched.
 
+Changed 2026-09-07 (`next-copy-picks-your-layer`): ⇧⌘C is now **Copy
+Merged**, and it sits in the Edit menu directly under Copy rather than in File
+as Copy Image. With no marquee up it is exactly the hand-off copy described
+above, spec list and all (`copyCompositeToClipboard` is untouched); with a
+marquee up it copies every layer flattened together inside the marquee.
+Plain ⌘C changed with it: it takes the picked layer rather than the composite
+(`CopyRoute` in `PhotonzCore`). With the flag off, ⇧⌘C is File ▸ Copy Image
+exactly as before.
+
 Changed 2026-09-02 (the inspector carries only what is about the selection):
 the measure inspector's Export section is gone. Copy Image and Export PNG are
 whole-document actions with a whole-document home already — File ▸ Copy Image

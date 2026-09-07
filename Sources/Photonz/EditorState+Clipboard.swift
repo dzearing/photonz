@@ -12,84 +12,172 @@ import UniformTypeIdentifiers
 extension EditorState {
     // MARK: - Clipboard
 
-    /// ⌘C with a layer selected: the layer's model JSON (plus its bitmap for
-    /// image layers — ImageRefs only mean something in this window's store)
-    /// goes on the pasteboard under a Photonz-private type.
+    /// Whether a marquee that means PIXELS is up. A rubber band thrown round
+    /// a few layers is a way of picking layers, not a hole cut in the picture,
+    /// so it never crops a copy.
+    private var hasPixelRegion: Bool { selectionTargetsPixels && selection != nil }
+
+    /// The picked layer, when there really is one in this document.
+    private var pickedLayerID: UUID? {
+        guard let id = selectedLayerID, document?.layer(id: id) != nil else { return nil }
+        return id
+    }
+
+    /// ⌘C: **copy takes what you picked, and a marquee crops it.**
     ///
-    /// With NO layer selected, ⌘C copies the marquee region — or, with no
-    /// marquee either, the whole canvas — flattened from the composite. So
-    /// ⌘A → ⌘C → ⌘V duplicates what you see (background included), and the
-    /// PNG also pastes into other apps.
-    func copySelectedLayer() {
-        // A pixel region supersedes the layer (even one that's selected —
-        // e.g. the fresh layer from ⌘N): ⌘C copies the region, not the layer.
-        if selectionTargetsPixels, selection != nil {
-            copyRegionFromComposite()
+    /// With a layer picked, the copy is that layer: whole when nothing is
+    /// marqueed (its model JSON, plus its bitmap for image layers, since
+    /// ImageRefs only mean something in this window's store), and its pixels
+    /// inside the marquee when one is. Nothing from the layers around it comes
+    /// along either way.
+    ///
+    /// With NO layer picked there is nothing to prefer, so ⌘C takes every
+    /// layer flattened together inside the marquee — or, with no marquee
+    /// either, the whole canvas. So ⌘A → ⌘C → ⌘V with nothing picked
+    /// duplicates what you see, background included, and the PNG also pastes
+    /// into other apps.
+    ///
+    /// Everything flattened together is ⇧⌘C (`copyMerged`).
+    @discardableResult
+    func copySelectedLayer() -> Bool {
+        // Off, the old rule stands: a marquee supersedes the layer, so ⌘C
+        // hands back the flattened region and the layer you picked is nowhere
+        // in it. Dropping the picked layer here is all that takes.
+        let picked = Experiments.shared.copyPicksYourLayerEnabled || !hasPixelRegion
+            ? pickedLayerID : nil
+        switch CopyRoute.copy(picked: picked, pixelRegion: hasPixelRegion,
+                              hasDocument: document != nil) {
+        case .nothing, .mergedImage: return false
+        case .layer(let id): return copyWholeLayer(id)
+        case .layerRegion(let id): return copyLayerRegion(id)
+        case .mergedRegion: return copyMergedRegion()
+        }
+    }
+
+    /// ⇧⌘C: every layer flattened together — the marquee's worth of it when
+    /// one is up, and the whole picture when none is (`copyCompositeToClipboard`,
+    /// which is the hand-off copy and carries the spec list with it).
+    func copyMerged() {
+        guard Experiments.shared.copyPicksYourLayerEnabled else {
+            copyCompositeToClipboard() // off: ⇧⌘C is File ▸ Copy Image, as it was
             return
         }
-        if let id = selectedLayerID, let layer = document?.layer(id: id) {
-            var imageData: Data?
-            if case .image(let ref) = layer.content, let cg = store.image(for: ref) {
-                imageData = ImageCodec.encode(cg, format: .png)
-            }
-            // The payload travels in CANVAS coordinates: a button copied out of
-            // a screen remembers where it was on the canvas, not where it was
-            // inside that screen, so pasting it lands it back over the screen.
-            let travelling = document?.detachedLayer(id: id) ?? layer
-            guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: travelling, imageData: imageData)) else { return }
-            let pasteboard = NSPasteboard.general
-            pasteboard.clearContents()
-            pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
-            // A copied measurement also travels as its spec line, so ⌘C then
-            // ⌘V in a chat or a doc pastes "- Width: 128 px (size)" instead of
-            // nothing. Photonz's own paste still prefers the layer payload.
-            if let document, let line = MeasureSpecList.specLine(for: layer, in: document) {
-                pasteboard.setString(line, forType: .string)
-            }
-            return
+        switch CopyRoute.copyMerged(pixelRegion: hasPixelRegion, hasDocument: document != nil) {
+        case .mergedRegion: copyMergedRegion()
+        case .mergedImage: copyCompositeToClipboard()
+        default: return
         }
-        guard let document else { return }
-        let canvas = CGRect(origin: .zero, size: document.canvasSize)
-        let region = selection.map { Geometry.pixelAligned($0.bounds) } ?? canvas
-        guard region.width >= 1, region.height >= 1,
-              let raster = previewRenderer.rasterize(region: region, of: document, store: store),
-              let png = ImageCodec.encode(raster, format: .png) else { return }
-        // A Photonz image-layer payload (⌘V lands it as a layer over the copied
-        // spot) plus a plain PNG for interoperability.
-        let layer = Layer(name: "Copied Selection",
-                          content: .image(ImageRef(pixelSize: region.size)), frame: region)
-        guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png)) else { return }
+    }
+
+    /// The whole picked layer, as a layer.
+    private func copyWholeLayer(_ id: UUID) -> Bool {
+        guard let layer = document?.layer(id: id) else { return false }
+        var imageData: Data?
+        if case .image(let ref) = layer.content, let cg = store.image(for: ref) {
+            imageData = ImageCodec.encode(cg, format: .png)
+        }
+        // The payload travels in CANVAS coordinates: a button copied out of
+        // a screen remembers where it was on the canvas, not where it was
+        // inside that screen, so pasting it lands it back over the screen.
+        let travelling = document?.detachedLayer(id: id) ?? layer
+        guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: travelling, imageData: imageData)) else { return false }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
-        pasteboard.setData(png, forType: .png)
+        // A copied measurement also travels as its spec line, so ⌘C then
+        // ⌘V in a chat or a doc pastes "- Width: 128 px (size)" instead of
+        // nothing. Photonz's own paste still prefers the layer payload.
+        if let document, let line = MeasureSpecList.specLine(for: layer, in: document) {
+            pasteboard.setString(line, forType: .string)
+        }
+        return true
     }
 
-    /// The pixel region copied from the composite, CLIPPED to its path —
-    /// transparent outside a wand blob or ellipse. Pastes as a layer over the
-    /// copied spot in Photonz, and as a PNG elsewhere.
-    private func copyRegionFromComposite() {
-        guard let document, let selection else { return }
+    /// The picked layer's pixels inside the marquee, and nothing from the
+    /// layers around it: the layer is drawn ALONE (`render(_:store:only:)`)
+    /// before the marquee crops it, clipped to its path so a wand blob or an
+    /// ellipse comes out with the shape it was drawn in.
+    ///
+    /// The copy is then trimmed to the pixels that are actually there, the way
+    /// slicing a layer with ⌫ tightens it to what survives, so a marquee flung
+    /// round a small drawing hands back the drawing and not a big transparent
+    /// box. A marquee that misses the layer entirely copies NOTHING and beeps:
+    /// an invisible rectangle on the clipboard is worse than an honest refusal.
+    private func copyLayerRegion(_ id: UUID) -> Bool {
+        guard let document, let selection, let layer = document.layer(id: id) else { return false }
         let canvas = CGRect(origin: .zero, size: document.canvasSize)
         let frame = selection.path.boundingBoxOfPath.integral.intersection(canvas)
         guard !frame.isNull, frame.width >= 1, frame.height >= 1,
+              let alone = previewRenderer.render(document, store: store, only: id),
+              let clipped = RegionOps.extracted(alone, path: selection.path),
+              let trimmed = RegionOps.trimmed(clipped) else {
+            NSSound.beep() // nothing of that layer is inside the marquee
+            return false
+        }
+        // `trimmed.rect` is in the cropped picture's pixels, which run one to
+        // one with document points from the marquee's top left corner.
+        let tight = CGRect(x: frame.minX + trimmed.rect.minX, y: frame.minY + trimmed.rect.minY,
+                           width: trimmed.rect.width, height: trimmed.rect.height)
+        // Named after the layer it came out of, so pasting it reads as "Button
+        // copy" rather than an anonymous scrap.
+        return put(Layer(name: layer.name, content: .image(ImageRef(pixelSize: tight.size)),
+                         frame: tight),
+                   picture: trimmed.image)
+    }
+
+    /// Every layer flattened together inside the marquee — or the whole canvas
+    /// when there is no marquee — CLIPPED to the marquee's path, so it is
+    /// transparent outside a wand blob or an ellipse. Pastes as a layer over
+    /// the copied spot in Photonz, and as a picture elsewhere.
+    @discardableResult
+    private func copyMergedRegion() -> Bool {
+        guard let document else { return false }
+        let canvas = CGRect(origin: .zero, size: document.canvasSize)
+        let path = selection?.path ?? CGPath(rect: canvas, transform: nil)
+        let frame = path.boundingBoxOfPath.integral.intersection(canvas)
+        guard !frame.isNull, frame.width >= 1, frame.height >= 1,
               let composite = previewRenderer.rasterize(region: canvas, of: document, store: store),
-              let clipped = RegionOps.extracted(composite, path: selection.path),
-              let png = ImageCodec.encode(clipped, format: .png) else { return }
-        let layer = Layer(name: "Copied Selection",
-                          content: .image(ImageRef(pixelSize: frame.size)), frame: frame)
-        guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png)) else { return }
+              let clipped = RegionOps.extracted(composite, path: path) else { return false }
+        return put(Layer(name: "Copied Selection", content: .image(ImageRef(pixelSize: frame.size)),
+                         frame: frame),
+                   picture: clipped)
+    }
+
+    /// A copied piece of picture on the pasteboard: the Photonz payload first,
+    /// so ⌘V lands it back as a layer over the spot it came from, then PNG and
+    /// TIFF so it pastes into other apps as the picture it is.
+    private func put(_ layer: Layer, picture image: CGImage) -> Bool {
+        guard let png = ImageCodec.encode(image, format: .png),
+              let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png))
+        else { return false }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
         pasteboard.setData(png, forType: .png)
+        // TIFF for the long tail of AppKit apps that ask for nothing else.
+        let tiffSource = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+        if let tiff = tiffSource.tiffRepresentation { pasteboard.setData(tiff, forType: .tiff) }
+        return true
     }
 
-    /// ⌘X: copy the selected (unlocked) layer, then remove it.
+    /// ⌘X: cut follows copy. With a marquee up it takes the picked layer's
+    /// pixels OUT of the marquee and leaves the rest of the layer standing
+    /// (Photoshop); with no marquee it takes the whole unlocked layer.
     func cutSelectedLayer() {
+        if Experiments.shared.copyPicksYourLayerEnabled, hasPixelRegion,
+           let id = pickedLayerID, canSliceRegion(from: id) {
+            // Nothing copied means nothing to cut: the marquee missed the
+            // layer, and it already beeped.
+            guard copyLayerRegion(id) else { return }
+            deleteRegion() // slices the same layer the copy came off
+            return
+        }
         guard let id = selectedLayerID, let layer = document?.layer(id: id),
               !layer.isLocked else { return }
-        copySelectedLayer()
+        // Cutting the layer whole copies it whole, marquee or no marquee: a
+        // clipboard holding a corner of something the document no longer has
+        // is the worse of the two answers.
+        guard copyWholeLayer(id) else { return }
         deleteLayer(id: id)
     }
 

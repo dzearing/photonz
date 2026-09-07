@@ -396,6 +396,12 @@ extension Experiments {
     /// flag off only takes away the View row and the Grid controls.
     var canvasGridEnabled: Bool { isEnabled(FeatureCatalog.canvasGridFlag) }
 
+    /// `next-copy-picks-your-layer`: whether the layer you picked survives a
+    /// marquee. On, ⌘C takes that layer's pixels inside the marquee and ⇧⌘C
+    /// is Copy Merged; off, the marquee supersedes the layer and ⌘C hands back
+    /// every layer flattened together (`CopyRoute`).
+    var copyPicksYourLayerEnabled: Bool { isEnabled(FeatureCatalog.copyPicksYourLayerFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

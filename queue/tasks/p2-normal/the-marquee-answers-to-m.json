@@ -1,0 +1,28 @@
+{
+  "id": "the-marquee-answers-to-m",
+  "title": "The marquee answers to M",
+  "goal": "Every other tool has a letter, and the marquee, which is the tool the copy and fill commands are built around, has none: you have to reach for the tool bar with the mouse every time. M is what Photoshop uses for it and pressing it again should swap between the box and the ellipse.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1730,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T17:19:09.616Z",
+  "updated": "2026-09-07T17:19:09.616Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Tool.shortcutKey in Sources/PhotonzCore/Tools.swift returns nil for rectSelect and ellipseSelect although the comment on isMarqueeSelectTool already calls them Photoshop's M group. Tool groups already cycle on a repeated press elsewhere (toolGroupsFlag).",
+  "acceptance": [
+    "Pressing M picks the rectangular marquee",
+    "Pressing M again swaps to the ellipse marquee, and again back",
+    "The tool bar tooltip shows the key, the way the other tools do",
+    "No existing shortcut is displaced"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T17:19:09.616Z",
+      "note": "created (manual)"
+    }
+  ]
+}

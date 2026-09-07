@@ -1,0 +1,28 @@
+{
+  "id": "new-layer-via-copy-takes-the-layer-you-picked",
+  "title": "New Layer via Copy takes the layer you picked",
+  "goal": "With a layer picked and a marquee drawn, command J makes a new layer out of every layer flattened together instead of out of the layer you picked. Copy was fixed to prefer the picked layer on 2026-09-07 and this command should agree with it, so the same marquee gives you the same pixels whichever way you take them.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1710,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T17:18:57.094Z",
+  "updated": "2026-09-07T17:18:57.095Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "promoteSelectionToLayer in Sources/Photonz/EditorState+LayerOps.swift rasterizes the composite. The copy fix added DocumentRenderer.render(_:store:only:) which draws one layer alone in place, and CopyRoute in PhotonzCore which decides picked-vs-merged; reuse both. Same next-scoped flag: FeatureCatalog.copyPicksYourLayerFlag.",
+  "acceptance": [
+    "With a layer picked and a marquee drawn, command J makes a new layer holding that layer's pixels inside the marquee and nothing from the layers around it",
+    "With nothing picked, command J still promotes everything inside the marquee, as it does now",
+    "With no marquee, command J still duplicates the picked layer",
+    "The audit shows a two layer document with both cases"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T17:18:57.095Z",
+      "note": "created (manual)"
+    }
+  ]
+}

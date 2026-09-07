@@ -1,0 +1,32 @@
+{
+  "feature": "Copy takes the layer you picked",
+  "epic": "ui-building",
+  "summary": "Pick a layer, drag a marquee over part of it and press ⌘C: you now get that layer's pixels inside the marquee, trimmed to what is drawn there, instead of every layer flattened together. Everything flattened together moved to ⇧⌘C as Edit ▸ Copy Merged, and ⌘X follows copy.",
+  "setup": "Photonz Dev, release Next. The flag Copy takes the layer you picked is on by default in the Experiments window. Open any picture and draw a shape on top of it so the document has two layers.",
+  "try": [
+    { "do": "Pick the shape you drew, in the layers list or on the picture." },
+    { "do": "Take the marquee, the dashed square second along the tool bar, and drag a box across the shape's corner, carrying on over the picture behind it.", "shot": "2026-09-07-copy-picks-your-layer-1-marquee.png" },
+    { "do": "Press ⌘C, then ⌘V.", "shot": "2026-09-07-copy-picks-your-layer-2-plain-copy.png" },
+    { "do": "Read the new row's W and H in Position & Size: it is the corner of the shape alone, with none of the picture behind it." },
+    { "do": "Press ⌘Z, drag the same marquee again, and this time press ⇧⌘C then ⌘V.", "shot": "2026-09-07-copy-picks-your-layer-3-copy-merged.png" },
+    { "do": "Open the Edit menu and read Copy and Copy Merged one under the other.", "shot": "2026-09-07-copy-picks-your-layer-4-edit-menu.png" },
+    { "do": "Copy the shape's corner again and paste it into another app, a chat or a note, to see the picture land there." },
+    { "do": "Pick the picture layer UNDER the shape, marquee the same spot and press ⌘X: the piece comes out of the picture and the shape above it is untouched." }
+  ],
+  "evaluate": [
+    "With a layer picked and a marquee up, is the layer's own pixels what you expected ⌘C to give you?",
+    "A copy is trimmed to the pixels that are actually there, so a marquee flung round a small drawing hands back the drawing rather than a big transparent box. Is that right, or do you want the copy to be the size of the marquee you drew?",
+    "Nothing on screen says which of the two copies you just took. Do you want a word at the bottom of the canvas saying what landed, or is silence right for a key you press all day?",
+    "A marquee that misses the picked layer copies nothing and beeps. Is a beep enough, or should it say why?",
+    "Copy Merged moved out of the File menu, where it was called Copy Image, into Edit under Copy. Is that where you would look for it?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot above is a real capture of the probe window, not an offscreen render.",
+    "What was driven, with the probe: a two layer picture, a marquee across the top layer's corner, ⌘C and ⌘V, the same marquee with ⇧⌘C and ⌘V, no marquee at all, the layer UNDER another one, a marquee that misses, and cut. Saved as Scripts/playtest/copy-takes-your-layer-walk.json so it stays a regression check.",
+    "Pasting into another app was checked by a separate process reading the clipboard the way a pasting app does: it got a 200 by 150 picture of the shape's corner and nothing else. It was not pasted into a named app by hand, because this loop is not allowed to drive other apps on your machine.",
+    "With nothing picked and a marquee up, ⌘C still takes every layer flattened together. That is deliberate: with no layer to prefer there is nothing else it could mean, and it keeps ⌘A ⌘C ⌘V duplicating what you see.",
+    "Cut on a SHAPE or a piece of text with a marquee up still takes the whole layer, because slicing a corner off a shape would mean turning it into pixels first and that is not something ⌘X should decide. Only a picture layer is sliced. Filed as its own task.",
+    "New Layer via Copy (⌘J) still promotes the flattened picture rather than the layer you picked, so it now disagrees with ⌘C. Filed as its own task.",
+    "Not built: the copy says nothing on screen either way. The notice pill exists and could carry it, but a pill on every ⌘C could be noise, so it is a question above rather than a guess."
+  ]
+}
