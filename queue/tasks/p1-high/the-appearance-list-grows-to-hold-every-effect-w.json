@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 30,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T04:17:33.932Z",
-  "updated": "2026-09-07T12:58:20.323Z",
+  "updated": "2026-09-07T15:01:05.666Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-06: we are missing inner border, outer border, inner shadow, outer shadow, bevel, and they are unsure how to organise these without the UX getting weird. Today LayerPart (Sources/PhotonzCore/LayerParts.swift line 22) has exactly three cases, fill, outline and shadow, each a fixed row in the Appearance list. The two ideas that keep the list from sprawling are worth stating in the task because they are what the answer turns on. First, inner versus outer is a PROPERTY of an effect rather than a different effect, which collapses four requested names into two parts with one extra setting each; that is how Figma and Sketch handle stroke position, and it means the list stays short. Second, some effects are countable, a second shadow being the common want, so the list has to accept more than one of a kind, which turns a fixed set of rows into an addable list with a plus and a remove. Once it is an addable list, order becomes visible and therefore has to be editable, so rows drag like layers. A bevel or an inner glow then costs one new kind and no new interaction. Read the current model first (LayerParts.swift and Sources/Photonz/PartsInspector.swift) and fold in the pending task switching-a-part-on-shows-its-settings-straight, which changes how a row reveals its settings, so the two do not fight.",
@@ -80,6 +80,10 @@
     {
       "t": "2026-09-07T12:58:20.322Z",
       "note": "seq 5 -> 30"
+    },
+    {
+      "t": "2026-09-07T15:01:05.666Z",
+      "note": "decision \"How should the Appearance list grow when a shape wants two shadows, a border on the inside, or a glow?\" resolved: One list you add to"
     }
   ],
   "started": "2026-09-07T04:47:54.247Z"

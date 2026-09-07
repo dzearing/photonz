@@ -11149,3 +11149,35 @@ Audit with real captures: `queue/audits/2026-09-07-screen-drag-cue.json`.
 
 Next: the queue's next task. Open question for the user, in the audit: whether
 the band case needs a mark of its own rather than the plain arrow.
+
+## 2026-09-07 — the repeated multi-selection line stays, on purpose
+
+The task "The panel says once that a change reaches everything picked" wanted
+to strip the sentence each dock section prints when it is speaking for several
+layers ("2 layers. A change here changes every one of them, in one step") and
+say it once at the top instead. It was worth about 190 points of panel height,
+and 34 of those were the difference between Effects fitting and not.
+
+Reproduced it first, before touching anything, with
+`Scripts/playtest.sh Scripts/playtest/dock-fits-the-window-walk.json`. The
+numbers in the task hold exactly: one text `Effects 838-996` in a 996 point
+dock, two text `Effects 838-1030`, and every other shape the dock takes (four
+picked, arrow, callout, fifteen layers) well inside. The capture
+`2-two-text-sc.png` shows Corner Radius on the bottom edge with its line cut
+off, which is the whole complaint.
+
+The user answered the attached decision while that was running and chose
+**leave the words alone**: the promise is worth repeating wherever the eye
+lands, and a short scroll in the one two-text case is the price. That option
+was marked as declining, so the task retired itself and nothing shipped in the
+UI.
+
+What did land is a note in `DockHeightBudget`'s doc comment recording the
+accepted residual — the case, the measurement, the date, and the instruction
+not to buy the room back out of those captions. That state had already been
+filed against four times in one day, and without writing the answer down where
+the next reader of the budget will see it, it would have been filed a fifth.
+`Scripts/test.sh` green at 4391.
+
+Next: the queue's next task. Room for Effects, if anyone still wants it, has
+to come from somewhere other than the words.

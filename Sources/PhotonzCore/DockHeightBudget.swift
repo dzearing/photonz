@@ -31,6 +31,17 @@ import CoreGraphics
 /// into the leftover; nothing in the app asks for that yet, and a Layers list
 /// that changed height every time the leftover changed would be worse than the
 /// gap it filled.)
+///
+/// One case is still over, on purpose. With two pieces of text picked in a
+/// window as tall as the display allows, Effects runs 838-1030 in a 996 point
+/// dock: 34 points below the fold, so Corner Radius sits on the bottom edge and
+/// the line under it is cut off. Every other shape the dock takes fits. The 34
+/// points are the multi-selection captions — each section speaking for several
+/// layers says so under its own controls — and on 2026-09-07 the user was asked
+/// whether to say that once instead of six times and answered leave the words
+/// alone: the promise is worth repeating wherever the eye lands, and a short
+/// scroll in this one case is the price. So do not "fix" this by trimming those
+/// captions. Room for Effects has to come from somewhere else.
 public enum DockHeightBudget {
     /// One group in the dock, as the budget sees it.
     public struct Group: Sendable, Equatable {

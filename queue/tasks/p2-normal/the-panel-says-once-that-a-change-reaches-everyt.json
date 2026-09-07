@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1630,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T13:25:34.601Z",
-  "updated": "2026-09-07T13:25:34.602Z",
+  "updated": "2026-09-07T15:02:16.225Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the-properties-panel-fits-on-the-screen-it-has (2026-09-07). That task shipped the dock height budget: list-shaped groups are bounded and scroll inside themselves, form-shaped ones are paid in full. Measured after it: one text 838-996 in a 996 dock (fits), two text 838-1030 (34 over), four picked 574-732, arrow 712-870, callout 835-993, fifteen layers 574-732. Only the two-text case is over, by 34pt, and the captions are worth about 190. Sources: MixedLook.swift, ArrangeInspector.swift:60, PartsInspector.swift:56, LayersPanel.swift:2849 and :2920, PlacementInspector.swift:486. Reproduce with Scripts/playtest.sh Scripts/playtest/dock-fits-the-window-walk.json and read dockSections in the log. A decision card is attached: this is a question about the words, not the layout.",
@@ -23,6 +23,25 @@
     {
       "t": "2026-09-07T13:25:34.602Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T14:57:57.172Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T15:00:19.069Z",
+      "note": "decision \"When you pick several things at once, how often should the panel tell you that a change reaches all of them?\" resolved: Leave the words alone"
+    },
+    {
+      "t": "2026-09-07T15:00:19.069Z",
+      "note": "retired by that answer: \"Leave the words alone\" means this should not be built, so it will not be picked up again."
+    },
+    {
+      "t": "2026-09-07T15:02:16.224Z",
+      "note": "Reproduced the 34pt overflow with dock-fits-the-window-walk before building (two text: Effects 838-1030 in a 996 dock; every other case fits). User answered the decision mid-run with 'Leave the words alone', which declines the task, so no UI change shipped. Recorded the accepted residual in DockHeightBudget's doc comment so it is not filed a fifth time. Scripts/test.sh green at 4391."
     }
-  ]
+  ],
+  "started": "2026-09-07T14:57:57.171Z",
+  "parked": false,
+  "parkReason": ""
 }
