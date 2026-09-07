@@ -765,6 +765,10 @@ private final class Run {
             try await photographMenuBarMenu(menu, name: name, ticked: ticked,
                                             unticked: unticked, number: number)
 
+        case .rightClick(let on, let shot, let choose, let ticked, let unticked):
+            try await openRowMenu(on, shot: shot, choose: choose, ticked: ticked,
+                                  unticked: unticked, number: number)
+
         case .dragTile(let tile, let to, let hold):
             try await dragTile(tile, to: to, hold: hold, number: number)
 
@@ -1882,6 +1886,163 @@ private final class Run {
              + "Ticked: \(tickedRows.isEmpty ? "none" : tickedRows.joined(separator: ", "))",
              state: ["menu": name, "rows": rows, "ticked": tickedRows, "live": liveRows,
                      "shot": shot ?? NSNull()])
+    }
+
+    /// Opens the menu you get by RIGHT CLICKING something in the panel, reads
+    /// it, photographs it, and can pick a row out of it.
+    ///
+    /// This is the third kind of menu and the only one that hangs off nothing.
+    /// A menu bar menu is on the bar and a panel menu is on a button, so both
+    /// can be found by looking; a `.contextMenu` exists only once the pointer
+    /// asks for it, which is why every audit that wanted to show the layer row
+    /// menu had to write out its rows in prose instead.
+    ///
+    /// The row is found by name, the way a press finds a button, and held to
+    /// the same rule: a row the dock has scrolled out of reach fails the walk
+    /// rather than opening a menu nobody could have opened. From there the
+    /// menu comes from the view actually under that point, so the search is
+    /// the one AppKit runs on a real right click.
+    ///
+    /// Unlike `menuShot` there is no check for rows with nothing behind them.
+    /// That rule exists because the menu BAR reads its state off the focused
+    /// window and a background app has none, so its checkmarks can be a
+    /// leftover default. A context menu has no such trouble: it is built fresh
+    /// by the very row that was clicked, so what it wears is that row's own
+    /// state.
+    ///
+    /// Everything about waiting for a menu's own event loop, and about why the
+    /// picture has to be a real screen capture, is `PlaytestPanelMenu`.
+    private func openRowMenu(_ name: String, shot: String?, choose: String?,
+                             ticked: [String], unticked: [String], number: Int) async throws {
+        let target = try rightClickTarget(name)
+        guard let window = target.window, let content = window.contentView else {
+            throw Failure(description: "\"\(target.name)\" is in no window, so there is nothing to right click")
+        }
+        guard Self.isInReach(target) else {
+            throw Failure(description: "\"\(target.name)\" is not where a person could right click it: it is "
+                + "off the window, or the dock has scrolled it far enough that the panel's edge cuts across "
+                + "it. Scroll to it with a \"scrollPanel\" step first.")
+        }
+        guard let (menu, view) = PlaytestPanelMenu.menu(rightClickingAt: target.point, in: content,
+                                                        window: window) else {
+            throw Failure(description: "right clicking \"\(target.name)\" raises no menu: nothing under that "
+                + "point offers one. Is there a `.contextMenu` on it?")
+        }
+        let shotURL = shot.map { out.appendingPathComponent("\($0)-sc.png") }
+        let noteURL = out.appendingPathComponent("row-menu-shot.txt")
+        try? FileManager.default.removeItem(at: noteURL)
+        var reading = PlaytestMenuReading()
+
+        // Everything below runs INSIDE the menu's own event loop.
+        let hop = PlaytestTrackingHop {
+            reading.rows = menu.items.map { $0.isSeparatorItem ? "" : $0.title }
+            reading.dimmed = menu.items.filter { !$0.isSeparatorItem && !$0.isEnabled }.map(\.title)
+            reading.ticked = menu.items.filter { $0.state == .on }.map(\.title)
+            if let shotURL, let menuWindow = PlaytestPanelMenu.openMenuWindow() {
+                let finished = DispatchSemaphore(value: 0)
+                PlaytestPanelMenu.capture(menuWindow: menuWindow.windowNumber,
+                                          over: window.windowNumber,
+                                          host: Self.screenFrame(of: window),
+                                          to: shotURL) { outcome in
+                    try? Data(outcome.utf8).write(to: noteURL)
+                    finished.signal()
+                }
+                _ = finished.wait(timeout: .now() + 3)
+                reading.shot = shotURL.lastPathComponent
+            } else if shotURL != nil {
+                reading.problem = "it showed in no window this app can see, so there is no picture"
+            }
+            // Picking happens LAST, after the reading and the picture: choosing
+            // a row can rebuild the very list being read.
+            if let choose {
+                if let index = menu.items.firstIndex(where: { $0.title == choose }) {
+                    if menu.items[index].isEnabled {
+                        menu.performActionForItem(at: index)
+                        reading.chose = choose
+                    } else {
+                        reading.problem = "the row \"\(choose)\" is dimmed, so picking it would do nothing"
+                    }
+                } else {
+                    reading.problem = "there is no row called \"\(choose)\"; the rows are: "
+                        + reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", ")
+                }
+            }
+            menu.cancelTracking()
+        }
+        // Long enough for the menu to be up and drawn, short enough that it is
+        // not sitting over whatever the person at this machine is looking at.
+        hop.schedule(after: 0.55)
+        // At the point the click landed on, which is where a real right click
+        // puts it: the picture then shows the menu joined to the row it came
+        // from, rather than floating at a corner.
+        menu.popUp(positioning: nil, at: view.convert(target.point, from: nil), in: view)
+        await sleep(0.25)
+
+        var outcome = "no picture asked for"
+        if shot != nil {
+            outcome = "the picture never finished"
+            for _ in 0..<40 {
+                if let data = try? Data(contentsOf: noteURL), let text = String(data: data, encoding: .utf8) {
+                    outcome = text
+                    break
+                }
+                await sleep(0.1)
+            }
+            try? FileManager.default.removeItem(at: noteURL)
+        }
+        if let problem = reading.problem {
+            throw Failure(description: "the menu on \"\(target.name)\" opened but \(problem)")
+        }
+        // Read off what the OPEN menu was wearing, not off the menu now that it
+        // has closed: closing it is another event, and another chance for the
+        // words to change under the reading.
+        for row in ticked + unticked where !reading.rows.contains(row) {
+            throw Failure(description: "no row called \"\(row)\" in the menu on \"\(target.name)\"; "
+                + "the rows are: " + reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", "))
+        }
+        if let missing = ticked.first(where: { !reading.ticked.contains($0) }) {
+            throw Failure(description: "\(target.name) ▸ \(missing) should be ticked and it is not; "
+                + "ticked: \(reading.ticked.isEmpty ? "none" : reading.ticked.joined(separator: ", "))")
+        }
+        if let extra = unticked.first(where: { reading.ticked.contains($0) }) {
+            throw Failure(description: "\(target.name) ▸ \(extra) should NOT be ticked and it is")
+        }
+        let rows = reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: " | ")
+        var detail = "right clicked \"\(target.name)\""
+        if !target.detail.isEmpty { detail += " (\(target.detail))" }
+        detail += " at window \(short(target.point)): \(reading.rows.count) rows: \(rows)"
+        detail += "; ticked: \(reading.ticked.isEmpty ? "none" : reading.ticked.joined(separator: ", "))"
+        if !reading.dimmed.isEmpty { detail += "; dimmed: \(reading.dimmed.joined(separator: ", "))" }
+        if let chose = reading.chose { detail += "; picked \"\(chose)\"" }
+        detail += "; picture: \(outcome)"
+        note(number, "rightClick", detail,
+             state: ["on": target.name, "rows": reading.rows, "ticked": reading.ticked,
+                     "dimmed": reading.dimmed, "chose": reading.chose ?? NSNull(),
+                     "shot": reading.shot ?? NSNull()])
+    }
+
+    /// Something in the panel a right click can land on, named the way the walk
+    /// names it. A row in one of the lists first, since those are the things
+    /// that carry a menu, then anything else the panel named for itself, so
+    /// the day a tile or a control grows one it is reachable without a change
+    /// here.
+    private func rightClickTarget(_ name: String) throws -> PlaytestPressTarget {
+        let all = try panelTargets().filter { $0.kind != .field }
+        guard let match = all.first(where: { $0.kind == .row && $0.name == name })
+                ?? all.first(where: { $0.name == name })
+                ?? all.first(where: { $0.detail == name })
+                ?? all.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
+            let seen = all.map { $0.detail.isEmpty ? $0.name : "\($0.name) / \($0.detail)" }
+                .joined(separator: ", ")
+            throw Failure(description: "nothing called \"\(name)\" is in the panel to right click; the ones "
+                + "that are: " + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
+        }
+        let frame = match.convert(match.bounds, to: nil)
+        return PlaytestPressTarget(name: match.name, detail: match.detail,
+                                   point: CGPoint(x: frame.midX, y: frame.midY),
+                                   box: frame,
+                                   visible: match.convert(match.visibleRect, to: nil),
+                                   isEnabled: true, window: match.window)
     }
 
     private func openPanelMenu(_ name: String, shot: String?, choose: String?, number: Int) async throws {

@@ -10939,3 +10939,31 @@ Next: `a-container-too-small-for-what-is-inside-it-says` picks up the
 arranging-container half — making the container fit rather than moving
 one layer. Open question in the audit: whether three routes to the same
 move (mark, row menu, Layer menu) is one too many.
+
+## 2026-09-07 — A walk can open and photograph a right click menu
+
+A scripted walk has a third menu step, `rightClick`, and it reaches the one
+kind of menu that hangs off nothing. A menu bar menu is on the bar and a
+`panelMenu` is on a button, so both can be found by looking; a `.contextMenu`
+does not exist until the pointer asks for it, which is why every audit that
+wanted to show the layer row menu had to write its rows out in prose. The step
+names a row the way `panel` lists it, opens its menu, writes every row, every
+dimmed row and every checkmark to the log, photographs it over the window, and
+can pick a row out of it. `ticked` and `unticked` make it a test: a walk that
+claims Locked is on when it is not fails with both lists in the message.
+
+The menu is found the way AppKit finds it — hit test the point a click would
+land on, then walk up until a view offers one — so a row the dock has scrolled
+out of sight comes back with no menu, exactly as it would for a person. The
+row itself is held to the same reach rule a `press` is.
+
+Two things came out of building it. The canvas has no context menu anywhere in
+the app, so the step covers panel rows only rather than a canvas menu that does
+not exist; the search is generic, so the day the canvas grows one it works
+there unchanged. And the Measurements rows had no name a walk could use at all,
+which is why nothing had ever opened their menu; they carry a `playtestTarget`
+now, and `measure-row-menu-walk.json` reads it.
+
+Next: the queue's next task. Open question in the audit: whether the menu
+covering the panel below the row it came from loses anything an audit needed to
+see.

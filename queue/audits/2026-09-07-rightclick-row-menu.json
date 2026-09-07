@@ -1,0 +1,28 @@
+{
+  "feature": "A walk can open and photograph a right click menu",
+  "epic": "unmanned-loop",
+  "summary": "A scripted walk can now open the menu you get by right clicking a row in the right hand panel, write out every row, every dimmed row and every checkmark, take a real photograph of it, and pick a row out of it. Until today an audit that wanted to show the layer row menu could only describe it in words.",
+  "setup": "Nothing to install and nothing in the app to turn on. This is loop tooling: you run it from the repo, and it drives its own copy of the app (Photonz Probe), never the one you playtest with.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/row-menu-walk.json in a terminal." },
+    { "do": "Open /tmp/photonz-playtest/row-menu/row-menu-2-locked-sc.png.", "shot": "2026-09-07-row-menu-locked.png" },
+    { "do": "Read the [9 rightClick] and [13 rightClick] lines in /tmp/photonz-playtest/row-menu/log.json." },
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/measure-row-menu-walk.json.", "shot": "2026-09-07-measure-row-menu.png" },
+    { "do": "Change \"ticked\": [\"Visible\"] to [\"Locked\"] in row-menu-walk.json and run it again." },
+    { "do": "Read the failure: it names the row, what it should have worn, and what it was actually wearing." },
+    { "do": "Put the walk file back with git checkout Scripts/playtest/row-menu-walk.json." }
+  ],
+  "evaluate": [
+    "Is the photograph good enough to settle an argument about the menu, or does the menu covering the panel behind it lose something you needed to see?",
+    "Does the log line tell you what the menu said without you having to open the picture at all?",
+    "Is \"rightClick\" with \"on\" the wording you would reach for when writing a walk, or would you expect something else?",
+    "Should the step also be able to right click a shape on the canvas, given the canvas has no menu of its own today?"
+  ],
+  "rough": [
+    "The canvas has no right click menu anywhere in the app, so the step covers panel rows only. The task goal said layer, measurement or canvas; building the canvas half would have been building a step for a menu that does not exist. The step finds the menu by asking whatever view is under the point, so the day the canvas grows one it works there without a change.",
+    "The measurement rows had no name a walk could use at all, so they got one as part of this. That is why the second walk can reach them.",
+    "The menu opens where a real right click would put it, at the middle of the row, which means it covers the panel below the row it came from. The row's own name stays readable to its left, but if you want the whole list in the same picture there is nowhere for the menu to go.",
+    "Screen Recording was granted for these runs, so both pictures in this audit are real screen captures of the menu over the window, not offscreen renders.",
+    "Unlike the menu bar step there is no check for rows with nothing behind them. That rule exists because the menu bar reads its state off the focused window and a background app has none. A context menu is built fresh by the row that was clicked, so its checkmarks are that row's own state and there is nothing to guard against."
+  ]
+}

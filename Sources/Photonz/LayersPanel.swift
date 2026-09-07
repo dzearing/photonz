@@ -2580,6 +2580,11 @@ struct MeasurementsListView: View {
             Divider()
             Button("Delete", role: .destructive) { editorState.deleteLayer(id: layer.id) }
         }
+        // The name a walk uses for this row, so its menu can be opened and
+        // photographed. Without it the measurement rows were the one list in
+        // the panel nothing could reach by name.
+        .playtestTarget(MeasureSpecList.displayName(for: layer), kind: .row,
+                        detail: "measurement, \(layer.isVisible ? "shown" : "hidden")")
     }
 
     /// The row's role swatch: the measurement's own ink, so it matches the

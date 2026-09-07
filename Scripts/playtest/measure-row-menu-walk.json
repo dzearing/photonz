@@ -1,0 +1,26 @@
+{
+  "out": "/tmp/photonz-playtest/measure-row-menu",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "what-this-proves", "note": "The Measurements rows carry their own right click menu, and until now nothing could even name one of them. A rightClick step opens it, writes its rows and its checkmark to the log, and photographs it over the window." },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 15 },
+    { "do": "measureMode", "mode": "size" },
+    { "do": "move", "at": [356, 786] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [356, 786] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "1-measured" },
+
+    { "do": "rightClick", "on": "Height", "shot": "measure-row-menu-1-shown", "ticked": ["Visible"] },
+    { "do": "describe", "stage": "2-shown", "note": "the measurement is shown, so Visible wears a checkmark; the menu is the short one measurements get, not the layer one" },
+
+    { "do": "rightClick", "on": "Height", "choose": "Visible" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "rightClick", "on": "Height", "shot": "measure-row-menu-2-hidden", "unticked": ["Visible"] },
+    { "do": "describe", "stage": "3-hidden", "note": "picking Visible out of the menu really hides the measurement, and the next opening of the same menu shows the checkmark gone" }
+  ]
+}

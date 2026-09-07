@@ -896,6 +896,18 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `ticked` and `unticked` name the rows that must, and must not, be
     /// wearing a checkmark, so the step is a test and not only a picture.
     case menuShot(menu: String, name: String, ticked: [String], unticked: [String])
+    /// Open the menu you get by RIGHT CLICKING something in the right hand
+    /// panel — a layer row, a measurement row — and photograph it.
+    ///
+    /// The other two menu steps reach menus that hang off something visible: a
+    /// menu bar title, or a button in the panel. This one reaches the menus
+    /// that hang off nothing at all until the pointer asks for them, which is
+    /// why an audit could only ever describe the layer row menu in words.
+    /// `shot` names a real screen capture of it, `choose` picks one of its
+    /// rows, and `ticked` and `unticked` name the rows that must, and must
+    /// not, be wearing a checkmark, so the step is a test and not only a
+    /// picture.
+    case rightClick(on: String, shot: String?, choose: String?, ticked: [String], unticked: [String])
     /// Pick a tile up off the Library shelf by its name, hold it over a point
     /// on the picture, and let go there. `hold` names a picture taken while it
     /// is still in hand, which is the only moment the landing outline exists.
@@ -1011,7 +1023,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragFile", "dragHandle", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelMenu", "pinch", "press",
-        "readClipboard", "render", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
+        "readClipboard", "render", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
@@ -1042,6 +1054,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .render: "render"
         case .panelMenu: "panelMenu"
         case .menuShot: "menuShot"
+        case .rightClick: "rightClick"
         case .dragTile: "dragTile"
         case .dragRow: "dragRow"
         case .dragColor: "dragColor"
@@ -1171,6 +1184,12 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .panelMenu(menu: try f.string("menu"),
                               shot: try f.optionalString("shot"),
                               choose: try f.optionalString("choose"))
+        case "rightClick":
+            self = .rightClick(on: try f.string("on"),
+                               shot: try f.optionalString("shot"),
+                               choose: try f.optionalString("choose"),
+                               ticked: try f.optionalStrings("ticked"),
+                               unticked: try f.optionalStrings("unticked"))
         case "dragTile":
             self = .dragTile(tile: try f.string("tile"), to: try f.point("to"),
                              hold: try f.optionalString("hold"))

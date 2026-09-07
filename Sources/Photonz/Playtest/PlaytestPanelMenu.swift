@@ -54,6 +54,8 @@ struct PlaytestMenuReading: Sendable {
     var rows: [String] = []
     /// The rows nothing would happen on, which is how a dimmed row reads.
     var dimmed: [String] = []
+    /// The rows wearing a checkmark, which is how a setting says it is on.
+    var ticked: [String] = []
     /// The row that was picked, if the step asked for one.
     var chose: String?
     /// Why no row was picked when one was asked for.
@@ -97,6 +99,37 @@ enum PlaytestPanelMenu {
             return (showing, "")
         }
         return (row, showing)
+    }
+
+    /// The menu a right click at this point would raise, and the view it
+    /// belongs to.
+    ///
+    /// A `.contextMenu` hangs off nothing a walk can see: there is no button
+    /// to find, and SwiftUI does not build its rows until something asks. What
+    /// it does leave behind is the ordinary AppKit answer — a view under the
+    /// pointer whose `menu(for:)` hands back the menu — so the search is the
+    /// same one AppKit itself runs: hit test the point the way a click would,
+    /// then walk up from there until a view offers a menu. The deepest one
+    /// wins, so a row's own menu is never mistaken for the panel's.
+    ///
+    /// The hit test is what keeps this honest. A row scrolled under the dock's
+    /// edge is still built and still knows its menu, but nothing of it is
+    /// under that point, so the search comes back with whatever really is
+    /// there, exactly as a person's right click would.
+    @MainActor static func menu(rightClickingAt point: CGPoint, in content: NSView,
+                                window: NSWindow) -> (menu: NSMenu, view: NSView)? {
+        guard let event = NSEvent.mouseEvent(
+                with: .rightMouseDown, location: point, modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil,
+                eventNumber: 0, clickCount: 1, pressure: 1) else { return nil }
+        var view = content.hitTest(content.convert(point, from: nil))
+        while let here = view {
+            if let menu = here.menu(for: event) ?? here.menu { return (menu, here) }
+            if here === content { break }
+            view = here.superview
+        }
+        return nil
     }
 
     /// The visible window a menu is showing in, if one is up.

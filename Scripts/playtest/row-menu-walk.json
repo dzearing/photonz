@@ -1,0 +1,32 @@
+{
+  "out": "/tmp/photonz-playtest/row-menu",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "what-this-proves", "note": "The menu you get by right clicking a layer row hangs off nothing: there is no button to find, and it does not exist until the pointer asks. A rightClick step opens it, writes every row, every dimmed row and every checkmark to the log, and photographs it over the window. The checkmarks are required by name, so the walk fails if one lies." },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 80], "to": [340, 200], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "1-rows" },
+
+    { "do": "rightClick", "on": "Rectangle", "shot": "row-menu-1-visible",
+      "ticked": ["Visible"], "unticked": ["Locked"] },
+    { "do": "describe", "stage": "2-shown-and-unlocked", "note": "the layer is shown and unlocked, so Visible wears a checkmark and Locked does not" },
+
+    { "do": "press", "control": "Lock", "in": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "rightClick", "on": "Rectangle", "shot": "row-menu-2-locked",
+      "ticked": ["Visible", "Locked"], "unticked": [] },
+    { "do": "describe", "stage": "3-locked", "note": "after the lock button the same menu comes back with Locked ticked too: the checkmark reads the row's real state, not a default" },
+
+    { "do": "press", "control": "Lock", "in": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "rightClick", "on": "Rectangle", "choose": "Duplicate" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "4-after-duplicate" },
+    { "do": "describe", "stage": "4-after-duplicate", "note": "picking Duplicate out of the menu really runs it: the layers list now holds a second rectangle" },
+    { "do": "snapshot", "name": "row-menu-3-after-duplicate" }
+  ]
+}

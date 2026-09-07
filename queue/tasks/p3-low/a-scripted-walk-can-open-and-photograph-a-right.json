@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T22:46:33.535Z",
-  "updated": "2026-09-06T12:16:42.340Z",
+  "updated": "2026-09-07T11:41:11.709Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/Playtest/PlaytestPanelMenu.swift already solves the hard half: PlaytestTrackingHop reaches the main thread while a menu tracking loop holds it, and capture() photographs a menu window over its host. What is missing is opening a SwiftUI .contextMenu: those are attached to the row NSView as its menu property and SwiftUI builds the content lazily, so the step has to find the row (PanelTarget) and post a right click or call NSMenu.popUp on view.menu. The menuShot step added on 2026-09-05 is the closest model.",
@@ -31,6 +31,28 @@
     {
       "t": "2026-09-06T12:16:42.340Z",
       "note": "seq 130 -> 130"
+    },
+    {
+      "t": "2026-09-07T11:30:04.059Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T11:32:46.749Z",
+      "note": "Adversarial review before building. (1) The goal says layer, measurement or canvas. The canvas has NO context menu at all: grep finds exactly two .contextMenu in the whole app, both on panel rows (LayersPanel.swift:2047 layer row, :2573 measurement row). Building a canvas path would be building a step for a menu that does not exist, so the step covers panel rows and will reach the canvas for free the day the canvas grows one. (2) The measurement row has no playtestTarget, so today it cannot be named at all: adding one is part of this task, otherwise the step only reaches half the menus we have. (3) Shortest version: ONE step, reusing PlaytestTrackingHop and PlaytestPanelMenu.capture verbatim. No second capture path. (4) Fidelity: opening the menu by calling NSMenu.popUp would let a walk open the menu on a row scrolled out of sight. The row is held to the same reach rule a press is (isInReach), so a row a person would have to scroll to fails the walk."
+    },
+    {
+      "t": "2026-09-07T11:41:06.036Z",
+      "note": "Built and verified on the probe, Screen Recording granted. rightClick step: on, shot, choose, ticked, unticked. Acceptance 1: row-menu-walk.json logs all 15 rows, the dimmed list and the ticked list for the layer row menu. Acceptance 2: row-menu-1-visible-sc.png and row-menu-2-locked-sc.png are real screen captures of the open menu over the window, checkmarks visible. Acceptance 3: a walk claiming ticked [Locked] on an unlocked layer failed with \"Rectangle > Locked should be ticked and it is not; ticked: Visible\". Acceptance 4: queue/audits/2026-09-07-rightclick-row-menu.json ships the layer row menu picture. Also measure-row-menu-walk.json proves the measurement row menu, and that choosing Visible out of it really hides the measurement. 4351 tests green."
+    },
+    {
+      "t": "2026-09-07T11:41:06.037Z",
+      "note": "Adversarial review of the built thing. The menu opens at the middle of the row, where a real right click puts it, so it covers the panel below; the row name stays readable to its left but the whole list cannot be in the same picture. Left as is and put in the audit as a question. No liveness check on the rows, unlike menuShot: that rule guards the menu bar reading a focused window a background app does not have, and a context menu is built fresh by the row clicked, so there is nothing to guard. The failure message when a row is not found prints every named thing in the panel, which is long, but it is the same shape press already uses and it is what makes a walk writable without reading source."
+    },
+    {
+      "t": "2026-09-07T11:41:11.708Z",
+      "note": "New rightClick walk step opens a panel row's context menu, logs its rows/dimming/checkmarks, photographs it over the window, can pick a row and can require which rows are ticked. Sources/PhotonzCore/PlaytestScript.swift (step + 3 decode tests), Sources/Photonz/Playtest/PlaytestPanelMenu.swift (menu finder), PlaytestHarness.swift (openRowMenu), LayersPanel.swift (measurement rows now nameable). Verified on the probe with Screen Recording granted: Scripts/playtest/row-menu-walk.json and measure-row-menu-walk.json pass, a deliberately wrong ticked list fails with a readable reason, 4351 tests green. Audit: queue/audits/2026-09-07-rightclick-row-menu.json"
     }
-  ]
+  ],
+  "started": "2026-09-07T11:30:04.059Z",
+  "completed": "2026-09-07T11:41:11.709Z"
 }

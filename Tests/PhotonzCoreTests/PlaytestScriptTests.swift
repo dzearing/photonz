@@ -104,6 +104,55 @@ struct PlaytestScriptTests {
         #expect(unticked == ["Show Library"])
     }
 
+    // MARK: The menu you get by right clicking a row
+
+    /// A menu bar menu hangs off the bar and a panel menu hangs off a button.
+    /// The third kind hangs off nothing: it only exists once you right click
+    /// the thing it belongs to, which is why an audit could describe the
+    /// layer row menu and never show it.
+    @Test("A rightClick step names the row whose menu to open")
+    func rightClickStepNamesTheRow() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "rightClick", "on": "Label" } ] }
+        """)
+        guard case .rightClick(let on, let shot, let choose, let ticked, let unticked) = script.steps[0] else {
+            Issue.record("rightClick"); return
+        }
+        #expect(on == "Label")
+        #expect(shot == nil)
+        #expect(choose == nil)
+        #expect(ticked.isEmpty)
+        #expect(unticked.isEmpty)
+        #expect(script.steps[0].name == "rightClick")
+    }
+
+    /// The picture is the point of the step, and the checkmarks are what stops
+    /// the picture from being the only thing it proves.
+    @Test("A rightClick step can ask for a picture, pick a row, and require the checkmarks")
+    func rightClickStepCanPhotographChooseAndRequireCheckmarks() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "rightClick", "on": "Label", "shot": "layer-row-menu",
+                       "choose": "Duplicate", "ticked": ["Visible"], "unticked": ["Locked"] } ] }
+        """)
+        guard case .rightClick(let on, let shot, let choose, let ticked, let unticked) = script.steps[0] else {
+            Issue.record("rightClick"); return
+        }
+        #expect(on == "Label")
+        #expect(shot == "layer-row-menu")
+        #expect(choose == "Duplicate")
+        #expect(ticked == ["Visible"])
+        #expect(unticked == ["Locked"])
+    }
+
+    @Test("A rightClick step with nothing to click is refused with a readable reason")
+    func rightClickStepNeedsSomethingToClick() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "rightClick", "shot": "layer-row-menu" } ] }
+            """)
+        }
+    }
+
     @Test("A menuShot step with no menu named is refused with a readable reason")
     func menuShotStepNeedsAMenu() {
         #expect(throws: PlaytestScriptError.self) {
