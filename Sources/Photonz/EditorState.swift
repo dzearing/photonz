@@ -1366,10 +1366,15 @@ final class EditorState {
             // starts over from the row it lands on.
             rowSelection = ListSelection(selected: multiSelectedLayerIDs)
         }
-        // A sweep that caught something leaves you standing where it caught
-        // it, so the next click, the next ⇧-sweep and Escape all still mean
-        // what they meant a moment ago.
-        if !captured.isEmpty { groupContextID = level }
+        // A sweep leaves you standing at the level it swept, WHETHER OR NOT it
+        // caught anything, so the next click, the next ⇧-sweep and Escape all
+        // still mean what they meant a moment ago. Caught-only was wrong once
+        // the band started saying which room it picks in: a sweep that came up
+        // empty inside a group put you back at the top with the lit box still
+        // fading, and the next band silently took whole layers instead of
+        // pieces. `region == nil` is not a sweep at all (clearing the marquee,
+        // pasting) and must leave where you are alone.
+        if region != nil { groupContextID = level }
     }
 
     /// The level a sweep picks at: the group you were inside, or the top level

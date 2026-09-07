@@ -1,0 +1,28 @@
+{
+  "id": "a-band-swept-inside-a-screen-picks-what-is-on-th",
+  "title": "A band swept inside a screen picks what is on that screen",
+  "goal": "Inside a screen, dragging out a selection band across its empty background should sweep up the things sitting on that screen. Today that drag picks the screen up and moves it instead, so there is no way to rubber-band several buttons on a screen at all.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1620,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T09:28:07.904Z",
+  "updated": "2026-09-07T09:28:07.905Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building the-rubber-band-shows-which-level-it-is-picking (2026-09-07). Reproduced in a playtest: inside a frame (insideGroup = Frame), a drag from empty frame surface reports snap guides catching, i.e. it went down the move-drag path, and the frame ends up translated. CanvasPointerDrags.mouseDown hit-testing treats the frame surface as a hittable layer even when it is the context you are standing inside. Figma is the reference: dragging a frame background marquees its children; the frame moves by its name label. Because of this, CanvasGroups.refreshGroupContextOutline deliberately keeps refusing to draw the group context box for frames even mid-sweep - once a band inside a screen is possible, lift that guard for the lit (sweeping) case so the screen edge lights the same way a group box does.",
+  "acceptance": [
+    "Inside a screen, a drag starting on its empty background draws a selection band and does not move the screen",
+    "The band picks up only the things on that screen, never the screen itself or anything beside it",
+    "There is still a way to move a screen by dragging, and it is discoverable",
+    "Shown in a playtest screenshot of a band mid-sweep on a screen"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T09:28:07.905Z",
+      "note": "created (manual)"
+    }
+  ]
+}

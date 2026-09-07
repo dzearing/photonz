@@ -485,6 +485,10 @@ extension EditorState {
         // group it reaches that group's pieces, so a selection can never end
         // up made of one child and one whole layer from the top.
         let level = sweepContext(context)
+        // Where the sweep happened, before anything can return early: a
+        // ⇧-band that caught nothing new has still not taken you out of the
+        // group you swept it in.
+        groupContextID = level
         let picked = BareCanvasPress.spares
             .selection(afterSweeping: document.layerIDs(fullyInside: region.bounds, inside: level),
                        startingFrom: was)
@@ -504,7 +508,6 @@ extension EditorState {
             // next ⇧-click in the list starts over from the row it lands on.
             rowSelection = ListSelection(selected: picked)
         }
-        groupContextID = level
     }
 
     /// Escape, one level: leaves the group you are in with that group selected.

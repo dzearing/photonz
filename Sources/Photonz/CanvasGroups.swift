@@ -96,19 +96,61 @@ extension CanvasNSView {
     /// straight away, so the box would be on almost all the time and say
     /// nothing. A screen already shows where it is, with its surface and its
     /// name above it.
+    /// While a band is being swept the box comes from the BAND, and it comes
+    /// up out of its whisper for as long as the button is down.
+    ///
+    /// Both halves are the same point. The press that starts a sweep lets go
+    /// of the selection, and letting go of the selection puts the canvas back
+    /// at the top level, so reading `groupContext` here took the box down at
+    /// the one moment it had something to say: the band that picks a button's
+    /// own pieces looked exactly like the band that picks whole layers off the
+    /// document. `marqueeContext` is the level the sweep was latched to at the
+    /// press, so it is the honest answer for as long as the band is up. And a
+    /// box drawn at the strength it rests at is a box nobody notices mid-drag,
+    /// so the room you are picking in lights up while you sweep it and settles
+    /// back the moment the band comes down.
     func refreshGroupContextOutline() {
-        guard let viewport, let document, let context = groupContext,
+        let sweeping = marquee != nil
+        let context = sweeping ? marqueeContext : groupContext
+        // A screen still never draws it, lit or resting. Not for want of a
+        // reason to — a band swept inside a screen would pick that screen's
+        // contents where the same band outside picks whole screens — but a
+        // band inside a screen cannot be swept in the first place: the screen
+        // paints a surface over its whole area, so a press on its empty space
+        // takes hold of the screen and moves it. Lighting a wall for a band
+        // that cannot exist is chrome for nobody. See the queue task about
+        // sweeping inside a screen.
+        guard let viewport, let document, let context,
               document.layer(id: context)?.isFrame != true,
               let bounds = document.canvasBounds(of: context), bounds.width > 0, bounds.height > 0
         else {
             groupContextLayer.isHidden = true
             return
         }
+        applyGroupContextStyle(lit: sweeping)
         let origin = viewport.viewPoint(fromDocument: bounds.origin)
         let rect = CGRect(x: origin.x, y: origin.y,
                           width: bounds.width * viewport.zoom,
                           height: bounds.height * viewport.zoom)
         groupContextLayer.path = CGPath(rect: rect.insetBy(dx: -3, dy: -3), transform: nil)
         groupContextLayer.isHidden = false
+    }
+
+    /// The two strengths the context box is drawn at: the room you are
+    /// standing in, and the room you are sweeping.
+    ///
+    /// The lit one is SOLID, and that is the whole of how it keeps out of the
+    /// band's way. Everything the band itself puts on screen is dashed — the
+    /// ants round the band, the two point `[2, 4]` outlines round each layer
+    /// it has caught — so a bright dashed box round the group read as one more
+    /// thing the band had taken, which is the exact opposite of what it means.
+    /// An unbroken hairline reads as a wall instead: the edge of the room you
+    /// are picking in, not something picked. Same blue, same one point, same
+    /// place as the box at rest, so it reads as that box firming up rather
+    /// than as a second box arriving.
+    func applyGroupContextStyle(lit: Bool) {
+        groupContextLayer.strokeColor = NSColor.systemBlue
+            .withAlphaComponent(lit ? 0.7 : 0.28).cgColor
+        groupContextLayer.lineDashPattern = lit ? nil : [1, 3]
     }
 }

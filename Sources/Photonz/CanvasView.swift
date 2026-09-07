@@ -1507,10 +1507,11 @@ final class CanvasNSView: NSView {
         layerOutlineLayer.lineDashPattern = [2, 4]
         // The group you are inside: the same blue, quieter and finer, so it
         // reads as the room you are standing in rather than as a selection.
-        groupContextLayer.strokeColor = NSColor.systemBlue.withAlphaComponent(0.28).cgColor
+        // Stroke and dash come from `applyGroupContextStyle`, which also owns
+        // the brighter version worn while a band is being swept in that room.
         groupContextLayer.fillColor = nil
         groupContextLayer.lineWidth = 1
-        groupContextLayer.lineDashPattern = [1, 3]
+        applyGroupContextStyle(lit: false)
         groupContextLayer.isHidden = true
         // Marquee-captured layers share the selection-outline styling.
         multiSelectOutlineLayer.strokeColor = layerOutlineLayer.strokeColor

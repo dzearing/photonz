@@ -1,0 +1,30 @@
+{
+  "feature": "The band shows which level it is picking at",
+  "epic": "ui-building",
+  "summary": "While you drag a selection band inside a group, a solid blue line now lights up round that group for as long as the button is down, so you can see you are about to pick the group's own pieces and not whole layers off the document. Out on the canvas the band looks exactly as it always did.",
+  "setup": "Photonz Dev, release Next. Needs the Experiments flag \"Group what you selected\", which is on by default in Next.",
+  "try": [
+    { "do": "Open a new blank canvas." },
+    { "do": "Press R and drag out three rectangles, stacked down the left of the canvas." },
+    { "do": "Press V, click the first rectangle, shift-click the other two, then press Command G." },
+    { "do": "Click bare canvas to let go, then drag a band across the top two rectangles and hold the button down before you release.", "shot": "2026-09-07-band-level-top-sc.png" },
+    { "do": "Let go: the band takes the whole group, because at the top level a group is one thing." },
+    { "do": "Double click the top rectangle to step inside the group." },
+    { "do": "Drag the very same band again and hold the button down: a solid blue line lights round the group.", "shot": "2026-09-07-band-level-inside-sc.png" },
+    { "do": "Let go, then sweep an empty patch inside the group: you are still inside it, and the next band still picks pieces." }
+  ],
+  "evaluate": [
+    "Mid-drag, does the lit line tell you which level you are picking at before you let go, or do you only find out from what gets picked?",
+    "Is a solid hairline the right weight for this, or does it need to be heavier to catch your eye while your attention is on the band?",
+    "Does the lit line ever read as \"the group is selected too\"? It is meant to read as the edge of the room you are picking in.",
+    "Is it right that a band which catches nothing now leaves you inside the group, instead of quietly stepping you back out to the top?",
+    "At rest the box is still the faint dotted whisper it was. Is that still quiet enough, now that it has a loud twin?"
+  ],
+  "rough": [
+    "The pictures here are real screen captures: the loop had the Screen Recording grant on this run.",
+    "The task proposed tinting or insetting the band itself. I did not, and would push back on it: the band's marching ants mean \"a region\" in every tool that draws them, so a band that changes colour by level would make the same marks mean two different things. The room it picks in is a different object, so it can carry the difference without touching the band.",
+    "Most of the work was a defect, not a new cue. The press that starts a band lets go of the selection, and letting go of the selection put the canvas back at the top level, so the context box came down at the exact moment it had something to say. Nothing on screen said which level a band picked at, including the box the task assumed was doing the job.",
+    "A screen draws no lit line, because a band cannot be swept inside a screen at all: the screen paints a surface over its whole area, so a drag from its empty background picks the screen up and moves it. Filed as its own task.",
+    "If a group is bigger than the window, its lit line can be entirely off screen and the band says nothing again. Not solved."
+  ]
+}

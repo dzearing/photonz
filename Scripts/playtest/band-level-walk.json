@@ -1,0 +1,351 @@
+{
+  "out": "/tmp/photonz-playtest/band-level",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        100
+      ],
+      "to": [
+        280,
+        160
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        220
+      ],
+      "to": [
+        370,
+        280
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        340
+      ],
+      "to": [
+        200,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        520,
+        420
+      ],
+      "to": [
+        760,
+        600
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        130
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        260,
+        250
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        150,
+        370
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        850,
+        80
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-top-level",
+      "note": "out on the canvas, nothing picked: insideGroup should be nil"
+    },
+    {
+      "do": "drag",
+      "from": [
+        85,
+        85
+      ],
+      "to": [
+        400,
+        300
+      ],
+      "steps": 12,
+      "hold": "band-top-level"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-top-swept",
+      "note": "the band at the top level is unchanged: no box round anything, and the group was only partly inside so nothing is picked"
+    },
+    {
+      "do": "click",
+      "at": [
+        850,
+        80
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        130
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-inside",
+      "note": "double click steps into the group: insideGroup should name the group"
+    },
+    {
+      "do": "snapshot",
+      "name": "band-inside-at-rest"
+    },
+    {
+      "do": "drag",
+      "from": [
+        85,
+        85
+      ],
+      "to": [
+        400,
+        300
+      ],
+      "steps": 12,
+      "hold": "band-inside-group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-inside-swept",
+      "note": "the very same band swept inside the group: the room it picks in is lit while the button is down, and it caught the group's top two rectangles"
+    },
+    {
+      "do": "snapshot",
+      "name": "band-inside-after"
+    },
+    {
+      "do": "drag",
+      "from": [
+        600,
+        100
+      ],
+      "to": [
+        820,
+        260
+      ],
+      "steps": 10,
+      "hold": "band-inside-empty"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-inside-empty",
+      "note": "a sweep inside the group that caught nothing: it must LEAVE YOU INSIDE the group, so insideGroup still names it and the next band still picks pieces"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        440,
+        60
+      ],
+      "to": [
+        860,
+        420
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        480,
+        110
+      ],
+      "to": [
+        640,
+        170
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        480,
+        230
+      ],
+      "to": [
+        760,
+        300
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        520,
+        140
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-inside-screen",
+      "note": "a click on something on a screen puts you straight inside that screen: insideGroup should name the frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        455,
+        80
+      ],
+      "to": [
+        800,
+        330
+      ],
+      "steps": 12,
+      "hold": "band-inside-screen"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "7-screen-swept",
+      "note": "a band swept inside a screen lights that screen's edge and picks the screen's own contents, never the screen itself"
+    }
+  ]
+}

@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T02:24:34.951Z",
-  "updated": "2026-09-06T12:16:42.317Z",
+  "updated": "2026-09-07T09:17:11.498Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Left rough by a-sweep-inside-a-group-picks-the-layers-in-that (2026-09-05). The sweep is now scoped to the group you are inside, but the only cue on screen is the faint dotted context box round the group (CanvasGroups.swift groupContextLayer), which is deliberately quiet and easy to miss. The band itself is marqueeLayer in CanvasView.swift and is identical either way. Cheapest honest option is probably to tint or inset the band while marqueeContext is non-nil. Worth confirming with the user that the cue is wanted at all before building: the dotted box may already be enough.",
+  "notes": "Left rough by a-sweep-inside-a-group-picks-the-layers-in-that (2026-09-05). The sweep is now scoped to the group you are inside, but the only cue on screen is the faint dotted context box round the group (CanvasGroups.swift groupContextLayer), which is deliberately quiet and easy to miss. The band itself is marqueeLayer in CanvasView.swift and is identical either way. Cheapest honest option is probably to tint or inset the band while marqueeContext is non-nil. Worth confirming with the user that the cue is wanted at all before building: the dotted box may already be enough.\n\nDONE 2026-09-07. The cue is the group context box itself: CanvasGroups.refreshGroupContextOutline now reads marqueeContext while `marquee != nil`, and applyGroupContextStyle(lit:) gives it a solid systemBlue 0.7 hairline while sweeping vs the resting dotted 0.28. CanvasView's setup calls applyGroupContextStyle(lit: false) instead of setting stroke and dash by hand. Level is kept across an empty sweep in EditorState.setSelection (`if region != nil`) and EditorState+Layout.addSweptLayersToSelection (moved above the early return). Frames still refuse the box in both states; see the queue task about sweeping inside a screen for why and what to lift when it lands.",
   "acceptance": [
     "A band swept while inside a group is visibly distinct from a band swept at the top level",
     "The difference is readable without stopping to look for it, and does not compete with the selection outlines the band is drawing",
@@ -31,6 +31,35 @@
     {
       "t": "2026-09-06T12:16:42.317Z",
       "note": "seq 90 -> 90"
+    },
+    {
+      "t": "2026-09-07T09:17:11.498Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T09:30:42.377763Z",
+      "note": "Adversarial review before building. The task's premise was that the faint dotted context box is the existing cue and is merely easy to miss. Reproduced it in a playtest instead: the box is NOT on screen during a sweep at all. The press that starts a band clears the selection, clearing the selection puts EditorState back at the top level, and the box is drawn from that. So today nothing whatever distinguishes the two bands, and the box the notes wanted to lean on had already gone."
+    },
+    {
+      "t": "2026-09-07T09:30:42.377763Z",
+      "note": "Rejected the notes' own suggestion of tinting or insetting the band. Marching ants mean 'a region' in every tool that draws them (rect select, ellipse select, wand), so a band whose colour changed by level would make the same marks mean two things. The room the band picks in is a separate object and can carry the difference for free."
+    },
+    {
+      "t": "2026-09-07T09:30:42.377763Z",
+      "note": "Built: while a band is in flight the context box is drawn from marqueeContext (latched at the press) rather than groupContext, and it comes up from its resting whisper to a SOLID blue hairline for as long as the button is down. Solid is the point: everything the band puts on screen is dashed (its own ants, the [2,4] outlines on each caught layer), so a bright dashed box read as one more thing caught. An unbroken hairline reads as a wall. First attempt used a bright long dash and did exactly the wrong thing on screen; changed after looking at it."
+    },
+    {
+      "t": "2026-09-07T09:30:42.377763Z",
+      "note": "Also fixed the behaviour the cue would otherwise have lied about: a sweep now leaves you at the level it swept whether or not it caught anything (EditorState.setSelection, EditorState+Layout.addSweptLayersToSelection). Before, an empty band inside a group put you back at the top with the lit wall still on screen, and the next band silently took whole layers."
+    },
+    {
+      "t": "2026-09-07T09:30:42.377763Z",
+      "note": "Screens deliberately still draw nothing. Tried lighting the wall for frames mid-sweep, then found in the playtest that a band inside a screen cannot be swept at all: the screen paints a surface over its whole area, so a drag from its empty background moves the screen. Reverted, and filed 'A band swept inside a screen picks what is on that screen' (p2) with the finding."
+    },
+    {
+      "t": "2026-09-07T09:30:42.377763Z",
+      "note": "Verified: Scripts/playtest/band-level-walk.json (new, 54 steps, ok) holds the band mid-sweep at both levels and after an empty sweep inside the group. The top-level capture has ZERO blue pixels in the band region, so the canvas band is byte-for-byte the same idea it was; the resting box is unchanged. Side by side picture and both real -sc captures in queue/audits/2026-09-07-band-level.json. Scripts/test.sh green (4314 tests)."
     }
-  ]
+  ],
+  "started": "2026-09-07T09:17:11.497Z"
 }
