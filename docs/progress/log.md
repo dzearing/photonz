@@ -10967,3 +10967,33 @@ now, and `measure-row-menu-walk.json` reads it.
 Next: the queue's next task. Open question in the audit: whether the menu
 covering the panel below the row it came from loses anything an audit needed to
 see.
+
+## 2026-09-07 — The full walk run finishes in forty minutes
+
+Ran the queue task "A full walk run finishes in an hour, not four".
+
+**Changed.** A walk's `wait` step now watches for the editor to go quiet
+instead of sleeping the number the walk wrote down. It ends as soon as the
+main run loop has had all but nothing to do and nothing on the walk's window
+is part way through an animation that will end, never before one turn of the
+run loop, and never after the seconds the walk asked for. The rule is
+`PlaytestSettle` in PhotonzCore, tested on its own; `Scripts/playtest-all.sh`
+now prints seconds per walk, the total, the average and the slowest walk.
+
+**Why that and not what the task said.** The task blamed per-walk process
+overhead. Measured: that is 0.6s of a 14.6s walk. `wait` steps are 50.6% of
+all in-app time, and the 247 scripts ask for 31.1 minutes of sleeping between
+them.
+
+**Result.** 247 walks in 40m 21s, down from about 60m. 244 passed. The three
+that failed (clip-contents-walk, panel-controls-walk, tool-tips) fail
+identically under `PHOTONZ_PLAYTEST_PACE=full`, which is the old clock
+behaviour exactly, so none of them is this change. Two already had pending
+tasks; filed one for tool-tips, whose walk rests on a button called Inspector
+that is called Hide Panel now.
+
+**Next.** If the run creeps back up, the next lever is `capture`: 14.2% of
+in-app time, two PNGs per snapshot encoded and written on the main thread
+while the walk waits. Left alone because the run does not need it.
+
+**Open question.** Nothing blocking.

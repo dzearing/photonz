@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 140,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T08:49:16.486Z",
-  "updated": "2026-09-07T12:49:58.000Z",
+  "updated": "2026-09-07T12:51:06.598Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Superseded the 2026-09-06 theory. Measured 2026-09-07 on 247 walks: a walk averages 14.6s wall, of which 0.6s is everything outside the app (quit, `open -a`, the pgrep and grants polls, permcheck at 0.18s cached). Sharing one process across walks would have bought about 2 minutes across the whole suite and would have put every walk's starting state at the mercy of the walk before it, so that plan is dead.\n\nWhere the time actually goes, from log.json step deltas over a 31-walk sample: `wait` 50.6%, `capture` 14.2% (0.37s per snapshot: an offscreen render plus a 2560x1680 screen capture, both PNG-encoded on the main thread), `action` 11.2%. The 247 scripts ask for 3282 `wait` steps totalling 31.1 minutes of pure sleeping.\n\nFix: `wait` watches instead of counting. `PlaytestSettle` (PhotonzCore, tested) holds the rule; `Run.settle(for:)` in PlaytestHarness.swift supplies the two signals, `MainThreadMeter.takeBusy()` for main thread work since the last look and `Run.animating(_:)` for layers mid-animation. Gotcha that cost an hour: the selection marquee's marching ants repeat for ever, so the first cut read the window as restless 100% of the time and saved nothing; animations with an infinite repeatCount or repeatDuration are now a steady state. `PHOTONZ_PLAYTEST_PACE=full` (passed through by `Scripts/probe-app.sh` with `open --env`) puts every wait back on the clock, which is how a walk that turns flaky says whether the pacing moved under it. done.json carries `secondsSaved`.\n\nNext lever if the run creeps back up: `capture`. Every `snapshot` writes two PNGs on the main thread and the walk waits for both; encoding and writing them off the main path and awaiting them at finish() would give back most of the 14%. Not done because the run does not need it.",
@@ -66,7 +66,12 @@
     {
       "t": "2026-09-07T12:49:58.000Z",
       "note": "No audit written: this change has no surface a person can look at or a picture worth taking. What it delivers is a number, and the number is in the run's own last line."
+    },
+    {
+      "t": "2026-09-07T12:51:06.598Z",
+      "note": "Scripts/playtest-all.sh now finishes in 40m 21s (was about 60m at 14.6s a walk), and prints its own seconds per walk, total, average and slowest. The cost was not process overhead as the task assumed: 50.6% of in-app time was wait steps sleeping, 31.1 minutes of it across the 247 scripts. A wait now watches for the editor to go quiet (PlaytestSettle in PhotonzCore, tested; PHOTONZ_PLAYTEST_PACE=full puts it back on the clock). Verified by a full 247-walk run: 244 passed, and the 3 that failed fail identically under the old clock behaviour, so none is from this change. Committed as 97d7749a."
     }
   ],
-  "started": "2026-09-07T11:41:51.660Z"
+  "started": "2026-09-07T11:41:51.660Z",
+  "completed": "2026-09-07T12:51:06.598Z"
 }
