@@ -158,3 +158,123 @@ struct BandInsideAScreenTests {
         #expect(doc.screenSurfacePress(at: emptySurface, picked: []) == nil)
     }
 }
+
+/// What the pointer SAYS about a press on a screen's surface, before the
+/// button goes down.
+///
+/// The same drag has two meanings on a screen's empty room — sweep a band over
+/// what is on the screen, or carry the screen — and which one you get depends
+/// on something you cannot see in the pointer: whether the screen is picked.
+/// The rule the app draws from this is one mark, the open hand: it means THIS
+/// DRAG CARRIES THE SCREEN, and it is absent everywhere a drag bands instead.
+@Suite("What a screen's surface says a drag will do")
+struct ScreenSurfaceCueTests {
+
+    private func leaf(_ name: String, _ frame: CGRect) -> Layer {
+        Layer(name: name, content: .text(TextContent(string: name)), frame: frame)
+    }
+
+    /// Canvas 800×600, "Screen" at (100, 100) 300×200 with two buttons on it.
+    private func makeDocument() -> PhotonzDocument {
+        let screen = Layer(name: "Screen",
+                           content: .group(GroupContent(children: [
+                               leaf("Save", CGRect(x: 20, y: 20, width: 60, height: 24)),
+                               leaf("Cancel", CGRect(x: 20, y: 60, width: 60, height: 24)),
+                           ], isFrame: true)),
+                           frame: CGRect(x: 100, y: 100, width: 300, height: 200))
+        return PhotonzDocument(canvasSize: CGSize(width: 800, height: 600),
+                               layers: [leaf("Aside", CGRect(x: 500, y: 100, width: 80, height: 40)),
+                                        screen])
+    }
+
+    private func id(_ doc: PhotonzDocument, _ name: String) -> UUID {
+        doc.allLayers.first { $0.name == name }?.id ?? UUID()
+    }
+
+    /// Empty room on the screen, well clear of both buttons.
+    private var emptySurface: CGPoint { CGPoint(x: 350, y: 260) }
+
+    // MARK: - The two meanings
+
+    @Test func aScreenThatIsNotPickedSaysItWillSweep() {
+        let doc = makeDocument()
+        #expect(doc.screenSurfaceCue(at: emptySurface, picked: [], optionHeld: false)
+                == .sweep(screen: id(doc, "Screen")))
+    }
+
+    @Test func aScreenThatIsPickedSaysItWillMove() {
+        let doc = makeDocument()
+        let screen = id(doc, "Screen")
+        #expect(doc.screenSurfaceCue(at: emptySurface, picked: [screen], optionHeld: false)
+                == .move(screen: screen))
+    }
+
+    /// The cue and the press are the same answer, always: a pointer that
+    /// offered a move where the press would band would be worse than no
+    /// pointer at all.
+    @Test func theCueNeverDisagreesWithThePress() {
+        let doc = makeDocument()
+        let screen = id(doc, "Screen")
+        for picked in [Set<UUID>(), [screen], [screen, id(doc, "Aside")], [id(doc, "Save")]] {
+            let press = doc.screenSurfacePress(at: emptySurface, picked: picked)
+            let cue = doc.screenSurfaceCue(at: emptySurface, picked: picked, optionHeld: false)
+            switch (press, cue) {
+            case (.sweep(let a)?, .sweep(let b)?), (.move(let a)?, .move(let b)?):
+                #expect(a == b)
+            default:
+                Issue.record("press \(String(describing: press)) and cue \(String(describing: cue)) disagree")
+            }
+        }
+    }
+
+    // MARK: - What ⌥ does there
+
+    /// ⌥ dragging a picked screen still leaves the original behind, so the
+    /// pointer keeps its copy badge.
+    @Test func optionOverAPickedScreenSaysItWillLeaveACopy() {
+        let doc = makeDocument()
+        let screen = id(doc, "Screen")
+        #expect(doc.screenSurfaceCue(at: emptySurface, picked: [screen], optionHeld: true)
+                == .moveCopy(screen: screen))
+    }
+
+    /// ⌥ dragging a screen that is NOT picked used to duplicate it and now
+    /// sweeps a band, so the copy badge has to go: a badge there would promise
+    /// a duplicate the press does not make.
+    @Test func optionOverAnUnpickedScreenStillSaysSweep() {
+        let doc = makeDocument()
+        #expect(doc.screenSurfaceCue(at: emptySurface, picked: [], optionHeld: true)
+                == .sweep(screen: id(doc, "Screen")))
+    }
+
+    // MARK: - Everywhere else says nothing
+
+    @Test func somethingSittingOnTheScreenGetsNoCue() {
+        let doc = makeDocument()
+        #expect(doc.screenSurfaceCue(at: CGPoint(x: 150, y: 130), picked: [], optionHeld: false) == nil)
+        #expect(doc.screenSurfaceCue(at: CGPoint(x: 150, y: 130),
+                                     picked: [id(doc, "Screen")], optionHeld: false) == nil)
+    }
+
+    @Test func bareCanvasGetsNoCue() {
+        let doc = makeDocument()
+        #expect(doc.screenSurfaceCue(at: CGPoint(x: 700, y: 500), picked: [], optionHeld: false) == nil)
+    }
+
+    @Test func aLockedScreenGetsNoCue() {
+        var doc = makeDocument()
+        let screen = id(doc, "Screen")
+        doc.updateLayer(id: screen) { $0.isLocked = true }
+        #expect(doc.screenSurfaceCue(at: emptySurface, picked: [screen], optionHeld: false) == nil)
+    }
+
+    @Test func aCopyOfAComponentGetsNoCue() {
+        var doc = makeDocument()
+        doc.updateLayer(id: id(doc, "Screen")) { layer in
+            guard var content = layer.group else { return }
+            content.instanceOf = UUID()
+            layer.content = .group(content)
+        }
+        #expect(doc.screenSurfaceCue(at: emptySurface, picked: [], optionHeld: false) == nil)
+    }
+}

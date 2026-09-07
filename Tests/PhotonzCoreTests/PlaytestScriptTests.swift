@@ -368,8 +368,8 @@ struct PlaytestScriptTests {
         #expect(key.name == "i" && mods.isEmpty)
         guard case .key(_, let chord) = script.steps[3] else { Issue.record("chord"); return }
         #expect(chord == [.command, .control])
-        guard case .move(let at) = script.steps[4] else { Issue.record("move"); return }
-        #expect(at.point == CGPoint(x: 100, y: 200) && at.space == .document)
+        guard case .move(let at, let moveMods) = script.steps[4] else { Issue.record("move"); return }
+        #expect(at.point == CGPoint(x: 100, y: 200) && at.space == .document && moveMods.isEmpty)
         guard case .click(let click, let count, let clickMods) = script.steps[5] else { Issue.record("click"); return }
         #expect(click.space == .view && count == 2 && clickMods.isEmpty)
         guard case .drag(let from, let to, let steps, _, _, _) = script.steps[6] else { Issue.record("drag"); return }
@@ -409,6 +409,21 @@ struct PlaytestScriptTests {
         guard case .drag(_, _, let steps, _, _, _) = script.steps[1] else { Issue.record("drag"); return }
         #expect(steps == PlaytestStep.defaultDragSteps)
         #expect(script.out == nil)
+    }
+
+    /// A pointer resting somewhere can be holding a key, and what the canvas
+    /// says a press would do depends on it: ⌥ over a layer offers a copy,
+    /// while ⌥ over a screen that is not picked offers nothing at all. So a
+    /// move can hold modifiers without clicking.
+    @Test func aMoveCanHoldModifiers() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "move", "at": [5, 6], "modifiers": ["option"] },
+                     { "do": "move", "at": [7, 8] } ] }
+        """)
+        guard case .move(let at, let held) = script.steps[0] else { Issue.record("move"); return }
+        #expect(at.point == CGPoint(x: 5, y: 6) && held == [.option])
+        guard case .move(_, let none) = script.steps[1] else { Issue.record("move"); return }
+        #expect(none.isEmpty)
     }
 
     /// A walk that wants to see what EXPORTING looks like asks the render step

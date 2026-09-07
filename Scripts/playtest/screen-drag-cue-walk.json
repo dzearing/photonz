@@ -1,0 +1,77 @@
+{
+  "out": "/tmp/photonz-playtest/screen-drag-cue",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [440, 100], "to": [840, 460], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [480, 150], "to": [640, 210], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [480, 270], "to": [760, 340], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [150, 560] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "0-made",
+      "note": "a screen at 440,100 400x360 with two rectangles on it, nothing picked. Its name sits between y 82 and y 96" },
+
+    { "do": "move", "at": [800, 430] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "1-not-picked-says-band",
+      "note": "the pointer resting on empty room of a screen that is NOT picked: a drag there sweeps a band, so cue must be screen-sweep and cursor must stay the plain arrow, the same one bare canvas wears for the same gesture" },
+    { "do": "snapshot", "name": "cue-not-picked" },
+
+    { "do": "move", "at": [800, 430], "modifiers": ["option"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "2-not-picked-option-promises-nothing",
+      "note": "option held over that same room: option dragging a screen USED to duplicate it and now sweeps, so cue must still be screen-sweep and cursor must be arrow, never dragCopy" },
+
+    { "do": "move", "at": [800, 430] },
+    { "do": "click", "at": [800, 430] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "move", "at": [800, 430] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "3-picked-says-move",
+      "note": "the same spot once the screen is picked: a drag there carries the screen, so cue must be screen-move and cursor must be openHand" },
+    { "do": "snapshot", "name": "cue-picked" },
+
+    { "do": "move", "at": [800, 430], "modifiers": ["option"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "4-picked-option-leaves-a-copy",
+      "note": "option held where the screen would move: the drag leaves the original behind, so cue must be screen-copy and cursor must be dragCopy" },
+
+    { "do": "move", "at": [800, 430] },
+    { "do": "key", "key": "escape" },
+    { "do": "click", "at": [150, 560] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "move", "at": [446, 89] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "5-name-always-moves",
+      "note": "the name above a screen that is not picked: it is the one grab that moves the screen without picking it first, so cue must be name-grab and cursor must be openHand" },
+    { "do": "snapshot", "name": "cue-name" },
+
+    { "do": "move", "at": [520, 180] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "6-a-thing-on-the-screen-says-nothing",
+      "note": "resting on a rectangle sitting on the screen: nothing about the screen is being offered, so cue must be none and cursor must be arrow" },
+
+    { "do": "drag", "from": [455, 115], "to": [790, 400], "steps": 12 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "7-the-band-gesture-did-not-change",
+      "note": "with nothing picked, a drag across that empty room still sweeps a band: the screen must still be at 440,100 and the two rectangles must be what is picked" },
+
+    { "do": "click", "at": [150, 560] },
+    { "do": "click", "at": [800, 430] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [800, 430], "to": [850, 480], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "8-the-move-gesture-did-not-change",
+      "note": "and a drag from the same room once the screen is picked still moves it: the screen must now be at 490,150" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "9-back",
+      "note": "the screen is back at 440,100 and the walk leaves nothing behind" }
+  ]
+}

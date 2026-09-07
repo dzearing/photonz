@@ -818,7 +818,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// an application-wide event monitor, and a monitor only ever sees what
     /// goes through the app. This step is how a walk reaches those.
     case appKey(PlaytestKey, [PlaytestModifier])
-    case move(PlaytestPoint)
+    /// Move the pointer to a point without pressing anything, so a walk can
+    /// read what the canvas SAYS a press would do there. `modifiers` are held
+    /// while the pointer rests: ⌥ over a layer is its own cue (the copy
+    /// badge), and over a screen's own surface ⌥ means different things
+    /// depending on whether the screen is picked, so a walk has to be able to
+    /// hold it without clicking.
+    case move(PlaytestPoint, [PlaytestModifier])
     /// Pinch the canvas to a zoom, the way two fingers on a trackpad do: a run
     /// of small nudges rather than one jump, each through the very call the
     /// gesture makes. A grid, a guide or a readout that only misbehaves WHILE
@@ -1148,7 +1154,7 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .appKey(key, try f.modifiers())
         case "move":
-            self = .move(try f.point("at"))
+            self = .move(try f.point("at"), try f.modifiers())
         case "pinch":
             let to = CGFloat(try f.number("to"))
             guard to.isFinite, to > 0 else {

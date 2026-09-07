@@ -203,7 +203,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: grabCueFlag,
                     title: "Every handle says what it does",
-                    description: "Rest the pointer on any handle around a selected object and it says what a press would do before you press it. An open hand over the parts that drag on their own (an arrow\'s caption, either end of a line, a measurement\'s number and its two feet), and a closed hand while you drag one. The matching resize arrows over the eight handles round a layer, round the canvas, or round the crop box. A curved arrow over the knob that turns it.",
+                    description: "Rest the pointer on any handle around a selected object and it says what a press would do before you press it. An open hand over the parts that drag on their own (an arrow\'s caption, either end of a line, a measurement\'s number and its two feet), and a closed hand while you drag one. The matching resize arrows over the eight handles round a layer, round the canvas, or round the crop box. A curved arrow over the knob that turns it. Over a screen it says which of the two drags you are about to get: the hand means the screen itself travels, and it is on the screen's name at all times and on the screen's own surface once the screen is picked, while empty room that would sweep a band keeps the plain arrow.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

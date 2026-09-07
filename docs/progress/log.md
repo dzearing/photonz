@@ -11113,3 +11113,39 @@ captures: `queue/audits/2026-09-07-panel-one-name.json`.
 
 Next: `Scripts/playtest/tool-tips.json` still hovers "Inspector" at line 21 —
 its own queued task, now a one-word change.
+
+## 2026-09-07 — A screen says which drag you are about to get
+
+A screen's empty room has meant two things since the band landed a few hours
+ago: sweep a band over what is on the screen, or carry the screen, decided by
+whether the screen is picked. Nothing said which, and the pointer was an arrow
+either way.
+
+One mark now, and it means **this drag carries the screen**: an open hand. It
+sits on a screen's name at all times, since the name is the move handle that is
+always there, and on the screen's own room once the screen is picked. Where a
+drag would sweep, the pointer stays the plain arrow it wears on bare canvas,
+which sweeps the same way, so the hand's absence is the other half of the
+answer. Considered and rejected: a crosshair over an unpicked screen's room (it
+would flick against the arrow every time you crossed a button), and lighting
+the screen's edge on hover (the context box is deliberately not drawn on a
+screen at rest).
+
+⌥ got honest at the same time. ⌥ over a picked screen still wears the copy
+badge, because that drag does leave the original behind; ⌥ over a screen that
+is not picked wears nothing, where it used to promise a duplicate that the new
+sweep never makes. Two smaller things came out of the wiring: a move, a
+multi-move and a marquee now bail out of the cursor refresh like every other
+drag, so the cue and the drag cannot take turns writing the pointer with the
+button down; and a walk's `move` step can hold modifiers, which is the only way
+to read a cue that only ⌥ brings up.
+
+`ScreenSurfaceCue` (PhotonzCore) is written as a wrapper over
+`screenSurfacePress`, so the cue and the press can never drift; a test asserts
+exactly that. `Scripts/test.sh` green at 4391. Verified on the probe with the
+Screen Recording grant via `Scripts/playtest/screen-drag-cue-walk.json`, which
+reads all five cases and proves both gestures are unchanged in the same run.
+Audit with real captures: `queue/audits/2026-09-07-screen-drag-cue.json`.
+
+Next: the queue's next task. Open question for the user, in the audit: whether
+the band case needs a mark of its own rather than the plain arrow.

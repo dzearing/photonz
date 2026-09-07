@@ -493,6 +493,21 @@ Nesting needs a way in and a way out, and both keys are already busy.
   The cost, taken knowingly: to sweep inside a screen you have just clicked,
   press Escape first, and ⌥-dragging a screen's surface no longer duplicates
   it — ⌥-drag its name instead.
+- **The pointer says which of those two drags you are about to get**
+  (2026-09-07). The same gesture meaning two things, decided by whether the
+  screen is picked, is invisible until you have already pressed, so the app
+  draws ONE mark and it means *this drag carries the screen*: an open hand. It
+  is on a screen's name at all times, since the name is the move handle that is
+  always there, and on a screen's own empty surface once the screen is picked.
+  Where a drag would sweep instead, the pointer stays the plain arrow it wears
+  on bare canvas, which sweeps the same way, so the hand's absence is the other
+  half of the answer. ⌥ over a picked screen wears the copy badge, because that
+  drag does leave the original behind; ⌥ over a screen that is NOT picked wears
+  nothing, because the ⌥ drag that used to duplicate a screen from its surface
+  now sweeps, and a badge there would promise a duplicate that never arrives.
+  Nothing about either gesture changed. The cue is the same call the press
+  makes (`PhotonzDocument.screenSurfaceCue` wraps `screenSurfacePress`), so the
+  two can never drift.
 - **Where you are follows what you are holding** (2026-09-03). Dragging a layer
   off a screen takes you out of that screen with it, so Escape never jumps back
   to a screen the layer has already left.

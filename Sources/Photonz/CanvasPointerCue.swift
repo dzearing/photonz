@@ -140,9 +140,26 @@ extension CanvasNSView {
         guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil,
               endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil,
               cropDrag == nil else { return }
+        // Carrying something, and sweeping a band, are drags too. They set
+        // their own pointer as they go (a copy badge, or nothing), and they
+        // are the two drags a screen's surface now has a cue for, so without
+        // this the cue and the drag would take turns writing the pointer while
+        // the button was down.
+        guard moveDrag == nil, multiMove == nil, marquee == nil else { return }
         let point = viewPoint ?? window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) }
         guard let viewport, let point, bounds.contains(point) else { return applyGrabCursor(nil) }
         let doc = viewport.documentPoint(fromView: point)
+        // A name above a box is that box's drag handle, and `mouseDown` reads
+        // it before anything else on the canvas, so the pointer does too. It
+        // is the one grab that moves a screen without picking it first, and
+        // until now the only thing that said so was the name tinting.
+        if Experiments.shared.grabCueEnabled, tool == .select, canvasNameField == nil,
+           nameLabelHit(at: point) != nil {
+            #if PHOTONZ_PLAYTEST
+            recordPlaytestCue("name-grab")
+            #endif
+            return applyGrabCursor(.openHand)
+        }
         let hit = pointerCue(at: doc)
         #if PHOTONZ_PLAYTEST
         recordPlaytestCue(hit)
@@ -150,10 +167,46 @@ extension CanvasNSView {
         if let hit {
             return applyGrabCursor(CanvasCursor.cursor(for: hit.cue, transform: hit.transform))
         }
+        // The empty room on a screen is the one place on the canvas where the
+        // same drag means two things — sweep a band over what is on the
+        // screen, or carry the screen — and which one you get turns on whether
+        // the screen is picked, which the pointer cannot otherwise show. The
+        // hand appears exactly where the screen would travel. Where it would
+        // band the pointer keeps the plain arrow it wears on bare canvas,
+        // which bands the same way; and ⌥ there gets no copy badge, because
+        // ⌥ dragging an unpicked screen sweeps now rather than duplicating it.
+        if let surface = screenSurfaceCue(at: doc) {
+            #if PHOTONZ_PLAYTEST
+            recordPlaytestCue(surface)
+            #endif
+            switch surface {
+            case .move: return applyGrabCursor(.openHand)
+            case .moveCopy: return applyGrabCursor(.dragCopy)
+            case .sweep: return applyGrabCursor(nil)
+            }
+        }
         // Nothing on the canvas says a drag can leave a copy behind, so the
         // badged pointer is the whole invitation: hold ⌥ over a layer and the
         // cursor answers before you have pressed anything.
-        applyGrabCursor(pointerModifiers.contains(.option) && copyDragCue(at: doc) ? .dragCopy : nil)
+        let copying = pointerModifiers.contains(.option) && copyDragCue(at: doc)
+        #if PHOTONZ_PLAYTEST
+        recordPlaytestCue(copying ? "drag-copy" : "none")
+        #endif
+        applyGrabCursor(copying ? .dragCopy : nil)
+    }
+
+    /// What a press on a screen's own empty surface at `p` (document coords)
+    /// would do, or nil everywhere that is not a screen's empty surface.
+    ///
+    /// Gated on the same flag the PRESS is gated on: with layer groups off, a
+    /// drag on a screen's room moves it like any other layer and there are not
+    /// two meanings to tell apart.
+    private func screenSurfaceCue(at p: CGPoint) -> ScreenSurfaceCue? {
+        guard Experiments.shared.grabCueEnabled, tool == .select, groupSelectionEnabled,
+              let viewport, let document else { return nil }
+        return document.screenSurfaceCue(at: p, zoom: viewport.zoom, picked: pickedLayerIDs,
+                                         optionHeld: pointerModifiers.contains(.option),
+                                         captionPillSize: Self.captionPillSizing)
     }
 
     /// Forces `cursor` onto the pointer, or gives it back. Only a CHANGE

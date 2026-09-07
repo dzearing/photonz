@@ -342,3 +342,50 @@ extension PhotonzDocument {
         return picked.contains(screen.id) ? .move(screen: screen.id) : .sweep(screen: screen.id)
     }
 }
+
+// MARK: - What that press SAYS before the button goes down
+
+/// What the pointer should say about a press on a screen's own empty surface.
+///
+/// The gesture is the same either way — press on the room between the things
+/// on a screen and drag — and it means two different things depending on
+/// something the pointer cannot see: whether that screen is picked. So the app
+/// draws one mark, an open hand, and it means THIS DRAG CARRIES THE SCREEN. It
+/// is on a screen's name at all times, on a picked screen's own surface, and
+/// nowhere a drag would band instead, where the pointer keeps the plain arrow
+/// it already wears on bare canvas, which bands the same way.
+public enum ScreenSurfaceCue: Equatable, Sendable {
+    /// A band, over what is on this screen. No mark: the plain arrow.
+    case sweep(screen: UUID)
+    /// The screen itself travels. The open hand.
+    case move(screen: UUID)
+    /// ⌥ held where the screen would move: the drag leaves the original
+    /// behind, so the pointer wears its copy badge.
+    case moveCopy(screen: UUID)
+}
+
+extension PhotonzDocument {
+
+    /// What the pointer should say at `point`, or nil everywhere a screen's
+    /// surface has nothing to say — on something sitting on a screen, on a
+    /// plain group, out on the canvas.
+    ///
+    /// This is `screenSurfacePress` read a moment earlier, and it is written
+    /// as the same call so the two can never drift: a pointer that offered a
+    /// move where the press would band would be worse than no pointer at all.
+    ///
+    /// `optionHeld` matters only where the screen moves. ⌥ dragging a screen
+    /// that is not picked USED to duplicate it and now sweeps, so a copy badge
+    /// there would promise a duplicate that never arrives.
+    public func screenSurfaceCue(at point: CGPoint, zoom: CGFloat = 1,
+                                 picked: Set<UUID>, optionHeld: Bool,
+                                 captionPillSize: CaptionPillSizing? = nil)
+    -> ScreenSurfaceCue? {
+        switch screenSurfacePress(at: point, zoom: zoom, picked: picked,
+                                  captionPillSize: captionPillSize) {
+        case .sweep(let screen)?: .sweep(screen: screen)
+        case .move(let screen)?: optionHeld ? .moveCopy(screen: screen) : .move(screen: screen)
+        case nil: nil
+        }
+    }
+}

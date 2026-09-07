@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T12:57:50.277Z",
-  "updated": "2026-09-07T12:58:20.425Z",
+  "updated": "2026-09-07T14:57:01.182Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-07 digest design review off audit queue/audits/2026-09-07-band-inside-a-screen.json, roughs 2 and 3. Rough 2: 'Nothing on screen tells the two apart before you press. The pointer stays an arrow either way. A cue on hover over a picked screen's surface would say it, and I left that out rather than invent a cursor for it in this task.' Rough 3: 'Option-dragging a screen's background used to duplicate the screen and now sweeps instead. Option-dragging its name duplicates it, so the gesture moved rather than went away, but nobody is told that.' The rule is Figma's and was the right call; this is the missing half of it. Code: PhotonzDocument.screenSurfacePress plus CanvasPointerDrags/CanvasPointerCue. Note UX-PATTERNS D12 covers tooltips and D16 covers guides, so check which vocabulary a hover cue on the canvas belongs to before inventing one.",
@@ -28,6 +28,40 @@
     {
       "t": "2026-09-07T12:58:20.425Z",
       "note": "seq 1640 -> 30"
+    },
+    {
+      "t": "2026-09-07T14:40:10.328Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T15:05:00.000Z",
+      "note": "Review before building. The task asks for a cue on both cases, but the two cases are not symmetric: a drag that BANDS on a screen's room does exactly what the same drag does on bare canvas, where the pointer is a plain arrow, while a drag that MOVES the screen is the surprise. So the design is one mark, the open hand, meaning this drag carries the screen: on the name at all times, on the room once the screen is picked, absent everywhere a drag bands. Rejected a crosshair over an unpicked screen's room: it would flick between crosshair and arrow every time the pointer crossed a button on a busy screen, and it would contradict the arrow bare canvas wears for the same gesture. Rejected a hover-lit screen edge: the context box is deliberately NOT drawn on a screen at rest (docs/design/ui-building.md, 2026-09-03) because it would be on almost all the time and say nothing. Checked UX-PATTERNS D12 and D16 as the notes asked: D12 tooltips anchor to a control or report a position, D16 governs guides drawn over the work; neither is the vocabulary for what a press would do, which the pointer already owns (CanvasPointerCue)."
+    },
+    {
+      "t": "2026-09-07T15:20:00.000Z",
+      "note": "Core, test first: ScreenSurfaceCue + PhotonzDocument.screenSurfaceCue in LayerGrouping.swift, written as a wrapper over screenSurfacePress so the cue and the press can never drift (one test asserts exactly that). 9 tests in Tests/PhotonzCoreTests/BandInsideAScreenTests.swift."
+    },
+    {
+      "t": "2026-09-07T15:35:00.000Z",
+      "note": "App: CanvasPointerCue.refreshGrabCursor now reads, in mouseDown's own order, the name label (open hand: any box's name is its drag handle), then the existing handle cues, then the screen surface (hand to move, copy badge with option, nothing where it bands). Option over an UNPICKED screen no longer shows the copy badge, which was the one flatly wrong cue on the canvas: that drag sweeps now. Found and fixed a second thing while wiring it: a move drag, a multi-move and a marquee did not bail out of refreshGrabCursor, so the new cue and the drag's own pointer would have taken turns writing the cursor with the button down."
+    },
+    {
+      "t": "2026-09-07T15:45:00.000Z",
+      "note": "Harness: the move step takes modifiers, so a walk can rest the pointer with option held and read the cue without clicking; cursorName knows dragCopy; the playtest cue string covers screen-sweep, screen-move, screen-copy, name-grab and drag-copy. Docs: playtest-harness.md move row, ui-building.md gestures section, and the grab cue flag's own description in FeatureCatalog."
+    },
+    {
+      "t": "2026-09-07T15:55:00.000Z",
+      "note": "Verified on the probe with Screen Recording granted (Scripts/playtest/screen-drag-cue-walk.json): not picked = cue screen-sweep / cursor arrow, and the same with option held; picked = screen-move / openHand, and screen-copy / dragCopy with option; the name = name-grab / openHand; a rectangle on the screen = none / arrow. Both gestures unchanged in the same run: a band still catches both rectangles with the screen left at 440,100, and a drag on the picked screen still moves it to 490,150. Scripts/test.sh green, 4391 tests."
+    },
+    {
+      "t": "2026-09-07T16:00:00.000Z",
+      "note": "Review of the built thing. Left standing: the band case has no positive mark of its own, and with a screen picked the pointer flips hand/arrow as it crosses the things on the screen. Both are in the audit's rough with questions in evaluate. Decided without asking, as it has no visible consequence: no perf test for the cue, because it costs the one hit test the press already makes, once per mouse move, and only where no handle cue matched. No decision card opened: nothing here needed the user to choose before there was something to try."
+    },
+    {
+      "t": "2026-09-07T14:57:01.181Z",
+      "note": "The pointer now says which drag a screen will give you: an open hand means it carries the screen (its name always, its own room once picked), plain arrow where a drag bands, copy badge only where option really copies. Core cue in PhotonzCore wraps the press so they cannot drift; verified on the probe with real captures, audit at queue/audits/2026-09-07-screen-drag-cue.json."
     }
-  ]
+  ],
+  "started": "2026-09-07T14:40:10.328Z",
+  "completed": "2026-09-07T14:57:01.182Z"
 }

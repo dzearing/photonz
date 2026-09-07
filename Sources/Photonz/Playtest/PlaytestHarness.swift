@@ -298,12 +298,22 @@ private final class Run {
             note(number, step.name, "\(Self.chord(key, modifiers)) sent through the app",
                  state: describe())
 
-        case .move(let at):
+        case .move(let at, let modifiers):
             let canvas = try requireCanvas()
             let p = try viewPoint(at)
-            if let event = mouseEvent(.mouseMoved, at: p, on: canvas) { canvas.mouseMoved(with: event) }
+            // The canvas learns about held modifiers from `flagsChanged`, not
+            // from the mouse event, so a walk that wants ⌥ held while the
+            // pointer rests has to put it where the real key would have left
+            // it. Setting it here and letting `mouseMoved` read it lands the
+            // canvas in the same state a person holding ⌥ would.
+            let flags = eventFlags(modifiers)
+            canvas.pointerModifiers = flags
+            if let event = mouseEvent(.mouseMoved, at: p, on: canvas, flags: flags) {
+                canvas.mouseMoved(with: event)
+            }
             await sleep(0.05)
-            note(number, step.name, "to \(short(at.point)) \(at.space.rawValue) = view \(short(p))")
+            let held = modifiers.isEmpty ? "" : " holding " + modifiers.map(\.rawValue).joined(separator: "+")
+            note(number, step.name, "to \(short(at.point)) \(at.space.rawValue) = view \(short(p))" + held)
 
         case .pinch(let to, let steps):
             let canvas = try requireCanvas()
@@ -3772,6 +3782,7 @@ private final class Run {
         let known: [(NSCursor, String)] = [
             (.openHand, "openHand"), (.closedHand, "closedHand"), (.arrow, "arrow"),
             (.crosshair, "crosshair"), (.iBeam, "iBeam"), (.pointingHand, "pointingHand"),
+            (.dragCopy, "dragCopy"),
         ]
         if let stock = known.first(where: { $0.0 === current })?.1 { return stock }
         return CanvasCursor.name(of: current) ?? "other"

@@ -1678,6 +1678,22 @@ final class CanvasNSView: NSView {
                 + Handles.screenHandle(for: handle, transform: hit.transform).axis.rawValue
         }
     }
+
+    /// What a press on a screen's own empty surface would do. "screen-sweep"
+    /// is the one cue with no pointer of its own ON PURPOSE: a drag that bands
+    /// keeps the plain arrow it wears on bare canvas, so a walk reading
+    /// `cue: screen-sweep` next to `cursor: arrow` is reading agreement.
+    func recordPlaytestCue(_ surface: ScreenSurfaceCue) {
+        switch surface {
+        case .sweep: playtestPointerCue = "screen-sweep"
+        case .move: playtestPointerCue = "screen-move"
+        case .moveCopy: playtestPointerCue = "screen-copy"
+        }
+    }
+
+    /// The cues that are not shapes on a handle: a name label's drag grab, the
+    /// ⌥ copy badge, and "none".
+    func recordPlaytestCue(_ name: String) { playtestPointerCue = name }
 #endif
 
     func viewRect(forDocRect r: CGRect, in viewport: Viewport) -> CGRect {

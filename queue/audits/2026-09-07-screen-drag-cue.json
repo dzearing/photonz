@@ -1,0 +1,30 @@
+{
+  "feature": "A screen says whether a drag will move it or sweep a band",
+  "epic": "ui-building",
+  "summary": "The pointer now says which of a screen's two drags you are about to get. An open hand means this drag carries the screen, and it is on the screen's name at all times and on the screen's own empty room once the screen is picked. Where a drag would sweep a band instead, the pointer stays the plain arrow.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default.",
+  "try": [
+    { "do": "Press F, then drag out a screen on an empty canvas." },
+    { "do": "Press R and draw two rectangles inside it, well apart." },
+    { "do": "Press V, then click bare canvas so nothing is picked." },
+    { "do": "Rest the pointer on an empty corner of the screen: it stays a plain arrow, and a drag from there sweeps a band.", "shot": "2026-09-07-screen-drag-cue-1.png" },
+    { "do": "Hold Option there: nothing changes, no copy badge, because that drag sweeps now rather than duplicating the screen." },
+    { "do": "Click that same empty corner to pick the screen, then rest on it again: the pointer is an open hand, and a drag carries the screen.", "shot": "2026-09-07-screen-drag-cue-2.png" },
+    { "do": "Hold Option there: the pointer gains its copy badge, because that drag does leave the original behind." },
+    { "do": "Press Escape, then rest the pointer on the screen's name: an open hand again, the grab that is always there.", "shot": "2026-09-07-screen-drag-cue-3.png" }
+  ],
+  "evaluate": [
+    "Does the open hand read as this drag carries the whole screen, or just as you can drag something here?",
+    "With the screen picked, the pointer flips to an arrow every time you cross something sitting on it. Useful, or busy?",
+    "The band case has no mark of its own, only the plain arrow bare canvas already wears. Is that enough to press with confidence?",
+    "Does the hand over a screen's name make you reach for the name to move the screen?",
+    "Option over a picked screen still offers a copy. Is that worth keeping now that Option on an unpicked screen offers nothing?"
+  ],
+  "rough": [
+    "Only the move is marked. A drag that sweeps keeps the plain arrow, so it is the hand's ABSENCE that says band. A crosshair over a screen's empty room was the alternative and I rejected it: the pointer would flick between crosshair and arrow every time you crossed a button on a busy screen, and the arrow already means band out on bare canvas, where the same drag sweeps the document.",
+    "That flip is still there in a smaller form once a screen is picked: hand over the room, arrow over the things on it. It is honest, since a drag on a button carries the button rather than the screen, but it is movement at the edge of your eye while you are only looking for a place to start a band.",
+    "The hand landed on EVERY layer's name, not only screens'. A name has been a drag handle for any box since the name drag shipped, so the promise is the same one, but it is wider than this task asked for.",
+    "The probe held the Screen Recording grant, so all three pictures are real captures of the window. What they cannot show is the pointer: macOS window captures leave the cursor out, and a walk's pointer is synthesized anyway. So the pictures show the two states, and the pointer shapes are read from the walk's own probe of the live cursor: arrow with nothing picked (and arrow with Option held), openHand once the screen is picked, dragCopy with Option, openHand over the name. Scripts/playtest/screen-drag-cue-walk.json is the walk.",
+    "Nothing about the two gestures changed, and the walk proves it in the same run: a band from that room still catches both rectangles and leaves the screen at 440,100, and a drag once the screen is picked still moves it to 490,150."
+  ]
+}
